@@ -188,14 +188,14 @@ So move the labels in state instead of letting the plan replace them:
 cd infra/github
 export GITHUB_TOKEN=$(gh auth token)
 
-tofu apply -target=github_repository.this          # the rename, alone
+tofu apply -target=github_repository.this               # the rename, alone
 
-for label in epic task bug proposal research; do   # re-adopt under the new name
+for label in epic task bug proposal research human; do  # re-adopt under the new name
 	tofu state rm "github_issue_label.$label"
 	tofu import "github_issue_label.$label" "daily-driver:$label"
 done
 
-tofu plan                                          # expect: alerts replaced, nothing else
+tofu plan                                               # expect: alerts replaced, nothing else
 tofu apply
 ```
 

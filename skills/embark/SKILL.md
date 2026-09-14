@@ -114,8 +114,8 @@ The two are not the same question, and `epic` writes both on purpose:
 
 **A `human` task is not in the wave.** Its label says no agent can do the
 work, so a session opened on it would stop at `Read the issue and its edges`
-and nothing else. It waits for the person, and the muster roll says so in its
-row rather than leaving it unaccounted for.
+and nothing else. It waits for the person, and `Post the muster roll` gives it
+a row of its own rather than leaving it unaccounted for.
 
 **Already at sea is read from the record, never assumed.** A task is at sea
 when a muster roll on the epic names a session for it, or when its own issue
@@ -134,7 +134,7 @@ how a resumed watcher loses the live one.
 and is still not a reason to launch a second one. That collision is the thing
 `undertake`'s claim exists to make visible.
 
-**An empty batch is three different things, and only one of them is a stop.**
+**An empty batch is four different things, and only one of them is a stop.**
 This step is the router, and the wave that comes in at `Watch the wave` returns
 here to be routed again:
 
@@ -145,7 +145,11 @@ here to be routed again:
   last one died finds. Go to `Watch the wave`, over the tasks at sea.
 - **Every task still open is blocked by something open.** There is no wave.
   Name the issue that blocks, and wait: that is the stop of that name below,
-  and it is the only one of the three.
+  and it is the only one of the four.
+- **Every task still open is `human`.** There is no wave, and there is nothing
+  to wait for either: no agent can start on any of them, and nothing this
+  session does moves them. Post the roll over them, say that the epic is
+  waiting on a person and name what each one needs, and stop.
 
 3 — Open the sessions
 ---------------------
@@ -227,7 +231,14 @@ one row per task:
 | ---- | ------- | ----- |
 | #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `claude-sonnet-5` |
 | #147 — Document the format. | [session_01DeF…](https://claude.ai/code/session_01DeF…) | `claude-opus-5`, inherited |
+| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — |
 ```
+
+**A `human` task gets a row and no session.** It is in the wave's heading
+because a reader counting the epic's open work would otherwise have to go
+looking for it, and the row says why no session is named. A wave that is
+nothing but `human` tasks still posts its roll: the roll is what says the
+epic is waiting on a person.
 
 **Say which model was inherited.** A reader cannot otherwise tell a judgement
 `epic` made from a default nobody chose, and the difference is the whole reason

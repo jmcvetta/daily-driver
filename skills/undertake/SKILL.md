@@ -454,13 +454,12 @@ Where it stops and waits
 ========================
 
 Autonomy is the point, so each pause has to earn itself. Eleven stop the
-sequence. Eight stop it to *ask* — the ambiguous issue, the request too vague
-to write one for, an issue labelled `proposal`, an issue labelled `human`,
-an issue carrying two of the six labels, the failing approach, a designated
-branch the harness states
+sequence. Seven stop it to *ask* — the ambiguous issue, the request too vague
+to write one for, an issue labelled `proposal`, an issue carrying two of the
+six labels, the failing approach, a designated branch the harness states
 ambiguously, and a base merge whose conflict is a real one. A blocked issue, an
-epic, and a running check stop it to report, and wait on something other than
-an answer.
+epic, an issue labelled `human`, and a running check stop it to report, and
+wait on something other than an answer.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing

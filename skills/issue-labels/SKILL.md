@@ -64,10 +64,12 @@ Ask the question in this order. The first answer that holds is the label.
    carries.
 2. **Can an agent do the work at all?** Where it cannot — credentials no
    agent holds, a decision only the user can make, an action outside the
-   repository — it is `human`. The question comes this early because the three
-   labels below all promise an agent may start, and where the work is a
-   person's that promise is false whichever of the three the body would
-   otherwise fit.
+   repository — it is `human`. The question comes before `bug`, `research` and
+   `task`, because each of those three promises an agent may start and that
+   promise is false whichever of the three the body would otherwise fit. It
+   does not come before `proposal`, which is the last step's other answer: a
+   wish whose shape is still open cannot be judged a person's to do, and
+   deciding the shape is what settles which it is.
 3. **Is it a bug report?** Then `bug`. Nothing here defines the word.
 4. **Does it close on an answer rather than on a change?** A question to
    settle, an option to compare, a spike to run — `research`. What the answer
