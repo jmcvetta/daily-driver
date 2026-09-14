@@ -57,9 +57,10 @@ loop — which is the same reason `Keep it current` below has no cadence.
 The session
 ===========
 
-**There is no session call.** The claim carries the branch alone. It omits the
-unavailable model and session instead of publishing a diagnostic about another
-harness's session surface.
+**Codex exposes no session id, so the claim records `session: n/a`** — the
+marker `SKILL.md` prescribes, not a diagnostic about the missing surface. The
+`Model:` line repeats what the harness states is serving the turn — the
+session's configured model — rather than a recalled name.
 
 The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch

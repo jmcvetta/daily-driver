@@ -66,9 +66,10 @@ worktree must agree before the claim is posted.
 `external_metadata.current_branches` is a different field and answers a
 different question: what is checked out, not what the harness designated.
 
-Where this call is absent, `Claim the issue` carries the branch alone. Read it
-from the task worktree's Git state, and read its repository from the remote
-`task-worktree` resolved.
+Where this call is absent, `Claim the issue` still records `session: n/a` and
+reads the model from the harness environment. Read the branch from the task
+worktree's Git state, and its repository from the remote `task-worktree`
+resolved.
 
 
 The cadence
