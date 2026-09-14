@@ -1,0 +1,44 @@
+# The Omp arm for one model, measured with and without daily-driver.
+#
+# The earlier Omp experiment carried one treated Claude variant. The delta is
+# now the thing readers need: each configured model has its own experiment and
+# the same `bare` and `with-plugin` variants. A variant applies to every task,
+# so separate files keep reports attributable to one model family.
+#
+# `agent: {type: omp}` resolves only when `coder-eval-omp` is installed beside
+# `coder-eval`. `coder-eval plan` prints resolution failures but exits 0, so
+# `make evals-plan` runs `scripts/evals-variants.py` first.
+
+experiment_id: omp-deepseek-v4-pro
+description: >-
+  Trigger accuracy, constitution delivery and review-depth routing on DeepSeek
+  v4 Pro, with daily-driver loaded and without it.
+
+defaults:
+  repeats: 5
+
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+
+  agent:
+    type: omp
+    # Verified against the provider catalog borrowed into the throwaway Omp home.
+    model: deepseek/deepseek-v4-pro
+    permission_mode: acceptEdits
+    # Recorded, not enforced: Omp RPC has no per-session tool allowlist.
+    allowed_tools: [Skill]
+
+variants:
+  - variant_id: bare
+    description: An Omp session with no plugin loaded.
+    agent:
+      plugins: []
+
+  - variant_id: with-plugin
+    description: An Omp session with the daily-driver plugin installed.
+    agent:
+      plugins:
+        - type: local
+          path: ".."
