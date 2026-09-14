@@ -56,6 +56,18 @@ jobs:
       - name: Ensure ShellCheck
         run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
 
+      # uv is the Python package manager the script legs declare their
+      # dependencies with -- the root pyproject.toml's dev group, locked in
+      # uv.lock. `make check`'s Python legs run under `uv run --frozen`, so
+      # the manager itself must be on PATH; the environment they sync is
+      # credential-free, resolved from the lock against PyPI. Unpinned like
+      # the CLI installs above: a new uv changing resolution behavior is a
+      # fact about the tool people actually run, which is what CI is asking.
+      - name: Install uv
+        run: |
+          curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - run: make check
 
   # The Omp half of the plugin, asked of a real Omp rather than of a fake.
