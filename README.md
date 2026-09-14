@@ -17,7 +17,7 @@ The **constitution** — `rules/constitution.md`, delivered to every session by
 hook on Claude Code and Codex, and by the rule provider on Omp — plus **two
 runtime adapters that enforce rather than instruct**, `hooks/` for the two
 harnesses that run hooks and `extensions/` for the one that does not, and
-fourteen skills:
+fifteen skills:
 
 | Skill | What it does |
 | ----- | ------------ |
@@ -32,6 +32,7 @@ fourteen skills:
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |
 | `review-cycle` | One round on a pull request: the built-in `/code-review`, a verdict on every finding, and the test for whether a later push has earned a second round. |
 | `undertake` | Takes a piece of work from its description to a pull request ready for review, opening the issue first where there is none, and keeping the branch current with its base after. |
+| `task-worktree` | Gives every repository-changing task a feature branch and sibling worktree before task research, then keeps all task operations rooted there without changing the primary worktree. |
 | `epic` | Breaks work too big for one pull request into task issues under an epic: the two gates that decide there is one, the plan agreed before anything is written, and the waves the sub-issue panel cannot render. |
 | `embark` | Works an epic: one Claude session per task issue in the current wave, the muster roll posted to the epic in place of a confirmation, and the watch kept through the pull requests rather than the session client. |
 | `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
@@ -59,14 +60,13 @@ loaded, and [its README](attic/README.md) says what is kept and why.
 ## The constitution
 
 `rules/constitution.md` is the always-on layer, in force in every session and
-every subagent. Ten sections:
+every subagent. Nine sections:
 
 | Section | What it settles |
 | ------- | --------------- |
 | Voice | Simplified Technical English for prose written in your own voice. |
 | Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
 | Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
-| Before you work on a repository | A feature branch and sibling worktree dedicated to every repository-changing task, before work begins. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
 | When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
@@ -80,9 +80,9 @@ moment, and says something the harness does not already say — it is paid for i
 every session and every subagent, forever. Amendments are pull requests against
 this repository.
 
-**Whether a session got it**: `scripts/check-constitution.py` drives the Claude
-Code and Codex hook routes, validates Omp's `alwaysApply` metadata, and asserts
-that all three routes use the same body. The
+**Whether a session got it**: `scripts/check-constitution.py` drives every
+injection point, on both harnesses, and asserts they carry the file verbatim
+and identically. The
 `constitution-reaches-subagent` eval covers the half a script cannot: it asks a
 subagent, with every file-reading tool closed, for a phrase only the injected
 constitution could have told it.

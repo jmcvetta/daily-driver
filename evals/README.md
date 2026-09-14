@@ -1,6 +1,6 @@
 # Evals
 
-Fifteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
+Sixteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
 than by `claude plugin eval`. The reasoning for the harness is
 [`docs/notes/0002-eval-harness.md`](../docs/notes/0002-eval-harness.md);
 the short version is that the built-in cannot be run on this account, is
@@ -28,6 +28,7 @@ evals/
 │   ├── issue-labels/    … when an issue is labelled, and not when it is linked?
 │   ├── judgement-call/  … when a choice is about to be put to the user?
 │   ├── session-title/   … when the session is named, and not the PR?
+│   ├── task-worktree/   … before repository-changing work, and not for read-only work?
 │   ├── constitution/    does the constitution reach a subagent, and land?
 │   └── review-depth/    does `review` send the right panel at the diff?
 ├── fixtures/review-depth/
@@ -652,10 +653,11 @@ the short version is that Omp engages a skill by reading `skill://<name>`,
 which `skill_triggered` cannot see, and that `coder_eval` builds the
 `[RESULT - …]` transcript these rubrics anchor on for its Claude agent alone.
 
-**An experiment file per arm, a run per arm, and tags in between.** Ten rows
-cannot be graded identically on both harnesses — the call they name differs, or
-the rule is Claude Code only per `0011` — so each is two files, tagged
-`claude-only` and `omp-only`, with `-omp` on the second's `task_id`. A
+**An experiment file per arm, a run per arm, and tags in between.** Eleven rows
+cannot be graded identically on Claude Code and Oh My Pi — their execution
+routes differ, or the rule is Claude Code only per `0011` — so each is two
+files, tagged `claude-only` and `omp-only`, with `-omp` on the second's
+`task_id`. A
 `coder_eval` variant applies to every task in the run, so one invocation
 carrying both sets would grade Omp's routes under a Claude arm and pay for it.
 `make evals-run` excludes `omp-only`; `make evals-run-omp` excludes
@@ -675,6 +677,7 @@ runs in every arm and fails for a reason that has nothing to do with the skill.
 | `judgement-call` | `01-ask-in-chat-hook` | `01-ask-in-chat-extension-omp` |
 | `undertake` | `08-wake-slot-is-refilled` | `08-cadence-stops-at-ready-omp` |
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-branch-alone-omp` |
+| `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-omp` |
 
 Each Omp row names its sibling with a `forks:<task_id>` tag, which is what
 `check-eval-arms` pairs them by — and what catches a sibling that loses its own
@@ -747,8 +750,9 @@ why.
 **It also resolves the plugin root**, which the built-in does not.
 `_setup_skills` symlinks each skill by the path it was handed, so the relative
 `path: ".."` every experiment here writes — right for the Claude agent, which
-never sees an unresolved path — links fourteen skills whose bodies point back at
-their own directory. Measured: fourteen entries, none with a readable
+never sees an unresolved path — links fifteen skills whose bodies point back at
+their own directory. Measured with the current tree: fifteen entries, none with
+a readable
 `SKILL.md`, and `_setup_skills`'s own "0 skills linked" warning silent because it
 counts entries. `start()` makes the root absolute and then raises rather than
 warns when no readable skill arrived.
@@ -761,9 +765,9 @@ skill tool at all: the model is handed a skills table and opens
 the agent that branch was written for. Issue #185 expected the Omp spelling
 here; the spike in #181 measured that Codex does not use it.
 
-**Ten `codex-only` rows.** Each forked row grades a route stated in a
+**Eleven `codex-only` rows.** Each forked row grades a route stated in a
 `skills/<name>/references/*.md`, so a Codex counterpart needs a
-`references/codex.md` to grade against; #183 and #184 wrote all twelve.
+`references/codex.md` to grade against.
 
 | Suite | Claude row | Codex counterpart | What the Codex row grades |
 | --- | --- | --- | --- |
@@ -777,6 +781,7 @@ here; the spike in #181 measured that Codex does not use it.
 | `session-title` | `07-get-session-before-set` | `07-one-call-or-no-surface-codex` | one `agent_tasks` call with `threadId` omitted, or the stop |
 | `undertake` | `08-wake-slot-is-refilled` | `08-no-wake-to-keep-codex` | no durable wake, so the cadence is handed on |
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-branch-alone-codex` | branch from git, model and session recorded as absent |
+| `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-codex` | shell `workdir` and file paths keep every later operation in the task worktree |
 
 None is its sibling's stem plus `-codex`, for the reason the Omp table above
 gives: the stem states Claude's route, and on Codex the row grades the opposite.

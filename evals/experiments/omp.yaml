@@ -1,7 +1,7 @@
 # The Omp arm: the same suites, the same plugin, a second harness.
 #
 # **Why this is its own file rather than another variant of
-# `with-without.yaml`.** Ten rows cannot be graded identically on both
+# `with-without.yaml`.** Eleven rows cannot be graded identically on both
 # harnesses — the call they name differs, or the rule itself is Claude Code
 # only — so each of those is two files, tagged `claude-only` and `omp-only`.
 # A variant applies to every task in the run, so one invocation carrying both

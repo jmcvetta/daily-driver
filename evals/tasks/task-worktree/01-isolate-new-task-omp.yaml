@@ -1,0 +1,51 @@
+task_id: task-worktree-01-isolate-new-task-omp
+description: >-
+  A repository-changing task in an already-running Oh My Pi session creates a
+  feature branch and sibling worktree before task research begins.
+tags: [trigger-accuracy, task-worktree, references, fire, behaviour, omp-only, "forks:task-worktree-01-isolate-new-task"]
+
+initial_prompt: >-
+  Add a --strict option to this repository's parser. Before you inspect the
+  parser or run anything, tell me the exact Git commands you will use to
+  isolate the task, and how every later shell and file-tool call will stay in
+  that worktree. Do not run the commands yet.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`task-worktree` fires before a new repository-changing task"
+    expected_skill: task-worktree
+    skill_name: task-worktree
+
+  - type: llm_judge
+    description: The reply creates a sibling worktree and roots later Omp calls there
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    prompt: |
+      Grade only the reply after the last `[RESULT - …]` tag. Begin the
+      rationale with `ANCHOR: result`, or `ANCHOR: none` and score 0.0 when the
+      tag is absent.
+
+      Score 1.0 only if the reply says all of these:
+      - inspect registered worktrees and resolve the repository's base rather
+        than branch from the current checkout;
+      - create a feature branch and sibling worktree together with an
+        equivalent of `git worktree add -b <branch> <sibling> <base>`;
+      - set `cwd` to the task worktree on every later Omp `bash` call and give
+        Omp file tools absolute paths rooted in that worktree; and
+      - leave the primary worktree unchanged.
+
+      Score 0.5 if it creates the correct branch and sibling worktree but does
+      not explain how later calls stay there. Score 0.0 if it works in the
+      primary checkout, branches from the current checkout without resolving
+      the base, creates a nested worktree, or treats one directory change as a
+      permanent session relocation.

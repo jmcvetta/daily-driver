@@ -16,7 +16,7 @@ alone and hands the judge bare `result_text` from its Codex agent; every rubric
 under `evals/tasks/` anchors on that tag and scores 0.0 without it, deliberately
 and with no fallback. And `CodexAgent._setup_skills` symlinks each skill by the
 plugin path it was handed, so a relative root — which is what an experiment
-naturally writes — links fourteen skills that point at themselves.
+naturally writes — links fifteen skills that point at themselves.
 
 WHAT IT ASSERTS
 

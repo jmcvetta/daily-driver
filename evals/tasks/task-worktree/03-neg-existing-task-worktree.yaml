@@ -1,0 +1,24 @@
+task_id: task-worktree-03-neg-existing-task-worktree
+description: >-
+  A harness-created worktree already dedicated to the same task satisfies the
+  isolation requirement. The skill must not create a second worktree.
+tags: [trigger-accuracy, task-worktree, no-fire]
+
+initial_prompt: >-
+  This session is already running in a harness-created feature worktree
+  dedicated to issue #52. Continue that same task and update the parser.
+
+agent:
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 5
+  task_timeout: 300
+  turn_timeout: 120
+
+success_criteria:
+  - type: skill_triggered
+    description: "`task-worktree` does not fire inside the same task's dedicated worktree"
+    expected_skill: none
+    skill_name: task-worktree
+    stop_early: {}

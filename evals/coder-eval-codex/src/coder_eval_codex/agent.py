@@ -22,8 +22,8 @@ at the last `[RESULT - …]` tag and scores 0.0 where there is none, and
 **The second** is `plugins.resolve_local_plugins`, applied to the plugin roots
 before `start()` delegates. `plugins.py` says what it is for; the short version
 is that `_setup_skills` symlinks each skill by the path it was handed, so the
-relative root an experiment naturally writes links fourteen skills that point at
-themselves.
+relative root an experiment naturally writes links fifteen skills that point
+at themselves.
 
 **Neither of them is the normalisation issue #185 expected.** It asked for a
 `skill://<name>` mapping, the spelling Omp uses. The spike in #181 measured
@@ -109,14 +109,14 @@ class CodexDailyDriverAgent(CodexAgent):
         length: `CodexAgent._setup_skills` symlinks each skill by the path it was
         handed, so a relative root — which is what these experiments write, and
         what the Claude agent never sees because `coder_eval` resolves it before
-        that agent is built — produces fourteen links that point at themselves.
+        that agent is built — produces fifteen links that point at themselves.
 
         **Then the count is checked, and an empty one is fatal.** The Omp arm
         raises in the same place and for the same reason: an arm that declared
         plugins and loaded none runs untreated and reports zeros, which reads
         exactly like a skill that never fires. `_setup_skills` only warns, and
-        only when it had sources to link from — fourteen broken links are
-        fourteen `iterdir()` entries, so its own warning stays silent on exactly
+        only when it had sources to link from — fifteen broken links are
+        fifteen `iterdir()` entries, so its own warning stays silent on exactly
         the failure above.
 
         The reading is done from the directory rather than from the session: the

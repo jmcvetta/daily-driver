@@ -71,21 +71,6 @@ locally. List the scripts you mean, one by one.
 so listen to it. Never skip, disable, silence, or delete a test to reach
 green. Say that it is failing, and make a plan to fix it.
 
-## Before you work on a repository
-
-Every repository-changing task gets one feature branch and one worktree
-dedicated to that task. Before research or a first change:
-
-- Start the branch from the repository's base branch, never from whatever is
-  checked out.
-- Put the worktree beside the primary worktree, never inside it.
-- Continue every read, change, command, test and commit from the task worktree.
-  Never change the primary worktree.
-
-A worktree the harness already created for this task satisfies the worktree
-requirement. Create the feature branch there if it is detached. A read-only
-question needs neither until it becomes repository-changing work.
-
 ## While you write code
 
 - **RTFM.** The manual first — before the web, before the source, before the
@@ -155,6 +140,6 @@ manifest or a lockfile.
 Plan first, then delegate the implementation. Quota is the user's money. Do
 not spend a capable model on work that does not need capability, and do not
 open a subagent per task where one subagent can take the batch. Open separate
-subagents only where the work genuinely requires them. Subagents touching different files run in the background in
-parallel, in their own worktrees, all launched before you start your own share
-of the plan.
+subagents only where the work genuinely requires them. Subagents touching
+different files run in the background in parallel, all launched before you
+start your own share of the plan.
