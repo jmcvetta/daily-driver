@@ -246,9 +246,9 @@ every pull request opened — rather than on a restated line from
 drift away from the depth table and can never catch the depth table being
 wrong.
 
-Every arm carries the same ablation: every criterion is scored in a `bare`
-session and in a treated session. The delta, not a treated score alone, measures
-the plugin's effect. See "The Omp arm" for its per-model form.
+Claude and Omp measurement arms carry the same ablation: every criterion is
+scored in a `bare` session and in a treated session. The delta, not a treated
+score alone, measures the plugin's effect. See "The Omp arm" for its per-model form.
 
 ## The two moods, and `expected_skill: none`
 
