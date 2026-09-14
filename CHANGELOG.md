@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.20.0](https://github.com/jmcvetta/daily-driver/compare/v0.19.0...v0.20.0) (2026-09-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* the marketplace is renamed from `claude-daily-driver` to `daily-driver`, so the enablement key becomes `daily-driver@daily-driver`. A repository carrying the old stanza names a marketplace that is no longer registered, and an `enabledPlugins` entry whose marketplace is unregistered is skipped as orphaned — the plugin stops loading and nothing reports it. Update `.claude/settings.json` with `python3 scripts/stanza.py --write <repo>`, and reinstall on each machine or environment with `claude plugin marketplace add jmcvetta/daily-driver` and `claude plugin install daily-driver@daily-driver`.
+
+### Features
+
+* **evals:** report a Codex arm beside the Claude and Omp ones ([472032a](https://github.com/jmcvetta/daily-driver/commit/472032a4f8089eab0f21140ca0a34a2930453911))
+* fork session-title, embark and review-cycle for Codex ([d2dd0f9](https://github.com/jmcvetta/daily-driver/commit/d2dd0f9f47b913b11816919ac679e308fb5b477a))
+* **hooks:** close the question widget and reach the subagent on Codex ([a00f9f3](https://github.com/jmcvetta/daily-driver/commit/a00f9f36855a43e4c2310dfcf7485eba84beaada))
+* rename the repository to daily-driver ([#175](https://github.com/jmcvetta/daily-driver/issues/175)) ([4217fad](https://github.com/jmcvetta/daily-driver/commit/4217fad3277a2c7feb065ea38c554262d9957b67))
+* **skills:** route nine skills' calls on Codex ([19a5a55](https://github.com/jmcvetta/daily-driver/commit/19a5a55af43c8f8b0df4be58c60acaa15edb4ba9))
+
 ## [0.19.0](https://github.com/jmcvetta/daily-driver/compare/v0.18.2...v0.19.0) (2026-09-11)
 
 
