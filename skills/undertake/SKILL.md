@@ -184,7 +184,7 @@ After `Read the issue and its edges` rather than before it, because the edges
 decide whether there is anything to claim: a blocked issue stops there, and a
 claim on work that is not starting is a false record.
 
-Beyond the claim itself the comment carries three things:
+Beyond the claim itself the comment always carries:
 
 - **The branch** the work will be committed on, named before it is cut and
   **linked** — `[branch](https://github.com/OWNER/REPO/tree/BRANCH)`.
@@ -202,6 +202,9 @@ Beyond the claim itself the comment carries three things:
   nothing to see, and the alternative is a name the reader must build a URL
   from by hand. `Cut the branch` owns where the name comes from; this step
   announces it, and is bound to what was announced.
+
+Where the harness has a session call, the comment also carries:
+
 - **The model that served the turn**, which is what actually ran and moves
   with a fallback that leaves the rest of the session untouched. Where the
   model the session was *set* to run disagrees with it, name that too: the gap
@@ -217,12 +220,12 @@ one — the call `session-title` documents — and so does the branch, where the
 harness designated one. The reference file says which of the three the harness
 in use can answer.
 
-**Where the harness supplies no such call the comment still goes up**, and says
-so. `session-title` stops there because a title it cannot set is
-nothing; a claim that names no model is still a claim. The branch is not lost
-with them: `Cut the branch`'s second and third sources need no call at all —
-the project's convention where it documents one, and `issue-<number>-<slug>`
-otherwise.
+**Where the harness supplies no such call the comment still goes up with the
+branch alone.** It does not announce the unavailable metadata: omission is the
+harness-neutral record, while a diagnostic about another harness's session
+surface adds nothing to the claim. The branch comes from `Cut the branch`'s
+second and third sources — the project's convention where it documents one,
+and `issue-<number>-<slug>` otherwise.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
