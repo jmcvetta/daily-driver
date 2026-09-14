@@ -106,6 +106,6 @@ Provenance
 `codex-cli 0.154.0`, read on 2026-09-12. The subcommands and their flags are
 quoted from `--help`; the tool names, their descriptions and the namespace are
 read from the installed binary's own tool table. **None of the nine was
-driven.** [#181](https://github.com/jmcvetta/claude-daily-driver/issues/181)
+driven.** [#181](https://github.com/jmcvetta/daily-driver/issues/181)
 established that the terminal UI cannot be reached without credentials, and
 that is the wall this file is behind.

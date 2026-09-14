@@ -5,7 +5,7 @@ pull request — the same process it specifies for the constitution itself.
 
 ## Goal
 
-Make `claude-daily-driver` the *entire* Claude environment, so that a session
+Make `daily-driver` the *entire* Claude environment, so that a session
 behaves identically whether it runs on the laptop CLI or on a Claude Code web
 worker.
 
@@ -471,7 +471,7 @@ so "restructure your three memory files" now means three different things:
 - project `CLAUDE.md` hygiene — unchanged
 - `CLAUDE.local.md` compaction — the automatic half, driven by the
   compaction hook rather than by the session
-- global rules — a PR against `claude-daily-driver` instead of against
+- global rules — a PR against `daily-driver` instead of against
   `dot-claude`
 
 The third is a relocation, not an upgrade: lessons-learned promotion is already

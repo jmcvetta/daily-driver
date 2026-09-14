@@ -58,7 +58,7 @@ rewritten to name its firing moment rather than merely to state a preference.
 | I will not be lazy | 154–156 | Became **Before I call it done**, and absorbs the *rule* behind the Pre-Completion Checklist (228–234). The per-language commands did not come with it. |
 | Package manager only | 109–111, 167–168 | The rule. The 16-line table of per-language invocations (303–318) did not survive as constitution. |
 | Planning / delegation | 128–141 | Compressed from three bullet groups to one paragraph. |
-| Memory Management | 176–189 | Top tier rewritten: global memory *is* this plugin, so promoting a rule is now a pull request against `claude-daily-driver` rather than an edit on one laptop. |
+| Memory Management | 176–189 | Top tier rewritten: global memory *is* this plugin, so promoting a rule is now a pull request against `daily-driver` rather than an edit on one laptop. |
 | Temporary files | 297–300 | One line, with the harness-scratchpad caveat that filter 3 demands. The `.tmp.claude/` permission grant stays in `~/.claude/settings.json`, which cannot travel (constraint 2). |
 
 Two things were **added** that were not in the source:

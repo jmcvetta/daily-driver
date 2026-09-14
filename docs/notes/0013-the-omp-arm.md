@@ -2,10 +2,10 @@
 
 **Status:** decided, 2026-09-11.
 **Provenance:** the spike in
-[#153](https://github.com/jmcvetta/claude-daily-driver/issues/153#issuecomment-5635896243)
+[#153](https://github.com/jmcvetta/daily-driver/issues/153#issuecomment-5635896243)
 established that the harness can take the arm; this note records the decisions
 taken while building it, in
-[#173](https://github.com/jmcvetta/claude-daily-driver/issues/173).
+[#173](https://github.com/jmcvetta/daily-driver/issues/173).
 **Extends:** [`0011`](0011-two-harnesses-one-skill-tree.md), which made the
 skills portable to Omp, and [`0002`](0002-eval-harness.md), which chose the
 harness.

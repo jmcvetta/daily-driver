@@ -2,11 +2,11 @@
 
 **Status:** decided, 2026-09-10.
 **Provenance:** decided across
-[#148](https://github.com/jmcvetta/claude-daily-driver/issues/148) and its
+[#148](https://github.com/jmcvetta/daily-driver/issues/148) and its
 children, as each part was built. This note records those decisions after the
 fact, in one place, because the reasons were spread over an epic and would
 otherwise be readable only from its pull requests.
-**Resolves:** [#152](https://github.com/jmcvetta/claude-daily-driver/issues/152).
+**Resolves:** [#152](https://github.com/jmcvetta/daily-driver/issues/152).
 **Amends:** [`0010`](0010-the-wake-slot-is-never-empty.md), whose never-empty
 wake slot is a Claude Code rule rather than a rule of this toolkit.
 

@@ -2,10 +2,10 @@
 
 **Status:** decided, 2026-09-12.
 **Provenance:** the spike in
-[#181](https://github.com/jmcvetta/claude-daily-driver/issues/181#issuecomment-5646398831)
+[#181](https://github.com/jmcvetta/daily-driver/issues/181#issuecomment-5646398831)
 measured what this plugin loads under a real `codex` binary; this note records
 the decisions taken while building the arm, in
-[#185](https://github.com/jmcvetta/claude-daily-driver/issues/185).
+[#185](https://github.com/jmcvetta/daily-driver/issues/185).
 **Extends:** [`0013`](0013-the-omp-arm.md), which built the second arm and set
 the shape this one follows, and [`0011`](0011-two-harnesses-one-skill-tree.md),
 which made the skills portable in the first place.
@@ -174,8 +174,8 @@ reading.
 
 **Ten `codex-only` rows.** Every forked row grades a route stated in a
 `skills/<name>/references/*.md`, so a Codex counterpart needs a
-`references/codex.md` to grade against. [#184](https://github.com/jmcvetta/claude-daily-driver/issues/184)
-wrote three of those and [#183](https://github.com/jmcvetta/claude-daily-driver/issues/183)
+`references/codex.md` to grade against. [#184](https://github.com/jmcvetta/daily-driver/issues/184)
+wrote three of those and [#183](https://github.com/jmcvetta/daily-driver/issues/183)
 the rest, both while this work was in review, so the set is complete:
 
 | Suite | Claude row | Codex counterpart | What the Codex row grades |

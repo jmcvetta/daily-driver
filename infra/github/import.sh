@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-readonly REPO="claude-daily-driver"
+readonly REPO="daily-driver"
 
 # import <address> <id> — no-op if the address is already in state.
 import() {

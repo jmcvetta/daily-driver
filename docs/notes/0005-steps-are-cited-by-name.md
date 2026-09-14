@@ -2,10 +2,10 @@
 
 **Status:** decided, 2026-09-07.
 **Provenance:** chosen by an agent in
-[#86](https://github.com/jmcvetta/claude-daily-driver/pull/86) — the same pull
+[#86](https://github.com/jmcvetta/daily-driver/pull/86) — the same pull
 request as the change it justifies — and ratified by that merge, not by a
 separate call from the author.
-**Resolves:** [#83](https://github.com/jmcvetta/claude-daily-driver/issues/83).
+**Resolves:** [#83](https://github.com/jmcvetta/daily-driver/issues/83).
 
 Three skills lay out a numbered sequence — `undertake`'s eleven steps,
 `review-cycle`'s three stages, `session-title`'s four cuts — and files across
@@ -71,7 +71,7 @@ for were, measured by running it over the branch point.
 
 A numbering this repository does not own cannot be renamed here. `docs/notes/`
 0001 and 0002 both cite the phases of
-[#35](https://github.com/jmcvetta/claude-daily-driver/issues/35), which are
+[#35](https://github.com/jmcvetta/daily-driver/issues/35), which are
 named in that issue and not in this repository. Those files waive the noun:
 
 ```

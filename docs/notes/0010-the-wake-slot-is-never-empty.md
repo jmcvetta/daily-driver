@@ -5,9 +5,9 @@
 an `undertake` run the session wrote *"Projection re-rendered on 392598e …
 No action. Waiting on CI."*, and then slept. CI went green minutes later and
 nothing woke the session. The answer was chosen by an agent in
-[#138](https://github.com/jmcvetta/claude-daily-driver/pull/138), the pull
+[#138](https://github.com/jmcvetta/daily-driver/pull/138), the pull
 request that carries the change it justifies.
-**Resolves:** [#137](https://github.com/jmcvetta/claude-daily-driver/issues/137).
+**Resolves:** [#137](https://github.com/jmcvetta/daily-driver/issues/137).
 **Amends:** [`0006`](0006-waiting-for-ci.md) and
 [`0007`](0007-keeping-the-branch-current.md), which each specify a
 `send_later` timer without knowing about the other's.

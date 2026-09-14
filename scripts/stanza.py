@@ -12,14 +12,14 @@ be subtly wrong.
 Two of its three values are easy to get wrong by hand, and both are read from
 the manifests here rather than written out:
 
-- The **marketplace name** is `marketplace.json`'s `name` — the repository's
-  name, `claude-daily-driver` — not the plugin's. Measured: `claude plugin
-  marketplace add jmcvetta/claude-daily-driver` registers it under exactly
-  that name.
+- The **marketplace name** is `marketplace.json`'s `name`, which is the
+  repository's name. Measured: `claude plugin marketplace add
+  jmcvetta/daily-driver` registers it under exactly that name.
 - The **enablement key** is `plugin@marketplace`, so it is
-  `daily-driver@claude-daily-driver`. The tempting `daily-driver@daily-driver`
-  is wrong in a way nothing reports: an `enabledPlugins` entry naming an
-  unregistered marketplace is skipped as orphaned.
+  `daily-driver@daily-driver`. The repetition is real rather than a typo:
+  the repository and the plugin it ships carry the same name. An
+  `enabledPlugins` entry naming an unregistered marketplace is skipped as
+  orphaned, and nothing reports it.
 
 Modes:
 

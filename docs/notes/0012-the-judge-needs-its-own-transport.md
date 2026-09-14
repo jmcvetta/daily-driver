@@ -2,11 +2,11 @@
 
 **Status:** decided, 2026-09-11.
 **Provenance:** found while running
-[#158](https://github.com/jmcvetta/claude-daily-driver/issues/158)'s nine
+[#158](https://github.com/jmcvetta/daily-driver/issues/158)'s nine
 `references` rows — the run the issue asked for surfaced a defect the issue
 did not anticipate.
 **Resolves:** the `llm_judge` half of
-[#158](https://github.com/jmcvetta/claude-daily-driver/issues/158#issuecomment-5634289151)'s
+[#158](https://github.com/jmcvetta/daily-driver/issues/158#issuecomment-5634289151)'s
 first finding.
 
 `coder_eval`'s `llm_judge` criterion needs a transport to a judge model, and

@@ -2,7 +2,7 @@
 
 **Status:** decided, 2026-09-11.
 **Provenance:** found while running
-[#158](https://github.com/jmcvetta/claude-daily-driver/issues/158)'s nine
+[#158](https://github.com/jmcvetta/daily-driver/issues/158)'s nine
 `references` rows, on the second attempt at that run.
 **Supersedes:** the premise of
 [`0012`](0012-the-judge-needs-its-own-transport.md), not its decision. The

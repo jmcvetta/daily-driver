@@ -5,9 +5,9 @@
 
 **Status:** survey complete, no decision taken.
 **Provenance:** written by an agent in
-[#36](https://github.com/jmcvetta/claude-daily-driver/pull/36), and merged. Nothing here
+[#36](https://github.com/jmcvetta/daily-driver/pull/36), and merged. Nothing here
 was ratified, because nothing here was decided.
-**Phase:** 1 of [#35](https://github.com/jmcvetta/claude-daily-driver/issues/35).
+**Phase:** 1 of [#35](https://github.com/jmcvetta/daily-driver/issues/35).
 **Surveyed:** 2026-09-06, `claude --version` → `2.1.263 (Claude Code)`.
 **Superseded in part:** the harness sections below ("Harness findings for
 phases 2–4") document `claude plugin eval` because nothing else does — **not as

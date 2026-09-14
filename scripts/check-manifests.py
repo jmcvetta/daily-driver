@@ -51,7 +51,8 @@ are checked here, each measured against the CLI rather than assumed:
   read settings files at all, and a stanza naming a marketplace that does not
   exist enables nothing while looking entirely correct. See `stanza.py`. A
   documented block may quote part of the stanza; a block deliberately showing
-  a wrong one is exempted with `<!-- stanza-check: ignore -->` above it.
+  a wrong one — prose walking through a failure mode — is exempted with
+  `<!-- stanza-check: ignore -->` above it.
 
 No third-party imports: this runs from a Makefile on a laptop and from CI,
 and a dependency install between the two is a place for them to differ.
@@ -74,10 +75,10 @@ ROOT = Path(__file__).resolve().parent.parent
 JSON_BLOCK = re.compile(r"^```json\n(.*?)^```", re.DOTALL | re.MULTILINE)
 
 # The one block that must not be checked is the one printing a stanza known to
-# be wrong -- `daily-driver@daily-driver` is worth showing precisely because it
-# looks right -- so a block preceded by this marker is skipped. It has to be
-# the last thing before the fence, so it cannot be left behind by an edit that
-# moves the block it was written for.
+# be wrong, which prose explaining a failure mode has to be free to show, so a
+# block preceded by this marker is skipped. It has to be the last thing before
+# the fence, so it cannot be left behind by an edit that moves the block it was
+# written for.
 IGNORE = re.compile(r"<!--\s*stanza-check:\s*ignore\s*-->\s*\Z")
 
 # The harness routes a `SKILL.md` body may not name. One pattern per rule,
@@ -373,7 +374,7 @@ def main() -> int:
                 )
 
     # The marketplace names the repository people install from -- `claude
-    # plugin marketplace add jmcvetta/claude-daily-driver` resolves through
+    # plugin marketplace add jmcvetta/daily-driver` resolves through
     # that name -- so it has to be the repository's. Read from plugin.json's
     # declared `repository` rather than from the checkout directory, which is
     # whatever the person cloning chose to call it.

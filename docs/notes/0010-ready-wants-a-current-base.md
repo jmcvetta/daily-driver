@@ -3,7 +3,7 @@
 **Status:** decided, 2026-09-09.
 **Provenance:** chosen by an agent in the pull request that carries the change
 it justifies.
-**Resolves:** [#134](https://github.com/jmcvetta/claude-daily-driver/issues/134).
+**Resolves:** [#134](https://github.com/jmcvetta/daily-driver/issues/134).
 
 [`0007`](0007-keeping-the-branch-current.md) wrote `Keep it current` for the
 window after `Ready for review`: a pull request waiting on a human goes behind

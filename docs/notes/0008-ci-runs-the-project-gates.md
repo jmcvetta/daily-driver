@@ -2,10 +2,10 @@
 
 **Status:** decided, 2026-09-08.
 **Provenance:** put to the author while implementing
-[#110](https://github.com/jmcvetta/claude-daily-driver/issues/110), handed
+[#110](https://github.com/jmcvetta/daily-driver/issues/110), handed
 back, and chosen by the agent in the same pull request as the change it
 justifies.
-**Resolves:** the contradiction [#110](https://github.com/jmcvetta/claude-daily-driver/issues/110)
+**Resolves:** the contradiction [#110](https://github.com/jmcvetta/daily-driver/issues/110)
 opens between its own rule and two rules already in force.
 
 #110 asks for a prohibition: *do not run a project check locally; push and read
