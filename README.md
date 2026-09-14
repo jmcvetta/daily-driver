@@ -362,9 +362,9 @@ stack — see [infra/github/README.md](infra/github/README.md). `make evals-run`
 needs a live model, and CI here is
 credential-free — see [evals/README.md](evals/README.md); `TASKS='tasks/constitution/*.yaml'` is the
 other half of the constitution's test, since only a real session can prove the
-harness honours the subagent hook. Those rows carry `skip:codex`: the Codex arm
+harness honours the subagent hook. That row carries `skip:codex`: the Codex arm
 links skills and installs no hooks, so the constitution never reaches that
-session and both rows would score zero for a reason that is not the
+session and it would score zero for a reason that is not the
 constitution's.
 
 `make mcp-usage` is not a check. It counts which GitHub MCP tools this laptop

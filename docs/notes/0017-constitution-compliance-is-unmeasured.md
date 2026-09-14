@@ -1,7 +1,10 @@
 # 0017 — Constitution compliance is unmeasured
 
-**Date**: 2026-09-14
-**Issue**: [#195](https://github.com/jmcvetta/daily-driver/issues/195)
+**Status:** decided, 2026-09-14.
+**Provenance:** [#195](https://github.com/jmcvetta/daily-driver/issues/195)
+diagnosed the row's failure, pre-registered the replacement design and the
+branch table, and this note records the branch the run selected.
+**Resolves:** [#195](https://github.com/jmcvetta/daily-driver/issues/195).
 
 `tasks/constitution/reply-is-concise.yaml` is deleted. It was the only row in
 this repository that asked whether the constitution *changes behaviour* rather
@@ -24,8 +27,12 @@ re-derives them, bands included.
 
 ### The first run — the row as written
 
-Run `evals/runs/2026-09-14_09-37-54`, `with-without`, `claude-sonnet-5`, five
-replicates per arm.
+Run `2026-09-14_09-37-54`, `with-without`, `claude-sonnet-5`, five replicates
+per arm. **`evals/runs/` is gitignored**, so neither run directory cited in this
+note is in the repository and neither outlives the container that produced it.
+The tables here are therefore the record rather than a pointer to one. This
+run's per-replicate scores are not among them — the directory was already gone
+by the time this note was written, and #195 preserved only the means:
 
 | Task | bare | with-plugin |
 | ---- | ---- | ----------- |
@@ -71,11 +78,21 @@ whatever directory it starts in. Asked whether it had been told how long its
 replies could be, a plain `claude -p` answered YES. The probe above ran under
 `--settings` with the plugin disabled, and the same question then answered NO.
 
+**That is a deviation from #195, recorded rather than glossed.** Step 1 of the
+issue said a YES answer invalidates the probe: stop and report. The work
+continued instead, because the YES had a located and removable cause — a
+plugin entry in the container's global `settings.json`, not a constitution
+leaking from somewhere unknown — and disabling it produced the NO the step
+asks for. The stop rule exists to prevent probing a contaminated environment,
+and the environment was decontaminated rather than assumed clean. A reader who
+thinks that call was wrong should discount the probe numbers; the run numbers,
+which decided the branch, do not depend on them.
+
 ### The second run — the rebuilt row
 
-Run `evals/runs/2026-09-14_13-21-15`, five replicates per arm, one run. Every
-replicate anchored on `ANCHOR: result`; no `ANCHOR: none`, no TIMEOUT. The
-instrument worked.
+Run `2026-09-14_13-21-15`, five replicates per arm, one run — again untracked,
+so the table below is the evidence. Every replicate anchored on
+`ANCHOR: result`; no `ANCHOR: none`, no TIMEOUT. The instrument worked.
 
 | Replicate | bare words | bare length | with-plugin words | with-plugin length |
 | --- | --- | --- | --- | --- |

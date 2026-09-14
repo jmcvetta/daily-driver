@@ -9,9 +9,9 @@ tags. The tag is what routes a row to its arm.
 
 A row that runs in some arms but not all of them cannot say so with an arm tag,
 because an arm tag claims exactly one arm. `skip:<arm>` is the tag for that: it
-takes the row out of the named arm and leaves it in the rest. Today the
-`constitution` rows carry `skip:codex`, because `coder_eval`'s Codex agent links
-skills and installs no hooks, so no constitution reaches that arm.
+takes the row out of the named arm and leaves it in the rest. Today the one
+`constitution` row carries `skip:codex`, because `coder_eval`'s Codex agent
+links skills and installs no hooks, so no constitution reaches that arm.
 
 The `review-depth` rows are tagged `claude-only` without a counterpart: they pin
 `agent.type: claude-code` and drive Claude's own settings and hooks, so they
