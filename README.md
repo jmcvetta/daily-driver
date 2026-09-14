@@ -1,6 +1,6 @@
 # daily-driver
 
-Daily-driver skills for [Claude Code][cc], [Omp][omp] and [Codex][codex],
+Daily-driver skills for [Claude Code][cc], [Omp][omp] and [Codex CLI][codex],
 packaged as one plugin that all three read.
 
 [cc]: https://claude.com/claude-code
@@ -14,7 +14,7 @@ read it, do not go further.
 ## What's in it
 
 The **constitution** — `rules/constitution.md`, delivered to every session by
-hook on Claude Code and Codex, and by the rule provider on Omp — plus **two
+hook on Claude Code and Codex CLI, and by the rule provider on Omp — plus **two
 runtime adapters that enforce rather than instruct**, `hooks/` for the two
 harnesses that run hooks and `extensions/` for the one that does not, and
 fourteen skills:
@@ -41,12 +41,12 @@ the work, and on the session's own tool calls. The tool-call triggers are
 written for all three harnesses, because a `description` is read before any
 reference file can be: `pr` fires on Claude Code's
 `mcp__github__create_pull_request`, on Omp's `github` tool (`pr_create`) and on
-the `gh pr create` that Codex has instead of either, and `judgement-call` on
+the `gh pr create` that Codex CLI has instead of either, and `judgement-call` on
 `AskUserQuestion`, on `ask` and on `request_user_input`. Those are examples
 rather than the list — each skill's `description` names its own triggers, and
 carries its own register.
 
-**A description has a length budget, and Codex sets it.** Codex's prompt
+**A description has a length budget, and Codex CLI sets it.** Its prompt
 renderer cuts one at 1021 characters and appends `...`, so the closing
 sentences — which are where a description says what must *not* fire it — are
 the part that goes. Nothing warns: the skill still loads. `make check` fails a
@@ -98,13 +98,13 @@ the `Agent` tool plus `SubagentStart` for every subagent, neither of which
 `SessionStart` alone reaches. All three read the one file by exact path and
 fail loudly. The measurement behind the second injection point is in [the
 planning doc](docs/planning/plugin-replaces-global-memory.md) under R2; the
-third is there for Codex, which delegates through `multi_agent_v1` and so has
+third is there for Codex CLI, which delegates through `multi_agent_v1` and so has
 no `Agent` tool for the matcher to catch.
 
 ## The hooks, and the Omp extension
 
 A plugin cannot ship a `CLAUDE.md`, and it cannot ship a preference either. Two
-hooks do both jobs on Claude Code and on Codex, and they do them for the same
+hooks do both jobs on Claude Code and on Codex CLI, and they do them for the same
 reason: prose can be read and not followed.
 
 | Hook | Event | What it does |
@@ -112,11 +112,11 @@ reason: prose can be read and not followed.
 | `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers `rules/constitution.md` to the session and to every subagent. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Denies the multiple-choice widget, and tells Claude to ask the question in the chat reply instead. |
 
-**Codex runs the same two scripts.** Its hook wire contract is Claude Code's —
+**Codex CLI runs the same two scripts.** Its hook wire contract is Claude Code's —
 same stdin, same `hookSpecificOutput` — so `hooks/hooks.json` carries one extra
 matcher and one extra event rather than a second copy of anything. The widget
 is `request_user_input` there and `AskUserQuestion` does not exist; delegation
-goes through `multi_agent_v1`, so `SubagentStart` is the only route a Codex
+goes through `multi_agent_v1`, so `SubagentStart` is the only route a Codex CLI
 subagent's constitution can arrive by. Claude Code fires `SubagentStart` too
 and honours the same `additionalContext`, so a Claude Code subagent is handed
 the constitution twice — the price of one `hooks.json` serving both, since
@@ -164,7 +164,7 @@ daily-driver/
 ├── docs/                   how this repository is meant to be used
 ├── evals/                  the trigger suites, and the constitution's live half
 ├── extensions/             the Omp runtime adapter
-├── hooks/                  the hook adapter, read by Claude Code and Codex:
+├── hooks/                  the hook adapter, read by Claude Code and Codex CLI:
 │                           the constitution's three injection points, and
 │                           the deny on the question widget
 ├── infra/github/           the repository's own settings, as OpenTofu
@@ -180,7 +180,7 @@ daily-driver/
 **What is shared, and what is per-harness.** The skills, the catalog and
 `rules/constitution.md` are one copy each, read by all three harnesses. Two
 things are per-harness. The runtime adapter, which is doubled rather than
-tripled — `hooks/` serves Claude Code and Codex, whose hook wire contracts are
+tripled — `hooks/` serves Claude Code and Codex CLI, whose hook wire contracts are
 the same, and `extensions/` serves Omp, which has no hook mechanism at all. And,
 inside a skill, the tool routes: a `SKILL.md` says what the skill decides, and
 `skills/<name>/references/claude.md`, `references/omp.md` and
@@ -212,7 +212,7 @@ omp plugin install daily-driver@daily-driver
 
 `omp plugin list` is what says it took.
 
-For Codex, the same catalog again — it accepts `.claude-plugin/marketplace.json`
+For Codex CLI, the same catalog again — it accepts `.claude-plugin/marketplace.json`
 as one of its marketplace layouts and `.claude-plugin/plugin.json` as one of its
 manifest paths — but **the second verb is `add`, not `install`**:
 
@@ -233,6 +233,12 @@ knowing before it surprises you, both measured against `codex-cli` 0.154.0:
   exactly like one running without the plugin. `codex exec` carries
   `--dangerously-bypass-hook-trust` for automation that has already vetted the
   source.
+
+**Daily-driver supports Codex only through Codex CLI. As of 2026-09-14,
+Codex cloud does not support plugins, so daily-driver is not available there.**
+See [OpenAI's plugin documentation][codex-plugins] for the supported surfaces.
+
+[codex-plugins]: https://learn.chatgpt.com/docs/plugins
 
 In the cloud — meaning a Claude Code cloud environment, so the Claude Code pair
 above rather than either of the others — the same two commands go in the
@@ -274,11 +280,11 @@ existing environment does not pick up a new release on its own.
 the mechanism under all of this, and *the stanza* a repository can carry in
 `.claude/settings.json` to say it wants the plugin.
 
-**The stanza is Claude Code's, and `template/` has no Codex counterpart.**
+**The stanza is Claude Code's, and `template/` has no Codex CLI counterpart.**
 Measured: a project `.codex/config.toml` is not read by this build at all —
 `codex doctor` names `$CODEX_HOME/config.toml` as the only config it loaded, and
 a marketplace and plugin declared in the project file loaded nothing. So on
-Codex there is no repository-level enable of any kind, not even the
+Codex CLI there is no repository-level enable of any kind, not even the
 record-the-intent one the stanza is on Claude Code; enabling is user-level only,
 through the two tables above.
 
@@ -288,7 +294,7 @@ The same tree is read by three harnesses. **Claude Code** discovers it as a
 plugin. **Omp** reads the Claude-compatible catalog and the same skills, and
 adds its own runtime adapter — `extensions/daily-driver.js`, wired by
 `omp.extensions` in `package.json`, which brings Omp the behaviour Claude Code
-gets from `hooks/`. **Codex** reads the same catalog again and runs `hooks/`
+gets from `hooks/`. **Codex CLI** reads the same catalog again and runs `hooks/`
 itself: its hook wire contract is Claude Code's — same stdin, same
 `hookSpecificOutput`, same `CLAUDE_PLUGIN_ROOT` in a plugin hook's environment
 — so it needs no adapter of its own, only the extra matcher and extra event
@@ -302,7 +308,7 @@ the `daily_driver_*` tools are absent on that route — edit a skill with it,
 and install (or `omp plugin link .`) to exercise the adapter. Measured on omp
 18.1.17, and `scripts/check-omp-plugin.py` is what keeps it measured.
 
-**Codex's own gaps are recorded rather than worked around.** It has no
+**Codex CLI's own gaps are recorded rather than worked around.** It has no
 `mcp__github__*` server and no `github` tool, so GitHub goes through `gh` in the
 shell, the way it does on Omp. It has no durable wake and nothing that blocks on
 a check, so `review-cycle` cannot wait and `undertake`'s `Keep it current`
@@ -317,7 +323,7 @@ harness. Where a rule holds on only some of them,
 [`0016`](docs/notes/0016-three-harnesses-one-skill-tree.md) are the decisions:
 `0011` says why there is one skill tree, where a harness route lives, and which
 rules are Claude Code only — among them the never-empty wake slot, since neither
-Omp nor Codex has a timer that outlives its session — and `0016` says what the
+Omp nor Codex CLI has a timer that outlives its session — and `0016` says what the
 third harness changed about all of that.
 
 ## Checks
@@ -332,9 +338,9 @@ from each; `scripts/check-labels.py`, which asserts the issue-label standard
 says the same thing in `issue-labels` and in the OpenTofu that declares it;
 `scripts/check-eval-fixtures.sh`; `scripts/check-omp-agent.py`, which drives
 the Omp eval arm's frame reduction against recorded frames;
-`scripts/check-codex-agent.py`, which asserts the Codex arm renders the judge's
+`scripts/check-codex-agent.py`, which asserts the Codex CLI arm renders the judge's
 anchor byte-identically to the Omp arm's; and `scripts/check-eval-arms.py`,
-which keeps the Claude, Omp and Codex thirds of the forked eval rows in step —
+which keeps the Claude, Omp and Codex CLI thirds of the forked eval rows in step —
 and the Makefile's three run targets in step with them.
 
 **One of its legs is Omp's.** `scripts/check-omp-extension.mjs` imports the
@@ -360,7 +366,7 @@ stack — see [infra/github/README.md](infra/github/README.md). `make evals-run`
 needs a live model, and CI here is
 credential-free — see [evals/README.md](evals/README.md); `TASKS='tasks/constitution/*.yaml'` is the
 other half of the constitution's test, since only a real session can prove the
-harness honours the subagent hook. Those rows carry `skip:codex`: the Codex arm
+harness honours the subagent hook. Those rows carry `skip:codex`: the Codex CLI arm
 links skills and installs no hooks, so the constitution never reaches that
 session and both rows would score zero for a reason that is not the
 constitution's.
