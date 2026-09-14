@@ -421,9 +421,13 @@ bug invites a diagnosis, a fix, a test and a summary. `Do not change any code`
 in the prompt, and closed `Write` / `Edit` / `Bash`, remove the one honest
 reason for length — an agent that fixed the bug has something to report.
 
-Both graders are `llm_judge`, because the reply is the only artifact the case
+Both graders are judges, because the reply is the only artifact the case
 produces and nothing in `coder_eval` matches the final message deterministically
-(see "How the graders ported"). The length grader is given a rubric that counts
+(see "How the graders ported"). Both are `agent_judge` rather than `llm_judge`,
+so they grade on the subscription instead of on an `ANTHROPIC_API_KEY` this
+project does not have — see
+[`docs/notes/0014-the-judge-runs-on-the-subscription.md`](../docs/notes/0014-the-judge-runs-on-the-subscription.md).
+The length grader is given a rubric that counts
 rather than one that forms an opinion, and it reports the count in its
 rationale so a verdict can be audited. Beneath it sits a correctness grader at
 weight 1: a length grader alone pays for silence, and short and wrong is not

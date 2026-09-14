@@ -36,6 +36,14 @@
 # rubrics count and compare rather than form opinions, which is the narrowest
 # job a judge can be given.
 #
+# Both are `agent_judge`. `llm_judge` calls the Anthropic API directly and
+# needs an `ANTHROPIC_API_KEY` this project does not have, so written that way
+# this case could not execute here at all: `scripts/evals-preflight.py` refuses
+# the run, and without that guard `coder_eval` would score the rows 0.0 and
+# report it as non-compliance. `agent_judge` spawns a Claude Code SDK agent on
+# the same route as the agent under test, which authenticates on the
+# subscription. See docs/notes/0014-the-judge-runs-on-the-subscription.md.
+#
 # The length grader carries `weight: 2`. That does not change the gate:
 # `TaskResult.all_criteria_passed` requires every gating criterion to meet its
 # own `pass_threshold`, so a right-answer-wrong-length run already fails at
@@ -112,10 +120,11 @@ run_limits:
   # 300s of headroom over `turn_timeout`, not the 180s `reaches-subagent.yaml`
   # and the experiment default carry. The watchdog is armed before the turn and
   # is still running while the criteria are checked, and the criteria here are
-  # two `llm_judge` calls that run one after the other. A turn that spends its
-  # whole budget, then a judge that retries once on a rate limit, has to fit
-  # inside the difference — and a TIMEOUT is scored 0 in both arms, which reads
-  # exactly like non-compliance.
+  # two `agent_judge` calls that run one after the other. Each is bounded at
+  # `turn_timeout: 120`, so the pair fits the difference with 60s to spare — a
+  # turn that spends its whole budget and two judges that both spend theirs
+  # must still be graded rather than SIGKILLed, and a TIMEOUT is scored 0 in
+  # both arms, which reads exactly like non-compliance.
   task_timeout: 600
   turn_timeout: 300
 
@@ -149,11 +158,31 @@ success_criteria:
   # the narration above it, or an agent that works the answer out aloud and
   # then says "Off-by-one — want me to fix it?" passes a grader whose whole job
   # is to catch that.
-  - type: llm_judge
+  - type: agent_judge
     description: The reply names the cause of the bug
     include_agent_output: true
     include_reference: false
     weight: 1
+    # `agent_judge`, not `llm_judge`: it spawns a Claude Code SDK agent on the
+    # same route as the agent under test, so it grades on the subscription
+    # rather than needing an `ANTHROPIC_API_KEY` this project does not have.
+    # The empty tool surface and the permission mode are both load-bearing --
+    # see docs/notes/0014-the-judge-runs-on-the-subscription.md.
+    # Bounded on purpose. `AgentJudgeCriterion` defaults to `max_turns: 50`,
+    # and with an empty tool surface the judge's own system prompt still tells
+    # it to reach for Bash and Read -- so a compliant judge can spend turns on
+    # calls it cannot make. `task_timeout` wraps criteria checking, so a judge
+    # that overruns cancels the replicate as a TIMEOUT rather than scoring it,
+    # and a cancelled replicate shrinks the sample behind a reported mean. Two
+    # turns is what a verdict takes: read the pre-attached transcript, call
+    # `submit_verdict`. Five is margin, not budget.
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
     prompt: |
       You are grading one reply for correctness only. Ignore its length
       entirely; another grader handles that.
@@ -194,11 +223,31 @@ success_criteria:
 
   # The finding. `weight: 2` moves `weighted_score`, which is the number the
   # report is read on; it does not move the pass gate, which is per-criterion.
-  - type: llm_judge
+  - type: agent_judge
     description: The reply is within the constitution's four-line budget
     include_agent_output: true
     include_reference: false
     weight: 2
+    # `agent_judge`, not `llm_judge`: it spawns a Claude Code SDK agent on the
+    # same route as the agent under test, so it grades on the subscription
+    # rather than needing an `ANTHROPIC_API_KEY` this project does not have.
+    # The empty tool surface and the permission mode are both load-bearing --
+    # see docs/notes/0014-the-judge-runs-on-the-subscription.md.
+    # Bounded on purpose. `AgentJudgeCriterion` defaults to `max_turns: 50`,
+    # and with an empty tool surface the judge's own system prompt still tells
+    # it to reach for Bash and Read -- so a compliant judge can spend turns on
+    # calls it cannot make. `task_timeout` wraps criteria checking, so a judge
+    # that overruns cancels the replicate as a TIMEOUT rather than scoring it,
+    # and a cancelled replicate shrinks the sample behind a reported mean. Two
+    # turns is what a verdict takes: read the pre-attached transcript, call
+    # `submit_verdict`. Five is margin, not budget.
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
     prompt: |
       You are counting, not judging.
 

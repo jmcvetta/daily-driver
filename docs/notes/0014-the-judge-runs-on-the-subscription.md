@@ -8,8 +8,7 @@
 [`0012`](0012-the-judge-needs-its-own-transport.md), not its decision. The
 pre-run guard `0012` added is still right and still runs. What changed is why
 a row would trip it: not a key an operator forgot, but a criterion this
-project cannot run at all. See "What is left" for the four rows that still
-trip it.
+project cannot run at all. See "What is left" for the rows that still trip it.
 
 `0012` treated a missing `ANTHROPIC_API_KEY` as a configuration gap — something
 an operator sets before a run. It is not. This project's only Claude access is
@@ -83,6 +82,17 @@ failure they can now have is also harder to read than the one they had: a
 judge that cannot start fails per replicate, so it shows as some replicates
 missing from a mean rather than as a row uniformly zero.
 
+The port also gives up a temperature. `LLMJudgeCriterion` carries
+`temperature: float = 0.0` — "0.0 keeps grading deterministic" — which every
+judge in this suite inherited by default. `AgentJudgeCriterion` has no such
+field, and neither does `ClaudeCodeAgentConfig`, so a ported judge samples at
+the SDK default and nothing can pin it. A rubric that scores on a boundary can
+therefore return a different verdict on an identical transcript, and a moved
+mean is not by itself evidence that the agent's behaviour moved. It lands
+hardest on `tasks/constitution/reply-is-concise.yaml`, whose weight-2 grader
+reports a line count — the one figure in the suite chosen because it was meant
+to be exact.
+
 That is a real cost, accepted because the alternative is eight findings that
 never execute at all. Two things hold it down, and neither is the guard:
 `permission_mode` and `allowed_tools` are set explicitly on every one of
@@ -102,14 +112,19 @@ memory — not a guard against a missing key.
 
 ## What is left
 
-Thirteen rows elsewhere in the suite still carry an enabled `llm_judge`, so
-`make evals-run` over the whole suite still stops at the guard. Four are
+Twelve rows elsewhere in the suite still carry an enabled `llm_judge`, so
+`make evals-run` over the whole suite still stops at the guard. Three are
 Claude-arm rows outside the nine:
 
-- `tasks/constitution/reply-is-concise.yaml`
 - `tasks/embark/06-launches-without-asking.yaml`
 - `tasks/issue-deps/02-write-the-edge-without-asking.yaml`
 - `tasks/undertake/08-wake-slot-is-refilled.yaml`
+
+A fourth was on that list until 2026-09-14, when
+`tasks/constitution/reply-is-concise.yaml` was ported under this note's rule
+and with the same load-bearing settings. It is the row that measures whether
+the constitution changes behaviour at all, and left on `llm_judge` that
+question could not be asked on this project's credentials.
 
 The other nine are the `omp-only` forks `0013` added, including the forks of
 eight of the nine rows this note is about. They have the same defect, and the
