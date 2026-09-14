@@ -59,13 +59,14 @@ loaded, and [its README](attic/README.md) says what is kept and why.
 ## The constitution
 
 `rules/constitution.md` is the always-on layer, in force in every session and
-every subagent. Nine sections:
+every subagent. Ten sections:
 
 | Section | What it settles |
 | ------- | --------------- |
 | Voice | Simplified Technical English for prose written in your own voice. |
 | Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
 | Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
+| Before you work on a repository | A feature branch and sibling worktree dedicated to every repository-changing task, before work begins. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
 | When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
@@ -80,8 +81,8 @@ every session and every subagent, forever. Amendments are pull requests against
 this repository.
 
 **Whether a session got it**: `scripts/check-constitution.py` drives every
-injection point, on both harnesses, and asserts they carry the file verbatim
-and identically. The
+delivery route across Claude Code, Codex and Oh My Pi, and asserts they carry
+the file verbatim and identically. The
 `constitution-reaches-subagent` eval covers the half a script cannot: it asks a
 subagent, with every file-reading tool closed, for a phrase only the injected
 constitution could have told it.

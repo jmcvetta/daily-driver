@@ -71,6 +71,21 @@ locally. List the scripts you mean, one by one.
 so listen to it. Never skip, disable, silence, or delete a test to reach
 green. Say that it is failing, and make a plan to fix it.
 
+## Before you work on a repository
+
+Every repository-changing task gets one feature branch and one worktree
+dedicated to that task. Before research or a first change:
+
+- Start the branch from the repository's base branch, never from whatever is
+  checked out.
+- Put the worktree beside the primary worktree, never inside it.
+- Continue every read, change, command, test and commit from the task worktree.
+  Never change the primary worktree.
+
+A worktree the harness already created for this task satisfies the worktree
+requirement. Create the feature branch there if it is detached. A read-only
+question needs neither until it becomes repository-changing work.
+
 ## While you write code
 
 - **RTFM.** The manual first — before the web, before the source, before the

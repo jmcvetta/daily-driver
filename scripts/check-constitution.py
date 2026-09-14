@@ -75,6 +75,17 @@ EVALS = ROOT / "evals"
 # which its prompt asks for and `file_matches_regex` reads as one.
 MARKER = "Doubt outranks the register"
 
+# The task-isolation contract is shared by all three CLIs. Stable sentences
+# cover every observable requirement so no delivery route can lose one silently.
+TASK_ISOLATION_MARKERS = (
+    "Every repository-changing task gets one feature branch and one worktree "
+    "dedicated to that task.",
+    "Start the branch from the repository's base branch, never from whatever "
+    "is checked out.",
+    "Put the worktree beside the primary worktree, never inside it.",
+    "Never change the primary worktree.",
+)
+
 # The frontmatter the canonical file must carry so Omp injects it everywhere.
 # Omp's rule provider reads `rules/*.md`, strips the frontmatter and — because
 # there is no `agents` filter — injects the body into the main agent and every
@@ -571,6 +582,31 @@ def collapse(text: str) -> str:
     return " ".join(text.split())
 
 
+def check_task_isolation_policy(errors: list[str]) -> None:
+    """Each CLI receives the task-isolation rule through its real route."""
+    delivered = {
+        harness: hook_specific(
+            run_hook(mode, event),
+            event_name,
+            f"{event_name} on {harness}",
+        ).get("additionalContext")
+        for harness, mode, event_name, event in CONTEXT_EVENTS
+        if mode == "session-start"
+    }
+    delivered["Oh My Pi"] = constitution_body()
+
+    for harness, context in delivered.items():
+        normalized = collapse(context) if isinstance(context, str) else ""
+        missing = [
+            marker for marker in TASK_ISOLATION_MARKERS if marker not in normalized
+        ]
+        if missing:
+            errors.append(
+                f"{harness}: the delivered constitution is missing "
+                f"task-isolation requirements: {missing}"
+            )
+
+
 def check_omp_metadata(errors: list[str]) -> None:
     """The canonical file carries Omp's contract, and the hook delivers its body.
 
@@ -783,6 +819,7 @@ def main() -> int:
     try:
         check_wiring(errors)
         check_delivery(errors)
+        check_task_isolation_policy(errors)
         check_loud_failure(errors)
         check_omp_metadata(errors)
         check_eval_marker(errors)
@@ -796,9 +833,9 @@ def main() -> int:
     if errors:
         return 1
     print(
-        "constitution delivery holds: every injection point carries "
-        f"{CONSTITUTION.relative_to(ROOT)}'s body verbatim, identically, on "
-        "both harnesses, and fails loudly when it is missing or malformed"
+        "constitution delivery holds: Claude Code, Codex and Oh My Pi receive "
+        f"{CONSTITUTION.relative_to(ROOT)}'s body verbatim and identically; "
+        "task isolation is present, and missing or malformed rules fail loudly"
     )
     return 0
 
