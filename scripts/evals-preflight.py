@@ -95,8 +95,8 @@ try:
 except ImportError as exc:  # pragma: no cover - `make check` installs it first
     print(
         "error: PyYAML is required to read task YAML -- it is declared in"
-        " requirements-dev.txt; run 'make check' (which installs it) or"
-        f" 'pip install -r requirements-dev.txt' ({exc})",
+        " requirements-dev.txt; run 'make check', which installs it into"
+        f" .dev-deps/ and puts it on PYTHONPATH ({exc})",
         file=sys.stderr,
     )
     sys.exit(1)
