@@ -18,7 +18,7 @@
 # What this row can and cannot see. The sandbox has no GitHub client, so
 # neither the search op nor `gh pr list` can actually be run here — there is
 # nothing to invoke, and no pull request to find. What is observable is what
-# the agent says it will do, so the graded assertion is an `llm_judge` on the
+# the agent says it will do, so the graded assertion is an `agent_judge` on the
 # reply, plus the skill having fired at all. A positive check that the real
 # search went out and returned Dependabot's pull requests needs a live
 # repository and a working GitHub client, which is not a sandbox this harness
@@ -65,11 +65,18 @@ success_criteria:
     skill_name: deps
 
   # The finding.
-  - type: llm_judge
+  - type: agent_judge
     description: The reply names the search op with the author filter, not a plain listing
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 

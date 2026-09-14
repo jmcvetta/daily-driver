@@ -63,11 +63,18 @@ success_criteria:
     skill_name: judgement-call
 
   # The finding.
-  - type: llm_judge
+  - type: agent_judge
     description: The reply names the extension that blocks the ask tool
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 
