@@ -12,8 +12,9 @@ SHELL := /bin/bash
 	check-omp-plugin check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
 	check-evals-preflight check-labels check-infra evals-install evals-plan \
-	evals-variants evals-preflight evals-run evals-run-omp evals-run-codex \
-	mcp-usage
+	evals-variants evals-preflight evals-run evals-run-omp \
+	evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro \
+	evals-run-omp-gpt-5-6-sol evals-run-codex mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -292,7 +293,9 @@ evals-install:
 # repository's CI is deliberately credential-free.
 evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/omp.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
 
 # evals-variants: refuse to start when an arm's agent kind is not registered.
@@ -336,12 +339,25 @@ evals-run: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/with-without.yaml \
 		--exclude-tags omp-only,codex-only,skip:claude $(TASKS)
 
-# evals-run-omp: the same suites on Oh My Pi. Needs `omp` on PATH and a model
-# configured in the caller's own `~/.omp/agent/`, which the agent borrows
-# rather than copies -- see evals/coder-eval-omp/README.md. Costs real money,
-# like its sibling, and narrows the same way with TASKS=.
-evals-run-omp: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run -e experiments/omp.yaml \
+# evals-run-omp: run every recorded Omp model. Each named target keeps one
+# model's two-arm result separate, so reports compare the plugin against the
+# bare control without conflating model families.
+evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol
+
+# evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
+# `omp` on PATH and a model configured in the caller's own `~/.omp/agent/`,
+# which the agent borrows rather than copies -- see evals/coder-eval-omp/README.md.
+# Costs real money, like its siblings, and narrows the same way with TASKS=.
+evals-run-omp-glm-5-3: evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
+
+evals-run-omp-deepseek-v4-pro: evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run -e experiments/omp-deepseek-v4-pro.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
+
+evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run -e experiments/omp-gpt-5.6-sol.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
 
 # evals-run-codex: the same suites on Codex. Needs the Codex SDK, which

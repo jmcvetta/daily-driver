@@ -94,11 +94,11 @@ EXPERIMENTS = ROOT / "evals" / "experiments"
 
 # Every arm, by its short name. This table is the routing: the tag that claims a
 # row for the arm, the `task_id` suffix that says so a second time, the
-# `agent.type` kinds that belong to it, the experiment file that runs it, and
-# the Makefile target that invokes that file. Every check below reads it, and
+# `agent.type` kinds that belong to it, the experiment files that run it, and
+# the Makefile targets that invoke those files. Every check below reads it, and
 # two of them read it against something outside this script -- the Makefile's
-# exclusions, and the experiment's own variants -- because the routing is stated
-# in three places and none of them reads the others.
+# exclusions, and the experiments' own variants -- because the routing is
+# stated in three places and none of them reads the others.
 #
 # `claude` has no id suffix because it is where the suites started and its rows
 # are the ones the others fork.
@@ -114,8 +114,17 @@ ARMS: dict[str, dict[str, object]] = {
         "tag": "omp-only",
         "id_suffix": "-omp",
         "kinds": ("omp",),
-        "experiment": "omp.yaml",
-        "run_target": "evals-run-omp",
+        "experiments": {
+            "omp-glm-5.3.yaml": "zai/glm-5.3",
+            "omp-deepseek-v4-pro.yaml": "deepseek/deepseek-v4-pro",
+            "omp-gpt-5.6-sol.yaml": "openai-codex/gpt-5.6-sol",
+        },
+        "run_targets": {
+            "evals-run-omp-glm-5-3": "omp-glm-5.3.yaml",
+            "evals-run-omp-deepseek-v4-pro": "omp-deepseek-v4-pro.yaml",
+            "evals-run-omp-gpt-5-6-sol": "omp-gpt-5.6-sol.yaml",
+        },
+        "bundle_target": "evals-run-omp",
     },
     "codex": {
         "tag": "codex-only",
@@ -125,6 +134,22 @@ ARMS: dict[str, dict[str, object]] = {
         "run_target": "evals-run-codex",
     },
 }
+
+
+def arm_experiments(spec: dict[str, object]) -> dict[str, str | None]:
+    """The arm's experiment files, with an Omp model where one is pinned."""
+    experiments = spec.get("experiments")
+    if isinstance(experiments, dict):
+        return {str(path): str(model) for path, model in experiments.items()}
+    return {str(spec["experiment"]): None}
+
+
+def arm_run_targets(spec: dict[str, object]) -> dict[str, str]:
+    """The one-model Make targets that invoke this arm's experiment files."""
+    targets = spec.get("run_targets")
+    if isinstance(targets, dict):
+        return {str(target): str(experiment) for target, experiment in targets.items()}
+    return {str(spec["run_target"]): str(spec["experiment"])}
 
 ARM_TAGS = {str(arm["tag"]): name for name, arm in ARMS.items()}
 KIND_ARMS = {kind: name for name, arm in ARMS.items() for kind in arm["kinds"]}  # type: ignore[union-attr]
@@ -329,84 +354,84 @@ def check_skips(tasks: list[tuple[Path, dict]]) -> None:
 
 
 def check_makefile_routing() -> None:
-    """Each arm's run target excludes every other arm, and its own `skip:`.
-
-    The routing is stated twice — in `ARMS` above and in the Makefile's
-    `--exclude-tags` lists — and neither half reads the other. An arm added here
-    but not there runs the other arms' forks and grades one harness's route
-    under another's; an arm whose `skip:` exclusion is missing runs the rows
-    somebody deliberately took out of it. Both are silent in a report, and both
-    are paid for.
-
-    It also catches the trap that made this check worth writing:
-    `--exclude-tags` is a single comma-separated option, so a SECOND
-    `--exclude-tags` on one command line replaces the first instead of adding to
-    it. A target written that way reads correct and excludes one tag.
-    """
+    """Each model target runs its experiment and excludes other arms and its skip."""
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
 
     for arm, spec in ARMS.items():
-        target = str(spec["run_target"])
-        # The recipe: from its target line to the first blank line.
-        start = makefile.find(f"\n{target}:")
-        if start < 0:
-            raise CheckFailed(f"Makefile declares no `{target}` target, so the {arm} arm cannot be run")
-        recipe = makefile[start + 1 :].split("\n\n", 1)[0]
+        targets = arm_run_targets(spec)
+        for target, experiment in targets.items():
+            # The recipe: from its target line to the first blank line.
+            start = makefile.find(f"\n{target}:")
+            if start < 0:
+                raise CheckFailed(f"Makefile declares no `{target}` target, so the {arm} arm cannot be run")
+            recipe = makefile[start + 1 :].split("\n\n", 1)[0]
 
-        occurrences = recipe.count("--exclude-tags")
-        if occurrences != 1:
-            raise CheckFailed(
-                f"Makefile `{target}` passes --exclude-tags {occurrences} time(s); it takes ONE "
-                "comma-separated value, and a repeated flag silently replaces the earlier one"
-            )
-        value = recipe.split("--exclude-tags", 1)[1].split()[0]
-        excluded = {tag.strip() for tag in value.split(",") if tag.strip()}
+            if f"-e experiments/{experiment}" not in recipe:
+                raise CheckFailed(
+                    f"Makefile `{target}` does not run experiments/{experiment}, so its model is not recorded"
+                )
+            occurrences = recipe.count("--exclude-tags")
+            if occurrences != 1:
+                raise CheckFailed(
+                    f"Makefile `{target}` passes --exclude-tags {occurrences} time(s); it takes ONE "
+                    "comma-separated value, and a repeated flag silently replaces the earlier one"
+                )
+            value = recipe.split("--exclude-tags", 1)[1].split()[0]
+            excluded = {tag.strip() for tag in value.split(",") if tag.strip()}
 
-        wanted = {str(spec["tag"]) for name, spec in ARMS.items() if name != arm} | {f"{SKIP_TAG}{arm}"}
-        if excluded != wanted:
-            raise CheckFailed(
-                f"Makefile `{target}` excludes {sorted(excluded)}; the {arm} arm must exclude "
-                f"{sorted(wanted)} — every other arm's tag, and its own skip"
-            )
+            wanted = {str(other["tag"]) for name, other in ARMS.items() if name != arm} | {f"{SKIP_TAG}{arm}"}
+            if excluded != wanted:
+                raise CheckFailed(
+                    f"Makefile `{target}` excludes {sorted(excluded)}; the {arm} arm must exclude "
+                    f"{sorted(wanted)} — every other arm's tag, and its own skip"
+                )
+
+        bundle_target = spec.get("bundle_target")
+        if bundle_target is not None:
+            start = makefile.find(f"\n{bundle_target}:")
+            if start < 0:
+                raise CheckFailed(f"Makefile declares no `{bundle_target}` target for the {arm} model set")
+            dependencies = makefile[start + 1 :].splitlines()[0].split(":", 1)[1].split()
+            if set(dependencies) != set(targets):
+                raise CheckFailed(
+                    f"Makefile `{bundle_target}` runs {sorted(dependencies)}; the {arm} model set is "
+                    f"{sorted(targets)}"
+                )
 
 
 def check_experiments() -> None:
-    """Every experiment names variants, and every variant names its own arm's kind.
-
-    Naming a kind is not enough. `codex.yaml` set to the BUILT-IN `codex` kind
-    would pass every other guard in the repository — it is a registered kind, so
-    `evals-variants.py` resolves it and says so — and then score 0.0 on every
-    judged row of a paid run, because the built-in hands the judge bare text.
-    That is the same class of drift `check_makefile_routing` catches on the
-    other side of the routing, and this is the experiment side of it.
-
-    The experiment files are read with `evals-variants.py`'s own parser, so the
-    parser that guards a paid run is exercised here too.
-    """
+    """Every experiment has its own arm kind, and Omp has both measured variants."""
     variant_kinds = _load_variant_kinds()
-    arm_of_experiment = {str(spec["experiment"]): name for name, spec in ARMS.items()}
+    arm_of_experiment = {
+        experiment: (name, model)
+        for name, spec in ARMS.items()
+        for experiment, model in arm_experiments(spec).items()
+    }
 
     files = sorted(EXPERIMENTS.glob("*.yaml"))
     if not files:
         raise CheckFailed(f"no experiment files under {EXPERIMENTS.relative_to(ROOT)}")
-    for arm, spec in ARMS.items():
-        if not (EXPERIMENTS / str(spec["experiment"])).is_file():
+    for experiment, (arm, _) in arm_of_experiment.items():
+        if not (EXPERIMENTS / experiment).is_file():
             raise CheckFailed(
-                f"the {arm} arm names {spec['experiment']} as its experiment, and there is no such file under "
+                f"the {arm} arm names {experiment} as its experiment, and there is no such file under "
                 f"{EXPERIMENTS.relative_to(ROOT)}"
             )
     for path in files:
         try:
             variants = variant_kinds(path)
+            document = yaml.safe_load(path.read_text(encoding="utf-8"))
         except (OSError, ValueError, yaml.YAMLError) as exc:
             raise CheckFailed(f"{path.relative_to(ROOT)}: {exc}") from exc
-        arm = arm_of_experiment.get(path.name)
-        if arm is None:
+        if not isinstance(document, dict):
+            raise CheckFailed(f"{path.relative_to(ROOT)} does not parse as a mapping")
+        arm_and_model = arm_of_experiment.get(path.name)
+        if arm_and_model is None:
             raise CheckFailed(
                 f"{path.relative_to(ROOT)}: no arm names this experiment file, so nothing says which agent "
-                f"kind it should run; the arms and their files are "
-                f"{ {name: spec['experiment'] for name, spec in ARMS.items()} }"
+                f"kind it should run; the arms and their files are {sorted(arm_of_experiment)}"
             )
+        arm, model = arm_and_model
         wanted = ARMS[arm]["kinds"]
         for variant_id, kind in variants:
             if not kind:
@@ -417,7 +442,27 @@ def check_experiments() -> None:
                     f"the {arm} arm's ({sorted(wanted)}); a registered-but-wrong kind resolves cleanly and "  # type: ignore[arg-type]
                     "then measures the wrong harness at full price"
                 )
-
+        if model is not None:
+            defaults = document.get("defaults") if isinstance(document, dict) else None
+            agent = defaults.get("agent") if isinstance(defaults, dict) else None
+            if not isinstance(agent, dict) or agent.get("model") != model:
+                raise CheckFailed(f"{path.relative_to(ROOT)}: expected Omp model {model!r}")
+            variants_by_id = {
+                variant.get("variant_id"): variant
+                for variant in document.get("variants", [])
+                if isinstance(variant, dict)
+            }
+            if set(variants_by_id) != {"bare", "with-plugin"}:
+                raise CheckFailed(
+                    f"{path.relative_to(ROOT)}: Omp must score `bare` and `with-plugin`; found "
+                    f"{sorted(str(variant_id) for variant_id in variants_by_id)}"
+                )
+            bare = variants_by_id["bare"].get("agent")
+            treated = variants_by_id["with-plugin"].get("agent")
+            if not isinstance(bare, dict) or bare.get("plugins") != []:
+                raise CheckFailed(f"{path.relative_to(ROOT)}: `bare` must load no plugins")
+            if not isinstance(treated, dict) or treated.get("plugins") != [{"type": "local", "path": ".."}]:
+                raise CheckFailed(f"{path.relative_to(ROOT)}: `with-plugin` must load the daily-driver plugin")
 
 def check_the_checks() -> None:
     """Prove the assertions above can fail, against synthetic rows.
