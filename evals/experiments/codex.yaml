@@ -83,9 +83,8 @@ variants:
   # It stays relative here, matching the other two experiments, and
   # `CodexDailyDriverAgent.start` makes it absolute before the built-in agent
   # sees it. That step is not optional: `_setup_skills` symlinks each skill by
-  # the path it was handed, and a relative one links fifteen skills that point
-  # at themselves. `../coder-eval-codex/src/coder_eval_codex/plugins.py` has the
-  # measurement.
+  # the path it was handed, and a relative one links every skill back at itself.
+  # `../coder-eval-codex/src/coder_eval_codex/plugins.py` has the measurement.
   #
   # `CodexAgent._setup_skills` scans this root and the `skills/` directory under
   # it, and symlinks each skill into `<task cwd>/.agents/skills/<name>/`, where

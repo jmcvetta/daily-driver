@@ -1,0 +1,55 @@
+task_id: task-worktree-04-detached-task-worktree
+description: >-
+  A harness-created worktree dedicated to the task still triggers the skill
+  when it is detached, because the task needs a feature branch before edits.
+tags: [trigger-accuracy, task-worktree, fire, behaviour]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/task-worktree/shared
+      mount_point: .fixture
+
+pre_run:
+  - command: bash .fixture/setup.sh detached
+    timeout: 60
+
+initial_prompt: >-
+  This harness-created worktree is already dedicated to issue #52, but it is
+  detached. Attach it to a new feature branch named issue-52-strict-parser from
+  the repository base, then add a line containing exactly `STRICT_MODE = True`
+  to src/parser.py. Run `bash .fixture/verify.sh detached` from the task
+  worktree when finished.
+
+agent:
+  allowed_tools: [Read, Write, Edit, Grep, Glob, Skill, Bash]
+  disallowed_tools: [NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 20
+  turn_timeout: 600
+  task_timeout: 780
+
+success_criteria:
+  - type: skill_triggered
+    description: "`task-worktree` fires for a detached worktree dedicated to the task"
+    expected_skill: task-worktree
+    skill_name: task-worktree
+
+  - type: command_executed
+    description: The detached worktree is attached to the task branch from the remote base
+    tool_name: Bash
+    command_pattern: 'git switch -c issue-52-strict-parser upstream/master'
+    min_count: 1
+
+  - type: command_executed
+    description: The fixture verifier runs from the repaired task root
+    tool_name: Bash
+    command_pattern: 'bash \.fixture/verify\.sh detached'
+    min_count: 1
+
+  - type: file_matches_regex
+    description: The detached task root passed every fixture invariant
+    path: .fixture/verification.txt
+    pattern: '(?m)^mode=detached\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=.*\nverified=yes$'
+    weight: 2

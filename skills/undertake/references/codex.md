@@ -61,9 +61,10 @@ The session
 unavailable model and session instead of publishing a diagnostic about another
 harness's session surface.
 
-The branch comes from the harness's own git state, which is the designation
-here. `git branch --show-current` names the branch this session works on.
-`OWNER/REPO` for the branch link comes from the `origin` remote.
+The branch comes from the task worktree's Git state:
+`git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
+link comes from the remote `task-worktree` resolved, never from an assumed
+`origin`.
 
 
 There is no durable wake

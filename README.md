@@ -331,12 +331,14 @@ such as a skill whose frontmatter `name` disagrees with its directory; `scripts/
 both hooks against synthetic event JSON and asserts the constitution comes back
 from each; `scripts/check-labels.py`, which asserts the issue-label standard
 says the same thing in `issue-labels` and in the OpenTofu that declares it;
-`scripts/check-eval-fixtures.sh`; `scripts/check-omp-agent.py`, which drives
-the Omp eval arm's frame reduction against recorded frames;
-`scripts/check-codex-agent.py`, which asserts the Codex arm renders the judge's
-anchor byte-identically to the Omp arm's; and `scripts/check-eval-arms.py`,
-which keeps the Claude, Omp and Codex thirds of the forked eval rows in step —
-and the Makefile's three run targets in step with them.
+`scripts/check-eval-fixtures.sh`; `scripts/check-task-worktree-fixture.sh`,
+which exercises the linked and detached repositories used by that skill's
+behavior rows; `scripts/check-omp-agent.py`, which drives the Omp eval arm's
+frame reduction against recorded frames; `scripts/check-codex-agent.py`, which
+asserts the Codex arm renders the judge's anchor byte-identically to the Omp
+arm's; and `scripts/check-eval-arms.py`, which keeps the Claude, Omp and Codex
+thirds of the forked eval rows in step — and the Makefile's three run targets
+in step with them.
 
 **One of its legs is Omp's.** `scripts/check-omp-extension.mjs` imports the
 adapter under Node with a faked `ExtensionAPI` and asserts the `ask` deny and

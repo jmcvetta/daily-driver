@@ -10,8 +10,9 @@ description: >-
   repository's base branch, the sibling worktree, and the rule that every later
   task operation stays rooted there while the primary worktree stays unchanged.
   Not for read-only questions, investigations, or reviews. Not when the current
-  worktree is already dedicated to this same task. A delegated slice of the
-  same task uses its parent's task worktree and does not create another one.
+  worktree is already dedicated to this task and attached to its feature
+  branch; a detached task worktree still triggers it. A delegated slice uses
+  its parent's task worktree and does not create another one.
 ---
 
 # Task worktree
@@ -37,16 +38,19 @@ Apply this skill before task research, not after the first edit.
 
 - **A new repository-changing task needs isolation.** This includes another
   skill whose workflow will change repository files.
-- **A worktree already dedicated to this same task is enough.** Reuse it. If it
-  is detached, create the task's feature branch there before continuing.
+- **A worktree already dedicated and attached to this task branch is enough.**
+  Reuse it. A detached task worktree still needs this skill so it gets a
+  feature branch before work continues.
 - **A delegated slice of the same task does not create another task worktree.**
   Give it the parent's task-worktree path and keep its operations there.
 - **Read-only work needs no isolation.** If an investigation or review turns
   into a request to change the repository, stop and establish the task
   worktree before researching or changing the new work.
 
-The skill establishes isolation. It does not replace the workflow skill that
-owns the task, issue, pull request, review, or dependency upgrade.
+This skill owns the task's branch identity and execution root. A workflow skill
+that invokes it consumes both; it must not choose or cut another branch. The
+skill establishes isolation but does not replace the workflow that owns the
+task, issue, pull request, review, or dependency upgrade.
 
 
 Establish the task root
@@ -60,13 +64,16 @@ Establish the task root
    otherwise use the remote's default branch. Never branch from whatever
    happens to be checked out. If neither source identifies a base, ask rather
    than guess.
-3. **Choose one task identity.** Use a short feature-branch name tied to the
-   issue or task. Derive the worktree directory from the same identity. Put it
-   beside the primary worktree, never inside any existing worktree.
-4. **Reuse only the same task.** A current linked worktree and branch satisfy
-   the rule only when they are already dedicated to this task. If that
-   worktree is detached, create the feature branch there from the resolved
-   base. Do not mistake an unrelated linked worktree for permission to reuse it.
+3. **Choose one task identity.** Use the one feature branch the harness already
+   designated for this task, when it designated exactly one. Otherwise use the
+   project's branch convention, then a short name tied to the issue or task.
+   Derive the worktree directory from the same identity. Put it beside the
+   primary worktree, never inside any existing worktree.
+4. **Reuse only the same task.** A current linked worktree and attached branch
+   satisfy the rule only when they are already dedicated to this task. In a
+   detached task worktree, attach the existing task branch when it is free, or
+   create it from the resolved base when it does not exist. Do not mistake an
+   unrelated linked worktree for permission to reuse it.
 5. **Otherwise create the branch and worktree together.** If the task branch
    already exists from an earlier run, attach that branch instead of creating
    a second branch. Stop on a branch or path collision; inspect it before

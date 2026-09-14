@@ -14,13 +14,13 @@ the Codex one, which does not go through that resolution.
 
 Measured, with the repository's real layout: a relative root makes every link
 body relative too, so `.agents/skills/pr -> ../skills/pr` resolves back to the
-link's own directory and points at itself. Fourteen entries are created and not
-one of them has a readable `SKILL.md`. The treated arm then runs with no skills
-at all, every trigger row scores 0, and the run costs full price — which is the
+link's own directory and points at itself. One entry per skill is created and
+not one has a readable `SKILL.md`. The treated arm then runs with no skills at
+all, every trigger row scores 0, and the run costs full price — which is the
 silent zero this whole arm exists to prevent, arriving through the arm itself.
 
-`_setup_skills`'s own "0 skills linked" warning does not fire on it: that
-counts `iterdir()` entries, and fourteen broken links are fourteen entries.
+`_setup_skills`'s own "0 skills linked" warning does not fire on it: broken
+links still count as directory entries.
 """
 
 from __future__ import annotations

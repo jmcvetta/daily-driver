@@ -16,7 +16,7 @@ alone and hands the judge bare `result_text` from its Codex agent; every rubric
 under `evals/tasks/` anchors on that tag and scores 0.0 without it, deliberately
 and with no fallback. And `CodexAgent._setup_skills` symlinks each skill by the
 plugin path it was handed, so a relative root — which is what an experiment
-naturally writes — links fifteen skills that point at themselves.
+naturally writes — links every skill back at itself.
 
 WHAT IT ASSERTS
 
@@ -38,10 +38,9 @@ WHAT IT ASSERTS
     A relative plugin root is made absolute before `CodexAgent._setup_skills`
     sees it. That function symlinks each skill by the path it was handed, so a
     relative root makes `.agents/skills/pr -> ../skills/pr` resolve back to the
-    link's own directory: fourteen entries, not one of them readable, and a
+    link's own directory: one entry per skill, not one of them readable, and a
     treated arm that ran with no skills at full price. `_setup_skills`'s own
-    "0 skills linked" warning counts directory entries, so it stays silent on
-    it.
+    "0 skills linked" warning counts directory entries, so it stays silent.
     A plugin root that does not resolve to a directory raises rather than
     warning, and so does an entry that is not `type: local`.
 
@@ -169,7 +168,7 @@ def check_a_reply_quoting_the_tag_is_still_rendered() -> None:
 
 
 def check_a_relative_plugin_root_is_made_absolute() -> None:
-    """The self-referential symlink this arm would otherwise link fourteen of."""
+    """Exercise the self-referential symlink this arm would create per skill."""
     with tempfile.TemporaryDirectory() as tmp:
         base = Path(tmp).resolve()
         (base / "plugin" / "skills" / "pr").mkdir(parents=True)

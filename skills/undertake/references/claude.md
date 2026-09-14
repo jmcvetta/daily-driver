@@ -45,8 +45,10 @@ The session
 ===========
 
 `mcp__Claude_Code_Remote__get_session`, with `session_id` omitted, describes
-the caller. It is the one call, and `Claim the issue` and `Cut the branch` read
-three things out of it.
+the caller. `task-worktree` consumes the designated branch when the call
+supplies exactly one for this repository. `Claim the issue` then confirms the
+task worktree is on that branch and reads the model and session from the same
+call.
 
 | What | Field |
 | ---- | ----- |
@@ -56,17 +58,17 @@ three things out of it.
 | The model the session is set to | `session_context.model`, `configured_model` |
 | The session id | the call's own `id`, for `https://claude.ai/code/session_…` |
 
-**Both branch fields are arrays.** Read the outcome whose `git_info.repo` names
-the repository this work will be pushed to, and take the one branch it lists.
-More than one is the stop `SKILL.md` states, not a pick.
+Both branch fields are arrays. Read the outcome whose `git_info.repo` names the
+repository this work will be pushed to. Exactly one branch is a designation;
+more than one is a collision, not a pick. The branch checked out in the task
+worktree must agree before the claim is posted.
 
-**`external_metadata.current_branches` is a different field** and answers a
-different question — what is checked out, which before `Cut the branch` need
-not be the designated branch.
+`external_metadata.current_branches` is a different field and answers a
+different question: what is checked out, not what the harness designated.
 
-Where this call is absent — a laptop without the Claude Code Remote tools —
-`Claim the issue` carries the branch alone, and `Cut the branch` falls through
-to its second and third sources.
+Where this call is absent, `Claim the issue` carries the branch alone. Read it
+from the task worktree's Git state, and read its repository from the remote
+`task-worktree` resolved.
 
 
 The cadence

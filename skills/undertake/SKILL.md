@@ -27,12 +27,13 @@ supplies one: an issue is what this skill takes in, and untracked work is what
 running without one leaves behind.
 
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
-restate**. The title convention lives in `pr-title`, the pull request itself in
-`pr`, the review round in `review-cycle`, what is worth asking the user in
-`judgement-call`, and the engineering standard in the constitution. Where a
-step below names a rule one of those owns, it names it as a pointer and cites
-the owner — a rule that acquires a second home here is one whose copy goes
-stale, and a citation is what makes the drift visible. There is no exception.
+restate**. The task branch and execution root live in `task-worktree`, the
+title convention in `pr-title`, the pull request itself in `pr`, the review
+round in `review-cycle`, what is worth asking the user in `judgement-call`,
+and the engineering standard in the constitution. Where a step below names a
+rule one of those owns, it names it as a pointer and cites the owner — a rule
+that acquires a second home here is one whose copy goes stale, and a citation
+is what makes the drift visible. There is no exception.
 
 What this skill owns is the sequencing and the gates between the steps.
 
@@ -41,8 +42,8 @@ steps below need is named in words here and resolved to a route there:
 [`references/claude.md`](references/claude.md) for Claude Code,
 [`references/omp.md`](references/omp.md) for Oh My Pi,
 [`references/codex.md`](references/codex.md) for Codex. Read the one for the
-harness in use before `Claim the issue`, which is the first step that writes
-anything.
+harness in use before `Claim the issue`, and read `task-worktree`'s reference
+for the harness before `Establish task worktree`.
 
 **Every step has a name, and the name is how it is cited** — here and in every
 other file that refers to one. The numbers order the sequence and do nothing
@@ -61,8 +62,8 @@ The sequence
 | 0 | `Open the issue` | this skill, `issue-deps`, `issue-labels` |
 | 1 | `Title the session` | `session-title` |
 | 2 | `Read the issue and its edges` | the harness's issue client, `issue-deps`, `issue-labels` |
-| 3 | `Claim the issue` | this skill |
-| 4 | `Cut the branch` | this skill |
+| 3 | `Establish task worktree` | `task-worktree` |
+| 4 | `Claim the issue` | this skill |
 | 5 | `Implement` | the constitution |
 | 6 | `Open the draft` | `pr` |
 | 7 | `Review the head` | `review-cycle` |
@@ -85,11 +86,11 @@ this step is what supplies one, and the ten after it are unchanged: what would
 otherwise happen is a branch, a review and a merge with no record of why any of
 it was wanted, and a pull request body with nothing to close.
 
-**Search before writing.** Search the repository's open issues first: work described in a prompt has often been described in an
-issue already, and a second issue for it splits the trail in two. Where one
-already covers the request, that is the issue — go on to `Title the session`
-with it, and say which one it is, so a wrong match is corrected before the
-branch is cut.
+**Search before writing.** Search the repository's open issues first: work
+described in a prompt has often been described in an issue already, and a
+second issue for it splits the trail in two. Where one already covers the
+request, that is the issue — go on to `Title the session` with it, and say
+which one it is, so a wrong match is corrected before the task worktree exists.
 
 Otherwise open one. Title and body record what
 was asked and no more: an issue is the statement of the request, and scope
@@ -173,12 +174,25 @@ The comments too, because `Claim the issue` needs to know whether it is claimed
 already — by this session, which means the sequence is being re-entered, or by
 another.
 
-3 — Claim the issue
+3 — Establish task worktree
+---------------------------
+
+Invoke `task-worktree`. The issue now supplies the task identity, and no
+repository research has begun. That skill owns the feature branch, its base,
+the sibling worktree, and every later operation's root.
+
+The branch it establishes is the branch `Claim the issue` announces. Do not
+select, create, rename, or check out a second branch here. Where a harness
+already designated one branch for this task, `task-worktree` consumes it;
+otherwise its own project-convention and task-name rules decide.
+
+4 — Claim the issue
 -------------------
 
-One comment on the issue, saying that this session has taken the work. It goes up before the branch is cut, because
-an issue carrying no claim reads as unstarted, and two agents starting the same
-issue is the waste the claim exists to prevent.
+One comment on the issue says that this session has taken the work. It goes up
+after `Establish task worktree`, so the branch it names exists and is the one
+the implementation will use, and before `Implement`, so another session can
+see that the work has started.
 
 After `Read the issue and its edges` rather than before it, because the edges
 decide whether there is anything to claim: a blocked issue stops there, and a
@@ -186,22 +200,15 @@ claim on work that is not starting is a false record.
 
 Beyond the claim itself the comment always carries:
 
-- **The branch** the work will be committed on, named before it is cut and
-  **linked** — `[branch](https://github.com/OWNER/REPO/tree/BRANCH)`.
-  `OWNER/REPO` is the repository the branch will be **pushed to**, which on a
-  fork is not the repository the issue is in: read it from the harness's
-  session call, which answers it beside the branch `Cut the branch`'s first
-  source reads, or from the `origin` remote where the harness has no such
-  call. Built from the issue's repository instead, the link 404s for good
-  rather than only until the push, and the trade below stops holding. A reader
-  of the issue can otherwise reach the session but not the code: until the pull
-  request opens at `Open the draft` nothing on GitHub ties the issue to a
-  branch, and the
-  whole implementation happens inside that window. The link 404s until that
-  push. Write it anyway: the cost is a dead link over the window where there is
-  nothing to see, and the alternative is a name the reader must build a URL
-  from by hand. `Cut the branch` owns where the name comes from; this step
-  announces it, and is bound to what was announced.
+- **The branch** established by `task-worktree`, **linked** as
+  `[branch](https://github.com/OWNER/REPO/tree/BRANCH)`. `OWNER/REPO` is the
+  repository the branch will be pushed to, which on a fork need not be the
+  repository the issue is in. Read it from the harness's session call where
+  that call supplies it, or from the remote `task-worktree` resolved. Built
+  from the issue's repository instead, the link can point to the wrong fork.
+  Until `Open the draft` nothing else on GitHub ties the issue to this branch.
+  The link can return 404 until the first push; write it anyway, because the
+  alternative is a branch name the reader must turn into a URL by hand.
 
 Where the harness has a session call, the comment also carries:
 
@@ -215,50 +222,22 @@ Where the harness has a session call, the comment also carries:
   identifier is what the reader needs; the link is that identifier and
   somewhere to go with it, and the reference file has its form.
 
-The model and the session come from the harness's session call, where it has
-one — the call `session-title` documents — and so does the branch, where the
-harness designated one. The reference file says which of the three the harness
-in use can answer.
+The model and session come from the harness's session call, where it has one —
+the call `session-title` documents. A branch designated by that call must be
+the branch `task-worktree` established; disagreement is a collision, not a
+choice between two branch sources.
 
-**Where the harness supplies no such call the comment still goes up with the
-branch alone.** It does not announce the unavailable metadata: omission is the
-harness-neutral record, while a diagnostic about another harness's session
-surface adds nothing to the claim. The branch comes from `Cut the branch`'s
-second and third sources — the project's convention where it documents one,
-and `issue-<number>-<slug>` otherwise.
+**Where the harness supplies no session call the comment still goes up with
+the branch alone.** It does not announce the unavailable metadata: omission is
+the harness-neutral record. The branch comes from the task worktree's Git
+state, never from a fresh naming decision in this step.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
-already, and the comments read at `Read the issue and its edges` are what show
-it. A claim from a *different* session is not suppressed: that collision is the
-thing the claim exists to make visible, and it is worth a line to the user
-before the branch is cut.
-
-4 — Cut the branch
-------------------
-
-Off the base branch, never off whatever happens to be checked out. `pr` guards
-against opening a pull request from `master`; the guard belongs *here* too,
-before a line of code is written rather than after — a branch cut from the
-wrong place is cheap to fix here and expensive at `Open the draft`.
-
-The *name* is settled one step earlier, because `Claim the issue` announced
-it. This step uses the announced name and does not choose a fresh one — a claim
-naming a
-branch nobody pushed to is worse than a claim naming none. Three sources, in
-this order:
-
-1. **The branch the harness designated for this session**, where it designated
-   one. The harnesses designate differently and the reference file has the
-   field to read. Two rules hold either way: **exactly one branch is an
-   answer**, and where the source names more than one it has not answered —
-   that is the stop below, not a pick. Nothing is chosen here otherwise, since
-   a worker that was given a branch refuses a push anywhere else.
-2. **The project's own convention**, where it documents one.
-3. **`issue-<number>-<slug>`**, failing both. The number leads for the reason
-   `session-title` gives it the lead in a session title: it is the identifier
-   a reader matches a branch against. The slug is two or three words from the
-   issue title.
+already, and the comments read at `Read the issue and its edges` show it. A
+claim from a different session is not suppressed: that collision is the thing
+the claim exists to make visible, and it is worth a line to the user before
+implementation begins.
 
 5 — Implement
 -------------
