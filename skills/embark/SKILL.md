@@ -1,20 +1,20 @@
 ---
 name: embark
 description: >-
-  This skill should be used whenever an epic's task issues are being put to
-  work in more than one session at once, or a fleet already at sea is being
-  watched — including when the user says "/embark", "work the epic", "launch
+  This skill should be used whenever an epic's task issues are put to
+  work in more than one session at once, or a fleet already at sea is
+  watched — when the user says "/embark", "work the epic", "launch
   the wave", "start the next wave", "run these issues in parallel", "open a
   session for each of these", or "how is the epic going", and on Claude's own
-  move from an epic whose plan is written to opening a session per task —
-  `mcp__Claude_Code_Remote__create_session` on Claude Code, `create_thread` on
-  Codex. Supplies the wave
-  it reads off the graph, the session it opens per task on the model that task
-  issue records, the muster roll it posts to the epic instead of asking, the
-  watch it keeps through the pull requests rather than through the session
-  client, and the backstop for a session that has gone quiet. Not for breaking
-  work into task issues, which is `epic`, and not for taking one task issue to
-  a pull request, which is `undertake` — and never fired on a single issue.
+  move from a planned epic to opening a session per task — a web session on
+  Claude Code, one harness-local subagent per task on Omp and Codex. Supplies
+  the wave it reads off the graph, the session or subagent it dispatches per
+  task — on the recorded model, or the cheaper implementation default where
+  web sessions are not the route — the muster roll it posts to the epic
+  instead of asking, the watch it keeps through the pull requests rather than
+  through the session client, and the backstop for a session that has gone
+  quiet. Not for breaking work into task issues, which is `epic`, taking one
+  task issue to a pull request, which is `undertake`, or a single issue.
 ---
 
 # Embark
@@ -41,9 +41,11 @@ steps below need is named in words here and resolved to a route there:
 [`references/omp.md`](references/omp.md) for Oh My Pi,
 [`references/codex.md`](references/codex.md) for Codex. Read the one for the
 harness in use before `Read the epic`, which is the first step with a route in
-any of them. **Only one of the three is a table.** Omp has no session-opening
-client, and Codex has one this skill cannot reach, so those two files are
-stops, and each says so and says why.
+any of them. **All three are tables.** Claude Code's names the web-session
+route; Omp and Codex cannot open a web session — one has no client, and the
+other has one this skill cannot reach — so their files carry the
+harness-local subagent fallback `Open the sessions` takes instead, and record
+what each surface has and has not been measured to do.
 
 **Every step has a name, and the name is how it is cited.** The numbers order
 the sequence and do nothing else: insert one and all of them move, while a name
@@ -143,31 +145,63 @@ here to be routed again:
 3 — Open the sessions
 ---------------------
 
-One session per task issue in the wave, opened in the same environment as this
-one, all of them before the watch starts. Each carries four things and no more:
+**Where the harness can open web sessions, one session per task issue in the
+wave**, opened in the same environment as this one, all of them before the
+watch starts. **Where it cannot, the fallback is one implementation subagent
+per task issue, dispatched concurrently through the harness's own subagent
+surface** — a wave is one batch either way, and every ship in it carries four
+things and no more:
 
 - **A prompt naming its task issue and asking for it to be undertaken**, and
   nothing else. The issue is the statement of the work; a summary of it in the
   prompt is a second copy that can disagree with the first, and the session
-  reads the issue itself at `undertake`'s `Read the issue and its edges`.
+  reads the issue itself at `undertake`'s `Read the issue and its edges`. The
+  boundary holds in the fallback: the subagent is given the issue number and
+  the instruction, no more.
 - **The model the task issue records**, taken from the `Model:` line `epic`
   writes as the last line of the body. Where there is no such line the session
   inherits this one's model, which `epic` states is the working default.
-  **This skill does not choose**, and does not second-guess a line it is given:
-  the judgement was made when the task was sized, and re-making it here on less
-  information is how it gets made worse.
+  **This skill does not choose**, and does not second-guess a line it is
+  given: the judgement was made when the task was sized, and re-making it here
+  on less information is how it gets made worse. That binds the web route.
+  **In the fallback the line is advisory, and the default is a cheaper
+  implementation model** — an unattended routine edit does not need the
+  orchestrator's own strength, and quota spent on one is quota the rest of
+  the wave does not get. Two exceptions, both the orchestrator's judgement
+  and neither appealed: work that is security-sensitive, and work whose
+  complexity makes a weaker implementor unsafe. Either is dispatched to a
+  stronger implementor, or taken by the orchestrator itself.
 - **A title**, in `session-title`'s form for the task issue. It is what makes a
-  list of five running sessions readable at the moment the wave launches, which
-  is before any of them has reached its own `Title the session` and set the same
-  string.
+  list of five running sessions readable at the moment the wave launches,
+  which is before any of them has reached its own `Title the session` and set
+  the same string. Where the dispatch surface takes no title, the issue
+  number in the prompt is the identifier the muster roll carries instead.
 - **The environment's own permissions**, inherited rather than narrowed or
   named. A task session runs unattended, and a session opened in a mode that
   blocks for a human approval is a session that never starts work.
 
-**A model identifier the session client rejects sinks one ship, not the
-fleet.** The call fails rather than falling back; report that task, launch the
-rest of the wave, and do not substitute an identifier of your own — the
-constitution forbids the guess, and `epic` owns the line that was wrong.
+**An implementor may ask for help, and must have someone to ask.** The route
+is the harness's agent messaging, and the advisor is the orchestrator itself
+or one shared subagent running a strong model — one advisor for the wave,
+never one per task unless a task's context is genuinely separate. An
+implementor that fails silently instead of asking is the failure this rule
+exists to surface, and advisor-on-demand alone does not catch it.
+
+**So a strong-model review gates every pull request an implementor
+produced.** An implementor that reaches `undertake`'s ready gate does not
+take the gate itself: it hands its head to the advisor over the messaging
+and waits, and the strong model — the orchestrator or the shared advisor —
+runs `review-cycle`'s round and returns its findings the same way. The
+implementor answers them under the round's protocol, and `Ready for review`
+waits for the round to close. The implementor does not review its own work,
+and a reviewer at the implementor's own strength is not a review.
+
+**A dispatch that fails sinks one ship, not the fleet.** A model identifier
+the session client rejects fails the call rather than falling back; report
+that task, launch the rest of the wave, and do not substitute an identifier
+of your own — the constitution forbids the guess, and `epic` owns the line
+that was wrong. The same holds in the fallback: a subagent that fails to
+launch is reported, and the rest of the batch sails.
 
 No permission is asked here. `Waves launch without confirmation` below is why.
 
@@ -194,6 +228,14 @@ one row per task:
 `epic` made from a default nobody chose, and the difference is the whole reason
 the `Model:` line exists.
 
+**The fallback's roll names subagents, not sessions.** The columns are the
+task, the implementor's subagent identifier, the model it ran on, and any
+advisor — the dispatch decision made visible, which is the point of the roll.
+A web-session row links; a fallback row names what the harness's own listing
+resolves. `Say which model was inherited` holds in both: where a fallback
+implementor ran on the cheaper default rather than the task's recorded line,
+the row says so.
+
 **The wave headings carry state, and nothing else moves it.** `epic` writes
 that state into the epic's `Sequencing` at decomposition time and never
 returns. This skill marks a wave `in progress` as it launches and `done` as it
@@ -215,6 +257,18 @@ request, and a pull request reports its own checks, its review threads and its
 merge. It is also where the user is already looking, and it outlives the session
 that opened it.
 
+**A fallback wave is supervised through the harness's subagent lifecycle.**
+The orchestrator holds the dispatch handles, and each subagent's result — or
+failure — arrives as a wake of its own. No session client and no durable
+cross-session timer is required for that, which is why their absence is not a
+stop. The GitHub watch runs on top of it unchanged: it is still how work in
+progress is told from work stuck. The lifecycle ends where the implementors
+finish, though: a subagent's completion wake is spent by then, its pull
+request still open, and a merge after it is something only the surface can
+deliver. Where the harness carries no pull-request event and no durable
+timer, the close of the wave — the wave marked `done`, the next one
+launched — is resumed by the next `embark` invocation, and that is said
+once rather than claimed as a watch.
 So on every wake:
 
 - **Subscribe to each task's pull request** as it appears, once. Events then
@@ -247,7 +301,10 @@ decays that way: this backstop catches a dropped event and a dead session, the
 worst case it bounds is one wave delayed by one interval, and a wave of five is
 already holding five two-minute cadences of its own. A second-by-second watch
 over the top of them is quota spent on nothing, and the constitution's
-*Delegation* rule says whose money that is.
+*Delegation* rule says whose money that is. In the fallback the subagent
+lifecycle supplies the wake, and where the harness can hold no timer at all
+the wave is read again whenever a result or a pull-request event next wakes
+the session — said once, not claimed.
 
 **A quiet task is what the backstop is for.** Three ways one goes quiet:
 
@@ -290,6 +347,11 @@ Reached from `Watch the wave`, and it returns there.
   replacement picks the work up where it was left: `pr`'s existing-PR check
   finds the open pull request rather than opening a second one, and the commits
   already pushed are on the branch it is handed.
+- **A fallback implementor is recovered the same way, through the messaging it
+  asks for help with.** A correction goes to the subagent's identifier; one
+  the harness reports as failed, or as finished with no pull request across
+  two check-ins, is relaunched on the **same branch** the claim comment
+  records, and the replacement is posted to the epic like any other.
 - **The replacement claims the task again, and that is correct.**
   `undertake`'s `Claim the issue` suppresses a second claim only for a session
   re-entering its own sequence, and reports a claim from any other session as a
@@ -339,22 +401,19 @@ touches the constitution's own gates.
 Where it stops and waits
 ========================
 
-Five, and two of them are reports rather than questions.
+Four, and two of them are reports rather than questions.
 
 - **An issue that is not an epic**, at `Read the epic`. A report: say which
   issue it is and which skill takes it — `undertake` for a task issue, `epic`
   for work not yet decomposed.
-- **A harness with no session-opening client this skill can reach.** The whole
-  skill, not one step. Say so, name the tasks whose blockers are closed, and
-  stop — which is `epic`'s `Hand off` reached without a fleet.
-  [`references/omp.md`](references/omp.md) and
-  [`references/codex.md`](references/codex.md) are the two harnesses this is
-  written for, and they are that case for different reasons: one has no client,
-  the other has one an unattended session is not offered.
 - **No wave to take**, at `Take the wave`. A report: every open task is blocked
   by something open, so name the issue that blocks and wait for it.
-- **A session that stopped to ask**, at `Recover a session`. Name the task, its
-  session and its pull request, and hand the question to the user. Guessing at
+- **A session that stopped to ask**, at `Recover a session`. Name the task,
+  its session and its pull request, and hand the question to the user. A
+  fallback implementor's question is the other thing: it arrives through the
+  messaging, is readable, and is answered on the advisor route. This stop
+  covers the question that cannot be read — a web session that stopped, or a
+  delivery that failed. Guessing at
   the answer is guessing at intent twice over — the constitution forbids it
   once, and this skill did not write the code being asked about.
 - **The epic's graph disagreeing with its body about a blocker**, at `Take the
@@ -374,10 +433,16 @@ Non-goals
   an epic whose plan is wrong is corrected there rather than worked around
   here.
 - **Does not implement, review, or answer a review.** Each task session does
-  its own, through `undertake` and the round that skill runs.
-- **Does not choose a model.** The task issue records one and this skill passes
-  it on. Staying dumb is the point: the planner knew which task was a
-  documentation edit, and this skill does not.
+  its own, through `undertake` and the round that skill runs. The exception is
+  the strong-model review `Open the sessions` requires of a fallback
+  implementor's pull request: that round is the orchestrator's or the shared
+  advisor's to run, because the rule exists precisely so the implementor does
+  not review itself.
+- **Does not choose a model on the web route.** The task issue records one and
+  this skill passes it on. Staying dumb is the point: the planner knew which
+  task was a documentation edit, and this skill does not. In the fallback it
+  applies the cheaper default `Open the sessions` states, and the bypass is
+  the orchestrator's judgement to make.
 - **Does not manage the branches.** It does not serialise merges and it does not
   resolve a conflict between two sibling branches. `undertake`'s `Keep it
   current` does the first, and the session that owns the code does the second.

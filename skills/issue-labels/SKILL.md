@@ -90,7 +90,7 @@ its edges`, and one label out of the five is a stop in two cases:
 
 - An `epic` is a stop **for `undertake`**, which needs code to put on a
   branch and an epic has none. It is not a stop for every reader of the
-  label: `embark` takes an epic directly and opens a session per child. So
+  label: `embark` takes an epic directly and dispatches one ship per child. So
   the answer is `embark`, or the name of the child to work instead — not a
   refusal.
 - A `proposal` is a stop. It is the vague-request case `Open the issue`

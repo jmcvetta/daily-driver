@@ -129,11 +129,14 @@ it to be true. What the epic body carries is the *reading* of it, under
 
 **Each task records the model that should undertake it.** Sizing a task is the
 moment it is known whether the work is a documentation edit or a schema
-migration, and that judgement is otherwise thrown away: `embark` opens one
-session per task and deliberately does not choose. Pick the lightest model that
-can do the task well — the constitution's *Delegation* rule is that quota is
-the user's money, and it cuts both ways, because a schema migration on a small
-model costs more than it saves.
+migration, and that judgement is otherwise thrown away: `embark` dispatches
+one ship per task, and on the web-session route deliberately does not choose —
+the line binds there. On a harness running `embark`'s subagent fallback the
+line is advisory: the fallback's cheaper implementation default applies, and
+the orchestrator reads the line before dispatching. Pick the lightest model
+that can do the task well — the constitution's *Delegation* rule is that
+quota is the user's money, and it cuts both ways, because a schema migration
+on a small model costs more than it saves.
 
 **The form is exact, because a skill parses it rather than a person.** The last
 line of the task issue body, and nothing after it:
@@ -145,8 +148,10 @@ Model: claude-sonnet-5
 The identifier must be one the harness's session client accepts. The reference
 file for the harness in use names them, and it is read rather than recalled.
 **Where no valid identifier can be named, write no line at all**: a missing
-line means the session inherits the orchestrator's model, which is a working
-default, and a session opened on a model that does not exist is not.
+line is a working default in both routes — the web session inherits the
+orchestrator's model, and `embark`'s subagent fallback applies its cheaper
+implementation default — and a session opened on a model that does not exist
+is not.
 
 **Reasoning effort cannot be recorded.** The session client takes a model and
 has no effort parameter — effort is session configuration rather than a
@@ -248,10 +253,10 @@ Every task whose blockers are closed can start now, each in its own session,
 each through `undertake`. Name them, rather than leaving the reader to derive
 the list the first time.
 
-**Putting that wave to sea is `embark`'s**, where the harness can open sessions
-at all: one session per task, watched to merge, and the next wave after it. The
-list named here is what it takes in, and it is also the whole hand-off on a
-harness that cannot.
+**Putting that wave to sea is `embark`'s**: one ship per task — a session
+where the harness opens web sessions, its subagent fallback where it cannot —
+watched to merge, and the next wave after it. The list named here is what it
+takes in.
 
 **The epic is never undertaken**, which is the stop of that name under
 `Where it stops and waits`. It carries no code; the tasks named above are what
