@@ -1,6 +1,6 @@
 # The issue labels this toolkit recognises.
 #
-# Five labels answer one question -- what kind of issue is this, and is it
+# Six labels answer one question -- what kind of issue is this, and is it
 # ready for an agent to work unattended -- and every issue carries exactly one
 # of them. `skills/issue-labels/SKILL.md` is the standard; this file is where
 # it is declared, so the names, colours and descriptions come from a file
@@ -57,4 +57,15 @@ resource "github_issue_label" "research" {
   name        = "research"
   color       = "fbca04"
   description = "A question to settle"
+}
+
+# Not a status. `human` says the work itself is a person's -- credentials no
+# agent holds, a decision only the user can make, an action outside the
+# repository -- and an agent that stops on one stops because of what the work
+# is, not because of where it got to.
+resource "github_issue_label" "human" {
+  repository  = github_repository.this.name
+  name        = "human"
+  color       = "006b75"
+  description = "Work only a person can do"
 }

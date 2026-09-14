@@ -112,6 +112,11 @@ The two are not the same question, and `epic` writes both on purpose:
   disagreement. It is the scheduling choice `epic` requires that task's line to
   state, and it is honoured: the task waits for its wave.
 
+**A `human` task is not in the wave.** Its label says no agent can do the
+work, so a session opened on it would stop at `Read the issue and its edges`
+and nothing else. It waits for the person, and the muster roll says so in its
+row rather than leaving it unaccounted for.
+
 **Already at sea is read from the record, never assumed.** A task is at sea
 when a muster roll on the epic names a session for it, or when its own issue
 carries an `undertake` claim comment. Either is enough, and the second is what

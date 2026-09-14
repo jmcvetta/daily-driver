@@ -128,7 +128,7 @@ same file.
 
 ## The Issue Labels
 
-`labels.tf` declares the five labels `skills/issue-labels/SKILL.md` defines,
+`labels.tf` declares the six labels `skills/issue-labels/SKILL.md` defines,
 so the names, colours and descriptions come from a file under review rather
 than from whoever clicked last. The skill is the standard; this is where it is
 declared.
@@ -170,7 +170,7 @@ with provider 6.13.0 against this stack's committed state — is:
       ~ repository = "claude-daily-driver" -> "daily-driver" # forces replacement
 ```
 
-for all five labels, plus `github_repository_vulnerability_alerts`, which
+for all six labels, plus `github_repository_vulnerability_alerts`, which
 holds nothing worth keeping. A destroyed label is stripped from every issue
 carrying it, and creating it again does not put it back.
 

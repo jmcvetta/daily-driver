@@ -19,7 +19,7 @@ The issue
 **The read in that row is not optional.** `labels` replaces the whole set, so
 an update sending one label deletes every other label the issue had — the
 stock and bot-owned ones `issue-labels` says to leave alone included. An
-issue carrying none of the standard's five is not an issue carrying none.
+issue carrying none of the standard's six is not an issue carrying none.
 
 `issue-deps` owns the edge writes, and has its own routes. So does
 `issue-labels`, whose `references/claude.md` states that trap where the label
