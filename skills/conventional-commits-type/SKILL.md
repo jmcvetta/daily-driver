@@ -7,9 +7,11 @@ description: >-
   says "the type is wrong" or "that's not a fix", questions what version
   merging will cut, or when a Projected Releases comment on a pull request
   disagrees with what the author meant; and whenever `pr-title` needs the type
-  for a title it is writing. Supplies the two gates and the one test that
+  for a title it is writing. Supplies the three gates and the one test that
   pick the type from what the change does, and what the type decides about
-  the next release. Not for writing the title itself — that is `pr-title` —
+  the next release — including the ships-versus-verifies boundary that
+  types test-only changes `test`.
+  Not for writing the title itself — that is `pr-title` —
   and not for commit messages, which are not Conventional Commits in this
   toolkit.
 ---
@@ -22,7 +24,7 @@ into a minor version, a breaking change into a major one, and everything else
 into a patch or nothing. So the type is decided from the change's **effect**,
 never from what the diff looks like or how the work felt.
 
-Two titles this toolkit reached for, and why both were too small:
+Three titles this toolkit reached for, and why each was the wrong word:
 
 - *"refactor: move the Terraform-shop review rules to project memory"* — the
   title #55 was written with, and corrected to `fix:` before it merged.
@@ -34,11 +36,19 @@ Two titles this toolkit reached for, and why both were too small:
   was warranted. A broken pointer prompted it, but the rubric it named was
   unreachable on every run, so no review had ever applied it. After the
   merge one does.
+- *"fix(check): declare pyyaml as a dev dependency of the check legs"* —
+  the title #215 carries. PyYAML entered as a dev dependency of the
+  `make check` legs: nothing a session loading the plugin observes moved,
+  yet the title claims a bug fix, and release-please cuts one under
+  *Bug Fixes* for a defect nobody had. `test(dev-deps): …` is the honest
+  shape; the ships-versus-verify boundary under *The question* is why.
 
-Both reached for the smaller word, and that is the direction this skill
-exists to stop. An over-typed change cuts a version one size too large; an
-under-typed one hides from the changelog section and the version where the
-people it matters to would look for it.
+The first two reached for the smaller word; the third reached for the
+louder one. Both directions misread the same way — from what the diff looks
+like or how the work felt, not from the effect. An over-typed change cuts a
+version one size too large or files a bug fix nobody's bug belongs under;
+an under-typed one hides from the changelog section and the version where
+the people it matters to would look for it.
 
 
 The question
@@ -48,13 +58,21 @@ The question
 > doing that it did?
 
 "The thing" is whatever the repository ships, seen by whoever consumes it: a
-caller of a library, a user of a CLI, CI running a workflow, a session
-loading a plugin. **In a plugin whose product is prose, prose is code.** What
+caller of a library, a user of a CLI, CI running a workflow the repository
+publishes, a session loading a plugin. **In a plugin whose product is prose,
+prose is code.** What
 Claude reads and acts on is `skills/`, `agents/`, `rules/` and `hooks/`, so
 a change there goes to the tests below exactly as code would, and one that
 changes what Claude does is never `docs` however much it reads as writing. A
 typo or a rewording there that changes nothing still is. Outside those
 directories — `README.md`, `docs/` and their kind — prose is documentation.
+The consumer list has a boundary, and it is where `test` lives: **ships
+versus verifies.** What the repository uses to verify itself — tests, check
+legs, fixtures, eval tooling, and the dev dependencies of any of them — is
+seen by the people working on the repository, not by a consumer of the
+shipped thing. A change whose whole effect is there changes nothing anyone
+observes, and test 3 below types it `test` (or `build`/`ci`) before the
+consumer question is asked.
 
 Answer the question first, from the diff, before naming a type. The answer
 decides the type; the diff's shape does not.
@@ -70,8 +88,8 @@ below applies on top of it: `revert!:`, with the footer, because taking back
 what a consumer may already be using breaks them. A *partial* undo is not a
 revert; it is an ordinary change, and the gates type it.
 
-Otherwise the first two are gates: where one fires it settles the type, and
-nothing below it runs.
+Otherwise the first three are gates: where one fires it settles the type,
+and nothing below it runs.
 
 1. **Does it break anyone?** A caller, a configuration, or a workflow that
    worked before the merge and does not after it. Then the type it would
@@ -92,10 +110,22 @@ nothing below it runs.
    the changelog: `perf` is silent here and still gets a section there, as
    the table below shows.
 
-Past both gates the behaviour changes, and the only question left is `fix` or
-`feat`. One test settles it:
+3. **Does anything the repository ships change?** Where the change's whole
+   effect is on the repository's own verification — the tests, the `make
+   check` legs, fixtures, eval tooling, or the dev dependencies of any of
+   them — no consumer observes anything, and the type is `test`: `build`
+   where the change is to the manifest or packaging that carries the
+   tooling, `ci` where it is a workflow leg's definition. A broken check
+   leg is not a defect in the shipped thing, and titling it `fix` cuts a
+   bug-fix release for a change nobody consuming the repository can
+   observe — the shape of #215. The gate fires on the *whole effect*: a
+   `fix` to shipped code with its tests alongside changes what the thing
+   does, and test 4 below types it, tests and all.
 
-3. **Could the thing already do this, and merely do it wrong?**
+Past the gates the behaviour of the shipped thing changes, and the only
+question left is `fix` or `feat`. One test settles it:
+
+4. **Could the thing already do this, and merely do it wrong?**
 
    - **Yes — `fix`.** The behaviour was promised and delivered incorrectly.
      The test is against the intent, not the code: a rule shipping to
@@ -111,7 +141,8 @@ that was specified but never once worked has not regressed.** The agent's own
 text named a rubric, which reads like a promise broken — but no run had ever
 applied it, so nothing was restored and something arrived for the first time.
 Ask what a consumer *observed*, never what a document promised. Where even
-that cannot settle it, prefer `feat`, for the reason the two examples give.
+that cannot settle it, prefer `feat`, for the reason the examples above
+give.
 
 A check on the answer: write the changelog line. *"Bug Fixes: reviewers no
 longer apply Terraform-shop rules in every repository"* reads true;
@@ -125,7 +156,9 @@ What does not decide it
 - **The size of the diff.** One line can be a `feat`; five hundred can be a
   `fix`.
 - **The proportion of it that is tests, docs or generated files.** The
-  behaviour change is the type; the files carrying it are not.
+  behaviour change is the type; the files carrying it are not. Where the
+  change's whole effect is on the verification itself, that is not a
+  proportion question — test 3 above decides.
 - **What the author called it** in the issue, the branch name, the commit
   messages or the conversation. Commit messages here are prose by rule and
   carry no type at all.
