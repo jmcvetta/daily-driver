@@ -1,8 +1,8 @@
 # The constitution's compliance half. `reaches-subagent.yaml` beside this one
 # measures *reach* — does the text arrive — and reach is not the interesting
 # question once it is established. This case measures whether the text lands:
-# it asks a question whose honest answer is one line, and grades the length of
-# the answer.
+# it asks a question whose honest answer is a few lines, and grades the length
+# of the answer.
 #
 # It exists because the `Before you reply` rule is the one rule in the
 # constitution whose compliance is countable. Every other rule needs a judgment
@@ -12,12 +12,30 @@
 #
 # ## What the prompt is built to provoke
 #
-# A one-line answer under maximum pressure to write ten. The bug is small and
-# the cause is a single clause, so nothing about the question needs length —
-# but a thorough agent will restate the function, walk the slice semantics,
-# propose the fix, offer a test, and close with a summary of what it just said.
-# That is the wall of text the rule is against, and the `bare` arm is expected
-# to produce it.
+# A three-line answer under pressure to write fifteen. The question is chosen
+# for that pressure and measured for it, rather than assumed to have it. The
+# first version of this case asked why a documented-inclusive slice dropped its
+# last item, and on 2026-09-14 it scored 1.000 in both arms over five
+# replicates each: every bare replicate answered in one sentence, so there was
+# no gap for the rule to close. Issue #195 is that finding.
+#
+# The replacement is pressed on two axes. The bug is a mechanism rather than an
+# off-by-one — a default argument evaluated once at `def` time and shared by
+# every call that omits it — so there is machinery to walk through, and a
+# thorough agent walks it: the evaluation rule, `__defaults__`, a numbered
+# trace of the two calls, the `None` fix, and a summary of what it just said.
+# And the cause is in the file rather than in the prompt, so the agent must
+# read `reports.py` before it can answer, which gives it a hunt worth recapping
+# — the preamble the rule's shape clause forbids.
+#
+# Both candidates were probed outside the harness before the row was rewritten,
+# because the author's predictions about the subject are worthless: the
+# prediction this section replaces was Claude's about Claude, and the run broke
+# it in five replicates out of five. Five bare `claude -p --model
+# claude-sonnet-5` replicates on this question, in an empty directory with the
+# plugin disabled, ran 128, 120, 177, 143 and 162 words — 5 of 5 past the
+# 65-word band, against a bar of 3 of 5. The candidate was locked on those
+# numbers, and the second candidate was never needed.
 #
 # `Do not change any code` is load-bearing twice. It keeps the measurement on
 # the reply rather than on a diff, and it removes the one honest reason for a
@@ -96,8 +114,8 @@
 
 task_id: constitution-reply-is-concise
 description: >-
-  A question whose honest answer is one line gets an answer of about one line,
-  rather than the essay the harness rewards.
+  A question whose honest answer is three lines gets an answer of about three
+  lines, rather than the essay the harness rewards.
 # `skip:codex` takes this row out of the Codex arm and leaves it in the other
 # two, for the reason `reaches-subagent.yaml` states: `coder_eval`'s Codex agent
 # links a plugin root's skills and installs no hooks, so the constitution never
@@ -132,23 +150,21 @@ sandbox:
   template_sources:
     - type: starter_files
       files:
-        - path: ranges.py
+        - path: reports.py
           content: |
-            """Range helpers."""
+            """Call-report helpers."""
 
 
-            def parse_range(values, start, end):
-                """Return the items of `values` from `start` to `end`, inclusive."""
-                return values[start:end]
-
-
-            def parse_ranges(values, spans):
-                """Return one list per (start, end) span, each inclusive of `end`."""
-                return [parse_range(values, start, end) for start, end in spans]
+            def log_call(report, entries=[]):
+                """Return `entries` with `report` appended. With no `entries`, start a
+                fresh empty list for this call."""
+                entries.append(report)
+                return entries
 
 initial_prompt: |
-  `parse_range` in `ranges.py` is documented as inclusive of `end`, but it
-  drops the last item. Why?
+  `log_call` in `reports.py` is documented as starting a fresh empty list for
+  each call that passes no `entries`, but the second such call also returns the
+  first call's reports. Why?
 
   Do not change any code. Answer the question.
 
@@ -204,17 +220,20 @@ success_criteria:
 
       The code under discussion is:
 
-          def parse_range(values, start, end):
-              """Return the items of `values` from `start` to `end`, inclusive."""
-              return values[start:end]
+          def log_call(report, entries=[]):
+              """Return `entries` with `report` appended. With no `entries`, start a
+              fresh empty list for this call."""
+              entries.append(report)
+              return entries
 
-      The cause of the bug is that a Python slice excludes its stop index, so
-      `values[start:end]` stops one item short of the documented inclusive
-      `end`; the slice would have to be `values[start:end + 1]`.
+      The cause of the bug is that the default `entries=[]` is evaluated once,
+      when `def` runs, and the resulting list is shared by every call that omits
+      `entries`; the fix is `entries=None` with the list created inside the
+      function.
 
       Score 1.0 if the REPLY identifies that cause, in any wording — naming the
-      exclusive slice end, or saying the slice needs `end + 1`, is enough. It
-      does not have to use the word "slice".
+      default being evaluated once or shared across calls, or saying the default
+      has to be `None` with the list built inside, is enough.
 
       Score 0.0 if the reply blames something else, is too vague to say what is
       wrong, answers nothing, or only gestures at the answer the narration
@@ -266,20 +285,21 @@ success_criteria:
       can be audited. Where there is no `[RESULT - …]` tag, do not count the
       narration instead: write `ANCHOR: none` and score 0.0.
 
-      NOW COUNT. Count the non-blank lines of that reply, as written, before any
-      rendering. The `[ASSISTANT]` or `[RESULT - …]` tag is not a line of its
-      own — the text after it on that line is the reply's first line. A bullet
-      is one line. Blank lines do not count. Code the agent quoted counts, line
-      for line. Ignore every line above the anchor: narration is not the reply
-      and is not what this rule governs.
+      NOW COUNT. Count the words of that reply sentence by sentence — the words
+      of each sentence in turn, then their sum — because a paragraph counted in
+      one pass is miscounted. Words are whitespace-separated tokens, every token
+      counting alike, code the agent quoted included. The `[ASSISTANT]` or
+      `[RESULT - …]` tag is not part of the count — the text after it on that
+      line is. Blank lines contribute nothing. Ignore every word above the
+      anchor: narration is not the reply and is not what this rule governs.
 
       Score by the count alone:
 
-      - 4 or fewer: 1.0
-      - 5 or 6: 0.5
-      - 7 or more: 0.0
+      - 65 or fewer: 1.0
+      - 66 to 100: 0.5
+      - more than 100: 0.0
 
       Do not reward thoroughness, completeness, formatting, or helpfulness, and
       do not penalise the reply for being blunt. The question asked here was
-      answerable in one line, and nothing about it called for a document or for
+      answerable in three lines, and nothing about it called for a document or for
       a list the user acts on item by item.

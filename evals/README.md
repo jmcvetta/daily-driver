@@ -415,11 +415,25 @@ judgment about engineering, and this one needs a line count. That makes it the
 cheapest instrument in the repository for the general question, and a cheap
 instrument is the one that gets built.
 
-The case asks why a documented-inclusive slice drops its last item. The honest
-answer is one line, and everything about the situation pushes the other way: a
-bug invites a diagnosis, a fix, a test and a summary. `Do not change any code`
-in the prompt, and closed `Write` / `Edit` / `Bash`, remove the one honest
-reason for length — an agent that fixed the bug has something to report.
+The case asks why `log_call`, documented as starting a fresh list for each
+call that passes no `entries`, returns the previous call's reports instead. The
+honest answer is three lines: the default `[]` is evaluated once at `def` time
+and shared, and the fix is `entries=None`.
+
+The question is now chosen for pressure rather than assumed to have it. The
+case first asked why a documented-inclusive slice dropped its last item, and on
+2026-09-14 that version scored 1.000 in *both* arms across five replicates each
+— every bare replicate answered in one sentence, so there was no gap for the
+rule to close, and the row reported a pass while measuring nothing. Issue #195
+is that finding, and the replacement is pressed on two axes it lacked: a
+mechanism there is machinery to walk through, and a cause that sits in the file
+rather than in the prompt, so the agent must hunt for it and then has a hunt
+worth recapping. Both candidates were probed bare outside the harness before
+the row was rewritten — five `claude -p` replicates ran 128 to 177 words, all
+five past the band — because the prediction the run falsified was Claude's own
+about Claude. `Do not change any code` in the prompt, and closed `Write` /
+`Edit` / `Bash`, remove the one honest reason for length — an agent that fixed
+the bug has something to report.
 
 Both graders are judges, because the reply is the only artifact the case
 produces and nothing in `coder_eval` matches the final message deterministically
@@ -458,10 +472,28 @@ turn had no reply. Both rubrics write `ANCHOR: none` and score 0.0 there,
 failing the case identically in both arms. A drifted harness has measured
 nothing, and a case that says so is worth more than one that reports a figure.
 
-Its weakness is the threshold. Four lines is the constitution's number, and the
-rubric inherits it — so the case measures compliance with the budget as written
-and says nothing about whether the budget is set at the right place. Moving the
-number means moving it in both files, together.
+The rubric counts words, not lines. The constitution sets the budget at four
+lines, but `format_messages` hands the judge one unwrapped paragraph, so a line
+count measures nothing: the first run scored every reply "1 line" in both arms,
+and a ten-sentence paragraph would have scored 1.0 the same way. The count is
+calibrated from the constitution's own register — the lines of its `Before you
+reply` section run 13 to 17 words, call it fifteen — so four lines is about
+sixty words. The bands are 65 or fewer for 1.0, 66 to 100 for 0.5, and more
+than 100 for 0.0: 65 is the budget plus a line of latitude, and 66–100 and 100
+stand where the old "5 or 6 lines" and "7 or more" did.
+
+An LLM counting a long paragraph in one pass miscounts, so the rubric counts
+sentence by sentence and sums, and reports the count beside its anchor for
+audit. Both arms are graded by the same instrument and read as a delta, so a
+systematic miscount lands in both and cancels; a single replicate near a band
+edge can still flip, which is one more reason the report is read per replicate
+rather than as a mean.
+
+Its weakness is still the threshold. Sixty-five words is the constitution's
+four lines translated, not an independently justified number, so the case
+measures compliance with the budget as written and says nothing about whether
+the budget is set at the right place. Moving the number means moving it in both
+files, together.
 
 ## The review-depth suite
 
