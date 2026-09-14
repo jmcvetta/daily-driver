@@ -8,8 +8,7 @@
 [`0012`](0012-the-judge-needs-its-own-transport.md), not its decision. The
 pre-run guard `0012` added is still right and still runs. What changed is why
 a row would trip it: not a key an operator forgot, but a criterion this
-project cannot run at all. See "What is left" for the four rows that still
-trip it.
+project cannot run at all. See "What is left" for the rows that still trip it.
 
 `0012` treated a missing `ANTHROPIC_API_KEY` as a configuration gap — something
 an operator sets before a run. It is not. This project's only Claude access is
@@ -110,6 +109,12 @@ Claude-arm rows outside the nine:
 - `tasks/embark/06-launches-without-asking.yaml`
 - `tasks/issue-deps/02-write-the-edge-without-asking.yaml`
 - `tasks/undertake/08-wake-slot-is-refilled.yaml`
+
+**Since amended:** `tasks/constitution/reply-is-concise.yaml` was ported to
+`agent_judge` on 2026-09-14, under this note's rule and with the same two
+load-bearing settings. It is the row that measures whether the constitution
+changes behaviour at all, and left on `llm_judge` that question could not be
+asked on this project's credentials. Three Claude-arm rows remain.
 
 The other nine are the `omp-only` forks `0013` added, including the forks of
 eight of the nine rows this note is about. They have the same defect, and the
