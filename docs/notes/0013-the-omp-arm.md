@@ -106,14 +106,12 @@ route that is renamed on Omp, three grade a rule that `0011` makes Claude Code
 only. The spike's own list named three in that second group while calling it
 four.
 
-**One Omp variant, and no bare-Omp control.** `evals/README.md`'s rule is that
-every criterion is scored in both arms, because a fire row's delta is the whole
-signal. This arm has no delta of its own: it reports the treated Omp arm alone.
-The control the issue chose instead is within the arm — a positive row and a
-negative row in one run, which together say whether the plugin loaded and
-whether the skill normalisation works. A bare-Omp variant doubles what the arm
-costs per run, and it is the obvious addition the day the delta is what someone
-is reading.
+**One Omp experiment per model, with a bare control.** Every criterion is
+scored in both variants: `bare` with no plugin and `with-plugin` with
+daily-driver installed. Each configured provider/model pair has a separate
+experiment file, so its ablation delta remains attributable to one model family.
+`evals/README.md` records the current model set and targets; the experiment
+headers carry the same rule where the delta is configured.
 
 **`plan` cannot guard the arm, so a guard runs in front of it.** Measured: with
 `agent: {type: omp}` and no plugin installed, `coder-eval plan` printed
