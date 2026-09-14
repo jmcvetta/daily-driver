@@ -1,6 +1,6 @@
 # Evals
 
-Fifteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
+Sixteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
 than by `claude plugin eval`. The reasoning for the harness is
 [`docs/notes/0002-eval-harness.md`](../docs/notes/0002-eval-harness.md);
 the short version is that the built-in cannot be run on this account, is
@@ -28,6 +28,7 @@ evals/
 │   ├── issue-labels/    … when an issue is labelled, and not when it is linked?
 │   ├── judgement-call/  … when a choice is about to be put to the user?
 │   ├── session-title/   … when the session is named, and not the PR?
+│   ├── task-worktree/   … before repository-changing work, and not for read-only work?
 │   ├── constitution/    does the constitution reach a subagent, and land?
 │   └── review-depth/    does `review` send the right panel at the diff?
 ├── fixtures/review-depth/
@@ -179,6 +180,13 @@ in would answer a one-line ask by upgrading everything in the repository. `04`
 is the ambient case: Dependabot's pull requests visible in the prompt and other
 work asked for, which is the shape a description reaching for "noticing" would
 misread as an invitation.
+
+`task-worktree/` tests the boundary and the work, not a narrated command.
+`01` runs the same Git fixture through each CLI arm and accepts only a branch
+from the remote default, a registered sibling worktree, the changed file there,
+and an unchanged primary checkout. `04` starts detached and requires the
+feature branch in place. `02` keeps read-only review out; `03` keeps an already
+attached worktree from nesting another one.
 
 `issue-labels/` is separated from `issue-deps`, and the two are one word
 apart: both are about an issue, and both are reached for with "what does this
@@ -652,10 +660,11 @@ the short version is that Omp engages a skill by reading `skill://<name>`,
 which `skill_triggered` cannot see, and that `coder_eval` builds the
 `[RESULT - …]` transcript these rubrics anchor on for its Claude agent alone.
 
-**An experiment file per arm, a run per arm, and tags in between.** Ten rows
-cannot be graded identically on both harnesses — the call they name differs, or
-the rule is Claude Code only per `0011` — so each is two files, tagged
-`claude-only` and `omp-only`, with `-omp` on the second's `task_id`. A
+**An experiment file per arm, a run per arm, and tags in between.** Eleven rows
+cannot be graded identically on Claude Code and Oh My Pi — their execution
+routes differ, or the rule is Claude Code only per `0011` — so each is two
+files, tagged `claude-only` and `omp-only`, with `-omp` on the second's
+`task_id`. A
 `coder_eval` variant applies to every task in the run, so one invocation
 carrying both sets would grade Omp's routes under a Claude arm and pay for it.
 `make evals-run` excludes `omp-only`; `make evals-run-omp` excludes
@@ -675,6 +684,7 @@ runs in every arm and fails for a reason that has nothing to do with the skill.
 | `judgement-call` | `01-ask-in-chat-hook` | `01-ask-in-chat-extension-omp` |
 | `undertake` | `08-wake-slot-is-refilled` | `08-cadence-stops-at-ready-omp` |
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-branch-alone-omp` |
+| `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-omp` |
 
 Each Omp row names its sibling with a `forks:<task_id>` tag, which is what
 `check-eval-arms` pairs them by — and what catches a sibling that loses its own
@@ -747,8 +757,9 @@ why.
 **It also resolves the plugin root**, which the built-in does not.
 `_setup_skills` symlinks each skill by the path it was handed, so the relative
 `path: ".."` every experiment here writes — right for the Claude agent, which
-never sees an unresolved path — links fourteen skills whose bodies point back at
-their own directory. Measured: fourteen entries, none with a readable
+never sees an unresolved path — links fifteen skills whose bodies point back at
+their own directory. Measured with the current tree: fifteen entries, none with
+a readable
 `SKILL.md`, and `_setup_skills`'s own "0 skills linked" warning silent because it
 counts entries. `start()` makes the root absolute and then raises rather than
 warns when no readable skill arrived.
@@ -761,9 +772,9 @@ skill tool at all: the model is handed a skills table and opens
 the agent that branch was written for. Issue #185 expected the Omp spelling
 here; the spike in #181 measured that Codex does not use it.
 
-**Ten `codex-only` rows.** Each forked row grades a route stated in a
+**Eleven `codex-only` rows.** Each forked row grades a route stated in a
 `skills/<name>/references/*.md`, so a Codex counterpart needs a
-`references/codex.md` to grade against; #183 and #184 wrote all twelve.
+`references/codex.md` to grade against.
 
 | Suite | Claude row | Codex counterpart | What the Codex row grades |
 | --- | --- | --- | --- |
@@ -777,13 +788,14 @@ here; the spike in #181 measured that Codex does not use it.
 | `session-title` | `07-get-session-before-set` | `07-one-call-or-no-surface-codex` | one `agent_tasks` call with `threadId` omitted, or the stop |
 | `undertake` | `08-wake-slot-is-refilled` | `08-no-wake-to-keep-codex` | no durable wake, so the cadence is handed on |
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-branch-alone-codex` | branch from git, unavailable model and session omitted |
+| `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-codex` | shell `workdir` and file paths keep every later operation in the task worktree |
 
 None is its sibling's stem plus `-codex`, for the reason the Omp table above
 gives: the stem states Claude's route, and on Codex the row grades the opposite.
 Two of them grade a *stop* — Codex is the first harness where the right answer
 to "title this session" and to "wait for CI" is that there is no way to do it.
 
-Three of the ten — `pr`, `pr-title` and `deps` — grade the same `gh` call their
+Three of the eleven — `pr`, `pr-title` and `deps` — grade the same `gh` call their
 Omp counterpart does, because Codex has no GitHub tool of its own either. They
 need their own files regardless: an arm tag claims exactly one arm, so without
 them the Codex arm would not measure those routes at all. `pr-body` is the
@@ -821,8 +833,8 @@ a report is read with them in mind.
 `codex_skills_linked` lands in each run's `environment_info`, for the reason the
 Omp arm's equivalents do: a red arm and an arm whose skills never arrived must
 not read alike. It counts skills with a readable `SKILL.md` rather than
-directory entries, which is what makes it an answer — fourteen broken symlinks
-are fourteen entries.
+directory entries, which is what makes it an answer — broken symlinks still
+count as entries.
 
 **It is the only such field, because `coder_eval` reads
 `get_environment_info()` once, during setup, before any turn runs.** A counter

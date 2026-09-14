@@ -17,7 +17,7 @@ The **constitution** — `rules/constitution.md`, delivered to every session by
 hook on Claude Code and Codex, and by the rule provider on Omp — plus **two
 runtime adapters that enforce rather than instruct**, `hooks/` for the two
 harnesses that run hooks and `extensions/` for the one that does not, and
-fourteen skills:
+fifteen skills:
 
 | Skill | What it does |
 | ----- | ------------ |
@@ -32,6 +32,7 @@ fourteen skills:
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |
 | `review-cycle` | One round on a pull request: the built-in `/code-review`, a verdict on every finding, and the test for whether a later push has earned a second round. |
 | `undertake` | Takes a piece of work from its description to a pull request ready for review, opening the issue first where there is none, and keeping the branch current with its base after. |
+| `task-worktree` | Gives every repository-changing task a feature branch and sibling worktree before task research, then keeps all task operations rooted there without changing the primary worktree. |
 | `epic` | Breaks work too big for one pull request into task issues under an epic: the two gates that decide there is one, the plan agreed before anything is written, and the waves the sub-issue panel cannot render. |
 | `embark` | Works an epic: one Claude session per task issue in the current wave, the muster roll posted to the epic in place of a confirmation, and the watch kept through the pull requests rather than the session client. |
 | `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
@@ -330,12 +331,14 @@ such as a skill whose frontmatter `name` disagrees with its directory; `scripts/
 both hooks against synthetic event JSON and asserts the constitution comes back
 from each; `scripts/check-labels.py`, which asserts the issue-label standard
 says the same thing in `issue-labels` and in the OpenTofu that declares it;
-`scripts/check-eval-fixtures.sh`; `scripts/check-omp-agent.py`, which drives
-the Omp eval arm's frame reduction against recorded frames;
-`scripts/check-codex-agent.py`, which asserts the Codex arm renders the judge's
-anchor byte-identically to the Omp arm's; and `scripts/check-eval-arms.py`,
-which keeps the Claude, Omp and Codex thirds of the forked eval rows in step —
-and the Makefile's three run targets in step with them.
+`scripts/check-eval-fixtures.sh`; `scripts/check-task-worktree-fixture.sh`,
+which exercises the linked and detached repositories used by that skill's
+behavior rows; `scripts/check-omp-agent.py`, which drives the Omp eval arm's
+frame reduction against recorded frames; `scripts/check-codex-agent.py`, which
+asserts the Codex arm renders the judge's anchor byte-identically to the Omp
+arm's; and `scripts/check-eval-arms.py`, which keeps the Claude, Omp and Codex
+thirds of the forked eval rows in step — and the Makefile's three run targets
+in step with them.
 
 **One of its legs is Omp's.** `scripts/check-omp-extension.mjs` imports the
 adapter under Node with a faked `ExtensionAPI` and asserts the `ask` deny and

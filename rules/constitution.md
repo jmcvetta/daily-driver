@@ -140,6 +140,6 @@ manifest or a lockfile.
 Plan first, then delegate the implementation. Quota is the user's money. Do
 not spend a capable model on work that does not need capability, and do not
 open a subagent per task where one subagent can take the batch. Open separate
-subagents only where the work genuinely requires them. Subagents touching different files run in the background in
-parallel, in their own worktrees, all launched before you start your own share
-of the plan.
+subagents only where the work genuinely requires them. Subagents touching
+different files run in the background in parallel, all launched before you
+start your own share of the plan.

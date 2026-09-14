@@ -41,12 +41,12 @@ targets `cd` into — which is right for the Claude agent, because `coder_eval`
 resolves plugin paths before that agent is built, and wrong for the Codex one,
 which never goes through that resolution.
 
-Measured against this repository's real layout: a relative root makes every link
-body relative too, so `.agents/skills/pr -> ../skills/pr` resolves back to the
-link's own directory and points at itself. Fourteen entries are created and not
-one of them has a readable `SKILL.md`; the treated arm runs with no skills and
-every trigger row scores 0, at full price. `_setup_skills`'s own "0 skills
-linked" warning counts `iterdir()` entries, so it stays silent on it.
+Measured against this repository's real layout: a relative root makes every
+link body relative too, so `.agents/skills/pr -> ../skills/pr` resolves back
+to the link's own directory and points at itself. One entry per skill is
+created and not one has a readable `SKILL.md`; the treated arm runs with no
+skills and every trigger row scores 0, at full price. `_setup_skills`'s own
+"0 skills linked" warning counts `iterdir()` entries, so it stays silent.
 `plugins.resolve_local_plugins` makes the root absolute in `start()` before
 delegating, and `start()` then raises — rather than warning — when plugins were
 declared and no readable skill arrived.
@@ -97,7 +97,7 @@ never arrived must not read alike. One field lands in each run's
 Codex app-server exposes no query for the skills it discovered, so unlike the
 Omp arm's `omp_skills_loaded` this says what was *offered* rather than what was
 taken up. It requires a readable `SKILL.md` rather than counting directory
-entries, which is what makes it an answer: fourteen broken symlinks are fourteen
+entries, which is what makes it an answer: broken symlinks still count as
 entries.
 
 **Only one field, and that is a constraint rather than a choice.** `coder_eval`

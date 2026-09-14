@@ -10,9 +10,10 @@ SHELL := /bin/bash
 .PHONY: git_sync check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-constitution check-ask-in-chat check-omp-extension \
 	check-omp-plugin check-omp-agent check-codex-agent check-eval-fixtures \
-	check-eval-arms check-step-names check-evals-preflight check-labels \
-	check-infra evals-install evals-plan evals-variants evals-preflight \
-	evals-run evals-run-omp evals-run-codex mcp-usage
+	check-task-worktree-fixture check-eval-arms check-step-names \
+	check-evals-preflight check-labels check-infra evals-install evals-plan \
+	evals-variants evals-preflight evals-run evals-run-omp evals-run-codex \
+	mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -45,8 +46,8 @@ git_sync:
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-constitution check-ask-in-chat check-omp-extension check-omp-agent \
-	check-codex-agent check-eval-fixtures check-eval-arms check-step-names \
-	check-evals-preflight check-labels
+	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
+	check-eval-arms check-step-names check-evals-preflight check-labels
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -196,6 +197,12 @@ check-eval-arms:
 # case or scores a model.
 check-eval-fixtures:
 	scripts/check-eval-fixtures.sh
+
+# check-task-worktree-fixture: prove the linked and detached repositories used
+# by the task-worktree behavior rows can satisfy every invariant they grade.
+# The model-driven rows remain outside CI; their test instrument does not.
+check-task-worktree-fixture:
+	scripts/check-task-worktree-fixture.sh
 
 # check-step-names: no file may cite a step of a numbered sequence by its
 # number. The numbers are positional, so inserting a step silently invalidates

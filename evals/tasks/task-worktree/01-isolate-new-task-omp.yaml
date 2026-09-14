@@ -1,0 +1,49 @@
+task_id: task-worktree-01-isolate-new-task-omp
+description: >-
+  A repository-changing task in an already-running Oh My Pi session creates
+  and uses a base-derived feature branch in a sibling worktree.
+tags: [trigger-accuracy, task-worktree, references, fire, behaviour, omp-only, "forks:task-worktree-01-isolate-new-task"]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/task-worktree/shared
+      mount_point: .fixture
+
+pre_run:
+  - command: bash .fixture/setup.sh linked
+    timeout: 60
+
+initial_prompt: >-
+  Add a line containing exactly `STRICT_MODE = True` to src/parser.py. Isolate
+  this as branch issue-52-strict-parser in the sibling path
+  ../task-worktree-issue-52 before inspecting the parser. Do not change the
+  primary worktree. Run `bash .fixture/verify.sh linked` from the task worktree
+  when finished.
+
+agent:
+  allowed_tools: [Read, Write, Edit, Grep, Glob, Skill, Bash]
+  disallowed_tools: [NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 20
+  turn_timeout: 600
+  task_timeout: 780
+
+success_criteria:
+  - type: skill_triggered
+    description: "`task-worktree` fires before a new repository-changing task"
+    expected_skill: task-worktree
+    skill_name: task-worktree
+
+  - type: command_executed
+    description: The fixture verifier runs from the new task root
+    tool_name: Bash
+    command_pattern: 'bash \.fixture/verify\.sh linked'
+    min_count: 1
+
+  - type: file_matches_regex
+    description: The sibling task root passed every fixture invariant
+    path: ../task-worktree-issue-52/.fixture/verification.txt
+    pattern: '(?m)^mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=.*/task-worktree-issue-52\nverified=yes$'
+    weight: 2
