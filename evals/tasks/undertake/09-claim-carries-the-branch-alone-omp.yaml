@@ -1,12 +1,10 @@
 # The Omp half of `09-session-fields-for-claim`, which is tagged `claude-only`
 # because the call it reads from is Claude's. `SKILL.md`'s `Claim the issue`
-# step says the comment carries the branch, the model, and the session — but
-# names no field for any of them, and points at the reference files "for the
-# fields that answer both." `skills/undertake/references/omp.md` answers for
-# this harness, and the answer is that two of the three are unavailable:
-# "There is no session call", so the claim says the surface supplied no model
-# and no session, and carries the branch alone. The branch comes from the
-# harness's own git state — `git branch --show-current` names it, and
+# step always carries the branch and adds model and session provenance only
+# where the harness has a session call. `skills/undertake/references/omp.md`
+# answers for this harness: "There is no session call", so the claim omits the
+# unavailable model and session and carries the branch alone. The branch comes
+# from the harness's own git state — `git branch --show-current` names it, and
 # `OWNER/REPO` for the branch link comes from the `origin` remote.
 #
 # Why the Claude sibling could not be reused: it grades specific field paths
@@ -14,34 +12,33 @@
 # `session_context.outcomes[].git_repository.git_info.branches` and
 # `external_metadata.last_served_model`. There is no such payload here, so an
 # Omp run against that rubric would fail for telling the truth about its own
-# surface. This row grades that truth instead, and invents no field to stand
-# in for the missing ones.
+# surface. This row grades the branch-only claim instead and invents no field
+# or diagnostic to stand in for the unavailable provenance.
 #
 # What this row can and cannot see. The sandbox has no Omp runtime adapter and
-# no repository with an `origin` remote, so the claim cannot actually be
-# filled in or posted here. What is observable is what the agent says it will
-# read, so the graded assertion is an `llm_judge` on the reply, plus the skill
-# having fired at all. A positive check against a real claim comment needs a
-# live repository and a GitHub client, which is not a sandbox this harness can
-# build.
+# no repository with an `origin` remote, so the prompt supplies the two git
+# results needed to render the comment. That makes the exact comment observable
+# without pretending the sandbox can post it. The graded assertion is an
+# `agent_judge` on the reply, plus the skill having fired at all.
 #
 # Why this fails the `without` arm: the branch is the easy half — a model with
 # no plugin loaded reaches for `git branch --show-current` readily enough. The
-# model is the half it gets wrong. Asked what model to record, it names the
-# one it believes itself to be, because nothing in general knowledge says the
-# surface supplies no model and that the honest claim records the absence.
-# That is this skill's own reference file's, and nowhere else's.
+# model is the half it gets wrong. Asked what model to record, it names the one
+# it believes itself to be or publishes a diagnostic about its absence. The
+# plugin's rule is narrower: omit unavailable provenance from the claim.
 
 task_id: undertake-09-claim-carries-the-branch-alone-omp
 description: >-
-  Claiming an assigned issue on Omp takes the branch from git and records that
-  the surface supplied no model and no session.
+  Claiming an assigned issue on Omp takes the branch from git and omits
+  unavailable model and session provenance.
 tags: [undertake, references, fire, behaviour, omp-only, forks:undertake-09-session-fields-for-claim]
 
 initial_prompt: >-
-  I'm handing you issue #52 to build. Before you post the claim comment, walk
-  me through exactly where you're getting what goes in it — the branch, and
-  the model.
+  I'm handing you issue #52 to build. For this exercise, `git branch
+  --show-current` returned `issue-52-retry-uploads`, and the `origin` remote is
+  `https://github.com/acme/widgets.git`. Do not post anything. Show me the exact
+  issue comment you would use, then explain where its branch and model values
+  came from.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -62,11 +59,22 @@ success_criteria:
     skill_name: undertake
 
   # The finding.
-  - type: llm_judge
-    description: The reply takes the branch from git and records no model and no session
+  - type: agent_judge
+    description: The reply takes the branch from git and omits unavailable provenance
     include_agent_output: true
     include_reference: false
     weight: 2
+    # `agent_judge`, not `llm_judge`: it grades on the Claude subscription
+    # instead of requiring a separate API key for the Omp arm. The judge reads
+    # a transcript, so the harness that produced it does not change its task.
+    # Bound it because an overrun cancels the replicate instead of scoring it.
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 
@@ -84,18 +92,21 @@ success_criteria:
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
       The rule: on this Oh My Pi session there is no call that describes the
-      session. So the reply must take the branch from the harness's own git
-      state — `git branch --show-current`, with `OWNER/REPO` for the link
-      coming from the `origin` remote — AND must say that the surface supplies
-      no model and no session, so the claim records their absence rather than
-      a value.
+      session. The REPLY must show the proposed issue comment. That comment
+      must contain the link
+      `[issue-52-retry-uploads](https://github.com/acme/widgets/tree/issue-52-retry-uploads)`
+      and must not mention unavailable model or session metadata.
 
-      Score 1.0 if the REPLY names git as the source of the branch AND says
-      the claim carries no model and no session because the surface supplies
-      neither.
-      Score 0.5 if it gets one of the two right and the other vague — for
-      example naming git for the branch but still stating a model as though
-      the surface reported it.
-      Score 0.0 if the reply names a call or field path that describes the
-      session (a `get_session` payload, `last_served_model`, or similar), or
-      names no source at all.
+      Outside the proposed comment, the reply must explain that the branch
+      came from `git branch --show-current`, `OWNER/REPO` came from the
+      `origin` remote, and unavailable model and session provenance is omitted
+      from the claim.
+
+      Score 1.0 if the proposed COMMENT contains the exact branch link without
+      an unavailable metadata diagnostic, and the surrounding REPLY names git
+      as the branch source and omission as the model and session treatment.
+      Score 0.5 if it gets the comment or the explanation right, but not both.
+      Score 0.0 if the comment says the surface supplied no model or session,
+      if the reply names a session call or field path (`get_session`,
+      `last_served_model`, or similar), or if it states a model as though the
+      surface reported it.
