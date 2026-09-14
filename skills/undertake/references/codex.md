@@ -57,9 +57,9 @@ loop — which is the same reason `Keep it current` below has no cadence.
 The session
 ===========
 
-**There is no session call**, so two of the three things `Claim the issue`
-carries are unavailable: the claim says the surface supplied no model and no
-session, which is the truth of a Codex session, and carries the branch alone.
+**There is no session call.** The claim carries the branch alone. It omits the
+unavailable model and session instead of publishing a diagnostic about another
+harness's session surface.
 
 The branch comes from the harness's own git state, which is the designation
 here. `git branch --show-current` names the branch this session works on.

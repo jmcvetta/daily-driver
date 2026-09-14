@@ -65,8 +65,8 @@ different question — what is checked out, which before `Cut the branch` need
 not be the designated branch.
 
 Where this call is absent — a laptop without the Claude Code Remote tools —
-`Claim the issue` says the surface supplied no model and no session, and
-`Cut the branch` falls through to its second and third sources.
+`Claim the issue` carries the branch alone, and `Cut the branch` falls through
+to its second and third sources.
 
 
 The cadence
