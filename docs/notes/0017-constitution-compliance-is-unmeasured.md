@@ -78,8 +78,9 @@ whatever directory it starts in. Asked whether it had been told how long its
 replies could be, a plain `claude -p` answered YES. The probe above ran under
 `--settings` with the plugin disabled, and the same question then answered NO.
 
-**That is a deviation from #195, recorded rather than glossed.** Step 1 of the
-issue said a YES answer invalidates the probe: stop and report. The work
+**That is a deviation from #195, recorded rather than glossed.** Its
+`Confirm the probe environment is bare` step said a YES answer invalidates the
+probe: stop and report. The work
 continued instead, because the YES had a located and removable cause — a
 plugin entry in the container's global `settings.json`, not a constitution
 leaking from somewhere unknown — and disabling it produced the NO the step
