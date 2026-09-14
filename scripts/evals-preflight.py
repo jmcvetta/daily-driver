@@ -94,9 +94,9 @@ try:
     import yaml
 except ImportError as exc:  # pragma: no cover - `make check` installs it first
     print(
-        "error: PyYAML is required to read task YAML -- it is declared in"
-        " requirements-dev.txt; run 'make check', which installs it into"
-        f" .dev-deps/ and puts it on PYTHONPATH ({exc})",
+        "error: PyYAML is required to read task YAML -- it is declared in the"
+        " root pyproject.toml's dev group; run 'make check', which runs the"
+        f" legs under uv (installed into .venv from uv.lock) ({exc})",
         file=sys.stderr,
     )
     sys.exit(1)

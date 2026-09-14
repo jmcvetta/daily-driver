@@ -39,7 +39,6 @@ WHAT IT COVERS
 
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 import tempfile
@@ -189,18 +188,13 @@ def base_env(tmp_home: Path, *, stub_bin: Path | None, pylib_dir: Path, **overri
     real developer `.env` or credential file elsewhere on the machine cannot
     leak in.
 
-    That redirect also hides a user-site PyYAML from the guard subprocess --
-    `site` resolves the user directory from `HOME` at import time -- so the
-    caller's `PYTHONPATH` is carried through, after the stub's directory:
-    when the leg runs under `make`, that inheritance is what brings the
-    Makefile's `.dev-deps/` (and PyYAML with it) into the subprocess. The
-    stub's directory stays first, so the stub `coder_eval` package still
-    wins over anything on the inherited path.
+    The venv interpreter the Makefile runs this script under resolves its
+    imports from the venv's own site-packages -- not from the user site,
+    which resolves from `HOME` -- so PyYAML reaches the subprocess through
+    the interpreter itself, and the redirect hides nothing the guard needs.
     """
     path = f"{stub_bin}:/usr/bin:/bin" if stub_bin is not None else "/usr/bin:/bin"
-    inherited = os.environ.get("PYTHONPATH")
-    pythonpath = f"{pylib_dir}{os.pathsep}{inherited}" if inherited else str(pylib_dir)
-    env = {"PATH": path, "HOME": str(tmp_home), "PYTHONPATH": pythonpath}
+    env = {"PATH": path, "HOME": str(tmp_home), "PYTHONPATH": str(pylib_dir)}
     env.update(overrides)
     return env
 
