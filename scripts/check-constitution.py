@@ -582,8 +582,8 @@ def collapse(text: str) -> str:
     return " ".join(text.split())
 
 
-def check_task_isolation_policy(errors: list[str]) -> None:
-    """Each CLI receives the task-isolation rule through its real route."""
+def check_hook_task_isolation_policy(errors: list[str]) -> None:
+    """Each hook-driven CLI receives the complete task-isolation rule."""
     delivered = {
         harness: hook_specific(
             run_hook(mode, event),
@@ -593,10 +593,15 @@ def check_task_isolation_policy(errors: list[str]) -> None:
         for harness, mode, event_name, event in CONTEXT_EVENTS
         if mode == "session-start"
     }
-    delivered["Oh My Pi"] = constitution_body()
 
     for harness, context in delivered.items():
-        normalized = collapse(context) if isinstance(context, str) else ""
+        if not isinstance(context, str) or not context.strip():
+            errors.append(
+                f"{harness}: no constitution context was delivered for "
+                "task-isolation checks"
+            )
+            continue
+        normalized = collapse(context)
         missing = [
             marker for marker in TASK_ISOLATION_MARKERS if marker not in normalized
         ]
@@ -819,7 +824,7 @@ def main() -> int:
     try:
         check_wiring(errors)
         check_delivery(errors)
-        check_task_isolation_policy(errors)
+        check_hook_task_isolation_policy(errors)
         check_loud_failure(errors)
         check_omp_metadata(errors)
         check_eval_marker(errors)
@@ -833,9 +838,9 @@ def main() -> int:
     if errors:
         return 1
     print(
-        "constitution delivery holds: Claude Code, Codex and Oh My Pi receive "
+        "constitution delivery holds: Claude Code and Codex receive "
         f"{CONSTITUTION.relative_to(ROOT)}'s body verbatim and identically; "
-        "task isolation is present, and missing or malformed rules fail loudly"
+        "Omp metadata and task isolation are present; failures are loud"
     )
     return 0
 

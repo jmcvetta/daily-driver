@@ -80,9 +80,9 @@ moment, and says something the harness does not already say — it is paid for i
 every session and every subagent, forever. Amendments are pull requests against
 this repository.
 
-**Whether a session got it**: `scripts/check-constitution.py` drives every
-delivery route across Claude Code, Codex and Oh My Pi, and asserts they carry
-the file verbatim and identically. The
+**Whether a session got it**: `scripts/check-constitution.py` drives the Claude
+Code and Codex hook routes, validates Omp's `alwaysApply` metadata, and asserts
+that all three routes use the same body. The
 `constitution-reaches-subagent` eval covers the half a script cannot: it asks a
 subagent, with every file-reading tool closed, for a phrase only the injected
 constitution could have told it.
