@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.0](https://github.com/jmcvetta/daily-driver/compare/v0.21.0...v0.22.0) (2026-09-14)
+
+
+### Features
+
+* **embark:** fall back to harness-local subagents where web sessions cannot open ([#210](https://github.com/jmcvetta/daily-driver/issues/210)) ([25e51cf](https://github.com/jmcvetta/daily-driver/commit/25e51cf8ff04dd01faaa47730d272b159e989f30))
+
 ## [0.21.0](https://github.com/jmcvetta/daily-driver/compare/v0.20.1...v0.21.0) (2026-09-14)
 
 
