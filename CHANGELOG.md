@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.21.0](https://github.com/jmcvetta/daily-driver/compare/v0.20.1...v0.21.0) (2026-09-14)
+
+
+### Features
+
+* **task-worktree:** isolate repository-changing tasks ([#197](https://github.com/jmcvetta/daily-driver/issues/197)) ([df13e46](https://github.com/jmcvetta/daily-driver/commit/df13e469a64abc242135c9a6b09232f29502f825))
+
 ## [0.20.1](https://github.com/jmcvetta/daily-driver/compare/v0.20.0...v0.20.1) (2026-09-14)
 
 
