@@ -67,8 +67,8 @@ WHAT IT DOES NOT ASSERT
     That the halves of a fork grade equivalent rules. Nothing but reading them
     can say that.
 
-No third-party imports beyond PyYAML, which `evals-preflight.py` already
-requires of this repository.
+No third-party imports beyond PyYAML, declared in `requirements-dev.txt` and
+installed by the Makefile's `.dev-deps/` bootstrap.
 """
 
 from __future__ import annotations
@@ -79,8 +79,13 @@ from pathlib import Path
 
 try:
     import yaml
-except ImportError as exc:  # pragma: no cover - PyYAML is a house-wide given
-    print(f"error: PyYAML is required to read task YAML ({exc})", file=sys.stderr)
+except ImportError as exc:  # pragma: no cover - `make check` installs it first
+    print(
+        "error: PyYAML is required to read task YAML -- it is declared in"
+        " requirements-dev.txt; run 'make check' (which installs it) or"
+        f" 'pip install -r requirements-dev.txt' ({exc})",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parent.parent

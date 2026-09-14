@@ -29,6 +29,33 @@ CODER_EVAL_VERSION := 0.11.6
 # through so it cannot be forgotten at a prompt.
 CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
 
+# Dev dependencies of the Python legs, from PyPI. The repository has no
+# Python packaging -- no pyproject.toml, and this file is the first
+# requirements*.txt -- and the legs that import nothing third-party stay
+# that way. PyYAML is the one declared exception: `requirements-dev.txt`
+# declares it, and the three scripts that read YAML import it
+# (`scripts/check-eval-arms.py`, `scripts/evals-preflight.py`,
+# `scripts/evals-variants.py`).
+#
+# `--target` rather than `--user`, for two measured reasons. The user site
+# resolves from `HOME`, and `scripts/check-evals-preflight.py` runs its
+# subject under a redirected `HOME`, where a user-site install is invisible
+# to exactly the check that most needs the package. And a system pip on a
+# PEP 668 distro refuses outright ("externally managed environment"). A
+# target directory on `PYTHONPATH` sees neither problem.
+#
+# CI installs nothing Python itself: the legs below declare the stamp as a
+# prerequisite and bootstrap it on first use, so the laptop and CI get
+# PyYAML from the same declaration and cannot drift apart.
+DEV_DEPS_DIR := .dev-deps
+DEV_DEPS_STAMP := $(DEV_DEPS_DIR)/.installed
+
+$(DEV_DEPS_STAMP): requirements-dev.txt
+	rm -rf $(DEV_DEPS_DIR)
+	python3 -m pip install --quiet --disable-pip-version-check \
+		--target $(DEV_DEPS_DIR) -r requirements-dev.txt
+	touch $@
+
 # git_sync: sync master with origin and delete local branches whose upstream
 # is gone. Branches checked out in a linked worktree (marked '+' by
 # `git branch -vv`) are reported as a warning rather than deleted — removal
@@ -183,8 +210,8 @@ check-codex-agent:
 # tags in step. A fork that loses its tag runs in both arms and grades one
 # harness's route under the other's. Credential-free like the other script
 # legs. See the script's docstring.
-check-eval-arms:
-	python3 scripts/check-eval-arms.py
+check-eval-arms: $(DEV_DEPS_STAMP)
+	PYTHONPATH=$(CURDIR)/$(DEV_DEPS_DIR) python3 scripts/check-eval-arms.py
 
 # check-eval-fixtures: build every review-depth fixture repository and assert
 # it has the shape the `review` skill needs. Part of `check` because it needs
@@ -220,8 +247,8 @@ check-step-names:
 # See the script's docstring for what it does and does not catch, and
 # docs/notes/0012-the-judge-needs-its-own-transport.md for why the guard
 # exists.
-check-evals-preflight:
-	python3 scripts/check-evals-preflight.py
+check-evals-preflight: $(DEV_DEPS_STAMP)
+	PYTHONPATH=$(CURDIR)/$(DEV_DEPS_DIR) python3 scripts/check-evals-preflight.py
 
 # check-labels: the issue-label standard is written twice -- the table in
 # `issue-labels` and the resources in infra/github/labels.tf -- and this leg
@@ -280,8 +307,8 @@ evals-plan: evals-variants
 # Wired in front of `evals-plan` rather than beside it, so the cheapest command
 # anyone runs is the one that catches it. See the script's docstring and
 # docs/notes/0013-the-omp-arm.md.
-evals-variants:
-	python3 scripts/evals-variants.py evals/experiments/*.yaml
+evals-variants: $(DEV_DEPS_STAMP)
+	PYTHONPATH=$(CURDIR)/$(DEV_DEPS_DIR) python3 scripts/evals-variants.py evals/experiments/*.yaml
 
 # evals-run: the whole suite on Claude Code, both variants. Costs real money --
 # see evals/README.md for what and why. Narrow it with TASKS=, e.g.
@@ -299,8 +326,8 @@ TASKS ?= tasks/*/*.yaml
 #
 # Runs from `evals/`, same as the model call below, so `$(TASKS)`'s default
 # glob and any override resolve identically in both places.
-evals-preflight:
-	cd evals && python3 ../scripts/evals-preflight.py $(TASKS)
+evals-preflight: $(DEV_DEPS_STAMP)
+	cd evals && PYTHONPATH=$(CURDIR)/$(DEV_DEPS_DIR) python3 ../scripts/evals-preflight.py $(TASKS)
 
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and

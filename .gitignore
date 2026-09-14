@@ -18,3 +18,7 @@ evals/runs/
 
 # Python
 __pycache__/
+
+# Dev dependencies the Makefile installs for the Python legs
+# (requirements-dev.txt -- see the Makefile's .dev-deps bootstrap).
+.dev-deps/

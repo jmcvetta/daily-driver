@@ -43,7 +43,7 @@ WHAT IT DOES NOT FLAG
     says so where it names `codex-daily-driver`; nothing here can.
     Whether the model named by a variant exists.
 
-No third-party imports beyond PyYAML, which the sibling guard already requires.
+No third-party imports beyond PyYAML, declared in `requirements-dev.txt`.
 """
 
 from __future__ import annotations
@@ -57,8 +57,13 @@ from pathlib import Path
 
 try:
     import yaml
-except ImportError as exc:  # pragma: no cover - PyYAML is a house-wide given
-    print(f"error: PyYAML is required to read experiment YAML ({exc})", file=sys.stderr)
+except ImportError as exc:  # pragma: no cover - `make check` installs it first
+    print(
+        "error: PyYAML is required to read experiment YAML -- it is declared in"
+        " requirements-dev.txt; run 'make check' (which installs it) or"
+        f" 'pip install -r requirements-dev.txt' ({exc})",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 

@@ -92,8 +92,13 @@ from pathlib import Path
 
 try:
     import yaml
-except ImportError as exc:  # pragma: no cover - PyYAML is a house-wide given
-    print(f"error: PyYAML is required to read task YAML ({exc})", file=sys.stderr)
+except ImportError as exc:  # pragma: no cover - `make check` installs it first
+    print(
+        "error: PyYAML is required to read task YAML -- it is declared in"
+        " requirements-dev.txt; run 'make check' (which installs it) or"
+        f" 'pip install -r requirements-dev.txt' ({exc})",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 # What the reader should actually DO. Upstream's own dispatch-time message

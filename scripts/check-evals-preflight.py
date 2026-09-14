@@ -39,6 +39,7 @@ WHAT IT COVERS
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -182,13 +183,24 @@ def base_env(tmp_home: Path, *, stub_bin: Path | None, pylib_dir: Path, **overri
     `PATH` carries the stub `coder-eval` first when `stub_bin` is given, and
     no `coder-eval` at all otherwise -- proving the "probe never invoked" and
     "coder-eval absent" cases actually exercise what they claim to.
-    `PYTHONPATH` makes the stub `coder_eval` package importable for the probe
-    subprocess the guard launches, without polluting the test process's own
-    imports. `HOME` is redirected to an empty directory so a real developer
-    `.env` or credential file elsewhere on the machine cannot leak in.
+    `PYTHONPATH` makes the stub `coder_eval` package importable for the
+    probe subprocess the guard launches, without polluting the test
+    process's own imports. `HOME` is redirected to an empty directory so a
+    real developer `.env` or credential file elsewhere on the machine cannot
+    leak in.
+
+    That redirect also hides a user-site PyYAML from the guard subprocess --
+    `site` resolves the user directory from `HOME` at import time -- so the
+    caller's `PYTHONPATH` is carried through, after the stub's directory:
+    when the leg runs under `make`, that inheritance is what brings the
+    Makefile's `.dev-deps/` (and PyYAML with it) into the subprocess. The
+    stub's directory stays first, so the stub `coder_eval` package still
+    wins over anything on the inherited path.
     """
     path = f"{stub_bin}:/usr/bin:/bin" if stub_bin is not None else "/usr/bin:/bin"
-    env = {"PATH": path, "HOME": str(tmp_home), "PYTHONPATH": str(pylib_dir)}
+    inherited = os.environ.get("PYTHONPATH")
+    pythonpath = f"{pylib_dir}{os.pathsep}{inherited}" if inherited else str(pylib_dir)
+    env = {"PATH": path, "HOME": str(tmp_home), "PYTHONPATH": pythonpath}
     env.update(overrides)
     return env
 
