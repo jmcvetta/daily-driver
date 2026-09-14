@@ -1,20 +1,19 @@
 # The Codex arm: the same suites, the same plugin, a third harness.
 #
-# **Why this is its own file rather than a third variant of
-# `with-without.yaml`.** The same reason `omp.yaml` is its own file. Rows that
-# cannot be graded identically across harnesses are forked and routed by tag,
-# and a `coder_eval` variant applies to every task in the run — so one
-# invocation carrying more than one arm's rows would grade one harness's routes
-# under another's and pay for it. Three invocations, filtered by tag, is what
-# separates them: `make evals-run` excludes `omp-only` and `codex-only`,
-# `make evals-run-omp` excludes `claude-only` and `codex-only`, and
-# `make evals-run-codex` excludes both of the others.
+# **Why this is its own file rather than a variant of
+# `with-without.yaml`.** The same routing rule that gives each Omp model its
+# own file applies here. Rows that cannot be graded identically across harnesses
+# are forked and routed by tag, and a `coder_eval` variant applies to every task
+# in the run — so one invocation carrying more than one arm's rows would grade
+# one harness's routes under another's and pay for it. Three invocations,
+# filtered by tag, separate them: `make evals-run` excludes `omp-only` and
+# `codex-only`, `make evals-run-omp` excludes `claude-only` and `codex-only`,
+# and `make evals-run-codex` excludes both of the others.
 #
-# **One variant, not two.** There is no bare-Codex control here, for the reason
-# `omp.yaml` gives: a second variant doubles what the arm costs per run, and
-# this arm has no ablation delta to read yet. The control is within the arm — a
-# positive row and a negative row in the same run, which together say whether
-# the skills reached the session at all.
+# **One treated variant.** This change measures the plugin delta across Omp's
+# model set, where model variety exists. Codex stays one treated variant until
+# its own bare control is needed; the positive and negative rows in this run
+# still show whether the skills reached the session.
 #
 # **`agent: {type: codex-daily-driver}` is not the built-in `codex` kind.** It
 # comes from `coder-eval-codex/`, a `coder_eval` plugin in this repository,
@@ -35,9 +34,9 @@ description: >-
   loaded into Codex.
 
 defaults:
-  # Matched to `with-without.yaml` and `omp.yaml` on purpose: the arms differ in
-  # the harness, and a different replicate count would make them differ in the
-  # confidence interval too.
+  # Matched to `with-without.yaml` and every Omp experiment on purpose: the
+  # arms differ in the harness, and a different replicate count would make them
+  # differ in the confidence interval too.
   repeats: 5
 
   run_limits:
