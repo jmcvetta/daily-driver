@@ -2,17 +2,17 @@
 
 **Status:** decided, 2026-09-07.
 **Provenance:** chosen by an agent in
-[#55](https://github.com/jmcvetta/claude-daily-driver/pull/55) — the same pull request as
+[#55](https://github.com/jmcvetta/daily-driver/pull/55) — the same pull request as
 the change it justifies — and ratified by that merge, not by a separate call
 from the author.
-**Resolves:** [#53](https://github.com/jmcvetta/claude-daily-driver/issues/53).
+**Resolves:** [#53](https://github.com/jmcvetta/daily-driver/issues/53).
 
 Two review rules shipped in the global layer that describe two of the author's
 Terraform repositories and nothing else: never flag `yor_*` / `git_*` tags in
 Terraform resources as stale, and require a reason on every `checkov:skip`.
 Both are correct, and both are genuinely unlearnable — a general-purpose
 reviewer cannot infer either, which is why
-[#35](https://github.com/jmcvetta/claude-daily-driver/issues/35) puts them out
+[#35](https://github.com/jmcvetta/daily-driver/issues/35) puts them out
 of scope for its measurement rather than expecting a built-in to reproduce
 them.
 

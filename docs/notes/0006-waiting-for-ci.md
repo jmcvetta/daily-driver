@@ -2,9 +2,9 @@
 
 **Status:** decided, 2026-09-08; amended, 2026-09-08 and 2026-09-09.
 **Provenance:** chosen by an agent in
-[#100](https://github.com/jmcvetta/claude-daily-driver/pull/100) — the same
+[#100](https://github.com/jmcvetta/daily-driver/pull/100) — the same
 pull request as the change it justifies — and ratified by that merge.
-**Resolves:** [#96](https://github.com/jmcvetta/claude-daily-driver/issues/96).
+**Resolves:** [#96](https://github.com/jmcvetta/daily-driver/issues/96).
 
 `review-cycle` opened `Review the head` with *"Wait for CI to report on the
 pushed head first"* and stopped there. The requirement had no mechanism —

@@ -2,9 +2,9 @@
 
 **Status:** decided, 2026-09-07.
 **Provenance:** audited in
-[#81](https://github.com/jmcvetta/claude-daily-driver/issues/81), decided by
+[#81](https://github.com/jmcvetta/daily-driver/issues/81), decided by
 the author.
-**Resolves:** [#81](https://github.com/jmcvetta/claude-daily-driver/issues/81).
+**Resolves:** [#81](https://github.com/jmcvetta/daily-driver/issues/81).
 
 `rules/constitution.md` calls itself the supreme law of a session, and it
 cites the White Horse Dialogue on naming. A file that says both invites an

@@ -61,7 +61,7 @@ Provenance
 `codex-cli 0.154.0`, read on 2026-09-12 from the installed binary and from
 `codex --help` and its subcommands. The subcommand surface is quoted from
 `--help` output. **`set_thread_title` was not driven**: reaching it needs the
-terminal UI, which [#181](https://github.com/jmcvetta/claude-daily-driver/issues/181)
+terminal UI, which [#181](https://github.com/jmcvetta/daily-driver/issues/181)
 established cannot be reached without credentials. The tool name and its
 description are read from the binary's own tool table, beside the eight other
 `agent_tasks` tools [`../../embark/references/codex.md`](../../embark/references/codex.md)

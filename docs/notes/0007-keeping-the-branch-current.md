@@ -2,11 +2,11 @@
 
 **Status:** decided, 2026-09-08; amended, 2026-09-08 and 2026-09-09.
 **Provenance:** chosen by an agent in
-[#115](https://github.com/jmcvetta/claude-daily-driver/pull/115), the pull
+[#115](https://github.com/jmcvetta/daily-driver/pull/115), the pull
 request that carries the change it justifies, and ratified by that merge. The
 cadence was amended straight after that merge, by the author's correction that
 `master` here moves every few minutes.
-**Resolves:** [#113](https://github.com/jmcvetta/claude-daily-driver/issues/113).
+**Resolves:** [#113](https://github.com/jmcvetta/daily-driver/issues/113).
 
 `undertake` ended at `Ready for review`. Commits land on `master` several times
 a day here, so a pull request waiting on a human reviewer goes behind its base

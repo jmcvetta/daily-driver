@@ -2,11 +2,11 @@
 
 **Status:** decided, 2026-09-12.
 **Provenance:** decided across
-[#180](https://github.com/jmcvetta/claude-daily-driver/issues/180) and its
+[#180](https://github.com/jmcvetta/daily-driver/issues/180) and its
 children, as each part was built. This note records those decisions after the
 fact, in one place, the way [`0011`](0011-two-harnesses-one-skill-tree.md)
 recorded the ones spread over #148.
-**Resolves:** [#186](https://github.com/jmcvetta/claude-daily-driver/issues/186).
+**Resolves:** [#186](https://github.com/jmcvetta/daily-driver/issues/186).
 **Extends:** [`0011`](0011-two-harnesses-one-skill-tree.md), which made the tree
 portable and set the shape this follows.
 **Amends:** [`0011`](0011-two-harnesses-one-skill-tree.md) in two places, marked
@@ -145,7 +145,7 @@ nor sufficient there.
 
 **The install verb is `add`.** `codex plugin marketplace add` matches Claude
 Code's spelling; `codex plugin install` does not exist, and the second command is
-`codex plugin add daily-driver@claude-daily-driver`.
+`codex plugin add daily-driver@daily-driver`.
 
 ## Known limits, recorded rather than fixed
 

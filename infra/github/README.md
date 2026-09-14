@@ -1,6 +1,6 @@
 # GitHub Repository Configuration
 
-Manages the configuration of the `jmcvetta/claude-daily-driver` repository
+Manages the configuration of the `jmcvetta/daily-driver` repository
 itself: merge strategy, branch protection, Dependabot alerts, and the issue
 labels.
 
@@ -149,6 +149,57 @@ The description strings are duplicated in the skill's table, and
 `scripts/check-labels.py` fails `make check` when they drift. That check is a
 leg of `check` rather than of `check-infra`: it needs only Python, so a laptop
 editing a skill runs it without OpenTofu installed.
+
+## Renaming the Repository
+
+`local.repository` in `main.tf` is the repository's name, so a rename is an
+edit there and an apply. The repository renames in place — `name` is not
+`ForceNew`, and `Update` re-reads the id from the response — and branch
+protection binds to the repository's `node_id`, which a rename does not
+change. GitHub redirects the old path, so clones, links and open pull
+requests keep working.
+
+The labels do not rename in place. `github_issue_label` takes the repository
+by *name* and marks that field `ForceNew`, and its `Read` never writes the
+name back, so a refresh cannot reconcile it. The plan for a rename — measured
+with provider 6.13.0 against this stack's committed state — is:
+
+```
+# github_issue_label.epic must be replaced
+-/+ resource "github_issue_label" "epic" {
+      ~ repository = "claude-daily-driver" -> "daily-driver" # forces replacement
+```
+
+for all five labels, plus `github_repository_vulnerability_alerts`, which
+holds nothing worth keeping. A destroyed label is stripped from every issue
+carrying it, and creating it again does not put it back.
+
+That replacement used to be harmless, which is why a rename may be remembered
+as uneventful. Through provider 6.12 the label's `Create` looked the label up
+first and *edited* it if it existed — the published docs still say so — so a
+destroy that quietly failed to delete was papered over by a create that
+quietly updated. From 6.13.0 `Create` is a bare `CreateLabel`, and the
+fallback is gone: on this provider the apply either deletes the labels for
+real, or fails with `already_exists` after dropping them from state.
+
+So move the labels in state instead of letting the plan replace them:
+
+```bash
+cd infra/github
+export GITHUB_TOKEN=$(gh auth token)
+
+tofu apply -target=github_repository.this          # the rename, alone
+
+for label in epic task bug proposal research; do   # re-adopt under the new name
+	tofu state rm "github_issue_label.$label"
+	tofu import "github_issue_label.$label" "daily-driver:$label"
+done
+
+tofu plan                                          # expect: alerts replaced, nothing else
+tofu apply
+```
+
+Commit `terraform.tfstate` afterwards, as with any other apply.
 
 ## Deliberate Exclusions
 

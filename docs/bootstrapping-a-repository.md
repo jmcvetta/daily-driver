@@ -14,13 +14,13 @@ performed from outside.
 
 ## Where an install puts its state
 
-`claude plugin install --scope project daily-driver@claude-daily-driver` — the
+`claude plugin install --scope project daily-driver@daily-driver` — the
 explicitly project-scoped form — still splits across two places:
 
 | Written into the repository | Written into `~/.claude` |
 | --------------------------- | ------------------------ |
 | `enabledPlugins` — a pointer | `extraKnownMarketplaces` — the registration |
-| | `plugins/cache/claude-daily-driver/daily-driver/<version>/` — the bytes |
+| | `plugins/cache/daily-driver/daily-driver/<version>/` — the bytes |
 
 Only the pointer travels with a `git clone`, and a pointer at a cache nothing
 filled loads nothing. The bytes land at **user** scope even when project scope
@@ -42,15 +42,15 @@ A repository *can* declare that it wants the plugin, with an
 ```json
 {
   "extraKnownMarketplaces": {
-    "claude-daily-driver": {
+    "daily-driver": {
       "source": {
         "source": "github",
-        "repo": "jmcvetta/claude-daily-driver"
+        "repo": "jmcvetta/daily-driver"
       }
     }
   },
   "enabledPlugins": {
-    "daily-driver@claude-daily-driver": true
+    "daily-driver@daily-driver": true
   }
 }
 ```
@@ -61,7 +61,7 @@ one key at a time, with the same stanza, untrusted and trusted:
 | Project-scope key | Untrusted | Trusted |
 | ----------------- | --------- | ------- |
 | `enabledPlugins` | honoured — all six skills it then carried loaded | honoured |
-| `extraKnownMarketplaces` | ignored: `installPluginsForHeadless` logs `no marketplaces declared` | `installed marketplace claude-daily-driver` |
+| `extraKnownMarketplaces` | ignored: `installPluginsForHeadless` logs `no marketplaces declared` | `installed marketplace daily-driver` |
 
 The gate sits on exactly the key that fetches things. The `enabledPlugins` row
 was measured with the marketplace already registered and cached in user
@@ -93,15 +93,17 @@ repository's own settings, the block above — has drifted from the manifests.
 
 Two names in it are easy to get wrong, and each fails the same silent way:
 
-- **The marketplace is `claude-daily-driver`, not `daily-driver`.** A
-  marketplace is named by its manifest's `name`, which is the repository's
-  name; the plugin inside it is `daily-driver`. Measured: `claude plugin
-  marketplace add jmcvetta/claude-daily-driver` records it under
-  `claude-daily-driver` in `~/.claude/plugins/known_marketplaces.json`.
+- **The marketplace is named after the repository, not after the plugin.** A
+  marketplace is named by its manifest's `name`, and here that is
+  `daily-driver`. Measured: `claude plugin marketplace add
+  jmcvetta/daily-driver` records it under `daily-driver` in
+  `~/.claude/plugins/known_marketplaces.json`. The plugin inside it is
+  `daily-driver` too, because the repository and the plugin now carry one
+  name — so the two halves agreeing here proves nothing, and each still has
+  to be read from its own manifest.
 - **The enablement key is `plugin@marketplace`**, so
-  `daily-driver@claude-daily-driver`. The symmetrical-looking
-  `daily-driver@daily-driver` names a marketplace that does not exist, and an
-  entry whose marketplace is not registered is skipped as orphaned.
+  `daily-driver@daily-driver`. An entry whose marketplace is not registered
+  is skipped as orphaned, and nothing says so.
 
 ## Codex has no stanza at all
 
@@ -195,7 +197,7 @@ Three checks, in increasing order of what they actually prove:
 | Check | What it proves |
 | ----- | -------------- |
 | `grep -n enabledPlugins .claude/settings.json` | that the file says so — and the file is the half that fetches nothing. Cold-start-proof, works from anywhere. Only meaningful in a repository that carries the stanza at all: on the install path the README documents nothing writes that key, so a miss here proves nothing |
-| `claude plugin details daily-driver@claude-daily-driver` | that the names are right and the plugin is on this machine. **Not** that it loaded: measured printing the full component inventory for a session whose `init` reported no plugins at all. Says `not found` anywhere the marketplace was never cached |
+| `claude plugin details daily-driver@daily-driver` | that the names are right and the plugin is on this machine. **Not** that it loaded: measured printing the full component inventory for a session whose `init` reported no plugins at all. Says `not found` anywhere the marketplace was never cached |
 | asking a session what it loaded | the question the other two are proxies for |
 
 The third one, headless:
@@ -272,7 +274,7 @@ than inheriting the conclusion. The cloud rows are real cloud sessions.
 
 | Question | Answer |
 | -------- | ------ |
-| Marketplace name registered from `jmcvetta/claude-daily-driver` | `claude-daily-driver` |
+| Marketplace name registered from `jmcvetta/daily-driver` | `daily-driver` |
 | Where `--scope project` writes its state | `enabledPlugins` in the repository; marketplace and cache in `~/.claude` |
 | Stanza in a **trusted** folder | marketplace registered, plugin cached |
 | …and what that session loaded | nothing: `init` reports no plugins, no `daily-driver:pr` |
@@ -281,7 +283,7 @@ than inheriting the conclusion. The cloud rows are real cloud sessions.
 | Stanza in an **untrusted** folder, nothing cached | ignored entirely, silently |
 | Project `enabledPlugins`, **untrusted**, marketplace already cached | honoured: all six skills loaded |
 | Project `extraKnownMarketplaces`, **untrusted** | ignored: `no marketplaces declared` |
-| …the same, **trusted** | `installed marketplace claude-daily-driver` |
+| …the same, **trusted** | `installed marketplace daily-driver` |
 | Stanza in a real Claude Code **cloud session** | not loaded; `hasTrustDialogAccepted: false`, nothing cached |
 | Startup installer, marketplace registered, nothing cached | `installed_plugins.json` stays empty; `Plugin "daily-driver" not cached` |
 | Setup script installing the plugin before launch | loaded, all components present |
@@ -292,7 +294,7 @@ than inheriting the conclusion. The cloud rows are real cloud sessions.
 | Plugin tree at `~/.claude/skills/<name>/` | `Status: ✓ loaded` as `<name>@skills-dir`, no marketplace |
 | The same tree at `.claude/skills/<name>/`, untrusted | skipped: workspace not trusted when plugins were scanned |
 | `claude plugin list` in the stanza-only repository | `No plugins installed` |
-| `claude plugin details daily-driver@claude-daily-driver` in that repository | full component inventory, though nothing had loaded |
+| `claude plugin details daily-driver@daily-driver` in that repository | full component inventory, though nothing had loaded |
 | The same command outside it | `not found` |
 | Harness `ListPlugins` in a cloud session with the plugin live | empty list |
 

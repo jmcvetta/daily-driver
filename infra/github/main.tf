@@ -1,6 +1,6 @@
 # GitHub repository configuration.
 #
-# Encodes the settings of the jmcvetta/claude-daily-driver repository itself:
+# Encodes the settings of the jmcvetta/daily-driver repository itself:
 # merge strategy and branch protection. Run with a token carrying repo admin
 # rights. State is local and committed to Git.
 #
@@ -16,5 +16,5 @@ provider "github" {
 
 locals {
   owner      = "jmcvetta"
-  repository = "claude-daily-driver"
+  repository = "daily-driver"
 }

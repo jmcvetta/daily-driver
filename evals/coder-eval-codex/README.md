@@ -71,7 +71,7 @@ Issue #185 asked for a second one: a mapping of `skill://<name>`, the URL Omp
 engages a skill through, so `skill_triggered` could see it. Codex does not use
 that spelling, and the criterion already sees the one it does.
 
-The spike in [#181](https://github.com/jmcvetta/claude-daily-driver/issues/181)
+The spike in [#181](https://github.com/jmcvetta/daily-driver/issues/181)
 measured both halves. Codex has no skill tool: the model is handed a skills
 table in a developer message and opens `SKILL.md` with an ordinary shell call,
 and a `skill://` mention in a prompt reaches the model as literal text. On the

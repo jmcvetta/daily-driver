@@ -11,7 +11,7 @@ tool, so that one file governs the session and everything it delegates to.
 It is paid for in every session and in every subagent, forever. Nothing lives
 here that does not change behaviour in most sessions, hang off a nameable
 moment, and say something the harness does not already say. Amendments are
-pull requests against `claude-daily-driver`.
+pull requests against `daily-driver`.
 
 ## Voice
 
