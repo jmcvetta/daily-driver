@@ -32,9 +32,15 @@ The wave
 The dispatch is one batch, never one call per task: the items run
 concurrently, and an item that fails to launch is reported in its own result
 while the rest of the batch sails — the one-ship rule `SKILL.md` states,
-delivered by the surface itself. Duplicate-dispatch protection is unchanged:
-the epic's muster rolls and each task issue's claim comments are read before
-the batch is built, exactly as `Take the wave` words it.
+delivered by the surface itself. The batch carries a shared `context` beside
+its items, because the surface requires one, and it holds only what every
+implementor needs: the repository, the base branch, and the fallback protocol
+of `Open the sessions`. Task scope stays in the issue; a summary of it in the
+context is the second copy `SKILL.md` forbids.
+
+Duplicate-dispatch protection is unchanged: the epic's muster rolls and each
+task issue's claim comments are read before the batch is built, exactly as
+`Take the wave` words it.
 
 Each item's prompt is the task issue number and the instruction to undertake
 it, and nothing else. The prompt boundary of `Open the sessions` holds.
@@ -43,16 +49,22 @@ it, and nothing else. The prompt boundary of `Open the sessions` holds.
 The model an implementor runs
 =============================
 
-The `task` surface selects an agent type, not a model identifier. The cheaper
-default of `Open the sessions` is therefore expressed as the default
-implementation agent type, and **the model each implementor actually ran on is
-read back from what the harness reports of that subagent** — never recalled.
+The `task` surface selects an agent type, not a model identifier, and this
+plugin ships no agents of its own. The cheaper default of `Open the sessions`
+is therefore the default implementation agent type, made cheaper by the
+harness's own task-role model configuration — and **what each implementor
+actually ran on is read back from what the harness reports of that
+subagent**, never recalled. Where that report names the orchestrator's own
+model for a routine task, the muster roll records it as it is: a cheaper
+default that configuration did not deliver is a configuration gap, reported
+rather than papered over.
+
 The task issue's `Model:` line is advisory here, exactly as `SKILL.md` says:
-it is the judgement `epic` made, and the orchestrator reads it before deciding
-whether the cheaper default is safe for this task. The bypass is the
-orchestrator's judgement too, made the same way: dispatch a stronger agent
-type for security-sensitive or unusually complex work, or take the task
-itself.
+it is the judgement `epic` made, and the orchestrator reads it before
+deciding whether the cheaper default is safe for this task. The bypass is
+the orchestrator's judgement too, made the same way: dispatch a stronger
+agent type for security-sensitive or unusually complex work, or take the
+task itself.
 
 
 Asking for help
@@ -88,12 +100,19 @@ request, its checks and its review threads are still how work in progress is
 told from work stuck, and the epic's graph is still how a task being home is
 read. `Take the wave`'s three empty-batch answers read the same graph.
 
+**The lifecycle ends where the implementors finish.** A subagent's completion
+wake is spent by then and its pull request is still open; where the surface
+delivers no pull-request event and holds no durable timer, the close of the
+wave — the wave marked `done`, the next one launched — is resumed by the next
+`embark` invocation, and that is said once rather than claimed as a watch.
+
 
 The strong-model review
 =======================
 
 At each implementor's ready gate, the round is run by a strong model — the
-orchestrator or the shared advisor, never the implementor. The surface is
+orchestrator or the shared advisor, never the implementor. The implementor
+hands its head over the messaging above and waits; the surface is
 `review-cycle`'s own [`omp.md`](../../review-cycle/references/omp.md): the
 `reviewer` task agent, dispatched through `task`. Its findings go back to the
 implementor over the messaging above and are answered under the round's

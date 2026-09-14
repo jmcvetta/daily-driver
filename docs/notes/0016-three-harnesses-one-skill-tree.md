@@ -115,7 +115,11 @@ each says so in its own file rather than degrading quietly:
   `create_thread`'s own contract reads *"Create and start a separate Codex task
   only when the user explicitly asks for a new task"*, which is the exact
   opposite of `Waves launch without confirmation`. Reconciling those is a
-  decision, not a workaround to write here.
+  decision, not a workaround to write here. *(Updated by
+  [#209](https://github.com/jmcvetta/daily-driver/issues/209): the web route
+  stays closed, and `embark` now runs its harness-local subagent fallback
+  here instead of stopping — the reconciliation above remains open for the
+  web route.)*
 - **`review-cycle`'s wait** — `codex exec review --base <branch>` is real,
   non-interactive and shell-reachable, but it reviews the checkout rather than a
   pull request, takes no effort level, and posts nothing; and nothing on this

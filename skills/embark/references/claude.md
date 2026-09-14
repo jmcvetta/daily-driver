@@ -2,8 +2,8 @@
 
 `SKILL.md` names each operation in words. This file names the call, for a
 session running in Claude Code. Omp's routes are in [`omp.md`](omp.md) and
-Codex's in [`codex.md`](codex.md); both of those are stops rather than tables,
-for different reasons each states.
+Codex's in [`codex.md`](codex.md); both carry the harness-local subagent
+fallback rather than web-session tables, for different reasons each states.
 
 
 The epic

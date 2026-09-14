@@ -130,10 +130,13 @@ it to be true. What the epic body carries is the *reading* of it, under
 **Each task records the model that should undertake it.** Sizing a task is the
 moment it is known whether the work is a documentation edit or a schema
 migration, and that judgement is otherwise thrown away: `embark` dispatches
-one ship per task and deliberately does not choose. Pick the lightest model that
-can do the task well — the constitution's *Delegation* rule is that quota is
-the user's money, and it cuts both ways, because a schema migration on a small
-model costs more than it saves.
+one ship per task, and on the web-session route deliberately does not choose —
+the line binds there. On a harness running `embark`'s subagent fallback the
+line is advisory: the fallback's cheaper implementation default applies, and
+the orchestrator reads the line before dispatching. Pick the lightest model
+that can do the task well — the constitution's *Delegation* rule is that
+quota is the user's money, and it cuts both ways, because a schema migration
+on a small model costs more than it saves.
 
 **The form is exact, because a skill parses it rather than a person.** The last
 line of the task issue body, and nothing after it:

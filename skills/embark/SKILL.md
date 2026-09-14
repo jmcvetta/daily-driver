@@ -188,10 +188,13 @@ implementor that fails silently instead of asking is the failure this rule
 exists to surface, and advisor-on-demand alone does not catch it.
 
 **So a strong-model review gates every pull request an implementor
-produced.** No fallback dispatch reaches `Ready for review` until a strong
-model — the orchestrator or the shared advisor — has run `review-cycle`'s
-round on its head. The implementor does not review its own work, and a
-reviewer at the implementor's own strength is not a review.
+produced.** An implementor that reaches `undertake`'s ready gate does not
+take the gate itself: it hands its head to the advisor over the messaging
+and waits, and the strong model — the orchestrator or the shared advisor —
+runs `review-cycle`'s round and returns its findings the same way. The
+implementor answers them under the round's protocol, and `Ready for review`
+waits for the round to close. The implementor does not review its own work,
+and a reviewer at the implementor's own strength is not a review.
 
 **A dispatch that fails sinks one ship, not the fleet.** A model identifier
 the session client rejects fails the call rather than falling back; report
@@ -259,8 +262,13 @@ The orchestrator holds the dispatch handles, and each subagent's result — or
 failure — arrives as a wake of its own. No session client and no durable
 cross-session timer is required for that, which is why their absence is not a
 stop. The GitHub watch runs on top of it unchanged: it is still how work in
-progress is told from work stuck.
-
+progress is told from work stuck. The lifecycle ends where the implementors
+finish, though: a subagent's completion wake is spent by then, its pull
+request still open, and a merge after it is something only the surface can
+deliver. Where the harness carries no pull-request event and no durable
+timer, the close of the wave — the wave marked `done`, the next one
+launched — is resumed by the next `embark` invocation, and that is said
+once rather than claimed as a watch.
 So on every wake:
 
 - **Subscribe to each task's pull request** as it appears, once. Events then
@@ -400,8 +408,12 @@ Four, and two of them are reports rather than questions.
   for work not yet decomposed.
 - **No wave to take**, at `Take the wave`. A report: every open task is blocked
   by something open, so name the issue that blocks and wait for it.
-- **A session that stopped to ask**, at `Recover a session`. Name the task, its
-  session and its pull request, and hand the question to the user. Guessing at
+- **A session that stopped to ask**, at `Recover a session`. Name the task,
+  its session and its pull request, and hand the question to the user. A
+  fallback implementor's question is the other thing: it arrives through the
+  messaging, is readable, and is answered on the advisor route. This stop
+  covers the question that cannot be read — a web session that stopped, or a
+  delivery that failed. Guessing at
   the answer is guessing at intent twice over — the constitution forbids it
   once, and this skill did not write the code being asked about.
 - **The epic's graph disagreeing with its body about a blocker**, at `Take the

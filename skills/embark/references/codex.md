@@ -51,6 +51,12 @@ the epic's muster rolls and each task issue's claim comments are read before
 the wave is built, exactly as `Take the wave` words it, and a delegation that
 fails to launch is reported while the rest of the wave sails.
 
+Until the namespace is driven, the delegation operation and its batch
+semantics cannot be named more concretely than this. A Codex session that
+cannot resolve them at run time stops at `Open the sessions` and says so —
+a stop at dispatch, with the wave named, not a declaration that the skill
+does not run.
+
 
 What this surface has not been measured to do
 =============================================
@@ -65,10 +71,12 @@ each is written the way the round should read it:
 - **A model argument.** No delegation argument is measured to select a model.
   The cheaper default of `Open the sessions` is therefore expressed as the
   delegation's default implementor, and the model an implementor actually ran
-  on is read back from what the harness reports of that subagent, never
-  recalled. The task issue's `Model:` line is advisory, the bypass is the
-  orchestrator's judgement, and `SKILL.md`'s wording is the rule this file
-  does not restate.
+  on is read back from what the harness reports of that subagent where it
+  reports one, never recalled; where nothing reports it, the muster-roll row
+  records the implementor's agent type and marks the model unreported — a
+  guessed identifier is not a measurement. The task issue's `Model:` line is
+  advisory, the bypass is the orchestrator's judgement, and `SKILL.md`'s
+  wording is the rule this file does not restate.
 - **Agent-to-agent messaging.** Whether a delegated implementor can send a
   question back to the delegating session is not measured. The route this
   file specifies is `SKILL.md`'s: the advisor is the orchestrator itself, and
@@ -91,7 +99,9 @@ The strong-model review
 =======================
 
 At each implementor's ready gate, the round is run by a strong model — the
-orchestrator or the shared advisor, never the implementor. The surface is
+orchestrator or the shared advisor, never the implementor. The implementor
+hands its head over the messaging where the namespace carries one, and
+waits; the surface is
 `review-cycle`'s own [`codex.md`](../../review-cycle/references/codex.md):
 `codex exec review --base <branch>`, which starts a fresh session with its own
 model — that is what makes it a named surface rather than a bare subagent,
