@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.1](https://github.com/jmcvetta/daily-driver/compare/v0.20.0...v0.20.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* **undertake:** make claim comments harness-neutral ([#199](https://github.com/jmcvetta/daily-driver/issues/199)) ([0282c4f](https://github.com/jmcvetta/daily-driver/commit/0282c4f5f5284d7c2bb58f2a6fad6d7a15f9ce03))
+
 ## [0.20.0](https://github.com/jmcvetta/daily-driver/compare/v0.19.0...v0.20.0) (2026-09-14)
 
 
