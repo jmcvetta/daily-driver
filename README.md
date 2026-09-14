@@ -87,10 +87,12 @@ subagent, with every file-reading tool closed, for a phrase only the injected
 constitution could have told it.
 
 **Whether it landed**: arriving and being obeyed are different questions, and
-the `constitution-reply-is-concise` eval asks the second. It puts a one-line
-answer under every pressure to write ten and counts the lines that come back.
-`Before you reply` is the rule it measures because that rule's compliance is
-countable; the rest of the file needs a judgment about engineering instead.
+the second is unmeasured. The `constitution-reply-is-concise` eval asked it
+until 2026-09-14 and could not separate the arms, rebuilt design included —
+the untreated model is already inside the `Before you reply` budget in that
+harness. The row is deleted and
+[`docs/notes/0017-constitution-compliance-is-unmeasured.md`](docs/notes/0017-constitution-compliance-is-unmeasured.md)
+carries the numbers.
 
 **How it arrives**: a plugin cannot ship a `CLAUDE.md`, so three injection
 points deliver the file — `SessionStart` for the session, and `PreToolUse` on
@@ -360,9 +362,9 @@ stack — see [infra/github/README.md](infra/github/README.md). `make evals-run`
 needs a live model, and CI here is
 credential-free — see [evals/README.md](evals/README.md); `TASKS='tasks/constitution/*.yaml'` is the
 other half of the constitution's test, since only a real session can prove the
-harness honours the subagent hook. Those rows carry `skip:codex`: the Codex arm
+harness honours the subagent hook. That row carries `skip:codex`: the Codex arm
 links skills and installs no hooks, so the constitution never reaches that
-session and both rows would score zero for a reason that is not the
+session and it would score zero for a reason that is not the
 constitution's.
 
 `make mcp-usage` is not a check. It counts which GitHub MCP tools this laptop

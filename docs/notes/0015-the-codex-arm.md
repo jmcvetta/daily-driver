@@ -143,9 +143,12 @@ tag, and never takes a row out of every arm.
 hole.** `coder_eval`'s Codex agent symlinks skills and installs nothing else —
 no `hooks/hooks.json`, so no `SessionStart` and no `PreToolUse` on the `Agent`
 tool. The constitution never reaches the session. `reaches-subagent` measures
-whether the text arrives and `reply-is-concise` measures whether it lands; both
+whether the text arrives and `reply-is-concise` measured whether it lands; both
 would score 0 for a reason that has nothing to do with the constitution, which
 is the exact failure `0013` built the Omp arm's `omp plugin link` to avoid.
+(`reply-is-concise` was retired on 2026-09-14 — see
+[`0017`](0017-constitution-compliance-is-unmeasured.md) — so only the first of
+the two rows still exists. The hole this paragraph describes is unchanged.)
 
 The Omp arm's fix does not transfer. #181 measured that a real Codex session
 does load `hooks/hooks.json` and does deliver the constitution as a developer
