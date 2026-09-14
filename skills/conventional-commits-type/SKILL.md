@@ -37,11 +37,12 @@ Three titles this toolkit reached for, and why each was the wrong word:
   unreachable on every run, so no review had ever applied it. After the
   merge one does.
 - *"fix(check): declare pyyaml as a dev dependency of the check legs"* —
-  the title #215 carries. PyYAML entered as a dev dependency of the
-  `make check` legs: nothing a session loading the plugin observes moved,
-  yet the title claims a bug fix, and release-please cuts one under
-  *Bug Fixes* for a defect nobody had. `test(dev-deps): …` is the honest
-  shape; the ships-versus-verify boundary under *The question* is why.
+  the title #215 was opened with, and since retitled `test(dev-deps): …`.
+  PyYAML entered as a dev dependency of the `make check` legs: nothing a
+  session loading the plugin observes moved, yet the title claimed a bug
+  fix, and release-please would have cut one under *Bug Fixes* for a
+  defect nobody had. `test(dev-deps): …` is the honest shape; the
+  ships-versus-verifies boundary under *The question* is why.
 
 The first two reached for the smaller word; the third reached for the
 louder one. Both directions misread the same way — from what the diff looks
@@ -114,8 +115,9 @@ and nothing below it runs.
    effect is on the repository's own verification — the tests, the `make
    check` legs, fixtures, eval tooling, or the dev dependencies of any of
    them — no consumer observes anything, and the type is `test`: `build`
-   where the change is to the manifest or packaging that carries the
-   tooling, `ci` where it is a workflow leg's definition. A broken check
+   where the change is to the packaging or build tooling itself, `ci`
+   where it is a workflow leg's definition. Declaring a dependency of the
+   check legs is a `test` change, as the #215 example shows. A broken check
    leg is not a defect in the shipped thing, and titling it `fix` cuts a
    bug-fix release for a change nobody consuming the repository can
    observe — the shape of #215. The gate fires on the *whole effect*: a
