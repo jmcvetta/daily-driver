@@ -34,7 +34,7 @@ fifteen skills:
 | `undertake` | Takes a piece of work from its description to a pull request ready for review, opening the issue first where there is none, and keeping the branch current with its base after. |
 | `task-worktree` | Gives every repository-changing task a feature branch and sibling worktree before task research, then keeps all task operations rooted there without changing the primary worktree. |
 | `epic` | Breaks work too big for one pull request into task issues under an epic: the two gates that decide there is one, the plan agreed before anything is written, and the waves the sub-issue panel cannot render. |
-| `embark` | Works an epic: one Claude session per task issue in the current wave, the muster roll posted to the epic in place of a confirmation, and the watch kept through the pull requests rather than the session client. |
+| `embark` | Works an epic: one session per task issue in the current wave — or, where the harness cannot open web sessions, one harness-local subagent per task — the muster roll posted to the epic in place of a confirmation, and the watch kept through the pull requests rather than the session client. |
 | `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
 
 A skill fires on its slash command where it has one, on natural phrasings of
@@ -308,7 +308,8 @@ and install (or `omp plugin link .`) to exercise the adapter. Measured on omp
 shell, the way it does on Omp. It has no durable wake and nothing that blocks on
 a check, so `review-cycle` cannot wait and `undertake`'s `Keep it current`
 cadence stops at `Ready for review`. It has no session client an unattended run
-can reach, so `session-title` and `embark` say so instead of guessing. Each of
+can reach, so `session-title` says so instead of guessing, and `embark` runs its
+harness-local subagent fallback there instead of the web-session route. Each of
 those is written in the skill's own `references/codex.md`, with what would have
 to become true for it to change.
 

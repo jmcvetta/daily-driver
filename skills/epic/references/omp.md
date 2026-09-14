@@ -43,10 +43,12 @@ skill's routes before `Write the graph`.
 The model a task records
 ========================
 
-`Draft the plan` writes a `Model:` line into each task issue. **Omp has no
-session-opening client**, so nothing on this harness reads that line: it is
-written for `embark`, which runs on Claude Code and opens a cloud session per
-task.
+`Draft the plan` writes a `Model:` line into each task issue, and the line is
+read two ways. On Claude Code, `embark` passes it to the session client,
+binding. On this harness, `embark` runs its subagent fallback, and there the
+line is advisory: the fallback's default is a cheaper implementation model,
+and the line is the judgement `embark`'s orchestrator reads before deciding
+whether that default is safe for this task.
 
 Write it anyway. The judgement is made here, at decomposition time, and a task
 issue planned on Omp is undertaken wherever the wave is put to sea. The

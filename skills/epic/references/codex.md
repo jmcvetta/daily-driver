@@ -44,13 +44,15 @@ before `Write the graph`.
 The model a task records
 ========================
 
-`Draft the plan` writes a `Model:` line into each task issue. **Nothing on
-this harness reads it.** Codex does have a session-opening client — the
-`agent_tasks` namespace — but `embark`'s
-[`codex.md`](../../embark/references/codex.md) records why this plugin cannot
-launch a wave through it, so no Codex session opens one per task issue. Nor
-does anything here report the running session's own model, so the identifier
-cannot be read off the session the way the Claude route reads it.
+`Draft the plan` writes a `Model:` line into each task issue. On Claude Code
+the line is passed to the session client, binding. Here `embark` runs its
+subagent fallback — the session-opening `agent_tasks` namespace is one this
+plugin cannot reach, so the wave goes out as local subagents instead — and
+there the line is advisory: the fallback's default is a cheaper implementation
+model, and the line is the judgement `embark`'s orchestrator reads before
+deciding whether that default is safe for this task. Nor does anything here
+report the running session's own model, so the identifier cannot be read off
+the session the way the Claude route reads it.
 
 Write it anyway, exactly as the Omp route does. The judgement is made here, at
 decomposition time, and a task issue planned on Codex is undertaken wherever

@@ -1,101 +1,112 @@
 # Codex routes — embark
 
-`SKILL.md` names each operation in words, and this file is where the calls for
-a session running in Codex would be. There are none it can make. Claude Code's
-routes are in [`claude.md`](claude.md); Omp's, which is a stop like this one,
-is [`omp.md`](omp.md).
+`SKILL.md` names each operation in words. This file names the call, for a
+session running in Codex. Claude Code's routes are in [`claude.md`](claude.md);
+Omp's — the same fallback, on a surface measured further — is
+[`omp.md`](omp.md).
 
 
-This skill does not run here
-============================
+Why the web route has no calls here
+===================================
 
-Same answer as Omp, and not the same reason. Omp has no session-opening client.
-**Codex has one and this skill cannot reach it.**
+The recorded facts stand, and they are now the reason the fallback runs
+rather than the reason the skill stops.
 
-Nine tools in the `agent_tasks` namespace, whose own description is *"Manage
-Codex tasks available through the connected app server"*, cover most of the
-dispatch and the watch:
+**Codex has a session-opening client this skill cannot reach.** Nine tools in
+the `agent_tasks` namespace, whose own description is *"Manage Codex tasks
+available through the connected app server"*, cover most of the dispatch and
+the watch: `create_thread` for `Open the sessions`, `set_thread_title` for
+the title each one carries, `read_thread` and `wait_threads` for the watch,
+`send_message_to_thread` and `set_thread_archived` for `Recover a session`.
+None of that matters, because:
 
-| Tool | What it would have served |
-| ---- | ------------------------- |
-| `create_thread` | `Open the sessions` |
-| `set_thread_title` | The title each one carries, `session-title`'s form |
-| `list_threads`, `list_archived_threads` | Finding the fleet again |
-| `read_thread` | `Watch the wave`, reading a task back directly |
-| `wait_threads` | `Watch the wave`'s backstop |
-| `send_message_to_thread` | `Recover a session`'s correction |
-| `set_thread_archived` | `Recover a session`'s retirement |
-| `fork_thread` | Nothing this skill needs |
+- **The namespace is terminal-UI only.** It is served where that UI is
+  attached to a running app-server daemon, and it is not in the tool list of
+  a `codex exec` run. A fleet is launched unattended by definition, and
+  unattended means `codex exec`.
+- **`create_thread`'s own contract refuses an unasked wave.** It reads
+  *"Create and start a separate Codex task **only when the user explicitly
+  asks for a new task**."* `SKILL.md`'s `Waves launch without confirmation` is
+  the opposite rule, and reconciling the two is a deliberate change to that
+  section, not a route written in passing.
+- **The fleet would be one daemon on one machine.** `codex agents` browses
+  sessions on *"the shared local app-server daemon"*, and every ship would be
+  in one harbour.
 
-Two of them are better than what Claude Code has. `read_thread` reads back
-another task's recent messages and status, which is the thing `claude.md`
-records as unavailable there and the whole reason `Watch the wave` watches pull
-requests instead. `wait_threads` blocks until up to eight other tasks finish or
-need input, which is a watch inside one turn rather than across many.
+So `Open the sessions` takes the harness-local subagent fallback on this
+harness, and the delegation surface is **`multi_agent_v1`** — the namespace
+[`0016`](../../../docs/notes/0016-three-harnesses-one-skill-tree.md) records
+as how Codex delegates, and the one the constitution's `SubagentStart` hook
+exists to reach.
 
-None of that matters yet, because of the four things below.
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Open the sessions` | Dispatch one implementor per task, concurrently | `multi_agent_v1`, one delegation per task issue in a single wave |
+| `Post the muster roll` | Comment on the epic | `gh issue comment <number> --body-file <path>` |
+| `Post the muster roll` | Mark the wave in the epic's body | `gh issue edit <number> --body-file <path>` |
 
-**The namespace is terminal-UI only.** It is a dynamic tool namespace served
-where that UI is attached to a running app-server daemon, and it is not in the
-tool list of a `codex exec` run. A fleet is launched unattended by definition,
-and unattended means `codex exec`.
-
-**`create_thread`'s own contract refuses an unasked wave.** It reads *"Create
-and start a separate Codex task **only when the user explicitly asks for a new
-task**."* `SKILL.md`'s `Waves launch without confirmation` is the opposite
-rule, and it is not a rule this skill may quietly drop: it is what `epic`'s one
-stop at `Agree the plan` bought. A harness whose dispatch tool asks for the
-confirmation `epic` already took is a harness where the two have to be
-reconciled deliberately, by somebody, rather than worked around here.
-
-**There is no durable wake.** Nothing in Codex's tool surface schedules a wake
-that outlives the turn that armed it. `sleep_tool` is a sleep, which
-`review-cycle` forbids outright as a timer rather than a test. `codex queue
---thread <id> --message <text>` injects a message into a saved session and is
-the thing to reach for — it needs an external scheduler to fire it, which makes
-it a workaround rather than a route, and the constitution says to discuss one
-of those before writing it. So
-[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md)'s never-empty
-wake slot has no slot to fill here either, which is the second harness that is
-true of.
-
-**The fleet would be one daemon on one machine.** `codex agents` browses
-sessions on *"the shared local app-server daemon"*. Every ship is in one
-harbour, and the watch that matters runs for hours.
+Each delegation's prompt is the task issue number and the instruction to
+undertake it, and nothing else. Duplicate-dispatch protection is unchanged:
+the epic's muster rolls and each task issue's claim comments are read before
+the wave is built, exactly as `Take the wave` words it, and a delegation that
+fails to launch is reported while the rest of the wave sails.
 
 
-So, on this harness
-===================
+What this surface has not been measured to do
+=============================================
 
-**Say the skill does not run, name the task issues whose blockers are closed,
-and stop** — which is what `omp.md` says, for the reason above rather than for
-its reason. That is `epic`'s `Hand off` reached without a fleet, and it leaves
-the user holding what they need to put the wave to sea from a harness that can.
+**The namespace has never been driven.** [#181](https://github.com/jmcvetta/daily-driver/issues/181)
+could not reach the delegation path — a stub router rejected every spelling
+of `spawn_agent`, and `multi_agent_v2` is not stable — so this file specifies
+the fallback against the namespace rather than against its tools, and the
+provenance below records it. Three things in particular are unmeasured, and
+each is written the way the round should read it:
 
-Reading the epic to name those tasks is ordinary work and needs nothing from
-here: the issue reads go through `gh` in the shell the way Omp's do, and
-`issue-deps` has the graph.
+- **A model argument.** No delegation argument is measured to select a model.
+  The cheaper default of `Open the sessions` is therefore expressed as the
+  delegation's default implementor, and the model an implementor actually ran
+  on is read back from what the harness reports of that subagent, never
+  recalled. The task issue's `Model:` line is advisory, the bypass is the
+  orchestrator's judgement, and `SKILL.md`'s wording is the rule this file
+  does not restate.
+- **Agent-to-agent messaging.** Whether a delegated implementor can send a
+  question back to the delegating session is not measured. The route this
+  file specifies is `SKILL.md`'s: the advisor is the orchestrator itself, and
+  an implementor's question travels by whatever messaging the namespace
+  carries. Until the namespace is driven, a fallback wave is supervised by
+  the orchestrator reading the delegations' reported state and the pulls —
+  and a question that could not travel is caught there. That catch is the
+  second reason the strong-model review exists, so a silent implementor is
+  the review's finding even where the messaging fails.
+- **A wait.** No durable wake exists on Codex, measured in `review-cycle`'s
+  [`codex.md`](../../review-cycle/references/codex.md) and unchanged by the
+  fallback: `sleep_tool` is still a sleep, and a wake built on `at` or cron is
+  still a workaround. The wave is supervised through the delegation lifecycle
+  where the namespace offers a wait; where the turn must end with ships still
+  out, the pulls are the next watcher's entry, and that is said once rather
+  than claimed.
 
-**`codex exec` is not the client, and it is the thing to reach for.** It starts
-a real agent run from the shell, so a session with a shell can start one per
-task. It blocks in the foreground until that run finishes, so a wave of five is
-five in series; backgrounded, it reports back to nothing, which is the failure
-[`0006`](../../../docs/notes/0006-waiting-for-ci.md) records. Neither shape is
-a fleet, and neither survives the session that spawned it.
+
+The strong-model review
+=======================
+
+At each implementor's ready gate, the round is run by a strong model — the
+orchestrator or the shared advisor, never the implementor. The surface is
+`review-cycle`'s own [`codex.md`](../../review-cycle/references/codex.md):
+`codex exec review --base <branch>`, which starts a fresh session with its own
+model — that is what makes it a named surface rather than a bare subagent,
+and why the round runs it once per diff rather than once per push.
 
 
 What would have to become true
 ==============================
 
-Recorded so that one of these arriving is not read as enough on its own.
-
-1. `agent_tasks` reachable from an unattended run, not only from the terminal
-   UI.
-2. A dispatch that does not require the user to ask per task, or a decision
-   that this skill asks on this harness — which is a change to
-   `Waves launch without confirmation` and therefore not one made in passing.
-3. A durable wake, for the watch and for the `Keep it current` cadence every
-   task session would be holding.
+1. `agent_tasks` reachable from an unattended run — which would make the
+   web-session route the road back, not the fallback.
+2. A durable wake, for the watch and for the `Keep it current` cadence every
+   implementor would be holding.
+3. The delegation namespace driven: its tool names, a model argument, and an
+   agent-to-agent messaging route measured. #181's wall stands until then.
 4. A fleet that outlives one local daemon, or a deliberate decision that a
    wave may sink with the machine it was launched from.
 
@@ -103,9 +114,10 @@ Recorded so that one of these arriving is not read as enough on its own.
 Provenance
 ==========
 
-`codex-cli 0.154.0`, read on 2026-09-12. The subcommands and their flags are
-quoted from `--help`; the tool names, their descriptions and the namespace are
-read from the installed binary's own tool table. **None of the nine was
-driven.** [#181](https://github.com/jmcvetta/daily-driver/issues/181)
-established that the terminal UI cannot be reached without credentials, and
-that is the wall this file is behind.
+`codex-cli 0.154.0`, read on 2026-09-12; the `agent_tasks` table, its
+terminal-UI-only finding, and `sleep_tool` are from that reading. **The
+delegation namespace has never been driven**:
+[#181](https://github.com/jmcvetta/daily-driver/issues/181) established that
+the delegation path could not be reached from the eval harness, and nothing
+since has measured it. This file specifies the fallback against the namespace
+rather than against its tools for that reason.

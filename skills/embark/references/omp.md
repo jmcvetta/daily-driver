@@ -1,45 +1,113 @@
 # Omp routes — embark
 
-`SKILL.md` names each operation in words, and this file is where the calls for
-a session running in Oh My Pi would be. There are none. Claude Code's routes
-are in [`claude.md`](claude.md); [`codex.md`](codex.md) is a stop like this
-one, and not for this one's reason.
+`SKILL.md` names each operation in words. This file names the call, for a
+session running in Oh My Pi. Claude Code's routes are in
+[`claude.md`](claude.md); [`codex.md`](codex.md) carries the same fallback as
+this one, on a surface measured less.
+
+**Omp has no session-opening client, so the web route has no calls here.** The
+wave goes out through the harness-local subagent fallback `SKILL.md`'s
+`Open the sessions` states, and the tables below are that fallback resolved to
+Omp's surfaces. The absence of the client — and of the durable cross-session
+wake, measured in `undertake`'s
+[`omp.md`](../../undertake/references/omp.md) — is why the fallback exists,
+not a reason to stop.
+
+Reading the epic is ordinary issue work and needs nothing this file adds:
+`epic`'s own [`omp.md`](../../epic/references/omp.md) has the issue reads, and
+`issue-deps` has the graph.
 
 
-This skill does not run here
-============================
+The wave
+========
 
-**Omp has no session-opening client.** `epic` records the same thing from the
-other end: it writes a `Model:` line into every task issue it opens, and says
-that nothing on this harness reads that line, because the line is written for
-`embark` and `embark` runs on Claude Code.
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Take the wave` | Read a task issue's body and claim | `issue://<number>`, comments included |
+| `Open the sessions` | Dispatch one implementor per task, concurrently | `task`, one item per task issue in a single batch |
+| `Open the sessions` | Name the implementor | the item's `name`, in `session-title`'s form |
+| `Post the muster roll` | Comment on the epic | `gh issue comment <number> --body-file <path>` |
+| `Post the muster roll` | Mark the wave in the epic's body | `gh issue edit <number> --body-file <path>` |
 
-Dispatch is the whole skill. An orchestrator that cannot open a session has no
-fleet to muster, no muster roll worth posting, and nothing to watch — the
-watch is over pull requests that would not exist. Opening the epic's tasks one
-after another in this session is not a smaller version of this skill: it is
-the serial run the skill exists to replace, and it is `undertake` invoked once
-per task with nothing in between.
+The dispatch is one batch, never one call per task: the items run
+concurrently, and an item that fails to launch is reported in its own result
+while the rest of the batch sails — the one-ship rule `SKILL.md` states,
+delivered by the surface itself. Duplicate-dispatch protection is unchanged:
+the epic's muster rolls and each task issue's claim comments are read before
+the batch is built, exactly as `Take the wave` words it.
 
-So on this harness: **say the skill does not run, name the task issues whose
-blockers are closed, and stop.** That is `epic`'s `Hand off` reached without a
-fleet, and it leaves the user holding exactly what they need to put the wave
-to sea from a harness that can.
-
-Reading the epic to name those tasks is ordinary work and needs nothing from
-here — `epic`'s own Omp routes have the issue reads, and `issue-deps` has the
-graph.
+Each item's prompt is the task issue number and the instruction to undertake
+it, and nothing else. The prompt boundary of `Open the sessions` holds.
 
 
-The durable wake is missing too
-===============================
+The model an implementor runs
+=============================
 
-Even given a session client, the watch would not survive. `undertake`'s Omp
-routes record the measurement: Omp's managed timers are unref'd and cleared on
-`session_shutdown`, so a reminder dies with the session and there is no
-`send_later` to hold a wake slot with. A watch over a fleet is a watch across
-many turns and many hours, so it is the half of this skill that depends on a
-durable wake most.
+The `task` surface selects an agent type, not a model identifier. The cheaper
+default of `Open the sessions` is therefore expressed as the default
+implementation agent type, and **the model each implementor actually ran on is
+read back from what the harness reports of that subagent** — never recalled.
+The task issue's `Model:` line is advisory here, exactly as `SKILL.md` says:
+it is the judgement `epic` made, and the orchestrator reads it before deciding
+whether the cheaper default is safe for this task. The bypass is the
+orchestrator's judgement too, made the same way: dispatch a stronger agent
+type for security-sensitive or unusually complex work, or take the task
+itself.
 
-This is recorded so that a session-opening client arriving in Omp later is not
-read as enough on its own. Two things are missing, and this is the second.
+
+Asking for help
+===============
+
+**The messaging is the orchestrator's own agent messaging.** A subagent
+inherits the orchestrator's identity on it, and a question it sends arrives as
+steering; the orchestrator answers the same way. The advisor of
+`Open the sessions` is the orchestrator itself by default. A shared strong
+advisor is one further subagent dispatched once for the wave, addressed by the
+identifier its dispatch returned — one advisor for the wave, never one per
+task.
+
+
+The watch
+=========
+
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Watch the wave` | Read the wave's state | the dispatch handles — `hub jobs` over them, `hub wait` to block on one |
+| `Watch the wave` | Find the pull request for a task issue | `issue://<number>` — `closed_by_pull_requests` |
+| `Watch the wave` | Read a pull request's state and checks | `pr://<number>` |
+
+**A subagent's result — or failure — arrives as a wake of its own**, so the
+wave needs no session client and no durable timer to be supervised: the
+orchestrator ends its turn holding the handles, and each implementor that
+finishes wakes it. That is what `SKILL.md` means by supervising the wave
+through the harness's subagent lifecycle, and it is why the missing durable
+wake is not a stop here.
+
+**The GitHub watch runs on top of it, unchanged.** A task issue's pull
+request, its checks and its review threads are still how work in progress is
+told from work stuck, and the epic's graph is still how a task being home is
+read. `Take the wave`'s three empty-batch answers read the same graph.
+
+
+The strong-model review
+=======================
+
+At each implementor's ready gate, the round is run by a strong model — the
+orchestrator or the shared advisor, never the implementor. The surface is
+`review-cycle`'s own [`omp.md`](../../review-cycle/references/omp.md): the
+`reviewer` task agent, dispatched through `task`. Its findings go back to the
+implementor over the messaging above and are answered under the round's
+protocol; the ready gate is `undertake`'s, and it is not satisfied until the
+round on the head is.
+
+
+Recovering an implementor
+=========================
+
+A correction is a message to the implementor's identifier. An implementor the
+harness reports as failed, or as finished with no pull request across two
+check-ins, is relaunched on the **same branch** — the claim comment
+`undertake` posted on the task issue records it, and the open pull request's
+head confirms it where one exists. The replacement is posted to the epic like
+any other replacement, naming the subagent retired and the one that took
+over.
