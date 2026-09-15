@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.1](https://github.com/jmcvetta/daily-driver/compare/v0.26.0...v0.26.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **skills:** route the Omp wake slot through the scheduler's cancel ([#256](https://github.com/jmcvetta/daily-driver/issues/256)) ([17bb77c](https://github.com/jmcvetta/daily-driver/commit/17bb77c5011bec12b204c3fbd06a8107457b3993))
+
 ## [0.26.0](https://github.com/jmcvetta/daily-driver/compare/v0.25.0...v0.26.0) (2026-09-15)
 
 
