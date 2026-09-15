@@ -5,10 +5,8 @@ description: >-
   being written or revised — including when the user says "rewrite the PR
   description", "update the PR body", "the PR description is thin", or asks
   for more detail in a PR, and including any call Claude makes on its own
-  initiative to `mcp__github__create_pull_request`, to
-  `mcp__github__update_pull_request` that sets a `body`, to Omp's `github`
-  tool's `pr_create` op (`body`), or to `gh pr create` / `gh pr edit` with the
-  body flag — `--body` on Omp, `--body-file` on Codex. Supplies the required
+  initiative that writes or revises a pull request's body while opening or
+  updating one. Supplies the required
   structure: one-line summary, salutation in verse, the issue-reference
   section, executive summary, and engineering detail. Not for the PR title —
   that is `pr-title`.

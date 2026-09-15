@@ -5,10 +5,8 @@ description: >-
   the current branch, or an existing one is being brought up to date as a
   whole — including when the user says "/pr", "open a PR", "create a PR",
   "raise a pull request", or "update the PR", and including any call Claude
-  makes on its own initiative to `mcp__github__create_pull_request`, to
-  `mcp__github__update_pull_request` for anything wider than the title or the
-  body alone, to Omp's `github` tool (`pr_create` op), or to `gh pr create` /
-  `gh pr edit`, which is the route on Omp and on Codex. Supplies the branch
+  makes on its own initiative before creating a pull request, or updating an
+  existing pull request beyond its title or body alone. Supplies the branch
   guard, the existing-PR check, draft state and the call on whether there is
   an issue to reference; the title comes from `pr-title` and the body, issue
   reference included, from `pr-body`.
