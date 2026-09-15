@@ -73,7 +73,9 @@ not survive the session, so it is not `send_later`, and nothing on Omp can wake
 a session that has ended.
 
 Two rules follow. `0010`'s never-empty wake slot is Claude Code only. On Omp,
-`github.run_watch` blocks in-process instead, and `undertake`'s
+`hub` supervises `gh pr checks --watch` with a fifteen-minute stop, then the
+session reads the head commit's check runs and statuses. `github.run_watch` is
+optional and disabled by default, so it is never the Omp route. `undertake`'s
 `Keep it current` cadence — which outlives the turn that armed it — stops at
 `Ready for review`. `0010` is not edited for this: the amendment is recorded
 here, as `0010` recorded its own amendments to `0006` and `0007`.

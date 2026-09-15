@@ -55,41 +55,41 @@ token-usage value, so `usage: unavailable` is required.
 The wait
 ========
 
-**`github.run_watch`.** The built-in `github` tool's `run_watch` op watches the
-head commit's Actions runs and streams until every one has reported. Success is
-double-checked with one more poll before it returns, and a failure names the
-failed jobs.
-
-It is a blocking watch, so the Actions half of the wait is one call. No
-subscription, no backstop, no timer — the three things `claude.md` needs exist
-because Claude has nothing that blocks.
-
-**`run_watch` answers for Actions runs and nothing else**, and `SKILL.md` says
-*reported* means the union of the check runs and the commit statuses. So the
-wait is two reads, not one:
+**A supervised `gh pr checks --watch`.** `github` is optional and disabled by
+default on Omp, so it is never this route. The essential `hub` tool owns a
+`gh` process directly — not through a shell — and keeps its lifecycle visible
+to the session:
 
 | Half | Call |
 | ---- | ---- |
-| The Actions runs | `github.run_watch` on the head commit |
+| The PR check rollup | `hub start` runs `gh pr checks --watch <pr> --repo <owner>/<repo>`; `hub wait` on that name for exit with timeout: 900 |
+| The check runs | `gh api /repos/{owner}/{repo}/commits/{sha}/check-runs` |
 | The commit statuses | `gh api /repos/{owner}/{repo}/commits/{sha}/status` |
 
-Read the statuses **after** `run_watch` returns. A repository that posts none
-answers with an empty `statuses` array and a `state` of `pending`, which is the
-empty answer rather than a report: where the repository is known to post none,
-it reports nothing and there is nothing to wait for; where one is expected and
-has not arrived, keep reading.
+Name the process `ci-<pr>-<short-sha>`. Read the check runs and statuses only
+after the supervised watch exits. The watcher is the wake; the two endpoint
+reads are the verdict. `reported` is their union, not the output of `gh pr
+checks` alone.
 
-**`run_watch` returns immediately on a pull request with zero Actions runs**,
-which is the same empty answer and not the end of the wait. A head pushed
-seconds ago has registered nothing yet.
+**The cap belongs to `hub wait`.** Start timing with that call. On its
+fifteen-minute timeout, call `hub stop` on the same name, read both endpoints
+once, and report every unreported check. A watcher exit with a failed check
+still leads to the two reads: red is reported, not a reason to review without
+the status half.
 
-**The fifteen-minute cap is the round's to keep**, because one blocking call
-has nowhere to put it. Time the wait from the first read. On the cap, stop and
-name what has not reported, as `SKILL.md` says.
+**An empty pair is a registration stop.** `gh pr checks --watch` returns when
+the PR rollup is empty; it cannot observe a future first check, and Omp has no
+durable wake for one. Zero check runs and an empty `statuses` array therefore
+mean no check has registered. Reject that result and report it; do not call it
+green or hide an unbounded poll behind the word *waiting*. This is the partial
+watch exception `SKILL.md` names. A repository known not to post commit
+statuses has no status half, but that fact must be known rather than inferred
+from this first read.
 
-`run_watch` is present wherever the `github` tool is enabled, which includes
-the laptop Omp surface. The surface `SKILL.md` says cannot wait does not arise
-here the way it arises on Claude.
+No `sleep`, subscription, timer, or unmanaged Bash job belongs here. The
+`SKILL.md` prohibition on an unattended shell wait remains: this is an Omp
+supervised process with an explicit stop at the same fifteen-minute cap, not a
+Bash command whose timeout ends the session's control of it.
 
 There is no durable wake
 ------------------------
@@ -101,9 +101,10 @@ session that armed it.
 
 So the never-empty wake slot —
 [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — is
-Claude's rule and not this harness's. It has nothing to hold. `run_watch`
-completes the wait inside the turn, so no wake is scheduled around it, and a
-wake scheduled with nothing to do on it is the noise `0010` exists to prevent.
+Claude's rule and not this harness's. It has nothing to hold. `hub wait`
+completes the supervised watch inside the turn, so no wake is scheduled around
+it, and a wake scheduled with nothing to do on it is the noise `0010` exists
+to prevent.
 Schedule with `daily_driver_schedule`, and cancel with
 `daily_driver_cancel_schedule`, only where the round must hand the pull request
 back to itself for a follow-up **inside the current session** — never as a

@@ -116,6 +116,10 @@ discipline each mechanism needs. What follows holds whichever one is in use.
   pushed seconds ago, means nothing has registered yet rather than that
   everything passed — *every check has reported* is otherwise vacuously true of
   a pull request nothing has looked at. Keep waiting, and let the cap decide.
+  **The exception is a partial watch that cannot observe registration and
+  cannot wake itself.** Its reference must say so; it rejects the empty result
+  and stops under *A surface that can neither block nor wake itself cannot
+  wait*, rather than hiding an unbounded poll behind the word *waiting*.
 - **A wake that is not about a check is still just a read.** The round is its
   own loudest source of the other kind: a review that posts a thread per
   finding, and a reply to every one. None of that is a check reporting, so none
