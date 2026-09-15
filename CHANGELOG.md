@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.1](https://github.com/jmcvetta/daily-driver/compare/v0.22.0...v0.22.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **conventional-commits-type:** send test-only changes to test ([#217](https://github.com/jmcvetta/daily-driver/issues/217)) ([799bc8e](https://github.com/jmcvetta/daily-driver/commit/799bc8e6faff4a833c4f5ba49bdeac1faa682499))
+
 ## [0.22.0](https://github.com/jmcvetta/daily-driver/compare/v0.21.0...v0.22.0) (2026-09-14)
 
 
