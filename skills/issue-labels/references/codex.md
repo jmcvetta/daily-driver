@@ -26,7 +26,7 @@ no read-first is needed here.
 It is also the half that breaks the exactly-one invariant. Swapping one
 standard label for another takes both flags — `--add-label task
 --remove-label proposal` — and an `--add-label` on its own leaves the issue
-carrying two of the five, which `SKILL.md` makes a stop. Write the swap as
+carrying two of the six, which `SKILL.md` makes a stop. Write the swap as
 one call with both flags rather than as two calls with one each.
 
 Finding the issues that carry a label is `gh issue list --label task`, or

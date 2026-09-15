@@ -189,9 +189,12 @@ that do not exist yet, which is why `Fill in the epic` is a step of its own.
 
 **Every issue this step writes carries a label**, and `issue-labels` supplies
 them. The epic gets `epic`, which is the one word that stops `undertake`
-starting on it; each task gets `task`, `bug` or `research`, whichever it is.
+starting on it; each task gets `task`, `bug`, `research` or `human`, whichever
+it is. A child whose work is a person's is written and sequenced like any
+other, and `human` is what tells `embark` to leave it for the person rather
+than open a session on it.
 An issue converted into the epic is **relabelled** rather than labelled: it
-carried something before, and two of the five on one issue is a stop in its
+carried something before, and two of the six on one issue is a stop in its
 own right. Both harnesses make that swap awkward, in opposite ways, and the
 reference file for the one in use says how: a write that *adds* needs the
 remove in the same call, and a write that *replaces* needs the issue's

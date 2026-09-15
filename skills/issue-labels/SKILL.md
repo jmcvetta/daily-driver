@@ -7,8 +7,8 @@ description: >-
   get?", "is this an epic or a task?", "that label is wrong", "which issues
   are ready for an agent?", and including any call Claude makes on its own
   initiative that sets a label on an issue. It fires too whenever `undertake`
-  opens an issue or reads one it
-  is about to start on. Supplies the five labels this toolkit recognises, the
+  opens an issue or reads one it is about to start on. Supplies the six labels
+  this toolkit recognises, the
   one question that picks between them, and the readiness each one states —
   which is what decides whether an agent may start on an issue unattended. Not
   for pull request labels, which nothing here sets, and not for issue
@@ -24,7 +24,7 @@ here answers:
 > **What kind of issue is this, and is it ready for an agent to work
 > unattended?**
 
-Five labels answer it. Every issue carries **exactly one** of them, because a
+Six labels answer it. Every issue carries **exactly one** of them, because a
 second answer to a single question is not extra information — it is a
 disagreement, and nothing resolves it.
 
@@ -44,6 +44,7 @@ harness in use before writing a label.
 | `bug` | Bug report | Yes |
 | `proposal` | Proposed feature | No — decompose it first |
 | `research` | A question to settle | Yes |
+| `human` | Work only a person can do | No — the work is a person's |
 
 The descriptions are the ones GitHub shows, verbatim. They live twice — here
 and in `infra/github/labels.tf` — and `scripts/check-labels.py` fails
@@ -60,8 +61,16 @@ Ask the question in this order. The first answer that holds is the label.
    epic closes when its children do. `epic` is the skill that decides there is
    one and writes the children; this label is what the finished epic then
    carries.
-2. **Is it a bug report?** Then `bug`. Nothing here defines the word.
-3. **Does it close on an answer rather than on a change?** A question to
+2. **Can an agent do the work at all?** Where it cannot — credentials no
+   agent holds, a decision only the user can make, an action outside the
+   repository — it is `human`. The question comes before `bug`, `research` and
+   `task`, because each of those three promises an agent may start and that
+   promise is false whichever of the three the body would otherwise fit. It
+   does not come before `proposal`, which is the last step's other answer: a
+   wish whose shape is still open cannot be judged a person's to do, and
+   deciding the shape is what settles which it is.
+3. **Is it a bug report?** Then `bug`. Nothing here defines the word.
+4. **Does it close on an answer rather than on a change?** A question to
    settle, an option to compare, a spike to run — `research`. What the answer
    produces is not fixed: a note under `docs/`, a set of task issues and an
    epic over them, or a decision not to do the thing at all. **A no is a
@@ -71,7 +80,7 @@ Ask the question in this order. The first answer that holds is the label.
    Where the answer is issues, writing them is `epic`'s, and they are the
    deliverable rather than a separate follow-up. Where it is code, that is a
    separate issue: the research closes, and a `task` opens.
-4. **Is the intent settled?** Where what "done" means is written down and
+5. **Is the intent settled?** Where what "done" means is written down and
    needs no further decision, it is a `task`. Where it is not — a capability
    somebody wants, with the shape of it still open — it is a `proposal`.
 
@@ -85,7 +94,7 @@ What the label decides
 ======================
 
 **Readiness, and nothing else.** `undertake` reads it at `Read the issue and
-its edges`, and one label out of the five is a stop in two cases:
+its edges`, and one label out of the six is a stop in three cases:
 
 - An `epic` is a stop **for `undertake`**, which needs code to put on a
   branch and an epic has none. It is not a stop for every reader of the
@@ -96,8 +105,13 @@ its edges`, and one label out of the five is a stop in two cases:
   already refuses to write an issue for, arriving with an issue already
   written. Deciding its shape is the user's and decomposing it is `epic`'s,
   so it goes to the user.
+- A `human` is a stop, and the only one that is a stop for every reader of
+  the label rather than for one skill. There is no agent route to the work,
+  so `undertake` does not cut a branch for it and `embark` does not dispatch
+  a ship for it: it waits for the person, and saying what the person has to
+  do is the whole of the answer.
 
-Two labels out of the five is a third stop, and it is below with its remedy.
+Two labels out of the six is a fourth stop, and it is below with its remedy.
 `task` and `bug` run through, and both end in a pull request. **`research`
 runs through and need not**: where the answer is a note it lands as a pull
 request like any other, and where the answer is a set of issues or a no,
@@ -114,7 +128,7 @@ labels every issue it opens and so does `epic`, so an unlabelled issue is one
 a person opened. Naming the label without writing it leaves the next session to name
 it again.
 
-**Two of the five on one issue is a stop.** They are two answers to a single
+**Two of the six on one issue is a stop.** They are two answers to a single
 question, and nothing here ranks them — a `proposal` that is also a `task`
 says the shape is both open and settled, and picking either reading is
 guessing at intent. Say which two are on it, say which one `Picking one`
@@ -133,7 +147,10 @@ What a label is not
 - **Not a status.** An issue is open or closed, and what is happening to it
   in between is on the issue: `undertake` comments its claim at `Claim the
   issue`, and the pull request references it. A `in progress` label is a
-  third copy of that, updated by hand, wrong first.
+  third copy of that, updated by hand, wrong first. **`human` is not the
+  exception.** It says what the work is, so an issue does not become `human`
+  because an agent got stuck on it this afternoon; that belongs in a comment,
+  and the issue keeps the label its work earns.
 - **Not a size.** An estimate is not a kind, and it does not change whether
   an agent may start.
 - **Not a relationship.** Blocked-by, parent and sub-issue are edges in a
@@ -177,7 +194,7 @@ here.
 Where the standard is declared
 ==============================
 
-`infra/github/labels.tf` declares the five as `github_issue_label` resources,
+`infra/github/labels.tf` declares the six as `github_issue_label` resources,
 so the names, colours and descriptions on GitHub come from a file under
 review rather than from whoever clicked last. OpenTofu owns only what it
 declares, so the stock labels above survive an apply untouched.
@@ -198,6 +215,6 @@ Three consequences worth knowing:
   rather than reading the failure as a broken stack.
 
 Applying the standard to a repository that does not run this Tofu stack means
-copying `labels.tf`, or creating the five by hand with the descriptions in
+copying `labels.tf`, or creating the six by hand with the descriptions in
 the table above. The descriptions are the part worth copying exactly — they
 are what a person hovering a label reads.

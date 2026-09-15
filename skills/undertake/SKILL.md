@@ -155,7 +155,9 @@ The label too, because it states whether the issue is ready for an agent at
 all, and `issue-labels` says what each one means. The `epic` label is that
 stop arriving as one word. **A `proposal` is a stop as well** — its shape is
 still open, so decomposing it is `epic`'s work and agreeing the plan is the
-user's. **Two of the five on one issue is a stop too**: the label answers the
+user's. **A `human` is a stop as well** — the work needs credentials, a
+decision or an action no agent has, so there is nothing to put on a branch.
+**Two of the six on one issue is a stop too**: the label answers the
 readiness question twice, and `issue-labels` says why neither answer wins.
 `task`, `bug` and `research`, one of them and no other, run through — with
 one caveat on the last. **A `research` issue whose answer turns out to be a
@@ -491,13 +493,13 @@ for the second round.
 Where it stops and waits
 ========================
 
-Autonomy is the point, so each pause has to earn itself. Eleven stop the
+Autonomy is the point, so each pause has to earn itself. Twelve stop the
 sequence. Seven stop it to *ask* — the ambiguous issue, the request too vague
 to write one for, an issue labelled `proposal`, an issue carrying two of the
-five labels, the failing approach, a designated branch the harness states
+six labels, the failing approach, a designated branch the harness states
 ambiguously, and a base merge whose conflict is a real one. A blocked issue, an
-epic, a running check, and a human action owed stop it to report, and wait on
-something other than an answer.
+epic, an issue labelled `human`, a running check, and a human action owed stop
+it to report, and wait on something other than an answer.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
@@ -509,8 +511,9 @@ something other than an answer.
   the stop and the wording, and the `epic` label is what says so in one word.
 - **An issue whose label does not clear it for work**, at `Read the issue and
   its edges`. A `proposal`'s shape is not yet decided, so deciding it is the
-  user's and decomposing it is `epic`'s; an issue carrying two of the five
-  answers the readiness question twice and answers it neither way.
+  user's and decomposing it is `epic`'s; a `human` names work no agent can
+  do, so the person it waits on is the answer; an issue carrying two of the
+  six answers the readiness question twice and answers it neither way.
   `issue-labels` is what each label claims, and what a contradiction between
   two of them costs.
 - **More than one designated branch** for this repository, at `Cut the
