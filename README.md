@@ -134,8 +134,9 @@ decides *whether* to ask, the hook decides *how*.
 
 **Omp has no hook mechanism**, so `extensions/daily-driver.js` does the same
 two jobs there: it blocks the `ask` tool with the same wording, and it supplies
-the session-title and reminder tools (`daily_driver_set_session_title`,
-`daily_driver_schedule`, `daily_driver_cancel_schedule`) that Omp's
+the session-title, reminder, and session-info tools
+(`daily_driver_set_session_title`, `daily_driver_schedule`,
+`daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
 `ExtensionAPI` makes natural. The constitution needs no adapter on that side —
 Omp's rule provider injects `rules/*.md` carrying `alwaysApply: true`.
 

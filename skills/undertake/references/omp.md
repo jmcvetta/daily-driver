@@ -44,9 +44,13 @@ review surface, the wait and the thread clients.
 The session
 ===========
 
-**There is no session call.** The claim carries the branch alone. It omits the
-unavailable model and session instead of publishing a diagnostic about another
-harness's session surface.
+**The claim reads the model and the session id from
+`daily_driver_get_session`**, the tool `extensions/daily-driver.js` registers.
+It answers this session's own id (`ctx.sessionManager.getSessionId()`), its
+name, and the id of the model serving it. The claim records both verbatim —
+`Model: <model>` and `session: <id>`, one line each, no note about where the
+values came from. Omp has no web URL for a session, so the id goes in bare
+rather than linked.
 
 The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
