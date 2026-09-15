@@ -101,7 +101,8 @@ or simply returns to the pull request on a user turn starts with:
 | ------------------ | ------- | ---- |
 | `BEHIND` | the base moved; the branch does not conflict | `gh pr update-branch <number>` — `Keep it current`'s merge — then continue the turn |
 | `DIRTY` | the branch conflicts with the base | the conflict stop `SKILL.md` writes under `Where it stops and waits` |
-| `CLEAN`, `BLOCKED`, `DRAFT`, `UNSTABLE` | current, or held by reviews, draft state, or checks | nothing; continue the turn |
+| `CLEAN`, `DRAFT`, `UNSTABLE` | current, or held by draft state or checks | nothing; continue the turn |
+| `BLOCKED`, `UNKNOWN` | not a currency answer: required reviews, or a state GitHub cannot currently determine | the update-branch call anyway — it is the test as well as the merge, and its own "already up to date" answer settles currency where this read has not; a call that fails changes nothing and reaches the conflict stop |
 
 The read is the look; the update-branch call is the merge. The call's own
 "already up to date" answer cannot stand in for the read, because something

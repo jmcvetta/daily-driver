@@ -121,9 +121,9 @@ success_criteria:
       change the score. Either reason is acceptable: that a timer here does
       not survive the turn, or that there is no timer at all.
 
-      Score 1.0 if the REPLY names the catch-up look — the read every turn
-      returning to the pull request takes, or the next session that picks it
-      up — and claims no watch of its own.
+      Score 1.0 if the REPLY names the catch-up look — the base-currency read
+      every turn returning to the pull request takes, whose BEHIND answer runs
+      `Keep it current`'s merge — and claims no watch of its own.
       Score 0.5 if it claims no watch but does not say who keeps the branch
       current.
       Score 0.0 if it claims a cadence, timer, check-in or subscription it

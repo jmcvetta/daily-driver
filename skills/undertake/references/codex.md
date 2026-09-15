@@ -81,7 +81,10 @@ read, before anything else the turn was going to do:
 
 `BEHIND` runs `gh pr update-branch <number>` — `Keep it current`'s merge —
 before the turn continues; `DIRTY` is the conflict stop `SKILL.md` writes
-under `Where it stops and waits`; every other state needs nothing.
+under `Where it stops and waits`; `CLEAN`, `DRAFT` and `UNSTABLE` need
+nothing. `BLOCKED` and an indeterminate answer are not currency answers: run
+the update-branch call anyway, whose own "already up to date" reply settles
+what this read has not.
 
 This is the Omp answer arrived at for a different reason. Omp has a timer and
 it is measured to die with the session; Codex has no timer this plugin has

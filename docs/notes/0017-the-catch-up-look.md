@@ -37,8 +37,10 @@ pull request. Each such turn reads the pull request's base currency before a
 CI read, a thread read, or whatever the turn was otherwise going to do. On
 Omp the read is `gh pr view <number> --json mergeStateStatus,mergeable`;
 `BEHIND` runs the update-branch merge and the turn continues, `DIRTY` is the
-conflict stop, and every other state needs nothing. The reference files name
-the call; `SKILL.md` names the rule in words, because the rule is
+conflict stop, and `CLEAN`, `DRAFT` and `UNSTABLE` need nothing. `BLOCKED`
+and an indeterminate answer are not currency answers: they defer to the
+update-branch call, which is the test as well as the merge. The reference
+files name the call; `SKILL.md` names the rule in words, because the rule is
 harness-neutral — Codex has no durable wake either, and its reference gains
 the same look.
 

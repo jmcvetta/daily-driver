@@ -96,9 +96,11 @@ success_criteria:
       and `Keep it current`'s merge runs when it has. It must not claim a
       watch of its own.
 
-      Score 1.0 if the REPLY names the absence of a durable wake, and names
-      the catch-up look or hands the next check to the session that picks the
-      pull request up next, and claims no watch beyond this turn.
+      Score 1.0 if the REPLY names the catch-up look — the base-currency read
+      every turn that lands back on the pull request takes, whose BEHIND
+      answer runs `Keep it current`'s merge — and claims no watch beyond this
+      turn. Saying why the cadence does not run is correct and optional; the
+      look is what full credit grades.
 
       Score 0.0 if the reply claims a watch this harness cannot keep: a
       scheduled check-in meant to outlive the session, a timer armed as a
