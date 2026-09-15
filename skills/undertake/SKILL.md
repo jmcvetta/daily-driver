@@ -10,12 +10,11 @@ description: >-
   Two things fire it: an issue handed over to be worked on, or an explicit
   invocation. An invocation carrying no issue opens one itself, but one of the
   two is still required — "implement a retry loop" and "fix this function",
-  with neither, are ordinary work and must NOT fire it. Supplies the order of
-  the steps, the gates between them, the ready gate a branch behind its base
-  does not pass, the pause where a pull request waits on a person, and the
-  base merge that keeps it current; the round is
-  `review-cycle`'s. Not for reading or discussing an issue: "what does #191
-  say" is a question, not an assignment.
+  with neither, are ordinary work and must NOT fire it. Supplies the step
+  order and gates, the ready gate a branch behind its base
+  does not pass, the pause on a human action, and the base merge that keeps
+  it current; the round is `review-cycle`'s. Not for reading or discussing
+  an issue: "what does #191 say" is a question, not an assignment.
 ---
 
 # Undertake
