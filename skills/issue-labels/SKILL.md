@@ -6,10 +6,9 @@ description: >-
   the user says "/issue-labels", "label this issue", "what label does this
   get?", "is this an epic or a task?", "that label is wrong", "which issues
   are ready for an agent?", and including any call Claude makes on its own
-  initiative to `mcp__github__issue_write` that sets `labels`, or to `gh issue
-  create --label` / `gh issue edit --add-label`, which is the route on Omp and
-  on Codex. It fires too whenever `undertake` opens an issue or reads one it
-  is about to start on. Supplies the six labels this toolkit recognises, the
+  initiative that sets a label on an issue. It fires too whenever `undertake`
+  opens an issue or reads one it is about to start on. Supplies the six labels
+  this toolkit recognises, the
   one question that picks between them, and the readiness each one states —
   which is what decides whether an agent may start on an issue unattended. Not
   for pull request labels, which nothing here sets, and not for issue
@@ -180,6 +179,16 @@ alone:
 
 The standard governs what is *applied to an issue by a skill in this plugin*.
 It does not claim the namespace, and it deletes nothing.
+
+What the body carries
+=====================
+
+The label decides readiness; it does not decide what the body says. The body
+requirements a labelled issue must satisfy are `issue-body`'s — which label's
+contract applies, the readiness test an issue must pass before it is
+presented as ready, and the `Model:` line a `task` body ends with. Read that
+skill whenever a body is being written or revised, alongside the label picked
+here.
 
 
 Where the standard is declared

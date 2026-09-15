@@ -56,7 +56,7 @@ The sequence
 | 0 | `Size the work` | this skill |
 | 1 | `Draft the plan` | this skill |
 | 2 | `Agree the plan` | this skill, `judgement-call` |
-| 3 | `Open the issues` | this skill, `undertake`, `issue-labels` |
+| 3 | `Open the issues` | this skill, `undertake`, `issue-labels`, `issue-body` |
 | 4 | `Write the graph` | `issue-deps` |
 | 5 | `Fill in the epic` | this skill |
 | 6 | `Hand off` | `undertake` |
@@ -97,8 +97,9 @@ again rather than making it a second epic. This skill does not nest: a graph
 two levels deep is read by nobody, and the second level is always a split
 somebody declined to make.
 
-**Each task issue records what was asked and no more**, the way `undertake`'s
-`Open the issue` writes one. Scope invented to round out a plan is scope every
+**Each task issue records what was asked and no more**, under the body
+contract `issue-body` supplies — the way `undertake`'s `Open the issue`
+writes one. Scope invented to round out a plan is scope every
 pull request is then measured against. A plan padded to look thorough is this
 skill's manufacturing failure, and it is the same instinct `issue-deps` names
 for edges.
@@ -129,34 +130,11 @@ it to be true. What the epic body carries is the *reading* of it, under
 
 **Each task records the model that should undertake it.** Sizing a task is the
 moment it is known whether the work is a documentation edit or a schema
-migration, and that judgement is otherwise thrown away: `embark` dispatches
-one ship per task, and on the web-session route deliberately does not choose —
-the line binds there. On a harness running `embark`'s subagent fallback the
-line is advisory: the fallback's cheaper implementation default applies, and
-the orchestrator reads the line before dispatching. Pick the lightest model
-that can do the task well — the constitution's *Delegation* rule is that
-quota is the user's money, and it cuts both ways, because a schema migration
-on a small model costs more than it saves.
-
-**The form is exact, because a skill parses it rather than a person.** The last
-line of the task issue body, and nothing after it:
-
-```
-Model: claude-sonnet-5
-```
-
-The identifier must be one the harness's session client accepts. The reference
-file for the harness in use names them, and it is read rather than recalled.
-**Where no valid identifier can be named, write no line at all**: a missing
-line is a working default in both routes — the web session inherits the
-orchestrator's model, and `embark`'s subagent fallback applies its cheaper
-implementation default — and a session opened on a model that does not exist
-is not.
-
-**Reasoning effort cannot be recorded.** The session client takes a model and
-has no effort parameter — effort is session configuration rather than a
-dispatch argument — so an `Effort:` line beside the model would be read by
-nothing. Do not write one.
+migration, and that judgement is otherwise thrown away. What the record says
+and how it is written is `issue-body`'s — the execution-model rule, the
+`Model:` line's format, the missing-line fallback and the per-harness
+identifier routes — and `embark` parses the line that contract defines. This
+skill does not restate them.
 
 2 — Agree the plan
 ------------------
@@ -186,8 +164,8 @@ writes them and reports each one, and asks nothing a second time.
 a change described in a prompt has often been described in an issue already,
 and a second issue for it splits the trail in two.
 
-Each task's body records what was asked and ends with its `Model` line, both
-settled at `Draft the plan`.
+Each task's body follows `issue-body`'s contract and ends with its `Model`
+line, both settled at `Draft the plan`.
 
 Where an issue already describes the whole change, **that issue becomes the
 epic**. Do not open a second one beside it: rewrite its body the way a new

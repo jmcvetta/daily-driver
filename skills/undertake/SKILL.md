@@ -10,21 +10,21 @@ description: >-
   Two things fire it: an issue handed over to be worked on, or an explicit
   invocation. An invocation carrying no issue opens one itself, but one of the
   two is still required — "implement a retry loop" and "fix this function",
-  with neither, are ordinary work and must NOT fire it. Supplies the order of
-  the steps, the gates between them, the ready gate a branch behind its base
-  does not pass, and the base merge that keeps it current; the round is
-  `review-cycle`'s. Not for reading or discussing an issue: "what does #191
-  say" is a question, not an assignment.
+  with neither, are ordinary work and must NOT fire it. Supplies the step
+  order and gates, the ready gate a branch behind its base
+  does not pass, the pause on a human action, and the base merge that keeps
+  it current; the round is `review-cycle`'s. Not for reading or discussing
+  an issue: "what does #191 say" is a question, not an assignment.
 ---
 
 # Undertake
 
 An issue in, a pull request ready for review out, and kept current with its
-base branch after that. Eleven steps, and this skill is the order they run in
-— the first of them, `Open the issue`, skipped in the
-common case where the work already has an issue. Where it does not, that step
-supplies one: an issue is what this skill takes in, and untracked work is what
-running without one leaves behind.
+base branch after that. Twelve steps, and this skill is the order they run in
+— the first of them, `Open the issue`, skipped in the common case where the
+work already has an issue. Where it does not, that step supplies one: an issue
+is what this skill takes in, and untracked work is what running without one
+leaves behind.
 
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
 restate**. The task branch and execution root live in `task-worktree`, the
@@ -68,21 +68,21 @@ The sequence
 | 6 | `Open the draft` | `pr` |
 | 7 | `Review the head` | `review-cycle` |
 | 8 | `Fix, answer, resolve, push` | `review-cycle` |
-| 9 | `Ready for review` | the harness's pull request client |
-| 10 | `Keep it current` | this skill, `review-cycle` |
+| 9 | `Verify the fix delta` | `review-cycle` |
+| 10 | `Ready for review` | the harness's pull request client |
+| 11 | `Keep it current` | this skill, `review-cycle` |
 
-`Review the head` and `Fix, answer, resolve, push` are `review-cycle`'s own
-first two stages, named identically on purpose: they are the same work, and one
-name for it is what lets either skill cite it without reaching into the other's
-numbering. `Ready for review` is not among them — that gate is this skill's,
-and `review-cycle` says so.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta`
+are `review-cycle` stages and carry the same names for that reason. `Ready for
+review` is not among them — it is this skill's gate, and `review-cycle` says
+what independent evidence it requires.
 
 0 — Open the issue
 ------------------
 
 Skipped where an issue is already in hand — handed over in the request, which
 is the common case, whether or not this skill was named. Where there is none,
-this step is what supplies one, and the ten after it are unchanged: what would
+this step supplies one, and the eleven after it are unchanged: what would
 otherwise happen is a branch, a review and a merge with no record of why any of
 it was wanted, and a pull request body with nothing to close.
 
@@ -92,11 +92,15 @@ second issue for it splits the trail in two. Where one already covers the
 request, that is the issue — go on to `Title the session` with it, and say
 which one it is, so a wrong match is corrected before the task worktree exists.
 
-Otherwise open one. Title and body record what
-was asked and no more: an issue is the statement of the request, and scope
-invented for it is scope the pull request is then measured against. No
-permission is asked — the invocation is the authorisation, and an issue is
-cheap to close.
+Otherwise open one, and author it through `issue`: the read-before-write
+rule, the body contract and the label are that sequence's, invoked rather
+than restated here. What stays here is the intent gate and the label rule
+below — and the order: **writing the issue must not start the
+implementation it describes.** The sequence continues when the issue is
+written, not while the work is begun. An issue is the statement of the
+request, and scope invented for it is scope the pull request is then
+measured against. No permission is asked — the invocation is the
+authorisation, and an issue is cheap to close.
 
 **A request too vague to write an issue for is a stop.** This is the intent
 gate of `Read the issue and its edges` arriving early, and the constitution's
@@ -164,10 +168,11 @@ on the issue, `epic` writes the issues where there are issues to write, and
 this sequence does not open a pull request with nothing in it.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
-runs through — unlabelled is not blocked — and it is the only place the
-standard's one-label-per-issue invariant is ever repaired: `Open the issue`
-labels everything it writes and so does `epic`, so an unlabelled issue is one
-a person opened. `issue-labels` picks the label and the issue client applies
+runs through — unlabelled is not blocked. `issue` repairs an unlabelled
+issue in passing too; what is special here is that nothing unlabelled gets
+past this sequence: `Open the issue` labels everything it writes and so
+does `epic`, so an unlabelled issue is one a person opened. `issue-labels`
+picks the label and the issue client applies
 it, on a write that needs no more permission than the claim a moment later.
 Naming the label and moving on leaves the next session asking the same
 question of the same issue.
@@ -212,27 +217,32 @@ Beyond the claim itself the comment always carries:
   The link can return 404 until the first push; write it anyway, because the
   alternative is a branch name the reader must turn into a URL by hand.
 
-Where the harness has a session call, the comment also carries:
-
-- **The model that served the turn**, which is what actually ran and moves
-  with a fallback that leaves the rest of the session untouched. Where the
-  model the session was *set* to run disagrees with it, name that too: the gap
-  between the two is the half of the record worth having. Never a name recalled
-  instead of read — a provenance record that guesses is worse than one that
-  says nothing. The reference file names the fields that answer both.
-- **The session**, as a link built from the same call's session id. The
-  identifier is what the reader needs; the link is that identifier and
-  somewhere to go with it, and the reference file has its form.
+- **The model that served the turn**, as one line — `Model: <model id>` —
+  and nothing else about it: no note about where the value came from, no
+  diagnostic about the surfaces that do not supply it. Read the id from the
+  harness's session call where it has one, and from the harness's own
+  statement of the serving model where it does not. Where the model the
+  session was *set* to run disagrees with the one that served, name that too:
+  the gap between the two is the half of the record worth having. Never a
+  name recalled instead of read — a provenance record that guesses is worse
+  than one that says nothing. The reference file names the fields that answer
+  both.
+- **The session**, as `session: <id>` where the id is reachable by any means
+  the harness offers, and `session: n/a` where it is not. The identifier is
+  what the reader needs; on Claude Code the link form is that identifier and
+  somewhere to go with it, and the reference file has its form. A missing id
+  is recorded as `n/a`, never narrated: a claim that explains why it has no
+  session publishes a diagnostic instead of a record.
 
 The model and session come from the harness's session call, where it has one —
 the call `session-title` documents. A branch designated by that call must be
 the branch `task-worktree` established; disagreement is a collision, not a
 choice between two branch sources.
 
-**Where the harness supplies no session call the comment still goes up with
-the branch alone.** It does not announce the unavailable metadata: omission is
-the harness-neutral record. The branch comes from the task worktree's Git
-state, never from a fresh naming decision in this step.
+**The comment never goes up with the branch alone.** The branch comes from
+the task worktree's Git state, never from a fresh naming decision in this
+step; the model and session lines follow the rules above whatever the harness
+supplies.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
@@ -259,39 +269,47 @@ has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
 closes.
 
+**The body is `pr-body`'s, and so is the notice that goes with a Tofu
+diff.** Where the branch's changes touch the infrastructure Tofu stack, the
+body carries that skill's human-action notice and the pull request the
+`human` label: the changes must be applied, and the updated state committed,
+before the pull request merges. `Ready for review` is what honours the
+notice when the round is over — the pause is stated there.
+
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate
 step comes before this one. The draft may open red, and `Review the head`
 waits for the result either way. A red check is answered at `Fix, answer,
 resolve, push`, and the ready gate below is what it has to satisfy in the end.
 
-7 and 8 — Review the head, then fix, answer, resolve, push
-----------------------------------------------------------
+7–9 — `Review the head`, `Fix, answer, resolve, push`, `Verify the fix delta`
+----------------------------------------------------------------------------
 
-Invoke `review-cycle`. It owns the wait for CI on the pushed head — the
-mechanism as well as the rule, under `How to wait` — the harness's review
-surface at a level it names, the protocol every finding is answered and
-resolved under, and the test for whether a later push has earned a second
-review.
+Invoke `review-cycle`. It owns the CI wait, full review, finding protocol, and
+independent bounded verification. First record the reviewed SHA and every
+finding disposition. Batch all fixes, including CI and bot fixes, push them,
+and wait for CI on that head. Then run `Verify the fix delta` when the
+pull-request content changed behavior, contracts, or workflow rules. It is one
+pass for the batch, never one per commit or finding.
 
-Two rows in the table above rather than one, because the ready gate tests them
-separately: green CI on the head `Fix, answer, resolve, push` left behind, and
-every finding `Review the head` raised answered. One round, two things to be
-true of it.
+A first pass that finds defects returns to `Fix, answer, resolve, push`, then
+receives exactly one final targeted confirmation after CI. A defect in that
+confirmation, an unavailable reviewer, incomplete verification, or an
+exhausted pass limit keeps the pull request draft and reports the blocker.
+Initial execution and a resumed session read the durable review record before
+acting; they do not reset the allowance for a resume, rewritten history, bot
+finding, or late CI correction.
 
-What is this skill's is where the round sits — after the draft is open, before
-the ready gate, and once. `review-cycle` decides whether it goes again, and it
-decides that from the head SHA it recorded, so `Ready for review` never re-runs
-it and never needs to ask. A later round is `Keep it current`'s to earn, on the
-same test and from the same mark.
+Only a material scope change runs a new `Review the head` round. A base merge
+or history rewrite with unchanged pull-request content does not. `review-cycle`
+owns the content comparison and rejected-finding evidence rule.
 
-9 — Ready for review
---------------------
+10 — Ready for review
+---------------------
 
-**Take the pull request out of draft.** See the gate below
-first: this step is conditional, and `Keep it current` runs before it — the
-gate's first condition is that step's merge, so the sequence reaches it once
-out of the table's order and then again on its own cadence.
+The harness pull-request client takes it out of draft only after `The gate`
+below holds. It does not review; `review-cycle` supplies the full review and
+independent verification that the gate consumes.
 
 It does not review. Marking a draft ready is a natural moment to reach for one,
 and the branch was already reviewed at `Review the head` — whether that review
@@ -302,6 +320,18 @@ discharges the leaving-draft trigger in its description: it fires on exactly
 the moment this step occupies, and a round already run on this head is that
 trigger already answered.
 
+**A pull request that waits on a person stops here instead.** Where the body
+carries `pr-body`'s human-action notice — a Tofu change awaiting its apply,
+or any other action only a person can take before merge — the round at
+`Review the head` still runs to its end. The round's end is then a comment
+on the pull request, not a state change: it says the review cycle is
+complete, and names the action the pull request waits on. The pull request
+stays a draft, and the sequence pauses there. What resumes it is the
+person's action landing on the branch — the Tofu applied, the updated state
+committed — after which the pull request returns through the gate below
+like any other. The person's commit is a new diff: `Review the head` runs
+over it once before the gate, the way any changed head earns a round.
+
 10 — Keep it current
 --------------------
 
@@ -310,10 +340,10 @@ reviewer reads, and a branch behind its base was reviewed and tested against a
 tree nobody will merge into. This step brings the base branch in, and it is the
 only step that runs more than once.
 
-**Its first run is before `Ready for review`, not after it.** The gate below
-carries the condition; this step carries the merge that satisfies it, and the
-step is written once for both. Ready is not the end either, so it runs again on
-the cadence under `When it looks`.
+**Its first run is before `Ready for review`, not after it.** The gate's first
+condition is that step's merge, so the sequence reaches it once out of the
+table's order and then again on its own cadence. Ready is not the end either,
+so it runs again on the cadence under `When it looks`.
 
 **The merge is the harness's update-branch call**, whichever one the reference
 file names. It merges the base branch into the head server-side, so it needs no
@@ -425,7 +455,6 @@ Ready is a gate, not a step
 
 "After fixing, set the PR to ready" reads as unconditional. It is not. The
 pull request goes to ready only when **all** of these hold:
-
 - The branch is current with its base branch and merges cleanly. `Keep it
   current` owns the merge that makes this true, and it is tested first because
   the merge moves the head: every condition below is about the head a reviewer
@@ -438,28 +467,39 @@ pull request goes to ready only when **all** of these hold:
   from the round at `Review the head`.
 - Every finding that round raised has been fixed, or rejected with a reason on
   its thread, or deferred with the user's agreement.
+- The independent verification record for the scope is clear on the current
+  behavioral head. When the first pass found defects, the second pass must be
+  the clear final confirmation of those corrections. Unavailable or incomplete
+  verification, a final-pass defect, or a cap hit is not approval.
+- The pull request waits on no human action. `pr-body`'s human-action notice
+  marks a pull request whose Tofu changes must be applied, and the updated
+  state committed, before it merges — a bar only a person clears, and
+  unlike a pending check nothing will ever report it. `Ready for review`
+  pauses on it; this condition is what the sequence returns to once the
+  branch carries the result.
 
-A branch behind its base, red CI, or an open thread means it **stays a
-draft**, and the reason is stated in one line. A red pull request marked ready
-is a claim about the work that is not true, and so is a ready one that does not
-merge.
+
+A branch behind its base, red CI, an open thread, or a human action still
+owed means it **stays a draft**, and the reason is stated in one line. A red
+pull request marked ready is a claim about the work that is not true, and so
+is a ready one that does not merge.
 
 The gate is also what a round at `Keep it current` returns through. That round
-sends the pull request back to draft, and these four conditions are what let
-it out again — the same four, tested again, rather than a second gate written
+sends the pull request back to draft, and these five conditions are what let
+it out again — the same five, tested again, rather than a second gate written
 for the second round.
 
 
 Where it stops and waits
 ========================
 
-Autonomy is the point, so each pause has to earn itself. Eleven stop the
+Autonomy is the point, so each pause has to earn itself. Twelve stop the
 sequence. Seven stop it to *ask* — the ambiguous issue, the request too vague
 to write one for, an issue labelled `proposal`, an issue carrying two of the
 six labels, the failing approach, a designated branch the harness states
 ambiguously, and a base merge whose conflict is a real one. A blocked issue, an
-epic, an issue labelled `human`, and a running check stop it to report, and
-wait on something other than an answer.
+epic, an issue labelled `human`, a running check, and a human action owed stop
+it to report, and wait on something other than an answer.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
@@ -491,6 +531,13 @@ wait on something other than an answer.
   never met. Where both sides changed the same logic, picking either loses
   behaviour, and that is the constitution's rule against guessing at intent:
   name the conflicting files and wait.
+- **A human action the pull request waits on**, at `Ready for review`. The
+  notice `pr-body` requires marks a Tofu change awaiting its apply — the
+  updated state committed — or any other bar only a person clears. The
+  review round runs to its end first; its end is a comment that says so and
+  names the action, the pull request stays a draft, and the sequence pauses
+  until the branch carries the result. An apply is not something CI reports,
+  and no check a session can read answers for it.
 
 The round at `Review the head` and `Fix, answer, resolve, push` has two stops
 of its own — its own wait on CI, and a review finding whose fix is a real
@@ -517,8 +564,8 @@ Non-goals
   to undertake one of the epic's ready tasks instead.
 - **Does not fire on work it was not asked to undertake.** "Implement a retry
   loop", with neither an issue nor an invocation, is ordinary work, and running
-  eleven steps and a review round over it would be the heaviest possible way
-  to write ten lines. `Open the issue` makes the issue reference optional; it
+  twelve steps and a review round over it would be the heaviest possible way to
+  write ten lines. `Open the issue` makes the issue reference optional; it
   does not make it the only thing that was ever doing the separating. An issue
   handed over, or this skill named — either fires it, and neither is ordinary
   work.

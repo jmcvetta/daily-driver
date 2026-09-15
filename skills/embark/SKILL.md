@@ -167,9 +167,10 @@ things and no more:
   reads the issue itself at `undertake`'s `Read the issue and its edges`. The
   boundary holds in the fallback: the subagent is given the issue number and
   the instruction, no more.
-- **The model the task issue records**, taken from the `Model:` line `epic`
-  writes as the last line of the body. Where there is no such line the session
-  inherits this one's model, which `epic` states is the working default.
+- **The model the task issue records**, taken from the `Model:` line that
+  ends the task body, written under `issue-body`'s contract. Where there is
+  no such line the session inherits this one's model, which that contract
+  states is the working default.
   **This skill does not choose**, and does not second-guess a line it is
   given: the judgement was made when the task was sized, and re-making it here
   on less information is how it gets made worse. That binds the web route.
@@ -208,8 +209,8 @@ and a reviewer at the implementor's own strength is not a review.
 **A dispatch that fails sinks one ship, not the fleet.** A model identifier
 the session client rejects fails the call rather than falling back; report
 that task, launch the rest of the wave, and do not substitute an identifier
-of your own — the constitution forbids the guess, and `epic` owns the line
-that was wrong. The same holds in the fallback: a subagent that fails to
+of your own — the constitution forbids the guess, and `issue-body` owns the
+line that was wrong. The same holds in the fallback: a subagent that fails to
 launch is reported, and the rest of the batch sails.
 
 No permission is asked here. `Waves launch without confirmation` below is why.

@@ -46,20 +46,18 @@ The pull request
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 
-Reading a pull request is `gh pr view <number>`. `Review the head` and
-`Fix, answer, resolve, push` are `review-cycle`'s, and that skill has its own
-[`codex.md`](../../review-cycle/references/codex.md). Read it: the surface
-there is `codex exec review --base`, it reviews the checkout rather than the
-pull request, it posts nothing, and its wait is a single read rather than a
-loop — which is the same reason `Keep it current` below has no cadence.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
+`review-cycle`'s. Its `references/codex.md` names the full-review surface and
+the unavailable-delta stop that keeps the pull request draft.
 
 
 The session
 ===========
 
-**There is no session call.** The claim carries the branch alone. It omits the
-unavailable model and session instead of publishing a diagnostic about another
-harness's session surface.
+**Codex exposes no session id, so the claim records `session: n/a`** — the
+marker `SKILL.md` prescribes, not a diagnostic about the missing surface. The
+`Model:` line repeats what the harness states is serving the turn — the
+session's configured model — rather than a recalled name.
 
 The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch

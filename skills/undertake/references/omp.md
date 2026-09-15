@@ -36,17 +36,21 @@ The pull request
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 
-Reading a pull request is `pr://<number>`. `Review the head` and `Fix, answer,
-resolve, push` are `review-cycle`'s, and its own `references/omp.md` has the
-review surface, the wait and the thread clients.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
+`review-cycle`'s. Its `references/omp.md` names the reviewer task, durable
+record, and bounded delta-pass contract.
 
 
 The session
 ===========
 
-**There is no session call.** The claim carries the branch alone. It omits the
-unavailable model and session instead of publishing a diagnostic about another
-harness's session surface.
+**The claim reads the model and the session id from
+`daily_driver_get_session`**, the tool `extensions/daily-driver.js` registers.
+It answers this session's own id (`ctx.sessionManager.getSessionId()`), its
+name, and the id of the model serving it. The claim records both verbatim —
+`Model: <model>` and `session: <id>`, one line each, no note about where the
+values came from. Omp has no web URL for a session, so the id goes in bare
+rather than linked.
 
 The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
@@ -54,23 +58,36 @@ link comes from the remote `task-worktree` resolved, never from an assumed
 `origin`.
 
 
-There is no durable wake
-========================
+Process durability does not run the cadence
+===========================================
 
-**`daily_driver_schedule` is an in-process managed timer.** Omp's own
-documentation says managed timers are unref'd and cleared on
-`session_shutdown`, so a reminder dies with the session. It is not a
-`send_later`, which survives the session that armed it.
+**`daily_driver_schedule` is an in-process managed timer.** Managed timers are
+unref'd and cleared on `session_shutdown`, so a reminder dies with the
+session. Use it for `Keep it current` check-ins only while this session remains
+alive.
 
-So **`Keep it current`'s cadence does not run on this harness.** After
-`Ready for review`, say once that the branch is kept current by the next Omp
-session that picks the pull request up, and stop. `daily_driver_schedule` is
-for a follow-up inside the current session, never for a watch meant to outlive
-it.
+Hub supplies a different guarantee. A process started with `persist: true`
+survives the last Omp client exiting. `detached: true` also survives broker
+shutdown and every Omp exit. Terminal completion is owner-scoped and remains
+pending until the owning session resumes in the same project and reconnects
+to Hub. This is the durable route for the bounded CI watcher in
+`review-cycle`'s [`omp.md`](../../review-cycle/references/omp.md).
 
-The never-empty wake slot —
-[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — is
-therefore the Claude rule this harness does not carry. It is recorded here so
-that a reader who finds it cited in `SKILL.md` knows why it does not bind, and
-so that a durable wake arriving in Omp later has a decision to be measured
-against.
+**Hub does not launch or resume the agent that runs `Keep it current`.** The
+cadence must inspect CI, decide whether an update is safe, call `gh pr
+update-branch <number>`, and apply the ready gate. A supervised process can
+preserve a watch and replay its completion. It cannot perform those agent
+turns after the session terminates.
+
+After `Ready for review`, use `daily_driver_schedule` for the next check-in
+while the session is live. Each CI wait uses the persistent Hub watcher. If
+the session terminates, the cadence pauses, but an existing watcher and its
+completion do not disappear. Resume the owning session, reconnect to Hub
+first, consume any pending completion, read the pull request, run `Keep it
+current`, and then arm the next live-session check-in. A different session can
+inspect the project-scoped process by name, but the owner's completion is not
+delivered to it.
+
+This is the Omp boundary: managed timers are session-local; Hub processes and
+their owner-scoped completions are durable; autonomous base synchronization
+still needs a running agent session.

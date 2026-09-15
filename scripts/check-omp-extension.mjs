@@ -7,6 +7,7 @@
  *
  *   - Omp's `ask` tool is blocked with actionable text, another tool passes;
  *   - daily_driver_set_session_title calls pi.setSessionName;
+ *   - daily_driver_get_session reads the session manager's id and the model;
  *   - daily_driver_schedule emits exactly one reminder after its delay and
  *     returns a triggerId;
  *   - daily_driver_cancel_schedule cancels a live trigger (no emission) and
@@ -190,6 +191,34 @@ check("set_session_title calls pi.setSessionName", async () => {
 	const result = await def.execute("c1", { title: "Fix the parser" }, undefined, undefined, {});
 	assert.deepEqual(s.rec.sessionNames, ["Fix the parser"]);
 	assert.deepEqual(result.details, { titled: "Fix the parser" });
+});
+
+// --- get_session ------------------------------------------------------------
+check("get_session reads the session manager and the serving model", async () => {
+	const s = makeSession();
+	const def = s.tools.get("daily_driver_get_session");
+	assert.ok(def, "daily_driver_get_session is registered");
+	const ctx = {
+		model: { id: "zai/glm-5.3" },
+		sessionManager: {
+			getSessionId: () => "0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
+			getSessionName: () => "Fix the parser",
+		},
+	};
+	const result = await def.execute("c0", {}, undefined, undefined, ctx);
+	assert.deepEqual(result.details, {
+		sessionId: "0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
+		sessionName: "Fix the parser",
+		model: "zai/glm-5.3",
+	});
+});
+
+check("get_session tolerates an unnamed session and no model", async () => {
+	const s = makeSession();
+	const def = s.tools.get("daily_driver_get_session");
+	const ctx = { sessionManager: { getSessionId: () => "s1", getSessionName: () => undefined } };
+	const result = await def.execute("c0b", {}, undefined, undefined, ctx);
+	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null });
 });
 
 // --- schedule emits exactly once --------------------------------------------

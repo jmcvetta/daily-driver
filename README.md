@@ -17,7 +17,7 @@ The **constitution** — `rules/constitution.md`, delivered to every session by
 hook on Claude Code and Codex, and by the rule provider on Omp — plus **two
 runtime adapters that enforce rather than instruct**, `hooks/` for the two
 harnesses that run hooks and `extensions/` for the one that does not, and
-fifteen skills:
+seventeen skills:
 
 | Skill | What it does |
 | ----- | ------------ |
@@ -27,6 +27,8 @@ fifteen skills:
 | `pr-body` | The body: a one-line summary, a salutation in verse, the `Issues` section that follows it, an executive summary, and engineering detail. |
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
 | `issue-labels` | The six labels an issue may carry — `epic`, `task`, `bug`, `proposal`, `research`, `human` — and the readiness each one states, which is what decides whether an agent may start unattended. |
+| `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
+| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a `Model:` line for `task`; every other label's edit runs under existing rules and acquires nothing. |
 | `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |
 | `readme` | Writes a README that answers what this is and how to use it, and nothing else: the shape, the reading of length as a symptom, and the list of what belongs in a commit message, a changelog or `docs/` instead. |
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |
@@ -38,14 +40,17 @@ fifteen skills:
 | `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
 
 A skill fires on its slash command where it has one, on natural phrasings of
-the work, and on the session's own tool calls. The tool-call triggers are
-written for all three harnesses, because a `description` is read before any
-reference file can be: `pr` fires on Claude Code's
-`mcp__github__create_pull_request`, on Omp's `github` tool (`pr_create`) and on
-the `gh pr create` that Codex has instead of either, and `judgement-call` on
-`AskUserQuestion`, on `ask` and on `request_user_input`. Those are examples
-rather than the list — each skill's `description` names its own triggers, and
-carries its own register.
+the work, and on the session's own tool calls. A description states those
+triggers by the operation and the intent — `pr` fires "before creating a pull
+request, or updating an existing pull request beyond its title or body alone"
+— never by an executable spelling on any harness. The reason is the reading
+order: a `description` is read before any reference file can be selected, and
+all three harnesses read the same one, so a command named there is exposed to
+the two harnesses that cannot run it. The call itself lives in the skill's
+reference file for the active harness, and the description sends the session
+there. Public invocations such as `/review-cycle` and the natural phrasings
+are kept verbatim. Those are examples rather than the list — each skill's
+`description` names its own triggers, and carries its own register.
 
 **A description has a length budget, and Codex sets it.** Codex's prompt
 renderer cuts one at 1021 characters and appends `...`, so the closing
@@ -134,8 +139,9 @@ decides *whether* to ask, the hook decides *how*.
 
 **Omp has no hook mechanism**, so `extensions/daily-driver.js` does the same
 two jobs there: it blocks the `ask` tool with the same wording, and it supplies
-the session-title and reminder tools (`daily_driver_set_session_title`,
-`daily_driver_schedule`, `daily_driver_cancel_schedule`) that Omp's
+the session-title, reminder, and session-info tools
+(`daily_driver_set_session_title`, `daily_driver_schedule`,
+`daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
 `ExtensionAPI` makes natural. The constitution needs no adapter on that side —
 Omp's rule provider injects `rules/*.md` carrying `alwaysApply: true`.
 
@@ -186,8 +192,10 @@ the same, and `extensions/` serves Omp, which has no hook mechanism at all. And,
 inside a skill, the tool routes: a `SKILL.md` says what the skill decides, and
 `skills/<name>/references/claude.md`, `references/omp.md` and
 `references/codex.md` carry the calls that do it, opened on demand by the
-session that needs them. `scripts/check-manifests.py` fails a `SKILL.md` that
-names a harness's own routes in its body.
+session that needs them — the one for the harness in use, and only that one.
+`scripts/check-manifests.py` fails a `SKILL.md` that names a harness's own
+routes in its description or its body; a description states its triggers in
+words, and the guard's fixture test holds that rule in place.
 
 ## Installing it
 

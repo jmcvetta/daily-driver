@@ -19,10 +19,11 @@
  *    harder to work with than prose, and the operator's answer is the same
  *    every time.
  *
- * 2. Provide session-title and scheduled-reminder tools that Omp's
- *    `ExtensionAPI` makes natural. `daily_driver_set_session_title` and
- *    `daily_driver_schedule` / `daily_driver_cancel_schedule` are the Omp
- *    runtime-adapter surface that Wave 2 (harness-portable skills) consumes.
+ * 2. Provide session-title, scheduled-reminder, and session-info tools that
+ *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,
+ *    `daily_driver_schedule` / `daily_driver_cancel_schedule`, and
+ *    `daily_driver_get_session`, are the Omp runtime-adapter surface that
+ *    Wave 2 (harness-portable skills) consumes.
  *
  * This file is deliberately dependency-free: it runs as a plain `.js` module
  * under Omp, with no build step and no package install between this repo and
@@ -122,6 +123,39 @@ export default function dailyDriverExtension(pi) {
 			return {
 				content: [{ type: "text", text: `Session titled: ${params.title}` }],
 				details: { titled: params.title },
+			};
+		},
+	});
+
+	// The read half of the session surface. Claude Code answers
+	// `mcp__Claude_Code_Remote__get_session`; Omp has no such call, and before
+	// this tool it had no model-readable route to its own session id at all —
+	// which made an undertake claim comment invent "session: unavailable"
+	// diagnostics about a surface that does exist. The id lives in the
+	// session manager, and the tool `ctx` exposes it read-only.
+	pi.registerTool({
+		name: "daily_driver_get_session",
+		label: "Get session info",
+		description:
+			"Read this session's own id, name, and model. The id is what an " +
+			"undertake claim comment records; the name and model are the " +
+			"session's current values.",
+		parameters: z.object({}),
+		execute: async (_toolCallId, _params, _signal, _onUpdate, ctx) => {
+			const model = ctx.model?.id ?? null;
+			const info = {
+				sessionId: ctx.sessionManager.getSessionId(),
+				sessionName: ctx.sessionManager.getSessionName() ?? null,
+				model,
+			};
+			return {
+				content: [
+					{
+						type: "text",
+						text: `Session ${info.sessionId}${info.sessionName ? ` (${info.sessionName})` : ""}, model ${model ?? "unknown"}`,
+					},
+				],
+				details: info,
 			};
 		},
 	});

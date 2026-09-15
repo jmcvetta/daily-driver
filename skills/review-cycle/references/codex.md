@@ -59,18 +59,41 @@ than a level the surface remembers between runs, and reaching for it would be
 this round choosing a depth by hand on every diff, which `Name the level`
 refuses above `high` for the reason it gives there.
 
-**Its findings do not land on the pull request.** It reports into the terminal,
-and nothing is posted. So the round carries them into `Fix, answer, resolve,
-push` itself, out of the command's output — the degradation `SKILL.md`
-describes under `A reviewer, not a bare subagent`, and the same one Omp takes.
-*Resolve* then reads as *answered*, in that stage and in the caller's gate
-alike.
+**Its findings return locally and must be published as a GitHub review.** They
+are not a transcript-only degradation. Give the reviewer the complete history,
+reviewed SHA, and current head; the publication route below turns its findings
+into the submitted threads that `Fix, answer, resolve, push` answers.
 
 **It is a second agent run, and it is billed as one.** `codex exec review`
 starts a fresh session with its own model. That is what makes it a named
 surface rather than the bare subagent `SKILL.md` refuses, and it is also why
 the round runs it once per diff rather than once per push.
 
+
+
+Fix-delta verification
+======================
+
+**Unavailable on the measured surface.** `codex exec review` accepts a base
+branch or one commit, not a reviewed-SHA/current-SHA range plus findings and
+dispositions. `--commit <SHA>` would verify one commit, not a batch. Do not
+substitute either for the required delta pass. Record the unavailable result
+with `gh pr comment <number> --body-file <path>`, leave or return the pull
+request to draft, and report the blocker:
+
+```text
+Review verification
+scope reviewed: <sha>
+pass: <1|2>
+verified: <sha>
+findings: <finding ids and dispositions>
+outcome: unavailable
+defects: <none|concise list>
+cap: <open|hit>
+usage: <exact value if exposed|unavailable>
+```
+
+Never estimate usage when the invocation does not expose it.
 
 The wait
 ========
@@ -128,30 +151,55 @@ turn. This one does not wait at all.
 and for the same reason.
 
 
-The review threads
-==================
+Review history, publication, and threads
+========================================
 
-**All three operations go through the GitHub CLI and API**, exactly as they do
-on Omp. Codex has no GitHub tool of its own, and the shell is the client.
+Before reviewing, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
+paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
+`isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
+and bodies. A REST comments page alone is not complete history and does not
+contain the `PRRT_…` ID needed to resolve a thread.
+
+After the review command returns, re-read the head and its diff anchors.
+Compare the returned findings with the review history and recorded review
+identifier before posting; a resumed run must not duplicate a review already
+submitted for that SHA. Put line-specific findings in `review.json` and create
+one submitted review:
+
+```json
+{
+  "event": "COMMENT",
+  "commit_id": "<reviewed-sha>",
+  "body": "<clean or cross-cutting review summary>",
+  "comments": [
+    {
+      "path": "<path>",
+      "side": "RIGHT",
+      "line": 42,
+      "body": "<finding, with a suggestion block when useful>"
+    }
+  ]
+}
+```
+
+Run `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input
+review.json`. Use `start_side` and `start_line` for a valid range. A clean or
+unanchorable review has no `comments` entry and uses the submitted summary.
+Never invent an anchor. On changed head, invalid anchor, absent `gh`, or GitHub
+failure, retain the findings and report publication as incomplete.
 
 | Operation | Call |
 | --------- | ---- |
-| Read the threads | `gh api /repos/{owner}/{repo}/pulls/{n}/comments` |
+| Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
+| Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
+| Publish review | `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input review.json` |
 | Reply on a thread | `gh api -X POST /repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
 The identifier trap `SKILL.md` states applies to the last two: the mutation
-takes the thread's `PRRT_…` node ID, and the reply takes the comment's numeric
-id — the `#discussion_r…` suffix of its `html_url`.
-
-**These calls are still worth having, even though this harness's own reviewer
-posts nothing.** A human reviewer's threads, a bot's, and an earlier round's
-are all on the pull request whatever reviewed the branch, and `SKILL.md` says a
-round entered on findings that already exist starts at `Fix, answer, resolve,
-push`. That entry is the common one here.
-
-Where `gh` is absent, `issue-deps`' client probe is the same question asked one
-skill over, and its script is the token-only route.
+takes the thread's `PRRT_…` node ID, while reply takes the comment's numeric
+ID. The review REST endpoint returns a review ID; record it with the reviewed
+SHA and dispositions so later rounds have a stable duplicate check.
 
 
 Provenance

@@ -4,11 +4,9 @@ description: >-
   This skill should be used whenever the title of a GitHub pull request is
   being written or revised — including when the user says "fix the PR title",
   "rename the PR", "that title is wrong", or asks what a PR should be called,
-  and including any call Claude makes on its own initiative to
-  `mcp__github__create_pull_request`, to `mcp__github__update_pull_request`
-  that sets a `title`, to Omp's `github` tool's `pr_create` op (`title`), or
-  to `gh pr create --title` / `gh pr edit --title`, which is the route on Omp
-  and on Codex. Supplies the Conventional Commits convention the title must
+  and including any call Claude makes on its own initiative that writes or
+  revises a pull request's title while opening or updating one. Supplies the
+  Conventional Commits convention the title must
   conform to; the type itself comes from `conventional-commits-type`. Not for
   commit messages, not for the PR body — that is `pr-body` — and not for the
   session's own name — that is `session-title`.
