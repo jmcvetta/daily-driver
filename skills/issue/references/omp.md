@@ -17,6 +17,7 @@ writes to.
 | The body | Open with a body | `gh issue create --label <label> --body-file <path>` |
 | The body | Replace a body | `gh issue edit <number> --body-file <path>` |
 | The edges | Blocked-by, parent, sub-issue | `issue-deps`'s own routes |
+| The state | Close or reopen | `gh issue close <number>` / `gh issue reopen <number>` |
 
 `--body-file` rather than `--body`: an issue body carries fenced blocks and
 lists, and passing that through a shell argument is where the quoting breaks.

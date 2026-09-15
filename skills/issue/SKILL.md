@@ -15,10 +15,11 @@ description: >-
 ---
 
 # Issue authoring
-
-Open a GitHub issue, or change one that exists. This skill is the entry point
-for every issue write: the session's own, `undertake`'s at `Open the issue`,
-and the issue writes `epic` makes at `Open the issues`.
+Open a GitHub issue, or change one that exists. This skill is the entry
+point for every issue write a session makes directly — its own, and
+`undertake`'s at `Open the issue`. `epic`'s writes at `Open the issues`
+reach the same body contract through `issue-body`, not through this
+sequence.
 
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
 restate**. The body's content is `issue-body`'s, the label standard is
