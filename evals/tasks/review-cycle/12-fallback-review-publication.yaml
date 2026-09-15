@@ -55,8 +55,18 @@ success_criteria:
       retains the findings and reports incomplete publication rather than claiming
       a durable review.
 
-      Score 1.0 only if the REPLY states all parts. Score 0.5 if it publishes a
-      submitted review with duplicate and changed-head handling but misses a
-      material history, anchor, identifier, or failure detail. Score 0.0 if it
-      leaves the result in a transcript or loose issue comment, posts duplicates,
-      anchors the unanchorable finding, or treats a failed publication as done.
+      Grade the substance of the reply, not its vocabulary. A reply states a
+      part when it conveys it in its own words; do not require the rule's
+      phrasing, and do not deduct for a part the reply covers compactly.
+
+      Score 0.0, whatever else the reply gets right, if it leaves the result in
+      a transcript or a loose issue comment, posts duplicates, anchors the
+      unanchorable finding, or treats a failed publication as done.
+
+      Otherwise score by coverage of four things: the complete paginated
+      history read before publishing; one submitted review carrying the
+      reviewed SHA, summary, and a valid anchor per line-specific finding, with
+      the unanchorable one in the summary alone; the head re-read and anchors
+      re-validated immediately before publication, with a resume checked
+      against what is already recorded; and the reply/resolve identifiers kept
+      apart. Score 1.0 for all four, 0.75 for three, 0.5 for two, 0.25 for one.

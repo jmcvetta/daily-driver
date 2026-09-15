@@ -195,8 +195,12 @@ is not the history. Give the reviewer that history, the reviewed SHA, and the
 current head rather than leaving the prior decision only in the author's
 context.
 
-**Every actionable line-specific finding is a submitted inline review thread.**
-Anchor it to the reviewed commit, path, side, and valid diff line or range.
+**Every actionable line-specific finding is an inline thread in a submitted
+`COMMENT` review.** The event is `COMMENT`: a review round states findings, and
+approving or requesting changes is the human reviewer's verdict to give, not
+this stage's. Anchor each finding to the reviewed commit, path, side, and a
+valid diff line — or, across more than one line, a start and end that both fall
+in the diff.
 Use a suggestion block only where it makes the concrete replacement clearer;
 it never replaces the explanation of the defect. A finding with no valid
 anchor, and a clean review, goes in the submitted review summary. Never invent
@@ -204,11 +208,21 @@ an anchor.
 
 **Use the surface's native publication where it has one; otherwise publish its
 returned findings through the available GitHub route.** Read the surface output
-and existing review record first, so a native comment is not posted twice on a
-resume. A reviewer returning findings locally is not permission to leave them
-in the transcript. If publication, permission, or anchor validation fails,
-retain and report the findings and the incomplete recording step; never claim a
-durable review.
+and existing review record first, and compare against the recorded review
+identifier rather than the finding text, so a resumed run does not post the
+same review twice. A reviewer returning findings locally is not permission to
+leave them in the transcript.
+
+**Re-read the head and re-validate every anchor immediately before
+publication.** The head can move while the review is being prepared, and an
+anchor validated against the old diff then lands on the wrong line or is
+rejected. Publication keeps the reviewed SHA it was produced against; it never
+re-attributes findings to a head they did not review.
+
+**A publication that does not complete is reported, never rounded up.** An
+absent GitHub client, a changed head, an invalid anchor, a permission problem,
+or a GitHub rejection each leaves the findings intact and the recording step
+named as incomplete. Never claim a durable review.
 
 **One finding has one conversation.** A repeated finding links to the earlier
 thread and disposition rather than reopening the argument. A recommendation
