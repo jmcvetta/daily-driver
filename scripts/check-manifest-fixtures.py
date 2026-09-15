@@ -113,7 +113,8 @@ def main() -> int:
             root,
             description=(
                 "This skill fires whenever a pull request is opened, including\n"
-                "any call to `mcp__github__create_pull_request` or its friends."
+                "any call to `gh pr\n"
+                "create` or its friends."
             ),
             body="# Fixture\n\nRead the reference file for the harness in use.\n",
         )
@@ -124,7 +125,7 @@ def main() -> int:
             f"case 1: error does not locate the route in the description: {found[0]}",
         )
         require(
-            "mcp__" in found[0] and "(mcp__)" in found[0],
+            "gh pr create/edit" in found[0] and "(gh pr create)" in found[0],
             f"case 1: error does not name the offending route: {found[0]}",
         )
         require(
