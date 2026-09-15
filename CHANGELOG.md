@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.24.0](https://github.com/jmcvetta/daily-driver/compare/v0.23.0...v0.24.0) (2026-09-15)
+
+
+### Features
+
+* add Omp model role overlays ([#236](https://github.com/jmcvetta/daily-driver/issues/236)) ([d48cf37](https://github.com/jmcvetta/daily-driver/commit/d48cf37aab4c303ad05f3aec14d9b23effc4f6a1))
+* add Omp plugin cache cleanup target ([#239](https://github.com/jmcvetta/daily-driver/issues/239)) ([2fc240d](https://github.com/jmcvetta/daily-driver/commit/2fc240dfcc8309b3fedf31b21d9720595eaf69ee))
+* **omp:** add five Gateway model experiment overlays ([#241](https://github.com/jmcvetta/daily-driver/issues/241)) ([0674567](https://github.com/jmcvetta/daily-driver/commit/0674567aed52f846c40d4c7baed9c8685ce24768))
+* **review-cycle:** record reviews inline ([#235](https://github.com/jmcvetta/daily-driver/issues/235)) ([865eb78](https://github.com/jmcvetta/daily-driver/commit/865eb7860184685b7caf21cac78a7f6896000a45))
+
+
+### Bug Fixes
+
+* **omp:** replace deprecated KAT Coder overlay ([#244](https://github.com/jmcvetta/daily-driver/issues/244)) ([2d19f1c](https://github.com/jmcvetta/daily-driver/commit/2d19f1c0ac7319487019bd5b530927ffc93fdb47))
+
 ## [0.23.0](https://github.com/jmcvetta/daily-driver/compare/v0.22.1...v0.23.0) (2026-09-15)
 
 
