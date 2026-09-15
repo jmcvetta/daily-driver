@@ -24,6 +24,34 @@ reviewer to resolve, so *resolve* reads as *answered*, and the caller's gate
 reads its no-unresolved-thread condition the same way.
 
 
+Fix-delta verification
+======================
+
+Dispatch exactly one `reviewer` task agent with a bounded brief. Give it the
+pull request, full-review SHA, current SHA, original findings, dispositions,
+and pass number. Require it to inspect `git diff <reviewed-sha> <current-sha>`
+and affected callers, then report only whether each implemented finding is
+solved and concrete regressions in that delta. It must not perform a full-PR
+audit or offer style improvements.
+
+The author records the result with `gh pr comment <number> --body-file <path>`:
+
+```text
+Review verification
+scope reviewed: <sha>
+pass: <1|2>
+verified: <sha>
+findings: <finding ids and dispositions>
+outcome: <clear|defects|incomplete|unavailable>
+defects: <none|concise list>
+cap: <open|hit>
+usage: unavailable
+```
+
+The task agent's result is independent evidence. The author writes this record
+only after receiving it; it must not invent a verdict. Omp exposes no reviewer
+token-usage value, so `usage: unavailable` is required.
+
 The wait
 ========
 

@@ -36,9 +36,9 @@ The pull request
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
 
-`Review the head` and `Fix, answer, resolve, push` are `review-cycle`'s, and
-its own `references/claude.md` has the review surface, the wait and the thread
-clients.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
+`review-cycle`'s. Its `references/claude.md` names the full-review surface and
+the unavailable-delta stop that keeps the pull request draft.
 
 
 The session

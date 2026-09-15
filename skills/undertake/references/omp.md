@@ -36,9 +36,9 @@ The pull request
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 
-Reading a pull request is `pr://<number>`. `Review the head` and `Fix, answer,
-resolve, push` are `review-cycle`'s, and its own `references/omp.md` has the
-review surface, the wait and the thread clients.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
+`review-cycle`'s. Its `references/omp.md` names the reviewer task, durable
+record, and bounded delta-pass contract.
 
 
 The session

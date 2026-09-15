@@ -29,6 +29,16 @@ Should a later CLI post plain issue comments instead of threads, read them with
 `A reviewer, not a bare subagent`.
 
 
+Fix-delta verification
+======================
+
+**Unavailable on the measured surface.** `/code-review --comment` reviews the
+pull request as a whole. It has no measured SHA-range or finding-disposition
+input, so it cannot be represented as an independent delta pass. Do not imply
+that a second full review is targeted verification. Record `outcome:
+unavailable` with `mcp__github__add_issue_comment`, leave or return the pull
+request to draft, and report the blocker.
+
 The wait
 ========
 
