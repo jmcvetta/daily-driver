@@ -9,7 +9,7 @@
 #
 # The branch comes from the harness's own git state: `git branch
 # --show-current` names the branch this session works on, and `OWNER/REPO` for
-# the branch link comes from the `origin` remote.
+# the branch link comes from the remote `task-worktree` resolved.
 #
 # A row that passes without the reference file being read is wrong, so the
 # graded content is both halves: the `Model:` line repeated from what the
@@ -44,9 +44,10 @@ tags: [undertake, references, fire, behaviour, codex-only, "forks:undertake-09-s
 
 initial_prompt: >-
   I'm handing you issue #52 to build. For this exercise, `git branch
-  --show-current` returned `issue-52-retry-uploads`, the `origin` remote is
-  `https://github.com/acme/widgets.git`, and the harness is running model
-  `gpt-5.6-sol`. Do not post anything. Show me the exact issue comment you
+  --show-current` returned `issue-52-retry-uploads`, the remote
+  `task-worktree` resolved is `https://github.com/acme/widgets.git`, and the
+  harness is running model `gpt-5.6-sol`. Do not post anything. Show me the
+  exact issue comment you
   would use, then explain where its branch, model, and session values came
   from.
 
@@ -119,7 +120,8 @@ success_criteria:
 
       Outside the proposed comment, the reply must explain that the branch
       came from `git branch --show-current`, `OWNER/REPO` came from the
-      `origin` remote, the model came from what the harness states it is
+      remote `task-worktree` resolved, the model came from what the harness
+      states it is
       running, and the session id is recorded as `n/a` because Codex exposes
       none.
 
@@ -128,5 +130,5 @@ success_criteria:
       provenance prose — and the surrounding REPLY names those sources. Score
       0.5 if it gets the comment or the explanation right, but not both.
       Score 0.0 if the comment omits the model line or the session line,
-      invents a session id, or narrates the missing surface instead of
-      recording `n/a`.
+      invents a session id, or the comment narrates the missing surface
+      instead of recording `n/a`.

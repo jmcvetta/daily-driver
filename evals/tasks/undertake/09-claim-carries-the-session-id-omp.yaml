@@ -8,7 +8,7 @@
 # `skills/undertake/references/omp.md` names that tool as the claim's source
 # for both. The branch comes from the harness's own git state — `git branch
 # --show-current` names it, and `OWNER/REPO` for the branch link comes from
-# the `origin` remote.
+# the remote `task-worktree` resolved.
 #
 # Why the Claude sibling could not be reused: it grades specific field paths
 # on a `get_session` payload —
@@ -19,7 +19,7 @@
 # Claude field to stand in for it.
 #
 # What this row can and cannot see. The sandbox has no Omp runtime adapter and
-# no repository with an `origin` remote, so the prompt supplies the two git
+# no repository with a resolved push remote, so the prompt supplies the two git
 # results and the adapter tool's answer needed to render the comment. That
 # makes the exact comment observable without pretending the sandbox can post
 # it. The graded assertion is an `agent_judge` on the reply, plus the skill
@@ -41,9 +41,10 @@ tags: [undertake, references, fire, behaviour, omp-only, forks:undertake-09-sess
 
 initial_prompt: >-
   I'm handing you issue #52 to build. For this exercise, `git branch
-  --show-current` returned `issue-52-retry-uploads`, the `origin` remote is
-  `https://github.com/acme/widgets.git`, and `daily_driver_get_session`
-  returned `{"sessionId": "0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8", "model":
+  --show-current` returned `issue-52-retry-uploads`, the remote
+  `task-worktree` resolved is `https://github.com/acme/widgets.git`, and
+  `daily_driver_get_session` returned `{"sessionId":
+  "0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8", "model":
   "zai/glm-5.3"}`. Do not post anything. Show me the exact issue comment you
   would use, then explain where its branch, model, and session values came
   from.
@@ -110,7 +111,7 @@ success_criteria:
 
       Outside the proposed comment, the reply must explain that the branch
       came from `git branch --show-current`, `OWNER/REPO` came from the
-      `origin` remote, and the model and session id came from
+      remote `task-worktree` resolved, and the model and session id came from
       `daily_driver_get_session`.
 
       Score 1.0 if the proposed COMMENT carries the exact branch link, the
