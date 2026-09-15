@@ -17,7 +17,7 @@ The **constitution** — `rules/constitution.md`, delivered to every session by
 hook on Claude Code and Codex, and by the rule provider on Omp — plus **two
 runtime adapters that enforce rather than instruct**, `hooks/` for the two
 harnesses that run hooks and `extensions/` for the one that does not, and
-fifteen skills:
+seventeen skills:
 
 | Skill | What it does |
 | ----- | ------------ |
@@ -27,6 +27,8 @@ fifteen skills:
 | `pr-body` | The body: a one-line summary, a salutation in verse, the `Issues` section that follows it, an executive summary, and engineering detail. |
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
 | `issue-labels` | The five labels an issue may carry — `epic`, `task`, `bug`, `proposal`, `research` — and the readiness each one states, which is what decides whether an agent may start unattended. |
+| `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
+| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a `Model:` line for `task`; every other label's edit runs under existing rules and acquires nothing. |
 | `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |
 | `readme` | Writes a README that answers what this is and how to use it, and nothing else: the shape, the reading of length as a symptom, and the list of what belongs in a commit message, a changelog or `docs/` instead. |
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |
@@ -134,8 +136,9 @@ decides *whether* to ask, the hook decides *how*.
 
 **Omp has no hook mechanism**, so `extensions/daily-driver.js` does the same
 two jobs there: it blocks the `ask` tool with the same wording, and it supplies
-the session-title and reminder tools (`daily_driver_set_session_title`,
-`daily_driver_schedule`, `daily_driver_cancel_schedule`) that Omp's
+the session-title, reminder, and session-info tools
+(`daily_driver_set_session_title`, `daily_driver_schedule`,
+`daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
 `ExtensionAPI` makes natural. The constitution needs no adapter on that side —
 Omp's rule provider injects `rules/*.md` carrying `alwaysApply: true`.
 
