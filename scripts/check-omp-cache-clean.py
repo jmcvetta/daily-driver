@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -12,14 +13,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TARGET = "clean-omp-plugin-cache"
 EXPECTED_CALLS = (
-    "plugin marketplace update daily-driver",
-    "plugin upgrade daily-driver@daily-driver",
+    ("plugin", "marketplace", "update", "daily-driver"),
+    ("plugin", "upgrade", "daily-driver@daily-driver"),
 )
-FAKE_OMP = """#!/bin/sh
-printf '%s\\n' "$*" >> "$OMP_CALL_LOG"
-if [ "$*" = "${OMP_FAIL_ON:-}" ]; then
-    exit 23
-fi
+FAKE_OMP = """#!/usr/bin/env python3
+import json
+import os
+import sys
+
+args = sys.argv[1:]
+with open(os.environ["OMP_CALL_LOG"], "a", encoding="utf-8") as stream:
+    json.dump(args, stream)
+    stream.write("\\n")
+
+fail_on = os.environ.get("OMP_FAIL_ON")
+if fail_on is not None and args == json.loads(fail_on):
+    raise SystemExit(23)
 """
 
 
@@ -29,7 +38,11 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def run_target(bin_dir: Path, call_log: Path, fail_on: str | None = None) -> subprocess.CompletedProcess[str]:
+def run_target(
+    bin_dir: Path,
+    call_log: Path,
+    fail_on: tuple[str, ...] | None = None,
+) -> subprocess.CompletedProcess[str]:
     """Run the target against the fake Omp executable."""
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
@@ -37,7 +50,7 @@ def run_target(bin_dir: Path, call_log: Path, fail_on: str | None = None) -> sub
     if fail_on is None:
         env.pop("OMP_FAIL_ON", None)
     else:
-        env["OMP_FAIL_ON"] = fail_on
+        env["OMP_FAIL_ON"] = json.dumps(fail_on)
     return subprocess.run(
         ["make", "--no-print-directory", "--silent", TARGET],
         cwd=ROOT,
@@ -48,9 +61,9 @@ def run_target(bin_dir: Path, call_log: Path, fail_on: str | None = None) -> sub
     )
 
 
-def read_calls(call_log: Path) -> tuple[str, ...]:
-    """Read the fake Omp calls in execution order."""
-    return tuple(call_log.read_text(encoding="utf-8").splitlines())
+def read_calls(call_log: Path) -> tuple[tuple[str, ...], ...]:
+    """Read the fake Omp argument vectors in execution order."""
+    return tuple(tuple(json.loads(line)) for line in call_log.read_text(encoding="utf-8").splitlines())
 
 
 def main() -> None:
