@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.1](https://github.com/jmcvetta/daily-driver/compare/v0.24.0...v0.24.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **omp:** preserve durable watcher completions ([#245](https://github.com/jmcvetta/daily-driver/issues/245)) ([c63634a](https://github.com/jmcvetta/daily-driver/commit/c63634a3c04ed1dd4bc213a421f9574c72d87d2d))
+
 ## [0.24.0](https://github.com/jmcvetta/daily-driver/compare/v0.23.0...v0.24.0) (2026-09-15)
 
 
