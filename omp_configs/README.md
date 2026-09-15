@@ -39,7 +39,7 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | `minimax-m3.yml` | MiniMax M3 as the default model with high reasoning. |
 | `qwen3.8-max-0902.yml` | Qwen 3.8 Max 0902 as the default model with high reasoning. |
 | `deepseek-v4.1-flash.yml` | DeepSeek V4.1 Flash as the default model with high reasoning. |
-| `kat-coder-pro-v2.5.yml` | KAT Coder Pro V2.5 as the default model with high reasoning. |
+| `mimo-v2.5-pro.yml` | MiMo V2.5 Pro as the default model with high reasoning. |
 
 The `advisor` role in `cocktail.yml` does not enable the advisor. Start Omp with `--advisor` when you want it:
 
@@ -49,10 +49,12 @@ omp --config ./cocktail.yml --advisor
 
 ## Provider access
 
-Omp must have access to every selected provider. Check a selector before use:
+Omp must have access to every selected provider. Check that Omp recognizes a selector before use:
 
 ```sh
 omp models find mercury-2.5
 ```
+
+Catalog entries do not guarantee that a provider still serves a model. An inference request can fail even when `omp models find` lists it.
 
 The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. The `openai-codex` models use Omp's configured OpenAI Codex credentials.
