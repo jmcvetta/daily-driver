@@ -20,9 +20,9 @@
 # has no subscription and no durable wake, so there is no ordering to grade —
 # an ordering rubric would fail a Codex run for answering correctly.
 #
-# Why not the Omp fork either: Omp's grades a blocking `github.run_watch`
-# followed by the statuses, and the blocking call is the half Codex does not
-# have. What survives on both is that the commit statuses are the second half of
+# Why not the Omp fork either: Omp's grades a supervised `gh pr checks --watch`
+# followed by both endpoint reads, while Codex cannot supervise that process.
+# What survives on both is that the commit statuses are the second half of
 # *reported*, and that is what this row keeps.
 #
 # Why this row and `07-there-is-no-wait-codex` are not the same row: 07 grades
