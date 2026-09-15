@@ -33,7 +33,8 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | `deepseek-v4-pro.yml` | DeepSeek V4 Pro as the default model. |
 | `gpt-5.6-sol.yml` | GPT-5.6 Sol as the default model. |
 | `gpt-5.6-sol-terra-task.yml` | GPT-5.6 Sol as the default model and GPT-5.6 Terra for task subagents. |
-| `cocktail.yml` | DeepSeek V4 Pro by default; Luna for small work; Sol for planning and deep work; GLM Flash for task subagents; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
+| `cocktail.yml` | GLM 5.3 Flash by default and for task subagents; Sol for planning and deep work; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
+| `cocktail.gpts-choice.yml` | The original GPT-generated cocktail: DeepSeek V4 Pro by default; Luna for small work; Sol for planning and deep work; GLM Flash for task subagents; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
 | `mercury-2.5.yml` | Mercury 2.5 as the default model for testing its diffusion-based agent behavior. |
 | `kimi-k3.yml` | Kimi K3 as the default model with high reasoning. |
 | `minimax-m3.yml` | MiniMax M3 as the default model with high reasoning. |
