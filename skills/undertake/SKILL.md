@@ -316,7 +316,8 @@ complete, and names the action the pull request waits on. The pull request
 stays a draft, and the sequence pauses there. What resumes it is the
 person's action landing on the branch — the Tofu applied, the updated state
 committed — after which the pull request returns through the gate below
-like any other.
+like any other. The person's commit is a new diff: `Review the head` runs
+over it once before the gate, the way any changed head earns a round.
 
 10 — Keep it current
 --------------------
@@ -455,10 +456,10 @@ pull request goes to ready only when **all** of these hold:
   its thread, or deferred with the user's agreement.
 - The pull request waits on no human action. `pr-body`'s human-action notice
   marks a pull request whose Tofu changes must be applied, and the updated
-  state committed, before it merges — a bar only a person clears, and one
-  `Ready for review` pauses on rather than waits under. The pause is stated
-  there; this condition is what the sequence returns to once the branch
-  carries the result.
+  state committed, before it merges — a bar only a person clears, and
+  unlike a pending check nothing will ever report it. `Ready for review`
+  pauses on it; this condition is what the sequence returns to once the
+  branch carries the result.
 
 
 A branch behind its base, red CI, an open thread, or a human action still

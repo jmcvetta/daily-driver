@@ -83,21 +83,22 @@ The human-action notice
 A pull request whose diff changes the infrastructure Tofu stack does not
 merge on CI green alone: the changes must be applied, and the updated state
 committed, before the branch lands — and only a person can run the apply.
-The body of such a pull request carries a prominent notice of that, between
-the `Issues` section and the `Summary`, where a reader meets it before any
-prose:
+The body of such a pull request carries a prominent notice of that —
+immediately after the `Issues` section when there is one, otherwise
+immediately after the salutation, and in either case above the `Summary`,
+where a reader meets it before any prose:
 
 ```
 > **Waits on a human apply.** This pull request changes the Tofu stack. The
 > changes must be applied and the updated state committed before it merges.
 ```
 
-The same act labels the pull request `human` — the label the `issue-labels`
-standard defines for work only a person can do — so the list view says what
-green CI does not: this one waits on a person. Writing the body and setting
-the label are one act. A body that carries the notice beside a pull request
-that does not carry the label states the wait twice, differently, and one
-of the two is wrong.
+The same act labels the pull request `human` — the label #219 adds to the
+`issue-labels` standard for work only a person can do — so the list view
+says what green CI does not: this one waits on a person. Writing the body
+and setting the label are one act. A body that carries the notice beside a
+pull request that does not carry the label states the wait twice,
+differently, and one of the two is wrong.
 
 The test is the diff, not the body. When a body is revised and the branch's
 changes touch the Tofu stack, a notice the first write did not know to add
