@@ -36,17 +36,21 @@ The pull request
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 
-Reading a pull request is `pr://<number>`. `Review the head` and `Fix, answer,
-resolve, push` are `review-cycle`'s, and its own `references/omp.md` has the
-review surface, the wait and the thread clients.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
+`review-cycle`'s. Its `references/omp.md` names the reviewer task, durable
+record, and bounded delta-pass contract.
 
 
 The session
 ===========
 
-**There is no session call.** The claim carries the branch alone. It omits the
-unavailable model and session instead of publishing a diagnostic about another
-harness's session surface.
+**The claim reads the model and the session id from
+`daily_driver_get_session`**, the tool `extensions/daily-driver.js` registers.
+It answers this session's own id (`ctx.sessionManager.getSessionId()`), its
+name, and the id of the model serving it. The claim records both verbatim —
+`Model: <model>` and `session: <id>`, one line each, no note about where the
+values came from. Omp has no web URL for a session, so the id goes in bare
+rather than linked.
 
 The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch

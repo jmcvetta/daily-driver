@@ -20,11 +20,11 @@ description: >-
 # Undertake
 
 An issue in, a pull request ready for review out, and kept current with its
-base branch after that. Eleven steps, and this skill is the order they run in
-— the first of them, `Open the issue`, skipped in the
-common case where the work already has an issue. Where it does not, that step
-supplies one: an issue is what this skill takes in, and untracked work is what
-running without one leaves behind.
+base branch after that. Twelve steps, and this skill is the order they run in
+— the first of them, `Open the issue`, skipped in the common case where the
+work already has an issue. Where it does not, that step supplies one: an issue
+is what this skill takes in, and untracked work is what running without one
+leaves behind.
 
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
 restate**. The task branch and execution root live in `task-worktree`, the
@@ -68,21 +68,21 @@ The sequence
 | 6 | `Open the draft` | `pr` |
 | 7 | `Review the head` | `review-cycle` |
 | 8 | `Fix, answer, resolve, push` | `review-cycle` |
-| 9 | `Ready for review` | the harness's pull request client |
-| 10 | `Keep it current` | this skill, `review-cycle` |
+| 9 | `Verify the fix delta` | `review-cycle` |
+| 10 | `Ready for review` | the harness's pull request client |
+| 11 | `Keep it current` | this skill, `review-cycle` |
 
-`Review the head` and `Fix, answer, resolve, push` are `review-cycle`'s own
-first two stages, named identically on purpose: they are the same work, and one
-name for it is what lets either skill cite it without reaching into the other's
-numbering. `Ready for review` is not among them — that gate is this skill's,
-and `review-cycle` says so.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta`
+are `review-cycle` stages and carry the same names for that reason. `Ready for
+review` is not among them — it is this skill's gate, and `review-cycle` says
+what independent evidence it requires.
 
 0 — Open the issue
 ------------------
 
 Skipped where an issue is already in hand — handed over in the request, which
 is the common case, whether or not this skill was named. Where there is none,
-this step is what supplies one, and the ten after it are unchanged: what would
+this step supplies one, and the eleven after it are unchanged: what would
 otherwise happen is a branch, a review and a merge with no record of why any of
 it was wanted, and a pull request body with nothing to close.
 
@@ -215,27 +215,32 @@ Beyond the claim itself the comment always carries:
   The link can return 404 until the first push; write it anyway, because the
   alternative is a branch name the reader must turn into a URL by hand.
 
-Where the harness has a session call, the comment also carries:
-
-- **The model that served the turn**, which is what actually ran and moves
-  with a fallback that leaves the rest of the session untouched. Where the
-  model the session was *set* to run disagrees with it, name that too: the gap
-  between the two is the half of the record worth having. Never a name recalled
-  instead of read — a provenance record that guesses is worse than one that
-  says nothing. The reference file names the fields that answer both.
-- **The session**, as a link built from the same call's session id. The
-  identifier is what the reader needs; the link is that identifier and
-  somewhere to go with it, and the reference file has its form.
+- **The model that served the turn**, as one line — `Model: <model id>` —
+  and nothing else about it: no note about where the value came from, no
+  diagnostic about the surfaces that do not supply it. Read the id from the
+  harness's session call where it has one, and from the harness's own
+  statement of the serving model where it does not. Where the model the
+  session was *set* to run disagrees with the one that served, name that too:
+  the gap between the two is the half of the record worth having. Never a
+  name recalled instead of read — a provenance record that guesses is worse
+  than one that says nothing. The reference file names the fields that answer
+  both.
+- **The session**, as `session: <id>` where the id is reachable by any means
+  the harness offers, and `session: n/a` where it is not. The identifier is
+  what the reader needs; on Claude Code the link form is that identifier and
+  somewhere to go with it, and the reference file has its form. A missing id
+  is recorded as `n/a`, never narrated: a claim that explains why it has no
+  session publishes a diagnostic instead of a record.
 
 The model and session come from the harness's session call, where it has one —
 the call `session-title` documents. A branch designated by that call must be
 the branch `task-worktree` established; disagreement is a collision, not a
 choice between two branch sources.
 
-**Where the harness supplies no session call the comment still goes up with
-the branch alone.** It does not announce the unavailable metadata: omission is
-the harness-neutral record. The branch comes from the task worktree's Git
-state, never from a fresh naming decision in this step.
+**The comment never goes up with the branch alone.** The branch comes from
+the task worktree's Git state, never from a fresh naming decision in this
+step; the model and session lines follow the rules above whatever the harness
+supplies.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
@@ -268,33 +273,34 @@ step comes before this one. The draft may open red, and `Review the head`
 waits for the result either way. A red check is answered at `Fix, answer,
 resolve, push`, and the ready gate below is what it has to satisfy in the end.
 
-7 and 8 — Review the head, then fix, answer, resolve, push
-----------------------------------------------------------
+7–9 — `Review the head`, `Fix, answer, resolve, push`, `Verify the fix delta`
+----------------------------------------------------------------------------
 
-Invoke `review-cycle`. It owns the wait for CI on the pushed head — the
-mechanism as well as the rule, under `How to wait` — the harness's review
-surface at a level it names, the protocol every finding is answered and
-resolved under, and the test for whether a later push has earned a second
-review.
+Invoke `review-cycle`. It owns the CI wait, full review, finding protocol, and
+independent bounded verification. First record the reviewed SHA and every
+finding disposition. Batch all fixes, including CI and bot fixes, push them,
+and wait for CI on that head. Then run `Verify the fix delta` when the
+pull-request content changed behavior, contracts, or workflow rules. It is one
+pass for the batch, never one per commit or finding.
 
-Two rows in the table above rather than one, because the ready gate tests them
-separately: green CI on the head `Fix, answer, resolve, push` left behind, and
-every finding `Review the head` raised answered. One round, two things to be
-true of it.
+A first pass that finds defects returns to `Fix, answer, resolve, push`, then
+receives exactly one final targeted confirmation after CI. A defect in that
+confirmation, an unavailable reviewer, incomplete verification, or an
+exhausted pass limit keeps the pull request draft and reports the blocker.
+Initial execution and a resumed session read the durable review record before
+acting; they do not reset the allowance for a resume, rewritten history, bot
+finding, or late CI correction.
 
-What is this skill's is where the round sits — after the draft is open, before
-the ready gate, and once. `review-cycle` decides whether it goes again, and it
-decides that from the head SHA it recorded, so `Ready for review` never re-runs
-it and never needs to ask. A later round is `Keep it current`'s to earn, on the
-same test and from the same mark.
+Only a material scope change runs a new `Review the head` round. A base merge
+or history rewrite with unchanged pull-request content does not. `review-cycle`
+owns the content comparison and rejected-finding evidence rule.
 
-9 — Ready for review
---------------------
+10 — Ready for review
+---------------------
 
-**Take the pull request out of draft.** See the gate below
-first: this step is conditional, and `Keep it current` runs before it — the
-gate's first condition is that step's merge, so the sequence reaches it once
-out of the table's order and then again on its own cadence.
+The harness pull-request client takes it out of draft only after `The gate`
+below holds. It does not review; `review-cycle` supplies the full review and
+independent verification that the gate consumes.
 
 It does not review. Marking a draft ready is a natural moment to reach for one,
 and the branch was already reviewed at `Review the head` — whether that review
@@ -305,7 +311,7 @@ discharges the leaving-draft trigger in its description: it fires on exactly
 the moment this step occupies, and a round already run on this head is that
 trigger already answered.
 
-10 — Keep it current
+11 — Keep it current
 --------------------
 
 Commits land on the base branch while the work is written and while a
@@ -313,10 +319,10 @@ reviewer reads, and a branch behind its base was reviewed and tested against a
 tree nobody will merge into. This step brings the base branch in, and it is the
 only step that runs more than once.
 
-**Its first run is before `Ready for review`, not after it.** The gate below
-carries the condition; this step carries the merge that satisfies it, and the
-step is written once for both. Ready is not the end either, so it runs again on
-the cadence under `When it looks`.
+**Its first run is before `Ready for review`, not after it.** The gate's first
+condition is that step's merge, so the sequence reaches it once out of the
+table's order and then again on its own cadence. Ready is not the end either,
+so it runs again on the cadence under `When it looks`.
 
 **The merge is the harness's update-branch call**, whichever one the reference
 file names. It merges the base branch into the head server-side, so it needs no
@@ -441,6 +447,10 @@ pull request goes to ready only when **all** of these hold:
   from the round at `Review the head`.
 - Every finding that round raised has been fixed, or rejected with a reason on
   its thread, or deferred with the user's agreement.
+- The independent verification record for the scope is clear on the current
+  behavioral head. When the first pass found defects, the second pass must be
+  the clear final confirmation of those corrections. Unavailable or incomplete
+  verification, a final-pass defect, or a cap hit is not approval.
 
 A branch behind its base, red CI, or an open thread means it **stays a
 draft**, and the reason is stated in one line. A red pull request marked ready
@@ -448,8 +458,8 @@ is a claim about the work that is not true, and so is a ready one that does not
 merge.
 
 The gate is also what a round at `Keep it current` returns through. That round
-sends the pull request back to draft, and these four conditions are what let
-it out again — the same four, tested again, rather than a second gate written
+sends the pull request back to draft, and these five conditions are what let
+it out again — the same five, tested again, rather than a second gate written
 for the second round.
 
 
@@ -519,8 +529,8 @@ Non-goals
   to undertake one of the epic's ready tasks instead.
 - **Does not fire on work it was not asked to undertake.** "Implement a retry
   loop", with neither an issue nor an invocation, is ordinary work, and running
-  eleven steps and a review round over it would be the heaviest possible way
-  to write ten lines. `Open the issue` makes the issue reference optional; it
+  twelve steps and a review round over it would be the heaviest possible way to
+  write ten lines. `Open the issue` makes the issue reference optional; it
   does not make it the only thing that was ever doing the separating. An issue
   handed over, or this skill named — either fires it, and neither is ordinary
   work.
