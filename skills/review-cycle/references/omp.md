@@ -55,60 +55,78 @@ token-usage value, so `usage: unavailable` is required.
 The wait
 ========
 
-**A supervised `gh pr checks --watch`.** `github` is optional and disabled by
-default on Omp, so it is never this route. The essential `hub` tool owns a
-`gh` process directly — not through a shell — and keeps its lifecycle visible
-to the session:
+**A durable, supervised `gh pr checks --watch`.** `github` is optional and
+disabled by default on Omp, so it is never this route. The essential `hub`
+tool owns a `gh` process directly. The process survives its owning session,
+and its terminal completion remains recoverable:
 
 | Half | Call |
 | ---- | ---- |
-| The PR check rollup | `hub start` runs `gh pr checks --watch <pr> --repo <owner>/<repo>`; `hub wait` on that name for exit with timeout: 900 |
+| The PR check rollup | `hub start` runs `gh pr checks --watch <pr> --repo <owner>/<repo>` with persistent lifecycle; `hub wait` on that name for exit with timeout: 900 |
 | The check runs | `gh api /repos/{owner}/{repo}/commits/{sha}/check-runs` |
 | The commit statuses | `gh api /repos/{owner}/{repo}/commits/{sha}/status` |
 
-Name the process `ci-<pr>-<short-sha>`. Read the check runs and statuses only
-after the supervised watch exits. The watcher is the wake; the two endpoint
-reads are the verdict. `reported` is their union, not the output of `gh pr
-checks` alone.
+Name the process `ci-<pr>-<short-sha>` and set `persist: true`. Persistence is
+the strongest safe lifecycle this bounded watcher needs: it keeps the broker
+and process alive after the last Omp client exits. `detached: true` goes
+further and lets a process survive broker shutdown and every Omp exit. Do not
+use it here. A detached check watcher can escape the broker that enforces this
+workflow's cleanup, while persistence already preserves the watch and its
+completion.
 
-**The cap belongs to `hub wait`.** Start timing with that call. On its
-fifteen-minute timeout, call `hub stop` on the same name, read both endpoints
-once, and report every unreported check. A watcher exit with a failed check
-still leads to the two reads: red is reported, not a reason to review without
-the status half.
+Hub assigns the process to the calling session. Terminal completion
+notifications are owner-scoped. If the owning session is not running when the
+watch exits, Hub keeps the notification pending. Resume that same session in
+the same project and reconnect to Hub; Hub then replays the pending
+completion. Another session can inspect the project-scoped process by name,
+but it does not receive the owner's completion.
+
+The watcher is the wake; the two endpoint reads are the verdict. Read the
+check runs and statuses after a live `hub wait` returns or a resumed session
+receives the replayed completion. `reported` is their union, not the output of
+`gh pr checks` alone.
+
+**The cap belongs to the workflow.** Start its fifteen-minute deadline from
+the process's `startedAt`. In a live session, `hub wait` uses the remaining
+time, never more than timeout: 900. On timeout, call `hub stop` on the same
+name, read both endpoints once, and report every unreported check. After a
+resume, call `hub describe` on the same name and recover its `startedAt`. Stop
+it immediately when the deadline has passed; otherwise wait only for the
+remaining time. A watcher exit with a failed check still leads to the two
+reads: red is reported, not a reason to review without the status half.
 
 **An empty pair is a registration stop.** `gh pr checks --watch` returns when
-the PR rollup is empty; it cannot observe a future first check, and Omp has no
-durable wake for one. Zero check runs and an empty `statuses` array therefore
-mean no check has registered. Reject that result and report it; do not call it
-green or hide an unbounded poll behind the word *waiting*. This is the partial
-watch exception `SKILL.md` names. A repository known not to post commit
-statuses has no status half, but that fact must be known rather than inferred
-from this first read.
+the PR rollup is empty; a process that has already exited cannot observe a
+future first check, however durable its completion is. Zero check runs and an
+empty `statuses` array therefore mean no check has registered. Reject that
+result and report it; do not call it green or hide an unbounded poll behind
+the word *waiting*. This is the partial watch exception `SKILL.md` names. A
+repository known not to post commit statuses has no status half, but that fact
+must be known rather than inferred from this first read.
 
-No `sleep`, subscription, timer, or unmanaged Bash job belongs here. The
-`SKILL.md` prohibition on an unattended shell wait remains: this is an Omp
-supervised process with an explicit stop at the same fifteen-minute cap, not a
-Bash command whose timeout ends the session's control of it.
+No `sleep`, subscription, timer, or unmanaged Bash job belongs here. This is
+an Omp-supervised process with an explicit stop at the same fifteen-minute
+cap, not a Bash command whose timeout ends the session's control of it.
 
-There is no durable wake
-------------------------
+Process durability is not session resumption
+--------------------------------------------
 
-**`daily_driver_schedule` is an in-process managed timer, and a reminder dies
-with the session.** Omp's own documentation says managed timers are unref'd and
-cleared on `session_shutdown`. It is not a `send_later`, which survives the
-session that armed it.
+**`daily_driver_schedule` is an in-process managed timer.** Managed timers are
+unref'd and cleared on `session_shutdown`, so a reminder dies with the
+session. Use one only for a follow-up inside the current session. It cannot
+replace the persistent Hub watcher.
 
-So the never-empty wake slot —
+A durable Hub process also does not launch or resume an Omp session. It can
+finish while the owner is absent and preserve its completion for replay, but
+the endpoint reads and the review still need an agent turn after the owning
+session reconnects. This is process durability with recoverable completion,
+not autonomous review.
+
+The never-empty wake slot —
 [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — is
-Claude's rule and not this harness's. It has nothing to hold. `hub wait`
-completes the supervised watch inside the turn, so no wake is scheduled around
-it, and a wake scheduled with nothing to do on it is the noise `0010` exists
-to prevent.
-Schedule with `daily_driver_schedule`, and cancel with
-`daily_driver_cancel_schedule`, only where the round must hand the pull request
-back to itself for a follow-up **inside the current session** — never as a
-watch that outlives it.
+Claude's scheduler rule and does not bind Omp's managed timer. On Omp, the
+persistent Hub watcher holds process work across session shutdown; a resumed
+owner consumes its completion and continues the workflow.
 
 
 Review history, publication, and threads

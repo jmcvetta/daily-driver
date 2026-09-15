@@ -84,27 +84,33 @@ The watch
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Watch the wave` | Read the wave's state | the dispatch handles — `hub jobs` over them, `hub wait` to block on one |
+| `Watch the wave` | Read the wave's live subagent state | the dispatch handles — `hub jobs` over them, `hub wait` to block on one |
+| `Watch the wave` | Preserve a pull request CI watch | `review-cycle`'s persistent `hub start` route |
 | `Watch the wave` | Find the pull request for a task issue | `issue://<number>` — `closed_by_pull_requests` |
 | `Watch the wave` | Read a pull request's state and checks | `pr://<number>` |
 
-**A subagent's result — or failure — arrives as a wake of its own**, so the
-wave needs no session client and no durable timer to be supervised: the
-orchestrator ends its turn holding the handles, and each implementor that
-finishes wakes it. That is what `SKILL.md` means by supervising the wave
-through the harness's subagent lifecycle, and it is why the missing durable
-wake is not a stop here.
+**A live subagent's result or failure arrives as a wake of its own.** The
+orchestrator ends its turn holding the dispatch handles, and each implementor
+that finishes wakes it. The GitHub state remains the durable record: a task
+issue's pull request, checks, and review threads say whether work is moving or
+stuck, and the epic graph says whether a task is home.
 
-**The GitHub watch runs on top of it, unchanged.** A task issue's pull
-request, its checks and its review threads are still how work in progress is
-told from work stuck, and the epic's graph is still how a task being home is
-read. `Take the wave`'s three empty-batch answers read the same graph.
+CI waiting uses `review-cycle`'s durable Hub process. `persist: true` keeps its
+broker and watcher alive after the last Omp client exits. `detached: true`
+would also survive broker shutdown and every Omp exit, but the bounded CI
+watch does not use it. Hub keeps terminal completion owner-scoped and pending
+while the orchestrator is absent. Resume the owning session in the same
+project and reconnect to Hub to receive that completion, then read the pull
+request state before acting. A different session can inspect the
+project-scoped process by name but does not receive the owner's replay.
 
-**The lifecycle ends where the implementors finish.** A subagent's completion
-wake is spent by then and its pull request is still open; where the surface
-delivers no pull-request event and holds no durable timer, the close of the
-wave — the wave marked `done`, the next one launched — is resumed by the next
-`embark` invocation, and that is said once rather than claimed as a watch.
+This durability does not turn the process into an agent. Hub cannot reopen or
+resume a terminated orchestrator, interpret the completed watch, mark the wave
+`done`, or launch the next wave. `daily_driver_schedule` also cannot supply
+that autonomy: it is a managed timer cleared on session shutdown. If the
+orchestrator terminates, process-only watches survive, but agent-driven wave
+work resumes only when the owning session resumes or a later `embark`
+invocation reads the graph and pull requests.
 
 
 The strong-model review
