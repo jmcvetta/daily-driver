@@ -175,7 +175,8 @@ its threads as recorded. Compare the returned review and comments with the
 history first; a resumed session must not post native findings twice.
 
 Where the review surface returns findings but no submitted review, create one
-with `POST /repos/{owner}/{repo}/pulls/{n}/reviews` using the worker token.
+with `curl` and the ambient `GITHUB_TOKEN` on a web worker, or `gh api` on a
+laptop, through `POST /repos/{owner}/{repo}/pulls/{n}/reviews`.
 The JSON body has `event: "COMMENT"`, `commit_id: <reviewed-sha>`, a summary
 `body`, and a `comments` array whose entries carry `path`, `side`, `line`
 (and `start_side` / `start_line` for a range), and finding body. The submitted
@@ -191,7 +192,7 @@ claiming the aggregation succeeded.
 | --------- | ---- |
 | Read review history | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments`, and `get_comments` |
 | Native publication | `/code-review` with `--comment` |
-| Fallback publication | `POST /repos/{owner}/{repo}/pulls/{n}/reviews` |
+| Fallback publication | `curl` with `GITHUB_TOKEN`, or `gh api`, to `POST /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Reply on a thread | `mcp__github__add_reply_to_pull_request_comment` |
 | Resolve a thread | `mcp__github__resolve_review_thread` |
 

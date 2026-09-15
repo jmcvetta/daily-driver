@@ -5,11 +5,12 @@ description: >-
   output.
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
-  An Omp reviewer returned two line-specific findings for PR #25 at aaa111 but
-  posted nothing. One finding has no valid diff anchor. The run may have resumed
-  after a successful publication, and the PR head could change while preparing
-  the review. Explain how to read the complete review history, publish the
-  findings, avoid duplicates, and handle a changed head or GitHub failure.
+  A harness reviewer returned two line-specific findings for PR #25 at aaa111
+  but posted nothing. One finding has no valid diff anchor. The run may have
+  resumed after a successful publication, and the PR head could change while
+  preparing the review. Explain how to read the complete review history,
+  publish the findings, avoid duplicates, handle replies and resolution, and
+  handle a changed head or GitHub failure.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Task]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash]
@@ -41,9 +42,9 @@ success_criteria:
       `ANCHOR: result`, or `ANCHOR: none` and score 0.0 when absent.
 
       The rule: a reviewer that returns findings locally still publishes one
-      submitted GitHub COMMENT review. It reads all review pages and the
-      paginated GraphQL review-thread graph first, including replies, resolved
-      and outdated state, review/comment IDs, and SHAs. It re-reads the head and
+      submitted GitHub COMMENT review. It reads every page of submitted reviews
+      and the complete thread graph first, including replies, resolved and
+      outdated state, review/comment IDs, and SHAs. It re-reads the head and
       validates diff anchors immediately before publication. The review carries
       the reviewed commit SHA, summary, and path/side/line (or valid range) for
       each line-specific finding. The unanchorable finding goes only in the

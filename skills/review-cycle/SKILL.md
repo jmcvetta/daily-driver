@@ -179,6 +179,11 @@ use is.
 Review record, not transcript
 -----------------------------
 
+**Use the harness's named review surface, never a bare subagent.** A bare
+subagent is an ad-hoc dispatch with no review rubric or publication contract.
+The reference file names the surface for the harness in use, and that surface
+is the only reviewer `Review the head` dispatches.
+
 **Read the complete GitHub review history before each review.** Read submitted
 reviews and every inline thread, including resolved and outdated threads, their
 replies, and the recorded dispositions. Paginate to the end; the newest page
@@ -259,10 +264,10 @@ it into a discussion reopens the thread the rule just closed.
 The clients, and the identifier trap
 ------------------------------------
 
-Three operations — **read the review threads, reply on one, resolve one** —
-and the client that performs them differs by harness. The reference file has
-the calls. The identifiers below are GitHub's, so the trap is the same
-whichever client makes the call.
+**Reading history, publishing the review, replying, and resolving are
+harness-specific operations.** The reference file names their calls. The
+identifiers below are GitHub's, so the trap is the same whichever client makes
+the call.
 
 **The two calls take different identifiers, and only one of them is a field.**
 Measured 2026-09-06: resolve wants the thread's `id`, a `PRRT_…` node ID, read
