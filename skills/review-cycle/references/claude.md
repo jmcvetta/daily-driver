@@ -23,10 +23,8 @@ whatever level was typed last, in some other session, about some other diff.
 `SKILL.md`'s `Name the level` is the rule; this is the surface that makes it
 load-bearing.
 
-Should a later CLI post plain issue comments instead of threads, read them with
-`get_comments` rather than `get_review_comments` and answer with
-`mcp__github__add_issue_comment` — the degradation `SKILL.md` describes under
-`A reviewer, not a bare subagent`.
+If the CLI returns findings without a submitted review, publish them through
+the fallback below. Plain issue comments are not an equivalent artifact.
 
 
 Fix-delta verification
@@ -163,15 +161,41 @@ timeout. Failing that, this is the surface `SKILL.md` says cannot wait: read
 the checks once, and where they have not all reported, say so and stop.
 
 
-The review threads
-==================
+Review history, publication, and threads
+========================================
+
+Before reviewing, read `pull_request_read` with `get_reviews`,
+`get_review_comments`, and `get_comments`. Follow every page or cursor until
+the result is complete. Preserve resolved and outdated threads, replies,
+review identifiers, and reviewed SHAs in the reviewer brief.
+
+`/code-review --comment` is the native publication route. Confirm that its
+result is a submitted `COMMENT` review with the reviewed SHA before treating
+its threads as recorded. Compare the returned review and comments with the
+history first; a resumed session must not post native findings twice.
+
+Where the review surface returns findings but no submitted review, create one
+with `POST /repos/{owner}/{repo}/pulls/{n}/reviews` using the worker token.
+The JSON body has `event: "COMMENT"`, `commit_id: <reviewed-sha>`, a summary
+`body`, and a `comments` array whose entries carry `path`, `side`, `line`
+(and `start_side` / `start_line` for a range), and finding body. The submitted
+summary carries unanchorable or clean results. Validate the head and diff
+anchors again immediately before this call. A missing token, GitHub rejection,
+or head change leaves the findings intact and reports publication as incomplete.
+
+The `/comments` fallback measured in `0001` demonstrates inline posting, not
+this submitted-review aggregation; read the response and review history before
+claiming the aggregation succeeded.
 
 | Operation | Call |
 | --------- | ---- |
-| Read the threads | `mcp__github__pull_request_read`, `get_review_comments` method |
+| Read review history | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments`, and `get_comments` |
+| Native publication | `/code-review` with `--comment` |
+| Fallback publication | `POST /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Reply on a thread | `mcp__github__add_reply_to_pull_request_comment` |
 | Resolve a thread | `mcp__github__resolve_review_thread` |
 
 The identifier trap `SKILL.md` states applies to the last two: resolve takes
 the thread's `PRRT_…` node ID, reply takes the `#discussion_r…` number from the
-comment's `html_url`.
+comment's `html_url`. The fallback creates a review, not a loose comment, so it
+gives the summary and each finding one durable review record.

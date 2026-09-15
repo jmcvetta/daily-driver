@@ -1,13 +1,14 @@
 ---
 name: review-cycle
 description: >-
-  Use this skill whenever a pull request is reviewed and then answered —
-  including "/review-cycle", "review the PR and fix what it finds", "address
-  the review feedback", "reply to the review comments", "resolve those
-  threads", or "does that need another review?", and before invoking a
-  pull-request review, replying to or resolving a review thread, or waiting
-  for a pull request's checks. Supplies the CI wait on the pushed head, the
-  review invocation and its level, the finding response protocol, bounded
+  Use this skill whenever a pull request is reviewed, alone or then answered —
+  including "/review-cycle", "review the PR", "review the PR and fix what it
+  finds", "address the review feedback", "reply to the review comments",
+  "resolve those threads", or "does that need another review?", and before
+  invoking a pull-request review, recording a review finding, replying to or
+  resolving a review thread, or waiting for a pull request's checks. Supplies
+  the CI wait on the pushed head, the review invocation and its level, a
+  durable inline review record, the finding response protocol, bounded
   independent verification of fix deltas, and the test for whether a later
   push changes the full-review scope. Not for opening a pull request or
   bringing one up to date — that is `pr` — nor for marking a draft ready,
@@ -18,12 +19,14 @@ description: >-
 
 One full review per scope, then at most two independent fix-delta passes. Every
 finding is answered, and a behavioral fix is verified without repeatedly
-auditing unchanged pull-request content.
+auditing unchanged pull-request content. A standalone review records its
+findings and stops; it does not turn into an implementation run.
 
 The analysis is the harness's own review surface, and this skill does not
-supply it. What it supplies is the five things around it — the wait for CI,
-the level, the thread protocol, bounded fix verification, and the full-review
-test — none of which any review surface has an opinion about.
+supply it. What it supplies is the six things around it — the wait for CI, the
+level, the durable review record, the thread protocol, bounded fix verification,
+and the full-review test — none of which any review surface has an opinion
+about.
 
 **The routes are per harness, and they live beside this file.** Every operation
 below is named in words here and resolved to a call there:
@@ -68,6 +71,12 @@ somebody asked to have answered, which is worse than not firing at all.
 `Review the head` is for a head nobody has reviewed yet; `Does it go again?`
 still decides what happens after.
 
+**A standalone review ends after `Review the head`.** It reads the history,
+reviews the requested pull request, publishes a submitted review, and reports
+the result. It does not enter `Fix, answer, resolve, push`, resolve its new
+threads, alter draft state, or merge. A request to fix or answer existing
+findings is not standalone and follows the relevant later stage.
+
 
 1 — Review the head
 ===================
@@ -79,9 +88,10 @@ The wait ends when every check has reported, whichever way it reported: a red
 check is a fact about the branch, not a reason to hold the review, and
 `Fix, answer, resolve, push` is where it is answered.
 
-Then **run the harness's review surface against the pull request**, and take
-what it raises as the round's findings. The reference file names the surface
-and the flags it is invoked with.
+First **read the complete review record**, then run the harness's review
+surface against the pull request. The record and current head tell the reviewer
+what has already been considered; the reference file names both the reader and
+the publication route.
 
 How to wait
 -----------
@@ -166,38 +176,45 @@ nothing to bind: they exist because a level can be remembered, and a surface
 with no level remembers none. The reference file says which case the harness in
 use is.
 
-A reviewer, not a bare subagent
--------------------------------
+Review record, not transcript
+-----------------------------
 
-**The reviewer is a named surface the round chose, never a bare subagent.** A
-bare subagent is an ad-hoc dispatch with no rubric: it inherits nothing, has no
-level anybody chose, and posts nothing — its findings die in the transcript,
-and `Fix, answer, resolve, push` has nothing to answer. The reference file
-names the surface for the harness in use, and it is the only thing this stage
-dispatches.
+**Read the complete GitHub review history before each review.** Read submitted
+reviews and every inline thread, including resolved and outdated threads, their
+replies, and the recorded dispositions. Paginate to the end; the newest page
+is not the history. Give the reviewer that history, the reviewed SHA, and the
+current head rather than leaving the prior decision only in the author's
+context.
 
-**Findings that land on the pull request survive the session**, and that is
-what makes them the record of why the branch was judged ready. They arrive as
-resolvable review threads, inline on the diff, where the reply-and-resolve of
-`Fix, answer, resolve, push` is the ordinary path rather than a hoped-for one.
-[`0001`](../../docs/notes/0001-built-in-review-surface.md) §4 records what was
-measured, and the reference file says whether the harness in use lands them
-that way.
+**Every actionable line-specific finding is a submitted inline review thread.**
+Anchor it to the reviewed commit, path, side, and valid diff line or range.
+Use a suggestion block only where it makes the concrete replacement clearer;
+it never replaces the explanation of the defect. A finding with no valid
+anchor, and a clean review, goes in the submitted review summary. Never invent
+an anchor.
 
-**Where they do not**, `Fix, answer, resolve, push` degrades: the round carries
-the findings itself, from the surface's result, and *resolve* reads as
-*answered* — in this file **and in the caller's gate**, where a bullet asking
-for no unresolved thread would otherwise be a condition the round can never
-satisfy. A surface that posts plain issue comments degrades the same way, to
-reply-only. Say so once, and re-measure into `0001` rather than leaving the
-next round to rediscover it.
+**Use the surface's native publication where it has one; otherwise publish its
+returned findings through the available GitHub route.** Read the surface output
+and existing review record first, so a native comment is not posted twice on a
+resume. A reviewer returning findings locally is not permission to leave them
+in the transcript. If publication, permission, or anchor validation fails,
+retain and report the findings and the incomplete recording step; never claim a
+durable review.
 
-Record the review scope
------------------------
+**One finding has one conversation.** A repeated finding links to the earlier
+thread and disposition rather than reopening the argument. A recommendation
+that reverses a recorded decision names the decision and its new evidence or
+changed constraint. A prior decision is evidence, not immunity from a
+demonstrated defect.
 
-**Record the reviewed SHA, findings, and dispositions on the pull request.**
-That record defines the scope and gives a resumed session the evidence it needs
-to enforce the bound. The harness route names the durable comment format.
+**A local review with no pull request still returns its findings and says that
+GitHub recording is unavailable.** It does not create a pull request to obtain
+a record.
+
+**Record the reviewed SHA, review identifier, findings, and dispositions on the
+pull request.** That record defines the scope, links the summary and threads,
+and gives a resumed session the evidence it needs to enforce the bound. The
+harness route names the durable format.
 
 
 2 — Fix, answer, resolve, push
@@ -220,14 +237,11 @@ Every finding gets a verdict, on its thread, and the thread is closed:
    and re-raise what this stage rejected.
 5. **Never left open silently.** The rule the other four exist to serve.
 
-Every reviewer is the same protocol — Claude's own findings, a human's, a
-bot's. None of it is reviewer-specific.
 
-**It is harness-specific.** The threads are a GitHub review surface, and a
-harness whose reviewer leaves no threads has none to answer or resolve: the
-round then carries the findings and the commits are the record.
-[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) is the
-decision.
+Every reviewer uses this protocol — Claude's own findings, a human's, a bot's,
+or locally returned output. GitHub threads are the durable record, so a
+reviewer that did not create them is followed by publication rather than a
+transcript-only degradation.
 
 The reply
 ---------

@@ -1,0 +1,61 @@
+task_id: review-cycle-12-fallback-review-publication
+description: >-
+  A local reviewer result is published once as a GitHub review, with complete
+  history, valid anchors, and explicit failure handling rather than transcript
+  output.
+tags: [review-cycle, behaviour, fire]
+initial_prompt: >-
+  An Omp reviewer returned two line-specific findings for PR #25 at aaa111 but
+  posted nothing. One finding has no valid diff anchor. The run may have resumed
+  after a successful publication, and the PR head could change while preparing
+  the review. Explain how to read the complete review history, publish the
+  findings, avoid duplicates, and handle a changed head or GitHub failure.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Task]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash]
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+success_criteria:
+  - type: skill_triggered
+    description: "`review-cycle` fires for fallback review publication"
+    expected_skill: review-cycle
+    skill_name: review-cycle
+  - type: agent_judge
+    description: The reply preserves durable fallback publication
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one reply against one rule.
+
+      FIRST, FIND THE REPLY after the last `[RESULT - …]` tag. Begin with
+      `ANCHOR: result`, or `ANCHOR: none` and score 0.0 when absent.
+
+      The rule: a reviewer that returns findings locally still publishes one
+      submitted GitHub COMMENT review. It reads all review pages and the
+      paginated GraphQL review-thread graph first, including replies, resolved
+      and outdated state, review/comment IDs, and SHAs. It re-reads the head and
+      validates diff anchors immediately before publication. The review carries
+      the reviewed commit SHA, summary, and path/side/line (or valid range) for
+      each line-specific finding. The unanchorable finding goes only in the
+      submitted summary. It compares the result with existing history and the
+      recorded review ID so a resume does not duplicate it. The numeric comment
+      ID replies; the PRRT thread node ID resolves. On an absent client,
+      changed head, invalid anchor, permission problem, or GitHub failure, it
+      retains the findings and reports incomplete publication rather than claiming
+      a durable review.
+
+      Score 1.0 only if the REPLY states all parts. Score 0.5 if it publishes a
+      submitted review with duplicate and changed-head handling but misses a
+      material history, anchor, identifier, or failure detail. Score 0.0 if it
+      leaves the result in a transcript or loose issue comment, posts duplicates,
+      anchors the unanchorable finding, or treats a failed publication as done.
