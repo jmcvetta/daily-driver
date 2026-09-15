@@ -8,7 +8,7 @@ SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
 .PHONY: git_sync check check-plugin check-skills check-agents check-scripts \
-	check-manifests check-constitution check-ask-in-chat check-omp-extension \
+	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
 	check-omp-plugin check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
 	check-evals-preflight check-labels check-infra evals-install evals-plan \
@@ -46,9 +46,10 @@ git_sync:
 # than restating its legs, so a leg added here is a leg CI gains — and there
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
-	check-constitution check-ask-in-chat check-omp-extension check-omp-agent \
-	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
-	check-eval-arms check-step-names check-evals-preflight check-labels
+	check-manifest-fixtures check-constitution check-ask-in-chat \
+	check-omp-extension check-omp-agent check-codex-agent check-eval-fixtures \
+	check-task-worktree-fixture check-eval-arms check-step-names \
+	check-evals-preflight check-labels
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -84,13 +85,23 @@ check-agents:
 # of them permanently unreachable. This is the leg that catches those, for
 # skills and agents alike.
 #
-# It is also the leg that holds `0011`'s split: no SKILL.md body names a
-# harness's own tool routes, every reference file is linked from the body, and
-# every reference link resolves. A route written back into a body reads
-# correctly on the harness it was written for, so nothing else catches it.
-# See the docstring in the script.
+# It is also the leg that holds `0011`'s split: no SKILL.md description or
+# body names a harness's own tool routes, every reference file is linked from
+# the body, and every reference link resolves. A route written back into a
+# description or a body reads correctly on the harness it was written for, so
+# nothing else catches it. See the docstring in the script.
 check-manifests:
 	python3 scripts/check-manifests.py
+
+# check-manifest-fixtures: the acceptance test for the route half of
+# check-manifests -- folded-description rejection, body rejection with its
+# line number, neutral and invocation acceptance, routes allowed in reference
+# files, and every route pattern exercised by name. Part of `check` because
+# the guard itself is credential-free: a pattern that stops matching fails
+# here rather than letting routes back into every description. See the
+# script's docstring.
+check-manifest-fixtures:
+	python3 scripts/check-manifest-fixtures.py
 
 # The credential-free half of the constitution's acceptance test: run both
 # delivery hooks against synthetic event JSON and assert the constitution's
