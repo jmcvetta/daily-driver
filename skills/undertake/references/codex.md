@@ -46,12 +46,9 @@ The pull request
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 
-Reading a pull request is `gh pr view <number>`. `Review the head` and
-`Fix, answer, resolve, push` are `review-cycle`'s, and that skill has its own
-[`codex.md`](../../review-cycle/references/codex.md). Read it: the surface
-there is `codex exec review --base`, it reviews the checkout rather than the
-pull request, it posts nothing, and its wait is a single read rather than a
-loop — which is the same reason `Keep it current` below has no cadence.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
+`review-cycle`'s. Its `references/codex.md` names the full-review surface and
+the unavailable-delta stop that keeps the pull request draft.
 
 
 The session

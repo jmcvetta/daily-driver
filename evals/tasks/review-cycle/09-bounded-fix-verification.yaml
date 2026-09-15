@@ -1,0 +1,62 @@
+task_id: review-cycle-09-bounded-fix-verification
+description: >-
+  A behavior-changing batch of review fixes is independently checked once, then
+  at most once more after concrete defects; a final defect blocks readiness.
+tags: [review-cycle, behaviour, fire]
+initial_prompt: >-
+  On PR #25, the full review at aaa111 found two defects. I fixed both plus a
+  CI-reported Markdown workflow regression in one batch and pushed bbb222; CI
+  is green. Explain the next review action, the evidence it must use, what you
+  record, and what happens if this pass or its final confirmation finds defects.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Task]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`review-cycle` fires for review-fix verification"
+    expected_skill: review-cycle
+    skill_name: review-cycle
+
+  - type: agent_judge
+    description: The reply describes the bounded independent delta-pass protocol
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn transcript.
+      The reply starts after the last `[RESULT - …]` tag. If there is no such
+      tag, begin with `ANCHOR: none` and score 0.0. Otherwise begin with
+      `ANCHOR: result`.
+
+      The rule: a behavior-changing batch, including a Markdown workflow fix,
+      gets ONE independent reviewer delta pass after CI. The reviewer receives
+      the reviewed SHA, current SHA, original findings, and dispositions; it
+      checks fixes and regressions, not a whole-PR audit or style. The result is
+      durably recorded with SHAs, pass count, outcome, defects, cap state, and
+      unavailable usage. A first-pass defect allows one batched correction and
+      one final confirmation; a final-pass defect, incomplete or unavailable
+      pass, or cap hit leaves the PR draft and reports a blocker. It must not
+      treat CI as verification or reset the cap for commits, resumes, rewrites,
+      bot findings, or CI fixes.
+
+      Score 1.0 only if the REPLY states all parts. Score 0.5 if it describes
+      the independent batch pass and one final confirmation but misses material
+      record or blocking details. Score 0.0 if it offers a full re-review,
+      verifies per finding, accepts CI as verification, renews the allowance,
+      or approves after a final defect.
