@@ -72,6 +72,31 @@ surface rather than the bare subagent `SKILL.md` refuses, and it is also why
 the round runs it once per diff rather than once per push.
 
 
+
+Fix-delta verification
+======================
+
+**Unavailable on the measured surface.** `codex exec review` accepts a base
+branch or one commit, not a reviewed-SHA/current-SHA range plus findings and
+dispositions. `--commit <SHA>` would verify one commit, not a batch. Do not
+substitute either for the required delta pass. Record the unavailable result
+with `gh pr comment <number> --body-file <path>`, leave or return the pull
+request to draft, and report the blocker:
+
+```text
+Review verification
+scope reviewed: <sha>
+pass: <1|2>
+verified: <sha>
+findings: <finding ids and dispositions>
+outcome: unavailable
+defects: <none|concise list>
+cap: <open|hit>
+usage: <exact value if exposed|unavailable>
+```
+
+Never estimate usage when the invocation does not expose it.
+
 The wait
 ========
 

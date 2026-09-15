@@ -1,32 +1,33 @@
 ---
 name: review-cycle
 description: >-
-  This skill should be used whenever a pull request is being reviewed and that
-  review is then answered — including when the user says "/review-cycle",
-  "review the PR and fix what it finds", "address the review feedback", "reply
-  to the review comments", "resolve those threads", or "does that need another
-  review?", and on any call to a harness's review surface aimed at a pull
+  Use this skill whenever a pull request is reviewed and then answered —
+  including "/review-cycle", "review the PR and fix what it finds", "address
+  the review feedback", "reply to the review comments", "resolve those
+  threads", or "does that need another review?", and on any call to a
+  harness's review surface aimed at a pull
   request — Claude's `/code-review`, Omp's `reviewer` task agent, or
   `codex exec review` — to a review-thread reply or resolution —
   `mcp__github__add_reply_to_pull_request_comment`,
   `mcp__github__resolve_review_thread`, or the `gh` equivalents — or to a wait
   on a pull request's checks, `github.run_watch` among them. Supplies the CI
-  wait on the pushed head, the review invocation and its level, the protocol
-  every finding is answered under, and the test for whether a later push earns
-  a second round. Not for opening a pull request or bringing one up to date —
-  that is `pr` — nor for marking a draft ready, which is the caller's gate.
+  wait on the pushed head, the review invocation and its level, the finding
+  response protocol, bounded independent verification of fix deltas, and the
+  test for whether a later push changes the full-review scope. Not for opening
+  a pull request or bringing one up to date — that is `pr` — nor for marking a
+  draft ready, which is the caller's gate.
 ---
 
 # Review cycle
 
-One round: **review, answer, and decide whether it goes again.** A pull request
-is reviewed once per diff, every finding it raises is closed out, and a push
-that only answered the review does not buy a second review.
+One full review per scope, then at most two independent fix-delta passes. Every
+finding is answered, and a behavioral fix is verified without repeatedly
+auditing unchanged pull-request content.
 
 The analysis is the harness's own review surface, and this skill does not
-supply it. What it supplies is the four things around it — the wait for CI, the
-level, the thread protocol, and the re-review test — none of which any review
-surface has an opinion about, and all four of which are the ones that go wrong.
+supply it. What it supplies is the five things around it — the wait for CI,
+the level, the thread protocol, bounded fix verification, and the full-review
+test — none of which any review surface has an opinion about.
 
 **The routes are per harness, and they live beside this file.** Every operation
 below is named in words here and resolved to a call there:
@@ -50,15 +51,17 @@ The round
 | - | ----- | ----- |
 | 1 | `Review the head` | the harness's review surface |
 | 2 | `Fix, answer, resolve, push` | this skill |
-| 3 | `Does it go again?` | this skill |
+| 3 | `Verify the fix delta` | the harness's review surface |
+| 4 | `Does it go again?` | this skill |
 
 **Every stage has a name, and the name is how it is cited** — here and in
 `undertake`, whose `Review the head` and `Fix, answer, resolve, push` steps are
-the first two of these and carry the same names for that reason. Its
-`Ready for review` is its own, not a third stage of this round. The numbers
-order the round and do nothing else, because a number moves when a stage is
-inserted and a name does not.
-[`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision.
+the first two of these and carry the same names for that reason. `Verify the
+fix delta` is independent verification, not another full review. Its outcome
+is part of `Ready for review`'s gate. The numbers order the round and do
+nothing else, because a number moves when a stage is inserted and a name does
+not. [`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the
+decision.
 
 **A round entered on findings that already exist starts at `Fix, answer,
 resolve, push`.** Half the register arrives that way — *"address the review
@@ -192,11 +195,12 @@ satisfy. A surface that posts plain issue comments degrades the same way, to
 reply-only. Say so once, and re-measure into `0001` rather than leaving the
 next round to rediscover it.
 
-Record the head SHA
--------------------
+Record the review scope
+-----------------------
 
-**Record the head SHA you reviewed.** `Does it go again?` measures its test
-from it, and nothing else records it.
+**Record the reviewed SHA, findings, and dispositions on the pull request.**
+That record defines the scope and gives a resumed session the evidence it needs
+to enforce the bound. The harness route names the durable comment format.
 
 
 2 — Fix, answer, resolve, push
@@ -262,50 +266,61 @@ Then push
 ---------
 
 A caller's CI gate reads the remote head, and a fix that never left the laptop
-is not in it.
+is not in it. Batch every outstanding finding and CI correction before asking
+for verification. Per-finding verification is prohibited.
 
 
-3 — Does it go again?
+3 — Verify the fix delta
+=========================
+
+**Verify a behavioral delta independently after the batch is pushed and CI has
+reported for that head.** Passing CI does not replace this pass. A red result
+does not approve the head or satisfy the caller's readiness gate.
+
+Give one reviewer the recorded full-review SHA, current SHA, original findings,
+and their recorded dispositions. It verifies that implemented fixes solve their
+findings and do not regress affected behavior. It may read surrounding code and
+affected callers. It must not restart a full pull-request audit, solicit style
+work, or accept the author's verdict as verification. The harness route names
+the concrete invocation.
+
+Classify the pull-request content delta, not commit provenance. A change to
+behavior, a contract, or a workflow rule requires a pass, including Markdown
+that changes workflow behavior and fixes prompted by CI or bots. Pure formatting
+does not. A clean base merge whose three-dot pull-request content is unchanged
+does not. Mixed changes require a pass. This content comparison also applies
+after a rebase, amend, or squash: a missing ancestor is never evidence of no
+change.
+
+**The limit is two passes per full-review scope.** The first pass either records
+no defects, or records concrete defects. Batch corrections for those defects,
+push them, obtain CI results, and make one final targeted confirmation of the
+correction delta and regression risk. A defect in that final pass, an incomplete
+pass, or an unavailable reviewer stops unattended progress and leaves (or
+returns) the pull request in draft. Commits, resumes, rewrites, late bot
+findings, and further CI fixes do not renew the limit. A materially changed
+scope runs `Review the head` as a new full round; it does not disguise a budget
+reset as a fix.
+
+Rejected findings remain closed unless new evidence defeats the recorded
+rejection. Repeating a rejected finding without that evidence is not a defect
+and does not consume a pass.
+
+Record every pass on the pull request: reviewed SHA, verified SHA, pass number,
+original findings and dispositions, outcome, actionable defects, and whether
+the cap was hit. Record reviewer token usage where the harness exposes it;
+otherwise record `unavailable`, never an estimate or a telemetry service.
+
+
+4 — Does it go again?
 =====================
 
-**Review once per diff.** `Fix, answer, resolve, push` usually puts commits on
-the branch, so by the end of a round the head is usually not the one `Review
-the head` read — and a rule that keyed on sameness would re-review on every
-round that had anything to fix.
-
-The test is therefore **provenance, not sameness**: take the head SHA recorded
-at `Review the head`, and classify every commit made after it.
-
-- **Answering** — a review finding, a review thread, a lint bot, a red check.
-  These do not start a new round, however many of them there are. Answering a
-  review is not new work, and re-reviewing the answer is the loop this rule
-  exists to cut.
-- **Changing what the code does** — new feature work, a scope addition, a
-  conflict resolution that rewrites the branch's own files. This is a new diff.
-  `Review the head` runs again over it, once, and its head SHA becomes the new
-  mark.
-- **Neither** — a comment reflow, a changelog line, a merge from the base
-  branch that leaves the pull request's own diff untouched. **Not a new diff.**
-  What a base merge breaks, it breaks in the build rather than in the diff, so
-  a red check is what reports it and `Fix, answer, resolve, push` is where it
-  is answered.
-  The default is not to go again, because `Review the head` reads the pull
-  request, whose diff is three-dot: a clean base merge changes the head and
-  changes nothing it would read. Reviewing it again would review
-  byte-identical content, and on a base branch that moves often it would do so
-  without end.
-
-The classification is per commit and the categories do not compound: a round
-that only ever answers ends with one review behind it, which is the point.
-
-When the mark is void
----------------------
-
-Where the branch's history is rewritten — a rebase, an amend, a squash — the
-recorded SHA stops being an ancestor of the head and the mark is void. There
-are then no commits "after it" to read, which is not the same as there being
-none. Fall back to content: compare the pull request's diff against what
-`Review the head` reviewed, and go again only if it has changed.
+**A material scope change earns a full review.** New feature work, a scope
+addition, a redesign, or a conflict resolution that changes the pull request's
+own behavior starts `Review the head` again and establishes a new scope. A
+comment reflow, changelog line, or clean base merge does not. The classification
+is content-based, so rewritten history preserves the existing scope when its
+pull-request content is unchanged.
 
 
 Where it stops and waits

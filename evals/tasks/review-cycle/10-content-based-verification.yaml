@@ -1,0 +1,60 @@
+task_id: review-cycle-10-content-based-verification
+description: >-
+  Verification follows content effect: formatting and unchanged base merges do
+  not consume a pass, while mixed or rewritten behavioral content does.
+tags: [review-cycle, behaviour, fire]
+initial_prompt: >-
+  PR #25 already used its first fix-verification pass. A clean base merge and
+  formatting-only commit followed. Then history was rewritten into one commit
+  containing formatting and a Markdown workflow rule change. Explain whether a
+  pass is consumed, whether the full-review scope changes, and how the record
+  prevents a resumed session from bypassing the two-pass limit.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Task]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`review-cycle` fires for content-based review decisions"
+    expected_skill: review-cycle
+    skill_name: review-cycle
+
+  - type: agent_judge
+    description: The reply preserves content-based coverage and the pass cap
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one reply against one rule.
+
+      FIRST, FIND THE REPLY after the last `[RESULT - …]` tag. Begin with
+      `ANCHOR: result`, or `ANCHOR: none` and score 0.0 when absent.
+
+      The rule: clean base merges with unchanged PR content and pure formatting
+      consume no pass. A mixed commit with a Markdown workflow behavior change
+      requires independent delta verification even after a history rewrite.
+      A missing ancestor is not no change: compare content. The rewrite and a
+      resume do not reset the two-pass allowance. The durable record must carry
+      reviewed and verified SHAs, pass count, findings/dispositions, outcome,
+      defects, cap state, and unavailable usage. A material scope change earns
+      a new full review, not a disguised fix-budget reset; a rejected finding
+      remains closed absent new evidence.
+
+      Score 1.0 only if the REPLY states every effect and bound. Score 0.5 if it
+      gets content-based verification and the no-reset rule but misses record,
+      scope, or rejected-finding handling. Score 0.0 if it counts formatting or
+      an unchanged merge, treats rewritten history as no change, resets the cap,
+      or calls the mixed change formatting-only.
