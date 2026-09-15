@@ -6,9 +6,8 @@ description: >-
   the user says "/issue-labels", "label this issue", "what label does this
   get?", "is this an epic or a task?", "that label is wrong", "which issues
   are ready for an agent?", and including any call Claude makes on its own
-  initiative to `mcp__github__issue_write` that sets `labels`, or to `gh issue
-  create --label` / `gh issue edit --add-label`, which is the route on Omp and
-  on Codex. It fires too whenever `undertake` opens an issue or reads one it
+  initiative that sets a label on an issue. It fires too whenever `undertake`
+  opens an issue or reads one it
   is about to start on. Supplies the five labels this toolkit recognises, the
   one question that picks between them, and the readiness each one states —
   which is what decides whether an agent may start on an issue unattended. Not

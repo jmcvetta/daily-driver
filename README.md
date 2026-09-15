@@ -38,14 +38,17 @@ fifteen skills:
 | `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
 
 A skill fires on its slash command where it has one, on natural phrasings of
-the work, and on the session's own tool calls. The tool-call triggers are
-written for all three harnesses, because a `description` is read before any
-reference file can be: `pr` fires on Claude Code's
-`mcp__github__create_pull_request`, on Omp's `github` tool (`pr_create`) and on
-the `gh pr create` that Codex has instead of either, and `judgement-call` on
-`AskUserQuestion`, on `ask` and on `request_user_input`. Those are examples
-rather than the list — each skill's `description` names its own triggers, and
-carries its own register.
+the work, and on the session's own tool calls. A description states those
+triggers by the operation and the intent — `pr` fires "before creating a pull
+request, or updating an existing pull request beyond its title or body alone"
+— never by an executable spelling on any harness. The reason is the reading
+order: a `description` is read before any reference file can be selected, and
+all three harnesses read the same one, so a command named there is exposed to
+the two harnesses that cannot run it. The call itself lives in the skill's
+reference file for the active harness, and the description sends the session
+there. Public invocations such as `/review-cycle` and the natural phrasings
+are kept verbatim. Those are examples rather than the list — each skill's
+`description` names its own triggers, and carries its own register.
 
 **A description has a length budget, and Codex sets it.** Codex's prompt
 renderer cuts one at 1021 characters and appends `...`, so the closing
@@ -187,8 +190,10 @@ the same, and `extensions/` serves Omp, which has no hook mechanism at all. And,
 inside a skill, the tool routes: a `SKILL.md` says what the skill decides, and
 `skills/<name>/references/claude.md`, `references/omp.md` and
 `references/codex.md` carry the calls that do it, opened on demand by the
-session that needs them. `scripts/check-manifests.py` fails a `SKILL.md` that
-names a harness's own routes in its body.
+session that needs them — the one for the harness in use, and only that one.
+`scripts/check-manifests.py` fails a `SKILL.md` that names a harness's own
+routes in its description or its body; a description states its triggers in
+words, and the guard's fixture test holds that rule in place.
 
 ## Installing it
 

@@ -6,11 +6,8 @@ description: >-
   "review the PR and fix what it finds", "address the review feedback", "reply
   to the review comments", "resolve those threads", or "does that need another
   review?", and on any call to a harness's review surface aimed at a pull
-  request — Claude's `/code-review`, Omp's `reviewer` task agent, or
-  `codex exec review` — to a review-thread reply or resolution —
-  `mcp__github__add_reply_to_pull_request_comment`,
-  `mcp__github__resolve_review_thread`, or the `gh` equivalents — or to a wait
-  on a pull request's checks, `github.run_watch` among them. Supplies the CI
+  request — before invoking a pull-request review, replying to or resolving
+  a review thread, or waiting for a pull request's checks. Supplies the CI
   wait on the pushed head, the review invocation and its level, the protocol
   every finding is answered under, and the test for whether a later push earns
   a second round. Not for opening a pull request or bringing one up to date —
@@ -125,11 +122,12 @@ it is also the failure this mechanism was written for: a job named *"Wait ~3
 minutes for CI"* that sits until it times out and never brings the session back
 to the loop.
 
-**And no shell wait at all where the session is unattended**, `gh` installed or
-not. The two shapes fail differently and both fail: a blocking watch in the
-foreground is bounded by the Bash tool's own timeout, and refused outright on a
-surface that blocks `sleep`; a backgrounded one is not bounded by anything and
-cannot wake the session, which is the report this mechanism answers.
+**And no shell wait at all where the session is unattended**, regardless of
+which command-line clients are installed. The two shapes fail differently and
+both fail: a blocking watch in the foreground is bounded by the Bash tool's
+own timeout, and refused outright on a surface that blocks `sleep`; a
+backgrounded one is not bounded by anything and cannot wake the session, which
+is the report this mechanism answers.
 [`0006`](../../docs/notes/0006-waiting-for-ci.md) is the decision, and carries
 what was rejected with it.
 
