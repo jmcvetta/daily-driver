@@ -182,10 +182,16 @@ def base_env(tmp_home: Path, *, stub_bin: Path | None, pylib_dir: Path, **overri
     `PATH` carries the stub `coder-eval` first when `stub_bin` is given, and
     no `coder-eval` at all otherwise -- proving the "probe never invoked" and
     "coder-eval absent" cases actually exercise what they claim to.
-    `PYTHONPATH` makes the stub `coder_eval` package importable for the probe
-    subprocess the guard launches, without polluting the test process's own
-    imports. `HOME` is redirected to an empty directory so a real developer
-    `.env` or credential file elsewhere on the machine cannot leak in.
+    `PYTHONPATH` makes the stub `coder_eval` package importable for the
+    probe subprocess the guard launches, without polluting the test
+    process's own imports. `HOME` is redirected to an empty directory so a
+    real developer `.env` or credential file elsewhere on the machine cannot
+    leak in.
+
+    The venv interpreter the Makefile runs this script under resolves its
+    imports from the venv's own site-packages -- not from the user site,
+    which resolves from `HOME` -- so PyYAML reaches the subprocess through
+    the interpreter itself, and the redirect hides nothing the guard needs.
     """
     path = f"{stub_bin}:/usr/bin:/bin" if stub_bin is not None else "/usr/bin:/bin"
     env = {"PATH": path, "HOME": str(tmp_home), "PYTHONPATH": str(pylib_dir)}

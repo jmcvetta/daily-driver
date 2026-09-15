@@ -3,14 +3,12 @@ name: issue
 description: >-
   This skill should be used whenever a GitHub issue is being opened or updated
   — including when the user says "/issue", "open an issue for this", "update
-  #123", or asks for an issue's body, label or state to change, and including
-  any call Claude makes on its own initiative to `mcp__github__issue_write`, to
-  Omp's `github` tool issue operations, or to `gh issue create` / `gh issue
-  edit`, which is the route on Omp and on Codex. Reads the issue's existing
-  state before any edit. The body's content is `issue-body`'s, the label is
-  `issue-labels`'s, the relationship graph is `issue-deps`'s; each is invoked
-  rather than restated. Not for read-only discussion of an issue, for a
-  comment alone, or for taking an issue to a pull request — that is
+  #123", or asks for an issue's body, label or state to change, and before
+  opening or updating an issue, or changing its body, label or state. Reads the
+  issue's existing state before any edit. The body's content is `issue-body`'s,
+  the label is `issue-labels`'s, the relationship graph is `issue-deps`'s; each
+  is invoked rather than restated. Not for read-only discussion of an issue,
+  for a comment alone, or for taking an issue to a pull request — that is
   `undertake`.
 ---
 

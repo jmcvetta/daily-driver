@@ -6,9 +6,7 @@ description: >-
   "set the session title", "rename this session", "name this session", or
   "that session title is wrong", and on Claude's own initiative when work on a
   GitHub issue begins, when the session's subject changes materially, or on
-  any call to the harness's session-title tool —
-  `mcp__Claude_Code_Remote__set_session_title`, Omp's
-  `daily_driver_set_session_title`, or Codex's `set_thread_title`. Supplies the
+  any call to the harness's session-title tool. Supplies the
   character budget a title is written to for the Claude mobile list, and
   the two forms that title may take. Not the title of a pull request —
   that is `pr-title`.

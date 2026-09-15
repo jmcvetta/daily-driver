@@ -33,13 +33,15 @@ are checked here, each measured against the CLI rather than assumed:
   the plugin name or version, or missing or mispointing the Omp extension
   entry. Release-please bumps the three manifests together, so a tree where
   they disagree has already drifted.
-- A `SKILL.md` naming a harness's own tool routes in its body. The skills run
-  on Claude Code, on Omp and on Codex, and the routes differ; `0011` puts the
-  body's operation in words and the call in
+- A `SKILL.md` naming a harness's own tool routes in its description or its
+  body. The skills run on Claude Code, on Omp and on Codex, and the routes
+  differ; `0011` puts the operation in words in the `SKILL.md` and the call in
   `skills/<name>/references/claude.md`, `references/omp.md` or
-  `references/codex.md`. A route written back into the body is not wrong on the
+  `references/codex.md`. A route written back into either is not wrong on the
   harness it was written for, which is exactly why nothing else catches it: it
-  reads correctly, and it is silently wrong on the other two.
+  reads correctly, and it is silently wrong on the other two. The description
+  is checked with the body because it is read before any reference file can be
+  selected -- by all three harnesses at once (#229).
 - A reference file no `SKILL.md` links, or a reference link that resolves to
   nothing. The move only works if the session opens the file when the skill
   fires, and the link is the whole of that pointer. An unlinked file is a
@@ -56,6 +58,9 @@ are checked here, each measured against the CLI rather than assumed:
 
 No third-party imports: this runs from a Makefile on a laptop and from CI,
 and a dependency install between the two is a place for them to differ.
+(PyYAML is the repository's one declared exception -- the dev group in the
+root `pyproject.toml`, installed by uv for the legs that read YAML. This
+script is not one of those legs.)
 """
 
 from __future__ import annotations
@@ -81,11 +86,13 @@ JSON_BLOCK = re.compile(r"^```json\n(.*?)^```", re.DOTALL | re.MULTILINE)
 # written for.
 IGNORE = re.compile(r"<!--\s*stanza-check:\s*ignore\s*-->\s*\Z")
 
-# The harness routes a `SKILL.md` body may not name. One pattern per rule,
-# named, so a failure says which rule it broke rather than which alternation
-# branch matched. `${CLAUDE_PLUGIN_ROOT}` is matched braced or not: the
-# unbraced spelling is an equally valid shell expansion and is the likelier
-# way the rule gets broken.
+# The harness routes a `SKILL.md` description or body may not name. One
+# pattern per rule, named, so a failure says which rule it broke rather than
+# which alternation branch matched. `${CLAUDE_PLUGIN_ROOT}` is matched braced
+# or not: the unbraced spelling is an equally valid shell expansion and is the
+# likelier way the rule gets broken. The GitHub CLI, tool-operation and MCP
+# rules carry the forms the shared descriptions used to name (#229), without
+# matching ordinary words such as "ask", "reviewer" or "task".
 ROUTES = {
     "mcp__": re.compile(r"mcp__"),
     "AskUserQuestion": re.compile(r"AskUserQuestion"),
@@ -104,6 +111,16 @@ ROUTES = {
         r"|list_threads|list_archived_threads|send_message_to_thread"
         r"|set_thread_title|set_thread_archived)\b"
     ),
+    "gh pr create/edit": re.compile(r"\bgh pr (?:create|edit)\b"),
+    "gh issue route": re.compile(r"\bgh issue (?:create|edit|view)\b"),
+    "gh probe": re.compile(r"\bgh (?:--version|auth)\b"),
+    "GitHub tool": re.compile(r"\bgithub tool\b"),
+    "GitHub relationship operation": re.compile(
+        r"\b(?:issue_read|issue_write|sub_issue_write|get_issue|create_issue"
+        r"|update_issue|get_sub_issues|get_parent|parent_issue_number"
+        r"|closed_by_pull_requests)\b"
+    ),
+    "pr_create op": re.compile(r"\bpr_create\b"),
 }
 
 # What Codex's prompt renderer keeps of a `description`. Beyond this the
@@ -274,11 +291,13 @@ def stanza_errors() -> list[str]:
 def body_of(path: Path) -> tuple[str, int]:
     """A component's body and the line its body starts on.
 
-    The frontmatter is exempt from the route rules, and that exemption is the
-    point rather than a concession: the `description` is what triggers the
-    skill, so a skill that fires on a tool call has to name that call — on
-    every harness — to fire on any of them. A file with no frontmatter is all
-    body, which is the safe reading: it exempts nothing.
+    The split from the frontmatter is bookkeeping only -- the `description`
+    is route-checked with the body, because it is the one part of a
+    `SKILL.md` every harness reads before a reference file can be selected
+    (#229). What the split buys is the line numbers: the description is one
+    unfolded string, so its errors carry no line, while the body's do. A file
+    with no frontmatter is all body, which is the safe reading: it exempts
+    nothing.
     """
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
@@ -290,35 +309,58 @@ def body_of(path: Path) -> tuple[str, int]:
     return text, 1
 
 
-def reference_errors(skills: list[Path]) -> list[str]:
-    """The three things `0011`'s reference-file split needs to stay true.
+def route_errors(
+    where: str, lines: list[str], place: str, offset: int = 0
+) -> list[str]:
+    """Every harness route named in `lines`, one error each.
 
-    No route in a body, no reference file nothing links to, and no link that
-    resolves to nothing. See the docstring for why each one is invisible to
-    every other check.
+    `place` is the location the message reports -- `description` or `body` --
+    and `offset` is the 1-based line number `lines` starts on. A description
+    is one unfolded string with no lines to point at, so it is passed with no
+    offset and its errors carry none; a body is passed with its real offset so
+    a failure names the line to fix.
+    """
+    errors: list[str] = []
+    for lineno, line in enumerate(lines, start=offset or 1):
+        for name, pattern in ROUTES.items():
+            match = pattern.search(line)
+            if match:
+                at = f"{where}:{lineno}" if offset else where
+                errors.append(
+                    f"{at}: names the {name} route ({match.group(0)}) in the "
+                    f"{place}; name the operation in words here and leave the "
+                    "call to references/claude.md, references/omp.md or "
+                    "references/codex.md"
+                )
+    return errors
+
+
+def reference_errors(skills: list[Path], root: Path = ROOT) -> list[str]:
+    """The four things `0011`'s reference-file split needs to stay true.
+
+    No route in a description, no route in a body, no reference file nothing
+    links to, and no link that resolves to nothing. See the docstring for why
+    each one is invisible to every other check.
     """
     errors: list[str] = []
     for skill in skills:
-        where = skill.relative_to(ROOT)
+        where = skill.relative_to(root)
+        fields = frontmatter(skill)
+        if fields is not None:
+            errors.extend(
+                route_errors(str(where), [fields.get("description", "")], "description")
+            )
         body, offset = body_of(skill)
 
         linked: set[str] = set()
+        errors.extend(route_errors(str(where), body.splitlines(), "body", offset))
         for lineno, line in enumerate(body.splitlines(), start=offset):
-            for name, pattern in ROUTES.items():
-                if pattern.search(line):
-                    errors.append(
-                        f"{where}:{lineno}: names the {name} route in the body; "
-                        "put the call in references/claude.md, references/omp.md "
-                        "or references/codex.md, and name the operation in words "
-                        "here"
-                    )
             for target in REFERENCE_LINK.findall(line):
                 linked.add(target)
                 if not (skill.parent / target).is_file():
                     errors.append(
                         f"{where}:{lineno}: links {target}, which does not exist"
                     )
-
         # The other direction. A reference file nothing links to is a route
         # the session is never sent to read, and it fails nothing else: the
         # skill loads, and reads as complete, with the call unreachable.
@@ -481,8 +523,8 @@ def main() -> int:
     print(
         f"manifests agree; {len(skills)} skill(s) "
         f"and {len(agents)} agent(s) checked; "
-        "skill bodies are harness-neutral and their reference files are "
-        f"linked; every description is inside Codex's {DESCRIPTION_CAP}-"
+        "skill descriptions and bodies are harness-neutral and their reference "
+        f"files are linked; every description is inside Codex's {DESCRIPTION_CAP}-"
         "character render; stanza copies agree"
     )
     return 0

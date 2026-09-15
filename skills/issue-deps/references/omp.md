@@ -42,7 +42,62 @@ statement, and use `"$deps"` everywhere after it — in the same Bash command,
 since each call is a fresh shell and the variable does not survive between
 them.
 
-An unreachable script leaves `SKILL.md`'s probe with its third branch, the
-GitHub MCP alone — the probe reached the script branch precisely because `gh`
-was absent or too old, so there is no client above it to fall back to. That
-branch reads counts and writes nothing, which is what to report.
+Client selection
+================
+
+Use the first branch that holds:
+
+1. `gh` 2.94.0 or later, with `gh auth status` succeeding.
+2. `scripts/issue-deps.sh`, when `GITHUB_TOKEN` or `GH_TOKEN` is present.
+3. The available GitHub MCP operations.
+
+Probe the CLI with `gh --version` and `gh auth status`; installed but
+unauthenticated is unavailable. The version floor matters because the issue
+relationship flags and JSON fields arrived together.
+
+The `gh` client
+===============
+
+```sh
+gh issue view 191 --json blockedBy,blocking,subIssues,parent,closedByPullRequestsReferences
+gh issue edit 191 --add-blocked-by 199
+gh issue edit 199 --add-blocking 191
+gh issue edit 191 --remove-blocked-by 199
+gh issue edit 191 --parent 150
+gh issue edit 150 --add-sub-issue 191
+gh issue edit 190 --add-blocked-by https://github.com/googleapis/release-please/issues/2853
+```
+
+Every relationship flag takes an issue number or URL, never a database ID.
+`--remove-parent` takes no argument. Check the command's status before piping
+its output. Verify that a read target is an issue before believing an empty
+graph. After a write, read the other end with `--json blocking` or
+`--json subIssues`.
+
+The fallback script
+===================
+
+Resolve `deps` as above, then keep the path and the command in one Bash call:
+
+```sh
+test -x "$deps" || { echo "issue-deps.sh unreachable" >&2; exit 1; }
+"$deps" blocked-by 191
+"$deps" blocking 188
+"$deps" summary 191
+"$deps" add 191 199
+"$deps" remove 191 199
+"$deps" add 190 googleapis/release-please#2853
+```
+
+It reaches blocked-by and blocking only, and states writes from the blocked
+side. Never replace the injected path with a project-relative path.
+
+The MCP client
+==============
+
+The newer server reads sub-issues with `issue_read` using `get_sub_issues` or
+`get_parent`, writes them with `sub_issue_write` or `issue_write` using
+`parent_issue_number`, and returns `closed_by_pull_requests` from `issue_read`.
+The older server exposes `get_issue`, `create_issue` and `update_issue`, and
+reaches none of those relationships. Neither generation lists the members of
+blocked-by or blocking edges or writes them; it returns summary counts only.

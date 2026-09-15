@@ -10,11 +10,11 @@ description: >-
   Two things fire it: an issue handed over to be worked on, or an explicit
   invocation. An invocation carrying no issue opens one itself, but one of the
   two is still required — "implement a retry loop" and "fix this function",
-  with neither, are ordinary work and must NOT fire it. Supplies the order of
-  the steps, the gates between them, the ready gate a branch behind its base
-  does not pass, and the base merge that keeps it current; the round is
-  `review-cycle`'s. Not for reading or discussing an issue: "what does #191
-  say" is a question, not an assignment.
+  with neither, are ordinary work and must NOT fire it. Supplies the step
+  order and gates, the ready gate a branch behind its base
+  does not pass, the pause on a human action, and the base merge that keeps
+  it current; the round is `review-cycle`'s. Not for reading or discussing
+  an issue: "what does #191 say" is a question, not an assignment.
 ---
 
 # Undertake
@@ -267,6 +267,13 @@ has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
 closes.
 
+**The body is `pr-body`'s, and so is the notice that goes with a Tofu
+diff.** Where the branch's changes touch the infrastructure Tofu stack, the
+body carries that skill's human-action notice and the pull request the
+`human` label: the changes must be applied, and the updated state committed,
+before the pull request merges. `Ready for review` is what honours the
+notice when the round is over — the pause is stated there.
+
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate
 step comes before this one. The draft may open red, and `Review the head`
@@ -311,7 +318,19 @@ discharges the leaving-draft trigger in its description: it fires on exactly
 the moment this step occupies, and a round already run on this head is that
 trigger already answered.
 
-11 — Keep it current
+**A pull request that waits on a person stops here instead.** Where the body
+carries `pr-body`'s human-action notice — a Tofu change awaiting its apply,
+or any other action only a person can take before merge — the round at
+`Review the head` still runs to its end. The round's end is then a comment
+on the pull request, not a state change: it says the review cycle is
+complete, and names the action the pull request waits on. The pull request
+stays a draft, and the sequence pauses there. What resumes it is the
+person's action landing on the branch — the Tofu applied, the updated state
+committed — after which the pull request returns through the gate below
+like any other. The person's commit is a new diff: `Review the head` runs
+over it once before the gate, the way any changed head earns a round.
+
+10 — Keep it current
 --------------------
 
 Commits land on the base branch while the work is written and while a
@@ -434,7 +453,6 @@ Ready is a gate, not a step
 
 "After fixing, set the PR to ready" reads as unconditional. It is not. The
 pull request goes to ready only when **all** of these hold:
-
 - The branch is current with its base branch and merges cleanly. `Keep it
   current` owns the merge that makes this true, and it is tested first because
   the merge moves the head: every condition below is about the head a reviewer
@@ -451,11 +469,18 @@ pull request goes to ready only when **all** of these hold:
   behavioral head. When the first pass found defects, the second pass must be
   the clear final confirmation of those corrections. Unavailable or incomplete
   verification, a final-pass defect, or a cap hit is not approval.
+- The pull request waits on no human action. `pr-body`'s human-action notice
+  marks a pull request whose Tofu changes must be applied, and the updated
+  state committed, before it merges — a bar only a person clears, and
+  unlike a pending check nothing will ever report it. `Ready for review`
+  pauses on it; this condition is what the sequence returns to once the
+  branch carries the result.
 
-A branch behind its base, red CI, or an open thread means it **stays a
-draft**, and the reason is stated in one line. A red pull request marked ready
-is a claim about the work that is not true, and so is a ready one that does not
-merge.
+
+A branch behind its base, red CI, an open thread, or a human action still
+owed means it **stays a draft**, and the reason is stated in one line. A red
+pull request marked ready is a claim about the work that is not true, and so
+is a ready one that does not merge.
 
 The gate is also what a round at `Keep it current` returns through. That round
 sends the pull request back to draft, and these five conditions are what let
@@ -466,13 +491,13 @@ for the second round.
 Where it stops and waits
 ========================
 
-Autonomy is the point, so each pause has to earn itself. Ten stop the
+Autonomy is the point, so each pause has to earn itself. Eleven stop the
 sequence. Seven stop it to *ask* — the ambiguous issue, the request too vague
 to write one for, an issue labelled `proposal`, an issue carrying two of the
 five labels, the failing approach, a designated branch the harness states
 ambiguously, and a base merge whose conflict is a real one. A blocked issue, an
-epic, and a running check stop it to report, and wait on something other than
-an answer.
+epic, a running check, and a human action owed stop it to report, and wait on
+something other than an answer.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
@@ -503,6 +528,13 @@ an answer.
   never met. Where both sides changed the same logic, picking either loses
   behaviour, and that is the constitution's rule against guessing at intent:
   name the conflicting files and wait.
+- **A human action the pull request waits on**, at `Ready for review`. The
+  notice `pr-body` requires marks a Tofu change awaiting its apply — the
+  updated state committed — or any other bar only a person clears. The
+  review round runs to its end first; its end is a comment that says so and
+  names the action, the pull request stays a draft, and the sequence pauses
+  until the branch carries the result. An apply is not something CI reports,
+  and no check a session can read answers for it.
 
 The round at `Review the head` and `Fix, answer, resolve, push` has two stops
 of its own — its own wait on CI, and a review finding whose fix is a real
