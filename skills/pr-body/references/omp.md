@@ -8,3 +8,5 @@ session running in Oh My Pi. Claude Code's routes are in
   `pr_create` op takes `body` directly.
 - **Revising the body of an existing pull request.**
   `gh pr edit --body "…"`.
+- **Labelling the pull request `human`** beside a body that carries the
+  human-action notice. `gh pr edit --add-label human`.
