@@ -1,20 +1,21 @@
 ---
 name: review-cycle
 description: >-
-  This skill should be used whenever a pull request is being reviewed and that
-  review is then answered — including when the user says "/review-cycle",
-  "review the PR and fix what it finds", "address the review feedback", "reply
-  to the review comments", "resolve those threads", or "does that need another
-  review?", and on any call to a harness's review surface aimed at a pull
+  Use this skill whenever a pull request is reviewed and then answered —
+  including "/review-cycle", "review the PR and fix what it finds", "address
+  the review feedback", "reply to the review comments", "resolve those
+  threads", or "does that need another review?", and on any call to a
+  harness's review surface aimed at a pull
   request — Claude's `/code-review`, Omp's `reviewer` task agent, or
   `codex exec review` — to a review-thread reply or resolution —
   `mcp__github__add_reply_to_pull_request_comment`,
   `mcp__github__resolve_review_thread`, or the `gh` equivalents — or to a wait
   on a pull request's checks, `github.run_watch` among them. Supplies the CI
-  wait on the pushed head, the review invocation and its level, the protocol
-  every finding is answered under, and the test for whether a later push earns
-  a second round. Not for opening a pull request or bringing one up to date —
-  that is `pr` — nor for marking a draft ready, which is the caller's gate.
+  wait on the pushed head, the review invocation and its level, the finding
+  response protocol, bounded independent verification of fix deltas, and the
+  test for whether a later push changes the full-review scope. Not for opening
+  a pull request or bringing one up to date — that is `pr` — nor for marking a
+  draft ready, which is the caller's gate.
 ---
 
 # Review cycle

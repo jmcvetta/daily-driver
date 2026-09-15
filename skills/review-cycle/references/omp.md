@@ -28,11 +28,13 @@ Fix-delta verification
 ======================
 
 Dispatch exactly one `reviewer` task agent with a bounded brief. Give it the
-pull request, full-review SHA, current SHA, original findings, dispositions,
-and pass number. Require it to inspect `git diff <reviewed-sha> <current-sha>`
-and affected callers, then report only whether each implemented finding is
-solved and concrete regressions in that delta. It must not perform a full-PR
-audit or offer style improvements.
+pull request, base branch, full-review SHA, current SHA, original findings,
+dispositions, and pass number. Require it to compare the pull request's
+three-dot content at the reviewed SHA with its three-dot content at the current
+SHA, exclude changes attributable only to the base branch, and inspect affected
+callers. It reports only whether each implemented finding is solved and any
+concrete regressions in that delta. It must not perform a full-PR audit or offer
+style improvements.
 
 The author records the result with `gh pr comment <number> --body-file <path>`:
 

@@ -35,9 +35,23 @@ Fix-delta verification
 **Unavailable on the measured surface.** `/code-review --comment` reviews the
 pull request as a whole. It has no measured SHA-range or finding-disposition
 input, so it cannot be represented as an independent delta pass. Do not imply
-that a second full review is targeted verification. Record `outcome:
-unavailable` with `mcp__github__add_issue_comment`, leave or return the pull
-request to draft, and report the blocker.
+that a second full review is targeted verification. Record the unavailable
+result with `mcp__github__add_issue_comment`, leave or return the pull request
+to draft, and report the blocker:
+
+```text
+Review verification
+scope reviewed: <sha>
+pass: <1|2>
+verified: <sha>
+findings: <finding ids and dispositions>
+outcome: unavailable
+defects: <none|concise list>
+cap: <open|hit>
+usage: <exact value if exposed|unavailable>
+```
+
+Never estimate usage when the invocation does not expose it.
 
 The wait
 ========

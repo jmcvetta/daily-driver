@@ -263,8 +263,8 @@ step comes before this one. The draft may open red, and `Review the head`
 waits for the result either way. A red check is answered at `Fix, answer,
 resolve, push`, and the ready gate below is what it has to satisfy in the end.
 
-7–9 — Review the head, fix, then verify the delta
---------------------------------------------------
+7–9 — `Review the head`, `Fix, answer, resolve, push`, `Verify the fix delta`
+----------------------------------------------------------------------------
 
 Invoke `review-cycle`. It owns the CI wait, full review, finding protocol, and
 independent bounded verification. First record the reviewed SHA and every
@@ -438,9 +438,9 @@ pull request goes to ready only when **all** of these hold:
 - Every finding that round raised has been fixed, or rejected with a reason on
   its thread, or deferred with the user's agreement.
 - The independent verification record for the scope is clear on the current
-  behavioral head. The only valid second pass is the clear final confirmation
-  after defects from the first; unavailable or incomplete verification, a
-  final-pass defect, or a cap hit is not approval.
+  behavioral head. When the first pass found defects, the second pass must be
+  the clear final confirmation of those corrections. Unavailable or incomplete
+  verification, a final-pass defect, or a cap hit is not approval.
 
 A branch behind its base, red CI, or an open thread means it **stays a
 draft**, and the reason is stated in one line. A red pull request marked ready
