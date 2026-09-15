@@ -36,6 +36,19 @@ answer. So does `issue-labels`, whose `references/codex.md` says why
 `--add-label` needs no read-first and the Claude route does.
 
 
+The implementor
+===============
+
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Implement` | Dispatch the implementor subagent | `multi_agent_v1`, one delegation per undertaking |
+
+`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
+surface that has the route, and the orchestrator keeps responsibility for
+claim, pull request, watch and gates. Codex has the route through the
+delegation namespace.
+
+
 The pull request
 ================
 

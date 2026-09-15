@@ -26,6 +26,19 @@ issue carrying none of the standard's six is not an issue carrying none.
 write lives.
 
 
+The implementor
+===============
+
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Implement` | Dispatch the implementor | `mcp__Claude_Code_Remote__create_session`, the harness's primary route; else the `Agent` tool — one implementor per undertaking |
+
+`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
+surface that has the route, and the orchestrator keeps responsibility for
+claim, pull request, watch and gates. Claude Code has both routes; the session
+route is embark's primary on this harness.
+
+
 The pull request
 ================
 
