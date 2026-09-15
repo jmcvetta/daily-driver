@@ -4,23 +4,17 @@ These YAML files select model roles for one Omp process. Use them to run indepen
 
 ## Usage
 
-Pass one overlay when starting Omp:
+From this directory, pass one overlay when starting Omp:
 
 ```sh
-omp --config /home/jmcvetta/projects/daily-driver/omp_configs/omp_configs/cocktail.yml
+omp --config ./cocktail.yml
 ```
 
 Start each configuration in a separate terminal to run several copies at once:
 
 ```sh
-omp --config /home/jmcvetta/projects/daily-driver/omp_configs/omp_configs/glm-5.3-flash.yml
-omp --config /home/jmcvetta/projects/daily-driver/omp_configs/omp_configs/deepseek-v4-pro.yml
-```
-
-From this directory, the shorter form works:
-
-```sh
-omp --config ./gpt-5.6-sol-terra-task.yml
+omp --config ./glm-5.3-flash.yml
+omp --config ./deepseek-v4-pro.yml
 ```
 
 The overlay applies only to that process. It overrides the roles it lists; unlisted roles continue to use the underlying Omp configuration. Later files win when `--config` is repeated.
@@ -28,7 +22,7 @@ The overlay applies only to that process. It overrides the roles it lists; unlis
 For a shell wrapper, set `PI_CONFIG_FILES` instead:
 
 ```sh
-PI_CONFIG_FILES=/home/jmcvetta/projects/daily-driver/omp_configs/omp_configs/cocktail.yml omp
+PI_CONFIG_FILES=./cocktail.yml omp
 ```
 
 ## Available overlays
