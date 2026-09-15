@@ -102,6 +102,7 @@ the owning session terminates, the cadence pauses, but an existing watcher and
 its completion do not disappear. A different session can inspect the
 project-scoped process by name, but the owner's completion is not delivered
 to it.
+
 Each CI wait borrows the wake slot while it runs: cancel the live check-in
 with `daily_driver_cancel_schedule` before `hub wait`, and re-arm it with
 `daily_driver_schedule` once the wait's reads are done.

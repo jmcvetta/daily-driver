@@ -405,6 +405,7 @@ to look.
 **Never end a turn with the wake slot empty while the check-ins are running.**
 They run from `Ready for review` until the pull request is merged or closed or
 the user says to stop, and wherever the reference file arms a timer at all — the
+three exits below, and nothing narrower. Inside them the slot is that one
 timer, held by the identifier the call returned, and it empties two ways: the
 timer fires, or a CI wait cancels it at `End the wait`. Both are the same
 instruction — fill it before the turn ends. What arms a check-in is therefore
