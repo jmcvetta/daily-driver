@@ -30,6 +30,28 @@ CODER_EVAL_VERSION := 0.11.6
 # through so it cannot be forgotten at a prompt.
 CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
 
+# Dev dependencies of the Python legs, managed with uv. The repository has no
+# Python packaging -- the root `pyproject.toml` declares no package, only the
+# dev dependency group the legs read from -- and the legs that import nothing
+# third-party stay that way. PyYAML is the one declared exception: the dev
+# group names it, and the three scripts that read YAML import it
+# (`scripts/check-eval-arms.py`, `scripts/evals-preflight.py`,
+# `scripts/evals-variants.py`).
+#
+# The legs run under `uv run --frozen`: uv syncs the environment from
+# `uv.lock` into `.venv/` at the repository root before the script starts.
+# A venv interpreter's imports resolve from the venv's own site-packages --
+# not from the user site, which resolves from `HOME`, and which
+# `scripts/check-evals-preflight.py` redirects -- so the venv carries
+# PyYAML into exactly the subprocess a user-site install cannot reach.
+# `--frozen` refuses to run against a `uv.lock` that disagrees with
+# `pyproject.toml` rather than re-resolving it: a drift is a loud failure
+# for whoever edits the declaration next, not a silent environment change.
+#
+# CI installs uv itself -- one step in ci.yml, before `make check` -- and
+# installs nothing else Python: the legs sync their own environment, so the
+# laptop and CI get PyYAML from the same lock and cannot drift apart.
+
 # git_sync: sync master with origin and delete local branches whose upstream
 # is gone. Branches checked out in a linked worktree (marked '+' by
 # `git branch -vv`) are reported as a warning rather than deleted — removal
@@ -196,7 +218,7 @@ check-codex-agent:
 # harness's route under the other's. Credential-free like the other script
 # legs. See the script's docstring.
 check-eval-arms:
-	python3 scripts/check-eval-arms.py
+	uv run --frozen python3 scripts/check-eval-arms.py
 
 # check-eval-fixtures: build every review-depth fixture repository and assert
 # it has the shape the `review` skill needs. Part of `check` because it needs
@@ -233,7 +255,7 @@ check-step-names:
 # docs/notes/0012-the-judge-needs-its-own-transport.md for why the guard
 # exists.
 check-evals-preflight:
-	python3 scripts/check-evals-preflight.py
+	uv run --frozen python3 scripts/check-evals-preflight.py
 
 # check-labels: the issue-label standard is written twice -- the table in
 # `issue-labels` and the resources in infra/github/labels.tf -- and this leg
@@ -295,7 +317,7 @@ evals-plan: evals-variants
 # anyone runs is the one that catches it. See the script's docstring and
 # docs/notes/0013-the-omp-arm.md.
 evals-variants:
-	python3 scripts/evals-variants.py evals/experiments/*.yaml
+	uv run --frozen python3 scripts/evals-variants.py evals/experiments/*.yaml
 
 # evals-run: the whole suite on Claude Code, both variants. Costs real money --
 # see evals/README.md for what and why. Narrow it with TASKS=, e.g.
@@ -314,7 +336,7 @@ TASKS ?= tasks/*/*.yaml
 # Runs from `evals/`, same as the model call below, so `$(TASKS)`'s default
 # glob and any override resolve identically in both places.
 evals-preflight:
-	cd evals && python3 ../scripts/evals-preflight.py $(TASKS)
+	cd evals && uv run --project $(CURDIR) --frozen python3 ../scripts/evals-preflight.py $(TASKS)
 
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and

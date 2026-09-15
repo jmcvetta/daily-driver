@@ -58,6 +58,9 @@ are checked here, each measured against the CLI rather than assumed:
 
 No third-party imports: this runs from a Makefile on a laptop and from CI,
 and a dependency install between the two is a place for them to differ.
+(PyYAML is the repository's one declared exception -- the dev group in the
+root `pyproject.toml`, installed by uv for the legs that read YAML. This
+script is not one of those legs.)
 """
 
 from __future__ import annotations
