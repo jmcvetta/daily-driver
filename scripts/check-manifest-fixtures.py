@@ -48,7 +48,7 @@ NEW_ROUTES = {
     "gh probe": "gh auth status",
     "GitHub tool": "Omp's github tool opens the pull request",
     "GitHub relationship operation": "issue_read with get_sub_issues",
-    "pr_create op": "Omp's github tool pr_create op",
+    "pr_create op": "the pr_create operation",
 }
 
 
