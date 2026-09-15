@@ -16,12 +16,10 @@ reading the diff through `pr://`.
 the depth judgement is the agent's. `SKILL.md`'s `Name the level` has nothing
 to bind here — there is no remembered level to override.
 
-**Its findings do not land on the pull request as review threads.** They come
-back in the agent's result and nowhere else, so the round carries them into
-`Fix, answer, resolve, push` itself. That is the degradation `SKILL.md`
-describes under `A reviewer, not a bare subagent`: nothing is posted for a
-reviewer to resolve, so *resolve* reads as *answered*, and the caller's gate
-reads its no-unresolved-thread condition the same way.
+**Its findings return locally and must be published as a GitHub review.** They
+are not a transcript-only degradation. Give the reviewer the complete history,
+reviewed SHA, and current head; the publication route below turns its findings
+into the submitted threads that `Fix, answer, resolve, push` answers.
 
 
 Fix-delta verification
@@ -113,18 +111,52 @@ back to itself for a follow-up **inside the current session** — never as a
 watch that outlives it.
 
 
-The review threads
-==================
+Review history, publication, and threads
+========================================
 
-**The built-in `github` tool has no review-thread operation.** All three go
-through the GitHub CLI and API.
+Before dispatch, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
+paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
+`isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
+and bodies. A REST comments page alone is not complete history and does not
+contain the `PRRT_…` ID needed to resolve a thread.
+
+After the reviewer returns, re-read the head and its diff anchors. Compare the
+returned findings with the review history and recorded review identifier before
+posting; a resumed run must not duplicate a review already submitted for that
+SHA. Put line-specific findings in `review.json` and create one submitted
+review:
+
+```json
+{
+  "event": "COMMENT",
+  "commit_id": "<reviewed-sha>",
+  "body": "<clean or cross-cutting review summary>",
+  "comments": [
+    {
+      "path": "<path>",
+      "side": "RIGHT",
+      "line": 42,
+      "body": "<finding, with a suggestion block when useful>"
+    }
+  ]
+}
+```
+
+Run `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input
+review.json`. Use `start_side` and `start_line` for a valid range. A clean or
+unanchorable review has no `comments` entry and uses the submitted summary.
+Never invent an anchor. On changed head, invalid anchor, absent `gh`, or GitHub
+failure, retain the findings and report publication as incomplete.
 
 | Operation | Call |
 | --------- | ---- |
-| Read the threads | `gh api /repos/{owner}/{repo}/pulls/{n}/comments` |
+| Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
+| Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
+| Publish review | `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input review.json` |
 | Reply on a thread | `gh api -X POST /repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
-The identifier trap `SKILL.md` states applies to the last two here too: the
-mutation takes the thread's `PRRT_…` node ID, and the reply takes the
-comment's numeric id — the `#discussion_r…` suffix of its `html_url`.
+The identifier trap `SKILL.md` states applies to the last two: the mutation
+takes the thread's `PRRT_…` node ID, while reply takes the comment's numeric
+ID. The review REST endpoint returns a review ID; record it with the reviewed
+SHA and dispositions so later rounds have a stable duplicate check.

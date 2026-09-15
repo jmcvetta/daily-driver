@@ -1,0 +1,74 @@
+task_id: review-cycle-11-standalone-inline-review
+description: >-
+  A review-only request records its result as a submitted GitHub review without
+  turning into a fix, resolution, draft-state, or merge workflow.
+tags: [review-cycle, behaviour, fire]
+initial_prompt: >-
+  CI is green on PR #25 at bbb222, in a repository this session cannot reach.
+  The pull request has two pages of review history, including a resolved
+  outdated thread that rejected a proposed retry and an earlier inline finding.
+  A review-only request has come in: no code fix, no thread resolution, no
+  draft-state change, no merge. Explain what that review must do — which
+  history it reads and what it carries forward from it, exactly what each
+  finding is anchored to when it is published, where a clean or unanchorable
+  result goes instead, and what it owes the earlier decision if the earlier
+  recommendation now appears wrong. Explain the protocol; do not attempt the
+  review itself.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Task]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash]
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+success_criteria:
+  - type: skill_triggered
+    description: "`review-cycle` fires for a standalone pull-request review"
+    expected_skill: review-cycle
+    skill_name: review-cycle
+  - type: agent_judge
+    description: The reply preserves standalone inline-review recording
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one reply against one rule.
+
+      FIRST, FIND THE REPLY after the last `[RESULT - …]` tag. Begin with
+      `ANCHOR: result`, or `ANCHOR: none` and score 0.0 when absent.
+
+      The rule: a standalone review reads every page of submitted reviews and
+      threads before reviewing, including resolved and outdated threads, replies,
+      dispositions, reviewed SHAs, and the current head. It gives that record to
+      the reviewer. Each actionable line-specific finding becomes an inline
+      thread in a submitted COMMENT review, anchored to the reviewed SHA, path,
+      side, and valid diff line or range. A clean or unanchorable result belongs
+      in the submitted review summary; no anchor is invented. A repeated rejected
+      finding links to its earlier disposition. A reversal names the prior
+      decision and new evidence or changed constraint. The review-only request
+      then stops: no code fix, thread resolution, draft-state change, or merge.
+
+      Grade the substance of the reply, not its vocabulary. A reply states a
+      part when it conveys it in its own words; do not require the rule's
+      phrasing, and do not deduct for a part the reply covers compactly.
+
+      Score 0.0, whatever else the reply gets right, if it treats a transcript
+      or a loose issue comment as sufficient, ignores resolved or outdated
+      history, invents an anchor, reopens a prior rejection without new
+      evidence, or starts fixing.
+
+      Otherwise score by coverage of four things: the complete history read and
+      handed to the reviewer; publication as anchored inline threads in a
+      submitted review; the summary as the home for clean and unanchorable
+      results; and the earlier decision honoured on a repeat or a reversal.
+      Score 1.0 for all four, 0.75 for three, 0.5 for two, 0.25 for one. The
+      review-only stop is a fifth requirement rather than a quarter: a reply
+      that fixes, resolves, changes draft state, or merges scores 0.0 under the
+      paragraph above.
