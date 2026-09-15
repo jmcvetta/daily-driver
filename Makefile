@@ -7,9 +7,9 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
-.PHONY: git_sync check check-plugin check-skills check-agents check-scripts \
+.PHONY: git_sync clean-omp-plugin-cache check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-plugin check-omp-review-cycle-route \
+	check-omp-extension check-omp-plugin check-omp-cache-clean check-omp-review-cycle-route \
 	check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
 	check-evals-preflight check-labels check-infra evals-install evals-plan \
@@ -64,13 +64,20 @@ git_sync:
 	git branch -vv | awk '/: gone\]/ && !/^\+/ {print $$1}' | xargs -r git branch -D
 	@git branch -vv | awk '/: gone\]/ && /^\+/ {printf "WARN: worktree-linked branch kept (upstream gone): %s\n", $$2}' >&2
 
+# clean-omp-plugin-cache: refresh this repository's installed Omp plugin
+# without deleting Omp's shared plugin state. Updating the marketplace replaces
+# its cached clone; upgrading force-reinstalls the plugin's cached bytes.
+clean-omp-plugin-cache:
+	omp plugin marketplace update daily-driver
+	omp plugin upgrade daily-driver@daily-driver
+
 
 # check: everything CI asserts about this plugin. CI runs this target rather
 # than restating its legs, so a leg added here is a leg CI gains — and there
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-review-cycle-route check-omp-agent \
+	check-omp-extension check-omp-cache-clean check-omp-review-cycle-route check-omp-agent \
 	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
 	check-eval-arms check-step-names check-evals-preflight check-labels
 
@@ -173,6 +180,11 @@ check-omp-extension:
 # what would have let it silently check nothing.
 check-omp-plugin:
 	python3 scripts/check-omp-plugin.py
+
+# The cache refresh target changes user state in a real run. This check puts a
+# fake `omp` first on PATH and asserts the command order and fail-fast behavior.
+check-omp-cache-clean:
+	python3 scripts/check-omp-cache-clean.py
 
 # The Omp review-cycle reference is executable guidance. This credential-free
 # check rejects a route that reaches for optional `github` instead of the
