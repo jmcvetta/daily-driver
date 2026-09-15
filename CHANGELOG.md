@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.25.0](https://github.com/jmcvetta/daily-driver/compare/v0.24.1...v0.25.0) (2026-09-15)
+
+
+### Features
+
+* **omp_configs:** remix the cocktail around glm-5.3-flash ([#247](https://github.com/jmcvetta/daily-driver/issues/247)) ([a383eed](https://github.com/jmcvetta/daily-driver/commit/a383eed85c75a9a442a2adc6b93d2b32024f3e29))
+
 ## [0.24.1](https://github.com/jmcvetta/daily-driver/compare/v0.24.0...v0.24.1) (2026-09-15)
 
 
