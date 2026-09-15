@@ -65,6 +65,11 @@ jobs:
       # fact about the tool people actually run, which is what CI is asking.
       - name: Install uv
         run: |
+          set -euo pipefail
+          # pipefail is what turns a failed download into a failed step:
+          # without it curl's exit is swallowed by the pipe, sh installs
+          # nothing, the step is reported green, and the failure surfaces
+          # three legs later as "uv: command not found".
           curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
