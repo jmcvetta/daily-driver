@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.23.0](https://github.com/jmcvetta/daily-driver/compare/v0.22.1...v0.23.0) (2026-09-15)
+
+
+### Features
+
+* add issue-authoring skills for cheaper-agent task handoffs ([#231](https://github.com/jmcvetta/daily-driver/issues/231)) ([ed38a4f](https://github.com/jmcvetta/daily-driver/commit/ed38a4f790c34cd8ced5f4d62ad27d0f05d8945e))
+* record the model and session id in the undertake claim ([#218](https://github.com/jmcvetta/daily-driver/issues/218)) ([468f9ac](https://github.com/jmcvetta/daily-driver/commit/468f9ac24b6dee01a88ffec0a3c76e5e3c035976))
+* **review-cycle:** verify review-fix deltas ([#226](https://github.com/jmcvetta/daily-driver/issues/226)) ([127fae2](https://github.com/jmcvetta/daily-driver/commit/127fae2ea7f16f835afae5d5dff2e6e40133f301))
+* **skills:** hold Tofu PRs for a human apply ([#223](https://github.com/jmcvetta/daily-driver/issues/223)) ([51d3998](https://github.com/jmcvetta/daily-driver/commit/51d39982b8b4d9901858cf28dc1392343c7832c5))
+
+
+### Bug Fixes
+
+* **review-cycle:** route CI wait through Omp tools ([#233](https://github.com/jmcvetta/daily-driver/issues/233)) ([fdd5c44](https://github.com/jmcvetta/daily-driver/commit/fdd5c449fad117701ef09807663bf23648f3d739))
+* **skills:** neutralize shared descriptions ([#232](https://github.com/jmcvetta/daily-driver/issues/232)) ([4c3bc61](https://github.com/jmcvetta/daily-driver/commit/4c3bc61540e076d1115018dfc277fb047d2933b0))
+
 ## [0.22.1](https://github.com/jmcvetta/daily-driver/compare/v0.22.0...v0.22.1) (2026-09-15)
 
 
