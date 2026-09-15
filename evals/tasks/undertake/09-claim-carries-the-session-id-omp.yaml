@@ -1,0 +1,124 @@
+# The Omp half of `09-session-fields-for-claim`, which is tagged `claude-only`
+# because the call it reads from is Claude's. `SKILL.md`'s `Claim the issue`
+# step carries the branch, a one-line `Model:` record, and the session —
+# `session: <id>` where the id is reachable by any means the harness offers,
+# `session: n/a` where it is not. On Omp the id is reachable:
+# `extensions/daily-driver.js` registers `daily_driver_get_session`, which
+# reads the session manager's own id and the model serving the turn.
+# `skills/undertake/references/omp.md` names that tool as the claim's source
+# for both. The branch comes from the harness's own git state — `git branch
+# --show-current` names it, and `OWNER/REPO` for the branch link comes from
+# the remote `task-worktree` resolved.
+#
+# Why the Claude sibling could not be reused: it grades specific field paths
+# on a `get_session` payload —
+# `session_context.outcomes[].git_repository.git_info.branches` and
+# `external_metadata.last_served_model`. There is no such payload here, so an
+# Omp run against that rubric would fail for telling the truth about its own
+# surface. This row grades the adapter-sourced claim instead and invents no
+# Claude field to stand in for it.
+#
+# What this row can and cannot see. The sandbox has no Omp runtime adapter and
+# no repository with a resolved push remote, so the prompt supplies the two git
+# results and the adapter tool's answer needed to render the comment. That
+# makes the exact comment observable without pretending the sandbox can post
+# it. The graded assertion is an `agent_judge` on the reply, plus the skill
+# having fired at all.
+#
+# Why this fails the `without` arm: the branch is the easy half — a model with
+# no plugin loaded reaches for `git branch --show-current` readily enough. The
+# model and session are the half it gets wrong: asked for them, it names a
+# model it merely believes itself to be, publishes a diagnostic about the
+# session surface, or drops the lines. The plugin's rule is narrower: a
+# one-line `Model:` record read from the adapter and a bare `session: <id>`
+# carrying the id it returned.
+
+task_id: undertake-09-claim-carries-the-session-id-omp
+description: >-
+  Claiming an assigned issue on Omp reads the model and session id from
+  daily_driver_get_session and records them in one line each.
+tags: [undertake, references, fire, behaviour, omp-only, forks:undertake-09-session-fields-for-claim]
+
+initial_prompt: >-
+  I'm handing you issue #52 to build. For this exercise, `git branch
+  --show-current` returned `issue-52-retry-uploads`, the remote
+  `task-worktree` resolved is `https://github.com/acme/widgets.git`, and
+  `daily_driver_get_session` returned `{"sessionId":
+  "0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8", "model":
+  "zai/glm-5.3"}`. Do not post anything. Show me the exact issue comment you
+  would use, then explain where its branch, model, and session values came
+  from.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  # Without this, a run that never reached the skill could still be judged on
+  # a plausible-sounding reply. Left unarmed for the reason `undertake/08`
+  # gives: there is no fail-stopping criterion here for a bare arm to defer.
+  - type: skill_triggered
+    description: "`undertake` fires on an issue handed over to be worked on"
+    expected_skill: undertake
+    skill_name: undertake
+
+  # The finding.
+  - type: agent_judge
+    description: The reply renders the claim from git and the adapter's session answer
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    # `agent_judge`, not `llm_judge`: it grades on the Claude subscription
+    # instead of requiring a separate API key for the Omp arm. The judge reads
+    # a transcript, so the harness that produced it does not change its task.
+    # Bound it because an overrun cancels the replicate instead of scoring it.
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: the claim records what the session's own surfaces answered.
+      The REPLY must show the proposed issue comment. That comment must
+      contain the link
+      `[issue-52-retry-uploads](https://github.com/acme/widgets/tree/issue-52-retry-uploads)`,
+      a line recording the model as `Model: zai/glm-5.3`, and a line recording
+      the session as `session: 0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8` — the
+      id bare, with no prose around either line about where the values came
+      from or about surfaces that did not supply them.
+
+      Outside the proposed comment, the reply must explain that the branch
+      came from `git branch --show-current`, `OWNER/REPO` came from the
+      remote `task-worktree` resolved, and the model and session id came from
+      `daily_driver_get_session`.
+
+      Score 1.0 if the proposed COMMENT carries the exact branch link, the
+      exact model line, and the exact session id — no absence diagnostic, no
+      provenance prose — and the surrounding REPLY names git and the adapter
+      tool as the sources. Score 0.5 if it gets the comment or the explanation
+      right, but not both. Score 0.0 if the comment omits the model line or
+      the session id, says the surface supplied no model or session, or the
+      reply states a value it was merely given as though it had read it
+      nowhere.

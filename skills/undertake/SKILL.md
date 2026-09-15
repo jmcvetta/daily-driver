@@ -210,27 +210,32 @@ Beyond the claim itself the comment always carries:
   The link can return 404 until the first push; write it anyway, because the
   alternative is a branch name the reader must turn into a URL by hand.
 
-Where the harness has a session call, the comment also carries:
-
-- **The model that served the turn**, which is what actually ran and moves
-  with a fallback that leaves the rest of the session untouched. Where the
-  model the session was *set* to run disagrees with it, name that too: the gap
-  between the two is the half of the record worth having. Never a name recalled
-  instead of read — a provenance record that guesses is worse than one that
-  says nothing. The reference file names the fields that answer both.
-- **The session**, as a link built from the same call's session id. The
-  identifier is what the reader needs; the link is that identifier and
-  somewhere to go with it, and the reference file has its form.
+- **The model that served the turn**, as one line — `Model: <model id>` —
+  and nothing else about it: no note about where the value came from, no
+  diagnostic about the surfaces that do not supply it. Read the id from the
+  harness's session call where it has one, and from the harness's own
+  statement of the serving model where it does not. Where the model the
+  session was *set* to run disagrees with the one that served, name that too:
+  the gap between the two is the half of the record worth having. Never a
+  name recalled instead of read — a provenance record that guesses is worse
+  than one that says nothing. The reference file names the fields that answer
+  both.
+- **The session**, as `session: <id>` where the id is reachable by any means
+  the harness offers, and `session: n/a` where it is not. The identifier is
+  what the reader needs; on Claude Code the link form is that identifier and
+  somewhere to go with it, and the reference file has its form. A missing id
+  is recorded as `n/a`, never narrated: a claim that explains why it has no
+  session publishes a diagnostic instead of a record.
 
 The model and session come from the harness's session call, where it has one —
 the call `session-title` documents. A branch designated by that call must be
 the branch `task-worktree` established; disagreement is a collision, not a
 choice between two branch sources.
 
-**Where the harness supplies no session call the comment still goes up with
-the branch alone.** It does not announce the unavailable metadata: omission is
-the harness-neutral record. The branch comes from the task worktree's Git
-state, never from a fresh naming decision in this step.
+**The comment never goes up with the branch alone.** The branch comes from
+the task worktree's Git state, never from a fresh naming decision in this
+step; the model and session lines follow the rules above whatever the harness
+supplies.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
