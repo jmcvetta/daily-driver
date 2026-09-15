@@ -114,7 +114,12 @@ Process durability is not session resumption
 **`daily_driver_schedule` is an in-process managed timer.** Managed timers are
 unref'd and cleared on `session_shutdown`, so a reminder dies with the
 session. Use one only for a follow-up inside the current session. It cannot
-replace the persistent Hub watcher.
+replace the persistent Hub watcher. Its pair is `daily_driver_cancel_schedule`:
+a wait that borrows the caller's cadence timer — `undertake`'s `Keep it
+current` check-in — borrows it by cancelling it, and the owner re-arms with
+`daily_driver_schedule` after the wait. An armed reminder does not lapse, it
+fires: left pending, it injects *read the checks again* as a follow-up in the
+middle of the review, restarting a wait on a run that finished.
 
 A durable Hub process also does not launch or resume an Omp session. It can
 finish while the owner is absent and preserve its completion for replay, but
@@ -131,9 +136,11 @@ and a `BEHIND` answer goes to `Keep it current` before the round continues. A
 green run on a head the base has since moved past is not current work.
 
 The never-empty wake slot —
-[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — is
-Claude's scheduler rule and does not bind Omp's managed timer. On Omp, the
-persistent Hub watcher holds process work across session shutdown; a resumed
+[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — binds
+Omp's managed timer for the session's life, exactly as it binds Claude's: one
+timer in the slot, cancelled before a wait borrows it, re-armed after. What
+it does not do is outlive the session — the timer dies at `session_shutdown`.
+The persistent Hub watcher holds process work across that boundary; a resumed
 owner consumes its completion and continues the workflow.
 
 

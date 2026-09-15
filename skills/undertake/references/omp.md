@@ -75,8 +75,13 @@ Process durability does not run the cadence
 
 **`daily_driver_schedule` is an in-process managed timer.** Managed timers are
 unref'd and cleared on `session_shutdown`, so a reminder dies with the
-session. Use it for `Keep it current` check-ins only while this session remains
-alive.
+session. Use it for `Keep it current` check-ins only while this session
+remains alive. **Its pair is `daily_driver_cancel_schedule`.** The one-timer
+rule `SKILL.md` states holds while the timer lives: a CI wait that borrows the
+wake slot cancels the check-in with `daily_driver_cancel_schedule` and re-arms
+it after, and each of the three exits — pull request merged or closed, or the
+user says to stop — cancels it too, so nothing fires into a turn that no
+longer wants it.
 
 Hub supplies a different guarantee. A process started with `persist: true`
 survives the last Omp client exiting. `detached: true` also survives broker
@@ -97,6 +102,10 @@ the owning session terminates, the cadence pauses, but an existing watcher and
 its completion do not disappear. A different session can inspect the
 project-scoped process by name, but the owner's completion is not delivered
 to it.
+
+Each CI wait borrows the wake slot while it runs: cancel the live check-in
+with `daily_driver_cancel_schedule` before `hub wait`, and re-arm it with
+`daily_driver_schedule` once the wait's reads are done.
 
 The catch-up look
 -----------------

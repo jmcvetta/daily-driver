@@ -381,7 +381,11 @@ wake at a time, carrying the instruction to look again — the discipline
 `review-cycle`'s `The backstop` states for the same reason. The reference file
 says whether the harness in use has such a wake, and names the call.
 
-**Where it has none, there is no cadence.** Say once, at `Ready for review`,
+**Where it has none, what remains is the reference file's to name.** A surface
+whose scheduler dies with the session still runs the cadence while the session
+lives: the reference file names the timer and its cancel, and the catch-up look
+below covers the gaps the timer's death leaves. A surface with neither a
+scheduler nor session control has no cadence: say once, at `Ready for review`,
 that the watch is the catch-up look below, and stop. A watch a surface cannot
 keep is worse claimed than skipped. A timer that dies with the session is not
 a durable wake, whatever it is called;
@@ -400,7 +404,7 @@ to look.
 
 **Never end a turn with the wake slot empty while the check-ins are running.**
 They run from `Ready for review` until the pull request is merged or closed or
-the user says to stop, and on a surface that has the durable wake at all — the
+the user says to stop, and wherever the reference file arms a timer at all — the
 three exits below, and nothing narrower. Inside them the slot is that one
 timer, held by the identifier the call returned, and it empties two ways: the
 timer fires, or a CI wait cancels it at `End the wait`. Both are the same
