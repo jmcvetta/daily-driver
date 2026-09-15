@@ -34,8 +34,8 @@ The implementor
 | `Implement` | Dispatch the implementor subagent | `task`, one subagent per undertaking |
 
 `SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
-surface that has the route, and the orchestrator keeps claim, pull request,
-watch and gates. Omp has the route.
+surface that has the route, and the orchestrator keeps responsibility for
+claim, pull request, watch and gates. Omp has the route.
 
 
 The pull request

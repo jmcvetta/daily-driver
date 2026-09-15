@@ -31,11 +31,12 @@ The implementor
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Implement` | Dispatch the implementor subagent | the `Agent` tool, one subagent per undertaking |
+| `Implement` | Dispatch the implementor | `mcp__Claude_Code_Remote__create_session`, the harness's primary route; else the `Agent` tool — one implementor per undertaking |
 
 `SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
-surface that has the route, and the orchestrator keeps claim, pull request,
-watch and gates. Claude Code has the route.
+surface that has the route, and the orchestrator keeps responsibility for
+claim, pull request, watch and gates. Claude Code has both routes; the session
+route is embark's primary on this harness.
 
 
 The pull request

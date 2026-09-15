@@ -28,8 +28,10 @@ Three escape hatches, all around delegation:
 ## Decided
 
 **Delegation is unconditional on a surface that has a subagent or session
-route.** The orchestrator claims, dispatches, watches and gates, and never
-implements — whatever the wave's size, whatever the task's size.
+route.** The orchestrator keeps responsibility for claim, dispatch, watch and
+gates, and never implements — whatever the wave's size, whatever the task's
+size. A dispatched implementor implements in its own session and does not
+re-dispatch.
 
 - **The cheaper-default rule stands.** A task body that meets `issue-body`'s
   contract is often executable by a cheaper-than-orchestrator model; that is

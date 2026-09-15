@@ -44,8 +44,9 @@ The implementor
 | `Implement` | Dispatch the implementor subagent | `multi_agent_v1`, one delegation per undertaking |
 
 `SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
-surface that has the route, and the orchestrator keeps claim, pull request,
-watch and gates. Codex has the route through the delegation namespace.
+surface that has the route, and the orchestrator keeps responsibility for
+claim, pull request, watch and gates. Codex has the route through the
+delegation namespace.
 
 
 The pull request

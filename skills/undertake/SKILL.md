@@ -253,13 +253,17 @@ implementation begins.
 -------------
 
 **Delegation is unconditional on a surface that has a subagent or session
-route.** The orchestrator dispatches an implementor subagent and keeps claim,
-the pull request, the watch and the gates; its context stays at orchestration
-size, whatever the task's size. The subagent is given the issue number and the
-instruction to undertake it — `embark`'s `Open the sessions` states the prompt,
-the cheaper-default model rule, and the advisor and strong-model review that
-surround a delegated implementor. Where the surface has no subagent route, the
-sequence runs in the session that invoked it, which is the implementor.
+route.** The orchestrator dispatches an implementor subagent and keeps
+responsibility for the claim, the pull request, the watch and the gates; its
+context stays at orchestration size, whatever the task's size. The subagent is
+given the issue number and the instruction to undertake it — `embark`'s
+`Open the sessions` states the prompt, the cheaper-default model rule, and the
+advisor and strong-model review that surround a delegated implementor. The
+dispatched implementor is the rule's exception: it implements in its own
+session and does not re-dispatch — the delegation rule binds the session that
+dispatched it, not the one that was dispatched. Where the surface has no
+subagent route, the sequence runs in the session that invoked it, which is the
+implementor.
 
 The constitution governs, under *While you write code*, *Before you commit* and
 *When you hit a wall*. Nothing about how to write or commit the code is decided

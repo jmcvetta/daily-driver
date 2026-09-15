@@ -173,7 +173,8 @@ things and no more:
   complexity makes a weaker implementor unsafe. Either is dispatched to a
   stronger implementor — a stronger subagent or session, never the
   orchestrator itself. **Delegation is unconditional**: the orchestrator
-  claims, dispatches, watches and gates, and never implements. A task too
+  keeps responsibility for claim, dispatch, watch and gates, and never
+  implements. A task too
   underspecified for any subagent is a planning defect, not an escape
   hatch — its body failed the readiness test, and the fix is a tighter
   task body through `epic`, never the orchestrator's hands on the code.
@@ -461,7 +462,7 @@ Non-goals
   fleet of one costs an epic, a muster roll and a watch to save nothing.
   What embark-of-one keeps is the dispatch: on a subagent-capable surface
   the implementation still goes to an implementor subagent, and the
-  orchestrator keeps claim, dispatch, watch and gates. The orchestrator
-  never implements, whatever the wave's size.
+  orchestrator keeps responsibility for claim, dispatch, watch and gates.
+  The orchestrator never implements, whatever the wave's size.
 - **Does not sweep for epics.** It works the epic in hand. Reading the issue
   list for others to put to sea is `epic`'s manufacturing failure, one level up.
