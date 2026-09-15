@@ -9,8 +9,8 @@ SHELL := /bin/bash
 
 .PHONY: git_sync check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-constitution check-ask-in-chat check-omp-extension \
-	check-omp-plugin check-omp-agent check-codex-agent check-eval-fixtures \
-	check-task-worktree-fixture check-eval-arms check-step-names \
+	check-omp-plugin check-omp-review-cycle-route check-omp-agent check-codex-agent \
+	check-eval-fixtures check-task-worktree-fixture check-eval-arms check-step-names \
 	check-evals-preflight check-labels check-infra evals-install evals-plan \
 	evals-variants evals-preflight evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro \
@@ -46,9 +46,10 @@ git_sync:
 # than restating its legs, so a leg added here is a leg CI gains — and there
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
-	check-constitution check-ask-in-chat check-omp-extension check-omp-agent \
-	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
-	check-eval-arms check-step-names check-evals-preflight check-labels
+	check-constitution check-ask-in-chat check-omp-extension \
+	check-omp-review-cycle-route check-omp-agent check-codex-agent \
+	check-eval-fixtures check-task-worktree-fixture check-eval-arms \
+	check-step-names check-evals-preflight check-labels
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -139,6 +140,12 @@ check-omp-extension:
 # what would have let it silently check nothing.
 check-omp-plugin:
 	python3 scripts/check-omp-plugin.py
+
+# The Omp review-cycle reference is executable guidance. This credential-free
+# check rejects a route that reaches for optional `github` instead of the
+# essential `hub` and `bash` surface, and holds its cap and empty-result rules.
+check-omp-review-cycle-route:
+	python3 scripts/check-omp-review-cycle-route.py
 
 # check-scripts: lint the shell a skill ships. `claude plugin validate` reads
 # manifests and never opens a `scripts/` file, so without this leg the plugin's

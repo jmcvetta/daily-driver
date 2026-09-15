@@ -2,40 +2,33 @@
 # `claude-only` because the mechanism it names is Claude's. `SKILL.md`'s
 # `How to wait` says only that "the mechanism is the harness's" and points at
 # the reference files. `skills/review-cycle/references/omp.md` names the Omp
-# mechanism, and it is not a subscription: the Actions half of the wait is one
-# blocking call, `github.run_watch` on the head commit, and the commit
-# statuses are a second read taken after it returns —
-# `gh api /repos/{owner}/{repo}/commits/{sha}/status`. Both halves are needed
-# because `reported` means the union of the check runs and the commit
-# statuses, and `run_watch` answers for the Actions runs alone. A row that
-# passes without the reference file being read is wrong, so the graded content
-# is the two calls and that order.
+# mechanism: `hub` supervises `gh pr checks --watch` for at most fifteen
+# minutes, then `gh api` reads the head commit's check runs and commit statuses.
+# The final two reads are both needed because `reported` means their union, and
+# zero check runs plus an empty `statuses` array is an empty result, not green.
 #
 # Why the Claude sibling could not be reused: it grades
 # `mcp__github__subscribe_pr_activity` taken once before the first read. Omp
-# has no subscription and needs none — the reference file says the three
-# things Claude needs exist because Claude has nothing that blocks. An Omp run
-# against that rubric would fail for waiting the way its own harness waits.
+# has no subscription and needs none — `hub` holds the process and its cap.
+# An Omp run against that rubric would fail for waiting the way its own harness
+# waits.
 #
-# What this row can and cannot see. The sandbox has no GitHub client, so
-# neither `run_watch` nor the status read can actually be run here — there is
-# no live pull request and no Actions run to watch. What is observable is what
-# the agent says it will do, so the graded assertion is an `agent_judge` on the
-# reply, plus the skill having fired at all. A positive check that the watch
-# blocked and the statuses were read after it needs a live pull request and a
-# working GitHub client, which is not a sandbox this harness can build.
+# What this row can and cannot see. The sandbox has no GitHub client, so the
+# watch and endpoint reads cannot actually be run here. What is observable is
+# what the agent says it will do, so the graded assertion is an `agent_judge`
+# on the reply, plus the skill having fired. A positive check needs a live pull
+# request and a working GitHub client, which is not a sandbox this harness can
+# build.
 #
-# Why this fails the `without` arm: a model with no plugin loaded waits on CI
-# by polling — a loop of `gh pr checks`, or a watch on the Actions runs alone
-# and nothing more. What it has no reason to know is that the wait has two
-# halves on this harness, that the commit statuses are the second, and that
-# they are read after the blocking watch returns rather than alongside it.
+# Why this fails the `without` arm: a model with no plugin loaded may use
+# `gh pr checks` alone or poll in a loop. What it has no reason to know is that
+# Omp must use Hub supervision and then read both endpoints for the head commit.
 # That shape lives only in this skill's own reference file.
-
+#
 task_id: review-cycle-08-run-watch-then-statuses-omp
 description: >-
-  Waiting on CI blocks on the head commit's Actions runs first, then reads the
-  commit statuses — two calls, in that order.
+  Waiting on CI supervises the PR check watch for fifteen minutes, then reads
+  the head commit's check runs and statuses.
 tags: [review-cycle, references, fire, behaviour, omp-only, forks:review-cycle-08-subscribe-before-first-read]
 
 initial_prompt: >-
@@ -45,7 +38,7 @@ initial_prompt: >-
   in order.
 
 agent:
-  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Hub]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 
 run_limits:
@@ -64,7 +57,7 @@ success_criteria:
 
   # The finding.
   - type: agent_judge
-    description: The reply blocks on run_watch, then reads the commit statuses
+    description: The reply uses Hub to watch checks, then reads both endpoints
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -91,16 +84,16 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the reply must describe an ordered wait with two halves. The
-      Actions runs are waited on with the `github` tool's `run_watch` op on
-      the head commit (`github.run_watch`, "run_watch", or plainly "the
-      github tool's blocking run watch"), which blocks until every run has
-      reported. The commit statuses are then read, AFTER that call returns,
-      with `gh api /repos/{owner}/{repo}/commits/{sha}/status` (or plainly
-      "the commit status API for the head SHA").
+      The rule: the reply must name a bounded, ordered wait with three parts.
+      It starts `gh pr checks --watch` under Omp's `hub` process supervision,
+      waits at most fifteen minutes, then reads BOTH head-commit API endpoints:
+      `/commits/{sha}/check-runs` and `/commits/{sha}/status`. It must reject
+      zero check runs plus an empty statuses array as an empty result, not
+      success.
 
-      Score 1.0 if the REPLY names the blocking run watch and the commit
-      status read, in that order.
-      Score 0.0 if the reply waits by polling in a loop of its own, waits by
-      arming a timer or a subscription, names only one of the two halves,
-      reads the statuses before the watch, or names no specific call at all.
+      Score 1.0 if the REPLY names Hub supervision of the PR check watcher, the
+      fifteen-minute cap, and both API reads after it exits.
+      Score 0.0 if the reply polls in a loop, sleeps, arms a timer or
+      subscription, names `github.run_watch`, names only one endpoint, reads
+      the endpoints before the watch, accepts an empty result, or names no
+      specific call at all.
