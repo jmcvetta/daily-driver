@@ -5,8 +5,9 @@
 # cleared on `session_shutdown`, so it is not a `send_later` and nothing here
 # can wake a session that has ended. `skills/undertake/references/omp.md`
 # draws the conclusion: `Keep it current`'s cadence does not run on this
-# harness. After `Ready for review`, say once that the branch is kept current
-# by the next Omp session that picks the pull request up, and stop.
+# harness. After `Ready for review`, say once that the watch is the catch-up
+# look — the base-currency read every turn that lands back on the pull
+# request takes, whose `BEHIND` answer runs the step's merge — and stop.
 #
 # So this row does not grade a refilled wake slot. It grades the Omp-side
 # truth in its place — that the session claims no watch it cannot keep. The
@@ -90,12 +91,14 @@ success_criteria:
 
       The rule: this harness has no wake that survives the session, so the
       recurring keep-it-current check does not run here. The reply must say
-      once that the branch is kept current by the next session that picks the
-      pull request up, and stop. It must not claim a watch of its own.
+      once that the watch is the catch-up look: every turn that lands back on
+      the pull request reads whether the branch has fallen behind its base,
+      and `Keep it current`'s merge runs when it has. It must not claim a
+      watch of its own.
 
-      Score 1.0 if the REPLY names the absence of a durable wake, or hands the
-      next check to the session that picks the pull request up next, and
-      claims no watch beyond this turn.
+      Score 1.0 if the REPLY names the absence of a durable wake, and names
+      the catch-up look or hands the next check to the session that picks the
+      pull request up next, and claims no watch beyond this turn.
 
       Score 0.0 if the reply claims a watch this harness cannot keep: a
       scheduled check-in meant to outlive the session, a timer armed as a

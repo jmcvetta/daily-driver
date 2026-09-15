@@ -367,11 +367,21 @@ wake at a time, carrying the instruction to look again — the discipline
 says whether the harness in use has such a wake, and names the call.
 
 **Where it has none, there is no cadence.** Say once, at `Ready for review`,
-that the branch is kept current by the next session that picks the pull request
-up, and stop. A watch a surface cannot keep is worse claimed than skipped. A
-timer that dies with the session is not a durable wake, whatever it is called;
+that the watch is the catch-up look below, and stop. A watch a surface cannot
+keep is worse claimed than skipped. A timer that dies with the session is not
+a durable wake, whatever it is called;
 [`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) is the
 decision, and names the harness that has one of those.
+
+**No cadence is not no looks.** On such a surface, every turn the session
+already has is a look: a turn that resumes the session, reconnects it to its
+supervisor, or otherwise puts it back on this pull request takes the
+base-currency read first — before a CI read, a thread read, or whatever the
+turn was otherwise going to do — and a branch the read finds behind its base
+runs this step now, not next time. The reference file names the read and the
+answers it distinguishes. The look costs one call and merges nothing on its
+own; skipping it is how a branch stays behind for as long as nobody happens
+to look.
 
 **Never end a turn with the wake slot empty while the check-ins are running.**
 They run from `Ready for review` until the pull request is merged or closed or

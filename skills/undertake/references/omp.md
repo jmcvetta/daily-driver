@@ -81,12 +81,34 @@ turns after the session terminates.
 
 After `Ready for review`, use `daily_driver_schedule` for the next check-in
 while the session is live. Each CI wait uses the persistent Hub watcher. If
-the session terminates, the cadence pauses, but an existing watcher and its
-completion do not disappear. Resume the owning session, reconnect to Hub
-first, consume any pending completion, read the pull request, run `Keep it
-current`, and then arm the next live-session check-in. A different session can
-inspect the project-scoped process by name, but the owner's completion is not
-delivered to it.
+the owning session terminates, the cadence pauses, but an existing watcher and
+its completion do not disappear. A different session can inspect the
+project-scoped process by name, but the owner's completion is not delivered
+to it.
+
+The catch-up look
+-----------------
+
+**The first read of every turn that lands back on the pull request is the
+base-currency read.** Omp has no durable wake, so a session that has come
+back is the only agent that will ever notice the base moved. The turn that
+resumes the owning session, reconnects to Hub, replays a pending completion,
+or simply returns to the pull request on a user turn starts with:
+
+    gh pr view <number> --json mergeStateStatus,mergeable
+
+| `mergeStateStatus` | Meaning | Move |
+| ------------------ | ------- | ---- |
+| `BEHIND` | the base moved; the branch does not conflict | `gh pr update-branch <number>` — `Keep it current`'s merge — then continue the turn |
+| `DIRTY` | the branch conflicts with the base | the conflict stop `SKILL.md` writes under `Where it stops and waits` |
+| `CLEAN`, `BLOCKED`, `DRAFT`, `UNSTABLE` | current, or held by reviews, draft state, or checks | nothing; continue the turn |
+
+The read is the look; the update-branch call is the merge. The call's own
+"already up to date" answer cannot stand in for the read, because something
+must decide to make the call — and a `DIRTY` answer must reach the stop
+rather than a failed merge. The resumed-owner order is: reconnect to Hub,
+consume any pending completion, take this read, then the CI reads the
+completion was replayed for, then arm the next live-session check-in.
 
 This is the Omp boundary: managed timers are session-local; Hub processes and
 their owner-scoped completions are durable; autonomous base synchronization

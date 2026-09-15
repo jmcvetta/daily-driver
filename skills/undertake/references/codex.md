@@ -70,8 +70,18 @@ There is no durable wake
 
 **No wake on this harness is known to outlive the turn that armed it**, so
 `Keep it current`'s cadence does not run here. After `Ready for review`, say
-once that the branch is kept current by the next session that picks the pull
-request up, and stop.
+once that the watch is the catch-up look below, and stop.
+
+**The catch-up look is the first read of every turn that lands back on the
+pull request.** A turn that returns the session to the pull request — a
+resume, a continuation, a user turn about it — starts with the base-currency
+read, before anything else the turn was going to do:
+
+    gh pr view <number> --json mergeStateStatus,mergeable
+
+`BEHIND` runs `gh pr update-branch <number>` — `Keep it current`'s merge —
+before the turn continues; `DIRTY` is the conflict stop `SKILL.md` writes
+under `Where it stops and waits`; every other state needs nothing.
 
 This is the Omp answer arrived at for a different reason. Omp has a timer and
 it is measured to die with the session; Codex has no timer this plugin has
