@@ -64,7 +64,7 @@ to the session:
 
 | Half | Call |
 | ---- | ---- |
-| The PR check rollup | `hub start` with `application: "gh"` and `args: ["pr", "checks", "--watch", "<pr>", "--repo", "<owner>/<repo>"]`, then `hub wait` on that name for exit with `timeout: 900` |
+| The PR check rollup | `hub start` runs `gh pr checks --watch <pr> --repo <owner>/<repo>`; `hub wait` on that name for exit with timeout: 900 |
 | The check runs | `gh api /repos/{owner}/{repo}/commits/{sha}/check-runs` |
 | The commit statuses | `gh api /repos/{owner}/{repo}/commits/{sha}/status` |
 
@@ -79,11 +79,14 @@ once, and report every unreported check. A watcher exit with a failed check
 still leads to the two reads: red is reported, not a reason to review without
 the status half.
 
-**An empty pair is not green.** Zero check runs and an empty `statuses` array
-mean no check has registered. Stop and report that empty result; do not let
-vacuous success through. A repository known not to post commit statuses has
-no status half, but that fact must be known rather than inferred from this
-first read.
+**An empty pair is a registration stop.** `gh pr checks --watch` returns when
+the PR rollup is empty; it cannot observe a future first check, and Omp has no
+durable wake for one. Zero check runs and an empty `statuses` array therefore
+mean no check has registered. Reject that result and report it; do not call it
+green or hide an unbounded poll behind the word *waiting*. This is the partial
+watch exception `SKILL.md` names. A repository known not to post commit
+statuses has no status half, but that fact must be known rather than inferred
+from this first read.
 
 No `sleep`, subscription, timer, or unmanaged Bash job belongs here. The
 `SKILL.md` prohibition on an unattended shell wait remains: this is an Omp
