@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.0](https://github.com/jmcvetta/daily-driver/compare/v0.25.0...v0.26.0) (2026-09-15)
+
+
+### Features
+
+* **skills:** always delegate undertakings to a subagent or session ([#253](https://github.com/jmcvetta/daily-driver/issues/253)) ([91d05fa](https://github.com/jmcvetta/daily-driver/commit/91d05fa37611268d768afb1a74ec55cdd6a50356))
+
 ## [0.25.0](https://github.com/jmcvetta/daily-driver/compare/v0.24.1...v0.25.0) (2026-09-15)
 
 
