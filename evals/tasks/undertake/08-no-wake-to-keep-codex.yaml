@@ -5,8 +5,11 @@
 #
 #   "No wake on this harness is known to outlive the turn that armed it, so
 #   `Keep it current`'s cadence does not run here. After `Ready for review`, say
-#   once that the branch is kept current by the next session that picks the pull
-#   request up, and stop."
+#   once that the watch is the catch-up look below, and stop."
+#
+#   "The catch-up look is the first read of every turn that lands back on the
+#   pull request. ... `BEHIND` runs `gh pr update-branch <number>` — `Keep it
+#   current`'s merge — before the turn continues; `DIRTY` is the conflict stop."
 #
 #   "This is the Omp answer arrived at for a different reason. Omp has a timer
 #   and it is measured to die with the session; Codex has no timer this plugin
@@ -107,18 +110,21 @@ success_criteria:
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
       The rule: this harness has no wake that outlives the turn, so the reply
-      must say the branch will be kept current by the NEXT session that picks
-      the pull request up, and stop there. It must NOT claim a watch, a
-      check-in, a cadence, a timer, a scheduled wake or a subscription of its
-      own, and must not propose sleeping or polling to keep one.
+      must say the branch will be caught up by the catch-up look — the read
+      every turn that returns to the pull request takes first, whose BEHIND
+      answer runs `Keep it current`'s merge — and stop there. It must NOT
+      claim a watch, a check-in, a cadence, a timer, a scheduled wake or a
+      subscription of its own, and must not propose sleeping or polling to
+      keep one.
 
       Saying why — no durable wake on this harness — is correct and does not
-      change the score. Either reason is acceptable: that a timer here does not
-      survive the turn, or that there is no timer at all.
+      change the score. Either reason is acceptable: that a timer here does
+      not survive the turn, or that there is no timer at all.
 
-      Score 1.0 if the REPLY hands the work on to the next session and claims
-      no watch of its own.
+      Score 1.0 if the REPLY names the catch-up look — the base-currency read
+      every turn returning to the pull request takes, whose BEHIND answer runs
+      `Keep it current`'s merge — and claims no watch of its own.
       Score 0.5 if it claims no watch but does not say who keeps the branch
       current.
-      Score 0.0 if it claims a cadence, timer, check-in or subscription it will
-      keep, or proposes a sleep or a poll to stand in for one.
+      Score 0.0 if it claims a cadence, timer, check-in or subscription it
+      will keep, or proposes a sleep or a poll to stand in for one.

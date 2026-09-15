@@ -122,6 +122,14 @@ the endpoint reads and the review still need an agent turn after the owning
 session reconnects. This is process durability with recoverable completion,
 not autonomous review.
 
+**The replayed completion is a check answer, not a currency answer.** The base
+branch moves while the owning session is away, and the CI watcher does not
+watch it. After a resumed owner consumes its completion, the base-currency
+read comes first — `undertake`'s
+[`omp.md`](../../undertake/references/omp.md) names the read and the answers —
+and a `BEHIND` answer goes to `Keep it current` before the round continues. A
+green run on a head the base has since moved past is not current work.
+
 The never-empty wake slot —
 [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — is
 Claude's scheduler rule and does not bind Omp's managed timer. On Omp, the
