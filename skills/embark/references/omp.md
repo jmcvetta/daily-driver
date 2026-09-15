@@ -114,6 +114,13 @@ orchestrator terminates, process-only watches survive, but agent-driven wave
 work resumes only when the owning session resumes or a later `embark`
 invocation reads the graph and pull requests.
 
+While the orchestrator lives, the backstop is the timer pair:
+`daily_driver_schedule` arms it ten minutes out, and
+`daily_driver_cancel_schedule` cancels it at the wave's close, when
+`Report the epic ready` drops the pull-request subscriptions. The one-slot
+rule `SKILL.md` states holds: one timer, kept by the trigger id the call
+returned, filled again before the turn ends while a wave is at sea.
+
 
 The strong-model review
 =======================

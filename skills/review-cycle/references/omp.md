@@ -110,11 +110,15 @@ cap, not a Bash command whose timeout ends the session's control of it.
 
 Process durability is not session resumption
 --------------------------------------------
-
 **`daily_driver_schedule` is an in-process managed timer.** Managed timers are
 unref'd and cleared on `session_shutdown`, so a reminder dies with the
 session. Use one only for a follow-up inside the current session. It cannot
-replace the persistent Hub watcher.
+replace the persistent Hub watcher. Its pair is `daily_driver_cancel_schedule`:
+a wait that borrows the caller's cadence timer — `undertake`'s `Keep it
+current` check-in — borrows it by cancelling it, and the owner re-arms with
+`daily_driver_schedule` after the wait. An armed reminder does not lapse, it
+fires: left pending, it injects *read the checks again* as a follow-up in the
+middle of the review, restarting a wait on a run that finished.
 
 A durable Hub process also does not launch or resume an Omp session. It can
 finish while the owner is absent and preserve its completion for replay, but
