@@ -44,20 +44,7 @@ before `Write the graph`.
 The model a task records
 ========================
 
-`Draft the plan` writes a `Model:` line into each task issue. On Claude Code
-the line is passed to the session client, binding. Here `embark` runs its
-subagent fallback — the session-opening `agent_tasks` namespace is one this
-plugin cannot reach, so the wave goes out as local subagents instead — and
-there the line is advisory: the fallback's default is a cheaper implementation
-model, and the line is the judgement `embark`'s orchestrator reads before
-deciding whether that default is safe for this task. Nor does anything here
-report the running session's own model, so the identifier cannot be read off
-the session the way the Claude route reads it.
-
-Write it anyway, exactly as the Omp route does. The judgement is made here, at
-decomposition time, and a task issue planned on Codex is undertaken wherever
-the wave is put to sea. The identifiers are the ones the Claude session client
-accepts, and [`claude.md`](claude.md) is where they are named — with the
-warning that the table there is a measurement with a date on it. A recalled
-identifier is not one: where `claude.md` cannot be read, write no line rather
-than guess at a name.
+The `Model:` line and the identifiers it may name are `issue-body`'s — see
+`skills/issue-body/references/codex.md` for how this harness reads it. The
+task bodies are written under that skill's contract at `Open the issues`;
+nothing here reads or writes the line.

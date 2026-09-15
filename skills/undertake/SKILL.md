@@ -92,11 +92,15 @@ second issue for it splits the trail in two. Where one already covers the
 request, that is the issue — go on to `Title the session` with it, and say
 which one it is, so a wrong match is corrected before the task worktree exists.
 
-Otherwise open one. Title and body record what
-was asked and no more: an issue is the statement of the request, and scope
-invented for it is scope the pull request is then measured against. No
-permission is asked — the invocation is the authorisation, and an issue is
-cheap to close.
+Otherwise open one, and author it through `issue`: the read-before-write
+rule, the body contract and the label are that sequence's, invoked rather
+than restated here. What stays here is the intent gate and the label rule
+below — and the order: **writing the issue must not start the
+implementation it describes.** The sequence continues when the issue is
+written, not while the work is begun. An issue is the statement of the
+request, and scope invented for it is scope the pull request is then
+measured against. No permission is asked — the invocation is the
+authorisation, and an issue is cheap to close.
 
 **A request too vague to write an issue for is a stop.** This is the intent
 gate of `Read the issue and its edges` arriving early, and the constitution's
@@ -162,10 +166,11 @@ on the issue, `epic` writes the issues where there are issues to write, and
 this sequence does not open a pull request with nothing in it.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
-runs through — unlabelled is not blocked — and it is the only place the
-standard's one-label-per-issue invariant is ever repaired: `Open the issue`
-labels everything it writes and so does `epic`, so an unlabelled issue is one
-a person opened. `issue-labels` picks the label and the issue client applies
+runs through — unlabelled is not blocked. `issue` repairs an unlabelled
+issue in passing too; what is special here is that nothing unlabelled gets
+past this sequence: `Open the issue` labels everything it writes and so
+does `epic`, so an unlabelled issue is one a person opened. `issue-labels`
+picks the label and the issue client applies
 it, on a write that needs no more permission than the claim a moment later.
 Naming the label and moving on leaves the next session asking the same
 question of the same issue.
