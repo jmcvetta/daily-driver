@@ -26,6 +26,18 @@ issue carrying none of the standard's five is not an issue carrying none.
 write lives.
 
 
+The implementor
+===============
+
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Implement` | Dispatch the implementor subagent | the `Agent` tool, one subagent per undertaking |
+
+`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
+surface that has the route, and the orchestrator keeps claim, pull request,
+watch and gates. Claude Code has the route.
+
+
 The pull request
 ================
 

@@ -63,8 +63,10 @@ The task issue's `Model:` line is advisory here, exactly as `SKILL.md` says:
 it is the judgement `epic` made, and the orchestrator reads it before
 deciding whether the cheaper default is safe for this task. The bypass is
 the orchestrator's judgement too, made the same way: dispatch a stronger
-agent type for security-sensitive or unusually complex work, or take the
-task itself.
+agent type for security-sensitive or unusually complex work — a stronger
+subagent, never the orchestrator itself. Work too underspecified for any
+subagent is a planning defect reported back into the task body, not a task
+the orchestrator takes.
 
 
 Asking for help

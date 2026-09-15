@@ -26,6 +26,18 @@ The issue
 read-first and the Claude route does.
 
 
+The implementor
+===============
+
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Implement` | Dispatch the implementor subagent | `task`, one subagent per undertaking |
+
+`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
+surface that has the route, and the orchestrator keeps claim, pull request,
+watch and gates. Omp has the route.
+
+
 The pull request
 ================
 

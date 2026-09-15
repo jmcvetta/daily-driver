@@ -171,7 +171,12 @@ things and no more:
   the wave does not get. Two exceptions, both the orchestrator's judgement
   and neither appealed: work that is security-sensitive, and work whose
   complexity makes a weaker implementor unsafe. Either is dispatched to a
-  stronger implementor, or taken by the orchestrator itself.
+  stronger implementor — a stronger subagent or session, never the
+  orchestrator itself. **Delegation is unconditional**: the orchestrator
+  claims, dispatches, watches and gates, and never implements. A task too
+  underspecified for any subagent is a planning defect, not an escape
+  hatch — its body failed the readiness test, and the fix is a tighter
+  task body through `epic`, never the orchestrator's hands on the code.
 - **A title**, in `session-title`'s form for the task issue. It is what makes a
   list of five running sessions readable at the moment the wave launches,
   which is before any of them has reached its own `Title the session` and set
@@ -451,8 +456,12 @@ Non-goals
   reason: what lands is the one decision worth a person. A green, ready pull
   request is reported, once.
 - **Does not close the epic.** It says the epic is ready and stops there.
-- **Does not fire on one issue.** Opening a session to undertake a single task
-  is the task session's own job, and running a fleet of one costs an epic, a
-  muster roll and a watch to save nothing.
+- **Does not fire on one issue — but its delegation rule still holds.**
+  Undertaking a single task is the task session's own job, and running a
+  fleet of one costs an epic, a muster roll and a watch to save nothing.
+  What embark-of-one keeps is the dispatch: on a subagent-capable surface
+  the implementation still goes to an implementor subagent, and the
+  orchestrator keeps claim, dispatch, watch and gates. The orchestrator
+  never implements, whatever the wave's size.
 - **Does not sweep for epics.** It works the epic in hand. Reading the issue
   list for others to put to sea is `epic`'s manufacturing failure, one level up.
