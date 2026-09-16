@@ -47,6 +47,9 @@ The pull request
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
+| `The milestone` | Read the readiness state | `gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid` |
+| `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
+| `The milestone` | Post the report | `gh pr comment <number> --body-file <path>` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/omp.md` names the reviewer task, durable
@@ -68,6 +71,50 @@ The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
 link comes from the remote `task-worktree` resolved, never from an assumed
 `origin`.
+
+
+The milestone
+=============
+
+`SKILL.md` owns what the report says and when it is owed; these are the calls
+that read the readiness state, find the claim's timestamp, and post it.
+
+**The readiness state is one read:**
+
+    gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid
+
+`isDraft` false and `mergeable` `MERGEABLE` are the two answers the report
+needs. `mergeStateStatus` is the catch-up look's field and carries the same
+caution: `UNKNOWN` and `BLOCKED` are not a no, but they are not a yes either,
+and `SKILL.md` rules both out as readiness. `headRefOid` is the SHA the
+report binds to.
+
+**The start is the claim comment's `createdAt`.** `gh issue view <issue>
+--json comments` is the read `Read the issue and its edges` already makes —
+`comments` is in its field list — and the claim is the comment carrying the
+branch link and the `Model:` and `session:` lines. Take its `createdAt`; a
+resumed session finds the start with the read it makes anyway. An issue with
+no recoverable claim leaves the timing `n/a`, per `SKILL.md`.
+
+**The report posts as a pull-request comment** — a pull request's comments
+are issue comments, so the write is the claim's own:
+
+    gh pr comment <number> --body-file <path>
+
+`--body-file` for the reason `Claim the issue`'s row gives: the report
+carries backticks, a SHA, and timestamps, and a double-quoted shell argument
+substitutes the backticks before `gh` sees them.
+
+**Read the existing comments before posting** — `gh pr view <number> --json
+comments` again, the report found by its opening line, so a resumed sequence
+that finds it posts nothing.
+
+**The provenance** comes from the sources `The session` names:
+`daily_driver_get_session` for the model and the session id, the harness's
+own statement of the serving model where the tool has none. The harness line
+names Omp, with the version the harness itself reports — `omp --version`
+where it answers. A version no surface in the session reports is `n/a`,
+never a guessed one.
 
 
 Process durability does not run the cadence

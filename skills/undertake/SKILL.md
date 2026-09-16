@@ -258,6 +258,15 @@ claim from a different session is not suppressed: that collision is the thing
 the claim exists to make visible, and it is worth a line to the user before
 implementation begins.
 
+**The claim's timestamp is the undertaking's clock start.** The comment's own
+`created_at` is what `The milestone` reads back when the pull request first
+reaches merge readiness — through resumes, through a delegated `Implement`,
+through whatever draft states the sequence has passed since. No timestamp is
+written into the claim for the milestone's sake: the durable start is the
+post, not a line in it. A claim that was never posted leaves the milestone
+with no start to read, and `The milestone` reports the timing as unavailable
+rather than guessing at one.
+
 5 — Implement
 -------------
 
@@ -351,6 +360,15 @@ person's action landing on the branch — the Tofu applied, the updated state
 committed — after which the pull request returns through the gate below
 like any other. The person's commit is a new diff: `Review the head` runs
 over it once before the gate, the way any changed head earns a round.
+
+When the gate clears and the pull request is marked ready, the milestone's
+moment has arrived: the sequence publishes the first-readiness report through
+`The milestone` below — once, the way that section's own rules bound it — and
+then arms the watch at `Keep it current` exactly as it would have without the
+comment. A pull request that stops here on a human action publishes nothing:
+it has not reached the milestone the report would name, and a report naming
+readiness over a bar only a person can clear is the false claim the gate
+exists to refuse.
 
 10 — Keep it current
 --------------------
@@ -522,6 +540,95 @@ The gate is also what a round at `Keep it current` returns through. That round
 sends the pull request back to draft, and these five conditions are what let
 it out again — the same five, tested again, rather than a second gate written
 for the second round.
+
+
+The milestone
+=============
+
+Ready is a state the pull request carries; the milestone is the one comment
+that says how long reaching it took. The first time the sequence carries a
+pull request through the ready side of `The gate` — `review-cycle`'s round
+complete, every gate condition holding on the current head, and the pull
+request actually marked ready by `Ready for review` — it publishes the
+undertaking's first-readiness report: one comment on the pull request, with
+the elapsed time and the provenance of the work. The reference file for the
+harness in use names the calls that read the readiness state, find the
+claim's timestamp, and post it.
+
+**The report is a milestone, not the end.** Posting it does not stop the
+watch at `Keep it current`, does not cancel a check-in or leave the wake slot
+empty, does not close the issue, and does not merge anything. The watch's
+exits — merged, closed, or the user says to stop — are what they were before
+the comment existed, and a base-branch advance after it runs the same update,
+CI wait, and return through the gate as any other.
+
+
+Merge readiness, not draft cleared
+----------------------------------
+
+Draft status being gone is not what the report attests. It is published only
+when all of these hold on the current head:
+
+- `The gate` holds — the round at `Review the head` has completed
+  successfully, and every condition in the gate is satisfied on this head.
+- The pull request has actually been marked ready. A draft the sequence is
+  about to mark, or one whose state a merge or a re-run has not yet touched,
+  is not the milestone.
+- The branch is current with its base and merges cleanly, and the harness's
+  own mergeability answer is affirmative. A pending required check, an
+  outstanding required approval, or an answer the harness cannot yet give —
+  an `UNKNOWN` mergeability, an indeterminate merge state — is a wait, not a
+  milestone, and the reads `review-cycle`'s `How to wait` prescribes are what
+  distinguish them.
+- No review thread is unresolved, and the pull request waits on no human
+  action. The pause `Ready for review` takes on `pr-body`'s notice keeps the
+  report unpublished with the pull request itself.
+
+Any one of them missing keeps the comment unpublished, and the sequence keeps
+watching. A report that says the pull request is ready to merge while a check
+is still pending is the same false claim a red pull request marked ready is.
+
+
+What the report carries
+-----------------------
+
+- **The timing, labelled as what it is** — wall-clock time from the claim to
+  first merge readiness. It runs from the claim comment's timestamp, read
+  back off the issue whatever has happened since: resumes, a delegated
+  `Implement`, later returns to draft and out again. The claim's timestamp is
+  the durable start, so a session arriving late never restarts the clock.
+  Both ends are UTC timestamps — the start and the milestone — with the
+  duration between them in words. The interval covers implementation, review,
+  fixes, and the waits in between; it excludes the maintenance watch that
+  follows, and the report never calls it compute time or the undertaking's
+  total duration. An undertaking with no recoverable start reports the timing
+  as unavailable rather than inventing one.
+
+- **The provenance, under `Claim the issue`'s rules.** The model that served
+  the work, exactly as reported — never a recalled revision — the agent
+  harness by name and the version of it that a surface in the session can
+  actually read, and the session identifier, linked where the harness offers
+  a link. A value no surface reports is `n/a`. Where `Implement` delegated
+  the work and the implementor's model or session is known and differs from
+  the orchestrator's, both are named, each attributed to the role that did
+  it; attribution nobody reported is not reconstructed.
+
+- **The head it binds to.** The pull request's head SHA and the milestone
+  timestamp. The comment is a statement about that head: a later head —
+  after a base merge, a conflict resolution, any push — is not what it
+  described, and nothing in the comment claims otherwise.
+
+
+Once per undertaking
+--------------------
+
+The report posts once for an undertaking and its pull request, and the check
+for it comes before the write: read the pull request's existing comments and
+look for the report before posting one. A resumed sequence, a retry of the
+readiness check, or a later return through draft — the path `A round after
+ready goes back to draft` writes — finds it there and posts nothing. The
+original milestone timestamp and elapsed time are never overwritten, because
+a later pass through the gate that finds the report does not touch it.
 
 
 Where it stops and waits
