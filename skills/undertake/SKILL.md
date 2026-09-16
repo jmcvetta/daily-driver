@@ -233,6 +233,13 @@ Beyond the claim itself the comment always carries:
   somewhere to go with it, and the reference file has its form. A missing id
   is recorded as `n/a`, never narrated: a claim that explains why it has no
   session publishes a diagnostic instead of a record.
+- **A brief poem, in the claiming agent's own style, placed last** — after
+  the branch, the model and the session, so that a reader looking for the
+  branch or the model finds them in a fixed place and is never made to read
+  past verse to reach it. The style is the agent's own, and deliberately so:
+  a pull request's salutation is classical and a task issue's opening verse
+  is a haiku, but a claim is the agent's voice at the moment it takes the
+  work.
 
 The model and session come from the harness's session call, where it has one —
 the call `session-title` documents. A branch designated by that call must be

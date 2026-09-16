@@ -75,6 +75,37 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    never by weakening a quality gate or by assigning arbitrary work to the
    smallest model.
 
+**A task body opens in a fixed shape, and the requirements above land in it
+in a fixed order.** The opening has four parts, in this order:
+
+1. **A one-line summary.** The first line of the body, and one line — very
+   concise — stating the observable outcome. No character limit is imposed:
+   an issue body has no surface that renders its first line in a list, so
+   "very concise" and "one line" are the whole rule.
+2. **A haiku.** Immediately after the summary line, separated by a blank
+   line. Three lines, 5-7-5, italicised line by line — the form
+   [`HAIKU.md`](../../HAIKU.md) shows — conveying the gist of the task. The
+   verse form is what tells a task issue and a pull request apart on sight:
+   a pull request carries a classical salutation, a task issue a haiku.
+3. **`Summary`.** What changes and why it is wanted, for a reader who will
+   not read `Detail` — requirements 1 and 2 above, in plain terms. **A short
+   paragraph or two, and it stops there.** The budget is part of the rule: a
+   `Summary` that grows into a second telling of `Detail` is the failure
+   mode, because the requirements below invite it. Nothing an implementer
+   needs lives here — that is `Detail`'s — and nothing is said twice.
+4. **`Detail`.** Free form, and as long as the task needs: the grounded
+   implementation map, the settled design, and the acceptance and
+   verification conditions — requirements 3, 4 and 5. Headings inside it
+   are the author's choice.
+
+The `Model:` line keeps the rule it has below: the last line of the body,
+after `Detail`, and nothing after it.
+
+**The shape is `task`'s alone**, as the standing rule at the top of this
+skill already says of everything defined here — an `epic` body is untouched.
+And it is not swept backwards: bodies written before it are not backfilled,
+because the update rule below already says what an update preserves.
+
 **Relationships are edges, not prose.** What the task waits on is
 `issue-deps`' to record, and a body states only what an edge cannot — that
 rule is `issue-deps`'s, cited here rather than restated.
