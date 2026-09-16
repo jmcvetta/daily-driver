@@ -2,9 +2,9 @@
 name: judgement-call
 description: >-
   This skill should be used at the moment a choice between ways of doing the
-  same task is about to be put to the user — on the harness's own use of the
-  question widget (Claude's `AskUserQuestion`, Omp's `ask`, Codex's
-  `request_user_input`), on a reply about to offer alternatives where one is
+  same task is about to be put to the user — on the harness's own use of its
+  question widget before asking the user to choose between approaches, on a
+  reply about to offer alternatives where one is
   quicker, less complete, or a departure from the standard way ("fix it
   properly, or leave a TODO?", "which approach do you prefer?", "should I …,
   or …?"), and when the user hands the same choice back ("properly, or a

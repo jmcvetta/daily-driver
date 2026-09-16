@@ -19,11 +19,24 @@ The issue
 **The read in that row is not optional.** `labels` replaces the whole set, so
 an update sending one label deletes every other label the issue had — the
 stock and bot-owned ones `issue-labels` says to leave alone included. An
-issue carrying none of the standard's five is not an issue carrying none.
+issue carrying none of the standard's six is not an issue carrying none.
 
 `issue-deps` owns the edge writes, and has its own routes. So does
 `issue-labels`, whose `references/claude.md` states that trap where the label
 write lives.
+
+
+The implementor
+===============
+
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Implement` | Dispatch the implementor | `mcp__Claude_Code_Remote__create_session`, the harness's primary route; else the `Agent` tool — one implementor per undertaking |
+
+`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
+surface that has the route, and the orchestrator keeps responsibility for
+claim, pull request, watch and gates. Claude Code has both routes; the session
+route is embark's primary on this harness.
 
 
 The pull request
@@ -35,10 +48,13 @@ The pull request
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
+| `The milestone` | Read the readiness state | `mcp__github__get_pull_request` — `isDraft`, `mergeable`, `mergeStateStatus`, `headRefOid` |
+| `The milestone` | Read the existing comments | `mcp__github__get_issue_comments` |
+| `The milestone` | Post the report | `mcp__github__add_issue_comment` |
 
-`Review the head` and `Fix, answer, resolve, push` are `review-cycle`'s, and
-its own `references/claude.md` has the review surface, the wait and the thread
-clients.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
+`review-cycle`'s. Its `references/claude.md` names the full-review surface and
+the unavailable-delta stop that keeps the pull request draft.
 
 
 The session
@@ -66,9 +82,50 @@ worktree must agree before the claim is posted.
 `external_metadata.current_branches` is a different field and answers a
 different question: what is checked out, not what the harness designated.
 
-Where this call is absent, `Claim the issue` carries the branch alone. Read it
-from the task worktree's Git state, and read its repository from the remote
-`task-worktree` resolved.
+Where this call is absent, `Claim the issue` still records `session: n/a` and
+reads the model from the harness environment. Read the branch from the task
+worktree's Git state, and its repository from the remote `task-worktree`
+resolved.
+
+
+The milestone
+=============
+
+`SKILL.md` owns what the report says and when it is owed; these are the calls
+that read the readiness state, find the claim's timestamp, and post it.
+
+**The readiness state is `mcp__github__get_pull_request`.** The fields answer
+`SKILL.md`'s questions directly: `isDraft`; `mergeable`, which answers
+`true`, `false`, or `null` — only `true` is a yes, and `null` is GitHub
+saying it cannot determine the answer yet, which is the unknown readiness
+`SKILL.md` rules out; `mergeStateStatus`, which must agree with `The gate`
+as well — `BEHIND` is a base the branch does not carry, `UNSTABLE` a check
+that is no longer green, `BLOCKED` a required review outstanding, and
+`UNKNOWN` the indeterminate answer `SKILL.md` rules out outright, so a state
+that disagrees with the gate is a wait, not a milestone; and `headRefOid`,
+the SHA the report binds to.
+
+**The start is the claim comment's `created_at`.** Read the issue's comments
+with `mcp__github__get_issue_comments`, find the claim by its branch link and
+`Model:` and `session:` lines, and take `created_at`; where more than one
+comment carries that shape, the earliest of them is the start — a later
+claim does not restart the clock. The resumed sequence
+makes this read anyway at `Read the issue and its edges`; an issue with no
+recoverable claim leaves the timing `n/a`, per `SKILL.md`.
+
+**The report posts with `mcp__github__add_issue_comment`** — a pull request's
+comments are issue comments, so the claim's write is the report's. The same
+call only writes, so read first: `mcp__github__get_issue_comments` on the
+pull request, the report found by its opening line, `First-readiness
+report`, the marker `SKILL.md` fixes, and a resumed sequence that finds it
+posts nothing.
+
+**The provenance** comes from `mcp__Claude_Code_Remote__get_session`, the
+same call `The session` names: `external_metadata.last_served_model` for the
+model, the call's own `id` for the session link. The harness line names
+Claude Code, with the version the harness itself reports — `claude
+--version`, where a shell is available. A version no surface in the session
+reports is `n/a`, never a guessed one.
 
 
 The cadence

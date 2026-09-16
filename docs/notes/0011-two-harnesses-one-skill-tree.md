@@ -9,6 +9,8 @@ otherwise be readable only from its pull requests.
 **Resolves:** [#152](https://github.com/jmcvetta/daily-driver/issues/152).
 **Amends:** [`0010`](0010-the-wake-slot-is-never-empty.md), whose never-empty
 wake slot is a Claude Code rule rather than a rule of this toolkit.
+**Amended by:** [#229](https://github.com/jmcvetta/daily-driver/issues/229),
+which withdrew the `description` exception recorded below.
 
 Claude Code was the only harness this plugin ran on. Oh My Pi (`omp`) is the
 second, and it reads Claude Code plugins natively. The question the epic
@@ -41,9 +43,21 @@ on demand by the session that needs them. This is the shape the skills are
 being moved to, and a skill written after this note was recorded is written to
 it from the start: `epic` shipped with one.
 
-The `description` frontmatter is the exception. It is the trigger, so it is
-read before any reference file can be, and it must be complete for both
-harnesses.
+The `description` frontmatter was recorded as the exception to that rule. It
+is the trigger, so it is read before any reference file can be, and it
+therefore carried every harness's executable route, so the skill would fire
+on any of them. [#229](https://github.com/jmcvetta/daily-driver/issues/229)
+amends that. The same reading order is why the exception cannot hold: the
+description is read by all three harnesses at once, before anything can
+select a reference file, so a route written into it exposes the other two
+harnesses' commands to every session that loads the skill. A description now
+states its triggers by the operation and the intent — public invocations such
+as `/review-cycle`, natural phrasings, and the operations that fire it in
+words — and never by an executable spelling. The call itself lives only in
+the reference file for the active harness, and the description sends the
+session there. `scripts/check-manifests.py` fails a route in a description
+exactly as it fails one in a body, with the reference files exempt because
+they are the one place a route is allowed to be.
 
 *Rejected: both harnesses' routes inline in every `SKILL.md`.* Every session
 would then read the other harness's branch, and pay for it, on every skill it
@@ -59,7 +73,9 @@ not survive the session, so it is not `send_later`, and nothing on Omp can wake
 a session that has ended.
 
 Two rules follow. `0010`'s never-empty wake slot is Claude Code only. On Omp,
-`github.run_watch` blocks in-process instead, and `undertake`'s
+`hub` supervises `gh pr checks --watch` with a fifteen-minute stop, then the
+session reads the head commit's check runs and statuses. `github.run_watch` is
+optional and disabled by default, so it is never the Omp route. `undertake`'s
 `Keep it current` cadence — which outlives the turn that armed it — stops at
 `Ready for review`. `0010` is not edited for this: the amendment is recorded
 here, as `0010` recorded its own amendments to `0006` and `0007`.

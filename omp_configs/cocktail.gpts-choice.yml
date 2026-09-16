@@ -1,0 +1,17 @@
+modelRoles:
+  # Strong, inexpensive agentic default; use Sol only when this value tier needs help.
+  default: vercel-ai-gateway/deepseek/deepseek-v4-pro
+  # Fast OpenAI helper for small work; more conservative than experimental Mercury.
+  smol: openai-codex/gpt-5.6-luna:medium
+  # Premium reasoning escalation for work that defeats the default.
+  slow: openai-codex/gpt-5.6-sol:high
+  # The same premium model makes architectural choices before cheaper models execute them.
+  plan: openai-codex/gpt-5.6-sol:high
+  # Cheap at subagent fan-out scale; high reasoning keeps delegated work dependable.
+  task: vercel-ai-gateway/zai/glm-5.3-flash:high
+  # Cross-family review of DeepSeek output; cheaper than assigning Sol to every review.
+  advisor: openai-codex/gpt-5.6-terra:high
+  # Native multimodality and long context cover images that the text-first roles cannot.
+  vision: vercel-ai-gateway/minimax/minimax-m3
+  # The cheapest, fastest, most experimental option is limited to non-critical background work.
+  tiny: vercel-ai-gateway/inception/mercury-2.5

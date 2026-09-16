@@ -112,6 +112,11 @@ The two are not the same question, and `epic` writes both on purpose:
   disagreement. It is the scheduling choice `epic` requires that task's line to
   state, and it is honoured: the task waits for its wave.
 
+**A `human` task is not in the wave.** Its label says no agent can do the
+work, so a session opened on it would stop at `Read the issue and its edges`
+and nothing else. It waits for the person, and `Post the muster roll` gives it
+a row of its own rather than leaving it unaccounted for.
+
 **Already at sea is read from the record, never assumed.** A task is at sea
 when a muster roll on the epic names a session for it, or when its own issue
 carries an `undertake` claim comment. Either is enough, and the second is what
@@ -129,7 +134,7 @@ how a resumed watcher loses the live one.
 and is still not a reason to launch a second one. That collision is the thing
 `undertake`'s claim exists to make visible.
 
-**An empty batch is three different things, and only one of them is a stop.**
+**An empty batch is four different things, and only one of them is a stop.**
 This step is the router, and the wave that comes in at `Watch the wave` returns
 here to be routed again:
 
@@ -140,7 +145,11 @@ here to be routed again:
   last one died finds. Go to `Watch the wave`, over the tasks at sea.
 - **Every task still open is blocked by something open.** There is no wave.
   Name the issue that blocks, and wait: that is the stop of that name below,
-  and it is the only one of the three.
+  and it is the only one of the four.
+- **Every task still open is `human`.** There is no wave, and there is nothing
+  to wait for either: no agent can start on any of them, and nothing this
+  session does moves them. Post the roll over them, say that the epic is
+  waiting on a person and name what each one needs, and stop.
 
 3 — Open the sessions
 ---------------------
@@ -158,9 +167,10 @@ things and no more:
   reads the issue itself at `undertake`'s `Read the issue and its edges`. The
   boundary holds in the fallback: the subagent is given the issue number and
   the instruction, no more.
-- **The model the task issue records**, taken from the `Model:` line `epic`
-  writes as the last line of the body. Where there is no such line the session
-  inherits this one's model, which `epic` states is the working default.
+- **The model the task issue records**, taken from the `Model:` line that
+  ends the task body, written under `issue-body`'s contract. Where there is
+  no such line the session inherits this one's model, which that contract
+  states is the working default.
   **This skill does not choose**, and does not second-guess a line it is
   given: the judgement was made when the task was sized, and re-making it here
   on less information is how it gets made worse. That binds the web route.
@@ -170,7 +180,13 @@ things and no more:
   the wave does not get. Two exceptions, both the orchestrator's judgement
   and neither appealed: work that is security-sensitive, and work whose
   complexity makes a weaker implementor unsafe. Either is dispatched to a
-  stronger implementor, or taken by the orchestrator itself.
+  stronger implementor — a stronger subagent or session, never the
+  orchestrator itself. **Delegation is unconditional**: the orchestrator
+  keeps responsibility for claim, dispatch, watch and gates, and never
+  implements. A task too
+  underspecified for any subagent is a planning defect, not an escape
+  hatch — its body failed the readiness test, and the fix is a tighter
+  task body through `epic`, never the orchestrator's hands on the code.
 - **A title**, in `session-title`'s form for the task issue. It is what makes a
   list of five running sessions readable at the moment the wave launches,
   which is before any of them has reached its own `Title the session` and set
@@ -199,8 +215,8 @@ and a reviewer at the implementor's own strength is not a review.
 **A dispatch that fails sinks one ship, not the fleet.** A model identifier
 the session client rejects fails the call rather than falling back; report
 that task, launch the rest of the wave, and do not substitute an identifier
-of your own — the constitution forbids the guess, and `epic` owns the line
-that was wrong. The same holds in the fallback: a subagent that fails to
+of your own — the constitution forbids the guess, and `issue-body` owns the
+line that was wrong. The same holds in the fallback: a subagent that fails to
 launch is reported, and the rest of the batch sails.
 
 No permission is asked here. `Waves launch without confirmation` below is why.
@@ -222,7 +238,14 @@ one row per task:
 | ---- | ------- | ----- |
 | #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `claude-sonnet-5` |
 | #147 — Document the format. | [session_01DeF…](https://claude.ai/code/session_01DeF…) | `claude-opus-5`, inherited |
+| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — |
 ```
+
+**A `human` task gets a row and no session.** It is in the wave's heading
+because a reader counting the epic's open work would otherwise have to go
+looking for it, and the row says why no session is named. A wave that is
+nothing but `human` tasks still posts its roll: the roll is what says the
+epic is waiting on a person.
 
 **Say which model was inherited.** A reader cannot otherwise tell a judgement
 `epic` made from a default nobody chose, and the difference is the whole reason
@@ -450,8 +473,12 @@ Non-goals
   reason: what lands is the one decision worth a person. A green, ready pull
   request is reported, once.
 - **Does not close the epic.** It says the epic is ready and stops there.
-- **Does not fire on one issue.** Opening a session to undertake a single task
-  is the task session's own job, and running a fleet of one costs an epic, a
-  muster roll and a watch to save nothing.
+- **Does not fire on one issue — but its delegation rule still holds.**
+  Undertaking a single task is the task session's own job, and running a
+  fleet of one costs an epic, a muster roll and a watch to save nothing.
+  What embark-of-one keeps is the dispatch: on a subagent-capable surface
+  the implementation still goes to an implementor subagent, and the
+  orchestrator keeps responsibility for claim, dispatch, watch and gates.
+  The orchestrator never implements, whatever the wave's size.
 - **Does not sweep for epics.** It works the epic in hand. Reading the issue
   list for others to put to sea is `epic`'s manufacturing failure, one level up.

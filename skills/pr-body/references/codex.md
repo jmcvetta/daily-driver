@@ -22,3 +22,6 @@ request body is the larger document.
 rather than Codex's, so that spelling is no safer there — but it is what the
 Omp eval rows grade, and correcting it is a change with its own rows to
 rewrite.
+
+- **Labelling the pull request `human`** beside a body that carries the
+  human-action notice. `gh pr edit --add-label human`.

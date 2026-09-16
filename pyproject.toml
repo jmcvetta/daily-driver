@@ -1,0 +1,13 @@
+# Dev dependencies of the Python check legs -- nothing here is a package.
+# The repository's shipped artifact is the Claude Code plugin (see
+# .claude-plugin/plugin.json and package.json); this file exists so uv has a
+# place to declare and lock what `make check`'s script legs import. The
+# version below is the PEP 621 floor, not the plugin's version -- that lives
+# in the three manifests release-please bumps together.
+[project]
+name = "daily-driver"
+version = "0.0.0"
+requires-python = ">=3.9"
+
+[dependency-groups]
+dev = ["PyYAML>=6.0.1"]

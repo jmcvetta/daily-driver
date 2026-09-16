@@ -1,0 +1,30 @@
+task_id: issue-02-neg-comment-only
+description: >-
+  A comment is prose on an issue, not a change to one. `issue`'s own
+  description draws this line; this row keeps the entry-point skill off a
+  write that is not an issue write.
+tags: [trigger-accuracy, issue, no-fire]
+
+initial_prompt: >-
+  Add a comment to #123 saying the migration ran clean and the follow-up
+  issue can close.
+
+agent:
+  # See issue/01: `disallowed_tools`, not `allowed_tools`, is what stops a
+  # denied read of a sibling SKILL.md scoring as a fire.
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 5
+  task_timeout: 300
+  turn_timeout: 120
+
+# `expected_skill: none` names no skill in this plugin, so the criterion
+# below is a distractor and the row passes only in silence.
+success_criteria:
+  - type: skill_triggered
+    description: "`issue` does not fire on a comment-only request"
+    expected_skill: none
+    skill_name: issue
+    # A misfire has already lost the row, so there is nothing left to pay for.
+    stop_early: {}
