@@ -183,6 +183,18 @@ jobs:
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      # uv builds the pinned environment `make check-omp-agent-settle` runs
+      # under (`uv run --with coder-eval==$(CODER_EVAL_VERSION) --with the
+      # adapter`), the same manager the `check` job's Python legs use. The
+      # omp job otherwise has no Python tooling at all, so this is its own
+      # install — unpinned like the Omp install above.
+      - name: Install uv
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       # `GITHUB_PATH` takes effect on the next step, so this is a step of its
       # own. It fails loudly where an installer put the binary somewhere else,
       # rather than leaving the check below to fail for a reason that reads
