@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.29.0](https://github.com/jmcvetta/daily-driver/compare/v0.28.0...v0.29.0) (2026-09-16)
+
+
+### Features
+
+* **omp_configs:** add a GLM 5.3 overlay ([#268](https://github.com/jmcvetta/daily-driver/issues/268)) ([2e6005b](https://github.com/jmcvetta/daily-driver/commit/2e6005b3e4897fb79907b18226394bb9d986376c))
+
 ## [0.28.0](https://github.com/jmcvetta/daily-driver/compare/v0.27.0...v0.28.0) (2026-09-16)
 
 
