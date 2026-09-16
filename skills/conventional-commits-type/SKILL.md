@@ -78,6 +78,16 @@ consumer question is asked.
 Answer the question first, from the diff, before naming a type. The answer
 decides the type; the diff's shape does not.
 
+Repository-local product boundary
+---------------------------------
+
+This repository keeps `omp_configs/` only as personal convenience
+configuration. It is not part of the software product that this repository
+versions. A pull request whose changes are confined to `omp_configs/` is
+therefore always `chore:`, even when an overlay changes which model Omp uses.
+If a pull request also changes shipped files, type the whole pull request from
+the shipped effect under the rules below.
+
 
 The tests
 =========

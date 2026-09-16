@@ -6,4 +6,4 @@ modelRoles:
   task: vercel-ai-gateway/zai/glm-5.3-flash:high
   advisor: openai-codex/gpt-5.6-terra:high
   vision: vercel-ai-gateway/minimax/minimax-m3
-  tiny: vercel-ai-gateway/inception/mercury-2.5
+  tiny: deepseek/deepseek-v4.1-flash:medium
