@@ -206,10 +206,12 @@ if __name__ == "__main__":
     try:
         main()
     except ImportError as error:
-        print(
-            f"check-omp-agent-settle: skipped - this check needs the pinned coder_eval install: {error}",
-            file=sys.stderr,
-        )
+        # The Makefile target pins `coder-eval` into the environment, so
+        # reaching this branch means a broken install — a failure of the
+        # check's own prerequisite, not a skip. Say so and fail.
+        print(f"check-omp-agent-settle: FAILED - this check needs the pinned coder_eval install: {error}",
+              file=sys.stderr)
+        print("rebuild it with `make evals-install`", file=sys.stderr)
         sys.exit(1)
     except AssertionError as failure:
         print(f"check-omp-agent-settle: {failure}", file=sys.stderr)

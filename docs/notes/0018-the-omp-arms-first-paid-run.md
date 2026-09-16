@@ -64,9 +64,11 @@ is the whole row):
 | with-plugin | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
 
 `skill_triggered` 0.0 in every bare replicate, 1.0 in every treated one. The
-treated replicates early-stopped on the pass at the first tool call; the bare
-replicates ran to the turn cap improvising, which is what an untreated
-session does with a slash command it has no skill for.
+treated replicates early-stopped on the pass at the first tool call. Four of
+the five bare replicates ran to the turn cap improvising, which is what an
+untreated session does with a slash command it has no skill for; replicate 03
+finished its answer normally inside the cap (5 assistant turns, 25s) and
+failed only on the criterion — the no-fire reading is unaffected either way.
 
 **`deps-03-neg-one-named-dependency` — the negative trigger row** (one named
 dependency, version pinned; the skill must not fire):
@@ -209,11 +211,13 @@ arm 1.000 where the pre-fix arm scored 0.0.
   replicates from the killed launch are part of this run's numbers.
 - **Invalid-instrument, evidence rather than the run**: the 2026-09-14
   partial (`~2` replicates, `2026-09-14_21-39-42/`) was lost with the old
-  worktree; the 2026-09-16_19-29-28 replicates (~6, pre-fix) are the
-  silent-zero evidence above; the 2026-09-16_19-53-50 pair (2, pre-fix) is
-  the same defect confirmed on a second task; the 2026-09-16_19-55-11 pair
-  (2) is the post-fix live verification. None of these are the run, and none
-  of their numbers appear in the tables above.
+  worktree; the 2026-09-16_19-29-28 directory holds 4 launched replicates,
+  3 of them finalized (`with-plugin/constitution-reaches-subagent/00` was in
+  flight when the stop landed) — all pre-fix, the silent-zero evidence
+  above; the 2026-09-16_19-53-50 pair (2, pre-fix) is the same defect
+  confirmed on a second task; the 2026-09-16_19-55-11 pair (2) is the
+  post-fix live verification. None of these are the run, and none of their
+  numbers appear in the tables above.
 - **Frame probes** (~5 short `omp` sessions on the pinned model) captured the
   raw frames the reduction was rebuilt against.
 - Token accounting: natural-completion turns carry real counts; every
