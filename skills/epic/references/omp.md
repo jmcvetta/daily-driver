@@ -43,14 +43,7 @@ skill's routes before `Write the graph`.
 The model a task records
 ========================
 
-`Draft the plan` writes a `Model:` line into each task issue, and the line is
-read two ways. On Claude Code, `embark` passes it to the session client,
-binding. On this harness, `embark` runs its subagent fallback, and there the
-line is advisory: the fallback's default is a cheaper implementation model,
-and the line is the judgement `embark`'s orchestrator reads before deciding
-whether that default is safe for this task.
-
-Write it anyway. The judgement is made here, at decomposition time, and a task
-issue planned on Omp is undertaken wherever the wave is put to sea. The
-identifiers are the ones the Claude route accepts, and
-[`claude.md`](claude.md) is where they are named.
+The `Model:` line and the identifiers it may name are `issue-body`'s — see
+`skills/issue-body/references/omp.md` for how this harness reads it. The task
+bodies are written under that skill's contract at `Open the issues`; nothing
+here reads or writes the line.

@@ -18,3 +18,7 @@ evals/runs/
 
 # Python
 __pycache__/
+
+# Python environment uv syncs for the Python legs' dev dependencies
+# (pyproject.toml -- see the Makefile).
+.venv/

@@ -16,84 +16,180 @@ reading the diff through `pr://`.
 the depth judgement is the agent's. `SKILL.md`'s `Name the level` has nothing
 to bind here — there is no remembered level to override.
 
-**Its findings do not land on the pull request as review threads.** They come
-back in the agent's result and nowhere else, so the round carries them into
-`Fix, answer, resolve, push` itself. That is the degradation `SKILL.md`
-describes under `A reviewer, not a bare subagent`: nothing is posted for a
-reviewer to resolve, so *resolve* reads as *answered*, and the caller's gate
-reads its no-unresolved-thread condition the same way.
+**Its findings return locally and must be published as a GitHub review.** They
+are not a transcript-only degradation. Give the reviewer the complete history,
+reviewed SHA, and current head; the publication route below turns its findings
+into the submitted threads that `Fix, answer, resolve, push` answers.
 
+
+Fix-delta verification
+======================
+
+Dispatch exactly one `reviewer` task agent with a bounded brief. Give it the
+pull request, base branch, full-review SHA, current SHA, original findings,
+dispositions, and pass number. Require it to compare the pull request's
+three-dot content at the reviewed SHA with its three-dot content at the current
+SHA, exclude changes attributable only to the base branch, and inspect affected
+callers. It reports only whether each implemented finding is solved and any
+concrete regressions in that delta. It must not perform a full-PR audit or offer
+style improvements.
+
+The author records the result with `gh pr comment <number> --body-file <path>`:
+
+```text
+Review verification
+scope reviewed: <sha>
+pass: <1|2>
+verified: <sha>
+findings: <finding ids and dispositions>
+outcome: <clear|defects|incomplete|unavailable>
+defects: <none|concise list>
+cap: <open|hit>
+usage: unavailable
+```
+
+The task agent's result is independent evidence. The author writes this record
+only after receiving it; it must not invent a verdict. Omp exposes no reviewer
+token-usage value, so `usage: unavailable` is required.
 
 The wait
 ========
 
-**`github.run_watch`.** The built-in `github` tool's `run_watch` op watches the
-head commit's Actions runs and streams until every one has reported. Success is
-double-checked with one more poll before it returns, and a failure names the
-failed jobs.
-
-It is a blocking watch, so the Actions half of the wait is one call. No
-subscription, no backstop, no timer — the three things `claude.md` needs exist
-because Claude has nothing that blocks.
-
-**`run_watch` answers for Actions runs and nothing else**, and `SKILL.md` says
-*reported* means the union of the check runs and the commit statuses. So the
-wait is two reads, not one:
+**A durable, supervised `gh pr checks --watch`.** `github` is optional and
+disabled by default on Omp, so it is never this route. The essential `hub`
+tool owns a `gh` process directly. The process survives its owning session,
+and its terminal completion remains recoverable:
 
 | Half | Call |
 | ---- | ---- |
-| The Actions runs | `github.run_watch` on the head commit |
+| The PR check rollup | `hub start` runs `gh pr checks --watch <pr> --repo <owner>/<repo>` with persistent lifecycle; `hub wait` on that name for exit with timeout: 900 |
+| The check runs | `gh api /repos/{owner}/{repo}/commits/{sha}/check-runs` |
 | The commit statuses | `gh api /repos/{owner}/{repo}/commits/{sha}/status` |
 
-Read the statuses **after** `run_watch` returns. A repository that posts none
-answers with an empty `statuses` array and a `state` of `pending`, which is the
-empty answer rather than a report: where the repository is known to post none,
-it reports nothing and there is nothing to wait for; where one is expected and
-has not arrived, keep reading.
+Name the process `ci-<pr>-<short-sha>` and set `persist: true`. Persistence is
+the strongest safe lifecycle this bounded watcher needs: it keeps the broker
+and process alive after the last Omp client exits. `detached: true` goes
+further and lets a process survive broker shutdown and every Omp exit. Do not
+use it here. A detached check watcher can escape the broker that enforces this
+workflow's cleanup, while persistence already preserves the watch and its
+completion.
 
-**`run_watch` returns immediately on a pull request with zero Actions runs**,
-which is the same empty answer and not the end of the wait. A head pushed
-seconds ago has registered nothing yet.
+Hub assigns the process to the calling session. Terminal completion
+notifications are owner-scoped. If the owning session is not running when the
+watch exits, Hub keeps the notification pending. Resume that same session in
+the same project and reconnect to Hub; Hub then replays the pending
+completion. Another session can inspect the project-scoped process by name,
+but it does not receive the owner's completion.
 
-**The fifteen-minute cap is the round's to keep**, because one blocking call
-has nowhere to put it. Time the wait from the first read. On the cap, stop and
-name what has not reported, as `SKILL.md` says.
+The watcher is the wake; the two endpoint reads are the verdict. Read the
+check runs and statuses after a live `hub wait` returns or a resumed session
+receives the replayed completion. `reported` is their union, not the output of
+`gh pr checks` alone.
 
-`run_watch` is present wherever the `github` tool is enabled, which includes
-the laptop Omp surface. The surface `SKILL.md` says cannot wait does not arise
-here the way it arises on Claude.
+**The cap belongs to the workflow.** Start its fifteen-minute deadline from
+the process's `startedAt`. In a live session, `hub wait` uses the remaining
+time, never more than timeout: 900. On timeout, call `hub stop` on the same
+name, read both endpoints once, and report every unreported check. After a
+resume, call `hub describe` on the same name and recover its `startedAt`. Stop
+it immediately when the deadline has passed; otherwise wait only for the
+remaining time. A watcher exit with a failed check still leads to the two
+reads: red is reported, not a reason to review without the status half.
 
-There is no durable wake
-------------------------
+**An empty pair is a registration stop.** `gh pr checks --watch` returns when
+the PR rollup is empty; a process that has already exited cannot observe a
+future first check, however durable its completion is. Zero check runs and an
+empty `statuses` array therefore mean no check has registered. Reject that
+result and report it; do not call it green or hide an unbounded poll behind
+the word *waiting*. This is the partial watch exception `SKILL.md` names. A
+repository known not to post commit statuses has no status half, but that fact
+must be known rather than inferred from this first read.
 
-**`daily_driver_schedule` is an in-process managed timer, and a reminder dies
-with the session.** Omp's own documentation says managed timers are unref'd and
-cleared on `session_shutdown`. It is not a `send_later`, which survives the
-session that armed it.
+No `sleep`, subscription, timer, or unmanaged Bash job belongs here. This is
+an Omp-supervised process with an explicit stop at the same fifteen-minute
+cap, not a Bash command whose timeout ends the session's control of it.
 
-So the never-empty wake slot —
-[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — is
-Claude's rule and not this harness's. It has nothing to hold. `run_watch`
-completes the wait inside the turn, so no wake is scheduled around it, and a
-wake scheduled with nothing to do on it is the noise `0010` exists to prevent.
-Schedule with `daily_driver_schedule`, and cancel with
-`daily_driver_cancel_schedule`, only where the round must hand the pull request
-back to itself for a follow-up **inside the current session** — never as a
-watch that outlives it.
+Process durability is not session resumption
+--------------------------------------------
+
+**`daily_driver_schedule` is an in-process managed timer.** Managed timers are
+unref'd and cleared on `session_shutdown`, so a reminder dies with the
+session. Use one only for a follow-up inside the current session. It cannot
+replace the persistent Hub watcher. Its pair is `daily_driver_cancel_schedule`:
+a wait that borrows the caller's cadence timer — `undertake`'s `Keep it
+current` check-in — borrows it by cancelling it, and the owner re-arms with
+`daily_driver_schedule` after the wait. An armed reminder does not lapse, it
+fires: left pending, it injects *read the checks again* as a follow-up in the
+middle of the review, restarting a wait on a run that finished.
+
+A durable Hub process also does not launch or resume an Omp session. It can
+finish while the owner is absent and preserve its completion for replay, but
+the endpoint reads and the review still need an agent turn after the owning
+session reconnects. This is process durability with recoverable completion,
+not autonomous review.
+
+**The replayed completion is a check answer, not a currency answer.** The base
+branch moves while the owning session is away, and the CI watcher does not
+watch it. After a resumed owner consumes its completion, the base-currency
+read comes first — `undertake`'s
+[`omp.md`](../../undertake/references/omp.md) names the read and the answers —
+and a `BEHIND` answer goes to `Keep it current` before the round continues. A
+green run on a head the base has since moved past is not current work.
+
+The never-empty wake slot —
+[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — binds
+Omp's managed timer for the session's life, exactly as it binds Claude's: one
+timer in the slot, cancelled before a wait borrows it, re-armed after. What
+it does not do is outlive the session — the timer dies at `session_shutdown`.
+The persistent Hub watcher holds process work across that boundary; a resumed
+owner consumes its completion and continues the workflow.
 
 
-The review threads
-==================
+Review history, publication, and threads
+========================================
 
-**The built-in `github` tool has no review-thread operation.** All three go
-through the GitHub CLI and API.
+Before dispatch, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
+paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
+`isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
+and bodies. A REST comments page alone is not complete history and does not
+contain the `PRRT_…` ID needed to resolve a thread.
+
+After the reviewer returns, re-read the head and its diff anchors. Compare the
+returned findings with the review history and recorded review identifier before
+posting; a resumed run must not duplicate a review already submitted for that
+SHA. Put line-specific findings in `review.json` and create one submitted
+review:
+
+```json
+{
+  "event": "COMMENT",
+  "commit_id": "<reviewed-sha>",
+  "body": "<clean or cross-cutting review summary>",
+  "comments": [
+    {
+      "path": "<path>",
+      "side": "RIGHT",
+      "line": 42,
+      "body": "<finding, with a suggestion block when useful>"
+    }
+  ]
+}
+```
+
+Run `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input
+review.json`. Use `start_side` and `start_line` for a valid range. A clean or
+unanchorable review has no `comments` entry and uses the submitted summary.
+Never invent an anchor. On changed head, invalid anchor, absent `gh`, or GitHub
+failure, retain the findings and report publication as incomplete.
 
 | Operation | Call |
 | --------- | ---- |
-| Read the threads | `gh api /repos/{owner}/{repo}/pulls/{n}/comments` |
+| Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
+| Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
+| Publish review | `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input review.json` |
 | Reply on a thread | `gh api -X POST /repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
-The identifier trap `SKILL.md` states applies to the last two here too: the
-mutation takes the thread's `PRRT_…` node ID, and the reply takes the
-comment's numeric id — the `#discussion_r…` suffix of its `html_url`.
+The identifier trap `SKILL.md` states applies to the last two: the mutation
+takes the thread's `PRRT_…` node ID, while reply takes the comment's numeric
+ID. The review REST endpoint returns a review ID; record it with the reviewed
+SHA and dispositions so later rounds have a stable duplicate check.

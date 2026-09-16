@@ -1,5 +1,87 @@
 # Changelog
 
+## [0.28.0](https://github.com/jmcvetta/daily-driver/compare/v0.27.0...v0.28.0) (2026-09-16)
+
+
+### Features
+
+* **skills:** post a first-readiness report on the pull request ([#265](https://github.com/jmcvetta/daily-driver/issues/265)) ([6ec7027](https://github.com/jmcvetta/daily-driver/commit/6ec7027f11b551532fce4095dfdc54b2bcd87297))
+
+## [0.27.0](https://github.com/jmcvetta/daily-driver/compare/v0.26.1...v0.27.0) (2026-09-16)
+
+
+### Features
+
+* **skills:** fix the task issue body shape and add a poem to the claim ([#262](https://github.com/jmcvetta/daily-driver/issues/262)) ([34a0caa](https://github.com/jmcvetta/daily-driver/commit/34a0caa3f02ab7fcecd308db9d291ed72c52320e))
+
+## [0.26.1](https://github.com/jmcvetta/daily-driver/compare/v0.26.0...v0.26.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **skills:** route the Omp wake slot through the scheduler's cancel ([#256](https://github.com/jmcvetta/daily-driver/issues/256)) ([17bb77c](https://github.com/jmcvetta/daily-driver/commit/17bb77c5011bec12b204c3fbd06a8107457b3993))
+
+## [0.26.0](https://github.com/jmcvetta/daily-driver/compare/v0.25.0...v0.26.0) (2026-09-15)
+
+
+### Features
+
+* **skills:** always delegate undertakings to a subagent or session ([#253](https://github.com/jmcvetta/daily-driver/issues/253)) ([91d05fa](https://github.com/jmcvetta/daily-driver/commit/91d05fa37611268d768afb1a74ec55cdd6a50356))
+
+## [0.25.0](https://github.com/jmcvetta/daily-driver/compare/v0.24.1...v0.25.0) (2026-09-15)
+
+
+### Features
+
+* **issue-labels:** add a human label for work only a person can do ([#220](https://github.com/jmcvetta/daily-driver/issues/220)) ([cd6af9e](https://github.com/jmcvetta/daily-driver/commit/cd6af9ee053f890cb50e4deb133cd6b96c0faf94))
+* **omp_configs:** remix the cocktail around glm-5.3-flash ([#247](https://github.com/jmcvetta/daily-driver/issues/247)) ([a383eed](https://github.com/jmcvetta/daily-driver/commit/a383eed85c75a9a442a2adc6b93d2b32024f3e29))
+* **undertake:** catch up on a branch gone behind its base at every pickup ([#250](https://github.com/jmcvetta/daily-driver/issues/250)) ([343497b](https://github.com/jmcvetta/daily-driver/commit/343497b06ff17ef6bccb0a7b6d755535b7bb806b))
+
+## [0.24.1](https://github.com/jmcvetta/daily-driver/compare/v0.24.0...v0.24.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **omp:** preserve durable watcher completions ([#245](https://github.com/jmcvetta/daily-driver/issues/245)) ([c63634a](https://github.com/jmcvetta/daily-driver/commit/c63634a3c04ed1dd4bc213a421f9574c72d87d2d))
+
+## [0.24.0](https://github.com/jmcvetta/daily-driver/compare/v0.23.0...v0.24.0) (2026-09-15)
+
+
+### Features
+
+* add Omp model role overlays ([#236](https://github.com/jmcvetta/daily-driver/issues/236)) ([d48cf37](https://github.com/jmcvetta/daily-driver/commit/d48cf37aab4c303ad05f3aec14d9b23effc4f6a1))
+* add Omp plugin cache cleanup target ([#239](https://github.com/jmcvetta/daily-driver/issues/239)) ([2fc240d](https://github.com/jmcvetta/daily-driver/commit/2fc240dfcc8309b3fedf31b21d9720595eaf69ee))
+* **omp:** add five Gateway model experiment overlays ([#241](https://github.com/jmcvetta/daily-driver/issues/241)) ([0674567](https://github.com/jmcvetta/daily-driver/commit/0674567aed52f846c40d4c7baed9c8685ce24768))
+* **review-cycle:** record reviews inline ([#235](https://github.com/jmcvetta/daily-driver/issues/235)) ([865eb78](https://github.com/jmcvetta/daily-driver/commit/865eb7860184685b7caf21cac78a7f6896000a45))
+
+
+### Bug Fixes
+
+* **omp:** replace deprecated KAT Coder overlay ([#244](https://github.com/jmcvetta/daily-driver/issues/244)) ([2d19f1c](https://github.com/jmcvetta/daily-driver/commit/2d19f1c0ac7319487019bd5b530927ffc93fdb47))
+
+## [0.23.0](https://github.com/jmcvetta/daily-driver/compare/v0.22.1...v0.23.0) (2026-09-15)
+
+
+### Features
+
+* add issue-authoring skills for cheaper-agent task handoffs ([#231](https://github.com/jmcvetta/daily-driver/issues/231)) ([ed38a4f](https://github.com/jmcvetta/daily-driver/commit/ed38a4f790c34cd8ced5f4d62ad27d0f05d8945e))
+* record the model and session id in the undertake claim ([#218](https://github.com/jmcvetta/daily-driver/issues/218)) ([468f9ac](https://github.com/jmcvetta/daily-driver/commit/468f9ac24b6dee01a88ffec0a3c76e5e3c035976))
+* **review-cycle:** verify review-fix deltas ([#226](https://github.com/jmcvetta/daily-driver/issues/226)) ([127fae2](https://github.com/jmcvetta/daily-driver/commit/127fae2ea7f16f835afae5d5dff2e6e40133f301))
+* **skills:** hold Tofu PRs for a human apply ([#223](https://github.com/jmcvetta/daily-driver/issues/223)) ([51d3998](https://github.com/jmcvetta/daily-driver/commit/51d39982b8b4d9901858cf28dc1392343c7832c5))
+
+
+### Bug Fixes
+
+* **review-cycle:** route CI wait through Omp tools ([#233](https://github.com/jmcvetta/daily-driver/issues/233)) ([fdd5c44](https://github.com/jmcvetta/daily-driver/commit/fdd5c449fad117701ef09807663bf23648f3d739))
+* **skills:** neutralize shared descriptions ([#232](https://github.com/jmcvetta/daily-driver/issues/232)) ([4c3bc61](https://github.com/jmcvetta/daily-driver/commit/4c3bc61540e076d1115018dfc277fb047d2933b0))
+
+## [0.22.1](https://github.com/jmcvetta/daily-driver/compare/v0.22.0...v0.22.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **conventional-commits-type:** send test-only changes to test ([#217](https://github.com/jmcvetta/daily-driver/issues/217)) ([799bc8e](https://github.com/jmcvetta/daily-driver/commit/799bc8e6faff4a833c4f5ba49bdeac1faa682499))
+
 ## [0.22.0](https://github.com/jmcvetta/daily-driver/compare/v0.21.0...v0.22.0) (2026-09-14)
 
 

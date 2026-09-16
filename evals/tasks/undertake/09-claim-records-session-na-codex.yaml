@@ -1,51 +1,55 @@
-# The Codex half of `09-session-fields-for-claim`, which is tagged `claude-only`
-# because the fields it names are Claude's. `undertake`'s `Claim the issue`
-# always carries the branch and adds model and session provenance only where
-# the harness has a session call. `skills/undertake/references/codex.md` says
-# this harness has no such call, so the claim omits unavailable provenance and
-# carries the branch alone.
+# The Codex half of `09-session-fields-for-claim`, which is tagged
+# `claude-only` because the fields it names are Claude's. `undertake`'s
+# `Claim the issue` carries the branch, a one-line `Model:` record, and the
+# session — `session: <id>` where the id is reachable by any means the harness
+# offers, `session: n/a` where it is not. Codex exposes no session id, so the
+# claim records `session: n/a` — the marker, not a diagnostic about the
+# missing surface. `skills/undertake/references/codex.md` says so, and sends
+# the `Model:` line to what the harness states is serving the turn.
 #
 # The branch comes from the harness's own git state: `git branch
 # --show-current` names the branch this session works on, and `OWNER/REPO` for
-# the branch link comes from the `origin` remote.
+# the branch link comes from the remote `task-worktree` resolved.
 #
 # A row that passes without the reference file being read is wrong, so the
-# graded content is both halves: git as the branch's source, and omission of
-# unavailable model and session provenance from the claim.
+# graded content is both halves: the `Model:` line repeated from what the
+# harness states, and `session: n/a` recorded in place of a narrated absence.
 #
 # Why the Claude sibling could not be reused: it grades specific field paths
 # off `mcp__Claude_Code_Remote__get_session`, a call a Codex session does not
 # have. A Codex run against that rubric would fail for correctly saying there
 # is no such call.
 #
-# Why not the Omp fork either: it grades the same shape — branch from git and
-# unavailable provenance omitted — and would be the closer template, but an
+# Why not the Omp fork either: it grades the same shape — the claim sourced
+# from the adapter's session answer — and would be the closer template, but an
 # arm tag claims exactly one arm. The Codex arm needs its own file or it does
 # not measure this at all.
 #
 # What this row can and cannot see. The sandbox has no GitHub client and no
-# session call, so the prompt supplies the two git results needed to render the
-# comment. That makes the exact comment observable without pretending the
-# sandbox can post it. The graded assertion is an `agent_judge` on the reply,
-# plus the skill having fired at all.
+# session surface, so the prompt supplies the git results and the model the
+# harness states it is running. That makes the exact comment observable
+# without pretending the sandbox can post it. The graded assertion is an
+# `agent_judge` on the reply, plus the skill having fired at all.
 #
 # Why this fails the `without` arm: a model with no plugin loaded has no claim
-# convention to fill in. Asked for the model, it can invent one or publish an
-# absence diagnostic. The plugin's rule is narrower: omit unavailable
-# provenance from the claim.
+# convention to fill in. Asked for the session, it invents an id, publishes an
+# absence diagnostic, or drops the line. The plugin's rule is narrower:
+# `session: n/a`, recorded rather than narrated.
 
-task_id: undertake-09-claim-carries-the-branch-alone-codex
+task_id: undertake-09-claim-records-session-na-codex
 description: >-
-  A claim comment on a harness with no session call takes the branch from git
-  and omits unavailable model and session provenance.
+  A claim comment on a harness with no session id takes the branch from git,
+  records the harness's model, and writes session: n/a.
 tags: [undertake, references, fire, behaviour, codex-only, "forks:undertake-09-session-fields-for-claim"]
 
 initial_prompt: >-
   I'm handing you issue #52 to build. For this exercise, `git branch
-  --show-current` returned `issue-52-retry-uploads`, and the `origin` remote is
-  `https://github.com/acme/widgets.git`. Do not post anything. Show me the exact
-  issue comment you would use, then explain where its branch and model values
-  came from.
+  --show-current` returned `issue-52-retry-uploads`, the remote
+  `task-worktree` resolved is `https://github.com/acme/widgets.git`, and the
+  harness is running model `gpt-5.6-sol`. Do not post anything. Show me the
+  exact issue comment you
+  would use, then explain where its branch, model, and session values came
+  from.
 
 agent:
   # Recorded and NOT enforced on this harness — `CodexAgent` logs both lists and
@@ -69,7 +73,7 @@ success_criteria:
 
   # The finding.
   - type: agent_judge
-    description: The reply takes the branch from git and omits unavailable provenance
+    description: "The reply renders the claim from git, the stated model, and session: n/a"
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -105,21 +109,26 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: on this Codex session there is no call that describes the
-      session. The REPLY must show the proposed issue comment. That comment
-      must contain the link
-      `[issue-52-retry-uploads](https://github.com/acme/widgets/tree/issue-52-retry-uploads)`
-      and must not mention unavailable model or session metadata.
+      The rule: the claim records the model and marks the session absent. The
+      REPLY must show the proposed issue comment. That comment must contain
+      the link
+      `[issue-52-retry-uploads](https://github.com/acme/widgets/tree/issue-52-retry-uploads)`,
+      a line recording the model as `Model: gpt-5.6-sol`, and a line recording
+      the session as `session: n/a` — with no prose around either line about
+      where the values came from or about the surface that supplies no session
+      id.
 
       Outside the proposed comment, the reply must explain that the branch
       came from `git branch --show-current`, `OWNER/REPO` came from the
-      `origin` remote, and unavailable model and session provenance is omitted
-      from the claim.
+      remote `task-worktree` resolved, the model came from what the harness
+      states it is
+      running, and the session id is recorded as `n/a` because Codex exposes
+      none.
 
-      Score 1.0 if the proposed COMMENT contains the exact branch link without
-      an unavailable metadata diagnostic, and the surrounding REPLY names git
-      as the branch source and omission as the model and session treatment.
-      Score 0.5 if it gets the comment or the explanation right, but not both.
-      Score 0.0 if the comment says the surface supplied no model or session,
-      if the reply names a session call to read the model from, or if it states
-      a model as though the surface reported it.
+      Score 1.0 if the proposed COMMENT carries the exact branch link, the
+      exact model line, and `session: n/a` — no absence diagnostic, no
+      provenance prose — and the surrounding REPLY names those sources. Score
+      0.5 if it gets the comment or the explanation right, but not both.
+      Score 0.0 if the comment omits the model line or the session line,
+      invents a session id, or the comment narrates the missing surface
+      instead of recording `n/a`.

@@ -128,7 +128,7 @@ same file.
 
 ## The Issue Labels
 
-`labels.tf` declares the five labels `skills/issue-labels/SKILL.md` defines,
+`labels.tf` declares the six labels `skills/issue-labels/SKILL.md` defines,
 so the names, colours and descriptions come from a file under review rather
 than from whoever clicked last. The skill is the standard; this is where it is
 declared.
@@ -170,7 +170,7 @@ with provider 6.13.0 against this stack's committed state — is:
       ~ repository = "claude-daily-driver" -> "daily-driver" # forces replacement
 ```
 
-for all five labels, plus `github_repository_vulnerability_alerts`, which
+for all six labels, plus `github_repository_vulnerability_alerts`, which
 holds nothing worth keeping. A destroyed label is stripped from every issue
 carrying it, and creating it again does not put it back.
 
@@ -188,14 +188,14 @@ So move the labels in state instead of letting the plan replace them:
 cd infra/github
 export GITHUB_TOKEN=$(gh auth token)
 
-tofu apply -target=github_repository.this          # the rename, alone
+tofu apply -target=github_repository.this               # the rename, alone
 
-for label in epic task bug proposal research; do   # re-adopt under the new name
+for label in epic task bug proposal research human; do  # re-adopt under the new name
 	tofu state rm "github_issue_label.$label"
 	tofu import "github_issue_label.$label" "daily-driver:$label"
 done
 
-tofu plan                                          # expect: alerts replaced, nothing else
+tofu plan                                               # expect: alerts replaced, nothing else
 tofu apply
 ```
 

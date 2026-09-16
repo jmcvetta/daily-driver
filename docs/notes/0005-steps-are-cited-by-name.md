@@ -7,8 +7,8 @@ request as the change it justifies — and ratified by that merge, not by a
 separate call from the author.
 **Resolves:** [#83](https://github.com/jmcvetta/daily-driver/issues/83).
 
-Three skills lay out a numbered sequence — `undertake`'s eleven steps,
-`review-cycle`'s three stages, `session-title`'s four cuts — and files across
+Three skills lay out a numbered sequence — `undertake`'s twelve steps,
+`review-cycle`'s four stages, `session-title`'s four cuts — and files across
 the repository cited them by number. Sixty-eight such citations, across eleven
 files, twelve of them crossing a file boundary.
 

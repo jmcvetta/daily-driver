@@ -36,6 +36,19 @@ answer. So does `issue-labels`, whose `references/codex.md` says why
 `--add-label` needs no read-first and the Claude route does.
 
 
+The implementor
+===============
+
+| Step | Operation | Call |
+| ---- | --------- | ---- |
+| `Implement` | Dispatch the implementor subagent | `multi_agent_v1`, one delegation per undertaking |
+
+`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
+surface that has the route, and the orchestrator keeps responsibility for
+claim, pull request, watch and gates. Codex has the route through the
+delegation namespace.
+
+
 The pull request
 ================
 
@@ -45,21 +58,22 @@ The pull request
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
+| `The milestone` | Read the readiness state | `gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid` |
+| `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
+| `The milestone` | Post the report | `gh pr comment <number> --body-file <path>` |
 
-Reading a pull request is `gh pr view <number>`. `Review the head` and
-`Fix, answer, resolve, push` are `review-cycle`'s, and that skill has its own
-[`codex.md`](../../review-cycle/references/codex.md). Read it: the surface
-there is `codex exec review --base`, it reviews the checkout rather than the
-pull request, it posts nothing, and its wait is a single read rather than a
-loop — which is the same reason `Keep it current` below has no cadence.
+`Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
+`review-cycle`'s. Its `references/codex.md` names the full-review surface and
+the unavailable-delta stop that keeps the pull request draft.
 
 
 The session
 ===========
 
-**There is no session call.** The claim carries the branch alone. It omits the
-unavailable model and session instead of publishing a diagnostic about another
-harness's session surface.
+**Codex exposes no session id, so the claim records `session: n/a`** — the
+marker `SKILL.md` prescribes, not a diagnostic about the missing surface. The
+`Model:` line repeats what the harness states is serving the turn — the
+session's configured model — rather than a recalled name.
 
 The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
@@ -67,13 +81,76 @@ link comes from the remote `task-worktree` resolved, never from an assumed
 `origin`.
 
 
+The milestone
+=============
+
+`SKILL.md` owns what the report says and when it is owed; these are the calls
+that read the readiness state, find the claim's timestamp, and post it. They
+are `gh` throughout, as everywhere on this harness.
+
+**The readiness state is one read:**
+
+    gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid
+
+`isDraft` false and `mergeable` `MERGEABLE` are two of the answers the report
+needs, and neither is sufficient alone. `mergeStateStatus` must agree with
+`The gate` as well: `BEHIND` is a base the branch does not carry, `UNSTABLE`
+a check that is no longer green, and `UNKNOWN` and `BLOCKED` are states
+`SKILL.md` rules out as readiness outright. The read confirms, on this head,
+what the gate answered; a state that disagrees with it is a wait, not a
+milestone. `headRefOid` is the SHA the report binds to.
+
+**The start is the claim comment's `createdAt`.** `gh issue view <issue>
+--json comments` is the read `Read the issue and its edges` already makes —
+`comments` is in its field list — and the claim is the comment carrying the
+branch link and the `Model:` line. Take its `createdAt`; where more than one
+comment carries that shape, the earliest of them is the start — a later
+claim does not restart the clock. A resumed session finds the start with the
+read it makes anyway. An issue with no recoverable
+claim leaves the timing `n/a`, per `SKILL.md`.
+
+**The report posts as a pull-request comment** — a pull request's comments
+are issue comments:
+
+    gh pr comment <number> --body-file <path>
+
+`--body-file` for the reason `Claim the issue`'s row gives: backticks and a
+markdown link in the body, and a double-quoted shell argument substitutes
+them before `gh` sees them.
+
+**Read the existing comments before posting** — `gh pr view <number> --json
+comments` again, the report found by its opening line, `First-readiness
+report`, the marker `SKILL.md` fixes; a resumed sequence that finds it posts
+nothing.
+
+**The provenance** follows `The session`: the model line repeats what the
+harness states is serving the turn, and the session line is `n/a` — the
+marker the claim already carries, not a diagnostic. The harness line names
+Codex, with the version the harness itself reports — `codex --version`, where
+it answers. A version no surface in the session reports is `n/a`, never a
+guessed one.
+
+
 There is no durable wake
 ========================
 
 **No wake on this harness is known to outlive the turn that armed it**, so
 `Keep it current`'s cadence does not run here. After `Ready for review`, say
-once that the branch is kept current by the next session that picks the pull
-request up, and stop.
+once that the watch is the catch-up look below, and stop.
+
+**The catch-up look is the first read of every turn that lands back on the
+pull request.** A turn that returns the session to the pull request — a
+resume, a continuation, a user turn about it — starts with the base-currency
+read, before anything else the turn was going to do:
+
+    gh pr view <number> --json mergeStateStatus,mergeable
+
+`BEHIND` runs `gh pr update-branch <number>` — `Keep it current`'s merge —
+before the turn continues; `DIRTY` is the conflict stop `SKILL.md` writes
+under `Where it stops and waits`; `CLEAN`, `DRAFT` and `UNSTABLE` need
+nothing. `BLOCKED` and an indeterminate answer are not currency answers: run
+the update-branch call anyway, whose own "already up to date" reply settles
+what this read has not.
 
 This is the Omp answer arrived at for a different reason. Omp has a timer and
 it is measured to die with the session; Codex has no timer this plugin has

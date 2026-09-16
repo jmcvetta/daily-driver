@@ -11,8 +11,7 @@ description: >-
   the bulk command each manager already has, green CI as the whole acceptance
   test, and the boundary an unattended run stays inside — no merge, no code
   edited around a breaking change, and nothing outside the pull request it
-  opens — and names the harness's PR routes (`mcp__github__…` on Claude Code,
-  the `github` tool on Omp, and `gh` on Omp and on Codex). Not for a single
+  opens. Not for a single
   named dependency, which is ordinary work, and not for a major version bump,
   which this skill reports and hands to `undertake`.
 ---

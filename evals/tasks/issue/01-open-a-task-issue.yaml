@@ -1,0 +1,83 @@
+task_id: issue-01-open-a-task-issue
+description: >-
+  Opening a task issue routes through `issue` and its body contract. The
+  sandbox has no GitHub and no repository with the change in it, so the
+  prompt supplies the change in words and asks for the draft body rather
+  than a post — the same move `undertake/09` makes for an unpostable claim.
+tags: [trigger-accuracy, issue, fire, behaviour]
+
+initial_prompt: >-
+  Open an issue for this: the release script re-signs every artifact even
+  when nothing changed, and each run takes eleven minutes. Skip artifacts
+  whose checksum matches the previous release. Do not post anything — show
+  me the exact issue body you would open, then explain which parts of it
+  are the grounded map and which design choices you left to the implementer.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  # Armed: once the entry-point skill has fired, nothing later in the run
+  # can change that answer.
+  - type: skill_triggered
+    description: "`issue` fires on an issue being opened"
+    expected_skill: issue
+    skill_name: issue
+    stop_early:
+      on_pass: stop
+
+  # Unarmed: a second fire assertion cannot also carry the pass-stop, and a
+  # misfire here is already caught by the judge below reading a body that
+  # arrived without its contract.
+  - type: skill_triggered
+    description: "`issue-body` fires on the body being written"
+    expected_skill: issue-body
+    skill_name: issue-body
+
+  - type: agent_judge
+    description: The draft body is a grounded task handoff ending in a Model line
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: the REPLY proposes an issue body for a settled task. That
+      body must state the observable outcome and why the change is needed,
+      and must end with a `Model:` line as the last line. It must not
+      dictate every implementation line, and the surrounding REPLY must say
+      which part is the grounded map and which choices were left to the
+      implementer.
+
+      Score 1.0 if the body carries the outcome and reason, ends with the
+      `Model:` line, and the reply distinguishes grounded map from
+      implementer choices. Score 0.5 if the body is a plausible task
+      handoff but misses one of those. Score 0.0 if there is no body, or if
+      it carries an `Effort:` line, or if it ends with anything after the
+      `Model:` line.

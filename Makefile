@@ -7,9 +7,10 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
-.PHONY: git_sync check check-plugin check-skills check-agents check-scripts \
-	check-manifests check-constitution check-ask-in-chat check-omp-extension \
-	check-omp-plugin check-omp-agent check-codex-agent check-eval-fixtures \
+.PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
+	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
+	check-omp-extension check-omp-plugin check-omp-cache-clean check-omp-review-cycle-route \
+	check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
 	check-evals-preflight check-labels check-infra evals-install evals-plan \
 	evals-variants evals-preflight evals-run evals-run-omp \
@@ -30,6 +31,28 @@ CODER_EVAL_VERSION := 0.11.6
 # through so it cannot be forgotten at a prompt.
 CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
 
+# Dev dependencies of the Python legs, managed with uv. The repository has no
+# Python packaging -- the root `pyproject.toml` declares no package, only the
+# dev dependency group the legs read from -- and the legs that import nothing
+# third-party stay that way. PyYAML is the one declared exception: the dev
+# group names it, and the three scripts that read YAML import it
+# (`scripts/check-eval-arms.py`, `scripts/evals-preflight.py`,
+# `scripts/evals-variants.py`).
+#
+# The legs run under `uv run --frozen`: uv syncs the environment from
+# `uv.lock` into `.venv/` at the repository root before the script starts.
+# A venv interpreter's imports resolve from the venv's own site-packages --
+# not from the user site, which resolves from `HOME`, and which
+# `scripts/check-evals-preflight.py` redirects -- so the venv carries
+# PyYAML into exactly the subprocess a user-site install cannot reach.
+# `--frozen` refuses to run against a `uv.lock` that disagrees with
+# `pyproject.toml` rather than re-resolving it: a drift is a loud failure
+# for whoever edits the declaration next, not a silent environment change.
+#
+# CI installs uv itself -- one step in ci.yml, before `make check` -- and
+# installs nothing else Python: the legs sync their own environment, so the
+# laptop and CI get PyYAML from the same lock and cannot drift apart.
+
 # git_sync: sync master with origin and delete local branches whose upstream
 # is gone. Branches checked out in a linked worktree (marked '+' by
 # `git branch -vv`) are reported as a warning rather than deleted — removal
@@ -41,12 +64,20 @@ git_sync:
 	git branch -vv | awk '/: gone\]/ && !/^\+/ {print $$1}' | xargs -r git branch -D
 	@git branch -vv | awk '/: gone\]/ && /^\+/ {printf "WARN: worktree-linked branch kept (upstream gone): %s\n", $$2}' >&2
 
+# omp-update-daily-driver: refresh this repository's installed Omp plugin
+# without deleting Omp's shared plugin state. Updating the marketplace replaces
+# its cached clone; upgrading force-reinstalls the plugin's cached bytes.
+omp-update-daily-driver:
+	omp plugin marketplace update daily-driver
+	omp plugin upgrade daily-driver@daily-driver
+
 
 # check: everything CI asserts about this plugin. CI runs this target rather
 # than restating its legs, so a leg added here is a leg CI gains — and there
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
-	check-constitution check-ask-in-chat check-omp-extension check-omp-agent \
+	check-manifest-fixtures check-constitution check-ask-in-chat \
+	check-omp-extension check-omp-cache-clean check-omp-review-cycle-route check-omp-agent \
 	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
 	check-eval-arms check-step-names check-evals-preflight check-labels
 
@@ -84,13 +115,23 @@ check-agents:
 # of them permanently unreachable. This is the leg that catches those, for
 # skills and agents alike.
 #
-# It is also the leg that holds `0011`'s split: no SKILL.md body names a
-# harness's own tool routes, every reference file is linked from the body, and
-# every reference link resolves. A route written back into a body reads
-# correctly on the harness it was written for, so nothing else catches it.
-# See the docstring in the script.
+# It is also the leg that holds `0011`'s split: no SKILL.md description or
+# body names a harness's own tool routes, every reference file is linked from
+# the body, and every reference link resolves. A route written back into a
+# description or a body reads correctly on the harness it was written for, so
+# nothing else catches it. See the docstring in the script.
 check-manifests:
 	python3 scripts/check-manifests.py
+
+# check-manifest-fixtures: the acceptance test for the route half of
+# check-manifests -- folded-description rejection, body rejection with its
+# line number, neutral and invocation acceptance, routes allowed in reference
+# files, and every route pattern exercised by name. Part of `check` because
+# the guard itself is credential-free: a pattern that stops matching fails
+# here rather than letting routes back into every description. See the
+# script's docstring.
+check-manifest-fixtures:
+	python3 scripts/check-manifest-fixtures.py
 
 # The credential-free half of the constitution's acceptance test: run both
 # delivery hooks against synthetic event JSON and assert the constitution's
@@ -139,6 +180,17 @@ check-omp-extension:
 # what would have let it silently check nothing.
 check-omp-plugin:
 	python3 scripts/check-omp-plugin.py
+
+# The cache refresh target changes user state in a real run. This check puts a
+# fake `omp` first on PATH and asserts the command order and fail-fast behavior.
+check-omp-cache-clean:
+	python3 scripts/check-omp-cache-clean.py
+
+# The Omp review-cycle reference is executable guidance. This credential-free
+# check rejects a route that reaches for optional `github` instead of the
+# essential `hub` and `bash` surface, and holds its cap and empty-result rules.
+check-omp-review-cycle-route:
+	python3 scripts/check-omp-review-cycle-route.py
 
 # check-scripts: lint the shell a skill ships. `claude plugin validate` reads
 # manifests and never opens a `scripts/` file, so without this leg the plugin's
@@ -200,7 +252,7 @@ check-codex-agent:
 # harness's route under the other's. Credential-free like the other script
 # legs. See the script's docstring.
 check-eval-arms:
-	python3 scripts/check-eval-arms.py
+	uv run --frozen python3 scripts/check-eval-arms.py
 
 # check-eval-fixtures: build every review-depth fixture repository and assert
 # it has the shape the `review` skill needs. Part of `check` because it needs
@@ -237,7 +289,7 @@ check-step-names:
 # docs/notes/0012-the-judge-needs-its-own-transport.md for why the guard
 # exists.
 check-evals-preflight:
-	python3 scripts/check-evals-preflight.py
+	uv run --frozen python3 scripts/check-evals-preflight.py
 
 # check-labels: the issue-label standard is written twice -- the table in
 # `issue-labels` and the resources in infra/github/labels.tf -- and this leg
@@ -299,7 +351,7 @@ evals-plan: evals-variants
 # anyone runs is the one that catches it. See the script's docstring and
 # docs/notes/0013-the-omp-arm.md.
 evals-variants:
-	python3 scripts/evals-variants.py evals/experiments/*.yaml
+	uv run --frozen python3 scripts/evals-variants.py evals/experiments/*.yaml
 
 # evals-run: the whole suite on Claude Code, both variants. Costs real money --
 # see evals/README.md for what and why. Narrow it with TASKS=, e.g.
@@ -318,7 +370,7 @@ TASKS ?= tasks/*/*.yaml
 # Runs from `evals/`, same as the model call below, so `$(TASKS)`'s default
 # glob and any override resolve identically in both places.
 evals-preflight:
-	cd evals && python3 ../scripts/evals-preflight.py $(TASKS)
+	cd evals && uv run --project $(CURDIR) --frozen python3 ../scripts/evals-preflight.py $(TASKS)
 
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and

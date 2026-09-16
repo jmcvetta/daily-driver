@@ -1,0 +1,45 @@
+task_id: conventional-commits-type-08-omp-configs-are-chore
+description: >-
+  Repository-local Omp convenience configurations are outside the shipped
+  product, so changing their active model is a chore rather than a fix.
+tags: [conventional-commits-type, behaviour, fire]
+
+initial_prompt: >-
+  What Conventional Commits type should this pull request use? It only changes
+  omp_configs/cocktail.yml, replacing Mercury with DeepSeek for the tiny role.
+  The omp_configs directory holds my personal convenience configurations and
+  is not part of the software product this repository versions.
+
+agent:
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 5
+  task_timeout: 300
+  turn_timeout: 120
+
+success_criteria:
+  - type: skill_triggered
+    description: "`conventional-commits-type` fires when the type is asked for"
+    expected_skill: conventional-commits-type
+    skill_name: conventional-commits-type
+
+  - type: llm_judge
+    description: The reply selects chore for an omp_configs-only pull request
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    prompt: |
+      You are grading one reply against a single repository policy.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn transcript.
+      A final `[RESULT - SUCCESS]` or `[RESULT - ERROR]` tag carries the reply.
+      Grade only the text from the last result tag to the end of that block.
+
+      The policy is exact: a pull request confined to `omp_configs/` is always
+      `chore:` because those files are personal convenience configuration, not
+      part of the software product this repository versions.
+
+      Score 1.0 if the reply clearly selects `chore` as the Conventional
+      Commits type. Score 0.0 if it selects or recommends `fix`, `feat`, or any
+      other type, gives no type, or treats `chore` as merely optional.

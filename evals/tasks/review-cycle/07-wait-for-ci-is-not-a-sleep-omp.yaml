@@ -3,9 +3,9 @@
 # is the same on both harnesses — the round is entered with CI still running,
 # and the wait must not be a shell `sleep` — and what replaces the sleep is
 # not. On Claude it is the read-wake-read loop `How to wait` prescribes. On
-# Omp it is one blocking call, `github.run_watch` on the head commit, plus the
-# commit-status read that follows it, both named in
-# `skills/review-cycle/references/omp.md`.
+# Omp, `hub` supervises `gh pr checks --watch` for a bounded fifteen minutes;
+# after it exits, `gh api` reads the head commit's check runs and statuses.
+# `skills/review-cycle/references/omp.md` names all three calls.
 #
 # Why the Claude sibling could not be reused: the two rows grade the same
 # negative but stand in front of different mechanisms, and the comment that
@@ -14,11 +14,11 @@
 # `mcp__Claude_Code_Remote__send_later`, a tool this harness never had.
 #
 # What this row can and cannot see. The sandbox has no GitHub client, so
-# `run_watch` cannot actually be called here; what `SKILL.md` prescribes for
-# exactly that case is to say so and stop. So the graded assertion is the
-# negative one — no `sleep` — plus the skill having fired at all. A positive
-# check that the blocking watch was used needs a live pull request and a
-# working GitHub client, which is not a sandbox this harness can build.
+# neither the watch nor the endpoint reads can actually be run here. What is
+# observable is the no-sleep rule plus the skill having fired. A positive check
+# that the supervised watcher and both endpoint reads were used needs a live
+# pull request and a working GitHub client, which is not a sandbox this harness
+# can build.
 #
 # `Bash` is deliberately open. A negative control on a tool the model was never
 # offered passes vacuously, and this one has to be able to fail.
@@ -33,7 +33,7 @@ initial_prompt: >-
   Review the head and bring me the findings.
 
 agent:
-  allowed_tools: [Bash, Read, Grep, Glob, Skill, Agent, Task]
+  allowed_tools: [Bash, Hub, Read, Grep, Glob, Skill, Agent, Task]
 
 run_limits:
   max_turns: 12
