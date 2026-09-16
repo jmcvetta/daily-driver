@@ -76,7 +76,9 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    smallest model.
 
 **A task body opens in a fixed shape, and the requirements above land in it
-in a fixed order.** The opening has four parts, in this order:
+in a fixed order — requirements 1 through 5 in the four parts below, and
+requirement 6 on the `Model:` line that closes the body.** The opening has
+four parts, in this order:
 
 1. **A one-line summary.** The first line of the body, and one line — very
    concise — stating the observable outcome. No character limit is imposed:
