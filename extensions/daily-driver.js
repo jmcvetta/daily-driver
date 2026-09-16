@@ -9,7 +9,7 @@
  * that Claude-compatible catalog, so there is deliberately no
  * `.omp-plugin/marketplace.json`).
  *
- * Two jobs:
+ * Three jobs:
  *
  * 1. Block Omp's `ask` tool, the way Claude Code denies `AskUserQuestion`.
  *    The model is told not to retry and to ask the question in chat instead,
@@ -19,17 +19,27 @@
  *    harder to work with than prose, and the operator's answer is the same
  *    every time.
  *
- * 2. Provide session-title, scheduled-reminder, and session-info tools that
+ * 2. Block direct file mutations and branch switches in a repository's
+ *    primary checkout, plus file mutations in a detached worktree. The
+ *    model-directed `task-worktree` workflow still chooses the task identity
+ *    and establishes or reuses its dedicated worktree; this guard makes
+ *    forgetting it fail before the user's checkout is changed.
+ *
+ * 3. Provide session-title, scheduled-reminder, and session-info tools that
  *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,
  *    `daily_driver_schedule` / `daily_driver_cancel_schedule`, and
  *    `daily_driver_get_session`, are the Omp runtime-adapter surface that
  *    Wave 2 (harness-portable skills) consumes.
  *
- * This file is deliberately dependency-free: it runs as a plain `.js` module
+ * This file has no third-party dependencies: it runs as a plain `.js` module
  * under Omp, with no build step and no package install between this repo and
  * a user's `~/.omp`. All per-session state lives in the factory closure so two
  * sessions in one process never share a trigger map.
  */
+
+import { execFileSync } from "node:child_process";
+import { existsSync, realpathSync, statSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -48,6 +58,15 @@ export const ASK_BLOCK_REASON =
 	"which way it went, and carry on. This adapter governs how a question that " +
 	"survives that gate is put, not whether it is worth putting.";
 
+/** What an unsafe repository mutation is told to do instead. */
+export const WORKTREE_BLOCK_REASON =
+	"Direct file changes are blocked in the primary checkout and in detached " +
+	"worktrees, and branch switches are blocked in the primary checkout. Do " +
+	"not retry the mutation there. Invoke the `task-worktree` skill, establish " +
+	"the task's feature branch in its dedicated worktree (attaching this " +
+	"worktree in place when it is already dedicated), and repeat the operation " +
+	"with its path rooted there.";
+
 /**
  * The customType namespacing scheduled reminders. Omp delivers a reminder as
  * a custom message via `pi.sendMessage`; a distinct namespaced customType is
@@ -55,6 +74,364 @@ export const ASK_BLOCK_REASON =
  * user/assistant turns.
  */
 export const REMINDER_CUSTOM_TYPE = "daily-driver.reminder";
+
+/**
+ * Return command output, or null where `cwd` is not a usable Git repository.
+ * The guard must fail open outside Git: ordinary files and synthetic tool
+ * devices are not task worktrees.
+ */
+function gitOutput(cwd, ...args) {
+	try {
+		return execFileSync("git", ["-C", cwd, ...args], {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+			timeout: 3000,
+		}).trim();
+	} catch {
+		return null;
+	}
+}
+
+/** Find the nearest existing directory that can anchor a Git lookup. */
+function existingDirectory(path) {
+	let candidate = path;
+	try {
+		if (!existsSync(candidate) || !statSync(candidate).isDirectory()) {
+			candidate = dirname(candidate);
+		}
+	} catch {
+		candidate = dirname(candidate);
+	}
+
+	while (!existsSync(candidate)) {
+		const parent = dirname(candidate);
+		if (parent === candidate) return null;
+		candidate = parent;
+	}
+	return candidate;
+}
+
+/**
+ * Describe the worktree containing one local path. Null means the path is not
+ * in a Git worktree, so this policy does not own it.
+ */
+function worktreeState(path, cwd) {
+	if (
+		typeof path !== "string" ||
+		path.length === 0 ||
+		/^[a-z][a-z0-9+.-]*:\/\//iu.test(path)
+	) {
+		return null;
+	}
+
+	const anchor = existingDirectory(resolve(cwd, path));
+	if (!anchor) return null;
+	const root = gitOutput(anchor, "rev-parse", "--show-toplevel");
+	if (!root) return null;
+	const listing = gitOutput(root, "worktree", "list", "--porcelain", "-z");
+	const fields = listing?.split("\0") ?? [];
+	const firstField = fields[0];
+	if (!firstField?.startsWith("worktree ")) return null;
+
+	const worktreePrefix = "worktree ";
+	const branchPrefix = "branch ";
+	const normalizedRoot = resolve(root);
+	let currentRecord = false;
+	let branch = "";
+	for (const field of fields) {
+		if (field.startsWith(worktreePrefix)) {
+			currentRecord =
+				resolve(field.slice(worktreePrefix.length)) === normalizedRoot;
+		} else if (currentRecord && field.startsWith(branchPrefix)) {
+			branch = field.slice(branchPrefix.length);
+		}
+	}
+
+	try {
+		return {
+			root: realpathSync(root),
+			primaryRoot: realpathSync(firstField.slice(worktreePrefix.length)),
+			branch,
+		};
+	} catch {
+		return null;
+	}
+}
+
+/** Remove the quoting accepted around paths in textual edit formats. */
+function normalizeEditPath(path) {
+	const trimmed = path.trim();
+	if (trimmed.length < 2) return trimmed;
+	const quote = trimmed[0];
+	return (quote === '"' || quote === "'") && trimmed.at(-1) === quote
+		? trimmed.slice(1, -1)
+		: trimmed;
+}
+
+/** Paths encoded inside hashline, apply-patch, or sloppy edit payloads. */
+function textualEditPaths(input) {
+	if (typeof input !== "string") return [];
+	const paths = [];
+	let hashlineSection = false;
+	for (const rawLine of input.replace(/^\uFEFF/u, "").split(/\r?\n/u)) {
+		const hashline = /^\[(.+)#[0-9a-f]{4}\]$/iu.exec(rawLine);
+		if (hashline) {
+			paths.push(normalizeEditPath(hashline[1]));
+			hashlineSection = true;
+			continue;
+		}
+		const applyPatch = /^\*\*\* (?:Add|Delete|Update) File: (.+)$/u.exec(rawLine);
+		if (applyPatch) {
+			paths.push(normalizeEditPath(applyPatch[1]));
+			hashlineSection = false;
+			continue;
+		}
+		const applyPatchMove = /^\*\*\* Move to: (.+)$/u.exec(rawLine);
+		if (applyPatchMove) {
+			paths.push(normalizeEditPath(applyPatchMove[1]));
+			continue;
+		}
+		const sloppy = /^<SM:EDIT\s+path=(?:"([^"]+)"|'([^']+)')(?:\s+all)?>$/u.exec(
+			rawLine,
+		);
+		if (sloppy) {
+			paths.push(sloppy[1] ?? sloppy[2]);
+			hashlineSection = false;
+			continue;
+		}
+		if (hashlineSection) {
+			const move = /^MV\s+(.+)$/u.exec(rawLine.trim());
+			if (move) paths.push(normalizeEditPath(move[1]));
+		}
+	}
+	return paths.filter((path) => path.length > 0);
+}
+
+/** Local file paths a mutating tool call is about to change. */
+function mutationPaths(event, cwd) {
+	if (event.toolName === "write") {
+		return typeof event.input?.path === "string" ? [event.input.path] : [];
+	}
+	if (event.toolName !== "edit") return [];
+
+	const paths = [];
+	for (const key of ["path", "file_path", "_path"]) {
+		if (typeof event.input?.[key] === "string") paths.push(event.input[key]);
+	}
+	if (Array.isArray(event.input?.paths)) {
+		paths.push(...event.input.paths.filter((path) => typeof path === "string"));
+	}
+	if (Array.isArray(event.input?.edits)) {
+		for (const edit of event.input.edits) {
+			if (!edit || typeof edit !== "object") continue;
+			for (const key of ["path", "rename", "move"]) {
+				if (typeof edit[key] === "string") paths.push(edit[key]);
+			}
+		}
+	}
+	for (const key of ["input", "_input"]) {
+		paths.push(...textualEditPaths(event.input?.[key]));
+	}
+	// A malformed or future edit format has no trustworthy target metadata.
+	// Its only safe anchor is the tool's working directory.
+	return paths.length > 0 ? [...new Set(paths)] : [cwd];
+}
+
+/**
+ * Split a literal shell command into executable segments. This is deliberately
+ * a command recognizer, not a shell security boundary: expansions stay opaque,
+ * while quoting, escaping, comments, and ordinary command separators keep
+ * prose such as `echo "git switch"` from looking executable.
+ */
+function shellSegments(command) {
+	const segments = [];
+	let words = [];
+	let word = "";
+	let wordStarted = false;
+	let quote = null;
+
+	const finishWord = () => {
+		if (!wordStarted) return;
+		words.push(word);
+		word = "";
+		wordStarted = false;
+	};
+	const finishSegment = (separator) => {
+		finishWord();
+		if (words.length > 0) segments.push({ words, separator });
+		words = [];
+	};
+
+	for (let index = 0; index < command.length; index++) {
+		const char = command[index];
+		if (quote === "'") {
+			if (char === "'") quote = null;
+			else word += char;
+			wordStarted = true;
+			continue;
+		}
+		if (char === "\\") {
+			const next = command[index + 1];
+			if (next !== undefined) {
+				word += next;
+				wordStarted = true;
+				index++;
+			}
+			continue;
+		}
+		if (quote === '"') {
+			if (char === '"') quote = null;
+			else word += char;
+			wordStarted = true;
+			continue;
+		}
+		if (char === "'" || char === '"') {
+			quote = char;
+			wordStarted = true;
+			continue;
+		}
+		if (char === "#" && !wordStarted) {
+			while (index + 1 < command.length && command[index + 1] !== "\n") index++;
+			continue;
+		}
+		if (/\s/u.test(char)) {
+			if (char === "\n") finishSegment("\n");
+			else finishWord();
+			continue;
+		}
+		if (char === ";" || char === "&" || char === "|") {
+			const doubled = command[index + 1] === char;
+			finishSegment(doubled ? char + char : char);
+			if (doubled) index++;
+			continue;
+		}
+		word += char;
+		wordStarted = true;
+	}
+	finishSegment(null);
+	return segments;
+}
+
+function isEnvironmentAssignment(word) {
+	return /^[A-Za-z_][A-Za-z0-9_]*=/u.test(word);
+}
+
+/** Find a literal git executable after common non-interpreting wrappers. */
+function gitWordIndex(words) {
+	let index = 0;
+	while (isEnvironmentAssignment(words[index] ?? "")) index++;
+	if (words[index] === "command") index++;
+	if (words[index] === "env") {
+		index++;
+		while (
+			(words[index]?.startsWith("-") ?? false) ||
+			isEnvironmentAssignment(words[index] ?? "")
+		) {
+			index++;
+		}
+	}
+	return basename(words[index] ?? "") === "git" ? index : -1;
+}
+
+/** Resolve one Git invocation's subcommand and effective working tree. */
+function gitInvocation(words, shellCwd) {
+	let index = gitWordIndex(words);
+	if (index < 0) return null;
+	index++;
+	let gitCwd = shellCwd;
+	for (; index < words.length; index++) {
+		const word = words[index];
+		if (word === "-C" && typeof words[index + 1] === "string") {
+			gitCwd = resolve(gitCwd, words[++index]);
+			continue;
+		}
+		if (word.startsWith("-C") && word.length > 2) {
+			gitCwd = resolve(gitCwd, word.slice(2));
+			continue;
+		}
+		if (word === "--work-tree" && typeof words[index + 1] === "string") {
+			gitCwd = resolve(gitCwd, words[++index]);
+			continue;
+		}
+		if (word.startsWith("--work-tree=")) {
+			gitCwd = resolve(gitCwd, word.slice("--work-tree=".length));
+			continue;
+		}
+		if (["-c", "--config-env", "--exec-path", "--git-dir", "--namespace"].includes(word)) {
+			index++;
+			continue;
+		}
+		if (word.startsWith("-")) continue;
+		return { subcommand: word, args: words.slice(index + 1), cwd: gitCwd };
+	}
+	return null;
+}
+
+/** Checkout with an explicit pathspec edits files but does not move HEAD. */
+function changesBranch(invocation) {
+	if (invocation.subcommand === "switch") return true;
+	if (invocation.subcommand !== "checkout" || invocation.args.length === 0) {
+		return false;
+	}
+	if (
+		invocation.args.some(
+			(arg) =>
+				arg === "-b" ||
+				arg === "-B" ||
+				arg === "--orphan" ||
+				arg === "--detach" ||
+				arg.startsWith("--orphan="),
+		)
+	) {
+		return true;
+	}
+	if (invocation.args.includes("--")) return false;
+	return !invocation.args.some((arg) =>
+		["-p", "--patch", "--ours", "--theirs"].includes(arg),
+	);
+}
+
+/** A branch switch run in the primary checkout instead of the task worktree. */
+function movesPrimaryBranch(event, cwd) {
+	if (event.toolName !== "bash" || typeof event.input?.command !== "string") {
+		return false;
+	}
+
+	let shellCwd = resolve(
+		typeof event.input.cwd === "string" ? event.input.cwd : cwd,
+	);
+	for (const segment of shellSegments(event.input.command)) {
+		const invocation = gitInvocation(segment.words, shellCwd);
+		if (invocation && changesBranch(invocation)) {
+			const state = worktreeState(".", invocation.cwd);
+			if (state !== null && state.root === state.primaryRoot) return true;
+		}
+
+		if (
+			segment.words.length === 2 &&
+			segment.words[0] === "cd" &&
+			["&&", ";", "\n"].includes(segment.separator)
+		) {
+			shellCwd = resolve(shellCwd, segment.words[1]);
+		}
+	}
+	return false;
+}
+
+/** True when a mutation would bypass the task worktree boundary. */
+function blocksTaskWorktree(event, cwd) {
+	if (movesPrimaryBranch(event, cwd)) return true;
+	for (const path of mutationPaths(event, cwd)) {
+		const state = worktreeState(path, cwd);
+		if (
+			state &&
+			(state.root === state.primaryRoot || state.branch.length === 0)
+		) {
+			return true;
+		}
+	}
+	return false;
+}
 
 /**
  * New trigger ids. `crypto.randomUUID` is a modern Node global with no
@@ -100,10 +477,14 @@ export default function dailyDriverExtension(pi) {
 		return true;
 	}
 
-	// Close Omp's `ask` widget, exactly as Claude Code closes AskUserQuestion.
-	pi.on("tool_call", (event, _ctx) => {
+	// Deny preferences and repository boundaries at execution time: unlike an
+	// instruction, a blocked call cannot be ignored by a weaker model.
+	pi.on("tool_call", (event, ctx) => {
 		if (event.toolName === "ask") {
 			return { block: true, reason: ASK_BLOCK_REASON };
+		}
+		if (blocksTaskWorktree(event, ctx.cwd)) {
+			return { block: true, reason: WORKTREE_BLOCK_REASON };
 		}
 		return undefined;
 	});

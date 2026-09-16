@@ -71,6 +71,14 @@ locally. List the scripts you mean, one by one.
 so listen to it. Never skip, disable, silence, or delete a test to reach
 green. Say that it is failing, and make a plan to fix it.
 
+**Isolate repository-changing tasks before research.** Invoke the
+`task-worktree` skill and establish the task's feature branch in a dedicated
+worktree before reading task files or making a change. A new task uses a sibling
+worktree; an already-dedicated detached worktree attaches the branch in place.
+Keep every task operation there and leave the primary worktree untouched.
+Read-only work needs no isolation. A delegated slice reuses its parent's task
+worktree.
+
 ## While you write code
 
 - **RTFM.** The manual first — before the web, before the source, before the

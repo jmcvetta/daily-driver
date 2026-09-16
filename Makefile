@@ -154,11 +154,10 @@ check-ask-in-chat:
 	python3 scripts/check-ask-in-chat.py
 
 # The acceptance test for the Omp runtime adapter: import extensions/
-# daily-driver.js with a fake ExtensionAPI and assert the Omp `ask` tool is
-# blocked (with a reason that sends the question to chat), that the title and
-# schedule/cancel tools behave, and that package.json wires the extension.
-# Credential-free like the other script legs, so it runs on a laptop and CI
-# alike. Node ships with the harness; no package install is involved.
+# daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
+# primary/detached-worktree mutation guard, the four tools, and package wiring.
+# Credential-free like the other script legs, so it runs on a laptop and CI.
+# Node ships with the harness; no package install is involved.
 check-omp-extension:
 	node scripts/check-omp-extension.mjs
 

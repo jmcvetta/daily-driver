@@ -5,7 +5,11 @@
  * Imports the extension factory with a fake `ExtensionAPI` and asserts the
  * runtime-adapter contract #145 delivers:
  *
- *   - Omp's `ask` tool is blocked with actionable text, another tool passes;
+ *   - Omp's `ask` tool is blocked with actionable text;
+ *   - direct writes, edits, and branch switches in a primary worktree are
+ *     blocked, as are file mutations in a detached worktree;
+ *   - attached feature-worktree mutations, worktree creation, detached branch
+ *     attachment, non-Git paths, and synthetic devices pass;
  *   - daily_driver_set_session_title calls pi.setSessionName;
  *   - daily_driver_get_session reads the session manager's id and the model;
  *   - daily_driver_schedule emits exactly one reminder after its delay and
@@ -20,7 +24,15 @@
  */
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import {
+	mkdirSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -157,13 +169,47 @@ async function check(name, fn) {
 // module gives us the factory plus its exported constants.
 const module_ = await import(EXTENSION);
 assert.equal(typeof module_.default, "function", "extension must export a default factory");
-const { ASK_BLOCK_REASON, REMINDER_CUSTOM_TYPE, default: dailyDriverExtension } = module_;
+const {
+	ASK_BLOCK_REASON,
+	REMINDER_CUSTOM_TYPE,
+	WORKTREE_BLOCK_REASON,
+	default: dailyDriverExtension,
+} = module_;
 
 function makeSession() {
 	const { pi, rec, tools, timers, fire } = fakeApi();
 	dailyDriverExtension(pi);
 	return { rec, tools, timers, fire, pi };
 }
+
+function runGit(cwd, ...args) {
+	return execFileSync("git", ["-C", cwd, ...args], {
+		encoding: "utf8",
+		stdio: ["ignore", "pipe", "pipe"],
+	});
+}
+
+/** A primary checkout, attached and detached worktrees, and a non-Git path. */
+function makeWorktreeFixture() {
+	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-extension-"));
+	const primary = resolve(root, "primary");
+	const task = resolve(root, "task");
+	const detached = resolve(root, "detached");
+	const outside = resolve(root, "outside");
+	mkdirSync(primary);
+	mkdirSync(outside);
+	runGit(primary, "init", "-b", "master");
+	runGit(primary, "config", "user.name", "Extension Check");
+	runGit(primary, "config", "user.email", "extension-check@example.invalid");
+	writeFileSync(resolve(primary, "tracked.txt"), "primary\n");
+	runGit(primary, "add", "tracked.txt");
+	runGit(primary, "commit", "-m", "Initial fixture");
+	runGit(primary, "worktree", "add", "-b", "feature/worktree-guard", task);
+	runGit(primary, "worktree", "add", "--detach", detached);
+	return { root, primary, task, detached, outside };
+}
+
+const worktrees = makeWorktreeFixture();
 
 // --- ask is blocked; another tool passes ------------------------------------
 check("ask tool is blocked with actionable reason", () => {
@@ -182,6 +228,210 @@ check("a tool other than ask passes through", async () => {
 	const decision = s.fire("tool_call", { type: "tool_call", toolCallId: "t2", toolName: "bash", input: { command: "true" } }, toolCtx);
 	assert.equal(decision, undefined, "non-ask tool must not be blocked");
 });
+
+let nextGuardCall = 1;
+function guardDecision(toolName, input, cwd) {
+	const s = makeSession();
+	return s.fire(
+		"tool_call",
+		{
+			type: "tool_call",
+			toolCallId: `guard-${nextGuardCall++}`,
+			toolName,
+			input,
+		},
+		{ cwd, ui: {} },
+	);
+}
+
+function checkGuard(name, blocked, toolName, input, cwd) {
+	check(name, () => {
+		const decision = guardDecision(toolName, input, cwd);
+		if (blocked) {
+			assert.deepEqual(decision, {
+				block: true,
+				reason: WORKTREE_BLOCK_REASON,
+			});
+		} else {
+			assert.equal(decision, undefined);
+		}
+	});
+}
+
+check("worktree denial directs the model through task-worktree", () => {
+	assert.match(WORKTREE_BLOCK_REASON, /do not retry/i);
+	assert.match(WORKTREE_BLOCK_REASON, /`task-worktree`/);
+	assert.match(WORKTREE_BLOCK_REASON, /attaching this worktree in place/i);
+});
+
+// --- repository boundary ---------------------------------------------------
+checkGuard(
+	"a write in the primary worktree is blocked",
+	true,
+	"write",
+	{ path: "new.txt", content: "unsafe\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an edit targeting the primary worktree is blocked",
+	true,
+	"edit",
+	{
+		input:
+			`*** Begin Patch\n[${resolve(worktrees.primary, "tracked.txt")}#ABCD]\n` +
+			"PUT 1.=1:\n+unsafe\n*** End Patch\n",
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a write in an attached feature worktree passes",
+	false,
+	"write",
+	{ path: resolve(worktrees.task, "new.txt"), content: "safe\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an edit in an attached feature worktree passes",
+	false,
+	"edit",
+	{
+		input:
+			`<SM:EDIT path="${resolve(worktrees.task, "tracked.txt")}">\n` +
+			"<SM:FIND>\nprimary\n</SM:FIND>\n<SM:PUT>\nsafe\n</SM:PUT>\n</SM:EDIT>",
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"a write in a detached worktree is blocked",
+	true,
+	"write",
+	{ path: "new.txt", content: "unsafe\n" },
+	worktrees.detached,
+);
+
+checkGuard(
+	"an edit in a detached worktree is blocked",
+	true,
+	"edit",
+	{
+		input:
+			`*** Begin Patch\n*** Update File: ${resolve(worktrees.detached, "tracked.txt")}\n` +
+			"@@\n-primary\n+unsafe\n*** End Patch\n",
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"an edit cannot move a feature-worktree file into the primary worktree",
+	true,
+	"edit",
+	{
+		input:
+			`*** Begin Patch\n[${resolve(worktrees.task, "tracked.txt")}#ABCD]\n` +
+			`MV ${resolve(worktrees.primary, "moved.txt")}\n*** End Patch\n`,
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a write to a non-Git path passes",
+	false,
+	"write",
+	{ path: resolve(worktrees.outside, "new.txt"), content: "ordinary\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an edit to a non-Git path passes",
+	false,
+	"edit",
+	{ path: resolve(worktrees.outside, "ordinary.txt"), old_string: "a", new_string: "b" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a synthetic device write passes",
+	false,
+	"write",
+	{ path: "xd://daily_driver_set_session_title", content: "{}" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git checkout in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git checkout -b feature/wrong-place" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git switch in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "  git switch feature/wrong-place" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git -C cannot switch the primary branch from a feature worktree",
+	true,
+	"bash",
+	{ command: `git -C "${worktrees.primary}" switch feature/wrong-place` },
+	worktrees.task,
+);
+
+checkGuard(
+	"a primary checkout path restore is not mistaken for a branch switch",
+	false,
+	"bash",
+	{ command: "git checkout -- tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"quoted Git prose is not mistaken for a branch switch",
+	false,
+	"bash",
+	{ command: 'printf "%s\\n" "git switch feature/not-executed"' },
+	worktrees.primary,
+);
+
+checkGuard(
+	"worktree creation from the primary checkout passes",
+	false,
+	"bash",
+	{ command: "git worktree add -b feature/right-place ../right-place master" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"attaching a detached task worktree to its branch passes",
+	false,
+	"bash",
+	{ command: "git switch -c feature/detached-fix master", cwd: worktrees.detached },
+	worktrees.primary,
+);
+
+checkGuard(
+	"changing into a detached task worktree before attachment passes",
+	false,
+	"bash",
+	{ command: `cd "${worktrees.detached}" && git switch -c feature/detached-fix master` },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a branch switch inside an attached feature worktree passes",
+	false,
+	"bash",
+	{ command: "git switch feature/another-task" },
+	worktrees.task,
+);
 
 // --- set_session_title ------------------------------------------------------
 check("set_session_title calls pi.setSessionName", async () => {
@@ -321,6 +571,7 @@ check("package.json wires the extension and is a module", () => {
 });
 
 await Promise.all(checks);
+rmSync(worktrees.root, { recursive: true, force: true });
 
 console.log(results.join("\n"));
 console.log("");

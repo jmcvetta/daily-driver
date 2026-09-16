@@ -27,7 +27,7 @@ printf '\nSTRICT_MODE = True\n' >>"${TASK_ROOT}/src/parser.py"
 	cd "${TASK_ROOT}"
 	bash .fixture/verify.sh linked
 )
-grep -qx 'verified=yes' "${TASK_ROOT}/.fixture/verification.txt"
+grep -qx 'verified=yes' "${PRIMARY}/.fixture/verification.txt"
 
 DETACHED="${ROOT}/detached-task"
 copy_fixture "${DETACHED}"

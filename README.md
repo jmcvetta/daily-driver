@@ -71,8 +71,7 @@ every subagent. Nine sections:
 | ------- | --------------- |
 | Voice | Simplified Technical English for prose written in your own voice. |
 | Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
-| Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
-| While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
+| Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; repository-changing tasks isolated before research; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
 | When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
 | Before you call it done | The project's own gates decide, not reasoning about them — and CI is where they run, not this machine. |
@@ -137,13 +136,20 @@ never reach for the widget, and every session would pay for the rule.
 decision, and `judgement-call` is the skill it is ordered with: that gate
 decides *whether* to ask, the hook decides *how*.
 
-**Omp has no hook mechanism**, so `extensions/daily-driver.js` does the same
-two jobs there: it blocks the `ask` tool with the same wording, and it supplies
-the session-title, reminder, and session-info tools
+**Omp has no hook mechanism**, so `extensions/daily-driver.js` does those jobs
+there: it blocks the `ask` tool with the same wording and supplies the
+session-title, reminder, and session-info tools
 (`daily_driver_set_session_title`, `daily_driver_schedule`,
 `daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
-`ExtensionAPI` makes natural. The constitution needs no adapter on that side —
-Omp's rule provider injects `rules/*.md` carrying `alwaysApply: true`.
+`ExtensionAPI` makes natural. It also closes the failure that weaker models
+exposed in `task-worktree`: direct `write` and `edit` calls in the primary
+checkout or a detached worktree are denied before they change state, as are
+branch-changing `git checkout` and `git switch` calls in the primary checkout.
+Attached feature-worktree mutations, worktree creation, detached branch
+attachment, non-Git paths, and synthetic devices remain available. The denial
+sends the model through the skill to establish the task worktree. The
+constitution needs no delivery adapter on this side — Omp's rule provider
+injects `rules/*.md` carrying `alwaysApply: true`.
 
 **Whether either still fires**: `scripts/check-constitution.py` and
 `scripts/check-ask-in-chat.py` run both hooks against synthetic event JSON, and
