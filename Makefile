@@ -7,7 +7,7 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
-.PHONY: git_sync clean-omp-plugin-cache check check-plugin check-skills check-agents check-scripts \
+.PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-plugin check-omp-cache-clean check-omp-review-cycle-route \
 	check-omp-agent check-codex-agent check-eval-fixtures \
@@ -64,10 +64,10 @@ git_sync:
 	git branch -vv | awk '/: gone\]/ && !/^\+/ {print $$1}' | xargs -r git branch -D
 	@git branch -vv | awk '/: gone\]/ && /^\+/ {printf "WARN: worktree-linked branch kept (upstream gone): %s\n", $$2}' >&2
 
-# clean-omp-plugin-cache: refresh this repository's installed Omp plugin
+# omp-update-daily-driver: refresh this repository's installed Omp plugin
 # without deleting Omp's shared plugin state. Updating the marketplace replaces
 # its cached clone; upgrading force-reinstalls the plugin's cached bytes.
-clean-omp-plugin-cache:
+omp-update-daily-driver:
 	omp plugin marketplace update daily-driver
 	omp plugin upgrade daily-driver@daily-driver
 
