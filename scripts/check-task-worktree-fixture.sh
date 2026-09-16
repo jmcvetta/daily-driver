@@ -28,6 +28,9 @@ printf '\nSTRICT_MODE = True\n' >>"${TASK_ROOT}/src/parser.py"
 	bash .fixture/verify.sh linked
 )
 grep -qx 'verified=yes' "${PRIMARY}/.fixture/verification.txt"
+[ -L "${PRIMARY}/.fixture/verification.txt" ]
+git -C "${PRIMARY}" worktree remove --force "${TASK_ROOT}"
+[ ! -e "${PRIMARY}/.fixture/verification.txt" ]
 
 DETACHED="${ROOT}/detached-task"
 copy_fixture "${DETACHED}"

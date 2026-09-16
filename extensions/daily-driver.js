@@ -92,12 +92,15 @@ function gitOutput(cwd, ...args) {
 	}
 }
 
-/** Find the nearest existing directory that can anchor a Git lookup. */
+/** Find and canonicalize the nearest existing directory for a Git lookup. */
 function existingDirectory(path) {
 	let candidate = path;
 	try {
-		if (!existsSync(candidate) || !statSync(candidate).isDirectory()) {
-			candidate = dirname(candidate);
+		if (existsSync(candidate)) {
+			const canonical = realpathSync(candidate);
+			return statSync(canonical).isDirectory()
+				? canonical
+				: dirname(canonical);
 		}
 	} catch {
 		candidate = dirname(candidate);
@@ -108,7 +111,46 @@ function existingDirectory(path) {
 		if (parent === candidate) return null;
 		candidate = parent;
 	}
-	return candidate;
+	try {
+		return realpathSync(candidate);
+	} catch {
+		return null;
+	}
+}
+
+/** Parse `git worktree list --porcelain -z` into ordered worktree records. */
+function worktreeRecords(listing) {
+	const records = [];
+	let record = null;
+	for (const field of listing?.split("\0") ?? []) {
+		if (field.startsWith("worktree ")) {
+			if (record) records.push(record);
+			record = { root: field.slice("worktree ".length), branch: "" };
+		} else if (record && field.startsWith("branch ")) {
+			record.branch = field.slice("branch ".length);
+		}
+	}
+	if (record) records.push(record);
+	return records;
+}
+
+/** Build guard state for one root from an ordered worktree listing. */
+function stateForWorktree(records, currentRoot) {
+	if (records.length === 0 || !currentRoot) return null;
+	try {
+		const normalizedRoot = realpathSync(currentRoot);
+		const current = records.find(
+			(record) => realpathSync(record.root) === normalizedRoot,
+		);
+		if (!current) return null;
+		return {
+			root: normalizedRoot,
+			primaryRoot: realpathSync(records[0].root),
+			branch: current.branch,
+		};
+	} catch {
+		return null;
+	}
 }
 
 /**
@@ -129,33 +171,45 @@ function worktreeState(path, cwd) {
 	const root = gitOutput(anchor, "rev-parse", "--show-toplevel");
 	if (!root) return null;
 	const listing = gitOutput(root, "worktree", "list", "--porcelain", "-z");
-	const fields = listing?.split("\0") ?? [];
-	const firstField = fields[0];
-	if (!firstField?.startsWith("worktree ")) return null;
+	return stateForWorktree(worktreeRecords(listing), root);
+}
 
-	const worktreePrefix = "worktree ";
-	const branchPrefix = "branch ";
-	const normalizedRoot = resolve(root);
-	let currentRecord = false;
-	let branch = "";
-	for (const field of fields) {
-		if (field.startsWith(worktreePrefix)) {
-			currentRecord =
-				resolve(field.slice(worktreePrefix.length)) === normalizedRoot;
-		} else if (currentRecord && field.startsWith(branchPrefix)) {
-			branch = field.slice(branchPrefix.length);
-		}
-	}
-
+/** Describe the worktree whose HEAD is selected by an explicit Git directory. */
+function worktreeStateFromGitDir(gitDir, cwd) {
+	const absoluteGitDir = gitOutput(
+		cwd,
+		`--git-dir=${gitDir}`,
+		"rev-parse",
+		"--absolute-git-dir",
+	);
+	if (!absoluteGitDir) return null;
+	const listing = gitOutput(
+		cwd,
+		`--git-dir=${absoluteGitDir}`,
+		"worktree",
+		"list",
+		"--porcelain",
+		"-z",
+	);
+	const records = worktreeRecords(listing);
+	let selectedRoot = null;
 	try {
-		return {
-			root: realpathSync(root),
-			primaryRoot: realpathSync(firstField.slice(worktreePrefix.length)),
-			branch,
-		};
+		const selectedGitDir = realpathSync(absoluteGitDir);
+		for (const record of records) {
+			const recordGitDir = gitOutput(
+				record.root,
+				"rev-parse",
+				"--absolute-git-dir",
+			);
+			if (recordGitDir && realpathSync(recordGitDir) === selectedGitDir) {
+				selectedRoot = record.root;
+				break;
+			}
+		}
 	} catch {
 		return null;
 	}
+	return stateForWorktree(records, selectedRoot);
 }
 
 /** Remove the quoting accepted around paths in textual edit formats. */
@@ -333,12 +387,27 @@ function gitWordIndex(words) {
 	return basename(words[index] ?? "") === "git" ? index : -1;
 }
 
-/** Resolve one Git invocation's subcommand and effective working tree. */
+/** Read one environment assignment that precedes the Git executable. */
+function environmentValue(words, end, name) {
+	const prefix = `${name}=`;
+	for (let index = 0; index < end; index++) {
+		if (words[index].startsWith(prefix)) {
+			return words[index].slice(prefix.length);
+		}
+	}
+	return null;
+}
+
+/** Resolve one Git invocation's subcommand and repository selectors. */
 function gitInvocation(words, shellCwd) {
 	let index = gitWordIndex(words);
 	if (index < 0) return null;
-	index++;
 	let gitCwd = shellCwd;
+	let gitDir = environmentValue(words, index, "GIT_DIR");
+	if (gitDir !== null) gitDir = resolve(shellCwd, gitDir);
+	let workTree = environmentValue(words, index, "GIT_WORK_TREE");
+	if (workTree !== null) workTree = resolve(shellCwd, workTree);
+	index++;
 	for (; index < words.length; index++) {
 		const word = words[index];
 		if (word === "-C" && typeof words[index + 1] === "string") {
@@ -350,19 +419,33 @@ function gitInvocation(words, shellCwd) {
 			continue;
 		}
 		if (word === "--work-tree" && typeof words[index + 1] === "string") {
-			gitCwd = resolve(gitCwd, words[++index]);
+			workTree = resolve(gitCwd, words[++index]);
 			continue;
 		}
 		if (word.startsWith("--work-tree=")) {
-			gitCwd = resolve(gitCwd, word.slice("--work-tree=".length));
+			workTree = resolve(gitCwd, word.slice("--work-tree=".length));
 			continue;
 		}
-		if (["-c", "--config-env", "--exec-path", "--git-dir", "--namespace"].includes(word)) {
+		if (word === "--git-dir" && typeof words[index + 1] === "string") {
+			gitDir = resolve(gitCwd, words[++index]);
+			continue;
+		}
+		if (word.startsWith("--git-dir=")) {
+			gitDir = resolve(gitCwd, word.slice("--git-dir=".length));
+			continue;
+		}
+		if (["-c", "--config-env", "--exec-path", "--namespace"].includes(word)) {
 			index++;
 			continue;
 		}
 		if (word.startsWith("-")) continue;
-		return { subcommand: word, args: words.slice(index + 1), cwd: gitCwd };
+		return {
+			subcommand: word,
+			args: words.slice(index + 1),
+			cwd: gitCwd,
+			gitDir,
+			workTree,
+		};
 	}
 	return null;
 }
@@ -391,7 +474,7 @@ function changesBranch(invocation) {
 	);
 }
 
-/** A branch switch run in the primary checkout instead of the task worktree. */
+/** A checkout or switch that changes the primary HEAD or its files. */
 function movesPrimaryBranch(event, cwd) {
 	if (event.toolName !== "bash" || typeof event.input?.command !== "string") {
 		return false;
@@ -403,8 +486,24 @@ function movesPrimaryBranch(event, cwd) {
 	for (const segment of shellSegments(event.input.command)) {
 		const invocation = gitInvocation(segment.words, shellCwd);
 		if (invocation && changesBranch(invocation)) {
-			const state = worktreeState(".", invocation.cwd);
-			if (state !== null && state.root === state.primaryRoot) return true;
+			const repositoryState = invocation.gitDir
+				? worktreeStateFromGitDir(invocation.gitDir, invocation.cwd)
+				: worktreeState(".", invocation.cwd);
+			if (
+				repositoryState !== null &&
+				repositoryState.root === repositoryState.primaryRoot
+			) {
+				return true;
+			}
+			if (invocation.workTree) {
+				const workTreeState = worktreeState(".", invocation.workTree);
+				if (
+					workTreeState !== null &&
+					workTreeState.root === workTreeState.primaryRoot
+				) {
+					return true;
+				}
+			}
 		}
 
 		if (

@@ -30,6 +30,7 @@ import {
 	mkdtempSync,
 	readFileSync,
 	rmSync,
+	symlinkSync,
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -206,7 +207,9 @@ function makeWorktreeFixture() {
 	runGit(primary, "commit", "-m", "Initial fixture");
 	runGit(primary, "worktree", "add", "-b", "feature/worktree-guard", task);
 	runGit(primary, "worktree", "add", "--detach", detached);
-	return { root, primary, task, detached, outside };
+	const primaryFileLink = resolve(task, "primary-file-link.txt");
+	symlinkSync(resolve(primary, "tracked.txt"), primaryFileLink);
+	return { root, primary, task, detached, outside, primaryFileLink };
 }
 
 const worktrees = makeWorktreeFixture();
@@ -306,6 +309,14 @@ checkGuard(
 );
 
 checkGuard(
+	"an attached-worktree symlink cannot redirect a write into the primary",
+	true,
+	"write",
+	{ path: worktrees.primaryFileLink, content: "unsafe\n" },
+	worktrees.task,
+);
+
+checkGuard(
 	"a write in a detached worktree is blocked",
 	true,
 	"write",
@@ -386,6 +397,54 @@ checkGuard(
 );
 
 checkGuard(
+	"--work-tree cannot disguise a primary branch switch",
+	true,
+	"bash",
+	{
+		command:
+			`git --work-tree="${worktrees.task}" ` +
+			"switch feature/wrong-place",
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"--git-dir cannot switch the primary HEAD from a feature worktree",
+	true,
+	"bash",
+	{
+		command:
+			`git --git-dir="${resolve(worktrees.primary, ".git")}" ` +
+			"switch feature/wrong-place",
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"GIT_DIR cannot switch the primary HEAD from a feature worktree",
+	true,
+	"bash",
+	{
+		command:
+			`GIT_DIR="${resolve(worktrees.primary, ".git")}" ` +
+			"git switch feature/wrong-place",
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"--work-tree cannot direct a feature HEAD switch into primary files",
+	true,
+	"bash",
+	{
+		command:
+			`git --git-dir="${resolve(worktrees.task, ".git")}" ` +
+			`--work-tree="${worktrees.primary}" switch feature/wrong-place`,
+	},
+	worktrees.task,
+);
+
+checkGuard(
 	"a primary checkout path restore is not mistaken for a branch switch",
 	false,
 	"bash",
@@ -431,6 +490,18 @@ checkGuard(
 	"bash",
 	{ command: "git switch feature/another-task" },
 	worktrees.task,
+);
+
+checkGuard(
+	"an explicit feature-worktree Git directory passes",
+	false,
+	"bash",
+	{
+		command:
+			`git --git-dir="${resolve(worktrees.task, ".git")}" ` +
+			"switch feature/another-task",
+	},
+	worktrees.primary,
 );
 
 // --- set_session_title ------------------------------------------------------

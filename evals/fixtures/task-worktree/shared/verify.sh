@@ -31,9 +31,11 @@ if [ "${mode}" = "linked" ]; then
 		exit 1
 	fi
 	[ -z "$(git -C "${primary_root}" status --short)" ]
-	verification="${primary_root}/.fixture/verification.txt"
+	verification="${task_root}/.fixture/verification.txt"
+	public_verification="${primary_root}/.fixture/verification.txt"
 elif [ "${mode}" = "detached" ]; then
 	verification="${task_root}/.fixture/verification.txt"
+	public_verification="${verification}"
 else
 	printf 'unknown fixture mode: %s\n' "${mode}" >&2
 	exit 2
@@ -46,3 +48,7 @@ base=${base}
 task-root=${task_root}
 verified=yes
 EOF
+
+if [ "${public_verification}" != "${verification}" ]; then
+	ln -sfn "${verification}" "${public_verification}"
+fi
