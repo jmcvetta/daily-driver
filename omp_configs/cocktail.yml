@@ -2,7 +2,7 @@ modelRoles:
   default: vercel-ai-gateway/zai/glm-5.3-flash:high
   smol: vercel-ai-gateway/zai/glm-5.3-flash:medium
   slow: vercel-ai-gateway/alibaba/qwen3.8-max-0902:high
-  plan: vercel-ai-gateway/alibaba/qwen3.8-max-0902:high
+  plan: vercel-ai-gateway/moonshotai/kimi-k3:high
   task: vercel-ai-gateway/zai/glm-5.3-flash:high
   advisor: vercel-ai-gateway/alibaba/qwen3.8-max-0902:high
   vision: vercel-ai-gateway/minimax/minimax-m3
