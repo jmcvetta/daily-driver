@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.28.0](https://github.com/jmcvetta/daily-driver/compare/v0.27.0...v0.28.0) (2026-09-16)
+
+
+### Features
+
+* **skills:** post a first-readiness report on the pull request ([#265](https://github.com/jmcvetta/daily-driver/issues/265)) ([6ec7027](https://github.com/jmcvetta/daily-driver/commit/6ec7027f11b551532fce4095dfdc54b2bcd87297))
+
 ## [0.27.0](https://github.com/jmcvetta/daily-driver/compare/v0.26.1...v0.27.0) (2026-09-16)
 
 
