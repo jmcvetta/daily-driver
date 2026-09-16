@@ -263,9 +263,11 @@ implementation begins.
 reaches merge readiness — through resumes, through a delegated `Implement`,
 through whatever draft states the sequence has passed since. No timestamp is
 written into the claim for the milestone's sake: the durable start is the
-post, not a line in it. A claim that was never posted leaves the milestone
-with no start to read, and `The milestone` reports the timing as unavailable
-rather than guessing at one.
+post, not a line in it. Where more than one comment carries the claim's
+shape — the collision the policy above permits — the earliest of them is the
+start: a later claim does not restart a clock already running. A claim that
+was never posted leaves the milestone with no start to read, and
+`The milestone` reports the timing as unavailable rather than guessing at one.
 
 5 — Implement
 -------------
@@ -624,11 +626,25 @@ Once per undertaking
 
 The report posts once for an undertaking and its pull request, and the check
 for it comes before the write: read the pull request's existing comments and
-look for the report before posting one. A resumed sequence, a retry of the
-readiness check, or a later return through draft — the path `A round after
-ready goes back to draft` writes — finds it there and posts nothing. The
-original milestone timestamp and elapsed time are never overwritten, because
-a later pass through the gate that finds the report does not touch it.
+look for the comment that opens with the fixed line `First-readiness report`
+before posting one. That opening line is the report's marker — the content
+beneath it may be phrased for the harness and the moment, but the line the
+duplicate check matches is one line, written the same way every time. A
+resumed sequence, a retry of the readiness check, or a later return through
+draft — the path `A round after ready goes back to draft` writes — finds it
+there and posts nothing. The original milestone timestamp and elapsed time
+are never overwritten, because a later pass through the gate that finds the
+report does not touch it.
+
+**A short read is a reason to look again, not to stop.** A first readiness
+read that comes back blocked, unknown, or otherwise short of the conditions
+above leaves the report unpublished, and the watch carries the evaluation:
+every check-in at `Keep it current` and every catch-up look takes the
+milestone's readiness read with it, the way it already takes the
+base-currency read, and publishes the report on the first look where the
+conditions hold. An approval that arrives and a mergeability answer that
+settles move no head and no base — the look that notices them is what posts
+the report the first pass withheld.
 
 
 Where it stops and waits

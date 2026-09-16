@@ -98,21 +98,27 @@ that read the readiness state, find the claim's timestamp, and post it.
 `SKILL.md`'s questions directly: `isDraft`; `mergeable`, which answers
 `true`, `false`, or `null` — only `true` is a yes, and `null` is GitHub
 saying it cannot determine the answer yet, which is the unknown readiness
-`SKILL.md` rules out; `mergeStateStatus`, the same state field a required
-review or a pending check reports through; and `headRefOid`, the SHA the
-report binds to.
+`SKILL.md` rules out; `mergeStateStatus`, which must agree with `The gate`
+as well — `BEHIND` is a base the branch does not carry, `UNSTABLE` a check
+that is no longer green, `BLOCKED` a required review outstanding, and
+`UNKNOWN` the indeterminate answer `SKILL.md` rules out outright, so a state
+that disagrees with the gate is a wait, not a milestone; and `headRefOid`,
+the SHA the report binds to.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__get_issue_comments`, find the claim by its branch link and
-`Model:` and `session:` lines, and take `created_at`. The resumed sequence
+`Model:` and `session:` lines, and take `created_at`; where more than one
+comment carries that shape, the earliest of them is the start — a later
+claim does not restart the clock. The resumed sequence
 makes this read anyway at `Read the issue and its edges`; an issue with no
 recoverable claim leaves the timing `n/a`, per `SKILL.md`.
 
 **The report posts with `mcp__github__add_issue_comment`** — a pull request's
 comments are issue comments, so the claim's write is the report's. The same
 call only writes, so read first: `mcp__github__get_issue_comments` on the
-pull request, the report found by its opening line, and a resumed sequence
-that finds it posts nothing.
+pull request, the report found by its opening line, `First-readiness
+report`, the marker `SKILL.md` fixes, and a resumed sequence that finds it
+posts nothing.
 
 **The provenance** comes from `mcp__Claude_Code_Remote__get_session`, the
 same call `The session` names: `external_metadata.last_served_model` for the

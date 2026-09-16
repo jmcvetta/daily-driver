@@ -92,17 +92,21 @@ are `gh` throughout, as everywhere on this harness.
 
     gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid
 
-`isDraft` false and `mergeable` `MERGEABLE` are the two answers the report
-needs. `mergeStateStatus` is the catch-up look's field and carries the same
-caution: `UNKNOWN` and `BLOCKED` are not a no, but they are not a yes either,
-and `SKILL.md` rules both out as readiness. `headRefOid` is the SHA the
-report binds to.
+`isDraft` false and `mergeable` `MERGEABLE` are two of the answers the report
+needs, and neither is sufficient alone. `mergeStateStatus` must agree with
+`The gate` as well: `BEHIND` is a base the branch does not carry, `UNSTABLE`
+a check that is no longer green, and `UNKNOWN` and `BLOCKED` are states
+`SKILL.md` rules out as readiness outright. The read confirms, on this head,
+what the gate answered; a state that disagrees with it is a wait, not a
+milestone. `headRefOid` is the SHA the report binds to.
 
 **The start is the claim comment's `createdAt`.** `gh issue view <issue>
 --json comments` is the read `Read the issue and its edges` already makes —
 `comments` is in its field list — and the claim is the comment carrying the
-branch link and the `Model:` line. Take its `createdAt`; a resumed session
-finds the start with the read it makes anyway. An issue with no recoverable
+branch link and the `Model:` line. Take its `createdAt`; where more than one
+comment carries that shape, the earliest of them is the start — a later
+claim does not restart the clock. A resumed session finds the start with the
+read it makes anyway. An issue with no recoverable
 claim leaves the timing `n/a`, per `SKILL.md`.
 
 **The report posts as a pull-request comment** — a pull request's comments
@@ -115,8 +119,9 @@ markdown link in the body, and a double-quoted shell argument substitutes
 them before `gh` sees them.
 
 **Read the existing comments before posting** — `gh pr view <number> --json
-comments` again, the report found by its opening line, so a resumed sequence
-that finds it posts nothing.
+comments` again, the report found by its opening line, `First-readiness
+report`, the marker `SKILL.md` fixes; a resumed sequence that finds it posts
+nothing.
 
 **The provenance** follows `The session`: the model line repeats what the
 harness states is serving the turn, and the session line is `n/a` — the
