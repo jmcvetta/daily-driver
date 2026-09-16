@@ -29,6 +29,7 @@ PI_CONFIG_FILES=./cocktail.yml omp
 
 | File | Role configuration |
 | --- | --- |
+| `glm-5.3.yml` | GLM 5.3 as the default model. |
 | `glm-5.3-flash.yml` | GLM 5.3 Flash as the default model. |
 | `deepseek-v4-pro.yml` | DeepSeek V4 Pro as the default model. |
 | `gpt-5.6-sol.yml` | GPT-5.6 Sol as the default model. |
