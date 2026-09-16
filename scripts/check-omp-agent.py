@@ -21,6 +21,10 @@ WHAT IT ASSERTS
     which frame carries them, so the reduction must accept either.
     A turn settles on a terminal `agent_end` and not on one carrying
     `isTerminal: false`.
+    Token counts are read from the per-message `usage` dict live Omp carries
+    on `agent_end`'s `messages` (recorded 2026-09-16: `input`, `output`,
+    `cacheRead`, `cacheWrite`), with the derived `totalTokens` left out so the
+    buckets sum to the frame's own total rather than double it.
     The transcript the judge reads carries the `[RESULT - ...]` anchor. Every
     `llm_judge` rubric under `evals/tasks/` locates the reply at that tag and
     scores 0.0 without it, deliberately and with no fallback -- so an arm that
@@ -211,6 +215,51 @@ def check_usage() -> None:
 
     usage, seen = extract_usage({"type": "agent_end"})
     check(usage == {} and seen == [], "a frame with no counts reports none rather than zeros")
+
+
+def check_usage_live_shape() -> None:
+    """The shape live Omp 18.2.1 actually sent, recorded 2026-09-16.
+
+    `agent_end` carries no counts of its own; the cumulative counts sit in a
+    `usage` dict on the last entry of `messages`, spelled `input` (the
+    uncached slice), `output`, `cacheRead` and `cacheWrite`, with a derived
+    `totalTokens` beside them. Mapping `totalTokens` into a bucket would
+    double-count, so the buckets must sum to the frame's own total instead.
+    """
+    frame = {
+        "type": "agent_end",
+        "isTerminal": True,
+        "messages": [
+            {"role": "user", "content": [{"type": "text", "text": "/deps"}]},
+            {
+                "role": "assistant",
+                "usage": {"input": 100, "output": 5, "cacheRead": 10, "cacheWrite": 2, "totalTokens": 117},
+            },
+            {
+                "role": "assistant",
+                "usage": {"input": 200, "output": 9, "cacheRead": 12, "cacheWrite": 3, "totalTokens": 224},
+            },
+        ],
+    }
+    usage, seen = extract_usage(frame)
+    check(
+        usage
+        == {
+            "uncached_input_tokens": 200,
+            "output_tokens": 9,
+            "cache_read_input_tokens": 12,
+            "cache_creation_input_tokens": 3,
+        },
+        f"the last message's usage is the cumulative one, got {usage}",
+    )
+    check(
+        sorted(seen) == ["cacheRead", "cacheWrite", "input", "output"],
+        f"the spellings that answered are recorded, got {seen}",
+    )
+    check(
+        sum(usage.values()) == 224,
+        f"the buckets must sum to the frame's own totalTokens, got {usage} vs 224",
+    )
 
 
 def check_agent_output() -> None:
