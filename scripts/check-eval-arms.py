@@ -151,6 +151,19 @@ def arm_run_targets(spec: dict[str, object]) -> dict[str, str]:
         return {str(target): str(experiment) for target, experiment in targets.items()}
     return {str(spec["run_target"]): str(spec["experiment"])}
 
+# Experiment files that are not arms. An arm answers "which harness does this
+# row run on"; a comparison asks a different question of ONE arm -- the same
+# suites under two revisions of the instructions -- so forcing it into the table
+# above would blur the concept every check here defends. It is still named,
+# because an experiment file nothing claims is one nothing says the agent kind
+# of, which is the drift `check_experiments` exists to catch.
+#
+# `arm` is the arm whose kinds it runs and whose tag exclusions its Make target
+# must repeat: a comparison measures one harness, never two.
+COMPARISONS: dict[str, dict[str, str]] = {
+    "base-vs-candidate.yaml": {"arm": "claude", "run_target": "evals-run-comparison"},
+}
+
 ARM_TAGS = {str(arm["tag"]): name for name, arm in ARMS.items()}
 KIND_ARMS = {kind: name for name, arm in ARMS.items() for kind in arm["kinds"]}  # type: ignore[union-attr]
 
@@ -398,6 +411,29 @@ def check_makefile_routing() -> None:
                     f"{sorted(targets)}"
                 )
 
+    for experiment, spec in COMPARISONS.items():
+        arm, target = spec["arm"], spec["run_target"]
+        start = makefile.find(f"\n{target}:")
+        if start < 0:
+            raise CheckFailed(f"Makefile declares no `{target}` target, so {experiment} cannot be run")
+        recipe = makefile[start + 1 :].split("\n\n", 1)[0]
+        if f"-e experiments/{experiment}" not in recipe:
+            raise CheckFailed(f"Makefile `{target}` does not run experiments/{experiment}")
+        occurrences = recipe.count("--exclude-tags")
+        if occurrences != 1:
+            raise CheckFailed(
+                f"Makefile `{target}` passes --exclude-tags {occurrences} time(s); it takes ONE "
+                "comma-separated value, and a repeated flag silently replaces the earlier one"
+            )
+        value = recipe.split("--exclude-tags", 1)[1].split()[0]
+        excluded = {tag.strip() for tag in value.split(",") if tag.strip()}
+        wanted = {str(other["tag"]) for name, other in ARMS.items() if name != arm} | {f"{SKIP_TAG}{arm}"}
+        if excluded != wanted:
+            raise CheckFailed(
+                f"Makefile `{target}` excludes {sorted(excluded)}; {experiment} measures the {arm} arm and "
+                f"must exclude {sorted(wanted)} — every other arm's tag, and its own skip"
+            )
+
 
 def check_experiments() -> None:
     """Every experiment has its own arm kind, and Omp has both measured variants."""
@@ -417,6 +453,12 @@ def check_experiments() -> None:
                 f"the {arm} arm names {experiment} as its experiment, and there is no such file under "
                 f"{EXPERIMENTS.relative_to(ROOT)}"
             )
+    for experiment, spec in COMPARISONS.items():
+        if not (EXPERIMENTS / experiment).is_file():
+            raise CheckFailed(
+                f"{experiment} is declared a comparison, and there is no such file under "
+                f"{EXPERIMENTS.relative_to(ROOT)}"
+            )
     for path in files:
         try:
             variants = variant_kinds(path)
@@ -426,12 +468,19 @@ def check_experiments() -> None:
         if not isinstance(document, dict):
             raise CheckFailed(f"{path.relative_to(ROOT)} does not parse as a mapping")
         arm_and_model = arm_of_experiment.get(path.name)
-        if arm_and_model is None:
+        comparison = COMPARISONS.get(path.name)
+        if arm_and_model is None and comparison is None:
             raise CheckFailed(
-                f"{path.relative_to(ROOT)}: no arm names this experiment file, so nothing says which agent "
-                f"kind it should run; the arms and their files are {sorted(arm_of_experiment)}"
+                f"{path.relative_to(ROOT)}: no arm and no comparison names this experiment file, so nothing "
+                f"says which agent kind it should run; the arms and their files are {sorted(arm_of_experiment)} "
+                f"and the comparisons are {sorted(COMPARISONS)}"
             )
-        arm, model = arm_and_model
+        if arm_and_model is not None and comparison is not None:
+            raise CheckFailed(
+                f"{path.relative_to(ROOT)}: claimed as both an arm's experiment and a comparison; it is one "
+                "or the other, and two claims make the agent kind ambiguous"
+            )
+        arm, model = arm_and_model if arm_and_model is not None else (comparison["arm"], None)
         wanted = ARMS[arm]["kinds"]
         for variant_id, kind in variants:
             if not kind:
