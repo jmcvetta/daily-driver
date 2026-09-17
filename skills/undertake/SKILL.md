@@ -236,7 +236,11 @@ Beyond the claim itself the comment always carries:
 - **A brief poem, in the claiming agent's own style, placed last** — after
   the branch, the model and the session, so that a reader looking for the
   branch or the model finds them in a fixed place and is never made to read
-  past verse to reach it. The style is the agent's own, and deliberately so:
+  past verse to reach it. Each line is written in italics — wrapped in
+  asterisks, line by line, as `HAIKU.md` at the repo root shows — because
+  italics designate the verse as poetry, so a reader never mistakes a line
+  of it for part of the claim data: the branch, the model, the session.
+  The style is the agent's own, and deliberately so:
   a pull request's salutation is classical and a task issue's opening verse
   is a haiku, but a claim is the agent's voice at the moment it takes the
   work.
