@@ -64,7 +64,8 @@ The pull request
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/codex.md` names the full-review surface and
-the unavailable-delta stop that keeps the pull request draft.
+the briefed-subagent route `Verify the fix delta` runs on; a pass that dispatch
+genuinely fails is what keeps the pull request draft.
 
 
 The session
