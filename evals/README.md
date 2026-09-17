@@ -1,6 +1,6 @@
 # Evals
 
-Sixteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
+Seventeen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
 than by `claude plugin eval`. The reasoning for the harness is
 [`docs/notes/0002-eval-harness.md`](../docs/notes/0002-eval-harness.md);
 the short version is that the built-in cannot be run on this account, is
@@ -19,6 +19,7 @@ evals/
 │   ├── conventional-commits-type/
 │   │                    … when a type is chosen, and never for a commit message?
 │   ├── pr-body/         … when a body is written, and only then?
+│   ├── issue-body/      does a task issue keep a terse human opening and a full agent `Detail`?
 │   ├── review-cycle/    … when a review is to be run and answered, and only then?
 │   ├── undertake/       … when work is undertaken, and only when handed over?
 │   ├── epic/            … when work is broken up, and never when it fits one PR?
@@ -232,10 +233,10 @@ constitution's own test, described under "Checks" in the repository README. Its 
 `scripts/check-constitution.py`.
 
 It asks two questions, not one. `reaches-subagent` asks whether the text
-arrives; `reply-is-concise` asks whether it changes anything once it has. The
-second is what a delivery test cannot tell you, and until it existed every
+arrives; the three behaviour cases ask whether it changes anything once it
+has. The second is what a delivery test cannot tell you, and until it existed every
 amendment to the constitution shipped on argument alone. See "The constitution
-suite" below for why that case is the one the file gets first.
+suite" below for why `reply-is-concise` is the one the file got first.
 
 `review-depth/` asks whether `review` sends the *right panel* at the right
 diff. Every case is anchored on something a person would notice if routing
@@ -383,7 +384,7 @@ row records a false negative a full run would never have produced.
 
 ## The constitution suite: reach, then compliance
 
-Both rows carry `skip:codex` and are absent from the Codex arm. `coder_eval`'s
+All four rows carry `skip:codex` and are absent from the Codex arm. `coder_eval`'s
 Codex agent links skills and installs no hooks, so the constitution never
 reaches that session and a zero there would say nothing about the constitution.
 See "The Codex arm" below.
@@ -418,9 +419,8 @@ the parent never sees, which is a change to the hook, not to the case.
 
 Reach is settled; whether an injected rule *lands* is not, and `reply-is-concise`
 is the first case here that asks. It picks the `Before you reply` rule because
-compliance with it is countable — every other rule in the constitution needs a
-judgment about engineering, and this one needs a line count. That makes it the
-cheapest instrument in the repository for the general question, and a cheap
+a session obeys or breaks it in plain sight — the cheapest place in the
+repository to measure whether an injected rule changes behaviour, and a cheap
 instrument is the one that gets built.
 
 The case asks why a documented-inclusive slice drops its last item. The honest
@@ -429,13 +429,41 @@ bug invites a diagnosis, a fix, a test and a summary. `Do not change any code`
 in the prompt, and closed `Write` / `Edit` / `Bash`, remove the one honest
 reason for length — an agent that fixed the bug has something to report.
 
-Both graders are `llm_judge`, because the reply is the only artifact the case
+Issue #279 rewrote the rule — from a four-line budget to the audience rule,
+human-facing text silently restated concise — and rewrote the case with it. A
+line count can no longer grade the rule: the constitution no longer carries a
+number to inherit, and a count rewards exactly the terse-but-useless reply the
+audience rule exists to stop. The brevity grader is now a judgment on
+unnecessary content — the reply must carry the cause and nothing else, with no
+fix offer, no test proposal, no tour of the code, no recap. It keeps weight 2,
+and the correctness grader beneath it stays at weight 1. The two judgments are
+kept separate, and each rubric says so: a verbose-but-correct reply fails
+brevity alone; a terse reply that names no cause fails correctness alone;
+neither grader compensates for the other, and the pass gate needs both.
+
+Both graders are `agent_judge` — the port `docs/notes/0014-the-judge-runs-on-
+the-subscription.md` decided for every new judge in this suite, applied when
+the rubrics were rewritten — because the reply is the only artifact the case
 produces and nothing in `coder_eval` matches the final message deterministically
-(see "How the graders ported"). The length grader is given a rubric that counts
-rather than one that forms an opinion, and it reports the count in its
-rationale so a verdict can be audited. Beneath it sits a correctness grader at
-weight 1: a length grader alone pays for silence, and short and wrong is not
-what the rule asks for.
+(see "How the graders ported").
+
+Two cases beside it extend the same rule to its other observable contracts.
+`tool-heavy-stays-lean` makes the agent earn the answer through a multi-file
+lookup and grades the whole transcript — play-by-play progress narration and a
+recap after the answer are what it fails, because progress messages are
+human-facing text under the audience rule. `explanation-request-answered` asks
+to be walked through the same bug and fails the shrug: the explanation must
+arrive complete, mechanism and corrected expression, because concision must
+not reward silence, vague answers, or omitted required action.
+
+Beyond the constitution suite, `pr-body/08-body-concise-not-repetitive`
+grades a drafted PR body: every required fact present, each said once, the
+skill's required structure surviving the compression. The new
+`issue-body/01-human-summary-agent-detail` grades the two audiences
+separately — a terse human-facing opening and `Summary`, and an agent-facing
+`Detail` that retains every stated contract, edge case, and verification
+condition. Neither suite asserts skill triggering; `02-thin-body.yaml` keeps
+that question where it belongs.
 
 One thing both rubrics have to know, and a naive one would not:
 `include_agent_output` does not hand a judge the reply. It hands over
@@ -462,10 +490,13 @@ turn had no reply. Both rubrics write `ANCHOR: none` and score 0.0 there,
 failing the case identically in both arms. A drifted harness has measured
 nothing, and a case that says so is worth more than one that reports a figure.
 
-Its weakness is the threshold. Four lines is the constitution's number, and the
-rubric inherits it — so the case measures compliance with the budget as written
-and says nothing about whether the budget is set at the right place. Moving the
-number means moving it in both files, together.
+Its weakness moved with the rewrite. A line count was crude but reproducible;
+the judgment is faithful to the rule but is a model's call, so
+`per_replicate_scores` are the thing to read and a disagreement between
+replicates is a finding about the rubric, not noise to average away. The
+calibration pair every rubric here carries — a verbose-but-correct example
+that must fail, a short-but-incomplete one that must fail the *other* grader —
+is what keeps the two judgments from collapsing into one opinion.
 
 ## The review-depth suite
 

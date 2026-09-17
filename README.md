@@ -24,11 +24,11 @@ seventeen skills:
 | `pr` | Opens the pull request for the current branch, or brings an open one up to date: branch guard, existing-PR check, draft state. Delegates the title and the body. |
 | `pr-title` | The title: concise, and Conventional Commits, which is what release-please reads to decide the next version. |
 | `conventional-commits-type` | Picks the type — `fix`, `feat`, `refactor` and the rest — from what the change *does*, never from what the diff looks like. |
-| `pr-body` | The body: a one-line summary, a salutation in verse, the `Issues` section that follows it, an executive summary, and engineering detail. |
+| `pr-body` | The body: a one-line summary, a salutation in verse, the `Issues` section that follows it, an executive summary, and concise reviewer-relevant detail — each fact said once. |
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
 | `issue-labels` | The six labels an issue may carry — `epic`, `task`, `bug`, `proposal`, `research`, `human` — and the readiness each one states, which is what decides whether an agent may start unattended. |
 | `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
-| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a `Model:` line for `task`; every other label's edit runs under existing rules and acquires nothing. |
+| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a `Model:` line for `task` — terse human-facing opening and `Summary`, unrestricted agent-facing `Detail`; every other label's edit runs under existing rules and acquires nothing. |
 | `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |
 | `readme` | Writes a README that answers what this is and how to use it, and nothing else: the shape, the reading of length as a symptom, and the list of what belongs in a commit message, a changelog or `docs/` instead. |
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |
@@ -70,7 +70,7 @@ every subagent. Nine sections:
 | Section | What it settles |
 | ------- | --------------- |
 | Voice | Simplified Technical English for prose written in your own voice. |
-| Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
+| Before you reply | Concision by audience: human-facing text — replies, progress, PR bodies, issue summaries — is silently restated concise, keeping every essential fact; agent-facing `Detail` and handoffs keep everything the receiving agent needs. The shape: the answer first, no preamble, no recap. |
 | Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
 | When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
@@ -93,10 +93,16 @@ subagent, with every file-reading tool closed, for a phrase only the injected
 constitution could have told it.
 
 **Whether it landed**: arriving and being obeyed are different questions, and
-the `constitution-reply-is-concise` eval asks the second. It puts a one-line
-answer under every pressure to write ten and counts the lines that come back.
-`Before you reply` is the rule it measures because that rule's compliance is
-countable; the rest of the file needs a judgment about engineering instead.
+the `constitution/` behaviour evals ask the second. `reply-is-concise` puts a
+one-line answer under every pressure to write ten and grades the reply for
+content the question never asked for — a judgment, since #279 replaced the
+line budget with the audience rule and no universal count remains. Beside it,
+`tool-heavy-stays-lean` fails play-by-play progress narration after a
+multi-file lookup, and `explanation-request-answered` fails the shrug — a
+request for an explanation is answered with the explanation. `Before you
+reply` is what they measure because it is the rule a session obeys or breaks
+in plain sight; the rest of the file needs a judgment about engineering
+instead.
 
 **How it arrives**: a plugin cannot ship a `CLAUDE.md`, so three injection
 points deliver the file — `SessionStart` for the session, and `PreToolUse` on
