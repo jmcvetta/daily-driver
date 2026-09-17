@@ -473,12 +473,12 @@ Non-goals
   reason: what lands is the one decision worth a person. A green, ready pull
   request is reported, once.
 - **Does not close the epic.** It says the epic is ready and stops there.
-- **Does not fire on one issue — but its delegation rule still holds.**
-  Undertaking a single task is the task session's own job, and running a
-  fleet of one costs an epic, a muster roll and a watch to save nothing.
-  What embark-of-one keeps is the dispatch: on a subagent-capable surface
-  the implementation still goes to an implementor subagent, and the
-  orchestrator keeps responsibility for claim, dispatch, watch and gates.
-  The orchestrator never implements, whatever the wave's size.
+- **Does not fire on one issue, and takes nothing with it.** Undertaking a
+  single task is the task session's own job, and running a fleet of one costs
+  an epic, a muster roll and a watch to save nothing. The dispatch does not
+  survive into that case either: `undertake`'s `Implement` has the session
+  that claimed the issue write the code itself, and a dispatch there would
+  only copy the session already on the work. Delegation here buys
+  parallelism across task issues; there is none to buy in a fleet of one.
 - **Does not sweep for epics.** It works the epic in hand. Reading the issue
   list for others to put to sea is `epic`'s manufacturing failure, one level up.
