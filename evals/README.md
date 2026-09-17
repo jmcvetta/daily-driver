@@ -11,6 +11,7 @@ the `claude` binary, so there is no version to hold back.
 evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
+│   ├── base-vs-candidate.yaml      old instructions against new, when a rule changes
 │   ├── omp-*.yaml                  one two-variant Omp experiment per model
 │   └── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 ├── tasks/
@@ -51,6 +52,8 @@ make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
 make evals-run-omp    # every Omp model, each with bare and treated variants.
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
+
+make evals-run-comparison  # old instructions against new. See "Measuring a rule change".
 ```
 
 The `*-neg-*` selector is a filename glob, and one absence assertion does not
@@ -88,6 +91,34 @@ Three things the Makefile does that a hand-typed `coder-eval` will not:
   run as a single unlabelled arm on `coder-eval`'s own stale defaults, and the
   ablation silently is not measured.
 - **`TELEMETRY_ENABLED=false`.** See "Two defaults, decided on purpose".
+
+### Measuring a rule change
+
+`with-without.yaml` ablates the plugin, so it answers "do the skills fire?".
+It cannot answer "did rewriting a rule change behaviour?", because its control
+carries no instructions at all: every difference it reports is the difference
+between some instructions and none. Reading one of its results as an
+old-versus-new comparison relabels the ablation rather than measuring the
+change.
+
+`base-vs-candidate.yaml` is the shape that does answer it. Both arms load a
+plugin; they differ only in which revision of it. The base arm reads a second
+checkout, which the experiment cannot create for itself:
+
+```sh
+git worktree add ../daily-driver-base <base-revision>
+make evals-run-comparison TASKS='tasks/constitution/*.yaml'
+```
+
+The sibling must be named `daily-driver-base` — `path` resolves against the
+process working directory, and both entry points `cd evals` first, so
+`../../daily-driver-base` is a sibling of this repository. Pointed at a
+directory with no `skills/` the SDK loads nothing and says so only in the run
+log, which would score the base arm like an untreated session and read as a
+policy effect.
+
+**Record both revisions with the results.** The report names the arms and not
+what they were; a comparison whose revisions are unrecoverable is not one.
 
 ## What the suites are for
 

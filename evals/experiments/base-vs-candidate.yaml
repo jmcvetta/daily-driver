@@ -1,0 +1,65 @@
+# The old-versus-new policy comparison: this checkout's instructions against a
+# base revision's, on the same cases, the same model and the same harness
+# configuration.
+#
+# It is NOT `with-without.yaml`. That file ablates the plugin — treated against
+# a session carrying no plugin at all — and answers "do the skills fire?". This
+# one loads a plugin in both arms and varies only which revision of the
+# instructions it is, which is the only shape that can answer "did the rewrite
+# change behaviour?". Reading a bare-versus-plugin result as an old-versus-new
+# result is the mistake issue #279 names explicitly; keep the two reports apart.
+#
+# THE BASE ARM NEEDS A SECOND CHECKOUT, and this file cannot make one. Create it
+# as a sibling of this repository, named `daily-driver-base`:
+#
+#     git worktree add ../daily-driver-base <base-revision>
+#
+# `path` is resolved against the process working directory, and both eval
+# entry points `cd evals` first, so `../..` is the directory holding this
+# repository and `../../daily-driver-base` is that sibling. Pointed anywhere
+# without a `skills/` subdirectory the SDK loads nothing and says so only in
+# the run log — the same trap `with-without.yaml` documents — so the base arm
+# would score like an untreated session and read as a policy effect.
+#
+# RECORD BOTH REVISIONS WITH THE RESULTS. The candidate is this checkout's
+# `git rev-parse HEAD`; the base is the sibling's. Neither is recoverable from
+# the report afterwards, and a comparison whose arms are unnamed is not one.
+
+experiment_id: base-vs-candidate
+description: >-
+  The same suites under a base revision's instructions and this checkout's,
+  loaded as a plugin in both arms.
+
+defaults:
+  # The documented five. Read the per-replicate scores in the report rather
+  # than the arm averages: five runs of a non-deterministic agent support a
+  # rate, not a point.
+  repeats: 5
+
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+
+  agent:
+    type: claude-code
+    model: claude-sonnet-5
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+
+variants:
+  # The control: the instructions as they stood before the change under test.
+  - variant_id: base-policy
+    description: The daily-driver plugin at the base revision.
+    agent:
+      plugins:
+        - type: local
+          path: "../../daily-driver-base"
+
+  # The treated arm: this checkout, whatever it currently holds.
+  - variant_id: candidate-policy
+    description: The daily-driver plugin at this checkout's revision.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

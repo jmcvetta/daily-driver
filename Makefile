@@ -15,7 +15,7 @@ SHELL := /bin/bash
 	check-evals-preflight check-labels check-infra evals-install evals-plan \
 	evals-variants evals-preflight evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro \
-	evals-run-omp-gpt-5-6-sol evals-run-codex mcp-usage
+	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-comparison mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -327,6 +327,7 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/base-vs-candidate.yaml tasks/*/*.yaml
 
 # evals-variants: refuse to start when an arm's agent kind is not registered.
 # `coder-eval plan` PRINTS "Variant 'omp': resolution failed" and then exits 0,
@@ -402,6 +403,21 @@ evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 evals-run-codex: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/codex.yaml \
 		--exclude-tags claude-only,omp-only,skip:codex $(TASKS)
+
+# evals-run-comparison: the same suites under a base revision's instructions
+# and this checkout's. Use it when a RULE changed and the question is whether
+# behaviour did -- `evals-run`'s ablation cannot answer that, because its
+# control carries no instructions at all. Needs a sibling checkout the
+# experiment cannot create:
+#
+#   git worktree add ../daily-driver-base <base-revision>
+#
+# Costs real money, like its siblings, and narrows the same way with TASKS=.
+# Both arms are Claude sessions, so it excludes what `evals-run` excludes.
+# Record both revisions with the results -- see evals/README.md.
+evals-run-comparison: evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml \
+		--exclude-tags omp-only,codex-only,skip:claude $(TASKS)
 
 # mcp-usage: which GitHub MCP tools were actually called, rolled up to the
 # toolsets that supply them. Laptop-only like git_sync — it reads Claude
