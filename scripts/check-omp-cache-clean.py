@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TARGET = "clean-omp-plugin-cache"
+TARGET = "omp-update-daily-driver"
 EXPECTED_CALLS = (
     ("plugin", "marketplace", "update", "daily-driver"),
     ("plugin", "upgrade", "daily-driver@daily-driver"),
