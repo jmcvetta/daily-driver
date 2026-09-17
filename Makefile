@@ -10,6 +10,7 @@ SHELL := /bin/bash
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-plugin check-omp-cache-clean check-omp-review-cycle-route \
+	check-review-cycle-fix-delta-route \
 	check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
 	check-evals-preflight check-labels check-infra evals-install evals-plan \
@@ -77,7 +78,8 @@ omp-update-daily-driver:
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-cache-clean check-omp-review-cycle-route check-omp-agent \
+	check-omp-extension check-omp-cache-clean check-omp-review-cycle-route \
+	check-review-cycle-fix-delta-route check-omp-agent \
 	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
 	check-eval-arms check-step-names check-evals-preflight check-labels
 
@@ -191,6 +193,13 @@ check-omp-cache-clean:
 # essential `hub` and `bash` surface, and holds its cap and empty-result rules.
 check-omp-review-cycle-route:
 	python3 scripts/check-omp-review-cycle-route.py
+
+# The Claude Code and Codex fix-delta routes are executable guidance too.
+# This credential-free check rejects a blanket "unavailable on this harness"
+# notice for `Verify the fix delta` and holds the briefed-subagent route and
+# its required brief elements in place. See the script's docstring.
+check-review-cycle-fix-delta-route:
+	python3 scripts/check-review-cycle-fix-delta-route.py
 
 # check-scripts: lint the shell a skill ships. `claude plugin validate` reads
 # manifests and never opens a `scripts/` file, so without this leg the plugin's
