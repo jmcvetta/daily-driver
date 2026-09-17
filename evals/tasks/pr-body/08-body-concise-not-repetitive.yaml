@@ -185,12 +185,12 @@ success_criteria:
 
       THE RULE. The body is human-facing, and the constitution's audience rule
       governs it: restate it concisely before it is sent, keep every essential
-      fact, and say each one once. A fact told in the one-line summary does
-      not get told again in the `Summary`, and a fact told in the `Summary`
-      does not get told again in the `Details` — the sections divide the
-      story, they do not replay it. A one-line summary may point at what the
-      sections elaborate; wording that merely references the change is not a
-      second telling. An explanation repeated nearly verbatim is.
+      fact, and say each FACT once. A fact is a piece of information — a
+      mechanism, a reason, a piece of evidence, a risk — and not the change's
+      subject. The sections divide the story; they do not replay it. Naming
+      the same change in more than one section is how the sections refer to
+      the thing they are each describing, and is not a second telling. An
+      explanation repeated nearly verbatim is.
 
       THE LADDER IS THE STRUCTURE, AND IT IS NOT THE FAULT. `pr-body` requires
       all three rungs, and each one is about the same change — so the change's

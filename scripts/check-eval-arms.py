@@ -453,6 +453,15 @@ def check_comparison_variants(path: Path, document: dict) -> None:
     roots: dict[str, str] = {}
     for variant in variants:
         variant_id = str(variant.get("variant_id"))
+        if variant_id in roots:
+            # `roots` is keyed by id, so a duplicate would overwrite its twin
+            # and the distinctness test below would compare one root against
+            # one root and pass. Mutation-tested: two variants sharing an id
+            # AND a root exited 0 without this.
+            raise CheckFailed(
+                f"{path.relative_to(ROOT)}: two variants share the id {variant_id!r}; `coder_eval` keys its "
+                "report on that id, and the arms would be indistinguishable in it"
+            )
         agent = variant.get("agent")
         plugins = agent.get("plugins") if isinstance(agent, dict) else None
         if not isinstance(plugins, list) or len(plugins) != 1 or not isinstance(plugins[0], dict):
@@ -700,6 +709,15 @@ def check_the_checks() -> None:
                 "variants": [
                     {"variant_id": "base", "agent": {"plugins": []}},
                     {"variant_id": "candidate", "agent": {"plugins": [one]}},
+                ]
+            },
+        ),
+        (
+            "a comparison whose variants share an id",
+            {
+                "variants": [
+                    {"variant_id": "base", "agent": {"plugins": [one]}},
+                    {"variant_id": "base", "agent": {"plugins": [one]}},
                 ]
             },
         ),
