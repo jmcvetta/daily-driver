@@ -104,8 +104,9 @@ hands its head over the messaging where the namespace carries one, and
 waits; the surface is
 `review-cycle`'s own [`codex.md`](../../review-cycle/references/codex.md):
 `codex exec review --base <branch>`, which starts a fresh session with its own
-model — that is what makes it a named surface rather than a bare subagent,
-and why the round runs it once per diff rather than once per push.
+model — that is what makes it a named surface carrying its own rubric and
+publication route, rather than an ad-hoc dispatch with neither, and why the
+round runs it once per diff rather than once per push.
 
 
 What would have to become true
