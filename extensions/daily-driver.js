@@ -134,23 +134,30 @@ function worktreeRecords(listing) {
 	return records;
 }
 
-/** Build guard state for one root from an ordered worktree listing. */
-function stateForWorktree(records, currentRoot) {
-	if (records.length === 0 || !currentRoot) return null;
+/** Canonicalize one path. Null where it cannot be resolved. */
+function resolvedPath(path) {
 	try {
-		const normalizedRoot = realpathSync(currentRoot);
-		const current = records.find(
-			(record) => realpathSync(record.root) === normalizedRoot,
-		);
-		if (!current) return null;
-		return {
-			root: normalizedRoot,
-			primaryRoot: realpathSync(records[0].root),
-			branch: current.branch,
-		};
+		return realpathSync(path);
 	} catch {
 		return null;
 	}
+}
+
+/**
+ * Build guard state for one root from an ordered worktree listing. A stale
+ * record — a worktree deleted but not pruned — is skipped rather than fatal,
+ * so one such entry cannot abort classification for every path.
+ */
+function stateForWorktree(records, currentRoot) {
+	if (records.length === 0 || !currentRoot) return null;
+	const normalizedRoot = resolvedPath(currentRoot);
+	const primaryRoot = resolvedPath(records[0].root);
+	if (!normalizedRoot || !primaryRoot) return null;
+	const current = records.find(
+		(record) => resolvedPath(record.root) === normalizedRoot,
+	);
+	if (!current) return null;
+	return { root: normalizedRoot, primaryRoot, branch: current.branch };
 }
 
 /**
@@ -387,10 +394,13 @@ function gitWordIndex(words) {
 	return basename(words[index] ?? "") === "git" ? index : -1;
 }
 
-/** Read one environment assignment that precedes the Git executable. */
+/**
+ * Read one environment assignment that precedes the Git executable. A shell
+ * exports the last assignment of a name, so the scan runs right to left.
+ */
 function environmentValue(words, end, name) {
 	const prefix = `${name}=`;
-	for (let index = 0; index < end; index++) {
+	for (let index = end - 1; index >= 0; index--) {
 		if (words[index].startsWith(prefix)) {
 			return words[index].slice(prefix.length);
 		}
@@ -403,10 +413,13 @@ function gitInvocation(words, shellCwd) {
 	let index = gitWordIndex(words);
 	if (index < 0) return null;
 	let gitCwd = shellCwd;
-	let gitDir = environmentValue(words, index, "GIT_DIR");
-	if (gitDir !== null) gitDir = resolve(shellCwd, gitDir);
-	let workTree = environmentValue(words, index, "GIT_WORK_TREE");
-	if (workTree !== null) workTree = resolve(shellCwd, workTree);
+	// Git reads GIT_DIR and GIT_WORK_TREE after `-C` has changed directory, so
+	// a relative value resolves against the directory `-C` establishes, not
+	// the shell's. The matching flags override them and resolve in the loop.
+	const environmentGitDir = environmentValue(words, index, "GIT_DIR");
+	const environmentWorkTree = environmentValue(words, index, "GIT_WORK_TREE");
+	let gitDir = null;
+	let workTree = null;
 	index++;
 	for (; index < words.length; index++) {
 		const word = words[index];
@@ -443,8 +456,16 @@ function gitInvocation(words, shellCwd) {
 			subcommand: word,
 			args: words.slice(index + 1),
 			cwd: gitCwd,
-			gitDir,
-			workTree,
+			gitDir:
+				gitDir ??
+				(environmentGitDir === null
+					? null
+					: resolve(gitCwd, environmentGitDir)),
+			workTree:
+				workTree ??
+				(environmentWorkTree === null
+					? null
+					: resolve(gitCwd, environmentWorkTree)),
 		};
 	}
 	return null;
@@ -486,9 +507,13 @@ function movesPrimaryBranch(event, cwd) {
 	for (const segment of shellSegments(event.input.command)) {
 		const invocation = gitInvocation(segment.words, shellCwd);
 		if (invocation && changesBranch(invocation)) {
-			const repositoryState = invocation.gitDir
+			const gitDirState = invocation.gitDir
 				? worktreeStateFromGitDir(invocation.gitDir, invocation.cwd)
-				: worktreeState(".", invocation.cwd);
+				: null;
+			// A Git directory that resolves to no repository must not skip the
+			// cwd check. Skipping it lets an unresolvable selector fail open.
+			const repositoryState =
+				gitDirState ?? worktreeState(".", invocation.cwd);
 			if (
 				repositoryState !== null &&
 				repositoryState.root === repositoryState.primaryRoot

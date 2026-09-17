@@ -214,6 +214,31 @@ function makeWorktreeFixture() {
 
 const worktrees = makeWorktreeFixture();
 
+/**
+ * A checkout whose worktree listing carries a stale record — a worktree
+ * removed from disk and never pruned — ordered before a live detached
+ * worktree, so the stale record is read first during classification.
+ */
+function makeStaleWorktreeFixture() {
+	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-stale-"));
+	const primary = resolve(root, "primary");
+	const gone = resolve(root, "agone");
+	const detached = resolve(root, "zdetached");
+	mkdirSync(primary);
+	runGit(primary, "init", "-b", "master");
+	runGit(primary, "config", "user.name", "Extension Check");
+	runGit(primary, "config", "user.email", "extension-check@example.invalid");
+	writeFileSync(resolve(primary, "tracked.txt"), "primary\n");
+	runGit(primary, "add", "tracked.txt");
+	runGit(primary, "commit", "-m", "Initial fixture");
+	runGit(primary, "worktree", "add", "-b", "feature/gone", gone);
+	runGit(primary, "worktree", "add", "--detach", detached);
+	rmSync(gone, { recursive: true, force: true });
+	return { root, primary, detached };
+}
+
+const staleWorktrees = makeStaleWorktreeFixture();
+
 // --- ask is blocked; another tool passes ------------------------------------
 check("ask tool is blocked with actionable reason", () => {
 	const s = makeSession();
@@ -504,6 +529,77 @@ checkGuard(
 	worktrees.primary,
 );
 
+checkGuard(
+	"a relative GIT_DIR resolves against the -C directory, not the shell's",
+	true,
+	"bash",
+	{
+		command:
+			`GIT_DIR=.git git -C "${worktrees.primary}" ` +
+			"switch feature/wrong-place",
+	},
+	worktrees.root,
+);
+
+checkGuard(
+	"an unresolvable GIT_DIR falls back to the working-directory check",
+	true,
+	"bash",
+	{
+		command:
+			`GIT_DIR="${resolve(worktrees.root, "nonexistent.git")}" ` +
+			"git switch feature/wrong-place",
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"the last GIT_DIR assignment wins, as the shell exports it",
+	true,
+	"bash",
+	{
+		command:
+			`GIT_DIR="${resolve(worktrees.root, "nonexistent.git")}" ` +
+			`GIT_DIR="${resolve(worktrees.primary, ".git")}" ` +
+			"git switch feature/wrong-place",
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a relative GIT_WORK_TREE resolves against the -C directory too",
+	true,
+	"bash",
+	{
+		command:
+			"GIT_WORK_TREE=primary git " +
+			`--git-dir="${resolve(worktrees.task, ".git")}" ` +
+			`-C "${worktrees.root}" switch feature/wrong-place`,
+	},
+	worktrees.task,
+);
+
+check("the stale worktree record precedes the detached worktree", () => {
+	const listing = runGit(
+		staleWorktrees.primary,
+		"worktree",
+		"list",
+		"--porcelain",
+	);
+	assert.ok(
+		listing.indexOf("agone") < listing.indexOf("zdetached"),
+		"the fixture must list the stale record first",
+	);
+});
+
+checkGuard(
+	"a stale worktree record cannot let a detached-worktree write through",
+	true,
+	"write",
+	{ path: resolve(staleWorktrees.detached, "a.txt"), content: "unsafe\n" },
+	staleWorktrees.detached,
+);
+
 // --- set_session_title ------------------------------------------------------
 check("set_session_title calls pi.setSessionName", async () => {
 	const s = makeSession();
@@ -643,6 +739,7 @@ check("package.json wires the extension and is a module", () => {
 
 await Promise.all(checks);
 rmSync(worktrees.root, { recursive: true, force: true });
+rmSync(staleWorktrees.root, { recursive: true, force: true });
 
 console.log(results.join("\n"));
 console.log("");
