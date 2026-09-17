@@ -183,10 +183,16 @@ use is.
 Review record, not transcript
 -----------------------------
 
-**Use the harness's named review surface, never a bare subagent.** A bare
-subagent is an ad-hoc dispatch with no review rubric or publication contract.
-The reference file names the surface for the harness in use, and that surface
-is the only reviewer `Review the head` dispatches.
+**Every reviewer carries a bounded brief and a publication contract.** What
+disqualifies a dispatch is not that it is a subagent — the constitution reaches
+every subagent here, through `SubagentStart` and the `PreToolUse` hook on
+`Agent`/`Task` — it is a dispatch with no rubric bounding what it reviews and
+no route landing its findings as resolvable threads under a submitted
+`COMMENT` review. The reference file names, for `Review the head`, the
+surface that supplies both by being named; a briefed subagent supplies them
+the same way `Verify the fix delta` requires, brief and publication route
+stated rather than assumed. What stays forbidden is a dispatch missing either
+half.
 
 **Read the complete GitHub review history before each review.** Read submitted
 reviews and every inline thread, including resolved and outdated threads, their

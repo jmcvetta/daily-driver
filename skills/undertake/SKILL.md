@@ -505,7 +505,8 @@ The gate
 
 The hand-typed prompt this skill replaces got three things wrong. Two of them
 were about the round rather than the sequence and left with it — `review-cycle`
-carries *review once per diff* and *a reviewer, not a subagent*. The third is
+carries *review once per diff* and *a briefed reviewer with a publication
+contract, not a bare dispatch*. The third is
 this skill's, and it is the one `Ready for review` turns on.
 
 Ready is a gate, not a step
