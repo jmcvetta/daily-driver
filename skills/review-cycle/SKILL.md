@@ -188,11 +188,15 @@ disqualifies a dispatch is not that it is a subagent — the constitution reache
 every subagent here, through `SubagentStart` and the `PreToolUse` hook on
 `Agent`/`Task` — it is a dispatch with no rubric bounding what it reviews and
 no route landing its findings as resolvable threads under a submitted
-`COMMENT` review. The reference file names, for `Review the head`, the
-surface that supplies both by being named; a briefed subagent supplies them
-the same way `Verify the fix delta` requires, brief and publication route
-stated rather than assumed. What stays forbidden is a dispatch missing either
-half.
+`COMMENT` review. What stays forbidden is a dispatch missing either half.
+
+**At `Review the head` the reviewer is still the harness's named review
+surface, and only that surface.** It supplies both by being named, along with
+the effort level `Name the level` binds and the measured resolvable-thread
+contract; whether a panel of briefed subagents should replace it is a
+question this rule does not answer. `Verify the fix delta` is where a briefed
+subagent is a reviewer: the reference file states its brief and its
+publication route rather than leaving either assumed.
 
 **Read the complete GitHub review history before each review.** Read submitted
 reviews and every inline thread, including resolved and outdated threads, their

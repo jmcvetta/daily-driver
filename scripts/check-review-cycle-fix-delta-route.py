@@ -18,7 +18,9 @@ not required to always succeed, only to have a concrete route to attempt.
 
 It also holds the restated `SKILL.md` rule and its citations: a briefed
 subagent is a legitimate reviewer, so the "never a bare subagent" phrasing
-this issue retired must not come back.
+this issue retired must not come back — and `Review the head` keeps the named
+surface it always had, which is what stops the restatement reading as
+permission to answer #35 by itself.
 """
 
 from __future__ import annotations
@@ -30,15 +32,19 @@ ROOT = Path(__file__).resolve().parent.parent
 SKILL = ROOT / "skills" / "review-cycle" / "SKILL.md"
 CLAUDE_REFERENCE = ROOT / "skills" / "review-cycle" / "references" / "claude.md"
 CODEX_REFERENCE = ROOT / "skills" / "review-cycle" / "references" / "codex.md"
+OMP_REFERENCE = ROOT / "skills" / "review-cycle" / "references" / "omp.md"
 UNDERTAKE_SKILL = ROOT / "skills" / "undertake" / "SKILL.md"
 EMBARK_CODEX_REFERENCE = ROOT / "skills" / "embark" / "references" / "codex.md"
 
 # The brief `Verify the fix delta` requires, restated in each harness route
-# that dispatches a subagent for it. Every element must survive, worded or
-# not, because a route missing one is the unbriefed dispatch the rule forbids.
+# that dispatches a subagent for it — Omp's included, because the other two
+# follow it and a brief that drifts there drifts unnoticed. Every element must
+# survive: a route missing one is the unbriefed dispatch the rule forbids. The
+# first is deliberately the fuller phrase — "pull request" alone occurs dozens
+# of times outside the fix-delta section, so asserting it would pass over a
+# route that had been deleted entirely.
 REQUIRED_BRIEF_ELEMENTS = (
-    "pull request",
-    "base branch",
+    "the pull request, base branch",
     "full-review SHA",
     "current SHA",
     "original findings",
@@ -62,6 +68,14 @@ FORBIDDEN_BLANKET_NOTICES = (
 
 # The rule phrasing #283 retired, and where it must not reappear. A subagent
 # is not disqualified for being a subagent; only an unbriefed one is.
+# The exclusivity the retired sentence carried. Without it the restated rule
+# reads as permission to dispatch briefed subagents at `Review the head` too,
+# which is #35's open question rather than this issue's.
+REQUIRED_SKILL_PHRASINGS = (
+    "At `Review the head` the reviewer is still the harness's named review",
+    "and only that surface",
+)
+
 FORBIDDEN_RULE_PHRASINGS = {
     SKILL: ("never a bare subagent",),
     UNDERTAKE_SKILL: ("a reviewer, not a subagent",),
@@ -76,9 +90,19 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def collapse(text: str) -> str:
+    """Return `text` with every run of whitespace reduced to one space.
+
+    A required phrase spans a line break wherever the reference happens to
+    wrap, so the assertions read the prose rather than its line endings.
+    """
+    return " ".join(text.split())
+
+
 def require_all(path: Path, text: str, phrases: tuple[str, ...]) -> None:
     """Fail naming every phrase from `phrases` missing from `text`."""
-    missing = [phrase for phrase in phrases if phrase not in text]
+    collapsed = collapse(text)
+    missing = [phrase for phrase in phrases if collapse(phrase) not in collapsed]
     if missing:
         relative = path.relative_to(ROOT)
         fail(f"{relative} is missing required text: {', '.join(missing)}")
@@ -100,15 +124,20 @@ def main() -> None:
             SKILL,
             CLAUDE_REFERENCE,
             CODEX_REFERENCE,
+            OMP_REFERENCE,
             UNDERTAKE_SKILL,
             EMBARK_CODEX_REFERENCE,
         )
     }
 
+    for reference in (CLAUDE_REFERENCE, CODEX_REFERENCE, OMP_REFERENCE):
+        require_all(reference, texts[reference], REQUIRED_BRIEF_ELEMENTS)
+
+    require_all(SKILL, texts[SKILL], REQUIRED_SKILL_PHRASINGS)
+
     for reference in (CLAUDE_REFERENCE, CODEX_REFERENCE):
         text = texts[reference]
         require_none(reference, text, FORBIDDEN_BLANKET_NOTICES)
-        require_all(reference, text, REQUIRED_BRIEF_ELEMENTS)
         require_all(reference, text, REQUIRED_DISPATCH_CALLS[reference])
         if "outcome: unavailable" not in text:
             fail(

@@ -78,7 +78,9 @@ failure behaviour are unchanged.**
 `skills/review-cycle/SKILL.md` (the rule under `Review the head`'s "Review
 record, not transcript"), `skills/review-cycle/references/claude.md` and
 `skills/review-cycle/references/codex.md` (the fix-delta route),
-`skills/undertake/SKILL.md` (the stale citation of the old rule), and
+`skills/undertake/SKILL.md`, `skills/undertake/references/claude.md` and
+`skills/undertake/references/codex.md` (the stale citations of the old rule —
+the last two pointed a session at a stop that no longer exists), and
 `skills/embark/references/codex.md` (a phrasing echo, reworded for
 consistency). `scripts/check-review-cycle-fix-delta-route.py`, wired into
 `make check` beside `check-omp-review-cycle-route`, holds the route and the
