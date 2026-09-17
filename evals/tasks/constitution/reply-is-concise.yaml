@@ -261,8 +261,8 @@ success_criteria:
 
       Score by what the reply adds to the answer:
 
-      - 1.0 — the reply is the answer, in proportion: the cause, optionally
-        the corrected expression, in a sentence or two.
+      - 1.0 — the reply is the answer, in proportion: the cause, and
+        optionally the corrected expression.
       - 0.5 — the answer plus minor padding: a restatement of the question, an
         apology, a closing pleasantry, or one sentence of narration addressed
         to the user.
@@ -274,7 +274,7 @@ success_criteria:
       answers correctly and then proposes the fix and offers a test is
       verbose-but-correct: it scores 1.0 on the correctness grader and 0.0
       here. A reply that is three words and vague — `Off-by-one.` — is
-      short-but-incomplete: it scores at most 1.0 here and 0.0 there. Each
+      short-but-incomplete: it may score here, and 0.0 there. Each
       grader must be willing to fail the case on its own, and neither may
       compensate for the other.
 

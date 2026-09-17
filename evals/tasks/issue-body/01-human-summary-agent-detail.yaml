@@ -48,9 +48,20 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task, WebFetch, WebSearch]
 
 run_limits:
-  max_turns: 8
-  task_timeout: 600
-  turn_timeout: 300
+  # Measured, not guessed: at `max_turns: 8` this row exhausted its turns in
+  # nine of ten replicates, using 12 to 22 turns. A truncated turn has no
+  # final reply for either judge to anchor on, so every low score was the
+  # ceiling rather than a body that broke the rule -- and every replicate
+  # that finished scored 1.0 on both graders. 30 is the experiment default
+  # and clears the observed 22 with room.
+  max_turns: 30
+  # The 300s gap is the grading window: the watchdog is armed before the turn
+  # and is still running while two `agent_judge` calls are made, one after the
+  # other. Raising `max_turns` raises generation latency, so the gap is held
+  # at 300s rather than inherited -- the headroom rule `reply-is-concise.yaml`
+  # documents.
+  task_timeout: 900
+  turn_timeout: 600
 
 sandbox:
   template_sources:

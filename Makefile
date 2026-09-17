@@ -425,7 +425,18 @@ evals-run-codex: evals-plan evals-preflight
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
 # Both arms are Claude sessions, so it excludes what `evals-run` excludes.
 # Record both revisions with the results -- see evals/README.md.
+# The sibling is asserted here because this is the ONLY place that can. The
+# plugin path is resolved in the agent at run time: `evals-plan` and
+# `evals-preflight` never touch it, and `evals-variants.py` reads only
+# `agent.type`. Without the checkout the run starts, pays for both arms, and
+# measures plugin-versus-nothing -- a large and entirely spurious policy
+# effect, arriving as exactly the confusion the experiment file exists to
+# prevent.
 evals-run-comparison: evals-plan evals-preflight
+	@test -d ../daily-driver-base/skills || { \
+		echo "error: ../daily-driver-base is missing or is not a plugin root;" >&2; \
+		echo "  run: git worktree add ../daily-driver-base <base-revision>" >&2; \
+		exit 1; }
 	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml \
 		--exclude-tags omp-only,codex-only,skip:claude $(TASKS)
 

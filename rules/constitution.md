@@ -41,12 +41,11 @@ recap of what they just watched happen, no unsolicited explanation, no menu
 of options you are not going to take — `judgement-call` says which choices
 are the user's, and the rest are yours to make. Where an instruction sets a
 form, the form wins: a reviewer told to return six fields per finding returns
-six.
+six. **The answer first**, then detail only where it was asked for.
 
 **A request for explanation is not a request for silence.** Asked to explain
 or asked for a long-form deliverable, deliver the requested content in full,
-without padding. The answer comes first; detail follows only where it was
-asked for.
+without padding.
 
 ## Non-negotiables
 

@@ -192,19 +192,40 @@ success_criteria:
       sections elaborate; wording that merely references the change is not a
       second telling. An explanation repeated nearly verbatim is.
 
-      Score 1.0 if each fact is developed in exactly one place, whatever the
-      body's total length.
+      THE LADDER IS THE STRUCTURE, AND IT IS NOT THE FAULT. `pr-body` requires
+      all three rungs, and each one is about the same change — so the change's
+      SUBJECT appears in all three by construction, and that is compliance,
+      not repetition. Grade what each rung CARRIES:
 
-      Score 0.5 if one explanation appears twice across sections, or the body
-      pads with filler — restated motivation, throat-clearing, a closing
-      recap — without duplicating an explanation outright.
+      - the **opening line** names *what* changed;
+      - **`Summary`** gives *why* — the reason it was wanted, what it means
+        for the reader;
+      - **`Details`** gives *how*, and the evidence: mechanism, verification,
+        risk.
 
-      Score 0.0 if the same explanation appears in three places (typically
-      the opening line, the `Summary`, and the `Details`), or if padding
-      dominates the body.
+      A rung that carries its own content is right even though the reader
+      meets the same feature three times. The fault is a rung that re-tells
+      another rung's content: the mechanism explained in `Summary` when
+      `Details` explains it too, the reason restated in `Details`, the
+      opening line's sentence reproduced under `Summary`.
 
-      Calibration. A body that carries every required fact but explains the
-      backoff-and-jitter change three times is verbose-but-correct: 1.0 on
-      the other grader, 0.0 here. A three-line body that never states the
-      verification evidence is short-but-incomplete: it may score here, and
-      fails there. Neither grader compensates for the other.
+      Score 1.0 if each rung carries its own content and no rung re-tells
+      another's, whatever the body's total length. Naming the change in all
+      three rungs is not a deduction.
+
+      Score 0.5 if one rung re-tells another's content once, or the body pads
+      with filler — restated motivation, throat-clearing, a closing recap.
+
+      Score 0.0 if the same explanation is developed in all three rungs, or
+      if padding dominates the body.
+
+      Calibration. A body whose `Summary` and `Details` both explain the
+      backoff-and-jitter mechanism, after an opening line that already
+      explained it, is verbose-but-correct: 1.0 on the other grader, 0.0
+      here. A body whose opening line names the retry change, whose
+      `Summary` says it stops duplicate-charge complaints, and whose
+      `Details` gives the backoff curve and the soak-test evidence, scores
+      1.0 here — three mentions of one change, three different facts. A
+      three-line body that never states the verification evidence is
+      short-but-incomplete: it may score here, and fails there. Neither
+      grader compensates for the other.
