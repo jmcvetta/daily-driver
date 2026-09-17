@@ -38,10 +38,8 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   importance of the PR for the larger software development or business
   perspectives, include that positioning.
 - **Details**: After the summaries, the engineering detail a reviewer needs —
-  what changed, why, how it was verified, and the material risk or
-  uncertainty. Concise enough to read once through, and each fact lives in
-  one section: what the one-line summary and the executive summary say is
-  not repeated here.
+  how the change was made, how it was verified, and the material risk or
+  uncertainty. Concise enough to read once through.
 - **Unopinionated**: This is a short description of the branch, NOT a code
   review. Do NOT do opine on code quality or security.
 
@@ -50,6 +48,24 @@ Edit it silently before it is written: prefer too terse over too verbose,
 keep every essential fact — the change, the reason, the verification
 evidence, the material risk — and say each one once. Length is not detail;
 a reviewer's one read-through is the budget.
+
+**The opening line, `Summary` and `Details` are a ladder, and each rung says
+what the rung above it did not.** They are not three chances to describe the
+change, which is the failure this body shape invites: an agent writes the
+change into the opening line, writes it again as the summary, and writes it a
+third time as the first detail bullet. Measured, that restatement is the one
+thing a drafted body does wrong most often, so it is worth naming by rung:
+
+- The **opening line** names *what* changed, in one line.
+- **`Summary`** gives *why* — the reason it was wanted and what it means for
+  the reader. It does not re-describe the change; the line above did that.
+- **`Details`** gives *how*, and the evidence: mechanism, verification,
+  risk. It does not re-describe the change or restate the reason; the two
+  rungs above did those.
+
+The test is mechanical, and it is worth applying before the body is set: take
+any one fact in the body and find every place it is stated. More than one
+place, and every place but the right rung comes out.
 
 **The call that sets the body is per harness, and it lives beside this
 file.** [`references/claude.md`](references/claude.md) is the route for

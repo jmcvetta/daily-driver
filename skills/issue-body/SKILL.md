@@ -93,14 +93,22 @@ four parts, in this order:
    [`HAIKU.md`](../../HAIKU.md) shows — conveying the gist of the task. The
    verse form is what tells a task issue and a pull request apart on sight:
    a pull request carries a classical salutation, a task issue a haiku.
-3. **`Summary`.** What changes and why it is wanted, for a reader who will
-   not read `Detail` — requirements 1 and 2 above, in plain terms. This is
+3. **`Summary`.** The outcome and the reason, for a reader who will not read
+   `Detail` — requirements 1 and 2 above, in plain terms. This is
    human-facing text: the constitution's audience rule governs it, and the
    silent editing step runs before it is written. **A short paragraph or
-   two, and it stops there.** That budget is part of the rule: a `Summary`
-   that grows into a second telling of `Detail` is the failure mode, because
-   the requirements below invite it. Nothing an implementer needs lives
-   here — that is `Detail`'s — and nothing is said twice.
+   two, and it stops there.**
+
+   **`Summary` is not a précis of `Detail`, and the two do not overlap.**
+   That budget alone does not stop the failure mode, which is measured and
+   common: an agent writes the handoff, then writes a shorter version of the
+   same handoff above it. What belongs to `Detail` belongs there only — the
+   implementation map, the files and functions to touch, the settled design,
+   the contracts and invariants, the edge cases, the acceptance and
+   verification conditions. None of them appears in `Summary`, not even
+   named in passing and not in compressed form. A reader finishes `Summary`
+   knowing what will be true when the work is done and why that is wanted,
+   and knowing nothing about how it will be done.
 4. **`Detail`.** Free form, and as long as the task needs: the grounded
    implementation map, the settled design, and the acceptance and
    verification conditions — requirements 3, 4 and 5. `Detail` is
