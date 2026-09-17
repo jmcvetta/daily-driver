@@ -264,8 +264,8 @@ implementation begins.
 
 **The claim's timestamp is the undertaking's clock start.** The comment's own
 `created_at` is what `The milestone` reads back when the pull request first
-reaches merge readiness — through resumes, through a delegated `Implement`,
-through whatever draft states the sequence has passed since. No timestamp is
+reaches merge readiness — through resumes, through whatever draft states the
+sequence has passed since. No timestamp is
 written into the claim for the milestone's sake: the durable start is the
 post, not a line in it. Where more than one comment carries the claim's
 shape — the collision the policy above permits — the earliest of them is the
@@ -276,18 +276,24 @@ was never posted leaves the milestone with no start to read, and
 5 — Implement
 -------------
 
-**Delegation is unconditional on a surface that has a subagent or session
-route.** The orchestrator dispatches an implementor subagent and keeps
-responsibility for the claim, the pull request, the watch and the gates; its
-context stays at orchestration size, whatever the task's size. The subagent is
-given the issue number and the instruction to undertake it — `embark`'s
-`Open the sessions` states the prompt, the cheaper-default model rule, and the
-advisor and strong-model review that surround a delegated implementor. The
-dispatched implementor is the rule's exception: it implements in its own
-session and does not re-dispatch — the delegation rule binds the session that
-dispatched it, not the one that was dispatched. Where the surface has no
-subagent route, the sequence runs in the session that invoked it, which is the
-implementor.
+**The session running this sequence writes the code itself.** No web session,
+no implementor subagent, no second context for the body of the work. An
+undertaking is one issue, and the hand that claimed it is the hand that
+implements it: a session that dispatches another session to undertake the
+issue it has already claimed buys a handoff, a second copy of the context and
+a second claim on the same branch, and buys nothing with them.
+
+**Subagents belong to the review round, not to the body of the work.**
+`review-cycle`'s `Verify the fix delta` dispatches a briefed subagent, and
+that is where a second reader earns its cost — the author of a delta cannot
+be an independent reader of it. That is the one dispatch this sequence makes:
+`Review the head` runs on the harness's own named review surface, which
+`review-cycle` says is the only thing it runs on.
+
+**Parallelism across issues is `embark`'s.** Where several task issues are
+worked at once, that skill opens a session or a subagent per task, and each of
+them runs this sequence in its own context. Delegation there is what buys the
+parallelism; delegation here duplicates a session that is already on the work.
 
 The constitution governs, under *While you write code*, *Before you commit* and
 *When you hit a wall*. Nothing about how to write or commit the code is decided
@@ -601,8 +607,8 @@ What the report carries
 
 - **The timing, labelled as what it is** — wall-clock time from the claim to
   first merge readiness. It runs from the claim comment's timestamp, read
-  back off the issue whatever has happened since: resumes, a delegated
-  `Implement`, later returns to draft and out again. The claim's timestamp is
+  back off the issue whatever has happened since: resumes, later returns to
+  draft and out again. The claim's timestamp is
   the durable start, so a session arriving late never restarts the clock.
   Both ends are UTC timestamps — the start and the milestone — with the
   duration between them in words. The interval covers implementation, review,
@@ -615,10 +621,10 @@ What the report carries
   the work, exactly as reported — never a recalled revision — the agent
   harness by name and the version of it that a surface in the session can
   actually read, and the session identifier, linked where the harness offers
-  a link. A value no surface reports is `n/a`. Where `Implement` delegated
-  the work and the implementor's model or session is known and differs from
-  the orchestrator's, both are named, each attributed to the role that did
-  it; attribution nobody reported is not reconstructed.
+  a link. A value no surface reports is `n/a`. One session did the work, so
+  one model and one session are named; where a resume moved the work to
+  another session, both are named in the order they ran, and attribution
+  nobody reported is not reconstructed.
 
 - **The head it binds to.** The pull request's head SHA and the milestone
   timestamp. The comment is a statement about that head: a later head —
