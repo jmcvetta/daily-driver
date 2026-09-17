@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.29.1](https://github.com/jmcvetta/daily-driver/compare/v0.29.0...v0.29.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* undertake implements in its own session instead of dispatching one ([#288](https://github.com/jmcvetta/daily-driver/issues/288)) ([c892cd1](https://github.com/jmcvetta/daily-driver/commit/c892cd1bebd307053b95a05f94aa37c4f939b59c))
+
 ## [0.29.0](https://github.com/jmcvetta/daily-driver/compare/v0.28.0...v0.29.0) (2026-09-17)
 
 
