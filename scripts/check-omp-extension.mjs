@@ -10,6 +10,8 @@
  *     blocked, as are file mutations in a detached worktree;
  *   - attached feature-worktree mutations, worktree creation, detached branch
  *     attachment, non-Git paths, and synthetic devices pass;
+ *   - a mutation the guard cannot place in a repository is refused, the way
+ *     one it cannot ask Git about is;
  *   - daily_driver_set_session_title calls pi.setSessionName;
  *   - daily_driver_get_session reads the session manager's id and the model;
  *   - daily_driver_schedule emits exactly one reminder after its delay and
@@ -174,6 +176,7 @@ const {
 	ASK_BLOCK_REASON,
 	GIT_UNAVAILABLE_BLOCK_REASON,
 	REMINDER_CUSTOM_TYPE,
+	UNANCHORED_PATH_BLOCK_REASON,
 	WORKTREE_BLOCK_REASON,
 	default: dailyDriverExtension,
 } = module_;
@@ -241,12 +244,14 @@ function makeStaleWorktreeFixture() {
 const staleWorktrees = makeStaleWorktreeFixture();
 
 /**
- * A repository whose only worktree is the main one, left detached — the shape
- * `setup.sh detached` builds, and the ordinary shape of a CI checkout.
+ * A detached primary checkout — the shape `setup.sh detached` builds, and the
+ * ordinary shape of a CI checkout — plus one attached task worktree, which is
+ * where a session that must not reach back into that primary sits.
  */
 function makeDetachedPrimaryFixture() {
 	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-detached-"));
 	const primary = resolve(root, "primary");
+	const task = resolve(root, "task");
 	mkdirSync(primary);
 	runGit(primary, "init", "-b", "master");
 	runGit(primary, "config", "user.name", "Extension Check");
@@ -255,7 +260,8 @@ function makeDetachedPrimaryFixture() {
 	runGit(primary, "add", "tracked.txt");
 	runGit(primary, "commit", "-m", "Initial fixture");
 	runGit(primary, "switch", "--detach");
-	return { root, primary };
+	runGit(primary, "worktree", "add", "-b", "feature/detached-task", task);
+	return { root, primary, task };
 }
 
 const detachedPrimary = makeDetachedPrimaryFixture();
@@ -293,13 +299,13 @@ function guardDecision(toolName, input, cwd) {
 	);
 }
 
-function checkGuard(name, blocked, toolName, input, cwd) {
+function checkGuard(name, blocked, toolName, input, cwd, reason) {
 	check(name, () => {
 		const decision = guardDecision(toolName, input, cwd);
 		if (blocked) {
 			assert.deepEqual(decision, {
 				block: true,
-				reason: WORKTREE_BLOCK_REASON,
+				reason: reason ?? WORKTREE_BLOCK_REASON,
 			});
 		} else {
 			assert.equal(decision, undefined);
@@ -663,6 +669,41 @@ checkGuard(
 	detachedPrimary.primary,
 );
 
+// The exemption is for a session sitting in the detached primary, which has
+// nowhere else to attach it. Reaching that primary from a task worktree is
+// ordinary primary-checkout work, and is blocked whatever its branch state.
+checkGuard(
+	"a detached primary reached by -C from a task worktree is blocked",
+	true,
+	"bash",
+	{ command: `git -C "${detachedPrimary.primary}" switch master` },
+	detachedPrimary.task,
+);
+
+checkGuard(
+	"an explicit work tree naming a detached primary is blocked",
+	true,
+	"bash",
+	{
+		command:
+			`git --work-tree="${detachedPrimary.primary}" ` +
+			`--git-dir="${resolve(detachedPrimary.task, ".git")}" ` +
+			"switch feature/wrong-place",
+	},
+	detachedPrimary.task,
+);
+
+checkGuard(
+	"attaching a detached primary from one of its subdirectories passes",
+	false,
+	"bash",
+	{
+		command: `cd "${resolve(detachedPrimary.primary, ".git")}/.." && ` +
+			"git switch -c feature/detached-primary master",
+	},
+	detachedPrimary.primary,
+);
+
 // --- write is guarded exactly as edit is -----------------------------------
 checkGuard(
 	"a write keyed file_path cannot reach the primary worktree",
@@ -678,6 +719,17 @@ checkGuard(
 	"write",
 	{ content: "unsafe\n" },
 	worktrees.primary,
+);
+
+// The same hole one layer up: a payload naming no path at all, with no
+// working directory to fall back to, names no repository the guard can check.
+checkGuard(
+	"a write naming no path and no working directory is refused",
+	true,
+	"write",
+	{ content: "unsafe\n" },
+	undefined,
+	UNANCHORED_PATH_BLOCK_REASON,
 );
 
 // --- grouped commands ------------------------------------------------------
@@ -715,6 +767,43 @@ checkGuard(
 	worktrees.primary,
 );
 
+// A function body is stored, not run: its `cd` never moves the shell that
+// defines the function, so the switch that follows still runs in the primary.
+checkGuard(
+	"a cd in a function body does not move the tracked directory",
+	true,
+	"bash",
+	{
+		command:
+			`f() { cd "${worktrees.task}"; }\n` +
+			"git switch master\n",
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"a cd in a subshell function body does not move it either",
+	true,
+	"bash",
+	{
+		command:
+			`f() ( cd "${worktrees.task}" )\n` + "git switch master\n",
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"a keyword function body does not move the tracked directory",
+	true,
+	"bash",
+	{
+		command:
+			`function f() { cd "${worktrees.task}"; }\n` +
+			"git switch master\n",
+	},
+	worktrees.primary,
+);
+
 // --- here-document bodies are data, not commands ---------------------------
 checkGuard(
 	"a here-document carrying a git switch line is not a branch switch",
@@ -744,22 +833,114 @@ checkGuard(
 	worktrees.primary,
 );
 
-// --- a missing working directory neither throws nor blinds the guard -------
 checkGuard(
-	"a relative edit path without a working directory is not classified",
+	"a spaced here-document delimiter still skips its body",
 	false,
-	"edit",
-	{ path: "tracked.txt", old_string: "a", new_string: "b" },
-	undefined,
+	"bash",
+	{ command: "cat > setup.sh << EOF\ngit switch feature/not-executed\nEOF\n" },
+	worktrees.primary,
 );
 
 checkGuard(
-	"a bash branch switch without any working directory is not classified",
+	"a here-document on an explicit file descriptor skips its body",
 	false,
+	"bash",
+	{ command: "cat > setup.sh 2<<EOF\ngit switch feature/not-executed\nEOF\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"stacked here-documents skip both bodies and the command after them runs",
+	true,
+	"bash",
+	{
+		command:
+			"cat setup.sh <<A <<B\ngit switch feature/not-executed\nA\n" +
+			"git switch feature/not-executed\nB\ngit switch master\n",
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"a here-document inside a subshell skips its body",
+	false,
+	"bash",
+	{
+		command:
+			"(cat > setup.sh <<'EOF'\ngit switch feature/not-executed\nEOF\n)\n",
+	},
+	worktrees.primary,
+);
+
+// An arithmetic left shift is not a redirection. Read as one, its delimiter
+// line never arrives and every later command goes untokenized.
+checkGuard(
+	"an arithmetic left shift does not unguard the commands after it",
+	true,
+	"bash",
+	{ command: "echo $((1 << 2))\ngit switch master\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an arithmetic evaluation does not unguard the commands after it",
+	true,
+	"bash",
+	{ command: "(( x = 1 << 2 ))\ngit switch master\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a spaced arithmetic expansion does not unguard the commands after it",
+	true,
+	"bash",
+	{ command: "echo $(( 1 << 4 ))\ngit switch master\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a here-document whose delimiter never arrives does not swallow the rest",
+	true,
+	"bash",
+	{ command: "cat > setup.sh <<EOF\ngit switch master\n" },
+	worktrees.primary,
+);
+
+// --- a missing working directory neither throws nor blinds the guard -------
+// These two pinned the opposite expectation until the guard was made
+// consistent with `gitOutput`: where the guard cannot determine the answer it
+// refuses. A relative path with no working directory names no repository the
+// guard can check, so the mutation is refused rather than allowed unchecked.
+checkGuard(
+	"a relative edit path without a working directory is refused",
+	true,
+	"edit",
+	{ path: "tracked.txt", old_string: "a", new_string: "b" },
+	undefined,
+	UNANCHORED_PATH_BLOCK_REASON,
+);
+
+checkGuard(
+	"a bash branch switch without any working directory is refused",
+	true,
 	"bash",
 	{ command: "git switch feature/wrong-place" },
 	undefined,
+	UNANCHORED_PATH_BLOCK_REASON,
 );
+
+checkGuard(
+	"a bash command that moves no branch still passes without a working directory",
+	false,
+	"bash",
+	{ command: "git status --short" },
+	undefined,
+);
+
+check("the unplaceable-mutation denial says what to do instead", () => {
+	assert.match(UNANCHORED_PATH_BLOCK_REASON, /refused rather than allowed/iu);
+	assert.match(UNANCHORED_PATH_BLOCK_REASON, /absolute path/iu);
+});
 
 checkGuard(
 	"an absolute primary path is blocked without a working directory",

@@ -67,6 +67,14 @@ export const WORKTREE_BLOCK_REASON =
 	"worktree in place when it is already dedicated), and repeat the operation " +
 	"with its path rooted there.";
 
+/** What a mutation whose repository could not be located is told. */
+export const UNANCHORED_PATH_BLOCK_REASON =
+	"This operation could not be placed in a repository, so it cannot be " +
+	"checked against the task worktree boundary. It is refused rather than " +
+	"allowed unchecked: a relative path arrived with no working directory to " +
+	"read it against. Repeat the operation with an absolute path, or from a " +
+	"working directory, rooted in the task worktree.";
+
 /** What a mutation is told when Git itself could not be consulted. */
 export const GIT_UNAVAILABLE_BLOCK_REASON =
 	"Git could not be consulted, so this operation cannot be checked against " +
@@ -85,6 +93,19 @@ class GitUnavailableError extends Error {
 	constructor(message) {
 		super(message);
 		this.name = "GitUnavailableError";
+	}
+}
+
+/**
+ * A path the guard cannot place in any repository: a relative path with no
+ * working directory to read it against. Distinct from a path Git places
+ * outside every worktree, which is an answer the guard can act on.
+ */
+class UnanchoredPathError extends Error {
+	/** @param {string} message Which operation could not be placed. */
+	constructor(message) {
+		super(message);
+		this.name = "UnanchoredPathError";
 	}
 }
 
@@ -192,12 +213,22 @@ function stateForWorktree(records, currentRoot) {
 /**
  * Anchor one tool-supplied path to the tool's working directory. Null where a
  * relative path arrives without a usable working directory: the guard cannot
- * tell which repository such a path names, and a guess would be worse than an
- * unclassified path. An absolute path needs no anchor and is always usable.
+ * tell which repository such a path names, and a guess would be worse than no
+ * answer. An absolute path needs no anchor and is always usable.
  */
 function anchoredPath(cwd, path) {
 	if (isAbsolute(path)) return path;
 	return typeof cwd === "string" && cwd.length > 0 ? resolve(cwd, path) : null;
+}
+
+/**
+ * Resolve one path against a Git working directory that may itself be
+ * unknown. An absolute path needs no base; a relative one without a base
+ * cannot be placed, and null says so.
+ */
+function resolveAgainst(base, value) {
+	if (isAbsolute(value)) return resolve(value);
+	return base === null ? null : resolve(base, value);
 }
 
 /**
@@ -214,7 +245,13 @@ function worktreeState(path, cwd) {
 	}
 
 	const target = anchoredPath(cwd, path);
-	if (target === null) return null;
+	// An unplaceable path is refused rather than allowed unchecked, the way an
+	// unanswerable Git query is.
+	if (target === null) {
+		throw new UnanchoredPathError(
+			`the relative path ${path} arrived with no working directory`,
+		);
+	}
 	const anchor = existingDirectory(target);
 	if (!anchor) return null;
 	const root = gitOutput(anchor, "rev-parse", "--show-toplevel");
@@ -340,28 +377,66 @@ function mutationPaths(event, cwd) {
 	}
 	// A malformed or future edit format has no trustworthy target metadata.
 	// Its only safe anchor is the tool's working directory. Where even that is
-	// missing there is nothing to classify, and `worktreeState` says so.
+	// missing, the mutation cannot be placed in any repository, so it is
+	// refused rather than allowed unchecked — the same answer an unplaceable
+	// relative path gets.
 	if (paths.length > 0) return [...new Set(paths)];
-	return typeof cwd === "string" && cwd.length > 0 ? [cwd] : [];
+	if (typeof cwd === "string" && cwd.length > 0) return [cwd];
+	throw new UnanchoredPathError(
+		`a ${event.toolName} names no path, and there is no working directory`,
+	);
 }
 
 /**
  * Advance past the here-document bodies owed by one command line. Returns the
  * index of the first character after the last body, so the caller resumes
  * tokenizing the next command rather than the text being written.
+ *
+ * A delimiter whose line never arrives means the operator was not a
+ * here-document after all. The start index is returned in that case, so the
+ * remaining lines are scanned as commands rather than swallowed as a body.
  */
 function skipHeredocBodies(command, start, heredocs) {
 	let position = start;
 	for (const { delimiter, stripTabs } of heredocs) {
+		let terminated = false;
 		while (position < command.length) {
 			const newline = command.indexOf("\n", position);
 			const end = newline < 0 ? command.length : newline;
 			const line = command.slice(position, end);
 			position = Math.min(end + 1, command.length);
-			if ((stripTabs ? line.replace(/^\t+/u, "") : line) === delimiter) break;
+			if ((stripTabs ? line.replace(/^\t+/u, "") : line) === delimiter) {
+				terminated = true;
+				break;
+			}
 		}
+		if (!terminated) return start;
 	}
 	return position;
+}
+
+/**
+ * Index just past the `))` closing an arithmetic expression that opens at
+ * `start`. Negative where the expression is never closed.
+ */
+function arithmeticEnd(command, start) {
+	let depth = 0;
+	for (let index = start; index < command.length; index++) {
+		if (command[index] === "(") depth++;
+		else if (command[index] === ")" && --depth === 0) return index + 1;
+	}
+	return -1;
+}
+
+/**
+ * True where `(` at `index` opens a function definition's empty parameter
+ * list — `name ()` or `function name ()` — rather than a subshell. What
+ * follows such a header is a body that is stored, not run.
+ */
+function opensFunctionDefinition(words, wordStarted, command, index) {
+	const count = words.length + (wordStarted ? 1 : 0);
+	if (count !== 1 && !(count === 2 && words[0] === "function")) return false;
+	return /^\s*\)/u.test(command.slice(index + 1, index + 64));
 }
 
 /**
@@ -385,6 +460,13 @@ function shellSegments(command) {
 	let heredocStripTabs = false;
 	let awaitingHeredocDelimiter = false;
 	const pendingHeredocs = [];
+	// A `{` that follows a function header opens a body that is stored rather
+	// than run. The stack remembers which open brace is such a body, so the
+	// matching `}` closes the right one. An unclosed body leaves the stack
+	// short, which needs no handling: bash rejects it as a syntax error, so
+	// nothing in it runs.
+	let pendingFunctionBody = false;
+	const braceStack = [];
 
 	const finishWord = () => {
 		if (!wordStarted) return;
@@ -392,7 +474,8 @@ function shellSegments(command) {
 			pendingHeredocs.push({ delimiter: word, stripTabs: heredocStripTabs });
 			awaitingHeredocDelimiter = false;
 		} else if (heredocWord) {
-			const rest = word.slice(2);
+			// The operator may carry a file descriptor: `2<<EOF` names EOF too.
+			const rest = word.slice(word.indexOf("<<") + 2);
 			heredocStripTabs = rest.startsWith("-");
 			const delimiter = heredocStripTabs ? rest.slice(1) : rest;
 			if (delimiter.length > 0) {
@@ -409,10 +492,27 @@ function shellSegments(command) {
 	};
 	const finishSegment = (separator) => {
 		finishWord();
-		// `{` and `}` group commands; neither is part of the command itself.
-		while (words[0] === "{") words.shift();
-		if (words.at(-1) === "}") words.pop();
+		// `{` and `}` group commands; neither is part of the command itself. A
+		// brace group holding a function body is emitted as a group instead, so a
+		// `cd` stored in it never moves the shell that defines the function.
+		const closers = [];
+		while (words[0] === "{") {
+			words.shift();
+			const storedBody = pendingFunctionBody;
+			pendingFunctionBody = false;
+			braceStack.push(storedBody);
+			if (storedBody) {
+				segments.push({ words: [], separator: null, group: "open" });
+			}
+		}
+		while (words.at(-1) === "}") {
+			words.pop();
+			if (braceStack.pop()) {
+				closers.push({ words: [], separator: null, group: "close" });
+			}
+		}
 		if (words.length > 0) segments.push({ words, separator });
+		segments.push(...closers);
 		words = [];
 	};
 
@@ -461,7 +561,30 @@ function shellSegments(command) {
 			}
 			continue;
 		}
+		// `$((…))` expands arithmetic and `((…))` evaluates it. Neither holds
+		// commands, and a `<<` inside one is a left shift rather than a
+		// here-document operator, so the whole expression is taken as one opaque
+		// word.
+		if (
+			char === "(" &&
+			command[index + 1] === "(" &&
+			(word.endsWith("$") || !wordStarted)
+		) {
+			const end = arithmeticEnd(command, index);
+			if (end > 0) {
+				word += command.slice(index, end);
+				wordStarted = true;
+				index = end - 1;
+				continue;
+			}
+		}
 		if (char === "(" || char === ")") {
+			if (
+				char === "(" &&
+				opensFunctionDefinition(words, wordStarted, command, index)
+			) {
+				pendingFunctionBody = true;
+			}
 			finishSegment(char);
 			segments.push({
 				words: [],
@@ -478,10 +601,11 @@ function shellSegments(command) {
 		}
 		word += char;
 		wordStarted = true;
-		// `<<` outside quotes opens a here-document; `<<<` is a here-string and
-		// has no body. Only an unquoted operator counts, so `echo "<<EOF"` is
-		// the prose it looks like.
-		if (char === "<") heredocWord = word === "<<";
+		// `<<` outside quotes opens a here-document, with an optional file
+		// descriptor in front of it; `<<<` is a here-string and has no body.
+		// Only an unquoted operator counts, so `echo "<<EOF"` is the prose it
+		// looks like.
+		if (char === "<") heredocWord = /^\d*<<$/u.test(word);
 	}
 	finishSegment(null);
 	return segments;
@@ -523,10 +647,12 @@ function environmentValue(words, end, name) {
 }
 
 /**
- * Resolve one path selector against the Git working directory. Null stays null.
+ * Resolve one path selector against the Git working directory. Null stays
+ * null, and so does a relative selector with no working directory to read it
+ * against.
  */
 function selectedPath(gitCwd, value) {
-	return value === null ? null : resolve(gitCwd, value);
+	return value === null ? null : resolveAgainst(gitCwd, value);
 }
 
 /** Resolve one Git invocation's subcommand and repository selectors. */
@@ -547,11 +673,11 @@ function gitInvocation(words, shellCwd) {
 	for (; index < words.length; index++) {
 		const word = words[index];
 		if (word === "-C" && typeof words[index + 1] === "string") {
-			gitCwd = resolve(gitCwd, words[++index]);
+			gitCwd = resolveAgainst(gitCwd, words[++index]);
 			continue;
 		}
 		if (word.startsWith("-C") && word.length > 2) {
-			gitCwd = resolve(gitCwd, word.slice(2));
+			gitCwd = resolveAgainst(gitCwd, word.slice(2));
 			continue;
 		}
 		if (word === "--work-tree" && typeof words[index + 1] === "string") {
@@ -611,17 +737,18 @@ function changesBranch(invocation) {
 }
 
 /**
- * True where a worktree state names a primary checkout that is on a branch.
- * A detached primary is the one case left open: writes there are blocked
- * already, and `WORKTREE_BLOCK_REASON` prescribes attaching the worktree in
- * place, so denying that attach too would leave the model nothing to do.
+ * True where a branch move would change a guarded primary checkout. An
+ * attached primary is always guarded. A detached primary is exempt only for a
+ * command operating from inside it: `WORKTREE_BLOCK_REASON` prescribes
+ * attaching such a worktree in place, so denying that attach would leave the
+ * model nothing to do. Reaching a detached primary from another worktree is
+ * not that attach, and stays guarded.
  */
-function isAttachedPrimary(state) {
-	return (
-		state !== null &&
-		state.root === state.primaryRoot &&
-		state.branch.length > 0
-	);
+function movesGuardedPrimary(state, shellCwd) {
+	if (state === null || state.root !== state.primaryRoot) return false;
+	if (state.branch.length > 0) return true;
+	const from = worktreeState(".", shellCwd);
+	return from === null || from.root !== state.primaryRoot;
 }
 
 /** A checkout or switch that changes the primary HEAD or its files. */
@@ -631,12 +758,14 @@ function movesPrimaryBranch(event, cwd) {
 	}
 
 	// A relative tool cwd is relative to the session's directory, never to the
-	// directory this Node process happens to run in.
+	// directory this Node process happens to run in. It is null where there is
+	// no session directory to read it against: a command that moves no branch
+	// still passes, and one that moves a branch is refused below, because the
+	// repository it would change cannot be identified.
 	let shellCwd = anchoredPath(
 		cwd,
 		typeof event.input.cwd === "string" ? event.input.cwd : ".",
 	);
-	if (shellCwd === null) return false;
 	const shellCwdStack = [];
 	for (const segment of shellSegments(event.input.command)) {
 		if (segment.group === "open") {
@@ -650,6 +779,11 @@ function movesPrimaryBranch(event, cwd) {
 		}
 		const invocation = gitInvocation(segment.words, shellCwd);
 		if (invocation && changesBranch(invocation)) {
+			if (invocation.cwd === null) {
+				throw new UnanchoredPathError(
+					"a branch move arrived with no working directory to place it in",
+				);
+			}
 			const gitDirState = invocation.gitDir
 				? worktreeStateFromGitDir(invocation.gitDir, invocation.cwd)
 				: null;
@@ -657,7 +791,7 @@ function movesPrimaryBranch(event, cwd) {
 			// cwd check. Skipping it lets an unresolvable selector fail open.
 			const repositoryState =
 				gitDirState ?? worktreeState(".", invocation.cwd);
-			if (isAttachedPrimary(repositoryState)) return true;
+			if (movesGuardedPrimary(repositoryState, shellCwd)) return true;
 			if (invocation.workTree) {
 				// Writing primary files from elsewhere is blocked whether or not
 				// the primary is attached: an in-place attach never names a work
@@ -677,7 +811,7 @@ function movesPrimaryBranch(event, cwd) {
 			segment.words[0] === "cd" &&
 			["&&", ";", "\n"].includes(segment.separator)
 		) {
-			shellCwd = resolve(shellCwd, segment.words[1]);
+			shellCwd = resolveAgainst(shellCwd, segment.words[1]);
 		}
 	}
 	return false;
@@ -753,6 +887,9 @@ export default function dailyDriverExtension(pi) {
 				return { block: true, reason: WORKTREE_BLOCK_REASON };
 			}
 		} catch (err) {
+			if (err instanceof UnanchoredPathError) {
+				return { block: true, reason: UNANCHORED_PATH_BLOCK_REASON };
+			}
 			if (!(err instanceof GitUnavailableError)) throw err;
 			// Say so on stderr as well as to the model: an operator must be able
 			// to tell a guarded session from one whose guard cannot run.
