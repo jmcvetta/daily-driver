@@ -1,0 +1,210 @@
+# The behaviour row beside the pr-body trigger rows. `02-thin-body.yaml`
+# grades that the skill fires on a thin body; this one grades the body
+# itself — issue #279's third observable contract: a PR body carries the
+# necessary change, reason, verification evidence, and material risk, without
+# repeating them across sections, and the required structure survives the
+# compression. Trigger accuracy and body quality are different questions,
+# and the distinction stays: no `skill_triggered` criterion here.
+#
+# ## The route
+#
+# The sandbox has no GitHub and no `gh`, so — like `issue/01-open-a-task-
+# issue.yaml` — the prompt supplies the facts in words and asks for the
+# exact body in the reply rather than a post. What the judge grades is
+# visible output: the draft body, not a claim that an editing step happened.
+#
+# ## The two judges, and why they are separate
+#
+# Issue #279: judge unnecessary content and retained meaning separately, and
+# grade the human-facing result as a whole. Judge 1 (weight 1) is the floor —
+# structure present, every required fact somewhere in the body. Judge 2
+# (weight 2, the finding) is the audience rule — each fact said once, no
+# second telling of the same explanation in the opening, the `Summary`, and
+# the `Details`. The failure mode #279 names for the old rule — "as much
+# engineering detail as seems fitting" inviting the same paragraph three
+# times — fails here while passing the floor, which is exactly why the two
+# judgments cannot be one grader.
+#
+# Both rubrics carry the calibration pair #279's evaluation design asks for:
+# a verbose-but-correct body and a short-but-incomplete one, each failing
+# exactly one judge.
+#
+# Judges are `agent_judge` per
+# `docs/notes/0014-the-judge-runs-on-the-subscription.md`, and the reply is
+# located at the last `[RESULT - …]` tag with the no-fallback anchor
+# discipline `reply-is-concise.yaml` documents.
+
+task_id: pr-body-08-body-concise-not-repetitive
+description: >-
+  A drafted PR body carries the change, reason, verification, and risk once
+  each, in the skill's required structure — not the same explanation three
+  times.
+tags: [pr-body, behaviour]
+
+# The draft is produced in the reply, so file-writing tools are closed; the
+# `Skill` tool stays open so the skill under test can load.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task, WebFetch, WebSearch]
+
+run_limits:
+  max_turns: 8
+  task_timeout: 600
+  turn_timeout: 300
+
+sandbox:
+  template_sources:
+    - type: starter_files
+      files:
+        - path: deliveries.py
+          content: |
+            """Webhook deliveries."""
+
+            import random
+            import time
+
+
+            MAX_ATTEMPTS = 3
+
+
+            def deliver(url, payload):
+                """POST a webhook payload, retrying failures with backoff."""
+                for attempt in range(MAX_ATTEMPTS):
+                    response = _post(url, payload)
+                    if response.ok:
+                        return response
+                    _sleep_backoff(attempt)
+                return response
+
+
+            def _sleep_backoff(attempt):
+                """Wait an exponentially growing, jittered interval."""
+                time.sleep((2 ** attempt) + random.random())
+
+initial_prompt: |
+  Draft the pull request body for our webhook-retry branch. Do not post
+  anything and do not call gh — show me the exact body you would open, in
+  your reply.
+
+  The branch: `deliver()` in `deliveries.py` now retries a failed webhook
+  POST up to three times with exponential backoff and jitter. Before, one
+  failed try dropped the delivery and a page had to be replayed by hand.
+  Verified by the new `test_deliver_retries.py` unit tests and a soak run
+  against staging — 10,000 deliveries, zero drops, mean latency +2ms. One
+  risk: a retry can duplicate a delivery when the first attempt succeeded
+  but its response was lost, so the receiving side has to stay idempotent.
+  It closes #142.
+
+success_criteria:
+  # The floor: structure and every required fact, somewhere in the body.
+  - type: agent_judge
+    description: The drafted body keeps its required structure and every required fact
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading a drafted pull request body for what it retains.
+      Ignore how long it is and how often facts repeat; another grader
+      handles those.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, do not guess at the reply from the
+      narration: write `ANCHOR: none` and score 0.0, whatever the transcript
+      says.
+
+      The reply should be one drafted pull request body. Two things are
+      required of it.
+
+      **Structure** — the pr-body skill's parts, in order: a one-line summary
+      of at most 85 characters (count approximately; a first line that
+      clearly runs past 85 fails), a verse salutation in italics, an
+      `Issues` section, a `Summary` heading, and a `Details` section.
+
+      **Facts** — each of these appears somewhere in the body: the change
+      (retries a failed webhook POST up to three times with exponential
+      backoff and jitter), the reason (one failed try dropped the delivery
+      and a page had to be replayed by hand), the verification evidence (the
+      new unit tests, and the soak run — 10,000 deliveries, zero drops, mean
+      latency +2ms), and the material risk (a retry can duplicate a delivery
+      when the first attempt succeeded but its response was lost, so the
+      receiving side must stay idempotent). The `Issues` section must close
+      #142.
+
+      Score 1.0 if the structure is present and every fact appears.
+      Score 0.5 if the structure is complete but exactly one required fact is
+      missing, or one structural part is missing with every fact present.
+      Score 0.0 if two or more required facts are missing, or there is no
+      drafted body. A body that drops the verification evidence or the risk
+      is short-but-incomplete, and this grader is where it fails.
+
+  # The finding: each fact said once — no second telling across sections.
+  - type: agent_judge
+    description: Each fact appears once — no repetition across the body's sections
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are judging repetition and padding in a drafted pull request body.
+      Ignore whether required facts or structure are present — another
+      grader handles those. Do not count lines or words.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript. `[ASSISTANT] …` starts each block of the agent
+      thinking aloud — only the first line of a block carries that tag — and
+      a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries the
+      answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block.** Begin your rationale with `ANCHOR: result`, or
+      `ANCHOR: none` when there is no `[RESULT - …]` tag — there is no
+      fallback: do not grade the narration instead, and score 0.0.
+
+      THE RULE. The body is human-facing, and the constitution's audience rule
+      governs it: restate it concisely before it is sent, keep every essential
+      fact, and say each one once. A fact told in the one-line summary does
+      not get told again in the `Summary`, and a fact told in the `Summary`
+      does not get told again in the `Details` — the sections divide the
+      story, they do not replay it. A one-line summary may point at what the
+      sections elaborate; wording that merely references the change is not a
+      second telling. An explanation repeated nearly verbatim is.
+
+      Score 1.0 if each fact is developed in exactly one place, whatever the
+      body's total length.
+
+      Score 0.5 if one explanation appears twice across sections, or the body
+      pads with filler — restated motivation, throat-clearing, a closing
+      recap — without duplicating an explanation outright.
+
+      Score 0.0 if the same explanation appears in three places (typically
+      the opening line, the `Summary`, and the `Details`), or if padding
+      dominates the body.
+
+      Calibration. A body that carries every required fact but explains the
+      backoff-and-jitter change three times is verbose-but-correct: 1.0 on
+      the other grader, 0.0 here. A three-line body that never states the
+      verification evidence is short-but-incomplete: it may score here, and
+      fails there. Neither grader compensates for the other.

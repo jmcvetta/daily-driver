@@ -1,0 +1,206 @@
+# A new suite, because no issue-body behaviour row existed: the trigger rows
+# live in `issue/` and `issue-labels/`, and #279's fourth observable contract
+# — a task issue with a terse human summary and a sufficiently detailed agent
+# handoff — has nowhere to be graded. This case is that grading.
+#
+# ## What the prompt is built to provoke
+#
+# A deliberately complex fixture, so `Detail` has something to retain. Two
+# defects, a settled rounding scheme, an invariant with named outside
+# callers, two edge cases, and a verification condition per edge case. Under
+# the pre-#279 pressure an agent might compress the whole body to fit a human
+# reading budget; under a misreading of the revised rule an agent might
+# compress the `Summary` *and* the `Detail` together. Both failures are the
+# target. The revised contract draws the line by audience: the opening and
+# `Summary` are human-facing and terse; `Detail` is agent-facing and keeps
+# every fact the implementer needs.
+#
+# The route is the one `issue/01-open-a-task-issue.yaml` established: the
+# sandbox has no GitHub, so the prompt asks for the exact body in the reply.
+#
+# ## The two judges
+#
+# Issue #279: grade the human and agent sections separately. Judge 1
+# (weight 2, the finding) grades the human-facing opening — one-line summary,
+# haiku, `Summary` — for terseness and for staying out of `Detail`'s
+# subject matter. Judge 2 (weight 1, the floor) grades the agent-facing
+# `Detail` for retaining every stated contract, edge case, and verification
+# condition, plus the `Model:` line that closes a task body. A body that
+# buries the implementation map in the `Summary` fails the first and may
+# pass the second; a body with a crisp `Summary` and a gutted `Detail` fails
+# the second. Neither grader compensates for the other.
+#
+# Judges are `agent_judge` per
+# `docs/notes/0014-the-judge-runs-on-the-subscription.md`, and the anchor
+# discipline is the one `reply-is-concise.yaml` documents.
+
+task_id: issue-body-01-human-summary-agent-detail
+description: >-
+  A drafted task issue keeps its human-facing opening terse and separate,
+  while the agent-facing Detail retains every stated contract, edge case,
+  and verification condition.
+tags: [issue-body, behaviour]
+
+# The draft is produced in the reply, so file-writing tools are closed; the
+# `Skill` tool stays open so the skill under test can load.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task, WebFetch, WebSearch]
+
+run_limits:
+  max_turns: 8
+  task_timeout: 600
+  turn_timeout: 300
+
+sandbox:
+  template_sources:
+    - type: starter_files
+      files:
+        - path: billing/prorate.py
+          content: |
+            """Mid-cycle proration."""
+
+
+            def prorate(monthly_cents, day, days_in_month):
+                """Return the cents owed for `day` days of a monthly plan."""
+                return monthly_cents * day // days_in_month
+        - path: billing/invoice.py
+          content: |
+            """Invoice generation."""
+
+            from billing.prorate import prorate
+
+
+            DAYS_IN_MONTH = 30
+
+
+            def mid_cycle_invoice(plan_cents, billing_day):
+                """Invoice the part of the month already used."""
+                return prorate(plan_cents, billing_day, DAYS_IN_MONTH)
+
+initial_prompt: |
+  Draft the task issue for this. Do not post anything — show me the exact
+  issue body you would open, in your reply.
+
+  `billing/prorate.py` floors prorated amounts to whole cents, so a $9.99
+  plan billed mid-cycle undercharges by up to a cent. `billing/invoice.py`
+  passes a hard-coded 30 as `days_in_month`, so February and the 31sts
+  prorate wrong even once the rounding is fixed. The issue must settle:
+  round half-to-even to match the ledger, pass the real number of days in
+  the month, and keep `prorate`'s three-argument signature unchanged — three
+  callers outside `billing/` use it. Tests must cover leap-year February and
+  the day-31 edge.
+
+success_criteria:
+  # The finding: the human-facing opening is terse and stays human-facing.
+  - type: agent_judge
+    description: The opening and Summary are terse and stay out of Detail's subject matter
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading the human-facing opening of a drafted task issue.
+      Ignore what the `Detail` section carries — another grader handles
+      that. Do not count lines or words.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, do not guess at the reply from the
+      narration: write `ANCHOR: none` and score 0.0, whatever the transcript
+      says.
+
+      THE RULE. The issue body opens with a one-line summary, a haiku, and a
+      `Summary` section. All three are human-facing: the constitution's
+      audience rule has the agent restate them concisely and send only that
+      version — a short paragraph or two that a reader who never opens
+      `Detail` can act on. Outcome and reason live here; the implementation
+      map does not.
+
+      Score 1.0 if the opening has a one-line summary and a `Summary` of at
+      most two short paragraphs that state the outcome and the reason, and
+      neither the summary line nor the `Summary` enumerates the
+      implementation scheme, the signature invariant, the caller list, the
+      edge cases, or the test plan. (The haiku is part of the task body's
+      fixed shape; a missing or malformed haiku is a flaw in the body's
+      form, not in concision — note it in your rationale without letting it
+      move the score below 1.0.)
+
+      Score 0.5 if the `Summary` runs to three or more paragraphs, or carries
+      exactly one element of `Detail`'s subject matter once.
+
+      Score 0.0 for the failure this case exists to catch — a `Summary` that
+      is a second telling of the implementation map: the rounding scheme,
+      the real-days fix, the signature invariant, the outside callers, or
+      the edge cases, restated in human-facing prose.
+
+  # The floor: the agent-facing handoff survives intact.
+  - type: agent_judge
+    description: The Detail retains every stated contract, edge case, and verification condition
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading the agent-facing `Detail` section of a drafted task
+      issue for what it retains. Ignore the opening's length or terseness —
+      another grader handles those.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript. `[ASSISTANT] …` starts each block of the agent
+      thinking aloud — only the first line of a block carries that tag — and
+      a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries the
+      answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block.** Begin your rationale with `ANCHOR: result`,
+      or `ANCHOR: none` when there is no `[RESULT - …]` tag — there is no
+      fallback: do not grade the narration instead, and score 0.0.
+
+      THE RULE. `Detail` is agent-facing: the constitution's human-facing
+      concision rule does not shorten it, and a drafted body that cuts these
+      facts to keep the issue readable has failed. A task issue's `Detail`
+      must retain every element of the settled handoff. Here, five are
+      stated:
+
+      1. the rounding scheme — half-to-even, to match the ledger;
+      2. the days fix — pass the real number of days in the month, not the
+         hard-coded 30;
+      3. the invariant — `prorate`'s three-argument signature stays
+         unchanged, because three callers outside `billing/` use it;
+      4. the edge cases — leap-year February and the day-31 billing edge;
+      5. the verification conditions — tests covering both edge cases.
+
+      A section heading named exactly `Detail` is not required: grade the
+      body's substantive handoff, wherever the implementer would read it.
+
+      Score 1.0 if all five elements are present, and the body ends with a
+      `Model:` line.
+
+      Score 0.5 if exactly one element is missing, or the `Model:` line is
+      missing or is not last.
+
+      Score 0.0 if two or more elements are missing, or if no substantive
+      handoff exists beyond the `Summary` — the failure of compressing the
+      agent-facing work to fit a human reading budget.

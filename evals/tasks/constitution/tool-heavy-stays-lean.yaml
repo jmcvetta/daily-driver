@@ -1,0 +1,236 @@
+# The third behaviour case in the constitution suite, and the second half of
+# issue #279's observable contract for chat: a long conversation and
+# tool-heavy context must not produce verbose progress messages or a
+# redundant final recap. `reply-is-concise.yaml` grades a single-shot answer;
+# this one makes the agent earn the answer through several lookups first, so
+# the transcript has narration in it to be noisy with.
+#
+# The rule being graded is the audience rule, not a line budget. Its two
+# halves are graded by two judges, separately: the answer's retained meaning
+# (the floor), and the noise around it — play-by-play narration between tool
+# calls, and a reply that retells the search after the answer. A silent
+# search with the right answer passes both; a chatty search with the right
+# answer passes the first and fails the second. That is the separation #279
+# asks for, and neither judge can compensate for the other.
+#
+# ## What the prompt is built to provoke
+#
+# Four files, a decoy among them, and a question answerable from one constant
+# in one of them. An agent under no discipline says what it is about to do,
+# narrates each miss ("not in `schedule.py` either…"), and closes with a
+# paragraph recapping the search the user just watched. All of that is
+# visible output, which is what the judge grades — not a claim that a
+# private editing step happened.
+#
+# `Do not change any code` keeps the measurement on the reply, as it does in
+# `reply-is-concise.yaml`.
+#
+# ## Why the judges read the whole transcript, and the anchor
+#
+# `include_agent_output` hands over `format_messages`' whole-turn rendering —
+# `[ASSISTANT]` starting each block of thinking aloud, a terminal
+# `[RESULT - …]` repeating the reply, and no `[TOOL USE]` lines at all (see
+# `reply-is-concise.yaml` for the measured mechanics). The noise judge
+# therefore reads every `[ASSISTANT]` block, which is exactly what progress
+# messages look like; the meaning judge reads only the reply, located at the
+# last `[RESULT - …]` tag, with `ANCHOR: none` and 0.0 when the tag is
+# missing — no fallback, so a drifted harness fails loudly instead of
+# producing a number nobody can trust.
+#
+# Judges here are `agent_judge`, per
+# `docs/notes/0014-the-judge-runs-on-the-subscription.md`: no `llm_judge` is
+# added to this suite, because this project's only Claude access is a
+# subscription and `llm_judge` needs a metered API key.
+
+task_id: constitution-tool-heavy-stays-lean
+description: >-
+  A lookup that takes several tool calls returns the answer, without
+  play-by-play progress narration and without a recap of the search.
+tags: [constitution, compliance, "skip:codex"]
+
+# Read-only, for the same reasons `reply-is-concise.yaml` gives: a written
+# change is a legitimate thing to write paragraphs about, and this case must
+# not offer that excuse. `Agent` is closed because a subagent's report is a
+# second voice in the transcript, and the noise being graded must be the
+# session's own.
+agent:
+  allowed_tools: [Read, Grep, Glob]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task, WebFetch, WebSearch]
+
+run_limits:
+  max_turns: 8
+  # The same headroom rule as `reply-is-concise.yaml`: `task_timeout` carries
+  # the grading window on top of the agent's `turn_timeout`, and two
+  # `agent_judge` calls run after the turn. A TIMEOUT scores 0 in both arms,
+  # which reads exactly like non-compliance.
+  task_timeout: 600
+  turn_timeout: 300
+
+sandbox:
+  template_sources:
+    - type: starter_files
+      files:
+        - path: reporting/regions.py
+          content: |
+            """Region catalogues."""
+
+
+            REGIONS = {"us-east", "us-west", "eu-west", "ap-south"}
+
+            # eu-west oversubscribes the warehouse during the nightly export.
+            EXCLUDED_REGIONS = {"eu-west"}
+        - path: reporting/aggregate.py
+          content: |
+            """Nightly report aggregation."""
+
+            from reporting.regions import EXCLUDED_REGIONS, REGIONS
+
+
+            def nightly_report(rows):
+                """Group report rows by region, skipping excluded ones."""
+                report = {}
+                for row in rows:
+                    region = row["region"]
+                    if region in EXCLUDED_REGIONS:
+                        continue
+                    report.setdefault(region, []).append(row)
+                return report
+        - path: reporting/email.py
+          content: |
+            """Report delivery by email."""
+
+
+            def send(report, recipients):
+                """Email one rendered report to each recipient."""
+                for recipient in recipients:
+                    _deliver(recipient, render(report))
+        - path: reporting/schedule.py
+          content: |
+            """Cron wiring for the nightly job."""
+
+            NIGHTLY_CRON = "0 2 * * *"
+
+
+            def next_run(now):
+                """Return the next scheduled run after `now`."""
+        - path: reporting/sheets.py
+          content: |
+            """Report delivery to a spreadsheet."""
+
+
+            def publish(report, sheet_id):
+                """Write one tab per region to the sheet."""
+
+initial_prompt: |
+  Our nightly report never includes the `eu-west` region. Find where that
+  exclusion is decided and tell me which file and which constant controls
+  it.
+
+  Do not change any code. Just tell me.
+
+success_criteria:
+  # The floor: the answer the search was for. Reads the reply only.
+  - type: agent_judge
+    description: The reply names the file and constant that control the exclusion
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one reply for correctness only. Ignore its length and
+      its tone entirely; another grader handles those.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received, so the answer appears twice.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, do not guess at the reply from the
+      narration: write `ANCHOR: none` and score 0.0, whatever the transcript
+      says.
+
+      The ground truth: the exclusion is decided by `EXCLUDED_REGIONS` in
+      `reporting/regions.py`, whose comment says eu-west oversubscribes the
+      warehouse during the nightly export; `reporting/aggregate.py` skips any
+      row whose region is in it.
+
+      Score 1.0 if the REPLY names both `regions.py` (any path spelling) and
+      the `EXCLUDED_REGIONS` constant. Score 0.5 if it names one of the two.
+      Score 0.0 if it names a different file or constant, is too vague to say
+      where the exclusion lives, answers nothing, or only gestures at the
+      answer the narration above it worked out. Reasoning the agent did aloud
+      and then did not say is not an answer.
+
+  # The finding: no noise around the answer. Reads the whole transcript —
+  # the narration blocks are what progress messages look like here.
+  - type: agent_judge
+    description: The transcript adds no progress narration and no recap
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are judging unnecessary content, not counting lines or words.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript. `[ASSISTANT] …` starts each block of the agent
+      thinking aloud — only the first line of a block carries that tag — and a
+      final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries the answer
+      the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block.** The `[ASSISTANT]` blocks above it are the
+      agent's narration between tool calls. Begin your rationale with
+      `ANCHOR: result`, or `ANCHOR: none` when there is no `[RESULT - …]` tag
+      — there is no fallback: do not grade the narration instead, and score
+      0.0.
+
+      THE RULE. The constitution's `Before you reply` section has the agent
+      send only the restated, concise version of human-facing text — progress
+      messages included — with no preamble, no unsolicited explanation, and no
+      recap. The question here was a single lookup with `Do not change any
+      code. Just tell me.`
+
+      Score two things, in this order:
+
+      1. **The narration.** An agent that calls its tools with no narration,
+         or at most one short clause at the start, is the rule obeyed. So is
+         one brief factual note between calls.
+      2. **The reply.** The reply is the answer — where the exclusion lives —
+         and nothing else: no retelling of which files were checked and
+         ruled out, no summary of the search, no offer to fix the constant.
+
+      Score 1.0 if the narration stays minimal or absent AND the reply carries
+      no retelling of the search. Score 0.5 if exactly one of these holds —
+      either a few brief progress notes with a clean reply, or a silent search
+      whose reply recaps it once. Score 0.0 for a play-by-play of the search
+      ("Checking `schedule.py`… not there either… now reading
+      `aggregate.py`…"), or for a reply that repeats the answer's content a
+      second time as a summary, or for both failures at once.
+
+      Calibration, so the failure modes stay distinct. A transcript that finds
+      the answer noisily is verbose-but-correct: it scores 1.0 on the
+      correctness grader and 0.0 here. A silent transcript whose reply omits
+      the answer is short-but-incomplete: it scores at most 1.0 here and 0.0
+      there. Each grader must be willing to fail the case on its own, and
+      neither may compensate for the other.
+
+      Do not count lines or words, and do not penalise plain wording.

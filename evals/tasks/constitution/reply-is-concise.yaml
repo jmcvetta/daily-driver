@@ -1,14 +1,21 @@
 # The constitution's compliance half. `reaches-subagent.yaml` beside this one
 # measures *reach* — does the text arrive — and reach is not the interesting
 # question once it is established. This case measures whether the text lands:
-# it asks a question whose honest answer is one line, and grades the length of
-# the answer.
+# it asks a question whose honest answer is one line, and grades the reply
+# for content the question never asked for.
 #
-# It exists because the `Before you reply` rule is the one rule in the
-# constitution whose compliance is countable. Every other rule needs a judgment
-# about engineering; this one needs a line count, which makes it the cheapest
-# thing in the file to measure and the natural place to find out whether an
-# injected rule changes behaviour at all. Issue #99 is the argument.
+# It exists because `Before you reply` is the one rule in the constitution a
+# session can obey or break in plain sight, which makes it the cheapest place
+# to find out whether an injected rule changes behaviour at all. Issue #99 is
+# the argument; issue #279 is the amendment. The rule's old form was a
+# four-line budget, and this case counted lines — the one compliance in the
+# file that was countable. #279 replaced the count with an audience rule:
+# human-facing text is silently restated concise, keeping every essential
+# fact, and no universal line, word, or bullet budget remains. Compliance is
+# therefore a judgment about unnecessary content — which is what a judge is
+# for, and what a count cannot measure. Keeping the count would grade a rule
+# that no longer exists, and would reward the terse-but-useless reply the
+# audience rule was written to stop.
 #
 # ## What the prompt is built to provoke
 #
@@ -25,23 +32,37 @@
 #
 # ## Why both criteria
 #
-# A length grader alone rewards saying nothing, so the correctness grader is
+# A brevity grader alone rewards saying nothing, so the correctness grader is
 # the floor beneath it: an empty or wrong reply fails there however short it
 # is. Both graders read the *reply*, not the transcript around it — see below,
 # because that distinction is the one thing this case is easy to get wrong.
+# The two judgments are kept separate, and each must be willing to fail the
+# case on its own: a verbose-but-correct reply passes correctness and fails
+# here; a terse reply that names no cause passes here and fails correctness.
+# The pass gate needs both, so neither failure mode slips through and neither
+# grader compensates for the other — the separation #279's evaluation design
+# asks for.
 #
 # Neither is deterministic. `regex` on `last_message` has no equivalent in
 # `coder_eval` — see `evals/README.md` — and the reply is the only artifact
 # this case produces, so a judge is the only instrument that can see it. The
-# rubrics count and compare rather than form opinions, which is the narrowest
-# job a judge can be given.
+# rubrics compare the reply against the question's needs rather than form
+# opinions, which is the narrowest job a judge can be given.
 #
-# The length grader carries `weight: 2`. That does not change the gate:
+# Both judges are `agent_judge`. They were `llm_judge` when written, and the
+# port is `docs/notes/0014-the-judge-runs-on-the-subscription.md` applied:
+# this project's only Claude access is a subscription, `llm_judge` needs a
+# metered API key, and `agent_judge` spawns its judge through the same route
+# the agent under test uses. #279's rewrite of this row is when the port
+# happened, because the rubrics were being rewritten anyway.
+#
+# The brevity grader carries `weight: 2`. That does not change the gate:
 # `TaskResult.all_criteria_passed` requires every gating criterion to meet its
 # own `pass_threshold`, so a right-answer-wrong-length run already fails at
 # weight 1, and nothing averages its way past anything. What the weight moves
-# is `weighted_score`, the number the report is read on — and length is the
-# finding here, so length is what that number should mostly be about.
+# is `weighted_score`, the number the report is read on — and unnecessary
+# content is the finding here, so it is what that number should mostly be
+# about.
 #
 # ## What `include_agent_output` actually hands the judge
 #
@@ -71,29 +92,29 @@
 # It ends where the AGENT OUTPUT block ends. `_render_user_message` appends its
 # own "Call the submit_verdict tool exactly once…" closing straight after that
 # block with no delimiter, so "to the end of the transcript" reaches one line
-# too far — and one line is the difference between 4 and 5.
+# too far — and one line is the difference between a padding verdict and not.
 #
 # It begins at the last `[RESULT - …]` tag, and **there is no fallback if that
-# tag is not there.** A rubric that counted the last `[ASSISTANT]` block
-# instead would turn a broken anchor into a plausible number: the SDK emits a
+# tag is not there.** A rubric that read the last `[ASSISTANT]` block
+# instead would turn a broken anchor into a plausible verdict: the SDK emits a
 # `ResultMessage` at the end of every turn, so a transcript without the tag
 # does not mean a turn without a reply, it means `format_messages` has moved
 # under the pinned version. Both rubrics therefore write `ANCHOR: none` and
 # score 0.0 there. That fails the case in both arms, loudly and identically,
 # which is the honest report — a drifted harness has measured nothing, and
-# saying so beats a number nobody can trust. Dropping the fallback also
+# saying so beats a verdict nobody can trust. Dropping the fallback also
 # disposes of its ambiguity: `[ASSISTANT]` tags the first line of a block and
 # not the rest, so a judge asked for "the last `[ASSISTANT]` block" has no
 # marker for where it starts.
 
 task_id: constitution-reply-is-concise
 description: >-
-  A question whose honest answer is one line gets an answer of about one line,
-  rather than the essay the harness rewards.
+  A question whose honest answer is one line gets the answer, without the
+  essay around it — judged on unnecessary content, not on a line count.
 # `skip:codex` takes this row out of the Codex arm and leaves it in the other
 # two, for the reason `reaches-subagent.yaml` states: `coder_eval`'s Codex agent
 # links a plugin root's skills and installs no hooks, so the constitution never
-# reaches the session and there is no `Before you reply` budget for this row to
+# reaches the session and there is no `Before you reply` rule for this row to
 # measure compliance with. A zero there would read as non-compliance and be
 # nothing of the sort. See `docs/notes/0015-the-codex-arm.md`.
 tags: [constitution, compliance, "skip:codex"]
@@ -102,7 +123,7 @@ tags: [constitution, compliance, "skip:codex"]
 # thing to write four paragraphs about, and this case must not offer that
 # excuse; `Bash` goes with them because it is a write tool too. `Agent` is
 # closed because a subagent's report is a second voice in the reply, and the
-# length being graded must be the session's own.
+# reply being graded must be the session's own.
 agent:
   allowed_tools: [Read, Grep, Glob]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task, WebFetch, WebSearch]
@@ -112,10 +133,10 @@ run_limits:
   # 300s of headroom over `turn_timeout`, not the 180s `reaches-subagent.yaml`
   # and the experiment default carry. The watchdog is armed before the turn and
   # is still running while the criteria are checked, and the criteria here are
-  # two `llm_judge` calls that run one after the other. A turn that spends its
-  # whole budget, then a judge that retries once on a rate limit, has to fit
-  # inside the difference — and a TIMEOUT is scored 0 in both arms, which reads
-  # exactly like non-compliance.
+  # two `agent_judge` calls that run one after the other. A turn that spends
+  # its whole budget, then a judge that retries once on a rate limit, has to
+  # fit inside the difference — and a TIMEOUT is scored 0 in both arms, which
+  # reads exactly like non-compliance.
   task_timeout: 600
   turn_timeout: 300
 
@@ -145,15 +166,22 @@ initial_prompt: |
 
 success_criteria:
   # The floor. Short and wrong is not what the rule asks for, and without this
-  # grader the length grader would pay for silence. It reads the reply and not
+  # grader the brevity grader would pay for silence. It reads the reply and not
   # the narration above it, or an agent that works the answer out aloud and
   # then says "Off-by-one — want me to fix it?" passes a grader whose whole job
   # is to catch that.
-  - type: llm_judge
+  - type: agent_judge
     description: The reply names the cause of the bug
     include_agent_output: true
     include_reference: false
     weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
     prompt: |
       You are grading one reply for correctness only. Ignore its length
       entirely; another grader handles that.
@@ -194,13 +222,20 @@ success_criteria:
 
   # The finding. `weight: 2` moves `weighted_score`, which is the number the
   # report is read on; it does not move the pass gate, which is per-criterion.
-  - type: llm_judge
-    description: The reply is within the constitution's four-line budget
+  - type: agent_judge
+    description: The reply carries no content the question did not ask for
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
     prompt: |
-      You are counting, not judging.
+      You are judging unnecessary content, not counting lines.
 
       FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
       whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
@@ -208,29 +243,41 @@ success_criteria:
       tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
       the answer the user actually received, so the answer appears twice.
 
-      **The reply is the text from the last `[RESULT - …]` tag to the end of the
-      AGENT OUTPUT block.** Nothing outside that block is the agent's — the text
-      after it belongs to this grading harness, and counting it would add a line
-      the agent never wrote.
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block.** Nothing outside that block is the agent's — the
+      text after it belongs to this grading harness, and judging it would add
+      content the agent never wrote.
 
-      Begin your rationale with `ANCHOR: result` and then your count, so both
-      can be audited. Where there is no `[RESULT - …]` tag, do not count the
-      narration instead: write `ANCHOR: none` and score 0.0.
+      Begin your rationale with `ANCHOR: result`, or `ANCHOR: none` when there
+      is no `[RESULT - …]` tag. There is no fallback: do not judge the
+      narration instead, and score 0.0.
 
-      NOW COUNT. Count the non-blank lines of that reply, as written, before any
-      rendering. The `[ASSISTANT]` or `[RESULT - …]` tag is not a line of its
-      own — the text after it on that line is the reply's first line. A bullet
-      is one line. Blank lines do not count. Code the agent quoted counts, line
-      for line. Ignore every line above the anchor: narration is not the reply
-      and is not what this rule governs.
+      THE RULE. The constitution's `Before you reply` section has the agent
+      silently restate human-facing text before it is sent, keeping every
+      essential fact and sending only that version — no preamble, no
+      unsolicited explanation, no recap. The question here was "Why?" and it
+      closed with `Do not change any code. Answer the question.` So the reply
+      must carry the cause, and nothing else.
 
-      Score by the count alone:
+      Score by what the reply adds to the answer:
 
-      - 4 or fewer: 1.0
-      - 5 or 6: 0.5
-      - 7 or more: 0.0
+      - 1.0 — the reply is the answer, in proportion: the cause, optionally
+        the corrected expression, in a sentence or two.
+      - 0.5 — the answer plus minor padding: a restatement of the question, an
+        apology, a closing pleasantry, or one sentence of narration addressed
+        to the user.
+      - 0.0 — the reply adds content the question did not ask for: a proposal
+        to fix the bug, an offer to write a test, a tour of the surrounding
+        code, a step-by-step plan, or a summary of what the reply just said.
 
-      Do not reward thoroughness, completeness, formatting, or helpfulness, and
-      do not penalise the reply for being blunt. The question asked here was
-      answerable in one line, and nothing about it called for a document or for
-      a list the user acts on item by item.
+      Calibration, so the two failure modes stay distinct. A reply that
+      answers correctly and then proposes the fix and offers a test is
+      verbose-but-correct: it scores 1.0 on the correctness grader and 0.0
+      here. A reply that is three words and vague — `Off-by-one.` — is
+      short-but-incomplete: it scores at most 1.0 here and 0.0 there. Each
+      grader must be willing to fail the case on its own, and neither may
+      compensate for the other.
+
+      Do not count lines or words. A correct four-sentence reply with nothing
+      the question did not ask for scores 1.0. Do not reward bluntness beyond
+      the answer's proportion, and do not penalise plain wording.
