@@ -286,8 +286,8 @@ a second claim on the same branch, and buys nothing with them.
 **Subagents belong to the review round, not to the body of the work.**
 `review-cycle`'s `Verify the fix delta` dispatches a briefed subagent, and
 that is where a second reader earns its cost — the author of a delta cannot
-be an independent reader of it. Steps 7–9 below are the only place this
-sequence delegates.
+be an independent reader of it. `Review the head`, `Fix, answer, resolve,
+push` and `Verify the fix delta` are the only place this sequence delegates.
 
 **Parallelism across issues is `embark`'s.** Where several task issues are
 worked at once, that skill opens a session or a subagent per task, and each of
