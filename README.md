@@ -380,8 +380,7 @@ credential-free — see [evals/README.md](evals/README.md); `TASKS='tasks/consti
 other half of the constitution's test, since only a real session can prove the
 harness honours the subagent hook. Those rows carry `skip:codex`: the Codex arm
 links skills and installs no hooks, so the constitution never reaches that
-session and both rows would score zero for a reason that is not the
-constitution's.
+session and they would score zero for a reason that is not the constitution's.
 
 `make mcp-usage` is not a check. It counts which GitHub MCP tools this laptop
 called, so the server's `--toolsets` list can be narrowed on evidence; see

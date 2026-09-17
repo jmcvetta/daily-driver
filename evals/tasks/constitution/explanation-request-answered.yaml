@@ -1,4 +1,4 @@
-# The fourth behaviour case in the constitution suite, and the guard against
+# The third behaviour case in the constitution suite, and the guard against
 # the failure the concision rule could itself cause: an agent that reads
 # "concise" as "short" answers a request for an explanation with a shrug.
 # Issue #279's fifth observable contract — a request for an explanation

@@ -1,4 +1,4 @@
-# The third behaviour case in the constitution suite, and the second half of
+# The second behaviour case in the constitution suite, and the second half of
 # issue #279's observable contract for chat: a long conversation and
 # tool-heavy context must not produce verbose progress messages or a
 # redundant final recap. `reply-is-concise.yaml` grades a single-shot answer;
@@ -15,7 +15,7 @@
 #
 # ## What the prompt is built to provoke
 #
-# Four files, a decoy among them, and a question answerable from one constant
+# Five files, three of them decoys, and a question answerable from one constant
 # in one of them. An agent under no discipline says what it is about to do,
 # narrates each miss ("not in `schedule.py` either…"), and closes with a
 # paragraph recapping the search the user just watched. All of that is
