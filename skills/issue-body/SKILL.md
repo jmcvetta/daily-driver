@@ -6,8 +6,10 @@ description: >-
   "update #123's body", or asks for an issue to be made ready for an agent,
   and including any call Claude makes on its own initiative that sets an issue
   `body`. It is invoked from `issue` and also fires on direct body edits, so
-  no write bypasses it. Supplies what a `task` issue's body must carry — the
-  grounded handoff, the readiness test, and the `Model:` line — and the update
+  no write bypasses it. Supplies what a `task` issue's body must carry —
+  the grounded handoff, a terse human-facing opening and `Summary`, the
+  unrestricted agent-facing `Detail`, the readiness test, and the `Model:`
+  line — and the update
   rule that preserves valid content. Any other label's edit runs under the
   rules that already govern it and acquires nothing here. Not for the label
   itself, which is `issue-labels`, for the relationship graph, which is
@@ -29,7 +31,9 @@ makes it a task body from that edit onward.
 **What is defined here is defined for `task` alone.** Every other label's
 body properties are undefined by this skill: perform the requested edit under
 the rules that already govern it and impose nothing — no task sections, no
-model metadata, no generic template. The standard does not claim the
+model metadata, no generic template. What governs the human-facing prose of
+those bodies is the constitution's audience rule, which needs no template
+from here. The standard does not claim the
 namespace, in the way `issue-labels` says of labels themselves.
 
 **The routes are per harness, and they live beside this file.** The calls
@@ -90,15 +94,20 @@ four parts, in this order:
    verse form is what tells a task issue and a pull request apart on sight:
    a pull request carries a classical salutation, a task issue a haiku.
 3. **`Summary`.** What changes and why it is wanted, for a reader who will
-   not read `Detail` — requirements 1 and 2 above, in plain terms. **A short
-   paragraph or two, and it stops there.** The budget is part of the rule: a
-   `Summary` that grows into a second telling of `Detail` is the failure
-   mode, because the requirements below invite it. Nothing an implementer
-   needs lives here — that is `Detail`'s — and nothing is said twice.
+   not read `Detail` — requirements 1 and 2 above, in plain terms. This is
+   human-facing text: the constitution's audience rule governs it, and the
+   silent editing step runs before it is written. **A short paragraph or
+   two, and it stops there.** That budget is part of the rule: a `Summary`
+   that grows into a second telling of `Detail` is the failure mode, because
+   the requirements below invite it. Nothing an implementer needs lives
+   here — that is `Detail`'s — and nothing is said twice.
 4. **`Detail`.** Free form, and as long as the task needs: the grounded
    implementation map, the settled design, and the acceptance and
-   verification conditions — requirements 3, 4 and 5. Headings inside it
-   are the author's choice.
+   verification conditions — requirements 3, 4 and 5. `Detail` is
+   agent-facing, so the constitution's human-facing concision rule does not
+   shorten it: do not cut the contracts, edge cases, or verification
+   conditions merely to meet a reading budget. Headings inside it are the
+   author's choice.
 
 The `Model:` line keeps the rule it has below: the last line of the body,
 after `Detail`, and nothing after it.
