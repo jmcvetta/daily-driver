@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.29.0](https://github.com/jmcvetta/daily-driver/compare/v0.28.0...v0.29.0) (2026-09-17)
+
+
+### Features
+
+* **omp_configs:** add a GLM 5.3 overlay ([#268](https://github.com/jmcvetta/daily-driver/issues/268)) ([2e6005b](https://github.com/jmcvetta/daily-driver/commit/2e6005b3e4897fb79907b18226394bb9d986376c))
+* **review-cycle:** verify the fix delta with a briefed subagent ([#286](https://github.com/jmcvetta/daily-driver/issues/286)) ([02bed7e](https://github.com/jmcvetta/daily-driver/commit/02bed7e2aad8144886bad6fc8de762f5b56c05bd))
+* **skills:** italicise the poem on claim comments ([#282](https://github.com/jmcvetta/daily-driver/issues/282)) ([be319ca](https://github.com/jmcvetta/daily-driver/commit/be319cacfde9672dd44e81978508706d2585c8ec))
+
 ## [0.28.0](https://github.com/jmcvetta/daily-driver/compare/v0.27.0...v0.28.0) (2026-09-16)
 
 
