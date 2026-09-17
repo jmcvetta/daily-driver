@@ -66,20 +66,35 @@ into the submitted threads that `Fix, answer, resolve, push` answers.
 
 **It is a second agent run, and it is billed as one.** `codex exec review`
 starts a fresh session with its own model. That is what makes it a named
-surface rather than the bare subagent `SKILL.md` refuses, and it is also why
-the round runs it once per diff rather than once per push.
+surface carrying its own rubric and publication route, rather than an ad-hoc
+dispatch with neither, and it is also why the round runs it once per diff
+rather than once per push.
 
 
 
 Fix-delta verification
 ======================
 
-**Unavailable on the measured surface.** `codex exec review` accepts a base
+**Unavailable on `codex exec review`, not on the harness.** It accepts a base
 branch or one commit, not a reviewed-SHA/current-SHA range plus findings and
-dispositions. `--commit <SHA>` would verify one commit, not a batch. Do not
-substitute either for the required delta pass. Record the unavailable result
-with `gh pr comment <number> --body-file <path>`, leave or return the pull
-request to draft, and report the blocker:
+dispositions; `--commit <SHA>` would verify one commit, not a batch, and
+neither substitutes for the required delta pass. The route is the delegation
+namespace's `multi_agent_v1` dispatch instead — the same one
+[`skills/undertake/references/codex.md`](../../undertake/references/codex.md)
+uses for `Implement` — carrying the bounded brief `SKILL.md`'s `Verify the fix
+delta` requires: the pull request, base branch, full-review SHA, current SHA,
+original findings, dispositions, and pass number. Require it to compare the
+pull request's three-dot content at the reviewed SHA with its three-dot
+content at the current SHA, exclude changes attributable only to the base
+branch, and inspect affected callers. It reports only whether each
+implemented finding is solved and any concrete regressions in that delta. It
+must not perform a full-PR audit, solicit style work, or supply the verdict —
+the session records the result from the delegate's report, never in place of
+it.
+
+Publish any findings it raises through this file's `Review history,
+publication, and threads` route below, then record the pass with
+`gh pr comment <number> --body-file <path>`:
 
 ```text
 Review verification
@@ -87,12 +102,15 @@ scope reviewed: <sha>
 pass: <1|2>
 verified: <sha>
 findings: <finding ids and dispositions>
-outcome: unavailable
+outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>
 cap: <open|hit>
 usage: <exact value if exposed|unavailable>
 ```
 
+`outcome: unavailable` stays reachable for a dispatch that genuinely fails —
+the delegate returns nothing usable, or does not return at all — recorded as
+such rather than guessed at; a working dispatch is not unavailable by design.
 Never estimate usage when the invocation does not expose it.
 
 The wait
