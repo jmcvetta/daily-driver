@@ -72,6 +72,7 @@ every subagent. Nine sections:
 | Voice | Simplified Technical English for prose written in your own voice. |
 | Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
 | Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; repository-changing tasks isolated before research; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
+| While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
 | When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
 | Before you call it done | The project's own gates decide, not reasoning about them — and CI is where they run, not this machine. |
@@ -144,10 +145,11 @@ session-title, reminder, and session-info tools
 `ExtensionAPI` makes natural. It also closes the failure that weaker models
 exposed in `task-worktree`: direct `write` and `edit` calls in the primary
 checkout or a detached worktree are denied before they change state, as are
-branch-changing `git checkout` and `git switch` calls in the primary checkout.
-Attached feature-worktree mutations, worktree creation, detached branch
-attachment, non-Git paths, and synthetic devices remain available. The denial
-sends the model through the skill to establish the task worktree. The
+branch-changing `git checkout` and `git switch` calls in a primary checkout
+that is on a branch. Attached feature-worktree mutations, worktree creation,
+branch attachment in a detached worktree — the primary included, where that is
+the only way out — non-Git paths, and synthetic devices remain available. The
+denial sends the model through the skill to establish the task worktree. The
 constitution needs no delivery adapter on this side — Omp's rule provider
 injects `rules/*.md` carrying `alwaysApply: true`.
 

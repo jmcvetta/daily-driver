@@ -39,7 +39,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, resolve } from "node:path";
+import { basename, dirname, isAbsolute, resolve } from "node:path";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -67,6 +67,27 @@ export const WORKTREE_BLOCK_REASON =
 	"worktree in place when it is already dedicated), and repeat the operation " +
 	"with its path rooted there.";
 
+/** What a mutation is told when Git itself could not be consulted. */
+export const GIT_UNAVAILABLE_BLOCK_REASON =
+	"Git could not be consulted, so this operation cannot be checked against " +
+	"the task worktree boundary. It is refused rather than allowed unchecked. " +
+	"Either `git` is missing from PATH, or the repository query timed out. Do " +
+	"not retry it blind: tell the user, so the cause is fixed before " +
+	"repository work continues.";
+
+/**
+ * Git was never consulted: `git` is missing from PATH, or a query was killed
+ * by the timeout. Distinct from Git answering "not a repository", which is an
+ * answer the guard can act on.
+ */
+class GitUnavailableError extends Error {
+	/** @param {string} message Why Git could not be consulted. */
+	constructor(message) {
+		super(message);
+		this.name = "GitUnavailableError";
+	}
+}
+
 /**
  * The customType namespacing scheduled reminders. Omp delivers a reminder as
  * a custom message via `pi.sendMessage`; a distinct namespaced customType is
@@ -78,7 +99,10 @@ export const REMINDER_CUSTOM_TYPE = "daily-driver.reminder";
 /**
  * Return command output, or null where `cwd` is not a usable Git repository.
  * The guard must fail open outside Git: ordinary files and synthetic tool
- * devices are not task worktrees.
+ * devices are not task worktrees. A non-zero exit is that answer from Git
+ * itself; every other failure means Git never answered, which is a
+ * `GitUnavailableError` so the caller can fail closed instead of mistaking an
+ * unconsulted guard for a path outside Git.
  */
 function gitOutput(cwd, ...args) {
 	try {
@@ -87,8 +111,13 @@ function gitOutput(cwd, ...args) {
 			stdio: ["ignore", "pipe", "ignore"],
 			timeout: 3000,
 		}).trim();
-	} catch {
-		return null;
+	} catch (err) {
+		if (typeof err?.status === "number") return null;
+		const detail =
+			err?.code === "ENOENT" ? "git is not on PATH" : `${err?.code ?? err}`;
+		throw new GitUnavailableError(
+			`git ${args.join(" ")} in ${cwd} could not be run: ${detail}`,
+		);
 	}
 }
 
@@ -161,6 +190,17 @@ function stateForWorktree(records, currentRoot) {
 }
 
 /**
+ * Anchor one tool-supplied path to the tool's working directory. Null where a
+ * relative path arrives without a usable working directory: the guard cannot
+ * tell which repository such a path names, and a guess would be worse than an
+ * unclassified path. An absolute path needs no anchor and is always usable.
+ */
+function anchoredPath(cwd, path) {
+	if (isAbsolute(path)) return path;
+	return typeof cwd === "string" && cwd.length > 0 ? resolve(cwd, path) : null;
+}
+
+/**
  * Describe the worktree containing one local path. Null means the path is not
  * in a Git worktree, so this policy does not own it.
  */
@@ -173,7 +213,9 @@ function worktreeState(path, cwd) {
 		return null;
 	}
 
-	const anchor = existingDirectory(resolve(cwd, path));
+	const target = anchoredPath(cwd, path);
+	if (target === null) return null;
+	const anchor = existingDirectory(target);
 	if (!anchor) return null;
 	const root = gitOutput(anchor, "rev-parse", "--show-toplevel");
 	if (!root) return null;
@@ -213,7 +255,8 @@ function worktreeStateFromGitDir(gitDir, cwd) {
 				break;
 			}
 		}
-	} catch {
+	} catch (err) {
+		if (err instanceof GitUnavailableError) throw err;
 		return null;
 	}
 	return stateForWorktree(records, selectedRoot);
@@ -268,12 +311,14 @@ function textualEditPaths(input) {
 	return paths.filter((path) => path.length > 0);
 }
 
-/** Local file paths a mutating tool call is about to change. */
+/**
+ * Local file paths a mutating tool call is about to change. `write` and `edit`
+ * are read the same way on purpose: a payload spelling its target `file_path`
+ * rather than `path` names the same file whichever tool carries it, so one
+ * weaker branch would be a way around the other.
+ */
 function mutationPaths(event, cwd) {
-	if (event.toolName === "write") {
-		return typeof event.input?.path === "string" ? [event.input.path] : [];
-	}
-	if (event.toolName !== "edit") return [];
+	if (event.toolName !== "write" && event.toolName !== "edit") return [];
 
 	const paths = [];
 	for (const key of ["path", "file_path", "_path"]) {
@@ -294,15 +339,41 @@ function mutationPaths(event, cwd) {
 		paths.push(...textualEditPaths(event.input?.[key]));
 	}
 	// A malformed or future edit format has no trustworthy target metadata.
-	// Its only safe anchor is the tool's working directory.
-	return paths.length > 0 ? [...new Set(paths)] : [cwd];
+	// Its only safe anchor is the tool's working directory. Where even that is
+	// missing there is nothing to classify, and `worktreeState` says so.
+	if (paths.length > 0) return [...new Set(paths)];
+	return typeof cwd === "string" && cwd.length > 0 ? [cwd] : [];
+}
+
+/**
+ * Advance past the here-document bodies owed by one command line. Returns the
+ * index of the first character after the last body, so the caller resumes
+ * tokenizing the next command rather than the text being written.
+ */
+function skipHeredocBodies(command, start, heredocs) {
+	let position = start;
+	for (const { delimiter, stripTabs } of heredocs) {
+		while (position < command.length) {
+			const newline = command.indexOf("\n", position);
+			const end = newline < 0 ? command.length : newline;
+			const line = command.slice(position, end);
+			position = Math.min(end + 1, command.length);
+			if ((stripTabs ? line.replace(/^\t+/u, "") : line) === delimiter) break;
+		}
+	}
+	return position;
 }
 
 /**
  * Split a literal shell command into executable segments. This is deliberately
  * a command recognizer, not a shell security boundary: expansions stay opaque,
- * while quoting, escaping, comments, and ordinary command separators keep
- * prose such as `echo "git switch"` from looking executable.
+ * while quoting, escaping, comments, here-document bodies, and ordinary
+ * command separators keep prose such as `echo "git switch"` from looking
+ * executable.
+ *
+ * A segment carries the words of one command and the separator that ended it.
+ * A subshell emits a wordless `group` marker instead, which is how a caller
+ * tracking the working directory learns where a `cd` stops applying.
  */
 function shellSegments(command) {
 	const segments = [];
@@ -310,15 +381,37 @@ function shellSegments(command) {
 	let word = "";
 	let wordStarted = false;
 	let quote = null;
+	let heredocWord = false;
+	let heredocStripTabs = false;
+	let awaitingHeredocDelimiter = false;
+	const pendingHeredocs = [];
 
 	const finishWord = () => {
 		if (!wordStarted) return;
+		if (awaitingHeredocDelimiter) {
+			pendingHeredocs.push({ delimiter: word, stripTabs: heredocStripTabs });
+			awaitingHeredocDelimiter = false;
+		} else if (heredocWord) {
+			const rest = word.slice(2);
+			heredocStripTabs = rest.startsWith("-");
+			const delimiter = heredocStripTabs ? rest.slice(1) : rest;
+			if (delimiter.length > 0) {
+				pendingHeredocs.push({ delimiter, stripTabs: heredocStripTabs });
+			} else {
+				// `<< EOF`: the delimiter is the next word.
+				awaitingHeredocDelimiter = true;
+			}
+		}
+		heredocWord = false;
 		words.push(word);
 		word = "";
 		wordStarted = false;
 	};
 	const finishSegment = (separator) => {
 		finishWord();
+		// `{` and `}` group commands; neither is part of the command itself.
+		while (words[0] === "{") words.shift();
+		if (words.at(-1) === "}") words.pop();
 		if (words.length > 0) segments.push({ words, separator });
 		words = [];
 	};
@@ -356,8 +449,25 @@ function shellSegments(command) {
 			continue;
 		}
 		if (/\s/u.test(char)) {
-			if (char === "\n") finishSegment("\n");
-			else finishWord();
+			if (char !== "\n") {
+				finishWord();
+				continue;
+			}
+			finishSegment("\n");
+			if (pendingHeredocs.length > 0) {
+				// The body is data being written, not commands to recognize.
+				index = skipHeredocBodies(command, index + 1, pendingHeredocs) - 1;
+				pendingHeredocs.length = 0;
+			}
+			continue;
+		}
+		if (char === "(" || char === ")") {
+			finishSegment(char);
+			segments.push({
+				words: [],
+				separator: null,
+				group: char === "(" ? "open" : "close",
+			});
 			continue;
 		}
 		if (char === ";" || char === "&" || char === "|") {
@@ -368,6 +478,10 @@ function shellSegments(command) {
 		}
 		word += char;
 		wordStarted = true;
+		// `<<` outside quotes opens a here-document; `<<<` is a here-string and
+		// has no body. Only an unquoted operator counts, so `echo "<<EOF"` is
+		// the prose it looks like.
+		if (char === "<") heredocWord = word === "<<";
 	}
 	finishSegment(null);
 	return segments;
@@ -496,16 +610,44 @@ function changesBranch(invocation) {
 	);
 }
 
+/**
+ * True where a worktree state names a primary checkout that is on a branch.
+ * A detached primary is the one case left open: writes there are blocked
+ * already, and `WORKTREE_BLOCK_REASON` prescribes attaching the worktree in
+ * place, so denying that attach too would leave the model nothing to do.
+ */
+function isAttachedPrimary(state) {
+	return (
+		state !== null &&
+		state.root === state.primaryRoot &&
+		state.branch.length > 0
+	);
+}
+
 /** A checkout or switch that changes the primary HEAD or its files. */
 function movesPrimaryBranch(event, cwd) {
 	if (event.toolName !== "bash" || typeof event.input?.command !== "string") {
 		return false;
 	}
 
-	let shellCwd = resolve(
-		typeof event.input.cwd === "string" ? event.input.cwd : cwd,
+	// A relative tool cwd is relative to the session's directory, never to the
+	// directory this Node process happens to run in.
+	let shellCwd = anchoredPath(
+		cwd,
+		typeof event.input.cwd === "string" ? event.input.cwd : ".",
 	);
+	if (shellCwd === null) return false;
+	const shellCwdStack = [];
 	for (const segment of shellSegments(event.input.command)) {
+		if (segment.group === "open") {
+			shellCwdStack.push(shellCwd);
+			continue;
+		}
+		if (segment.group === "close") {
+			// A `cd` inside a subshell stops applying when the subshell ends.
+			if (shellCwdStack.length > 0) shellCwd = shellCwdStack.pop();
+			continue;
+		}
 		const invocation = gitInvocation(segment.words, shellCwd);
 		if (invocation && changesBranch(invocation)) {
 			const gitDirState = invocation.gitDir
@@ -515,13 +657,11 @@ function movesPrimaryBranch(event, cwd) {
 			// cwd check. Skipping it lets an unresolvable selector fail open.
 			const repositoryState =
 				gitDirState ?? worktreeState(".", invocation.cwd);
-			if (
-				repositoryState !== null &&
-				repositoryState.root === repositoryState.primaryRoot
-			) {
-				return true;
-			}
+			if (isAttachedPrimary(repositoryState)) return true;
 			if (invocation.workTree) {
+				// Writing primary files from elsewhere is blocked whether or not
+				// the primary is attached: an in-place attach never names a work
+				// tree, so nothing legitimate is caught here.
 				const workTreeState = worktreeState(".", invocation.workTree);
 				if (
 					workTreeState !== null &&
@@ -608,8 +748,18 @@ export default function dailyDriverExtension(pi) {
 		if (event.toolName === "ask") {
 			return { block: true, reason: ASK_BLOCK_REASON };
 		}
-		if (blocksTaskWorktree(event, ctx.cwd)) {
-			return { block: true, reason: WORKTREE_BLOCK_REASON };
+		try {
+			if (blocksTaskWorktree(event, ctx?.cwd)) {
+				return { block: true, reason: WORKTREE_BLOCK_REASON };
+			}
+		} catch (err) {
+			if (!(err instanceof GitUnavailableError)) throw err;
+			// Say so on stderr as well as to the model: an operator must be able
+			// to tell a guarded session from one whose guard cannot run.
+			console.error(
+				`daily-driver: worktree guard could not run: ${err.message}`,
+			);
+			return { block: true, reason: GIT_UNAVAILABLE_BLOCK_REASON };
 		}
 		return undefined;
 	});

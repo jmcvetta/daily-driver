@@ -24,7 +24,7 @@
  */
 
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import {
 	mkdirSync,
 	mkdtempSync,
@@ -35,7 +35,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, "..");
@@ -172,6 +172,7 @@ const module_ = await import(EXTENSION);
 assert.equal(typeof module_.default, "function", "extension must export a default factory");
 const {
 	ASK_BLOCK_REASON,
+	GIT_UNAVAILABLE_BLOCK_REASON,
 	REMINDER_CUSTOM_TYPE,
 	WORKTREE_BLOCK_REASON,
 	default: dailyDriverExtension,
@@ -238,6 +239,26 @@ function makeStaleWorktreeFixture() {
 }
 
 const staleWorktrees = makeStaleWorktreeFixture();
+
+/**
+ * A repository whose only worktree is the main one, left detached — the shape
+ * `setup.sh detached` builds, and the ordinary shape of a CI checkout.
+ */
+function makeDetachedPrimaryFixture() {
+	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-detached-"));
+	const primary = resolve(root, "primary");
+	mkdirSync(primary);
+	runGit(primary, "init", "-b", "master");
+	runGit(primary, "config", "user.name", "Extension Check");
+	runGit(primary, "config", "user.email", "extension-check@example.invalid");
+	writeFileSync(resolve(primary, "tracked.txt"), "primary\n");
+	runGit(primary, "add", "tracked.txt");
+	runGit(primary, "commit", "-m", "Initial fixture");
+	runGit(primary, "switch", "--detach");
+	return { root, primary };
+}
+
+const detachedPrimary = makeDetachedPrimaryFixture();
 
 // --- ask is blocked; another tool passes ------------------------------------
 check("ask tool is blocked with actionable reason", () => {
@@ -625,6 +646,208 @@ checkGuard(
 	staleWorktrees.detached,
 );
 
+// --- a detached primary keeps the attach the block reason prescribes --------
+checkGuard(
+	"attaching a detached primary worktree in place passes",
+	false,
+	"bash",
+	{ command: "git switch -c feature/detached-primary master" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a write in a detached primary worktree is still blocked",
+	true,
+	"write",
+	{ path: "new.txt", content: "unsafe\n" },
+	detachedPrimary.primary,
+);
+
+// --- write is guarded exactly as edit is -----------------------------------
+checkGuard(
+	"a write keyed file_path cannot reach the primary worktree",
+	true,
+	"write",
+	{ file_path: resolve(worktrees.primary, "new.txt"), content: "unsafe\n" },
+	worktrees.task,
+);
+
+checkGuard(
+	"a write with no recognized path key falls back to the working directory",
+	true,
+	"write",
+	{ content: "unsafe\n" },
+	worktrees.primary,
+);
+
+// --- grouped commands ------------------------------------------------------
+checkGuard(
+	"a subshell around cd keeps the switch rooted in the task worktree",
+	false,
+	"bash",
+	{
+		command:
+			`(cd "${worktrees.detached}" && git switch -c feature/detached-fix master)`,
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"a brace group around cd keeps the switch rooted in the task worktree",
+	false,
+	"bash",
+	{
+		command:
+			`{ cd "${worktrees.detached}" && git switch -c feature/detached-fix master; }`,
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"a cd inside a subshell stops applying when the subshell closes",
+	false,
+	"bash",
+	{
+		command:
+			`cd "${worktrees.detached}" && (cd "${worktrees.primary}" && true) && ` +
+			"git switch -c feature/detached-fix master",
+	},
+	worktrees.primary,
+);
+
+// --- here-document bodies are data, not commands ---------------------------
+checkGuard(
+	"a here-document carrying a git switch line is not a branch switch",
+	false,
+	"bash",
+	{ command: "cat > setup.sh <<'EOF'\ngit switch feature/not-executed\nEOF\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a tab-stripped here-document body is skipped too",
+	false,
+	"bash",
+	{ command: "cat > setup.sh <<-'EOF'\n\tgit switch feature/not-executed\n\tEOF\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a here-document body cannot redirect the guard, and the next command is checked",
+	true,
+	"bash",
+	{
+		command:
+			`cat > setup.sh <<'EOF'\ncd "${worktrees.detached}"\nEOF\n` +
+			"git switch -c feature/wrong-place master\n",
+	},
+	worktrees.primary,
+);
+
+// --- a missing working directory neither throws nor blinds the guard -------
+checkGuard(
+	"a relative edit path without a working directory is not classified",
+	false,
+	"edit",
+	{ path: "tracked.txt", old_string: "a", new_string: "b" },
+	undefined,
+);
+
+checkGuard(
+	"a bash branch switch without any working directory is not classified",
+	false,
+	"bash",
+	{ command: "git switch feature/wrong-place" },
+	undefined,
+);
+
+checkGuard(
+	"an absolute primary path is blocked without a working directory",
+	true,
+	"write",
+	{ path: resolve(worktrees.primary, "new.txt"), content: "unsafe\n" },
+	undefined,
+);
+
+// --- a relative tool cwd is read against the session, not this process -----
+checkGuard(
+	"a relative tool cwd of . resolves to the session's directory",
+	true,
+	"bash",
+	{ command: "git switch feature/wrong-place", cwd: "." },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a relative tool cwd resolves against the session's directory",
+	true,
+	"bash",
+	{ command: "git switch feature/wrong-place", cwd: "primary" },
+	worktrees.root,
+);
+
+// --- Git that cannot be consulted fails closed and says so ----------------
+/**
+ * Fire one write through the guard in a child process whose PATH is `binDir`
+ * alone. A fake or absent `git` cannot be installed in this process, and the
+ * guard's stderr is what proves the failure is visible to an operator.
+ */
+function guardWithPath(binDir, target) {
+	const child = spawnSync(
+		process.execPath,
+		[
+			"--input-type=module",
+			"-e",
+			[
+				`const mod = await import(${JSON.stringify(pathToFileURL(EXTENSION).href)});`,
+				"const handlers = new Map();",
+				"const node = (m) => ({ describe: () => node(m), min: () => node(m), max: () => node(m), int: () => node(m) });",
+				"const pi = { zod: { object: (s) => s, string: () => node({}), number: () => node({}) },",
+				"  on: (e, h) => handlers.set(e, h), registerTool: () => {}, setSessionName: async () => {},",
+				"  sendMessage: () => {}, setTimeout: () => 1, clearTimer: () => {} };",
+				"mod.default(pi);",
+				`const target = ${JSON.stringify(target)};`,
+				'const decision = handlers.get("tool_call")(',
+				'  { type: "tool_call", toolCallId: "child", toolName: "write", input: { path: "new.txt", content: "x" } },',
+				"  { cwd: target, ui: {} },",
+				");",
+				"process.stdout.write(JSON.stringify(decision ?? null));",
+			].join("\n"),
+		],
+		{ encoding: "utf8", env: { ...process.env, PATH: binDir } },
+	);
+	assert.equal(child.status, 0, `child exited ${child.status}: ${child.stderr}`);
+	return { decision: JSON.parse(child.stdout), stderr: child.stderr };
+}
+
+/** Two PATH directories: one with no `git`, one whose `git` always exits 128. */
+function makeFakeBinFixture() {
+	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-bin-"));
+	const absent = resolve(root, "absent");
+	const refusing = resolve(root, "refusing");
+	mkdirSync(absent);
+	mkdirSync(refusing);
+	writeFileSync(resolve(refusing, "git"), "#!/bin/sh\nexit 128\n", { mode: 0o755 });
+	return { root, absent, refusing };
+}
+
+const fakeBin = makeFakeBinFixture();
+
+check("a missing git binary fails closed and reports why", () => {
+	const { decision, stderr } = guardWithPath(fakeBin.absent, worktrees.primary);
+	assert.deepEqual(decision, {
+		block: true,
+		reason: GIT_UNAVAILABLE_BLOCK_REASON,
+	});
+	assert.match(stderr, /worktree guard could not run/u, "the failure is visible");
+	assert.match(GIT_UNAVAILABLE_BLOCK_REASON, /could not be consulted/iu);
+});
+
+check("git answering 'not a repository' still fails open", () => {
+	const { decision } = guardWithPath(fakeBin.refusing, worktrees.primary);
+	assert.equal(decision, null, "a non-zero exit is Git's own answer, not a fault");
+});
+
 // --- set_session_title ------------------------------------------------------
 check("set_session_title calls pi.setSessionName", async () => {
 	const s = makeSession();
@@ -765,6 +988,8 @@ check("package.json wires the extension and is a module", () => {
 await Promise.all(checks);
 rmSync(worktrees.root, { recursive: true, force: true });
 rmSync(staleWorktrees.root, { recursive: true, force: true });
+rmSync(detachedPrimary.root, { recursive: true, force: true });
+rmSync(fakeBin.root, { recursive: true, force: true });
 
 console.log(results.join("\n"));
 console.log("");
