@@ -50,5 +50,6 @@ second copy of the context already in hand.**
 delegated implementor — `Claim the issue`'s clock and `The milestone`'s
 provenance), the three `skills/undertake/references/{claude,omp,codex}.md`
 route tables, which now record that there is no implementor route and why,
-`skills/embark/SKILL.md` (`Non-goals`), and `rules/constitution.md`
-(*Delegation*). No step was renamed.
+`skills/embark/SKILL.md` (`Non-goals`), `rules/constitution.md`
+(*Delegation*), and `README.md`, whose constitution summary table carried a
+copy of the sentence that changed. No step was renamed.

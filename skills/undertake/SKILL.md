@@ -286,8 +286,9 @@ a second claim on the same branch, and buys nothing with them.
 **Subagents belong to the review round, not to the body of the work.**
 `review-cycle`'s `Verify the fix delta` dispatches a briefed subagent, and
 that is where a second reader earns its cost — the author of a delta cannot
-be an independent reader of it. `Review the head`, `Fix, answer, resolve,
-push` and `Verify the fix delta` are the only place this sequence delegates.
+be an independent reader of it. That is the one dispatch this sequence makes:
+`Review the head` runs on the harness's own named review surface, which
+`review-cycle` says is the only thing it runs on.
 
 **Parallelism across issues is `embark`'s.** Where several task issues are
 worked at once, that skill opens a session or a subagent per task, and each of
@@ -606,8 +607,8 @@ What the report carries
 
 - **The timing, labelled as what it is** — wall-clock time from the claim to
   first merge readiness. It runs from the claim comment's timestamp, read
-  back off the issue whatever has happened since: resumes, a delegated
-  `Implement`, later returns to draft and out again. The claim's timestamp is
+  back off the issue whatever has happened since: resumes, later returns to
+  draft and out again. The claim's timestamp is
   the durable start, so a session arriving late never restarts the clock.
   Both ends are UTC timestamps — the start and the milestone — with the
   duration between them in words. The interval covers implementation, review,
