@@ -579,6 +579,31 @@ checkGuard(
 	worktrees.task,
 );
 
+checkGuard(
+	"--git-dir written before -C still resolves against the -C directory",
+	true,
+	"bash",
+	{
+		command:
+			`git --git-dir=.git -C "${worktrees.primary}" ` +
+			"switch feature/wrong-place",
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"--work-tree written before -C still resolves against the -C directory",
+	true,
+	"bash",
+	{
+		command:
+			"git --work-tree=primary " +
+			`--git-dir="${resolve(worktrees.task, ".git")}" ` +
+			`-C "${worktrees.root}" switch feature/wrong-place`,
+	},
+	worktrees.task,
+);
+
 check("the stale worktree record precedes the detached worktree", () => {
 	const listing = runGit(
 		staleWorktrees.primary,

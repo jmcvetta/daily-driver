@@ -408,14 +408,23 @@ function environmentValue(words, end, name) {
 	return null;
 }
 
+/**
+ * Resolve one path selector against the Git working directory. Null stays null.
+ */
+function selectedPath(gitCwd, value) {
+	return value === null ? null : resolve(gitCwd, value);
+}
+
 /** Resolve one Git invocation's subcommand and repository selectors. */
 function gitInvocation(words, shellCwd) {
 	let index = gitWordIndex(words);
 	if (index < 0) return null;
 	let gitCwd = shellCwd;
-	// Git reads GIT_DIR and GIT_WORK_TREE after `-C` has changed directory, so
-	// a relative value resolves against the directory `-C` establishes, not
-	// the shell's. The matching flags override them and resolve in the loop.
+	// `-C` sets the directory every other path selector is read against: a
+	// relative --git-dir, --work-tree, GIT_DIR or GIT_WORK_TREE resolves
+	// against the directory `-C` establishes, whatever the word order. So each
+	// selector is captured raw here and resolved once, after the loop. A flag
+	// overrides the matching environment variable.
 	const environmentGitDir = environmentValue(words, index, "GIT_DIR");
 	const environmentWorkTree = environmentValue(words, index, "GIT_WORK_TREE");
 	let gitDir = null;
@@ -432,19 +441,19 @@ function gitInvocation(words, shellCwd) {
 			continue;
 		}
 		if (word === "--work-tree" && typeof words[index + 1] === "string") {
-			workTree = resolve(gitCwd, words[++index]);
+			workTree = words[++index];
 			continue;
 		}
 		if (word.startsWith("--work-tree=")) {
-			workTree = resolve(gitCwd, word.slice("--work-tree=".length));
+			workTree = word.slice("--work-tree=".length);
 			continue;
 		}
 		if (word === "--git-dir" && typeof words[index + 1] === "string") {
-			gitDir = resolve(gitCwd, words[++index]);
+			gitDir = words[++index];
 			continue;
 		}
 		if (word.startsWith("--git-dir=")) {
-			gitDir = resolve(gitCwd, word.slice("--git-dir=".length));
+			gitDir = word.slice("--git-dir=".length);
 			continue;
 		}
 		if (["-c", "--config-env", "--exec-path", "--namespace"].includes(word)) {
@@ -456,16 +465,8 @@ function gitInvocation(words, shellCwd) {
 			subcommand: word,
 			args: words.slice(index + 1),
 			cwd: gitCwd,
-			gitDir:
-				gitDir ??
-				(environmentGitDir === null
-					? null
-					: resolve(gitCwd, environmentGitDir)),
-			workTree:
-				workTree ??
-				(environmentWorkTree === null
-					? null
-					: resolve(gitCwd, environmentWorkTree)),
+			gitDir: selectedPath(gitCwd, gitDir ?? environmentGitDir),
+			workTree: selectedPath(gitCwd, workTree ?? environmentWorkTree),
 		};
 	}
 	return null;
