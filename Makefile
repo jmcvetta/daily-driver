@@ -194,10 +194,11 @@ check-omp-cache-clean:
 check-omp-review-cycle-route:
 	python3 scripts/check-omp-review-cycle-route.py
 
-# The Claude Code and Codex fix-delta routes are executable guidance too.
-# This credential-free check rejects a blanket "unavailable on this harness"
-# notice for `Verify the fix delta` and holds the briefed-subagent route and
-# its required brief elements in place. See the script's docstring.
+# Every harness's fix-delta route is executable guidance too. This
+# credential-free check rejects a blanket "unavailable on this harness" notice
+# for `Verify the fix delta`, holds the briefed-subagent route and the brief's
+# required elements in place across all three references, and holds the
+# pointers `undertake` keeps to them. See the script's docstring.
 check-review-cycle-fix-delta-route:
 	python3 scripts/check-review-cycle-fix-delta-route.py
 

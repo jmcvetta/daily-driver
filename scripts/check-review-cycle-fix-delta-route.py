@@ -20,7 +20,9 @@ It also holds the restated `SKILL.md` rule and its citations: a briefed
 subagent is a legitimate reviewer, so the "never a bare subagent" phrasing
 this issue retired must not come back — and `Review the head` keeps the named
 surface it always had, which is what stops the restatement reading as
-permission to answer #35 by itself.
+permission to answer #35 by itself. `undertake`'s own harness references are
+read for the same reason: each points at the route below, and a pointer left
+naming the retired stop defeats the route without touching it.
 """
 
 from __future__ import annotations
@@ -34,6 +36,8 @@ CLAUDE_REFERENCE = ROOT / "skills" / "review-cycle" / "references" / "claude.md"
 CODEX_REFERENCE = ROOT / "skills" / "review-cycle" / "references" / "codex.md"
 OMP_REFERENCE = ROOT / "skills" / "review-cycle" / "references" / "omp.md"
 UNDERTAKE_SKILL = ROOT / "skills" / "undertake" / "SKILL.md"
+UNDERTAKE_CLAUDE_REFERENCE = ROOT / "skills" / "undertake" / "references" / "claude.md"
+UNDERTAKE_CODEX_REFERENCE = ROOT / "skills" / "undertake" / "references" / "codex.md"
 EMBARK_CODEX_REFERENCE = ROOT / "skills" / "embark" / "references" / "codex.md"
 
 # The brief `Verify the fix delta` requires, restated in each harness route
@@ -79,6 +83,8 @@ REQUIRED_SKILL_PHRASINGS = (
 FORBIDDEN_RULE_PHRASINGS = {
     SKILL: ("never a bare subagent",),
     UNDERTAKE_SKILL: ("a reviewer, not a subagent",),
+    UNDERTAKE_CLAUDE_REFERENCE: ("the unavailable-delta stop",),
+    UNDERTAKE_CODEX_REFERENCE: ("the unavailable-delta stop",),
     CODEX_REFERENCE: ("the bare subagent `SKILL.md` refuses",),
     EMBARK_CODEX_REFERENCE: ("a named surface rather than a bare subagent",),
 }
@@ -126,6 +132,8 @@ def main() -> None:
             CODEX_REFERENCE,
             OMP_REFERENCE,
             UNDERTAKE_SKILL,
+            UNDERTAKE_CLAUDE_REFERENCE,
+            UNDERTAKE_CODEX_REFERENCE,
             EMBARK_CODEX_REFERENCE,
         )
     }
@@ -154,8 +162,8 @@ def main() -> None:
         require_none(path, texts[path], phrasings)
 
     print(
-        "check-review-cycle-fix-delta-route: Claude Code and Codex both name "
-        "a briefed-subagent fix-delta route"
+        "check-review-cycle-fix-delta-route: all three references name a "
+        "briefed-subagent fix-delta route, and undertake points at it"
     )
 
 
