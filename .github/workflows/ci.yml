@@ -113,6 +113,11 @@ jobs:
       #   - `extensions/**` — the adapter itself. A module that throws on
       #     import costs one stderr line and the session runs on without it.
       #   - `scripts/check-omp-plugin.py` — the check.
+      #   - `evals/coder-eval-omp/**` — the eval arm. Its `agent.py` holds the
+      #     early-stop record handling whose defect silently zeroed the first
+      #     paid run (docs/notes/0018), and its reducer is the other half of
+      #     that arm's scoring.
+      #   - `scripts/check-omp-agent-settle.py` — the arm's second check.
       #
       # `skills/**` is deliberately absent. An added or renamed skill is
       # discovered by Omp exactly as by Claude Code, so a skill-only diff
@@ -150,7 +155,8 @@ jobs:
             exit 0
           fi
           changed=$(git diff --name-only "$base" "$GITHUB_SHA" -- \
-            package.json .claude-plugin extensions scripts/check-omp-plugin.py)
+            package.json .claude-plugin extensions scripts/check-omp-plugin.py \
+            evals/coder-eval-omp scripts/check-omp-agent-settle.py)
           if [[ -n "$changed" ]]; then
             echo "files that can affect Omp changed:"
             echo "$changed"
@@ -177,6 +183,18 @@ jobs:
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      # uv builds the pinned environment `make check-omp-agent-settle` runs
+      # under (`uv run --with coder-eval==$(CODER_EVAL_VERSION) --with the
+      # adapter`), the same manager the `check` job's Python legs use. The
+      # omp job otherwise has no Python tooling at all, so this is its own
+      # install — unpinned like the Omp install above.
+      - name: Install uv
+        if: steps.scope.outputs.run == 'true'
+        run: |
+          set -euo pipefail
+          curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       # `GITHUB_PATH` takes effect on the next step, so this is a step of its
       # own. It fails loudly where an installer put the binary somewhere else,
       # rather than leaving the check below to fail for a reason that reads
@@ -188,6 +206,17 @@ jobs:
       - name: make check-omp-plugin
         if: steps.scope.outputs.run == 'true'
         run: make check-omp-plugin
+
+      # The eval arm's early-stop invariant — the defect that silently zeroed
+      # the first paid run (docs/notes/0018) — has its own acceptance test,
+      # which needs the pinned `coder_eval` beside the adapter. `make
+      # check-omp-agent-settle` builds that environment with `uv run --with`
+      # (no install step, no cache to warm), and the fake binary it drives
+      # needs no network. Same scope gate as the plugin check above: the two
+      # paths added to the diff filter are the files that can break it.
+      - name: make check-omp-agent-settle
+        if: steps.scope.outputs.run == 'true'
+        run: make check-omp-agent-settle
 
   # The aggregating job branch protection names. `if: always()` is
   # load-bearing: without it a failure upstream *skips* this job, and GitHub

@@ -107,10 +107,22 @@ CALL_ID_KEYS = ("toolCallId", "callId", "toolCallID", "id")
 # "telemetry fields on `agent_end`" without naming them, so this reads both the
 # camelCase and snake_case forms of each.
 USAGE_KEYS: dict[str, tuple[str, ...]] = {
-    "uncached_input_tokens": ("inputTokens", "input_tokens", "promptTokens", "prompt_tokens"),
-    "output_tokens": ("outputTokens", "output_tokens", "completionTokens", "completion_tokens"),
-    "cache_read_input_tokens": ("cacheReadTokens", "cache_read_tokens", "cachedTokens", "cached_tokens"),
-    "cache_creation_input_tokens": ("cacheWriteTokens", "cache_write_tokens"),
+    "uncached_input_tokens": (
+        "inputTokens",
+        "input_tokens",
+        "promptTokens",
+        "prompt_tokens",
+        "input",
+        # Omp 18.2.1 spells it `input` on the per-message usage object, where it
+        # is the uncached slice — `totalTokens` below it sums input + output +
+        # cache reads, so mapping it to the uncached bucket is the reading that
+        # makes the buckets sum to the frame's own total.
+        "inputTokensUncached",
+        "uncachedInputTokens",
+    ),
+    "output_tokens": ("outputTokens", "output_tokens", "completionTokens", "completion_tokens", "output"),
+    "cache_read_input_tokens": ("cacheReadTokens", "cache_read_tokens", "cachedTokens", "cached_tokens", "cacheRead"),
+    "cache_creation_input_tokens": ("cacheWriteTokens", "cache_write_tokens", "cacheWrite"),
 }
 
 # Sub-objects a usage payload might be nested under on `agent_end`.
@@ -264,10 +276,12 @@ def extract_arguments(payload: dict[str, Any]) -> tuple[dict[str, Any], str | No
 def extract_usage(payload: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
     """Token counts from an `agent_end` payload, and the keys they came from.
 
-    Reads the payload itself and every container in `USAGE_CONTAINERS`, so a
-    count nested under `telemetry` is found as readily as one at the top level.
-    An empty result means the frame carried no counts — the caller decides
-    whether that fails the turn.
+    Reads the payload itself, every container in `USAGE_CONTAINERS`, and the
+    per-message usage object the live Omp 18.2.1 actually carries — a `usage`
+    dict on the last entry of `messages`, holding the cumulative counts for the
+    session so far. The last message wins: its usage is the running total, and
+    an earlier message's is a prefix of it. An empty result means the frame
+    carried no counts — the caller decides whether that fails the turn.
     """
     found: dict[str, int] = {}
     seen: list[str] = []
@@ -276,6 +290,15 @@ def extract_usage(payload: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
         value = payload.get(container)
         if isinstance(value, dict):
             sources.append(value)
+    messages = payload.get("messages")
+    if isinstance(messages, list):
+        for message in reversed(messages):
+            if not isinstance(message, dict):
+                continue
+            usage = message.get("usage")
+            if isinstance(usage, dict) and usage:
+                sources.append(usage)
+                break
 
     for source in sources:
         for bucket, spellings in USAGE_KEYS.items():

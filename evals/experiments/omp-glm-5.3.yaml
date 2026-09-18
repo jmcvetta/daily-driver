@@ -24,8 +24,15 @@ defaults:
 
   agent:
     type: omp
-    # Verified against the provider catalog borrowed into the throwaway Omp home.
-    model: zai/glm-5.3
+    # The model the issue pins is `zai/glm-5.3`. The direct `zai` provider
+    # carries that id in the catalog this arm borrows, but the machine holds no
+    # credential for it — `omp` would refuse the session or fall back to the
+    # home default, and either way the report would not say which model ran.
+    # The same model id is served through the one gateway this machine is
+    # credentialed for, which is also the route the real home's own
+    # `modelRoles` take for GLM. Set as Omp's `provider/modelId` form and split
+    # on the first slash by the adapter's `set_model`.
+    model: vercel-ai-gateway/zai/glm-5.3
     permission_mode: acceptEdits
     # Recorded, not enforced: Omp RPC has no per-session tool allowlist.
     allowed_tools: [Skill]

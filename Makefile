@@ -229,6 +229,21 @@ check-scripts:
 check-omp-agent:
 	python3 scripts/check-omp-agent.py
 
+# check-omp-agent-settle: the acceptance test for the Omp arm's early-stop
+# record -- that a replicate which early-stops on `skill_triggered` cannot
+# final-score 0 on that same criterion, the failure the first live run
+# measured (2026-09-16, issue #206): the watcher latched a pass on the
+# in-flight skill call while the abort settle dropped every event the frozen
+# trajectory is built from. It drives `coder_eval_omp.agent` against a fake
+# `omp --mode rpc`, so unlike check-omp-agent it needs the pinned
+# `coder_eval` install -- `make evals-install` provides it -- and no network.
+# Not a `check` leg, for the toolchain reason check-omp-plugin's comment
+# records; the evals that need it installed are the ones it protects.
+check-omp-agent-settle:
+	uv run --python 3.13 --with coder-eval==$(CODER_EVAL_VERSION) \
+		--with ./evals/coder-eval-omp \
+		python3 scripts/check-omp-agent-settle.py
+
 # check-codex-agent: the acceptance test for the Codex eval arm's one
 # normalisation -- the `[RESULT - ...]` transcript every judge rubric here
 # anchors on. Part of `check` for the same reason check-omp-agent is:

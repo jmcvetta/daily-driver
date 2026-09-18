@@ -64,14 +64,22 @@ puts the answer in each run's `environment_info`:
 | `omp_argument_keys_seen` | which key a tool frame carried its arguments under |
 | `omp_usage_keys_seen` | which telemetry fields carried the token counts |
 
-The last two are open questions rather than settled facts. Omp's `docs/rpc.md`
-shows `toolName` on `tool_execution_start` without showing the arguments, and
-places token accounting in "telemetry fields on `agent_end`" without naming
-them. The adapter reads every plausible spelling and records the one that
-answered, so the first live run settles it instead of a guess doing so. Until
-then `require_token_telemetry` defaults to false, which is the opposite of
-`coder_eval`'s OpenCode agent: a missing count here is a gap in this adapter,
-not proof of a broken turn.
+The last two were open questions until the first live run answered them
+(2026-09-16, the run that also found the settle defect below). The answers:
+tool frames carry their arguments under `args`, and token counts sit in a
+`usage` dict on the last entry of `agent_end`'s `messages`, spelled `input`
+(the uncached slice), `output`, `cacheRead` and `cacheWrite` — with one
+caveat the run also measured: an aborted turn books all zeros there, so
+early-stopped and max-turn-exhausted replicates carry no token accounting
+and `require_token_telemetry` stays false for a measured reason, not an
+unsettled one.
+
+One capture-timing note the run also settled: `coder_eval` merges an agent's
+`environment_info` into the result once, at agent start — before any turn
+has run — so these two fields would always be empty in `task.json`'s
+`environment_info`. The agent therefore replays the same facts through
+`get_sdk_options`, which the harness reads at finalize time, after the run:
+the two fields appear per replicate under `sdk_options`, same names.
 
 ## What is tested, and what is not
 
@@ -83,6 +91,16 @@ That is where the three things above live, and it is why they live there.
 binary, and CI here has neither. What it holds is process lifecycle and the
 event protocol, both copied from `coder_eval`'s OpenCode agent and from
 `scripts/check-omp-plugin.py`, which drives a real `omp --mode rpc` today.
+
+One part of that lifecycle carries its own acceptance test:
+`scripts/check-omp-agent-settle.py` (`make check-omp-agent-settle`) drives the
+real `communicate` against a fake `omp --mode rpc` and asserts the
+early-stop invariant the first live run violated — a replicate that
+early-stops on `skill_triggered` cannot final-score 0 on that same criterion,
+because the abort settle emitted the frames it had been swallowing. It needs
+the `coder-eval` install (`make evals-install`), so it is not a `make check`
+leg, and it needs no network, so it is cheap to run whenever `agent.py`
+changes.
 
 ## Installing it
 
