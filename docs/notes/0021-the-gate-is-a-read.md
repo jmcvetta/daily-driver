@@ -71,8 +71,9 @@ two of them where there are now three; the duplicated sentence at `Ready for
 review`; the no-permission line under `Where it stops and waits`; and the
 second step numbered 10, which is `Keep it current` and is 11 in the table.
 Then the three `skills/undertake/references/{claude,omp,codex}.md` route
-tables, which carry the gate's two reads and keep `The milestone`'s own
-decode, `skills/review-cycle/SKILL.md` (`Verify the fix delta` and `Where it
+tables, which carry a row per gate read and keep `The milestone`'s own
+decode, where `clean` is still the only yes because the draft is gone by
+then, `skills/review-cycle/SKILL.md` (`Verify the fix delta` and `Where it
 stops and waits`), the three
 `skills/review-cycle/references/{claude,omp,codex}.md` record blocks, whose
 `pass: <1|2>` and `cap:` fields became `pass: <n>` and `wall:`, and two eval

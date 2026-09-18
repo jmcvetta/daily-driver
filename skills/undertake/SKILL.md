@@ -349,9 +349,9 @@ pass for the batch, never one per commit or finding.
 A pass that finds defects returns to `Fix, answer, resolve, push`, and the
 correction pushed from there earns the pass that confirms it — every time,
 because an unverified fix is what the round exists to prevent. The loop ends
-on the first clean pass, and `review-cycle`'s wall ends it the other way:
-three consecutive passes each finding defects, reported with the defects on
-the pull request. That bound is that skill's and is not restated here. An
+on the first clean pass, and `review-cycle`'s wall ends it the other way,
+with the defects reported on the pull request. How many passes that takes is
+that skill's number, read there rather than carried here. An
 unavailable reviewer or an incomplete pass keeps the pull request draft and
 reports the blocker. Initial execution and a resumed session read the durable
 review record before acting; a resume, a rewritten history, a bot finding and
@@ -569,15 +569,16 @@ sequence stops, and the reason is stated in one line.
    checks themselves rather than inferring them from the merge state, which
    reports a draft's status before its checks': the union of check runs and
    commit statuses that `review-cycle`'s wait reads is the same union here,
-   and the reference file names what answers it on this harness. **Pending is not green** — wait
-   for it the way `How to wait` says, rather than treating an unreported
-   check as either answer. The mechanism has one home, and it is not this
-   one.
+   and the reference file names what answers it on this harness. **Pending
+   is not green** — wait for it the way `How to wait` says, rather than
+   treating an unreported check as either answer. The mechanism has one
+   home, and it is not this one.
 3. **Every review thread**, from any reviewer and not only from the round at
-   `Review the head`. An unanswered or unresolved thread is work at `Fix,
-   answer, resolve, push`, never a reason to stay draft. Every finding that
-   round raised is fixed, or rejected with a reason on its thread, or
-   deferred with the user's agreement.
+   `Review the head`. This read answers two conditions, which is why five
+   reads close over six: no thread is unanswered or unresolved, and every
+   finding that round raised is fixed, or rejected with a reason on its
+   thread, or deferred with the user's agreement. An open thread is work at
+   `Fix, answer, resolve, push`, never a reason to stay draft.
 4. **The review record on the pull request.** The independent verification
    record for the scope is clear on the current behavioral head: the last
    pushed fix has a pass that found nothing. The bound on those passes is
