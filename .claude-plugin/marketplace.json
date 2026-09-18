@@ -10,7 +10,7 @@
       "name": "daily-driver",
       "source": "./",
       "description": "Daily-driver skills for Claude Code, Omp and Codex: the PR workflow, and whatever else earns its place.",
-      "version": "0.29.1"
+      "version": "0.30.0"
     }
   ]
 }
