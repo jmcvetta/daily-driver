@@ -1,4 +1,4 @@
-# The constitution's compliance half, for the failure the other rows do not
+# The constitution's second compliance row, for the failure the first does not
 # reach. `reply-is-concise.yaml` asks a question with ONE honest answer: a
 # single bug, a single lookup. The model gives it and every arm scores 1.0,
 # measured — which is why that row could not distinguish two policies in issue
@@ -57,9 +57,20 @@
 # this row, ten replicates: the simulator wrote its own answer instead of the
 # question in four of them, and in one of those the self-answer also carried
 # the stop token, so the dialog ended after the audit and the graders read the
-# audit. `max_turns: 2` below closes the other half of that hole — a third
-# turn used to let the simulator state the answer before the question arrived.
-# Drift that remains is visible in `simulation.total_turns` and in the
+# audit.
+#
+# **`max_turns: 2` below MOVES that drift; it does not reduce it.** At three
+# turns a self-answer landed on an utterance nobody graded and the question
+# still arrived afterwards. At two the simulator has exactly one utterance, so
+# the same drift now lands on the turn the graders read: the agent answers a
+# message that already contains the answer. What the cap does buy is that no
+# spare turn exists for the simulator to answer in AND ask in, which is what
+# made the three-turn case unreadable. The only control on the drift itself is
+# the fourth constraint, and a constraint is a steer.
+#
+# `simulation.total_turns` does NOT detect this. Under the cap it reads 2 for
+# every replicate except a stop-token abort, so it sees the rarer failure and
+# is blind to the common one. Drift is visible in
 # conversation log, and a replicate that was never asked the question measures
 # nothing about selection. Read the logs before reading the score.
 #
@@ -136,12 +147,19 @@ simulation:
     - "Never name a file, a defect, or a symptom; never hint at which one you mean; never ask for a short answer."
     - "Never answer your own question, and never state or imply an opinion about which defect breaks first. You are asking because you do not know."
   # Two, not three. At three the simulator's drift got a whole extra utterance:
-  # measured, it used the first one to state the answer itself and the pinned
-  # question only arrived on the second, so the graded reply answered a
-  # question the interlocutor had already answered. Two turns are the audit
-  # and the reply being graded, and the dialog ends at the cap — which is also
-  # why no constraint asks for the stop token any more. The one replicate that
-  # measured nothing was the simulator putting the stop token in a self-answer.
+  # measured, it used the first one to state the answer itself and the question
+  # only arrived on the second, so the graded reply answered a question the
+  # interlocutor had already answered. Two turns are the audit and the reply
+  # being graded.
+  #
+  # The cap is not what ends the dialog, and the header says why: `coder_eval`
+  # puts "emit the exact token <stop_token> when you judge the task complete"
+  # into the simulator's system prompt unconditionally, and `orchestrator`
+  # tests the utterance for it BEFORE handing it to the agent. A stop token in
+  # the simulator's one utterance therefore still ends the dialog after the
+  # audit, with the graders reading the audit — the replicate that measured
+  # nothing did exactly that. Dropping the constraint that used to ask for the
+  # token lowers the odds; nothing in a task file closes the path.
   max_turns: 2
 
 run_limits:

@@ -256,11 +256,12 @@ indicative and has not been re-measured.** Reviewing the run showed the
 simulated interlocutor drifting off the question it was given: in one of the
 ten replicates it answered itself and ended the dialog, so the graders read the
 audit instead of the reply, and in three more an extra turn let it state the
-answer before the pinned question arrived. The row's `simulation` block has
+answer before the question arrived. The row's `simulation` block has
 since been narrowed — two turns instead of three, the model pinned, the
 `description` stripped of anything describing the rule — so the run that
 produced 0.40/0.80 was made under a configuration this repository no longer
-holds. What the row establishes today is that it is not at ceiling; the number
+holds. The narrowing does not remove the drift: at two turns a self-answer
+lands on the graded turn instead of a spare one. What the row establishes today is that it is not at ceiling; the number
 itself needs a fresh run before any amendment is tested against it.
 
 `review-depth/` asks whether `review` sends the *right panel* at the right
@@ -514,8 +515,13 @@ Its weakness is the interlocutor. `coder_eval` has no scripted user turn, so
 turn two's wording is a `constraints` instruction to a roleplaying model rather
 than a pin, and the first probe run showed it drifting — see the block above
 and the file's own header for what that cost and what was narrowed in
-response. A replicate whose `simulation.total_turns` is not 2 was not asked
-the question, and measures nothing about selection.
+response.
+
+Reading a run therefore means reading its dialog, not a field.
+`simulation.total_turns` below 2 catches only the stop-token abort — the rarer
+failure — and reads 2 for every self-answer, which is the common one. A
+replicate whose graded turn answers a message already carrying the answer
+measures nothing about selection, and only the conversation log shows it.
 
 ## The review-depth suite
 
