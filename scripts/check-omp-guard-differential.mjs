@@ -197,6 +197,17 @@ function shapes({ primary, task, detached }) {
 	add("timeout wrapper", task, `timeout 10 ${move(primary)}`);
 	add("nohup wrapper", task, `nohup ${move(primary)}`);
 
+	// Substitution and wrappers that hide the git word from a positional scan.
+	add("substitution inside double quotes", task, `echo "$(git -C ${primary} switch feature/y)"`);
+	add("assignment from a substitution", task, `x="$(cd ${primary} && git switch feature/y)"`);
+	add("non-literal word before git", task, `env -u NOPE* git -C ${primary} switch feature/y`);
+	add("glob before git", task, `nice -n 5 */dev/null git -C ${primary} switch feature/y`);
+
+	// A `cd` whose own execution was conditional on something that failed.
+	add("cd after a failed and", primary, `false && cd ${task}\ngit switch feature/y`);
+	add("cd after a successful or", primary, `true || cd ${task}\ngit switch feature/y`);
+	add("cd downstream of a pipe", primary, `echo x | cd ${task}\ngit switch feature/y`);
+
 	// Quoting, comments, and prose that only look like commands.
 	add("quoted prose", primary, 'echo "git switch feature/y"');
 	add("single-quoted prose", primary, "echo 'git switch feature/y'");

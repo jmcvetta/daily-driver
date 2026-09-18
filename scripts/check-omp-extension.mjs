@@ -962,6 +962,56 @@ for (const [name, command] of [
 	checkGuard(`${name} still runs in a task worktree`, false, "bash", { command }, worktrees.task);
 }
 
+// --- a substitution is a substitution wherever it is written ---------------
+for (const [name, command] of [
+	["inside double quotes", `echo "$(git -C '${worktrees.primary}' switch master)"`],
+	["as an assignment's value", `x="$(cd '${worktrees.primary}' && git switch master)"`],
+	["in backticks", `echo \`cd "${worktrees.primary}" && git switch master\``],
+]) {
+	// The backtick spelling was tokenized and the `$(…)` one inside a quoted
+	// string was not, so the same command passed or failed on its punctuation.
+	checkGuard(
+		`a branch move in a substitution ${name} is still a branch move`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
+checkGuard(
+	"a word the guard cannot read does not hide the git behind it",
+	true,
+	"bash",
+	{ command: `env -u NOPE* git -C "${worktrees.primary}" switch master` },
+	worktrees.task,
+);
+
+for (const [name, command] of [
+	["after a condition that failed", `false && cd "${worktrees.task}"\ngit switch master\n`],
+	["after a condition that succeeded", `true || cd "${worktrees.task}"\ngit switch master\n`],
+]) {
+	// Whether such a `cd` ran depends on an exit status the guard cannot know,
+	// so the directory is unknown rather than moved — and the branch move that
+	// follows cannot be placed.
+	checkGuard(
+		`a cd ${name} does not move the tracked directory`,
+		true,
+		"bash",
+		{ command },
+		worktrees.primary,
+		UNANCHORED_PATH_BLOCK_REASON,
+	);
+}
+
+checkGuard(
+	"a cd downstream of a pipe never moved the shell at all",
+	true,
+	"bash",
+	{ command: `echo x | cd "${worktrees.task}"\ngit switch master\n` },
+	worktrees.primary,
+);
+
 // --- here-document bodies are data, not commands ---------------------------
 checkGuard(
 	"a here-document carrying a git switch line is not a branch switch",

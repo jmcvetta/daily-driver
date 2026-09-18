@@ -526,6 +526,10 @@ function shellSegments(command) {
 	// What each open paren opened. Arithmetic holds no commands, so the caller
 	// must not read its words as one.
 	const groupKinds = [];
+	// A substitution may open inside a double-quoted string — `"$(…)"` — and the
+	// string resumes where it closes. The quote in force is stacked with the
+	// group so the text after the `)` is still read as quoted.
+	const quoteStack = [];
 	let depth = 0;
 
 	const finishWord = () => {
@@ -549,6 +553,27 @@ function shellSegments(command) {
 		words.push(shellWord(word, wordLiteral));
 		word = "";
 		wordStarted = false;
+		wordLiteral = true;
+	};
+	const openGroup = (kind, separator) => {
+		finishSegment(separator);
+		segments.push({
+			words: [],
+			separator: null,
+			group: "open",
+			arithmetic: kind === "arithmetic",
+		});
+		groupKinds.push(kind);
+		quoteStack.push(quote);
+		quote = null;
+		depth += kind === "arithmetic" ? 2 : 1;
+	};
+	const closeGroup = (separator) => {
+		finishSegment(separator);
+		segments.push({ words: [], separator: null, group: "close" });
+		const kind = groupKinds.pop();
+		quote = quoteStack.length > 0 ? quoteStack.pop() : null;
+		depth -= kind === "arithmetic" ? 2 : 1;
 		wordLiteral = true;
 	};
 	const finishSegment = (separator) => {
@@ -602,6 +627,16 @@ function shellSegments(command) {
 			continue;
 		}
 		if (quote === '"') {
+			if (char === "$" && command[index + 1] === "(") {
+				// A substitution inside a quoted string is still a substitution:
+				// leaving it as word text is how `"$(git switch …)"` walked past
+				// the guard while the backtick spelling of it did not.
+				wordLiteral = false;
+				const arithmetic = command[index + 2] === "(";
+				openGroup(arithmetic ? "arithmetic" : "command", "(");
+				index += arithmetic ? 2 : 1;
+				continue;
+			}
 			if (char === '"') quote = null;
 			else if (char === "$" || char === "`") wordLiteral = false;
 			if (char !== '"' && char !== "`") word += char;
@@ -615,16 +650,9 @@ function shellSegments(command) {
 		if (char === "`") {
 			// A backtick substitution runs commands in a subshell, exactly as
 			// `$(…)` does. It is emitted as a group so its `cd` cannot leak out.
-			finishSegment(null);
-			segments.push({
-				words: [],
-				separator: null,
-				group: backtick ? "close" : "open",
-			});
-			if (backtick) depth--;
-			else depth++;
+			if (backtick) closeGroup(null);
+			else openGroup("command", null);
 			backtick = !backtick;
-			wordLiteral = true;
 			continue;
 		}
 		if (char === "#" && !wordStarted) {
@@ -649,10 +677,7 @@ function shellSegments(command) {
 			// the words inside as a command, but either may hold a `$(…)` that
 			// does, so the span is tokenized like any other group and marked as
 			// arithmetic for the caller.
-			finishSegment("(");
-			segments.push({ words: [], separator: null, group: "open", arithmetic: true });
-			groupKinds.push("arithmetic");
-			depth += 2;
+			openGroup("arithmetic", "(");
 			index++;
 			continue;
 		}
@@ -661,10 +686,7 @@ function shellSegments(command) {
 			command[index + 1] === ")" &&
 			groupKinds.at(-1) === "arithmetic"
 		) {
-			finishSegment(")");
-			segments.push({ words: [], separator: null, group: "close" });
-			groupKinds.pop();
-			depth -= 2;
+			closeGroup(")");
 			index++;
 			continue;
 		}
@@ -695,15 +717,8 @@ function shellSegments(command) {
 				// one. None of them is a stored brace body.
 				pendingFunctionBody = false;
 			}
-			finishSegment(char);
-			segments.push({
-				words: [],
-				separator: null,
-				group: char === "(" ? "open" : "close",
-			});
-			if (char === "(") groupKinds.push("command");
-			else groupKinds.pop();
-			depth += char === "(" ? 1 : -1;
+			if (char === "(") openGroup("command", char);
+			else closeGroup(char);
 			continue;
 		}
 		if (char === ";" || char === "&" || char === "|") {
@@ -725,7 +740,9 @@ function shellSegments(command) {
 	finishSegment(null);
 
 	let unreadable = null;
-	if (quote !== null) unreadable = "a quote is never closed";
+	if (quote !== null || quoteStack.some((held) => held !== null)) {
+		unreadable = "a quote is never closed";
+	}
 	else if (backtick) unreadable = "a backtick substitution is never closed";
 	else if (depth > 0) unreadable = "a parenthesis is never closed";
 	return { segments, functions, unreadable };
@@ -738,16 +755,18 @@ function isEnvironmentAssignment(word) {
 /**
  * Index of the literal `git` executable in one command's words, or -1.
  *
- * Every word before it must be literal: a wrapper the guard cannot read could
- * be anything, and `git` behind it is not reliably the command that runs. The
- * search is positional rather than a list of known wrappers, so `xargs git
+ * The search is positional rather than a list of known wrappers, so `xargs git
  * switch`, `timeout 5 git switch` and `sudo -u x git switch` are all found
- * without the guard having to have met the wrapper before.
+ * without the guard having to have met the wrapper before. A word it cannot
+ * read does not stop the scan: `env -u NOPE* git switch` runs git whatever the
+ * unreadable word turns out to be, and stopping there was a way to hide the
+ * git word behind one glob.
  */
 function gitWordIndex(words) {
 	for (let index = 0; index < words.length; index++) {
-		if (!words[index].literal) return -1;
-		if (basename(words[index].text) === "git") return index;
+		if (words[index].literal && basename(words[index].text) === "git") {
+			return index;
+		}
 	}
 	return -1;
 }
@@ -893,21 +912,6 @@ function movesGuardedPrimary(state, shellCwd) {
 }
 
 /**
- * True where a command running with this working directory would run in the
- * guarded primary checkout. An unknown directory answers true: the guard
- * cannot place the command, and the whole point of the inversion is that what
- * cannot be placed is refused rather than allowed. A detached primary answers
- * false for the same reason `movesGuardedPrimary` exempts it — the model is
- * told to attach it in place, and it needs commands to do that with.
- */
-function runsInGuardedPrimary(shellCwd) {
-	if (shellCwd === null) return true;
-	const state = worktreeState(".", shellCwd);
-	if (state === null) return false;
-	return state.root === state.primaryRoot && state.branch.length > 0;
-}
-
-/**
  * Commands that run a string the guard has not read. Where the string is one
  * literal word it is tokenized like any other command; where it is not, the
  * guard has no way to know what runs.
@@ -977,18 +981,26 @@ function walkShellCommand(command, toolCwd) {
 	// would refuse `$(( $n + 1 ))` for naming an executable that expands.
 	const arithmeticStack = [];
 
+	// The separator that ended the previous command, which is what says whether
+	// the next one runs at all.
+	let previousSeparator = null;
+
 	for (const segment of segments) {
 		if (segment.group === "open") {
 			shellCwdStack.push(shellCwd);
 			arithmeticStack.push(segment.arithmetic === true);
+			previousSeparator = null;
 			continue;
 		}
 		if (segment.group === "close") {
 			// A `cd` inside a subshell stops applying when the subshell ends.
 			if (shellCwdStack.length > 0) shellCwd = shellCwdStack.pop();
 			arithmeticStack.pop();
+			previousSeparator = null;
 			continue;
 		}
+		const enteredAfter = previousSeparator;
+		previousSeparator = segment.separator;
 		if (arithmeticStack.at(-1) === true) continue;
 
 		const invocation = gitInvocation(segment.words, shellCwd);
@@ -1080,9 +1092,24 @@ function walkShellCommand(command, toolCwd) {
 		}
 
 		if (name === "cd" || name === "pushd") {
-			if (segment.separator === "|" || segment.separator === "&") {
-				// A `cd` in a pipeline or a background job runs in a subshell of
-				// its own, so the shell that continues never moves.
+			if (
+				segment.separator === "|" ||
+				segment.separator === "&" ||
+				enteredAfter === "|" ||
+				enteredAfter === "|&"
+			) {
+				// A `cd` on either side of a pipe, or in a background job, runs
+				// in a subshell of its own, so the shell that continues never
+				// moves.
+				continue;
+			}
+			if (enteredAfter === "&&" || enteredAfter === "||") {
+				// Whether this `cd` ran at all depends on an exit status the
+				// guard cannot know. `false && cd elsewhere` leaves the shell
+				// where it was, and reading the `cd` as having happened is how a
+				// later branch move in the primary looked like one somewhere
+				// else.
+				shellCwd = null;
 				continue;
 			}
 			const moved = directoryAfterChange(shellCwd, segment.words.slice(position));
