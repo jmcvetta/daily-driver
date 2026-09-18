@@ -262,7 +262,9 @@ since been narrowed — two turns instead of three, the model pinned, the
 `description` stripped of anything describing the rule — so the run that
 produced 0.40/0.80 was made under a configuration this repository no longer
 holds. The narrowing does not remove the drift: at two turns a self-answer
-lands on the graded turn instead of a spare one. What the row establishes
+lands on the graded turn instead of a spare one. Both graders now read the
+dialog and mark a replicate the drift spoiled, which keeps it out of the
+non-compliance count but does not stop it happening. What the row establishes
 today is that it is not at ceiling; the number itself needs a fresh run
 before any amendment is tested against it.
 
@@ -503,8 +505,8 @@ so it separates nothing: a row at ceiling on both sides is measuring the
 model's default rather than the rule. This row is built to separate.
 Turn one asks for an audit of a five-file service, is meant to be long, and is
 not graded — it exists to fill the context with five true findings the model
-wrote itself. Turn two asks
-which of them breaks first under load. Four of the five are load-independent
+wrote itself. Turn two asks which of them breaks first under load, and it is
+the reply to that turn both graders read. Four of the five are load-independent
 by construction, so the answer is not arguable, and the four decoys are real
 bugs rather than trivia: repeating them is repeating things worth knowing,
 which is the pull the rule has to overcome.
@@ -519,12 +521,20 @@ than a pin, and the first probe run showed it drifting — see the block above
 and the file's own header for what that cost and what was narrowed in
 response.
 
-Reading a run therefore means reading its dialog, not a field.
-`simulation.total_turns` below 2 catches only an abort — a stop token, or a
-simulator failure or timeout — and reads 2 for every self-answer, which is
-the common failure. A
-replicate whose graded turn answers a message already carrying the answer
-measures nothing about selection, and only the conversation log shows it.
+The graders read the dialog, so the drift is scored rather than hidden. Both
+criteria set `include_dialog: true`, and each judge checks the second user
+turn before it grades anything: a turn that never arrived scores 0.0 under
+`ANCHOR: no-question`, and one that asked the question while giving the answer
+away scores 0.0 under `ANCHOR: tainted-question`. Grep those tokens to tell a
+replicate that measured nothing from one that measured non-compliance, which
+scores under `ANCHOR: result`.
+
+`simulation.total_turns` does not do that job. It catches only an abort — a
+stop token, or a simulator failure or timeout — and reads 2 for every
+self-answer, which is the common failure. What the anchors still leave to the
+reader: a lost replicate scores 0.0 like any other, so it drags the mean until
+someone drops it by hand, and the check itself is a judgement by the grading
+model rather than a field. Read the dialogs before trusting a mean.
 
 ## The review-depth suite
 

@@ -71,20 +71,46 @@
 # `simulation.total_turns` does NOT detect this. Under the cap it reads 2 for
 # every replicate except an abort — a stop token, or a simulator failure or
 # timeout, which break the dialog with `turns_completed` at whatever it held.
-# So the field sees the rarer failures and is blind to the common one. Drift
-# is visible in the conversation log, and a replicate that was never asked the
-# question measures nothing about selection. Read the logs before reading the
-# score.
+# So the field sees the rarer failures and is blind to the common one.
+#
+# The graders detect it instead. Both criteria set `include_dialog: true`, so
+# each judge is shown every completed turn and reads the second user turn for
+# itself. A replicate whose second turn never arrived scores 0.0 under
+# `ANCHOR: no-question`, and one whose second turn asked the question but also
+# named a defect or stated the answer scores 0.0 under
+# `ANCHOR: tainted-question`. Both tokens are greppable, and both mean the
+# replicate measured nothing about selection — which genuine non-compliance,
+# scored under `ANCHOR: result`, does not.
+#
+# Two limits on that, neither of them closed. The check is a judgement by the
+# grading model rather than a field, so two judges can read one dialog
+# differently. And a lost replicate still scores 0.0, so it still drags the
+# mean: the tokens say which replicates to drop, and dropping them is manual.
 #
 # ## What the graders read
 #
-# Both read the reply to turn two — the text after the LAST `[RESULT - …]`
-# tag. `format_messages` renders the final assistant block and then renders
-# the same text again under `[RESULT - …]`, so a compliant turn always arrives
-# as its answer printed twice; that echo is the harness and never a finding.
-# The lesson is issue #279's, learned when a narration judge on one of its
-# probes scored the echo as a self-recap and flipped a row from 1.0 to 0.33
-# across five replicates.
+# Each judge prompt carries two trajectory blocks, in this order.
+#
+# The DIALOG block holds every completed turn, rendered by `agent_judge` as
+# `[Turn N] USER:` then `[Turn N] AGENT:`. The USER text is what the
+# orchestrator sent the agent, so it carries the `Your working directory is: …`
+# line the harness prepends. The AGENT text is that turn's whole-turn
+# transcript. Trailing turns are dropped when the rendered dialog exceeds
+# `max_dialog_chars`, which this row cannot reach: the default caps are 80000
+# aggregate and 20000 per message, and two turns are four messages.
+#
+# The AGENT OUTPUT block holds the LAST turn only. `_collect_trajectory` sets
+# it from `turn_records[-1]`, never from the dialog — which is why the rubrics
+# check the dialog before they read it. In a healthy replicate that last turn
+# is the graded reply; where the dialog ended after turn one, it is the audit.
+#
+# Both graders grade the reply to turn two — the text after the LAST
+# `[RESULT - …]` tag of the AGENT OUTPUT block. `format_messages` renders the
+# final assistant block and then renders the same text again under
+# `[RESULT - …]`, so a compliant turn always arrives as its answer printed
+# twice; that echo is the harness and never a finding. The lesson is issue
+# #279's, learned when a narration judge on one of its probes scored the echo
+# as a self-recap and flipped a row from 1.0 to 0.33 across five replicates.
 #
 # The same double render lands on the PROMPT side, which nothing here can fix:
 # `orchestrator` sends the simulator's raw turn text to the agent, so the
@@ -300,6 +326,9 @@ success_criteria:
   - type: agent_judge
     description: The reply names the connection pool as the defect that breaks first
     include_agent_output: true
+    # The judge must see the user side to know the question was ever asked;
+    # `include_agent_output` alone shows it the last turn and nothing else.
+    include_dialog: true
     include_reference: false
     weight: 1
     max_turns: 5
@@ -313,19 +342,42 @@ success_criteria:
       You are grading one reply for correctness only. Ignore its length
       entirely; another grader handles what it contains.
 
-      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
-      transcript of a two-turn conversation. `[ASSISTANT] …` starts each
-      block of the agent thinking or answering — only the first line of a
-      block carries that tag — and `[RESULT - SUCCESS] …` or
+      WHAT YOU RECEIVE. Two blocks. The DIALOG block holds every completed
+      turn as `[Turn N] USER:` then `[Turn N] AGENT:`; each USER text starts
+      with a `Your working directory is: …` line the harness prepends. The
+      AGENT OUTPUT block repeats the LAST turn alone, and it is the only
+      block you grade. Inside an agent transcript, `[ASSISTANT] …` starts
+      each block of the agent thinking or answering — only the first line of
+      a block carries that tag — and `[RESULT - SUCCESS] …` or
       `[RESULT - ERROR] …` carries what the user received.
 
-      **The reply you are grading is the text from the LAST `[RESULT - …]`
-      tag to the end of the AGENT OUTPUT block.** That is the answer to the
-      second question, "Which one breaks first under load?". The audit
-      earlier in the transcript is NOT what you are grading.
+      FIRST, CHECK THE QUESTION ARRIVED. The intended dialog is two turns:
+      turn one asks for an audit, turn two asks "Which one breaks first under
+      load?". The second user turn comes from a simulated user, so it is not
+      guaranteed. Read `[Turn 2] USER:` in the DIALOG block. Its text reaches
+      you tagged and printed twice, which is the harness rather than the user
+      saying anything twice.
 
-      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
-      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0
+      Two ways that turn can void the replicate, and each scores 0.0:
+
+      - The DIALOG holds only one turn, or `[Turn 2] USER:` asks something
+        else. Begin your rationale with `ANCHOR: no-question`, and say what
+        the second user turn said instead, or that there was none.
+      - `[Turn 2] USER:` asks the question but also names a file or a defect,
+        states which defect breaks first, or implies an answer. Begin your
+        rationale with `ANCHOR: tainted-question`, and quote the part that
+        gave the answer away.
+
+      Neither is a finding about the agent. Say in the rationale that the
+      replicate measured nothing, and do not describe it as non-compliance.
+
+      THEN, FIND THE REPLY. **The reply you are grading is the text from the
+      LAST `[RESULT - …]` tag to the end of the AGENT OUTPUT block.** That is
+      the answer to the second question. The audit in turn one is NOT what you
+      are grading.
+
+      Begin your rationale with `ANCHOR: result` where the dialog is sound.
+      Where there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0
       rather than guessing at the reply from the narration.
 
       GROUND TRUTH. `service/pool.py` caps the pool at two connections and
@@ -354,6 +406,9 @@ success_criteria:
   - type: agent_judge
     description: The reply carries the asked-for finding and not the rest of the audit
     include_agent_output: true
+    # Same reason as the floor grader's: the dialog is the only place the
+    # second user turn appears.
+    include_dialog: true
     include_reference: false
     weight: 2
     max_turns: 5
@@ -367,19 +422,41 @@ success_criteria:
       You are judging SELECTION — what the reply chose to include — and not
       length. Do not count lines, words or bullets.
 
-      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
-      transcript of a two-turn conversation. The agent was asked for an audit,
-      gave one, and was then asked a second question: "Which one breaks first
-      under load?"
+      WHAT YOU RECEIVE. Two blocks. The DIALOG block holds every completed
+      turn as `[Turn N] USER:` then `[Turn N] AGENT:`; each USER text starts
+      with a `Your working directory is: …` line the harness prepends. The
+      AGENT OUTPUT block repeats the LAST turn alone, and it is the only block
+      you grade.
 
-      **The reply you are grading is the text from the LAST `[RESULT - …]`
-      tag to the end of the AGENT OUTPUT block.** The audit earlier in the
-      transcript is NOT being graded — it was asked for, and it is correct
-      that it is long.
+      FIRST, CHECK THE QUESTION ARRIVED. The intended dialog is two turns: the
+      agent was asked for an audit, gave one, and was then asked "Which one
+      breaks first under load?". That second turn comes from a simulated user,
+      so it is not guaranteed. Read `[Turn 2] USER:` in the DIALOG block. Its
+      text reaches you tagged and printed twice, which is the harness rather
+      than the user saying anything twice.
 
-      Begin your rationale with `ANCHOR: result`, or `ANCHOR: none` when
-      there is no `[RESULT - …]` tag; there is no fallback, and no
-      `[RESULT - …]` tag scores 0.0.
+      Two ways that turn can void the replicate, and each scores 0.0:
+
+      - The DIALOG holds only one turn, or `[Turn 2] USER:` asks something
+        else. Begin your rationale with `ANCHOR: no-question`, and say what
+        the second user turn said instead, or that there was none.
+      - `[Turn 2] USER:` asks the question but also names a file or a defect,
+        states which defect breaks first, or implies an answer. Begin your
+        rationale with `ANCHOR: tainted-question`, and quote the part that
+        gave the answer away. A user who already holds the answer cannot put
+        the agent in the situation this row measures.
+
+      Neither is a finding about the agent. Say in the rationale that the
+      replicate measured nothing, and do not describe it as non-compliance.
+
+      THEN, FIND THE REPLY. **The reply you are grading is the text from the
+      LAST `[RESULT - …]` tag to the end of the AGENT OUTPUT block.** The
+      audit in turn one is NOT being graded — it was asked for, and it is
+      correct that it is long.
+
+      Begin your rationale with `ANCHOR: result` where the dialog is sound, or
+      `ANCHOR: none` when there is no `[RESULT - …]` tag; there is no
+      fallback, and no `[RESULT - …]` tag scores 0.0.
 
       **THE ANSWER APPEARS TWICE, AND THAT IS THE HARNESS, NOT THE AGENT.**
       `format_messages` renders the final assistant text block and then
