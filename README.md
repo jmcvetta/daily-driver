@@ -308,6 +308,18 @@ Do **not** ask what plugins are installed: that question has a known wrong
 answer. After a release, bump the `CACHEBUST` number and ask again — an
 existing environment does not pick up a new release on its own.
 
+[docs/bootstrapping-a-repository.md](docs/bootstrapping-a-repository.md) has
+the mechanism under all of this, and *the stanza* a repository can carry in
+`.claude/settings.json` to say it wants the plugin.
+
+**The stanza is Claude Code's, and `template/` has no Codex counterpart.**
+Measured: a project `.codex/config.toml` is not read by this build at all —
+`codex doctor` names `$CODEX_HOME/config.toml` as the only config it loaded, and
+a marketplace and plugin declared in the project file loaded nothing. So on
+Codex there is no repository-level enable of any kind, not even the
+record-the-intent one the stanza is on Claude Code; enabling is user-level only,
+through the two tables above.
+
 ### The other cloud route: enable it on your account
 
 A cloud session also loads the plugins and skills **enabled for your claude.ai
@@ -320,10 +332,12 @@ It needs a paid plan (Pro, Max, Team, Enterprise).
 
 In the web console: **Customize** in the left sidebar → the **Plugins** tab →
 **Browse plugins** for the listed ones. This plugin is not in that directory,
-so its route is the upload beside it — a valid `.zip` of the plugin tree, under
-50 MB, holding `.claude-plugin/plugin.json` at its root. Skills upload the same
-way from the **Skills** tab, one ZIP per skill folder, but a whole-plugin
-upload is the one that also carries `hooks/`, and so the constitution.
+so its route is the upload beside it, which takes a `.zip` — this tree as the
+repository lays it out, `.claude-plugin/plugin.json` at its root. The console
+states its own size limit; no number is quoted here, because none of the pages
+linked below carries one. Skills upload the same way from the **Skills** tab,
+one ZIP per skill folder, but a whole-plugin upload is the one that also
+carries `hooks/`, and so the constitution.
 
 An uploaded ZIP is a snapshot of whatever you zipped: re-upload it to move to a
 new release. Anthropic documents the menu and the sync
@@ -335,27 +349,22 @@ marketplace cache stays empty, and so does `installed_plugins.json`:
 
 > Without reading any file, say what the constitution tells you about
 > production systems. Then list the skills available to you whose names begin
-> `daily-driver:`. Then run `ls ~/.claude/plugins/synced/`.
+> `daily-driver:`. Then say which plugin those skills came from, with its
+> full identifier. Then run `ls ~/.claude/plugins/synced/`.
 
+The identifier is the question's load-bearing half, and it is why this question
+carries one the install route's does not. **The two routes do not stack**: an
+environment whose Setup script installed the plugin loads that copy and reports
+the synced one as not loaded, so every other answer above comes back right
+while the upload is doing nothing. `daily-driver@synced` is the account route
+answering; `daily-driver@daily-driver` is the Setup script answering, on an
+environment that cannot test the upload at all.
 [Checking whether it loaded](docs/bootstrapping-a-repository.md#checking-whether-it-loaded)
-is why the first two are the answer on either route: asking the session is the
-only check that reads what loaded rather than what some file says.
+is why the session is asked rather than a file read.
 
 [help-plugins]: https://support.claude.com/en/articles/13837440-use-plugins-in-claude
 [help-skills]: https://support.claude.com/en/articles/12512180-use-skills-in-claude
 [synced]: https://code.claude.com/docs/en/plugins-reference#synced-plugins
-
-[docs/bootstrapping-a-repository.md](docs/bootstrapping-a-repository.md) has
-the mechanism under all of this, and *the stanza* a repository can carry in
-`.claude/settings.json` to say it wants the plugin.
-
-**The stanza is Claude Code's, and `template/` has no Codex counterpart.**
-Measured: a project `.codex/config.toml` is not read by this build at all —
-`codex doctor` names `$CODEX_HOME/config.toml` as the only config it loaded, and
-a marketplace and plugin declared in the project file loaded nothing. So on
-Codex there is no repository-level enable of any kind, not even the
-record-the-intent one the stanza is on Claude Code; enabling is user-level only,
-through the two tables above.
 
 ## Portability
 

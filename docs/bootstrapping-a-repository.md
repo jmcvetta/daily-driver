@@ -193,7 +193,10 @@ also loads the plugins and skills **enabled for a claude.ai account**: in a
 cloud or Cowork session it downloads them into the session's own environment as
 it starts, and loads each as `<name>@synced` — into
 `~/.claude/plugins/synced/`, with no marketplace registration and no
-`installed_plugins.json` entry. So the Setup script's verification line is
+`installed_plugins.json` entry. **The route is not the cloud's alone.** A
+terminal session signed in with the same account syncs them too, from Claude
+Code v2.1.273, into the same directory — which makes it the one half of this
+route a laptop can check, precedence included, without a container. So the Setup script's verification line is
 blind to it by construction: a synced plugin is live with the file that line
 greps still `{"version": 2, "plugins": {}}`. `claude plugin list` may answer
 where that line cannot: [Anthropic's documentation][synced] says it prints
@@ -267,16 +270,15 @@ Two readers are routinely mistaken for one of the three, and are not:
 - **The harness `ListPlugins` tool answers a different question.** In two
   separate cloud environments it returned an empty list while the plugin was
   live — skills firing, constitution injected.
-- **`claude plugin list` reads `installed_plugins.json`.** So it is honest
-  about a plugin the Setup script installed and says nothing about one
-  arriving by stanza. Measured: in the trusted stanza-only repository, where
-  the marketplace was registered and the plugin cached, it still said `No
-  plugins installed`. Worth reading on a cloud container, where
-  `installed_plugins.json` is the file the Setup script's verification line
-  greps. It is not the one-route reader this bullet once called it:
-  [Anthropic's documentation][synced] gives the account route a
-  `Synced from claude.ai` heading of its own in that output — documented, and
-  measured here no more than the rest of that route.
+- **`claude plugin list` says nothing about a plugin arriving by stanza.**
+  Measured: in the trusted stanza-only repository, where the marketplace was
+  registered and the plugin cached, it still said `No plugins installed` —
+  the answer `installed_plugins.json` holds, which is also the file the Setup
+  script's verification line greps, so the command is worth reading on a cloud
+  container. It is not the single-file reader that measurement once read as,
+  though: [Anthropic's documentation][synced] gives the account route a
+  `Synced from claude.ai` heading of its own in the same output — documented,
+  and measured here no more than the rest of that route.
 
 ## The route that would be genuinely per-repository, and is blocked
 
