@@ -55,8 +55,8 @@ The pull request
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
-| `The milestone` | Read the readiness state | `mcp__github__get_pull_request` — `isDraft`, `mergeable`, `mergeStateStatus`, `headRefOid` |
-| `The milestone` | Read the existing comments | `mcp__github__get_issue_comments` |
+| `The milestone` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable`, `mergeable_state`, `head.sha` |
+| `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
 | `The milestone` | Post the report | `mcp__github__add_issue_comment` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
@@ -102,19 +102,20 @@ The milestone
 `SKILL.md` owns what the report says and when it is owed; these are the calls
 that read the readiness state, find the claim's timestamp, and post it.
 
-**The readiness state is `mcp__github__get_pull_request`.** The fields answer
-`SKILL.md`'s questions directly: `isDraft`; `mergeable`, which answers
-`true`, `false`, or `null` — only `true` is a yes, and `null` is GitHub
-saying it cannot determine the answer yet, which is the unknown readiness
-`SKILL.md` rules out; `mergeStateStatus`, which must agree with `The gate`
-as well — `BEHIND` is a base the branch does not carry, `UNSTABLE` a check
-that is no longer green, `BLOCKED` a required review outstanding, and
-`UNKNOWN` the indeterminate answer `SKILL.md` rules out outright, so a state
-that disagrees with the gate is a wait, not a milestone; and `headRefOid`,
-the SHA the report binds to.
+**The readiness state is `mcp__github__pull_request_read`, method `get`.**
+The fields answer `SKILL.md`'s questions directly: `draft`; `mergeable`,
+which answers `true`, `false`, or `null` — only `true` is a yes, and `null`
+is GitHub saying it cannot determine the answer yet, which is the unknown
+readiness `SKILL.md` rules out; `mergeable_state`, which must agree with
+`The gate` as well — `behind` is a base the branch does not carry,
+`unstable` a check that is no longer green, `blocked` a required review
+outstanding, and `unknown` the indeterminate answer `SKILL.md` rules out
+outright, so a state that disagrees with the gate is a wait, not a
+milestone; and `head.sha`, the SHA the report binds to.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
-with `mcp__github__get_issue_comments`, find the claim by its branch link and
+with `mcp__github__issue_read`, method `get_comments` — the read `Read the
+issue and its edges` already makes — find the claim by its branch link and
 `Model:` and `session:` lines, and take `created_at`; where more than one
 comment carries that shape, the earliest of them is the start — a later
 claim does not restart the clock. The resumed sequence
@@ -123,8 +124,8 @@ recoverable claim leaves the timing `n/a`, per `SKILL.md`.
 
 **The report posts with `mcp__github__add_issue_comment`** — a pull request's
 comments are issue comments, so the claim's write is the report's. The same
-call only writes, so read first: `mcp__github__get_issue_comments` on the
-pull request, the report found by its opening line, `First-readiness
+call only writes, so read first: `mcp__github__pull_request_read`, method
+`get_comments`, on the pull request, the report found by its opening line, `First-readiness
 report`, the marker `SKILL.md` fixes, and a resumed sequence that finds it
 posts nothing.
 

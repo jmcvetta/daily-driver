@@ -96,10 +96,11 @@ a check that is no longer green, and `UNKNOWN` and `BLOCKED` are states
 what the gate answered; a state that disagrees with it is a wait, not a
 milestone. `headRefOid` is the SHA the report binds to.
 
-**The start is the claim comment's `createdAt`.** `gh issue view <issue>
---json comments` is the read `Read the issue and its edges` already makes —
-`comments` is in its field list — and the claim is the comment carrying the
-branch link and the `Model:` and `session:` lines. Take its `createdAt`;
+**The start is the claim comment's `createdAt`.** `issue://<issue>` carries
+the comments, so `Read the issue and its edges` already has them; `gh issue
+view <issue> --json comments` is the same read where that resource is not to
+hand. The claim is the comment carrying the branch link and the `Model:` and
+`session:` lines. Take its `createdAt`;
 where more than one comment carries that shape, the earliest of them is the
 start — a later claim does not restart the clock. A resumed session finds
 the start with the read it makes anyway. An issue with no recoverable claim
