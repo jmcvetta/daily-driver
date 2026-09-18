@@ -384,10 +384,10 @@ row records a false negative a full run would never have produced.
 
 ## The constitution suite: reach, then compliance
 
-All three rows carry `skip:codex` and are absent from the Codex arm.
-`coder_eval`'s Codex agent links skills and installs no hooks, so the constitution never
-reaches that session and a zero there would say nothing about the constitution.
-See "The Codex arm" below.
+Every row there carries `skip:codex` and is absent from the Codex arm.
+`coder_eval`'s Codex agent links skills and installs no hooks, so the
+constitution never reaches that session and a zero there would say nothing
+about the constitution. See "The Codex arm" below.
 
 `subagent-reports-the-token` was `regex` on `last_message`, weight 2 — the
 grader that *is* the finding. It now has the subagent write its answer to a
@@ -507,11 +507,21 @@ matters more here than anywhere: the final text is rendered twice, and
 a naive judge scores the renderer's echo as the agent's recap. A sibling row
 lost five replicates to exactly that.
 
-What the row does not assert is that the edit landed. Both criteria read the
-report, so an agent that renames nothing and says so accurately passes the
-floor. A `file_matches_regex` would close it, and it is left out so
-`weighted_score` stays about the report. Nothing here has been run: no score
-for this row has been measured in either arm.
+Neither judge can tell whether the edit landed, so an agent that renames
+nothing and says so accurately passes the floor. Two `file_matches_regex`
+criteria close that, both at `weight: 0` — which `coder_eval` documents as
+purely informational, excluded from `weighted_score` and from the pass gate
+alike. The number stays a reading of the report, and the run still says whether
+the work happened.
+
+Two things a reader of a comparison should carry. With weights 1 and 2 and a
+floor that is near-constant at 1.0, `weighted_score` is confined to roughly
+[0.33, 1.0], so a third of the number is a constant. And both arms run with the
+SDK's `claude_code` preset in force, which already instructs against preamble,
+postamble and unsolicited summaries — most of the six modes. This row may
+therefore sit at ceiling in both arms, like the answer probes it replaces; the
+row's own header says what to sharpen if it does. Nothing here has been run: no
+score for this row has been measured in either arm.
 
 ## The review-depth suite
 
@@ -830,10 +840,10 @@ grades `--body`.
 so. That tag takes a row out of one arm and leaves it in the rest, which an arm
 tag cannot express. The reason is that `coder_eval`'s Codex agent links skills
 and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` and no
-`PreToolUse` on the `Agent` tool, and no constitution in the session. All
-three rows would score 0 for a reason that has nothing to do with the
-constitution. #181 measured that a *real* Codex session does load the hook file and does deliver
-the constitution, behind persisted hook trust and an exactly-echoed
+`PreToolUse` on the `Agent` tool, and no constitution in the session. Every row
+there would score 0 for a reason that has nothing to do with the constitution.
+#181 measured that a *real* Codex session does load the hook file and does
+deliver the constitution, behind persisted hook trust and an exactly-echoed
 `hookEventName`; whether the SDK's app-server can be driven through those gates
 is unmeasured, and `0015` says what settling it needs.
 

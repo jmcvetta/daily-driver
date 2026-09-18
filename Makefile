@@ -416,8 +416,8 @@ evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 #
 # `skip:codex` is not a spare exclusion: `tasks/constitution/*` carries it,
 # because `coder_eval`'s Codex agent links skills and installs no hooks, so no
-# constitution reaches that arm and both rows would score 0 for the wrong
-# reason. See docs/notes/0015-the-codex-arm.md.
+# constitution reaches that arm and every row there would score 0 for the
+# wrong reason. See docs/notes/0015-the-codex-arm.md.
 evals-run-codex: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/codex.yaml \
 		--exclude-tags claude-only,omp-only,skip:codex $(TASKS)
