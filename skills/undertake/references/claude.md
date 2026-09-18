@@ -55,7 +55,7 @@ The pull request
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
-| `The milestone` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable`, `mergeable_state`, `head.sha` |
+| `The milestone` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable_state`, `head.sha` |
 | `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
 | `The milestone` | Post the report | `mcp__github__add_issue_comment` |
 
@@ -103,15 +103,16 @@ The milestone
 that read the readiness state, find the claim's timestamp, and post it.
 
 **The readiness state is `mcp__github__pull_request_read`, method `get`.**
-The fields answer `SKILL.md`'s questions directly: `draft`; `mergeable`,
-which answers `true`, `false`, or `null` — only `true` is a yes, and `null`
-is GitHub saying it cannot determine the answer yet, which is the unknown
-readiness `SKILL.md` rules out; `mergeable_state`, which must agree with
-`The gate` as well — `behind` is a base the branch does not carry,
-`unstable` a check that is no longer green, `blocked` a required review
-outstanding, and `unknown` the indeterminate answer `SKILL.md` rules out
-outright, so a state that disagrees with the gate is a wait, not a
-milestone; and `head.sha`, the SHA the report binds to.
+Three fields answer `SKILL.md`'s questions: `draft`; `mergeable_state`,
+which carries both the mergeability answer and the gate's — `clean` is the
+only yes, `behind` is a base the branch does not carry, `unstable` a check
+that is no longer green, `dirty` a conflict, `blocked` a required review
+outstanding, and `unknown` GitHub saying it cannot determine the answer
+yet, which is the indeterminate readiness `SKILL.md` rules out, so a state
+that disagrees with the gate is a wait, not a milestone; and `head.sha`,
+the SHA the report binds to. This call returns no `mergeable` boolean —
+measured on the server this session holds, 2026-09-18 — so `mergeable_state`
+is the whole answer rather than half of it.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the
