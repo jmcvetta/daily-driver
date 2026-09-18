@@ -215,6 +215,33 @@ function gitFailureDetail(err, stderr) {
 	return `${err?.code ?? err}`;
 }
 
+/**
+ * Read one config value, or null where Git says the key is not set.
+ *
+ * `gitOutput` reads Git's answer about a worktree, where the only non-zero
+ * exit that is an answer is "not a git repository". `git config --get` has
+ * another: it exits 1 with nothing on stderr when the key is simply absent,
+ * which is the ordinary case for a subcommand that is not an alias. Every
+ * other failure is Git declining to answer, and stays a `GitUnavailableError`
+ * so the caller fails closed.
+ */
+function gitConfigValue(cwd, args) {
+	try {
+		return execFileSync("git", ["-C", cwd, ...args], {
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "pipe"],
+			timeout: 3000,
+			env: gitEnvironment(),
+		}).trim();
+	} catch (err) {
+		const stderr = typeof err?.stderr === "string" ? err.stderr : "";
+		if (err?.status === 1 && stderr.trim() === "") return null;
+		throw new GitUnavailableError(
+			`git ${args.join(" ")} in ${cwd} could not be run: ${gitFailureDetail(err, stderr)}`,
+		);
+	}
+}
+
 /** Find and canonicalize the nearest existing directory for a Git lookup. */
 function existingDirectory(path) {
 	let candidate = path;
@@ -1121,7 +1148,10 @@ function recognizedSubcommand(word) {
  *
  * The lookup runs where Git would read the config: in the invocation's own
  * directory, and under its `--git-dir` where it selects one, because a
- * selected repository's config is the config the alias comes from. A config read Git cannot answer at
+ * selected repository's config is the config the alias comes from. An absent
+ * key is `gitConfigValue`'s null; a Git that declines to answer is a
+ * `GitUnavailableError`, so the guard does not fail open on a config read it
+ * never got. A config read Git cannot answer at
  * all is a `GitUnavailableError` from `gitOutput`, not an absent alias: the
  * guard must not fail open on a Git it could not consult.
  *
@@ -1137,7 +1167,7 @@ function aliasExpansion(cwd, gitDir, word) {
 	const anchor = existingDirectory(cwd ?? gitDir);
 	if (anchor === null) return null;
 	const selectors = gitDir === null ? [] : [`--git-dir=${gitDir}`];
-	return gitOutput(anchor, ...selectors, "config", "--get", `alias.${word}`);
+	return gitConfigValue(anchor, [...selectors, "config", "--get", `alias.${word}`]);
 }
 
 /**

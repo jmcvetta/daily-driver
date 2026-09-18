@@ -2196,9 +2196,11 @@ function fakeGitMessage(binDir) {
  * alone. A fake or absent `git` cannot be installed in this process, and the
  * guard's stderr is what proves the failure is visible to an operator.
  * `env` overlays the child's environment, which is how the locale case sets
- * the ambient locale the guard must override.
+ * the ambient locale the guard must override. `call` replaces the write with
+ * another tool call, which is how the config read is reached: it is a `bash`
+ * command's alias lookup rather than a path placement.
  */
-function guardWithPath(binDir, target, env = {}) {
+function guardWithPath(binDir, target, env = {}, call = null) {
 	const child = spawnSync(
 		process.execPath,
 		[
@@ -2213,8 +2215,9 @@ function guardWithPath(binDir, target, env = {}) {
 				"  sendMessage: () => {}, setTimeout: () => 1, clearTimer: () => {} };",
 				"mod.default(pi);",
 				`const target = ${JSON.stringify(target)};`,
+				`const call = ${JSON.stringify(call ?? { toolName: "write", input: { path: "new.txt", content: "x" } })};`,
 				'const decision = handlers.get("tool_call")(',
-				'  { type: "tool_call", toolCallId: "child", toolName: "write", input: { path: "new.txt", content: "x" } },',
+				'  { type: "tool_call", toolCallId: "child", toolName: call.toolName, input: call.input },',
 				"  { cwd: target, ui: {} },",
 				");",
 				"process.stdout.write(JSON.stringify(decision ?? null));",
@@ -2358,6 +2361,24 @@ check("the guard pins git's locale, so the message it matches is English", () =>
 		LANGUAGE: "de",
 	});
 	assert.equal(decision, null, "git ran under LC_ALL=C");
+});
+
+check("a config read Git declines fails closed", () => {
+	// The alias lookup runs before any placement, so this is the config read
+	// failing rather than the worktree query. An absent alias is an exit of 1
+	// with nothing on stderr; a refusal is anything else, and must not be
+	// read as "no alias, carry on".
+	const { decision, stderr } = guardWithPath(
+		fakeBin.dubiousOwnership,
+		worktrees.primary,
+		{},
+		{ toolName: "bash", input: { command: "git lg -1" } },
+	);
+	assert.deepEqual(decision, {
+		block: true,
+		reason: GIT_UNAVAILABLE_BLOCK_REASON,
+	});
+	assert.match(stderr, /config --get alias\.lg/u, "the config read is named");
 });
 
 check("a non-zero exit with no message fails closed", () => {
