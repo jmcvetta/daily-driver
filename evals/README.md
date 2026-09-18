@@ -538,7 +538,7 @@ reader: a lost replicate scores 0.0 like any other, so it drags the mean until
 someone drops it by hand, and the check itself is a judgement by the grading
 model rather than a field. Read the dialogs before trusting a mean.
 
-### `completion-report-is-lean`, the report half
+### `completion-report-is-lean`, the row that grades a report
 
 `reply-is-concise` grades an *answer*. So does `answer-selects-from-findings`,
 the section above. Both ask a question with one honest factual answer, and issue #279's
