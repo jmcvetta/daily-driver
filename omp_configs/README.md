@@ -31,6 +31,7 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | --- | --- |
 | `glm-5.3.yml` | GLM 5.3 as the default model. |
 | `glm-5.3-flash.yml` | GLM 5.3 Flash as the default model. |
+| `glm-family.yml` | GLM 5.3 Flash for default, small, vision, commit, and tiny work; GLM 5.3 for deep analysis, planning, and advice; GLM 5.3 Fast for task subagents. |
 | `deepseek-v4-pro.yml` | DeepSeek V4 Pro as the default model. |
 | `gpt-5.6-sol.yml` | GPT-5.6 Sol as the default model. |
 | `gpt-5.6-sol-terra-task.yml` | GPT-5.6 Sol as the default model and GPT-5.6 Terra for task subagents. |
