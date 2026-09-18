@@ -63,13 +63,21 @@ count.
 
 ## Where it landed
 
-`skills/undertake/SKILL.md` (`Ready is a gate, not a step`, rewritten; the
-duplicated sentence at `Ready for review`; the no-permission line under
-`Where it stops and waits`; and the second step numbered 10, which is
-`Keep it current` and is 11 in the table), the three
-`skills/undertake/references/{claude,omp,codex}.md` route tables, which now
-carry the gate's own reads, `skills/review-cycle/SKILL.md` (`Verify the fix
-delta` and `Where it stops and waits`), the three
+`skills/undertake/SKILL.md`: `Ready is a gate, not a step`, rewritten; the
+step at `Review the head`, `Fix, answer, resolve, push` and `Verify the fix
+delta`, which restated the retired two-pass cap and would have been read
+before `review-cycle` ever was; the summary of that round's borrowed stops,
+two of them where there are now three; the duplicated sentence at `Ready for
+review`; the no-permission line under `Where it stops and waits`; and the
+second step numbered 10, which is `Keep it current` and is 11 in the table.
+Then the three `skills/undertake/references/{claude,omp,codex}.md` route
+tables, which carry the gate's two reads and keep `The milestone`'s own
+decode, `skills/review-cycle/SKILL.md` (`Verify the fix delta` and `Where it
+stops and waits`), the three
 `skills/review-cycle/references/{claude,omp,codex}.md` record blocks, whose
 `pass: <1|2>` and `cap:` fields became `pass: <n>` and `wall:`, and two eval
 rows. No step was renamed.
+
+The review round on the pull request that carried this note found four
+defects in the first draft of the gate, including the merge-state reading
+above; they are fixed here rather than left for the next session to meet.
