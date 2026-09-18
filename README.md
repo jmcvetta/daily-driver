@@ -320,16 +320,16 @@ Codex there is no repository-level enable of any kind, not even the
 record-the-intent one the stanza is on Claude Code; enabling is user-level only,
 through the two tables above.
 
-### The other cloud route: enable it on your account
+### The other route: enable it on your account
 
-A cloud session also loads the plugins and skills **enabled for your claude.ai
-account**, downloaded into the session's own environment at session start and
-loaded as `daily-driver@synced` — no marketplace, no install record, and
-nothing for the Setup script to do. A terminal session signed in with the same
-account syncs them too, from Claude Code v2.1.273, so the route is not the
-cloud's alone. That route is per-account rather than
-per-environment, so it reaches every cloud environment at once, and an update
-arrives at the next session's sync rather than waiting on a `CACHEBUST` bump.
+A session also loads the plugins and skills **enabled for your claude.ai
+account** — a cloud one, downloaded into the session's own environment at
+session start, and a terminal one signed in with the same account, from Claude
+Code v2.1.273. Either way they load as `daily-driver@synced`: no marketplace,
+no install record, and nothing for the Setup script to do. The route is
+per-account rather than per-environment, so it reaches every environment at
+once, and an update arrives at the next session's sync rather than waiting on a
+`CACHEBUST` bump.
 It needs a paid plan (Pro, Max, Team, Enterprise).
 
 In the web console: **Customize** in the left sidebar → the **Plugins** tab →

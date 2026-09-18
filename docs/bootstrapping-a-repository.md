@@ -227,7 +227,7 @@ or the one you did not think you were testing is the one you are.
 The checks below are asked differently here. `claude plugin details` takes the
 plugin's ID, which is `daily-driver@synced` on this route and not
 `daily-driver@daily-driver`, and the directory to list beside the third check —
-[the README's account-route question](../README.md#the-other-cloud-route-enable-it-on-your-account)
+[the README's account-route question](../README.md#the-other-route-enable-it-on-your-account)
 ends with one — is `~/.claude/plugins/synced/` rather than a marketplace cache
 nothing filled.
 
