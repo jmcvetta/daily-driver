@@ -238,9 +238,16 @@ sandbox:
 # into `fatal: not a git repository`, which is a real anomaly its report has to
 # carry. This builds the repository and commits the fixture, so the obligation
 # is met in silence and both arms start from the same place.
+#
+# `fail_on_error` defaults to True, so anything here failing aborts the
+# evaluation with ERROR — which scores 0 in BOTH arms and reads exactly like
+# non-compliance. That default is right, because an agent must not run against
+# a half-built fixture, and it is also why the command uses nothing optional.
+# `git init` takes no `-b`: that flag needs Git 2.28 and the branch name is
+# never read, so requiring it would buy a version dependency for nothing.
 pre_run:
   - command: >-
-      git init -q -b master &&
+      git init -q &&
       git config user.name "Eval Fixture" &&
       git config user.email "fixture@example.invalid" &&
       git add billing/__init__.py billing/limits.py billing/charge.py &&
