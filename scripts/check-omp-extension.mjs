@@ -14,6 +14,9 @@
  *     attachment, non-Git paths, and synthetic devices pass;
  *   - a mutation the guard cannot place in a repository is refused, the way
  *     one it cannot ask Git about is;
+ *   - a subcommand that is a configured alias is read as the command it
+ *     expands to, and one whose expansion the guard cannot read is refused
+ *     where it would reach the primary;
  *   - daily_driver_set_session_title calls pi.setSessionName;
  *   - daily_driver_get_session reads the session manager's id and the model;
  *   - daily_driver_schedule emits exactly one reminder after its delay and
@@ -212,6 +215,18 @@ function makeWorktreeFixture() {
 	writeFileSync(resolve(primary, "tracked.txt"), "primary\n");
 	runGit(primary, "add", "tracked.txt");
 	runGit(primary, "commit", "-m", "Initial fixture");
+	// Configured aliases, which rename a guarded subcommand into a word no
+	// recognizer set holds. Repository config is shared with every worktree
+	// cut from it, so the task worktree carries the same aliases.
+	runGit(primary, "config", "alias.co", "checkout");
+	runGit(primary, "config", "alias.sw", "switch");
+	runGit(primary, "config", "alias.undo", "reset --hard");
+	runGit(primary, "config", "alias.lg", "log --oneline");
+	runGit(primary, "config", "alias.elsewhere", "-C . switch");
+	runGit(primary, "config", "alias.chain", "co");
+	runGit(primary, "config", "alias.visual", "!git switch master");
+	runGit(primary, "config", "alias.loop", "hoop");
+	runGit(primary, "config", "alias.hoop", "loop");
 	runGit(primary, "worktree", "add", "-b", "feature/worktree-guard", task);
 	runGit(primary, "worktree", "add", "--detach", detached);
 	const primaryFileLink = resolve(task, "primary-file-link.txt");
@@ -744,6 +759,108 @@ checkGuard(
 	"bash",
 	{ command: "git -c core.pager=cat log --oneline -1" },
 	worktrees.primary,
+);
+
+// A configured alias renames a guarded subcommand just as an inline one does,
+// and the word alone says nothing about it. The guard asks Git what the word
+// means rather than reading past it.
+checkGuard(
+	"a configured alias for checkout is blocked in the primary worktree",
+	true,
+	"bash",
+	{ command: "git co feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a configured alias for switch is blocked in the primary worktree",
+	true,
+	"bash",
+	{ command: "git sw feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a configured alias carrying the destructive form is blocked",
+	true,
+	"bash",
+	{ command: "git undo HEAD~1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an alias naming another alias is followed to the guarded command",
+	true,
+	"bash",
+	{ command: "git chain feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an alias whose expansion selects the primary is blocked from elsewhere",
+	true,
+	"bash",
+	{ command: `git -C "${worktrees.primary}" elsewhere feature/x` },
+	worktrees.task,
+);
+
+checkGuard(
+	"a shell alias the guard cannot read is blocked in the primary worktree",
+	true,
+	"bash",
+	{ command: "git visual" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a loop of aliases is refused rather than followed",
+	true,
+	"bash",
+	{ command: "git loop feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an alias for a read-only command still passes in the primary worktree",
+	false,
+	"bash",
+	{ command: "git lg -1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a shell alias passes inside an attached feature worktree",
+	false,
+	"bash",
+	{ command: "git visual" },
+	worktrees.task,
+);
+
+checkGuard(
+	"a subcommand that is no alias is still read as itself",
+	false,
+	"bash",
+	{ command: "git status --porcelain" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an alias for checkout passes inside an attached feature worktree",
+	false,
+	"bash",
+	{ command: "git co feature/x" },
+	worktrees.task,
+);
+
+// A `-C` value that expands leaves no directory to ask Git about the alias
+// in, so the word the guard reads may be a guarded command in a coat.
+checkGuard(
+	"an unreadable -C leaves an unrecognized subcommand unresolvable",
+	true,
+	"bash",
+	{ command: `d="${worktrees.primary}"; git -C "$d" co feature/x` },
+	worktrees.task,
+	UNANCHORED_PATH_BLOCK_REASON,
 );
 
 // A `cd` whose target does not exist fails, and the shell stays in the
