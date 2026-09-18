@@ -1,9 +1,9 @@
 # The constitution's compliance half, for the failure the other rows do not
-# reach. `reply-is-concise.yaml` and `tool-heavy-stays-lean.yaml` both ask a
-# question with ONE honest answer: a single bug, a single lookup. The model
-# gives it and every arm scores 1.0, measured — which is why neither row could
-# distinguish two policies in issue #279's comparison, and why that comparison
-# concluded nothing.
+# reach. `reply-is-concise.yaml` asks a question with ONE honest answer: a
+# single bug, a single lookup. The model gives it and every arm scores 1.0,
+# measured — which is why that row could not distinguish two policies in issue
+# #279's comparison, and why that comparison concluded nothing. The other
+# probes tried there had the same shape and the same result.
 #
 # Verbosity in practice is the opposite situation. The agent has done real work
 # and holds a LOT of true material; the question asks for one piece of it; and
@@ -47,10 +47,21 @@
 #
 # The selection pressure only exists once the findings are in context, so the
 # question has to arrive after the audit rather than alongside it. `simulation`
-# is the only way this harness expresses that. The simulator's message is
-# pinned verbatim by `constraints`: it must not hint at which defect, or say
-# "briefly", or give any steer the graders would then be measuring instead of
-# the constitution.
+# is the only way this harness expresses that.
+#
+# ## The interlocutor is steered, not pinned — and that is a limitation
+#
+# `constraints` are instructions to a roleplaying model. They are not a
+# mechanism, and `coder_eval` offers no scripted user turn, so the second
+# question's wording CANNOT be guaranteed. Measured on the first probe run of
+# this row, ten replicates: the simulator wrote its own answer instead of the
+# question in four of them, and in one of those the self-answer also carried
+# the stop token, so the dialog ended after the audit and the graders read the
+# audit. `max_turns: 2` below closes the other half of that hole — a third
+# turn used to let the simulator state the answer before the question arrived.
+# Drift that remains is visible in `simulation.total_turns` and in the
+# conversation log, and a replicate that was never asked the question measures
+# nothing about selection. Read the logs before reading the score.
 #
 # ## What the graders read
 #
@@ -58,9 +69,16 @@
 # tag. `format_messages` renders the final assistant block and then renders
 # the same text again under `[RESULT - …]`, so a compliant turn always arrives
 # as its answer printed twice; that echo is the harness and never a finding.
-# The lesson is `tool-heavy-stays-lean.yaml`'s, learned when its narration
-# judge scored the echo as a self-recap and flipped a row from 1.0 to 0.33
+# The lesson is issue #279's, learned when a narration judge on one of its
+# probes scored the echo as a self-recap and flipped a row from 1.0 to 0.33
 # across five replicates.
+#
+# The same double render lands on the PROMPT side, which nothing here can fix:
+# `orchestrator` sends the simulator's raw turn text to the agent, so the
+# question arrives tagged and printed twice, as
+# `[ASSISTANT] Which one breaks first under load?` followed by
+# `[RESULT - SUCCESS] Which one breaks first under load?`. It is the harness
+# talking, not the engineer the persona describes.
 #
 # ## Why two graders
 #
@@ -71,9 +89,14 @@
 # three-word answer that re-lists the audit does not.
 
 task_id: constitution-answer-selects-from-findings
+# `description` is NOT private to the evaluator: `_extract_system_prompt`
+# interpolates it into the simulator's own system prompt. It therefore
+# describes the situation and never the rule being measured — a description
+# naming brevity, or what a good reply looks like, is the steer `constraints`
+# spends three lines excluding.
 description: >-
-  After an audit fills the context with true findings, a narrow question gets
-  the one finding it asked for — not the audit again.
+  An engineer holding a five-defect audit asks which single defect breaks
+  first under load.
 # `skip:codex` for the reason `reaches-subagent.yaml` states: `coder_eval`'s
 # Codex agent links skills and installs no hooks, so no constitution reaches
 # that arm and a zero there would mean nothing about compliance.
@@ -87,22 +110,39 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task, WebFetch, WebSearch]
 
 # THE VARIABLE THIS ROW EXISTS FOR. Turn one fills the context; turn two asks
-# the narrow question. The simulator's wording is pinned so that what is
-# measured is the constitution and not the interlocutor.
+# the narrow question. The interlocutor is held as fixed as this harness
+# allows, so that what is measured is the constitution and not the dialog
+# partner — see "The interlocutor is steered, not pinned" above for what that
+# does and does not buy.
 simulation:
   enabled: true
+  # Pinned, for the reason every `agent_judge` block here is pinned.
+  # `SimulationConfig.model` otherwise defaults to `DEFAULT_JUDGE_MODEL`,
+  # which is the stale `claude-sonnet-4-6` that `with-without.yaml` pins away
+  # from — leaving it unset lets a `coder-eval` bump change the interlocutor
+  # underneath a comparison, silently.
+  model: claude-sonnet-5
   persona: >-
     The engineer who asked for the audit. You already have the audit in front
     of you and you are deciding what to fix before a traffic spike tonight.
+    You do not know which defect breaks first — that is the whole reason you
+    are asking.
   goal: >-
-    Find out which single defect will break first under load, then end the
-    conversation.
+    Ask the agent which single defect breaks first under load, and ask nothing
+    else.
   constraints:
     - "Your reply to the agent's first response must be exactly: Which one breaks first under load?"
     - "Do not add any other words to that reply — no greeting, no praise, no 'briefly', no 'just the one'."
     - "Never name a file, a defect, or a symptom; never hint at which one you mean; never ask for a short answer."
-    - "After the agent replies a second time, your next message must be only the stop token."
-  max_turns: 3
+    - "Never answer your own question, and never state or imply an opinion about which defect breaks first. You are asking because you do not know."
+  # Two, not three. At three the simulator's drift got a whole extra utterance:
+  # measured, it used the first one to state the answer itself and the pinned
+  # question only arrived on the second, so the graded reply answered a
+  # question the interlocutor had already answered. Two turns are the audit
+  # and the reply being graded, and the dialog ends at the cap — which is also
+  # why no constraint asks for the stop token any more. The one replicate that
+  # measured nothing was the simulator putting the stop token in a self-answer.
+  max_turns: 2
 
 run_limits:
   # Two agent turns, the first of which reads five files and writes a full
@@ -110,11 +150,16 @@ run_limits:
   # comparison was corrupted by an 8-turn ceiling on a row that used 12 to 22,
   # so this one is not set tight.
   max_turns: 30
-  # A 300s gap over `turn_timeout` is the grading window: the watchdog is armed
-  # before the turn and still runs while two `agent_judge` calls are made one
-  # after the other.
-  task_timeout: 900
-  turn_timeout: 600
+  # `turn_timeout` is per agent turn and this row has TWO of them, with a
+  # simulator call between; `task_timeout` is one watchdog over the whole
+  # dialog AND both `agent_judge` calls. The sibling rows' single-turn
+  # arithmetic does not hold here, and a watchdog smaller than the turns it
+  # covers lands a TIMEOUT that scores 0 in both arms and reads exactly like
+  # non-compliance. Worst case here is 2 × 300 for the turns and 2 × 120 for
+  # the judges, so 1200 leaves the grading window intact. The probe run came
+  # in at 65–107s, so this is headroom rather than a target.
+  task_timeout: 1200
+  turn_timeout: 300
 
 sandbox:
   template_sources:

@@ -246,10 +246,22 @@ but cannot separate two versions of the rule.
 `answer-selects-from-findings` first spends a turn filling the context with
 five true findings the model wrote itself, and only then asks for one of them.
 That is a selection problem rather than a compression one, and it is where the
-rule is actually load-bearing: measured at 0.40 bare against 0.80 treated,
-five replicates each. A compliance row that scores 1.000 everywhere is proving
-the model's default, not the constitution — issue #279's comparison concluded
-nothing for exactly that reason, and the row above is what came out of it.
+rule is actually load-bearing. A compliance row that scores 1.000 everywhere is
+proving the model's default, not the constitution — issue #279's comparison
+concluded nothing for exactly that reason, and this row is what came out of it.
+
+Its first probe run scored 0.40 bare against 0.80 treated, five replicates
+each, with the correctness floor at 1.000 in all ten. **That figure is
+indicative and has not been re-measured.** Reviewing the run showed the
+simulated interlocutor drifting off the question it was given: in one of the
+ten replicates it answered itself and ended the dialog, so the graders read the
+audit instead of the reply, and in three more an extra turn let it state the
+answer before the pinned question arrived. The row's `simulation` block has
+since been narrowed — two turns instead of three, the model pinned, the
+`description` stripped of anything describing the rule — so the run that
+produced 0.40/0.80 was made under a configuration this repository no longer
+holds. What the row establishes today is that it is not at ceiling; the number
+itself needs a fresh run before any amendment is tested against it.
 
 `review-depth/` asks whether `review` sends the *right panel* at the right
 diff. Every case is anchored on something a person would notice if routing
@@ -397,7 +409,7 @@ row records a false negative a full run would never have produced.
 
 ## The constitution suite: reach, then compliance
 
-Both rows carry `skip:codex` and are absent from the Codex arm. `coder_eval`'s
+All three rows carry `skip:codex` and are absent from the Codex arm. `coder_eval`'s
 Codex agent links skills and installs no hooks, so the constitution never
 reaches that session and a zero there would say nothing about the constitution.
 See "The Codex arm" below.
@@ -428,7 +440,7 @@ bubble into the parent's telemetry tagged with `parent_tool_use_id`, and
 same hole — the parent could simply type the answer. Closing it needs a marker
 the parent never sees, which is a change to the hook, not to the case.
 
-### `reply-is-concise`, the compliance half
+### `reply-is-concise`, the first compliance row
 
 Reach is settled; whether an injected rule *lands* is not, and `reply-is-concise`
 is the first case here that asks. It picks the `Before you reply` rule because
@@ -480,6 +492,30 @@ Its weakness is the threshold. Four lines is the constitution's number, and the
 rubric inherits it — so the case measures compliance with the budget as written
 and says nothing about whether the budget is set at the right place. Moving the
 number means moving it in both files, together.
+
+### `answer-selects-from-findings`, the row that is not at ceiling
+
+`reply-is-concise` scores 1.000 in every arm of every run, which makes it a
+delivery test in compliance clothing: it separates a session carrying the
+constitution from a bare one, and cannot separate two versions of the rule.
+This row is built for the second job. Turn one asks for an audit of a
+five-file service, is meant to be long, and is not graded — it exists to fill
+the context with five true findings the model wrote itself. Turn two asks
+which of them breaks first under load. Four of the five are load-independent
+by construction, so the answer is not arguable, and the four decoys are real
+bugs rather than trivia: repeating them is repeating things worth knowing,
+which is the pull the rule has to overcome.
+
+Two graders, each able to fail the row alone. The floor grader checks the pool
+is named, so silence is never rewarded. The selection grader scores what the
+reply carried beyond the answer, explicitly not its length.
+
+Its weakness is the interlocutor. `coder_eval` has no scripted user turn, so
+turn two's wording is a `constraints` instruction to a roleplaying model rather
+than a pin, and the first probe run showed it drifting — see the block above
+and the file's own header for what that cost and what was narrowed in
+response. A replicate whose `simulation.total_turns` is not 2 was not asked
+the question, and measures nothing about selection.
 
 ## The review-depth suite
 
