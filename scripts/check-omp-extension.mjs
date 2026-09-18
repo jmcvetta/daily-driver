@@ -226,14 +226,16 @@ function makeWorktreeFixture() {
 const worktrees = makeWorktreeFixture();
 
 /**
- * A checkout whose worktree listing carries a stale record — a worktree
- * removed from disk and never pruned — ordered before a live detached
- * worktree, so the stale record is read first during classification.
+ * A checkout whose worktree listing carries two stale records — a worktree
+ * removed from disk, and one whose path is now an ordinary file — both
+ * ordered before a live detached worktree, so they are read first during
+ * classification. Git fails the same way on each.
  */
 function makeStaleWorktreeFixture() {
 	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-stale-"));
 	const primary = resolve(root, "primary");
 	const gone = resolve(root, "agone");
+	const goneFile = resolve(root, "bgonefile");
 	const detached = resolve(root, "zdetached");
 	mkdirSync(primary);
 	runGit(primary, "init", "-b", "master");
@@ -243,8 +245,11 @@ function makeStaleWorktreeFixture() {
 	runGit(primary, "add", "tracked.txt");
 	runGit(primary, "commit", "-m", "Initial fixture");
 	runGit(primary, "worktree", "add", "-b", "feature/gone", gone);
+	runGit(primary, "worktree", "add", "-b", "feature/gone-file", goneFile);
 	runGit(primary, "worktree", "add", "--detach", detached);
 	rmSync(gone, { recursive: true, force: true });
+	rmSync(goneFile, { recursive: true, force: true });
+	writeFileSync(goneFile, "a file where a worktree was\n");
 	return { root, primary, detached };
 }
 
@@ -1263,7 +1268,7 @@ checkGuard(
 	worktrees.task,
 );
 
-check("the stale worktree record precedes the detached worktree", () => {
+check("the stale worktree records precede the detached worktree", () => {
 	const listing = runGit(
 		staleWorktrees.primary,
 		"worktree",
@@ -1271,8 +1276,9 @@ check("the stale worktree record precedes the detached worktree", () => {
 		"--porcelain",
 	);
 	assert.ok(
-		listing.indexOf("agone") < listing.indexOf("zdetached"),
-		"the fixture must list the stale record first",
+		listing.indexOf("agone") < listing.indexOf("bgonefile") &&
+			listing.indexOf("bgonefile") < listing.indexOf("zdetached"),
+		"the fixture must list both stale records first",
 	);
 });
 
@@ -1968,6 +1974,18 @@ checkGuard(
 const fakeGitMessages = new Map();
 
 /**
+ * The stderr registered for one fake `git` directory. An unregistered
+ * directory throws rather than defaulting to no message: a silent empty
+ * message is the vacuous pass these fixtures exist to rule out.
+ */
+function fakeGitMessage(binDir) {
+	if (!fakeGitMessages.has(binDir)) {
+		throw new Error(`no fake git message registered for ${binDir}`);
+	}
+	return fakeGitMessages.get(binDir);
+}
+
+/**
  * Fire one write through the guard in a child process whose PATH is `binDir`
  * alone. A fake or absent `git` cannot be installed in this process, and the
  * guard's stderr is what proves the failure is visible to an operator.
@@ -2001,7 +2019,7 @@ function guardWithPath(binDir, target, env = {}) {
 			env: {
 				...process.env,
 				PATH: binDir,
-				DAILY_DRIVER_STDERR: fakeGitMessages.get(binDir) ?? "",
+				DAILY_DRIVER_STDERR: fakeGitMessage(binDir),
 				...env,
 			},
 		},
@@ -2019,6 +2037,8 @@ function makeFakeBinFixture() {
 	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-bin-"));
 	const absent = resolve(root, "absent");
 	mkdirSync(absent);
+	// Registered empty on purpose: there is no `git` here to print anything.
+	fakeGitMessages.set(absent, "");
 	/** Install a `git` that writes `stderr` to fd 2 and exits 128. */
 	const refusing = (name, stderr) => {
 		const dir = resolve(root, name);
@@ -2077,6 +2097,9 @@ function localeSensitiveGit(root) {
 		].join("\n") + "\n",
 		{ mode: 0o755 },
 	);
+	// Registered empty on purpose: this script writes its own message and
+	// ignores the variable.
+	fakeGitMessages.set(dir, "");
 	return dir;
 }
 

@@ -165,7 +165,7 @@ const NOT_A_WORKTREE =
 
 /**
  * The environment Git is consulted in: the session's own, with the locale
- * pinned so `NOT_A_REPOSITORY` reads a message Git wrote in English. `LC_ALL`
+ * pinned so `NOT_A_WORKTREE` reads a message Git wrote in English. `LC_ALL`
  * settles every category; `LANGUAGE` is cleared because gettext consults it
  * ahead of `LC_ALL` whenever the locale is not `C`, and an inherited value is
  * one fewer thing to reason about.
@@ -255,6 +255,15 @@ function worktreeRecords(listing) {
 	}
 	if (record) records.push(record);
 	return records;
+}
+
+/** True where `path` is an existing directory, following symlinks. */
+function isDirectory(path) {
+	try {
+		return statSync(path).isDirectory();
+	} catch {
+		return false;
+	}
 }
 
 /** Canonicalize one path. Null where it cannot be resolved. */
@@ -357,8 +366,10 @@ function worktreeStateFromGitDir(gitDir, cwd) {
 		for (const record of records) {
 			// A worktree deleted but not pruned is skipped, not fatal: Git cannot
 			// be asked about a directory that is gone, and one stale record must
-			// not block every mutation until `git worktree prune` runs.
-			if (!existsSync(record.root)) continue;
+			// not block every mutation until `git worktree prune` runs. The test
+			// is "is a directory" rather than "exists", because a file left at a
+			// removed worktree's path fails the same query the same way.
+			if (!isDirectory(record.root)) continue;
 			const recordGitDir = gitOutput(
 				record.root,
 				"rev-parse",
