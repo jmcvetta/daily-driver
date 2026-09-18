@@ -849,22 +849,26 @@ function selectedPath(gitCwd, value) {
 const RENAMES_SUBCOMMANDS = /^(alias\.|include\.path|includeIf\.)/iu;
 
 /**
- * How one `-c`/`--config-env` setting bears on the subcommand that follows.
+ * True where one `-c`/`--config-env` setting may rename the subcommand that
+ * follows it.
  *
- * Only the setting's **name** decides it, and the name is the part before the
- * first `=`. `git -c core.pager="$PAGER" log` names `core.pager`, which
- * renames nothing however the value expands, so refusing it would refuse
- * ordinary read-only work everywhere for a word that cannot reach a checkout.
- * A name that expands is a different matter: `git -c "$setting" q` may be
- * defining the alias `q` runs as.
+ * A literal setting is read: `git -c core.pager=less log` names `core.pager`,
+ * which renames nothing. Anything else is not read at all, because a word's
+ * text is not the word Git will see — the tokenizer pulls a substitution out
+ * of it, so `"$(echo alias.q)=switch"` arrives here as `=switch` and any test
+ * on that text answers about a name that was never there. That is the hole
+ * the first attempt at this left open, and inspecting the text more closely
+ * would not have closed it.
+ *
+ * Refusing an unreadable setting costs little, because it is not refused
+ * everywhere: the caller marks the invocation as a working-tree rewrite and
+ * the ordinary placement decides. `git -c core.pager="$PAGER" log` runs in a
+ * task worktree and outside Git; in the primary checkout it is refused, which
+ * is where the guard is meant to be an obstacle.
  */
-function settingReach(word) {
-	const name = word.text.split("=")[0];
-	if (RENAMES_SUBCOMMANDS.test(name)) return "renames";
-	if (word.literal) return "inert";
-	return word.text.includes("=") && !/[$*?~]/u.test(name)
-		? "inert"
-		: "renames";
+function mayRenameSubcommand(word) {
+	if (!word.literal) return true;
+	return RENAMES_SUBCOMMANDS.test(word.text.split("=")[0]);
 }
 
 /**
@@ -921,6 +925,9 @@ function gitInvocation(words, shellCwd, start) {
 	const environmentWorkTree = environmentValue(words, index, "GIT_WORK_TREE");
 	let gitDir = null;
 	let workTree = null;
+	// Set by a `-c`/`--config-env` setting that may rename the subcommand, so
+	// the word read as the subcommand below may be an alias for a guarded one.
+	let mayRename = false;
 	index++;
 	for (; index < words.length; index++) {
 		const { text: word, literal } = words[index];
@@ -959,9 +966,7 @@ function gitInvocation(words, shellCwd, start) {
 		const setting = configSetting(word, literal, words, index);
 		if (setting !== null) {
 			index += setting.consumed;
-			if (settingReach(setting.word) === "renames") {
-				return unreadableInvocation(gitCwd, gitDir, workTree, environmentGitDir, environmentWorkTree);
-			}
+			if (mayRenameSubcommand(setting.word)) mayRename = true;
 			continue;
 		}
 		if (["--exec-path", "--namespace"].includes(word)) {
@@ -978,6 +983,7 @@ function gitInvocation(words, shellCwd, start) {
 		return {
 			subcommand: word,
 			unreadable: false,
+			mayRename,
 			args: words.slice(index + 1),
 			cwd: gitCwd,
 			gitDir: selectedPath(gitCwd, gitDir ?? environmentGitDir),
@@ -1251,6 +1257,9 @@ const REWRITE_FORM = new Map([
  */
 function rewritesWorkingTree(invocation) {
 	if (invocation.subcommand === UNREADABLE) return true;
+	// A setting the guard could not read may have renamed a guarded
+	// subcommand into the word it just read, so the word decides nothing.
+	if (invocation.mayRename) return true;
 	if (REWRITES_ALWAYS.has(invocation.subcommand)) return true;
 	const form = REWRITE_FORM.get(invocation.subcommand);
 	if (form === undefined) return false;

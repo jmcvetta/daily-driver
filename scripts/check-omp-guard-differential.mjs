@@ -276,6 +276,9 @@ function shapes({ root, primary, task, detached }) {
 	add("inline alias definition", task, `git -C ${primary} -c alias.q=switch q feature/y`);
 	add("alias through --config-env", task, `SWV=switch git -C ${primary} --config-env=alias.q=SWV q feature/y`);
 	add("config value that expands", task, 'git -c core.pager="$PAGER" log --oneline -1');
+	add("substituted alias name", task, `git -C ${primary} -c "$(echo alias.q)=switch" q feature/y`);
+	add("backticked alias name", task, `git -C ${primary} -c \`echo alias.q\`=switch q feature/y`);
+	add("substituted --config-env alias name", task, `SWV=switch git -C ${primary} --config-env="$(echo alias.q)=SWV" q feature/y`);
 	add("cd into a missing directory", primary, `cd ${root}/never-created\ngit switch feature/y`);
 	add("restore in the primary", primary, "git restore --source=HEAD~1 tracked.txt");
 

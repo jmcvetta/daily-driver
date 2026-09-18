@@ -728,7 +728,6 @@ checkGuard(
 	"bash",
 	{ command: `git -C "${worktrees.primary}" -c alias.q=switch q feature/x` },
 	worktrees.task,
-	UNREADABLE_COMMAND_BLOCK_REASON,
 );
 
 checkGuard(
@@ -737,7 +736,6 @@ checkGuard(
 	"bash",
 	{ command: "git -calias.q=switch q feature/x" },
 	worktrees.primary,
-	UNREADABLE_COMMAND_BLOCK_REASON,
 );
 
 checkGuard(
@@ -783,7 +781,6 @@ checkGuard(
 			"--config-env=alias.q=SWV q feature/x",
 	},
 	worktrees.task,
-	UNREADABLE_COMMAND_BLOCK_REASON,
 );
 
 checkGuard(
@@ -792,7 +789,6 @@ checkGuard(
 	"bash",
 	{ command: "SWV=switch git --config-env alias.q=SWV q feature/x" },
 	worktrees.primary,
-	UNREADABLE_COMMAND_BLOCK_REASON,
 );
 
 checkGuard(
@@ -801,24 +797,69 @@ checkGuard(
 	"bash",
 	{ command: "git -c include.path=/tmp/aliases q feature/x" },
 	worktrees.primary,
-	UNREADABLE_COMMAND_BLOCK_REASON,
 );
 
-// Only the setting's name bears on the subcommand. A value that expands
-// cannot rename one, and refusing it would refuse ordinary work everywhere.
+// A setting the guard cannot read is not refused everywhere: it makes the
+// invocation a rewrite, and the ordinary placement decides. So it costs the
+// primary checkout, where the guard is meant to be an obstacle, and costs
+// neither the task worktree nor a directory outside Git.
 checkGuard(
-	"a -c value that expands is still read past",
-	false,
+	"a -c setting that expands is refused in the primary checkout",
+	true,
 	"bash",
 	{ command: 'git -c core.pager="$PAGER" log --oneline -1' },
 	worktrees.primary,
 );
 
 checkGuard(
-	"a -c value that expands is read past in a feature worktree too",
+	"a -c setting that expands passes in a feature worktree",
 	false,
 	"bash",
 	{ command: 'git -c core.pager="$PAGER" log --oneline -1' },
+	worktrees.task,
+);
+
+checkGuard(
+	"a -c setting that expands passes outside Git",
+	false,
+	"bash",
+	{ command: 'git -c core.pager="$PAGER" --version' },
+	worktrees.outside,
+);
+
+// A substitution standing for the setting's name reaches the tokenizer with
+// the substitution already removed, so the text is not the name Git will
+// see. Reading it more closely is what let this through the first time.
+checkGuard(
+	"a substituted setting name cannot smuggle an alias past the guard",
+	true,
+	"bash",
+	{
+		command: `git -C "${worktrees.primary}" -c "$(echo alias.q)=switch" q feature/x`,
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a backticked setting name cannot either",
+	true,
+	"bash",
+	{
+		command:
+			`git -C "${worktrees.primary}" -c \`echo alias.q\`=switch q feature/x`,
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a substituted --config-env name cannot either",
+	true,
+	"bash",
+	{
+		command:
+			`SWV=switch git -C "${worktrees.primary}" ` +
+			'--config-env="$(echo alias.q)=SWV" q feature/x',
+	},
 	worktrees.task,
 );
 
@@ -828,7 +869,6 @@ checkGuard(
 	"bash",
 	{ command: 'git -c "$setting" q feature/x' },
 	worktrees.primary,
-	UNREADABLE_COMMAND_BLOCK_REASON,
 );
 
 // A `cd` through a symlink arrives where the symlink points, so the shell
