@@ -145,8 +145,8 @@ no `hooks/hooks.json`, so no `SessionStart` and no `PreToolUse` on the `Agent`
 tool. The constitution never reaches the session. `reaches-subagent` measures
 whether the text arrives and the compliance rows measure whether it lands;
 every one of them would score 0 for a reason that has nothing to do with the
-constitution, which
-is the exact failure `0013` built the Omp arm's `omp plugin link` to avoid.
+constitution, which is the exact failure `0013` built the Omp arm's `omp
+plugin link` to avoid.
 
 The Omp arm's fix does not transfer. #181 measured that a real Codex session
 does load `hooks/hooks.json` and does deliver the constitution as a developer

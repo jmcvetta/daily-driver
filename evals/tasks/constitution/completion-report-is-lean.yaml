@@ -256,15 +256,18 @@ sandbox:
 # GLOBAL config. Three settings there would otherwise abort the run:
 # `commit.gpgSign`, which fails with no key and no tty; `core.hooksPath`,
 # which points at hooks this fixture does not have; and `core.excludesFile`,
-# which makes `git add` exit 1 on a path it ignores. The first two are written
-# into the repository's OWN config and the third is answered by `add -f`.
+# which makes `git add` exit 1 on a path it ignores. All three are written into
+# the repository's OWN config, and `add -f` covers this command's own staging.
 #
 # Persisted with `git config`, not passed with `-c`, and the difference is the
 # whole point. `-c` would cover this command's commit and nothing else, while
-# the commit that matters is the one the AGENT makes a moment later under the
-# constitution's "commit as you work". That commit reads this repository's
-# config, so the override has to live there. `evals/fixtures/review-depth/`
-# persists it the same way, for the same reason.
+# the commands that matter are the ones the AGENT runs a moment later under the
+# constitution's "commit as you work". Those read this repository's config, so
+# the overrides have to live there — `add -f` is no help to a `git add` the
+# agent runs itself, which is why `core.excludesFile` is persisted rather than
+# worked around. `evals/fixtures/review-depth/shared/lib.sh` persists
+# `commit.gpgsign` the same way; the other two are this fixture's own, because
+# the agent here runs Git and there it does not.
 pre_run:
   - command: >-
       git init -q &&
@@ -272,6 +275,7 @@ pre_run:
       git config user.email "fixture@example.invalid" &&
       git config commit.gpgsign false &&
       git config core.hooksPath /dev/null &&
+      git config core.excludesFile /dev/null &&
       git add -f billing/__init__.py billing/limits.py billing/charge.py &&
       git commit -q -m "Billing fixture"
     timeout: 60
