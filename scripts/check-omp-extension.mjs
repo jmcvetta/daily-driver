@@ -636,6 +636,139 @@ checkGuard(
 	worktrees.task,
 );
 
+checkGuard(
+	"git rm in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git rm -r tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git rm --cached in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git rm --cached tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git mv in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git mv tracked.txt other.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git mv --dry-run in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git mv -n tracked.txt other.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git bisect start in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git bisect start HEAD HEAD" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git bisect log in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git bisect log" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git sparse-checkout set in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git sparse-checkout set nothing" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git sparse-checkout list in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git sparse-checkout list" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git submodule update --force in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git submodule update --force" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git submodule status in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git submodule status" },
+	worktrees.primary,
+);
+
+// An alias renames a guarded subcommand into one the recognizer has never
+// met, so a command that defines one carries a subcommand it cannot read.
+checkGuard(
+	"an inline alias definition is refused rather than read past",
+	true,
+	"bash",
+	{ command: `git -C "${worktrees.primary}" -c alias.q=switch q feature/x` },
+	worktrees.task,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+checkGuard(
+	"an inline alias definition with an attached value is refused too",
+	true,
+	"bash",
+	{ command: "git -calias.q=switch q feature/x" },
+	worktrees.primary,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+checkGuard(
+	"an ordinary -c setting is still read past",
+	false,
+	"bash",
+	{ command: "git -c core.pager=cat log --oneline -1" },
+	worktrees.primary,
+);
+
+// A `cd` whose target does not exist fails, and the shell stays in the
+// primary: reading it as moved placed every later command somewhere the
+// shell never went.
+checkGuard(
+	"a rewrite after a cd into a directory that does not exist is refused",
+	true,
+	"bash",
+	{
+		command: `cd "${resolve(worktrees.root, "never-created")}"\ngit switch feature/x`,
+	},
+	worktrees.primary,
+	UNANCHORED_PATH_BLOCK_REASON,
+);
+
+checkGuard(
+	"a pushd into a directory that does not exist is refused the same way",
+	true,
+	"bash",
+	{
+		command: `pushd "${resolve(worktrees.root, "never-created")}"\ngit switch feature/x`,
+	},
+	worktrees.primary,
+	UNANCHORED_PATH_BLOCK_REASON,
+);
+
 // The whole widened set stays available where the work belongs.
 checkGuard(
 	"the widened set passes inside an attached feature worktree",
@@ -1072,6 +1205,57 @@ checkGuard(
 	true,
 	"bash",
 	{ command: "git stash pop" },
+	detachedPrimary.primary,
+);
+
+// The exemption is for the attach, and so is tested on the form. A pathspec
+// checkout and a forcing switch attach nothing and spend the checkout's
+// uncommitted work, so neither rides it.
+checkGuard(
+	"a pathspec checkout inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git checkout -- tracked.txt" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a commit-and-pathspec checkout inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git checkout HEAD -- tracked.txt" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a forcing checkout inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git checkout --force master" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a discarding switch inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git switch --discard-changes master" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a detaching switch inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git switch --detach master" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"attaching a detached primary to an existing branch passes",
+	false,
+	"bash",
+	{ command: "git switch master" },
 	detachedPrimary.primary,
 );
 

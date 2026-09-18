@@ -151,7 +151,7 @@ function blocked(command, cwd) {
  * command run from a task worktree is one the guard has no other reason to
  * refuse, so anything that reaches the primary from there is a hole.
  */
-function shapes({ primary, task, detached }) {
+function shapes({ root, primary, task, detached }) {
 	const move = (cwd) => `git -C ${cwd} switch feature/y`;
 	const cases = [];
 	const add = (label, from, command) => cases.push({ label, from, command });
@@ -265,6 +265,16 @@ function shapes({ primary, task, detached }) {
 	add("cherry-pick", task, `git -C ${primary} cherry-pick feature/ahead`);
 	add("revert the head commit", task, `git -C ${primary} revert --no-edit HEAD`);
 	add("cd then reset --hard", task, `cd ${primary} && git reset --hard HEAD~1`);
+	add("git rm", task, `git -C ${primary} rm -r tracked.txt`);
+	add("git mv", task, `git -C ${primary} mv tracked.txt other.txt`);
+	add("bisect start", task, `git -C ${primary} bisect start HEAD HEAD~1`);
+	add("sparse-checkout set", task, `git -C ${primary} sparse-checkout set nothing`);
+
+	// An alias renames a guarded subcommand into one the recognizer has never
+	// met, and a `cd` that fails leaves the shell in the primary. Both were
+	// allowed until the review of #297 measured them here.
+	add("inline alias definition", task, `git -C ${primary} -c alias.q=switch q feature/y`);
+	add("cd into a missing directory", primary, `cd ${root}/never-created\ngit switch feature/y`);
 	add("restore in the primary", primary, "git restore --source=HEAD~1 tracked.txt");
 
 	// The detached worktree, and mutations that should run untouched.
