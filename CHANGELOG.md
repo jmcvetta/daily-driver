@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.30.3](https://github.com/jmcvetta/daily-driver/compare/v0.30.2...v0.30.3) (2026-09-18)
+
+
+### Bug Fixes
+
+* **task-worktree:** resolve configured Git aliases in the worktree guard ([#305](https://github.com/jmcvetta/daily-driver/issues/305)) ([be8523d](https://github.com/jmcvetta/daily-driver/commit/be8523de9bdb65b32193c24425747394894e313c))
+
 ## [0.30.2](https://github.com/jmcvetta/daily-driver/compare/v0.30.1...v0.30.2) (2026-09-18)
 
 
