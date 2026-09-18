@@ -25,7 +25,7 @@ defaults:
   agent:
     type: omp
     # Verified against the provider catalog borrowed into the throwaway Omp home.
-    model: zai/glm-5.3
+    model: vercel-ai-gateway/zai/glm-5.3
     permission_mode: acceptEdits
     # Recorded, not enforced: Omp RPC has no per-session tool allowlist.
     allowed_tools: [Skill]

@@ -71,7 +71,7 @@ every subagent. Nine sections:
 | ------- | --------------- |
 | Voice | Simplified Technical English for prose written in your own voice. |
 | Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
-| Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
+| Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; repository-changing tasks isolated before research; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
 | When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
@@ -137,13 +137,42 @@ never reach for the widget, and every session would pay for the rule.
 decision, and `judgement-call` is the skill it is ordered with: that gate
 decides *whether* to ask, the hook decides *how*.
 
-**Omp has no hook mechanism**, so `extensions/daily-driver.js` does the same
-two jobs there: it blocks the `ask` tool with the same wording, and it supplies
-the session-title, reminder, and session-info tools
+**Omp has no hook mechanism**, so `extensions/daily-driver.js` does those jobs
+there: it blocks the `ask` tool with the same wording and supplies the
+session-title, reminder, and session-info tools
 (`daily_driver_set_session_title`, `daily_driver_schedule`,
 `daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
-`ExtensionAPI` makes natural. The constitution needs no adapter on that side —
-Omp's rule provider injects `rules/*.md` carrying `alwaysApply: true`.
+`ExtensionAPI` makes natural. It also closes the failure that weaker models
+exposed in `task-worktree`: direct `write` and `edit` calls in the primary
+checkout or a detached worktree are denied before they change state, as are
+branch-changing `git checkout` and `git switch` calls in a primary checkout
+that is on a branch. Attached feature-worktree mutations, worktree creation,
+branch attachment in a detached worktree — the primary included, where that is
+the only way out — non-Git paths, and synthetic devices remain available. The
+denial sends the model through the skill to establish the task worktree.
+
+**The shell recognizer refuses what it cannot read.** It either enumerates
+every command a `bash` call will run, or says it could not, and a call it
+cannot enumerate is denied. That direction is deliberate. The first version
+asked whether a command *was* dangerous, which needs an understanding of all of
+bash, so every construct it had not met — a here-document, `cd` in a subshell,
+an arithmetic `<<`, a function body — resolved to "allow", and four review
+rounds found six such holes one at a time. Asking instead whether a command is
+*provably* inert turns that class from a silent hole into a visible false
+positive: an `eval` of a variable, an executable named by a variable, an
+unterminated quote are all refused, and the repair is to write the command
+literally. The cost is cheap because the primary checkout is meant to be
+read-only for agents in the first place.
+
+**What it does not claim.** The guard reads shell commands; it does not audit
+programs. A `make`, `python3` or shell script the model runs can reach the
+primary checkout, and nothing here would see it — only the `task-worktree` rule
+stops that. Saying so is the point: a boundary that overstates itself is the
+failure this guard was rewritten to avoid.
+
+The
+constitution needs no delivery adapter on this side — Omp's rule provider
+injects `rules/*.md` carrying `alwaysApply: true`.
 
 **Whether either still fires**: `scripts/check-constitution.py` and
 `scripts/check-ask-in-chat.py` run both hooks against synthetic event JSON, and
@@ -349,10 +378,17 @@ arm's; and `scripts/check-eval-arms.py`, which keeps the Claude, Omp and Codex
 thirds of the forked eval rows in step — and the Makefile's three run targets
 in step with them.
 
-**One of its legs is Omp's.** `scripts/check-omp-extension.mjs` imports the
-adapter under Node with a faked `ExtensionAPI` and asserts the `ask` deny and
-the three tools behave. It needs only Node, so it runs everywhere the rest of
-`check` does.
+**Two of its legs are Omp's.** `scripts/check-omp-extension.mjs` imports the
+adapter under Node with a faked `ExtensionAPI` and asserts the `ask` deny, the
+three tools, and the guard's verdict on commands a person thought of.
+`scripts/check-omp-guard-differential.mjs` asserts the property those verdicts
+are for, against the only authority on what a shell command does: it runs each
+command shape for real under bash in a throwaway repository and checks the
+guard's verdict against whether the primary checkout actually moved. The
+property is one-directional — allowed implies unmoved — so a guard that refuses
+something harmless fails nothing there, and over-blocking is held in check by
+the first script instead. Both need only Node and Git, so they run everywhere
+the rest of `check` does.
 
 Three more checks are deliberately outside it. `make check-omp-plugin` starts a
 real `omp --mode rpc` and asks the running agent what it got: every skill

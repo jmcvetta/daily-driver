@@ -182,11 +182,12 @@ work asked for, which is the shape a description reaching for "noticing" would
 misread as an invitation.
 
 `task-worktree/` tests the boundary and the work, not a narrated command.
-`01` runs the same Git fixture through each CLI arm and accepts only a branch
-from the remote default, a registered sibling worktree, the changed file there,
-and an unchanged primary checkout. `04` starts detached and requires the
-feature branch in place. `02` keeps read-only review out; `03` keeps an already
-attached worktree from nesting another one.
+`01` names the feature branch but says nothing about isolation; the rule and
+skill must supply the sibling worktree. The same Git fixture runs through each
+CLI arm and accepts only a branch from the remote default, the changed file in
+a registered sibling worktree, and an unchanged primary checkout. `04` starts
+detached and requires the feature branch in place. `02` keeps read-only review
+out; `03` keeps an already attached worktree from nesting another one.
 
 `issue-labels/` is separated from `issue-deps`, and the two are one word
 apart: both are about an issue, and both are reached for with "what does this
@@ -671,7 +672,7 @@ The Omp home the agent borrows configures each of these provider/model IDs:
 
 | Experiment | Model |
 | --- | --- |
-| `omp-glm-5.3.yaml` | `zai/glm-5.3` |
+| `omp-glm-5.3.yaml` | `vercel-ai-gateway/zai/glm-5.3` |
 | `omp-deepseek-v4-pro.yaml` | `deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
 
