@@ -530,6 +530,8 @@ function shellSegments(command) {
 	// string resumes where it closes. The quote in force is stacked with the
 	// group so the text after the `)` is still read as quoted.
 	const quoteStack = [];
+	// The word a substitution opened inside, set aside until it closes.
+	const wordStateStack = [];
 	let depth = 0;
 
 	const finishWord = () => {
@@ -555,8 +557,24 @@ function shellSegments(command) {
 		wordStarted = false;
 		wordLiteral = true;
 	};
-	const openGroup = (kind, separator) => {
-		finishSegment(separator);
+	const openGroup = (kind, separator, inWord = wordStarted) => {
+		// A substitution is a word of the command carrying it — `git -C "$(…)"
+		// switch` — never the end of that command. Ending it here would split
+		// `git -C` away from `switch` and leave both halves unrecognizable, so
+		// the enclosing word is set aside and resumed when the group closes,
+		// whether or not any of it had been typed yet. Only a `(` standing where
+		// a command starts is a subshell, and that one does end the command
+		// before it.
+		if (inWord) {
+			wordStateStack.push({ words, word, wordLiteral });
+			words = [];
+			word = "";
+			wordStarted = false;
+			wordLiteral = true;
+		} else {
+			finishSegment(separator);
+			wordStateStack.push(null);
+		}
 		segments.push({
 			words: [],
 			separator: null,
@@ -574,7 +592,17 @@ function shellSegments(command) {
 		const kind = groupKinds.pop();
 		quote = quoteStack.length > 0 ? quoteStack.pop() : null;
 		depth -= kind === "arithmetic" ? 2 : 1;
-		wordLiteral = true;
+		const enclosing = wordStateStack.pop();
+		if (enclosing) {
+			words = enclosing.words;
+			word = enclosing.word;
+			wordStarted = true;
+			// Whatever the substitution produced, the word is no longer the
+			// guard's to read.
+			wordLiteral = false;
+		} else {
+			wordLiteral = true;
+		}
 	};
 	const finishSegment = (separator) => {
 		finishWord();
@@ -651,7 +679,10 @@ function shellSegments(command) {
 			// A backtick substitution runs commands in a subshell, exactly as
 			// `$(…)` does. It is emitted as a group so its `cd` cannot leak out.
 			if (backtick) closeGroup(null);
-			else openGroup("command", null);
+			// A backtick opens a word even where none has been typed: after
+			// `git -C ` the word is empty, and treating that as a command
+			// boundary hid the `switch` that followed the closing backtick.
+			else openGroup("command", null, true);
 			backtick = !backtick;
 			continue;
 		}
@@ -753,22 +784,25 @@ function isEnvironmentAssignment(word) {
 }
 
 /**
- * Index of the literal `git` executable in one command's words, or -1.
+ * Every position where a literal `git` executable could stand in one command's
+ * words.
  *
  * The search is positional rather than a list of known wrappers, so `xargs git
  * switch`, `timeout 5 git switch` and `sudo -u x git switch` are all found
  * without the guard having to have met the wrapper before. A word it cannot
  * read does not stop the scan: `env -u NOPE* git switch` runs git whatever the
- * unreadable word turns out to be, and stopping there was a way to hide the
- * git word behind one glob.
+ * unreadable word turns out to be. Nor does an earlier `git` that turns out to
+ * be an argument — `find . -name git -exec git -C <primary> switch \\;` runs the
+ * second one, so each candidate is read in turn.
  */
-function gitWordIndex(words) {
+function gitWordIndices(words) {
+	const found = [];
 	for (let index = 0; index < words.length; index++) {
 		if (words[index].literal && basename(words[index].text) === "git") {
-			return index;
+			found.push(index);
 		}
 	}
-	return -1;
+	return found;
 }
 
 /**
@@ -805,9 +839,8 @@ function selectedPath(gitCwd, value) {
 }
 
 /** Resolve one Git invocation's subcommand and repository selectors. */
-function gitInvocation(words, shellCwd) {
-	let index = gitWordIndex(words);
-	if (index < 0) return null;
+function gitInvocation(words, shellCwd, start) {
+	let index = start;
 	let gitCwd = shellCwd;
 	// `-C` sets the directory every other path selector is read against: a
 	// relative --git-dir, --work-tree, GIT_DIR or GIT_WORK_TREE resolves
@@ -853,9 +886,23 @@ function gitInvocation(words, shellCwd) {
 			index++;
 			continue;
 		}
+		if (!literal) {
+			// It could be an option, and `-C <primary>` is an option. Whether
+			// this word is a flag or the subcommand cannot be told apart, so
+			// neither is assumed.
+			return {
+				subcommand: UNREADABLE,
+				unreadable: true,
+				args: [],
+				cwd: gitCwd,
+				gitDir: selectedPath(gitCwd, gitDir ?? environmentGitDir),
+				workTree: selectedPath(gitCwd, workTree ?? environmentWorkTree),
+			};
+		}
 		if (word.startsWith("-")) continue;
 		return {
-			subcommand: literal ? word : UNREADABLE,
+			subcommand: word,
+			unreadable: false,
 			args: words.slice(index + 1),
 			cwd: gitCwd,
 			gitDir: selectedPath(gitCwd, gitDir ?? environmentGitDir),
@@ -1003,8 +1050,14 @@ function walkShellCommand(command, toolCwd) {
 		previousSeparator = segment.separator;
 		if (arithmeticStack.at(-1) === true) continue;
 
-		const invocation = gitInvocation(segment.words, shellCwd);
-		if (invocation && changesBranch(invocation)) {
+		for (const start of gitWordIndices(segment.words)) {
+			const invocation = gitInvocation(segment.words, shellCwd, start);
+			if (invocation === null || !changesBranch(invocation)) continue;
+			if (invocation.unreadable) {
+				throw new UnreadableCommandError(
+					"a git invocation carries an option the guard cannot read",
+				);
+			}
 			if (invocation.cwd === null) {
 				throw new UnanchoredPathError(
 					"a branch move arrived with no working directory to place it in",

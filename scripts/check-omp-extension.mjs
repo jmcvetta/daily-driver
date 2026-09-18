@@ -1012,6 +1012,48 @@ checkGuard(
 	worktrees.primary,
 );
 
+// --- a substitution is a word, never the end of its command -----------------
+for (const [name, command, reason] of [
+	// An unreadable `-C` leaves the repository unplaceable, which is the
+	// unanchored refusal.
+	["quoted in a -C value", `git -C "$(echo '${worktrees.primary}')" switch master`, UNANCHORED_PATH_BLOCK_REASON],
+	["unquoted in a -C value", `git -C $(echo ${worktrees.primary}) switch master`, UNANCHORED_PATH_BLOCK_REASON],
+	["in backticks in a -C value", `git -C \`echo ${worktrees.primary}\` switch master`, UNANCHORED_PATH_BLOCK_REASON],
+	["appended to a -C value", `git -C "${worktrees.primary}$(echo /.)" switch master`, UNANCHORED_PATH_BLOCK_REASON],
+	// A repository selector or an option the guard cannot read is the
+	// unreadable refusal instead.
+	["in a GIT_DIR value", `GIT_DIR="$(echo '${worktrees.primary}')/.git" git switch master`, UNREADABLE_COMMAND_BLOCK_REASON],
+	["standing in for the option itself", `git "$(echo -C)" '${worktrees.primary}' switch master`, UNREADABLE_COMMAND_BLOCK_REASON],
+]) {
+	// Ending the command at the substitution split `git -C` away from `switch`
+	// and left neither half recognizable. The word is set aside and resumed, so
+	// the invocation stays whole and what it cannot read is refused.
+	checkGuard(
+		`a substitution ${name} does not break the command around it`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+		reason,
+	);
+}
+
+checkGuard(
+	"a git that is an argument does not shadow the git that runs",
+	true,
+	"bash",
+	{ command: `find . -name git -exec git -C "${worktrees.primary}" switch master \\;` },
+	worktrees.task,
+);
+
+checkGuard(
+	"a substitution in an ordinary argument is still allowed",
+	false,
+	"bash",
+	{ command: 'git commit -m "$(date)"' },
+	worktrees.task,
+);
+
 // --- here-document bodies are data, not commands ---------------------------
 checkGuard(
 	"a here-document carrying a git switch line is not a branch switch",

@@ -215,6 +215,22 @@ function shapes({ primary, task, detached }) {
 	add("cd after a successful or", primary, `true || cd ${task}\ngit switch feature/y`);
 	add("cd downstream of a pipe", primary, `echo x | cd ${task}\ngit switch feature/y`);
 
+	// A substitution standing in a Git option's value. It is part of the word
+	// carrying it, so ending the command there hid `switch` from the scan
+	// entirely — the same fail-open the quoted-substitution fix closed, reopened
+	// by that fix.
+	add("substitution in a -C value", task, `git -C "$(echo ${primary})" switch feature/y`);
+	add("substitution in a -C value, unquoted", task, `git -C $(echo ${primary}) switch feature/y`);
+	add("substitution in a -C value, backticks", task, `git -C \`echo ${primary}\` switch feature/y`);
+	add("substitution appended to a -C value", task, `git -C "${primary}$(echo /.)" switch feature/y`);
+	add("substitution in git-dir and work-tree", task, `git --git-dir="$(echo ${primary})/.git" --work-tree="$(echo ${primary})" switch feature/y`);
+	add("substitution in a GIT_DIR value", task, `GIT_DIR="$(echo ${primary})/.git" git switch feature/y`);
+	add("substitution standing in for an option", task, `git "$(echo -C)" ${primary} switch feature/y`);
+	add("substitution in a -C value, checkout", task, `git -C "$(echo ${primary})" checkout feature/y`);
+
+	// An earlier `git` that is an argument rather than the executable.
+	add("git as an argument before the real one", task, `touch git; find . -name git -exec git -C ${primary} switch feature/y \\;`);
+
 	// Quoting, comments, and prose that only look like commands.
 	add("quoted prose", primary, 'echo "git switch feature/y"');
 	add("single-quoted prose", primary, "echo 'git switch feature/y'");
