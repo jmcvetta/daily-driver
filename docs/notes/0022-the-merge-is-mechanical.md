@@ -5,7 +5,7 @@
 harnesses — an `undertake` run's pull request fell behind its base on Omp
 once the session went away, and the Claude Code cadence died silently more
 than once. The answer was chosen by an agent in
-[#<PR>](https://github.com/jmcvetta/daily-driver/pull/<PR>), the pull request
+[#312](https://github.com/jmcvetta/daily-driver/pull/<PR>), the pull request
 that carries the change it justifies.
 **Resolves:** [#310](https://github.com/jmcvetta/daily-driver/issues/310).
 **Amends:** [`0011`](0011-two-harnesses-one-skill-tree.md), which scoped
