@@ -388,12 +388,12 @@ success_criteria:
       Score by what the reply includes beyond the answer:
 
       - 1.0 — the answer and its reasoning: the pool, why concurrency
-        triggers it, and optionally what it would do about it or how it
-        compares to ONE other finding the user might otherwise fix first.
-        Four sentences of this score 1.0.
-      - 0.5 — the answer plus one stray: a second defect described in its own
-        right without being contrasted, a restatement of the question, a
-        closing offer, or a sentence of narration addressed to the user.
+        triggers it, and optionally how it compares to ONE other finding the
+        user might otherwise fix first. Four sentences of this score 1.0.
+      - 0.5 — the answer plus one stray: a fix, a patch or a remediation
+        plan, a second defect described in its own right without being
+        contrasted, a restatement of the question, a closing offer, or a
+        sentence of narration addressed to the user.
       - 0.0 — the reply re-presents the audit: two or more of the other
         findings described again, a re-ranked list of everything, a table of
         all five, a severity summary, or a plan for fixing the lot.
@@ -409,3 +409,12 @@ success_criteria:
       contrast — "the pool, before the swallowed exception matters" — is the
       answer doing its job, not a stray. Two or more such contrasts is the
       audit coming back.
+
+      A fix is not part of the answer. The question asked WHICH defect breaks
+      first, and it asked nothing else; what to do about it is the next
+      question, and the user did not ask it. So a remediation — a patch, a
+      suggested value for `MAX_CONNECTIONS`, a timeout to add, a sentence on
+      how to fix it — is a stray at 0.5, however brief and however correct.
+      One clause naming the mechanism is the reasoning and stays at 1.0: "it
+      queues forever past two concurrent callers" explains the answer, while
+      "give `acquire()` a timeout" proposes work.
