@@ -90,9 +90,10 @@ are at sea already.
 1 — Title the session
 ---------------------
 
-`session-title` has the form and the budget, and the epic's number and title
-are what the title is built from. This session is the one the user watches the
-fleet from, so it is named for the epic rather than for any task in it.
+`session-title` has the form and the budget, and for this session it is the
+orchestrating-an-epic form that skill defines. This session is the one the
+user watches the fleet from, so it is named for the epic rather than for any
+task in it.
 
 Where the harness cannot set a title, that stop is the step's rather than the
 sequence's: say so in a line and go on to `Take the wave`.
