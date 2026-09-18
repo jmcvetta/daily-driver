@@ -256,6 +256,15 @@ success_criteria:
   # read on; it does not move the pass gate, which is per-criterion —
   # `all_criteria_passed` tests every gating criterion against its own
   # `pass_threshold`, so nothing averages its way to a pass.
+  #
+  # `pass_threshold` is left at `coder_eval`'s default of 0.7, which makes
+  # BOTH graders' 0.5 bands fail the gate. That is deliberate and it is worth
+  # stating plainly, because a middle band reads like a partial pass and is
+  # not one: one fluff mode fails the row, and a report claiming work the
+  # transcript does not show fails it too. The gradation is real but it lives
+  # in `weighted_score`, which is where a comparison between two revisions is
+  # read. The gate is the stricter question, and 0.5 is on the wrong side of
+  # it by design.
   - type: agent_judge
     description: The report carries the outcome and none of the named fluff modes
     include_agent_output: true
