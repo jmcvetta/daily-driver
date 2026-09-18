@@ -232,10 +232,23 @@ constitution's own test, described under "Checks" in the repository README. Its 
 `scripts/check-constitution.py`.
 
 It asks two questions, not one. `reaches-subagent` asks whether the text
-arrives; `reply-is-concise` asks whether it changes anything once it has. The
+arrives; the compliance rows ask whether it changes anything once it has. The
 second is what a delivery test cannot tell you, and until it existed every
 amendment to the constitution shipped on argument alone. See "The constitution
 suite" below for why that case is the one the file gets first.
+
+**The compliance rows differ in how much true material the model is holding,
+and that turns out to be the axis that matters.** `reply-is-concise` asks a
+question with one honest answer, so the model gives it: measured at 1.000 in
+every arm of every run, which means it can separate a session from a bare one
+but cannot separate two versions of the rule.
+`answer-selects-from-findings` first spends a turn filling the context with
+five true findings the model wrote itself, and only then asks for one of them.
+That is a selection problem rather than a compression one, and it is where the
+rule is actually load-bearing: measured at 0.40 bare against 0.80 treated,
+five replicates each. A compliance row that scores 1.000 everywhere is proving
+the model's default, not the constitution — issue #279's comparison concluded
+nothing for exactly that reason, and the row above is what came out of it.
 
 `review-depth/` asks whether `review` sends the *right panel* at the right
 diff. Every case is anchored on something a person would notice if routing
@@ -784,8 +797,8 @@ grades `--body`.
 so. That tag takes a row out of one arm and leaves it in the rest, which an arm
 tag cannot express. The reason is that `coder_eval`'s Codex agent links skills
 and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` and no
-`PreToolUse` on the `Agent` tool, and no constitution in the session. Both rows
-would score 0 for a reason that has nothing to do with the constitution. #181
+`PreToolUse` on the `Agent` tool, and no constitution in the session. Every row
+there would score 0 for a reason that has nothing to do with the constitution. #181
 measured that a *real* Codex session does load the hook file and does deliver
 the constitution, behind persisted hook trust and an exactly-echoed
 `hookEventName`; whether the SDK's app-server can be driven through those gates
