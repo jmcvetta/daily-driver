@@ -21,8 +21,8 @@ fix nothing had read, and only a person could move it.
 ## Why it could happen
 
 **The gate was written as six conditions and no procedure.** Every one of
-them is answerable by a call — GitHub's merge state answers two, the thread
-reads answer two more — but the section named none of those calls. It listed
+them is answerable by a call — the merge state, the checks and the thread
+reads between them answer five — but the section named none of those calls. It listed
 what must be true and left the session to decide whether it was. A condition
 you weigh is a condition you can take to somebody else, and *is this ready?*
 is a natural thing to hand upward. The text also named only one failure: a
