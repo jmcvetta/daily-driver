@@ -115,8 +115,9 @@ Process durability is not session resumption
 unref'd and cleared on `session_shutdown`, so a reminder dies with the
 session. Use one only for a follow-up inside the current session. It cannot
 replace the persistent Hub watcher. Its pair is `daily_driver_cancel_schedule`:
-a follow-up that must not fire into a review borrows the slot by cancelling
-it, and the owner re-arms with `daily_driver_schedule` before that turn ends.
+a wait that must not have a follow-up fire into the review borrows the slot
+by cancelling the armed follow-up, and the owner re-arms with
+`daily_driver_schedule` after the wait.
 An armed reminder does not lapse, it
 fires: left pending, it injects *read the checks again* as a follow-up in the
 middle of the review, restarting a wait on a run that finished. On this

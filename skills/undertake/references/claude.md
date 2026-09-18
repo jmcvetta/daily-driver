@@ -171,11 +171,13 @@ it, which is what makes a cadence across turns possible at all.
    the same prompt. This is the wake's first act, not its last: a wake that
    ends with no trigger in flight is a cadence that has died, whatever else
    the turn did.
-2. **Take the base-currency read and the floor's.** The pull-request read
-   `The milestone` names — `draft`, `mergeable_state`, `head.sha` — with the
-   check rollup on the head beside it. `clean`, `draft`, and `unstable` with
-   a run in flight need nothing this tick.
-3. **Act on what it finds.** `behind` runs
+2. **Take the state read and the floor's.** The pull-request read
+   `The milestone` names — `state`, `draft`, `mergeable_state`, `head.sha` —
+   with the check rollup on the head beside it. `clean`, `draft`, and
+   `unstable` with a run in flight need nothing this tick.
+3. **Act on what it finds.** A `state` of `merged` or `closed` cancels the
+   trigger step 1 just armed with `mcp__Claude_Code_Remote__delete_trigger`
+   and ends the watch — the exits `SKILL.md` names. `behind` runs
    `mcp__github__update_pull_request_branch`; `dirty` is the conflict stop
    `SKILL.md` writes under `Where it stops and waits`; a run in flight holds
    the floor.

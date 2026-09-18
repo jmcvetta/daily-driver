@@ -163,10 +163,11 @@ move, readable with `hub logs`.
 Its exits are `Keep it current`'s three, and nothing narrower. It exits 0
 when the pull request is merged or closed. It exits 3 on a conflict — the
 call fails and changes nothing, and the stop is left for the session's
-catch-up look below. When the user says to stop, the session stops the
-process with `hub stop`, `name` `keep-current-<number>`. Thirty consecutive
-failed reads exit 2: a watch polling a repository it cannot read is noise,
-not a watch.
+catch-up look below, which re-arms the loop with `hub start` once the
+conflict is resolved and pushed. When the user says to stop, the session
+stops the process with `hub stop`, `name` `keep-current-<number>`. Thirty
+consecutive failed reads exit 2: a watch polling a repository it cannot read
+is noise, not a watch.
 
 **`daily_driver_schedule` is no longer this cadence's vehicle.** The managed
 timer is unref'd and cleared on `session_shutdown`, so a cadence it carried
