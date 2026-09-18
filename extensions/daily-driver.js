@@ -75,6 +75,16 @@ export const UNANCHORED_PATH_BLOCK_REASON =
 	"read it against. Repeat the operation with an absolute path, or from a " +
 	"working directory, rooted in the task worktree.";
 
+/** What a command the guard could not read is told. */
+export const UNREADABLE_COMMAND_BLOCK_REASON =
+	"This command could not be read well enough to tell whether it changes " +
+	"the primary checkout, so it is refused rather than allowed unchecked. " +
+	"The guard enumerates the commands a shell call will run; a command it " +
+	"cannot enumerate is refused wherever it might be running in the primary " +
+	"checkout. Repeat the operation written literally \u2014 no `eval`, no " +
+	"executable named by a variable, no unterminated quote \u2014 from a " +
+	"working directory rooted in the task worktree.";
+
 /** What a mutation is told when Git itself could not be consulted. */
 export const GIT_UNAVAILABLE_BLOCK_REASON =
 	"Git could not be consulted, so this operation cannot be checked against " +
@@ -93,6 +103,20 @@ class GitUnavailableError extends Error {
 	constructor(message) {
 		super(message);
 		this.name = "GitUnavailableError";
+	}
+}
+
+/**
+ * A command whose executed commands the guard could not enumerate: an
+ * executable that expands, a string run by `eval`, an unterminated quote. It
+ * is the inversion's error — the guard refuses what it cannot read, rather
+ * than allowing what it did not recognize as dangerous.
+ */
+class UnreadableCommandError extends Error {
+	/** @param {string} message Why the command could not be read. */
+	constructor(message) {
+		super(message);
+		this.name = "UnreadableCommandError";
 	}
 }
 
@@ -416,46 +440,78 @@ function skipHeredocBodies(command, start, heredocs) {
 }
 
 /**
- * Index just past the `))` closing an arithmetic expression that opens at
- * `start`. Negative where the expression is never closed.
- */
-function arithmeticEnd(command, start) {
-	let depth = 0;
-	for (let index = start; index < command.length; index++) {
-		if (command[index] === "(") depth++;
-		else if (command[index] === ")" && --depth === 0) return index + 1;
-	}
-	return -1;
-}
-
-/**
  * True where `(` at `index` opens a function definition's empty parameter
  * list — `name ()` or `function name ()` — rather than a subshell. What
  * follows such a header is a body that is stored, not run.
  */
 function opensFunctionDefinition(words, wordStarted, command, index) {
 	const count = words.length + (wordStarted ? 1 : 0);
-	if (count !== 1 && !(count === 2 && words[0] === "function")) return false;
+	if (count !== 1 && !(count === 2 && words[0].text === "function")) {
+		return false;
+	}
 	return /^\s*\)/u.test(command.slice(index + 1, index + 64));
 }
 
 /**
- * Split a literal shell command into executable segments. This is deliberately
- * a command recognizer, not a shell security boundary: expansions stay opaque,
- * while quoting, escaping, comments, here-document bodies, and ordinary
- * command separators keep prose such as `echo "git switch"` from looking
- * executable.
+ * Keywords that introduce a command rather than being one. Stripping them
+ * leaves the command they govern visible: without this, `if git switch master`
+ * reads as a call to `if` and the branch move behind it is never examined.
+ */
+const CONTROL_KEYWORDS = new Set([
+	"!",
+	"case",
+	"do",
+	"done",
+	"elif",
+	"else",
+	"esac",
+	"fi",
+	"if",
+	"select",
+	"then",
+	"time",
+	"until",
+	"while",
+]);
+
+/**
+ * One word of a command, and whether its text is the whole story. A word is
+ * literal when nothing in it expands: no `$`, no backtick, no glob, no leading
+ * `~`. Only a literal word may be read as a path, an executable name, or a Git
+ * subcommand; anything else is a value the guard cannot know, and the caller
+ * refuses rather than guesses.
+ */
+function shellWord(text, literal) {
+	return { text, literal };
+}
+
+/**
+ * Split a literal shell command into executable segments.
+ *
+ * The recognizer's contract is that it either enumerates every command the
+ * shell will run, or says it could not. Command substitutions, arithmetic,
+ * process substitutions and subshells are all parenthesized, so they are all
+ * emitted as groups and their contents tokenized like any other command: a
+ * `cd` inside one is seen, and stops applying where the group closes. Nothing
+ * is treated as opaque text, because opaque text is where a command hides.
  *
  * A segment carries the words of one command and the separator that ended it.
- * A subshell emits a wordless `group` marker instead, which is how a caller
- * tracking the working directory learns where a `cd` stops applying.
+ * A group emits a wordless `open` or `close` marker instead, which is how a
+ * caller tracking the working directory learns where a `cd` stops applying.
+ *
+ * Returns the segments, the names of any functions defined along the way, and
+ * `unreadable`: a reason string where the scan could not be completed, which
+ * the caller must treat as a refusal rather than as an empty command.
  */
 function shellSegments(command) {
 	const segments = [];
+	const functions = [];
 	let words = [];
 	let word = "";
 	let wordStarted = false;
+	let wordLiteral = true;
 	let quote = null;
+	let backtick = false;
 	let heredocWord = false;
 	let heredocStripTabs = false;
 	let awaitingHeredocDelimiter = false;
@@ -467,6 +523,10 @@ function shellSegments(command) {
 	// nothing in it runs.
 	let pendingFunctionBody = false;
 	const braceStack = [];
+	// What each open paren opened. Arithmetic holds no commands, so the caller
+	// must not read its words as one.
+	const groupKinds = [];
+	let depth = 0;
 
 	const finishWord = () => {
 		if (!wordStarted) return;
@@ -486,9 +546,10 @@ function shellSegments(command) {
 			}
 		}
 		heredocWord = false;
-		words.push(word);
+		words.push(shellWord(word, wordLiteral));
 		word = "";
 		wordStarted = false;
+		wordLiteral = true;
 	};
 	const finishSegment = (separator) => {
 		finishWord();
@@ -496,7 +557,7 @@ function shellSegments(command) {
 		// brace group holding a function body is emitted as a group instead, so a
 		// `cd` stored in it never moves the shell that defines the function.
 		const closers = [];
-		while (words[0] === "{") {
+		while (words[0]?.text === "{") {
 			words.shift();
 			const storedBody = pendingFunctionBody;
 			pendingFunctionBody = false;
@@ -505,11 +566,14 @@ function shellSegments(command) {
 				segments.push({ words: [], separator: null, group: "open" });
 			}
 		}
-		while (words.at(-1) === "}") {
+		while (words.at(-1)?.text === "}") {
 			words.pop();
 			if (braceStack.pop()) {
 				closers.push({ words: [], separator: null, group: "close" });
 			}
+		}
+		while (words[0]?.literal && CONTROL_KEYWORDS.has(words[0].text)) {
+			words.shift();
 		}
 		if (words.length > 0) segments.push({ words, separator });
 		segments.push(...closers);
@@ -527,21 +591,40 @@ function shellSegments(command) {
 		if (char === "\\") {
 			const next = command[index + 1];
 			if (next !== undefined) {
-				word += next;
-				wordStarted = true;
+				// A backslash-newline is a line continuation: it joins the lines
+				// and contributes no character to the word.
+				if (next !== "\n") {
+					word += next;
+					wordStarted = true;
+				}
 				index++;
 			}
 			continue;
 		}
 		if (quote === '"') {
 			if (char === '"') quote = null;
-			else word += char;
+			else if (char === "$" || char === "`") wordLiteral = false;
+			if (char !== '"' && char !== "`") word += char;
+			wordStarted = true;
+			if (char !== "`") continue;
+		} else if (char === "'" || char === '"') {
+			quote = char;
 			wordStarted = true;
 			continue;
 		}
-		if (char === "'" || char === '"') {
-			quote = char;
-			wordStarted = true;
+		if (char === "`") {
+			// A backtick substitution runs commands in a subshell, exactly as
+			// `$(…)` does. It is emitted as a group so its `cd` cannot leak out.
+			finishSegment(null);
+			segments.push({
+				words: [],
+				separator: null,
+				group: backtick ? "close" : "open",
+			});
+			if (backtick) depth--;
+			else depth++;
+			backtick = !backtick;
+			wordLiteral = true;
 			continue;
 		}
 		if (char === "#" && !wordStarted) {
@@ -561,22 +644,29 @@ function shellSegments(command) {
 			}
 			continue;
 		}
-		// `$((…))` expands arithmetic and `((…))` evaluates it. Neither holds
-		// commands, and a `<<` inside one is a left shift rather than a
-		// here-document operator, so the whole expression is taken as one opaque
-		// word.
+		if (char === "(" && command[index + 1] === "(") {
+			// `((…))` evaluates arithmetic and `$((…))` expands it. Neither runs
+			// the words inside as a command, but either may hold a `$(…)` that
+			// does, so the span is tokenized like any other group and marked as
+			// arithmetic for the caller.
+			finishSegment("(");
+			segments.push({ words: [], separator: null, group: "open", arithmetic: true });
+			groupKinds.push("arithmetic");
+			depth += 2;
+			index++;
+			continue;
+		}
 		if (
-			char === "(" &&
-			command[index + 1] === "(" &&
-			(word.endsWith("$") || !wordStarted)
+			char === ")" &&
+			command[index + 1] === ")" &&
+			groupKinds.at(-1) === "arithmetic"
 		) {
-			const end = arithmeticEnd(command, index);
-			if (end > 0) {
-				word += command.slice(index, end);
-				wordStarted = true;
-				index = end - 1;
-				continue;
-			}
+			finishSegment(")");
+			segments.push({ words: [], separator: null, group: "close" });
+			groupKinds.pop();
+			depth -= 2;
+			index++;
+			continue;
 		}
 		if (char === "(" || char === ")") {
 			if (
@@ -584,6 +674,26 @@ function shellSegments(command) {
 				opensFunctionDefinition(words, wordStarted, command, index)
 			) {
 				pendingFunctionBody = true;
+				// The name is the word the header just ended on, which may still
+				// be the one being accumulated.
+				if (wordStarted) {
+					if (wordLiteral) functions.push(word);
+				} else if (words.at(-1)?.literal) {
+					functions.push(words.at(-1).text);
+				}
+				// A definition header is not a call to the function it names.
+				// Emitting it as one would make every definition look like an
+				// invocation of its own body.
+				words = [];
+				word = "";
+				wordStarted = false;
+				wordLiteral = true;
+			} else if (char === "(") {
+				// Any other `(` opens something that runs in a subshell of its
+				// own — a command substitution, arithmetic, a process
+				// substitution, a plain subshell, or a function body written as
+				// one. None of them is a stored brace body.
+				pendingFunctionBody = false;
 			}
 			finishSegment(char);
 			segments.push({
@@ -591,6 +701,9 @@ function shellSegments(command) {
 				separator: null,
 				group: char === "(" ? "open" : "close",
 			});
+			if (char === "(") groupKinds.push("command");
+			else groupKinds.pop();
+			depth += char === "(" ? 1 : -1;
 			continue;
 		}
 		if (char === ";" || char === "&" || char === "|") {
@@ -599,6 +712,8 @@ function shellSegments(command) {
 			if (doubled) index++;
 			continue;
 		}
+		if (char === "$" || char === "*" || char === "?") wordLiteral = false;
+		if (char === "~" && !wordStarted) wordLiteral = false;
 		word += char;
 		wordStarted = true;
 		// `<<` outside quotes opens a here-document, with an optional file
@@ -608,51 +723,66 @@ function shellSegments(command) {
 		if (char === "<") heredocWord = /^\d*<<$/u.test(word);
 	}
 	finishSegment(null);
-	return segments;
+
+	let unreadable = null;
+	if (quote !== null) unreadable = "a quote is never closed";
+	else if (backtick) unreadable = "a backtick substitution is never closed";
+	else if (depth > 0) unreadable = "a parenthesis is never closed";
+	return { segments, functions, unreadable };
 }
 
 function isEnvironmentAssignment(word) {
-	return /^[A-Za-z_][A-Za-z0-9_]*=/u.test(word);
+	return /^[A-Za-z_][A-Za-z0-9_]*=/u.test(word.text);
 }
 
-/** Find a literal git executable after common non-interpreting wrappers. */
+/**
+ * Index of the literal `git` executable in one command's words, or -1.
+ *
+ * Every word before it must be literal: a wrapper the guard cannot read could
+ * be anything, and `git` behind it is not reliably the command that runs. The
+ * search is positional rather than a list of known wrappers, so `xargs git
+ * switch`, `timeout 5 git switch` and `sudo -u x git switch` are all found
+ * without the guard having to have met the wrapper before.
+ */
 function gitWordIndex(words) {
-	let index = 0;
-	while (isEnvironmentAssignment(words[index] ?? "")) index++;
-	if (words[index] === "command") index++;
-	if (words[index] === "env") {
-		index++;
-		while (
-			(words[index]?.startsWith("-") ?? false) ||
-			isEnvironmentAssignment(words[index] ?? "")
-		) {
-			index++;
-		}
+	for (let index = 0; index < words.length; index++) {
+		if (!words[index].literal) return -1;
+		if (basename(words[index].text) === "git") return index;
 	}
-	return basename(words[index] ?? "") === "git" ? index : -1;
+	return -1;
 }
 
 /**
  * Read one environment assignment that precedes the Git executable. A shell
- * exports the last assignment of a name, so the scan runs right to left.
+ * exports the last assignment of a name, so the scan runs right to left. A
+ * non-literal value is reported as such, because a selector whose value the
+ * guard cannot read must not be resolved as if it were a path.
  */
 function environmentValue(words, end, name) {
 	const prefix = `${name}=`;
 	for (let index = end - 1; index >= 0; index--) {
-		if (words[index].startsWith(prefix)) {
-			return words[index].slice(prefix.length);
+		if (words[index].text.startsWith(prefix)) {
+			return words[index].literal
+				? words[index].text.slice(prefix.length)
+				: UNREADABLE;
 		}
 	}
 	return null;
 }
 
+/** A selector whose value the guard cannot read. Distinct from absent. */
+const UNREADABLE = Symbol("unreadable");
+
 /**
  * Resolve one path selector against the Git working directory. Null stays
- * null, and so does a relative selector with no working directory to read it
- * against.
+ * null; an unreadable selector and a relative selector with no working
+ * directory to read it against both resolve to null, which the caller treats
+ * as a repository it could not place.
  */
 function selectedPath(gitCwd, value) {
-	return value === null ? null : resolveAgainst(gitCwd, value);
+	if (value === null) return null;
+	if (value === UNREADABLE) return UNREADABLE;
+	return resolveAgainst(gitCwd, value);
 }
 
 /** Resolve one Git invocation's subcommand and repository selectors. */
@@ -671,29 +801,33 @@ function gitInvocation(words, shellCwd) {
 	let workTree = null;
 	index++;
 	for (; index < words.length; index++) {
-		const word = words[index];
-		if (word === "-C" && typeof words[index + 1] === "string") {
-			gitCwd = resolveAgainst(gitCwd, words[++index]);
+		const { text: word, literal } = words[index];
+		const value = (raw, isLiteral) => (isLiteral ? raw : UNREADABLE);
+		if (word === "-C" && words[index + 1] !== undefined) {
+			const next = words[++index];
+			gitCwd = next.literal ? resolveAgainst(gitCwd, next.text) : null;
 			continue;
 		}
 		if (word.startsWith("-C") && word.length > 2) {
-			gitCwd = resolveAgainst(gitCwd, word.slice(2));
+			gitCwd = literal ? resolveAgainst(gitCwd, word.slice(2)) : null;
 			continue;
 		}
-		if (word === "--work-tree" && typeof words[index + 1] === "string") {
-			workTree = words[++index];
+		if (word === "--work-tree" && words[index + 1] !== undefined) {
+			const next = words[++index];
+			workTree = value(next.text, next.literal);
 			continue;
 		}
 		if (word.startsWith("--work-tree=")) {
-			workTree = word.slice("--work-tree=".length);
+			workTree = value(word.slice("--work-tree=".length), literal);
 			continue;
 		}
-		if (word === "--git-dir" && typeof words[index + 1] === "string") {
-			gitDir = words[++index];
+		if (word === "--git-dir" && words[index + 1] !== undefined) {
+			const next = words[++index];
+			gitDir = value(next.text, next.literal);
 			continue;
 		}
 		if (word.startsWith("--git-dir=")) {
-			gitDir = word.slice("--git-dir=".length);
+			gitDir = value(word.slice("--git-dir=".length), literal);
 			continue;
 		}
 		if (["-c", "--config-env", "--exec-path", "--namespace"].includes(word)) {
@@ -702,24 +836,31 @@ function gitInvocation(words, shellCwd) {
 		}
 		if (word.startsWith("-")) continue;
 		return {
-			subcommand: word,
+			subcommand: literal ? word : UNREADABLE,
 			args: words.slice(index + 1),
 			cwd: gitCwd,
 			gitDir: selectedPath(gitCwd, gitDir ?? environmentGitDir),
 			workTree: selectedPath(gitCwd, workTree ?? environmentWorkTree),
 		};
 	}
+	// `git` with no subcommand at all moves nothing.
 	return null;
 }
 
-/** Checkout with an explicit pathspec edits files but does not move HEAD. */
+/**
+ * Checkout with an explicit pathspec edits files but does not move HEAD. A
+ * subcommand the guard could not read is treated as a branch move, because the
+ * one that moves a branch is the one that matters.
+ */
 function changesBranch(invocation) {
+	if (invocation.subcommand === UNREADABLE) return true;
 	if (invocation.subcommand === "switch") return true;
 	if (invocation.subcommand !== "checkout" || invocation.args.length === 0) {
 		return false;
 	}
+	const args = invocation.args.map((arg) => arg.text);
 	if (
-		invocation.args.some(
+		args.some(
 			(arg) =>
 				arg === "-b" ||
 				arg === "-B" ||
@@ -730,8 +871,8 @@ function changesBranch(invocation) {
 	) {
 		return true;
 	}
-	if (invocation.args.includes("--")) return false;
-	return !invocation.args.some((arg) =>
+	if (args.includes("--")) return false;
+	return !args.some((arg) =>
 		["-p", "--patch", "--ours", "--theirs"].includes(arg),
 	);
 }
@@ -751,7 +892,61 @@ function movesGuardedPrimary(state, shellCwd) {
 	return from === null || from.root !== state.primaryRoot;
 }
 
-/** A checkout or switch that changes the primary HEAD or its files. */
+/**
+ * True where a command running with this working directory would run in the
+ * guarded primary checkout. An unknown directory answers true: the guard
+ * cannot place the command, and the whole point of the inversion is that what
+ * cannot be placed is refused rather than allowed. A detached primary answers
+ * false for the same reason `movesGuardedPrimary` exempts it — the model is
+ * told to attach it in place, and it needs commands to do that with.
+ */
+function runsInGuardedPrimary(shellCwd) {
+	if (shellCwd === null) return true;
+	const state = worktreeState(".", shellCwd);
+	if (state === null) return false;
+	return state.root === state.primaryRoot && state.branch.length > 0;
+}
+
+/**
+ * Commands that run a string the guard has not read. Where the string is one
+ * literal word it is tokenized like any other command; where it is not, the
+ * guard has no way to know what runs.
+ */
+const STRING_INTERPRETERS = new Set(["bash", "dash", "eval", "ksh", "sh", "zsh"]);
+
+/** Commands that move the shell itself somewhere the guard cannot follow. */
+const DIRECTORY_UNKNOWNS = new Set([".", "popd", "source"]);
+
+/**
+ * Where a `cd` or `pushd` leaves the shell. Returns the resolved directory, or
+ * null where the guard cannot know it: an argument that expands, no argument
+ * at all (`$HOME`), `cd -` (the previous directory), or any form not
+ * recognized. A stale directory is what lets a later branch move look safe, so
+ * every unrecognized form answers "unknown" rather than "unchanged".
+ */
+function directoryAfterChange(base, words) {
+	const operands = [];
+	for (const word of words.slice(1)) {
+		if (word.text === "--") continue;
+		if (word.literal && /^-[LPe@]+$/u.test(word.text)) continue;
+		operands.push(word);
+	}
+	if (operands.length !== 1) return null;
+	const [target] = operands;
+	if (!target.literal || target.text === "-") return null;
+	return resolveAgainst(base, target.text);
+}
+
+/**
+ * A checkout, switch, or otherwise unreadable command that would change the
+ * primary HEAD or its files.
+ *
+ * The walk is the inversion this guard turns on: it does not look for proof
+ * that a command is dangerous, it looks for proof that every command is
+ * placed. A command whose executable, arguments, or working directory the
+ * recognizer cannot read is refused where it could be running in the primary
+ * checkout, rather than allowed because nothing matched a dangerous shape.
+ */
 function movesPrimaryBranch(event, cwd) {
 	if (event.toolName !== "bash" || typeof event.input?.command !== "string") {
 		return false;
@@ -762,21 +957,40 @@ function movesPrimaryBranch(event, cwd) {
 	// no session directory to read it against: a command that moves no branch
 	// still passes, and one that moves a branch is refused below, because the
 	// repository it would change cannot be identified.
-	let shellCwd = anchoredPath(
+	const toolCwd = anchoredPath(
 		cwd,
 		typeof event.input.cwd === "string" ? event.input.cwd : ".",
 	);
+	return walkShellCommand(event.input.command, toolCwd);
+}
+
+/** Walk one command's segments, tracking the shell's working directory. */
+function walkShellCommand(command, toolCwd) {
+	const { segments, functions, unreadable } = shellSegments(command);
+	if (unreadable !== null) {
+		throw new UnreadableCommandError(unreadable);
+	}
+	const defined = new Set(functions);
+	let shellCwd = toolCwd;
 	const shellCwdStack = [];
-	for (const segment of shellSegments(event.input.command)) {
+	// Words inside `$((…))` are arithmetic, not a command. Reading them as one
+	// would refuse `$(( $n + 1 ))` for naming an executable that expands.
+	const arithmeticStack = [];
+
+	for (const segment of segments) {
 		if (segment.group === "open") {
 			shellCwdStack.push(shellCwd);
+			arithmeticStack.push(segment.arithmetic === true);
 			continue;
 		}
 		if (segment.group === "close") {
 			// A `cd` inside a subshell stops applying when the subshell ends.
 			if (shellCwdStack.length > 0) shellCwd = shellCwdStack.pop();
+			arithmeticStack.pop();
 			continue;
 		}
+		if (arithmeticStack.at(-1) === true) continue;
+
 		const invocation = gitInvocation(segment.words, shellCwd);
 		if (invocation && changesBranch(invocation)) {
 			if (invocation.cwd === null) {
@@ -784,13 +998,17 @@ function movesPrimaryBranch(event, cwd) {
 					"a branch move arrived with no working directory to place it in",
 				);
 			}
+			if (invocation.gitDir === UNREADABLE || invocation.workTree === UNREADABLE) {
+				throw new UnreadableCommandError(
+					"a branch move selects its repository with a value that expands",
+				);
+			}
 			const gitDirState = invocation.gitDir
 				? worktreeStateFromGitDir(invocation.gitDir, invocation.cwd)
 				: null;
 			// A Git directory that resolves to no repository must not skip the
 			// cwd check. Skipping it lets an unresolvable selector fail open.
-			const repositoryState =
-				gitDirState ?? worktreeState(".", invocation.cwd);
+			const repositoryState = gitDirState ?? worktreeState(".", invocation.cwd);
 			if (movesGuardedPrimary(repositoryState, shellCwd)) return true;
 			if (invocation.workTree) {
 				// Writing primary files from elsewhere is blocked whether or not
@@ -806,12 +1024,71 @@ function movesPrimaryBranch(event, cwd) {
 			}
 		}
 
-		if (
-			segment.words.length === 2 &&
-			segment.words[0] === "cd" &&
-			["&&", ";", "\n"].includes(segment.separator)
+		// The executable, once any leading environment assignments are past.
+		let position = 0;
+		while (
+			position < segment.words.length &&
+			isEnvironmentAssignment(segment.words[position])
 		) {
-			shellCwd = resolveAgainst(shellCwd, segment.words[1]);
+			position++;
+		}
+		const executable = segment.words[position];
+		if (executable === undefined) continue;
+		if (!executable.literal) {
+			// Everywhere, not only in the primary checkout: the program a word
+			// expands to may be `git`, and `git -C <primary> switch` reaches the
+			// primary from any directory at all.
+			throw new UnreadableCommandError(
+				"a command names an executable that expands",
+			);
+		}
+
+		const name = basename(executable.text);
+		const operands = segment.words.slice(position + 1);
+
+		if (STRING_INTERPRETERS.has(name)) {
+			// `sh -c '…'` and `eval '…'` run a string. One literal string is
+			// read like any other command; anything else is unreadable. `eval`
+			// runs in the current shell, so its directory changes carry; `sh -c`
+			// runs a child, so they do not.
+			const script = operands.filter(
+				(operand) => !(operand.literal && operand.text.startsWith("-")),
+			);
+			if (script.length === 0) continue;
+			if (script.length > 1 || !script[0].literal) {
+				// A shell running more shell is squarely inside what this guard
+				// reads, so an unreadable script is refused wherever it runs: the
+				// string may name the primary checkout itself.
+				throw new UnreadableCommandError(
+					"a command runs a string the guard cannot read",
+				);
+			}
+			if (name === "eval") {
+				if (walkShellCommand(script[0].text, shellCwd)) return true;
+				shellCwd = null;
+			} else if (walkShellCommand(script[0].text, shellCwd)) {
+				return true;
+			}
+			continue;
+		}
+
+		if (DIRECTORY_UNKNOWNS.has(name) || defined.has(name)) {
+			// A sourced file and a function body are commands the guard has not
+			// read, and both can move the shell that runs them.
+			shellCwd = null;
+			continue;
+		}
+
+		if (name === "cd" || name === "pushd") {
+			if (segment.separator === "|" || segment.separator === "&") {
+				// A `cd` in a pipeline or a background job runs in a subshell of
+				// its own, so the shell that continues never moves.
+				continue;
+			}
+			const moved = directoryAfterChange(shellCwd, segment.words.slice(position));
+			// `cd x || y` may or may not have moved; either answer would be a
+			// guess, so the directory becomes unknown.
+			shellCwd = segment.separator === "||" ? null : moved;
 		}
 	}
 	return false;
@@ -889,6 +1166,9 @@ export default function dailyDriverExtension(pi) {
 		} catch (err) {
 			if (err instanceof UnanchoredPathError) {
 				return { block: true, reason: UNANCHORED_PATH_BLOCK_REASON };
+			}
+			if (err instanceof UnreadableCommandError) {
+				return { block: true, reason: UNREADABLE_COMMAND_BLOCK_REASON };
 			}
 			if (!(err instanceof GitUnavailableError)) throw err;
 			// Say so on stderr as well as to the model: an operator must be able

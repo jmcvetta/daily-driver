@@ -177,6 +177,7 @@ const {
 	GIT_UNAVAILABLE_BLOCK_REASON,
 	REMINDER_CUSTOM_TYPE,
 	UNANCHORED_PATH_BLOCK_REASON,
+	UNREADABLE_COMMAND_BLOCK_REASON,
 	WORKTREE_BLOCK_REASON,
 	default: dailyDriverExtension,
 } = module_;
@@ -803,6 +804,163 @@ checkGuard(
 	},
 	worktrees.primary,
 );
+
+// --- the inversion: what the guard cannot read, it refuses ------------------
+// The recognizer no longer looks for proof that a command is dangerous. It
+// looks for proof that every command it will run has been placed, and refuses
+// where it has none. These are the constructs that leaves it refusing, and the
+// ordinary ones it must still let through.
+
+check("the unreadable denial tells the model to write the command literally", () => {
+	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /refused rather than allowed/iu);
+	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /literally/iu);
+	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /eval/iu);
+});
+
+for (const [name, command] of [
+	["a string run by eval", "eval \"$script\""],
+	["a string run by bash -c", "bash -c \"$script\""],
+	["a string run by sh -c", "sh -c \"$script\""],
+	["an executable that expands", "$g switch master"],
+	["an executable that a substitution produces", "$(echo git) switch master"],
+]) {
+	// Refused from the task worktree, not only from the primary: the string or
+	// the program may name the primary checkout itself, and `git -C <primary>`
+	// reaches it from any directory at all.
+	checkGuard(
+		`${name} is refused even from a task worktree`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+		UNREADABLE_COMMAND_BLOCK_REASON,
+	);
+}
+
+checkGuard(
+	"a quote that never closes is refused rather than half-read",
+	true,
+	"bash",
+	{ command: 'git status "' },
+	worktrees.task,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+checkGuard(
+	"a parenthesis that never closes is refused too",
+	true,
+	"bash",
+	{ command: "echo $(git status" },
+	worktrees.task,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+// The cost the inversion accepts, stated rather than discovered: a command
+// naming its interpreter through a variable is refused wherever it runs. It is
+// a visible false positive with an obvious repair, which is the whole bargain —
+// the alternative is a silent hole of exactly the shape four rounds kept
+// finding.
+checkGuard(
+	"an ordinary command whose interpreter expands is refused as well",
+	true,
+	"bash",
+	{ command: '"$PYTHON" -m pytest' },
+	worktrees.task,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+// Arithmetic is not a command, so a variable inside it is not an executable.
+checkGuard(
+	"arithmetic holding an expansion is not a command the guard must read",
+	false,
+	"bash",
+	{ command: "n=1\necho $(( $n + 1 ))\n" },
+	worktrees.task,
+);
+
+checkGuard(
+	"arithmetic still cannot hide a substitution that moves a branch",
+	true,
+	"bash",
+	{ command: `echo $(( $(cd "${worktrees.primary}" && git switch master) + 1 ))` },
+	worktrees.task,
+);
+
+for (const [name, command] of [
+	["a control-flow condition", "if git switch master; then true; fi"],
+	["a loop condition", "while git switch master; do break; done"],
+	["a negated command", "! git switch master"],
+	["a literal eval", "eval 'git switch master'"],
+	["a literal bash -c", "bash -c 'git switch master'"],
+	["a wrapper that execs its argument", "timeout 10 git switch master"],
+]) {
+	// Each of these reads as a call to a keyword or a wrapper unless the
+	// recognizer looks past it to the command it governs.
+	checkGuard(
+		`${name} does not hide a branch move in the primary`,
+		true,
+		"bash",
+		{ command },
+		worktrees.primary,
+	);
+}
+
+for (const [name, command] of [
+	["a cd with a double dash", `cd -- "${worktrees.primary}" && git switch master`],
+	["a cd with an option", `cd -P "${worktrees.primary}" && git switch master`],
+	["a pushd", `pushd "${worktrees.primary}" && git switch master`],
+]) {
+	// A `cd` the walker reads is followed into the primary checkout, whatever
+	// options it carries.
+	checkGuard(
+		`${name} is followed into the primary checkout`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
+for (const [name, command] of [
+	["a cd whose target expands", `x="${worktrees.primary}"\ncd $x\ngit switch master\n`],
+	["a cd that may not have happened", `cd "${worktrees.primary}" || true\ngit switch master\n`],
+	["a cd with no argument at all", "cd\ngit switch master\n"],
+]) {
+	// A `cd` form the walker does not recognize leaves the directory unknown,
+	// and a branch move with an unknown directory cannot be placed at all —
+	// which is the unanchored refusal, not the worktree one.
+	checkGuard(
+		`${name} leaves the directory unknown rather than stale`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+		UNANCHORED_PATH_BLOCK_REASON,
+	);
+}
+
+checkGuard(
+	"a function defined and then called moves the directory out of reach",
+	true,
+	"bash",
+	{
+		command:
+			`f() { cd "${worktrees.primary}"; }\n` + "f\n" + "git switch master\n",
+	},
+	worktrees.task,
+	UNANCHORED_PATH_BLOCK_REASON,
+);
+
+// Ordinary work in a task worktree is what the guard exists to leave alone.
+for (const [name, command] of [
+	["a read-only Git query", "git status --porcelain"],
+	["an ordinary substitution", "echo $(date)"],
+	["a literal interpreter", "python3 -c 'print(1)'"],
+	["a branch move in the task worktree itself", "git switch -c feature/next"],
+	["a cd within the task worktree", "cd subdir && git status"],
+]) {
+	checkGuard(`${name} still runs in a task worktree`, false, "bash", { command }, worktrees.task);
+}
 
 // --- here-document bodies are data, not commands ---------------------------
 checkGuard(
