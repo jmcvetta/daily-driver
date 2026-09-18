@@ -9,7 +9,8 @@ SHELL := /bin/bash
 
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-plugin check-omp-cache-clean check-omp-review-cycle-route \
+	check-omp-extension check-omp-guard-differential check-omp-plugin \
+	check-omp-cache-clean check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route \
 	check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
@@ -78,7 +79,8 @@ omp-update-daily-driver:
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-cache-clean check-omp-review-cycle-route \
+	check-omp-extension check-omp-guard-differential check-omp-cache-clean \
+	check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route check-omp-agent \
 	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
 	check-eval-arms check-step-names check-evals-preflight check-labels
@@ -156,13 +158,20 @@ check-ask-in-chat:
 	python3 scripts/check-ask-in-chat.py
 
 # The acceptance test for the Omp runtime adapter: import extensions/
-# daily-driver.js with a fake ExtensionAPI and assert the Omp `ask` tool is
-# blocked (with a reason that sends the question to chat), that the title and
-# schedule/cancel tools behave, and that package.json wires the extension.
-# Credential-free like the other script legs, so it runs on a laptop and CI
-# alike. Node ships with the harness; no package install is involved.
+# daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
+# primary/detached-worktree mutation guard, the four tools, and package wiring.
+# Credential-free like the other script legs, so it runs on a laptop and CI.
+# Node ships with the harness; no package install is involved.
 check-omp-extension:
 	node scripts/check-omp-extension.mjs
+
+# check-omp-guard-differential: the worktree guard measured against bash rather
+# than against what somebody thought of. Each command shape is run for real in
+# a throwaway repository, and the guard's verdict is checked against whether
+# the primary checkout actually moved. Credential-free and network-free, but it
+# runs git and bash dozens of times, so it is its own leg.
+check-omp-guard-differential:
+	node scripts/check-omp-guard-differential.mjs
 
 # check-omp-plugin: the discovery half of the Omp story, which
 # check-omp-extension cannot reach. It starts a real `omp --mode rpc` and asks
