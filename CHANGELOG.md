@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.30.1](https://github.com/jmcvetta/daily-driver/compare/v0.30.0...v0.30.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* **task-worktree:** guard every Git command that rewrites the primary tree ([#297](https://github.com/jmcvetta/daily-driver/issues/297)) ([610d0c7](https://github.com/jmcvetta/daily-driver/commit/610d0c741a72de3a7c76abc07fbe78af512a3672))
+
 ## [0.30.0](https://github.com/jmcvetta/daily-driver/compare/v0.29.1...v0.30.0) (2026-09-18)
 
 
