@@ -241,8 +241,9 @@ suite" below for why that case is the one the file gets first.
 **The compliance rows differ in how much true material the model is holding,
 and that turns out to be the axis that matters.** `reply-is-concise` asks a
 question with one honest answer, so the model gives it: measured at 1.000 in
-every arm of every run, which means it can separate a session from a bare one
-but cannot separate two versions of the rule.
+every arm of every run, treated and bare alike, which means it separates
+nothing — not two versions of the rule, and not a session carrying the
+constitution from one without it.
 `answer-selects-from-findings` first spends a turn filling the context with
 five true findings the model wrote itself, and only then asks for one of them.
 That is a selection problem rather than a compression one, and it is where the
@@ -497,12 +498,12 @@ number means moving it in both files, together.
 
 ### `answer-selects-from-findings`, the row that is not at ceiling
 
-`reply-is-concise` scores 1.000 in every arm of every run, which makes it a
-delivery test in compliance clothing: it separates a session carrying the
-constitution from a bare one, and cannot separate two versions of the rule.
-This row is built for the second job. Turn one asks for an audit of a
-five-file service, is meant to be long, and is not graded — it exists to fill
-the context with five true findings the model wrote itself. Turn two asks
+`reply-is-concise` scores 1.000 in every arm of every run, bare arms included,
+so it separates nothing: a row at ceiling on both sides is measuring the
+model's default rather than the rule. This row is built to separate.
+Turn one asks for an audit of a five-file service, is meant to be long, and is
+not graded — it exists to fill the context with five true findings the model
+wrote itself. Turn two asks
 which of them breaks first under load. Four of the five are load-independent
 by construction, so the answer is not arguable, and the four decoys are real
 bugs rather than trivia: repeating them is repeating things worth knowing,
