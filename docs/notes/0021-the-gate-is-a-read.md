@@ -38,9 +38,14 @@ prevent, reached by obeying the rule that was meant to prevent it.
 
 ## Decided
 
-**The gate is a read, not a judgement.** Six conditions, four reads, each
+**The gate is a read, not a judgement.** Six conditions, five reads, each
 one a call the harness reference names, and the last read followed in the
-same turn by the call that marks the pull request ready. Nothing comes
+same turn by the call that marks the pull request ready. The merge state
+answers only the branch's currency there: a draft reports `draft`, or
+`blocked` where the repository requires a review, so a gate that waited for
+`clean` would hold every pull request draft until it was approved and
+unapprovable until it was out of draft. CI at the gate is read from the
+checks themselves. Nothing comes
 between them: no summary first, no permission asked. The user is named as
 never a gate condition — no stop under `Where it stops and waits` is a
 confirmation of readiness, and the person who did not do the work cannot

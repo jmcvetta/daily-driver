@@ -52,7 +52,8 @@ The pull request
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the draft` | Open it | `pr`, which owns the call |
-| `The gate` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable_state`, `head.sha` |
+| `The gate` | Read the branch against its base | `mcp__github__pull_request_read`, method `get` — `mergeable_state` |
+| `The gate` | Read CI on the head | `mcp__github__pull_request_read`, **both** `get_check_runs` and `get_status` |
 | `The gate` | Read the review threads | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments` and `get_comments` — `review-cycle`'s reference owns them |
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
@@ -65,6 +66,12 @@ The pull request
 `review-cycle`'s. Its `references/claude.md` names the full-review surface and
 the briefed-subagent route `Verify the fix delta` runs on; a pass that dispatch
 genuinely fails is what keeps the pull request draft.
+
+**The gate's CI read is two calls, not one.** `mergeable_state` reports a
+draft's own status ahead of its checks — `draft`, or `blocked` where the
+repository requires a review — so a session reading CI out of that field
+reads nothing about CI. `get_check_runs` and `get_status` are the union
+`review-cycle`'s wait defines, and `SKILL.md`'s `The gate` uses the same one.
 
 
 The session
@@ -105,14 +112,23 @@ The milestone
 that read the readiness state, find the claim's timestamp, and post it.
 
 **The readiness state is `mcp__github__pull_request_read`, method `get`** —
-the same read `The gate` takes, one step earlier. Three fields answer
-`SKILL.md`'s questions: `draft`; `mergeable_state`, whose values `The gate`
-decodes and this file does not restate; and `head.sha`, the SHA the report
-binds to. The read confirms, on this head, what the gate answered, so a
-state that disagrees with it is a wait, not a milestone. This call returns
-no `mergeable` boolean — measured on the server this session holds,
-2026-09-18 — so `mergeable_state` is the whole answer rather than half of
-it.
+the same call `The gate` makes, asking a different question. Three fields
+answer `SKILL.md`'s: `draft`, which must be false; `mergeable_state`; and
+`head.sha`, the SHA the report binds to.
+
+**Here `clean` is the only yes**, and that is the difference from the gate.
+The gate runs while the pull request is still a draft, where this field
+reports `draft` or `blocked` and says nothing about the merge; the milestone
+runs after the draft is cleared, where the same field finally answers the
+mergeability question the report attests to. So `unstable` is a check that is
+no longer green, `behind` a base the branch does not carry, `dirty` a
+conflict, `blocked` a required review outstanding, and `unknown` GitHub
+saying it cannot determine the answer yet — the indeterminate readiness
+`SKILL.md` rules out. Each of them is a wait, not a milestone.
+
+This call returns no `mergeable` boolean — measured on the server this
+session holds, 2026-09-18 — so `mergeable_state` is the whole answer rather
+than half of it.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the

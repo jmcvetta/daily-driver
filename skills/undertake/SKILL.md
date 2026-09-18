@@ -346,13 +346,16 @@ and wait for CI on that head. Then run `Verify the fix delta` when the
 pull-request content changed behavior, contracts, or workflow rules. It is one
 pass for the batch, never one per commit or finding.
 
-A first pass that finds defects returns to `Fix, answer, resolve, push`, then
-receives exactly one final targeted confirmation after CI. A defect in that
-confirmation, an unavailable reviewer, incomplete verification, or an
-exhausted pass limit keeps the pull request draft and reports the blocker.
-Initial execution and a resumed session read the durable review record before
-acting; they do not reset the allowance for a resume, rewritten history, bot
-finding, or late CI correction.
+A pass that finds defects returns to `Fix, answer, resolve, push`, and the
+correction pushed from there earns the pass that confirms it — every time,
+because an unverified fix is what the round exists to prevent. The loop ends
+on the first clean pass, and `review-cycle`'s wall ends it the other way:
+three consecutive passes each finding defects, reported with the defects on
+the pull request. That bound is that skill's and is not restated here. An
+unavailable reviewer or an incomplete pass keeps the pull request draft and
+reports the blocker. Initial execution and a resumed session read the durable
+review record before acting; a resume, a rewritten history, a bot finding and
+a late CI correction are not passes and move nothing.
 
 Only a material scope change runs a new `Review the head` round. A base merge
 or history rewrite with unchanged pull-request content does not. `review-cycle`
@@ -532,7 +535,7 @@ Ready is a gate, not a step
 ---------------------------
 
 "After fixing, set the PR to ready" reads as unconditional. It is not. It is
-also not a judgement: **the gate is a read**. Six conditions decide it, four
+also not a judgement: **the gate is a read**. Six conditions decide it, five
 reads answer them, and every read is a call the reference file for the harness
 in use names. A gate that has to be weighed is a gate that gets taken to the
 user, and the user is not the one who can answer it.
@@ -540,32 +543,52 @@ user, and the user is not the one who can answer it.
 Take the reads in this order. The first that does not hold is where the
 sequence stops, and the reason is stated in one line.
 
-1. **The pull request's readiness state**, which answers two conditions at
-   once: the branch is current with its base and merges cleanly, and CI is
-   green on the head commit. GitHub's merge state is the answer and `clean`
-   is the only yes. `behind` is a base the branch does not carry, so `Keep it
-   current` runs its merge and this read is taken again; `dirty` is that
-   step's conflict; `unstable` is a check that is no longer green; `blocked`
-   is a required review outstanding; `unknown` is GitHub saying it cannot
-   answer yet. This read comes first because the merge moves the head: every
+1. **The branch against its base**, for the condition that it is current and
+   merges cleanly. GitHub's merge state answers it, and only three of its
+   values are this read's: `behind` is a base the branch does not carry, so
+   `Keep it current` runs its merge and this read is taken again; `dirty` is
+   that step's conflict; `unknown` is GitHub saying it cannot answer yet,
+   which is a wait under `review-cycle`'s `How to wait` rather than either
+   answer. This read comes first because the merge moves the head: every
    condition below is about the head a reviewer will actually read, and a
    merge run after them would leave them answered about a commit nobody sees.
-   **Pending is not green**, and `unknown` is not a no — both are waited for
-   the way `review-cycle`'s `How to wait` says, rather than treated as either
-   answer. The mechanism has one home, and it is not this one.
-2. **Every review thread**, from any reviewer and not only from the round at
+
+   **The other values are not this gate's business, and reading them as
+   stops is what jams it shut.** A draft reports `draft` or, where the
+   repository requires a review, `blocked` — measured on a draft of this
+   toolkit with every check green and the branch current, 2026-09-18, which
+   answered `blocked`. Neither describes the work: `draft` is the state this
+   gate exists to change, and `blocked` is the approval that marking ready is
+   what asks for. Treating either as a no is the stall in its purest form —
+   a pull request held draft until it is approved, and unapprovable until it
+   is out of draft. `has_hooks` is a passing state with a hook configured.
+   **`clean` is the yes only after the draft is cleared**, which is why
+   `The milestone` reads this same field again and this gate does not wait
+   for that value.
+2. **CI on the head commit**, for the condition that it is green. Read the
+   checks themselves rather than inferring them from the merge state, which
+   reports a draft's status before its checks': the union of check runs and
+   commit statuses that `review-cycle`'s wait reads is the same union here,
+   and the reference file names what answers it on this harness. **Pending is not green** — wait
+   for it the way `How to wait` says, rather than treating an unreported
+   check as either answer. The mechanism has one home, and it is not this
+   one.
+3. **Every review thread**, from any reviewer and not only from the round at
    `Review the head`. An unanswered or unresolved thread is work at `Fix,
    answer, resolve, push`, never a reason to stay draft. Every finding that
    round raised is fixed, or rejected with a reason on its thread, or
    deferred with the user's agreement.
-3. **The review record on the pull request.** The independent verification
+4. **The review record on the pull request.** The independent verification
    record for the scope is clear on the current behavioral head: the last
-   pushed fix has a clear pass, or `review-cycle`'s wall has been reported.
-   The bound on those passes is that skill's, cited here rather than
-   restated. **A full review that raised no actionable finding leaves nothing
-   to verify**, and this condition is satisfied with no pass owed — a clean
-   review produces no verification record, so waiting for one waits forever.
-4. **The pull request waits on no human action.** `pr-body`'s human-action
+   pushed fix has a pass that found nothing. The bound on those passes is
+   `review-cycle`'s, cited here rather than restated — and its wall is the
+   opposite of this condition, never a way through it. A walled scope has
+   outstanding defects and stays a draft, as do an incomplete pass and an
+   unavailable reviewer. **A full review that raised no actionable finding
+   leaves nothing to verify**, and this condition is satisfied with no pass
+   owed — a clean review produces no verification record, so waiting for one
+   waits forever.
+5. **The pull request waits on no human action.** `pr-body`'s human-action
    notice marks a pull request whose Tofu changes must be applied, and the
    updated state committed, before it merges — a bar only a person clears,
    and unlike a pending check nothing will ever report it. `Ready for review`
@@ -753,10 +776,11 @@ it to report, and wait on something other than an answer.
   until the branch carries the result. An apply is not something CI reports,
   and no check a session can read answers for it.
 
-The round at `Review the head` and `Fix, answer, resolve, push` has two stops
-of its own — its own wait on CI, and a review finding whose fix is a real
-trade-off. Both are `review-cycle`'s, and the second is `judgement-call`'s gate
-applied inside it.
+The round at `Review the head` and `Fix, answer, resolve, push` has three stops
+of its own — its own wait on CI, a review finding whose fix is a real
+trade-off, and fixes that will not converge, which is the wall at `Verify the
+fix delta`. All three are `review-cycle`'s; the second is `judgement-call`'s
+gate applied inside it, and the third reports rather than asks.
 
 Everything else runs through. No permission is asked to open the issue, to
 claim it, to commit, to push, to open the draft, or to mark it ready. The last
