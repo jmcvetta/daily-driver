@@ -145,9 +145,12 @@ manifest or a lockfile.
 
 ## Delegation
 
-Plan first, then delegate the implementation. Quota is the user's money. Do
-not spend a capable model on work that does not need capability, and do not
-open a subagent per task where one subagent can take the batch. Open separate
+Plan first, then delegate what runs in parallel. Delegation buys parallelism;
+where there is none to buy it buys a second copy of the context you are
+already holding, so a single task stays in the session that took it on.
+Quota is the user's money. Do not spend a capable model on work that does not
+need capability, and do not open a subagent per task where one subagent can
+take the batch. Open separate
 subagents only where the work genuinely requires them. Subagents touching
 different files run in the background in parallel, all launched before you
 start your own share of the plan.

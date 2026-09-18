@@ -29,14 +29,14 @@ write lives.
 The implementor
 ===============
 
-| Step | Operation | Call |
-| ---- | --------- | ---- |
-| `Implement` | Dispatch the implementor | `mcp__Claude_Code_Remote__create_session`, the harness's primary route; else the `Agent` tool — one implementor per undertaking |
-
-`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
-surface that has the route, and the orchestrator keeps responsibility for
-claim, pull request, watch and gates. Claude Code has both routes; the session
-route is embark's primary on this harness.
+No route, and that is the rule rather than a gap. `SKILL.md`'s `Implement`
+owns it: the session running the sequence writes the code itself, so nothing
+here dispatches `mcp__Claude_Code_Remote__create_session` or the `Agent` tool
+for the body of the work. Both routes exist on this harness and both belong to
+`embark`, which uses them to run several task issues at once — the web session
+is its primary route here. The one dispatch inside this sequence is
+`review-cycle`'s briefed subagent at `Verify the fix delta`, named in that
+skill's own reference file.
 
 
 The pull request
@@ -54,7 +54,8 @@ The pull request
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/claude.md` names the full-review surface and
-the unavailable-delta stop that keeps the pull request draft.
+the briefed-subagent route `Verify the fix delta` runs on; a pass that dispatch
+genuinely fails is what keeps the pull request draft.
 
 
 The session

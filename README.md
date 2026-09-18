@@ -77,7 +77,7 @@ every subagent. Nine sections:
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
 | Before you call it done | The project's own gates decide, not reasoning about them — and CI is where they run, not this machine. |
 | Dependencies | Added and pinned through the package manager; never a hand-edited manifest or lockfile. |
-| Delegation | Plan first, delegate the implementation, batch the subagents, spend no more quota than the work needs. |
+| Delegation | Plan first, delegate what runs in parallel, batch the subagents, spend no more quota than the work needs. |
 
 **What belongs there** is the admission test the file states on itself: a rule
 lives here only if it changes behaviour in most sessions, hangs off a nameable

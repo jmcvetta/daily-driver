@@ -236,7 +236,11 @@ Beyond the claim itself the comment always carries:
 - **A brief poem, in the claiming agent's own style, placed last** — after
   the branch, the model and the session, so that a reader looking for the
   branch or the model finds them in a fixed place and is never made to read
-  past verse to reach it. The style is the agent's own, and deliberately so:
+  past verse to reach it. Each line is written in italics — wrapped in
+  asterisks, line by line, as `HAIKU.md` at the repo root shows — because
+  italics designate the verse as poetry, so a reader never mistakes a line
+  of it for part of the claim data: the branch, the model, the session.
+  The style is the agent's own, and deliberately so:
   a pull request's salutation is classical and a task issue's opening verse
   is a haiku, but a claim is the agent's voice at the moment it takes the
   work.
@@ -260,8 +264,8 @@ implementation begins.
 
 **The claim's timestamp is the undertaking's clock start.** The comment's own
 `created_at` is what `The milestone` reads back when the pull request first
-reaches merge readiness — through resumes, through a delegated `Implement`,
-through whatever draft states the sequence has passed since. No timestamp is
+reaches merge readiness — through resumes, through whatever draft states the
+sequence has passed since. No timestamp is
 written into the claim for the milestone's sake: the durable start is the
 post, not a line in it. Where more than one comment carries the claim's
 shape — the collision the policy above permits — the earliest of them is the
@@ -272,18 +276,24 @@ was never posted leaves the milestone with no start to read, and
 5 — Implement
 -------------
 
-**Delegation is unconditional on a surface that has a subagent or session
-route.** The orchestrator dispatches an implementor subagent and keeps
-responsibility for the claim, the pull request, the watch and the gates; its
-context stays at orchestration size, whatever the task's size. The subagent is
-given the issue number and the instruction to undertake it — `embark`'s
-`Open the sessions` states the prompt, the cheaper-default model rule, and the
-advisor and strong-model review that surround a delegated implementor. The
-dispatched implementor is the rule's exception: it implements in its own
-session and does not re-dispatch — the delegation rule binds the session that
-dispatched it, not the one that was dispatched. Where the surface has no
-subagent route, the sequence runs in the session that invoked it, which is the
-implementor.
+**The session running this sequence writes the code itself.** No web session,
+no implementor subagent, no second context for the body of the work. An
+undertaking is one issue, and the hand that claimed it is the hand that
+implements it: a session that dispatches another session to undertake the
+issue it has already claimed buys a handoff, a second copy of the context and
+a second claim on the same branch, and buys nothing with them.
+
+**Subagents belong to the review round, not to the body of the work.**
+`review-cycle`'s `Verify the fix delta` dispatches a briefed subagent, and
+that is where a second reader earns its cost — the author of a delta cannot
+be an independent reader of it. That is the one dispatch this sequence makes:
+`Review the head` runs on the harness's own named review surface, which
+`review-cycle` says is the only thing it runs on.
+
+**Parallelism across issues is `embark`'s.** Where several task issues are
+worked at once, that skill opens a session or a subagent per task, and each of
+them runs this sequence in its own context. Delegation there is what buys the
+parallelism; delegation here duplicates a session that is already on the work.
 
 The constitution governs, under *While you write code*, *Before you commit* and
 *When you hit a wall*. Nothing about how to write or commit the code is decided
@@ -501,7 +511,8 @@ The gate
 
 The hand-typed prompt this skill replaces got three things wrong. Two of them
 were about the round rather than the sequence and left with it — `review-cycle`
-carries *review once per diff* and *a reviewer, not a subagent*. The third is
+carries *review once per diff* and *a briefed reviewer with a publication
+contract, not a bare dispatch*. The third is
 this skill's, and it is the one `Ready for review` turns on.
 
 Ready is a gate, not a step
@@ -596,8 +607,8 @@ What the report carries
 
 - **The timing, labelled as what it is** — wall-clock time from the claim to
   first merge readiness. It runs from the claim comment's timestamp, read
-  back off the issue whatever has happened since: resumes, a delegated
-  `Implement`, later returns to draft and out again. The claim's timestamp is
+  back off the issue whatever has happened since: resumes, later returns to
+  draft and out again. The claim's timestamp is
   the durable start, so a session arriving late never restarts the clock.
   Both ends are UTC timestamps — the start and the milestone — with the
   duration between them in words. The interval covers implementation, review,
@@ -610,10 +621,10 @@ What the report carries
   the work, exactly as reported — never a recalled revision — the agent
   harness by name and the version of it that a surface in the session can
   actually read, and the session identifier, linked where the harness offers
-  a link. A value no surface reports is `n/a`. Where `Implement` delegated
-  the work and the implementor's model or session is known and differs from
-  the orchestrator's, both are named, each attributed to the role that did
-  it; attribution nobody reported is not reconstructed.
+  a link. A value no surface reports is `n/a`. One session did the work, so
+  one model and one session are named; where a resume moved the work to
+  another session, both are named in the order they ran, and attribution
+  nobody reported is not reconstructed.
 
 - **The head it binds to.** The pull request's head SHA and the milestone
   timestamp. The comment is a statement about that head: a later head —

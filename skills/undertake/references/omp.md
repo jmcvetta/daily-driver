@@ -29,13 +29,12 @@ read-first and the Claude route does.
 The implementor
 ===============
 
-| Step | Operation | Call |
-| ---- | --------- | ---- |
-| `Implement` | Dispatch the implementor subagent | `task`, one subagent per undertaking |
-
-`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
-surface that has the route, and the orchestrator keeps responsibility for
-claim, pull request, watch and gates. Omp has the route.
+No route, and that is the rule rather than a gap. `SKILL.md`'s `Implement`
+owns it: the session running the sequence writes the code itself, so `task`
+dispatches no implementor here. Omp has the route and it belongs to `embark`,
+which uses it to run several task issues at once. The one dispatch inside this
+sequence is `review-cycle`'s briefed subagent at `Verify the fix delta`, named
+in that skill's own reference file.
 
 
 The pull request

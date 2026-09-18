@@ -39,14 +39,12 @@ answer. So does `issue-labels`, whose `references/codex.md` says why
 The implementor
 ===============
 
-| Step | Operation | Call |
-| ---- | --------- | ---- |
-| `Implement` | Dispatch the implementor subagent | `multi_agent_v1`, one delegation per undertaking |
-
-`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
-surface that has the route, and the orchestrator keeps responsibility for
-claim, pull request, watch and gates. Codex has the route through the
-delegation namespace.
+No route, and that is the rule rather than a gap. `SKILL.md`'s `Implement`
+owns it: the session running the sequence writes the code itself, so
+`multi_agent_v1` carries no delegation here. That namespace belongs to
+`embark`, which uses it to run several task issues at once. The one dispatch
+inside this sequence is `review-cycle`'s briefed subagent at `Verify the fix
+delta`, named in that skill's own reference file.
 
 
 The pull request
@@ -64,7 +62,8 @@ The pull request
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/codex.md` names the full-review surface and
-the unavailable-delta stop that keeps the pull request draft.
+the briefed-subagent route `Verify the fix delta` runs on; a pass that dispatch
+genuinely fails is what keeps the pull request draft.
 
 
 The session
