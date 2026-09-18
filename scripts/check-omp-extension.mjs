@@ -868,6 +868,34 @@ checkGuard(
 	worktrees.outside,
 );
 
+// A `--git-dir` whose value expands hides that repository's own config, so
+// the lookup falls back to the directory it can reach. Refusing instead would
+// deny every read-only command carrying such a selector, wherever it runs.
+checkGuard(
+	"a read-only command with an unreadable --git-dir still passes",
+	false,
+	"bash",
+	{ command: 'd=.git; git --git-dir="$d" lg -1' },
+	worktrees.task,
+);
+
+checkGuard(
+	"a read-only command with an unreadable GIT_DIR still passes",
+	false,
+	"bash",
+	{ command: 'd=.git; GIT_DIR="$d" git log --oneline -1' },
+	worktrees.task,
+);
+
+checkGuard(
+	"an alias reached through an unreadable --git-dir is still refused",
+	true,
+	"bash",
+	{ command: 'd=.git; git --git-dir="$d" co feature/x' },
+	worktrees.primary,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
 // Config carried in the environment defines an alias exactly as `-c` does.
 checkGuard(
 	"an alias defined through GIT_CONFIG_KEY is refused rather than read past",

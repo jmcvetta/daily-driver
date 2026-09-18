@@ -1146,10 +1146,9 @@ function renamingInvocation(invocation) {
  * own — `alias.co = -C /elsewhere checkout` selects another repository, and
  * `alias.x = -c alias.y=switch y` renames again.
  *
- * Three cases cannot be resolved and are marked as renaming rather than
- * answered: an expansion Git hands to a shell, a chain longer than the limit,
- * and a `--git-dir` whose value expands, which selects a config the guard
- * cannot read. A third has no lookup to make at all — an invocation whose own
+ * Two cases cannot be resolved and are marked as renaming rather than
+ * answered: an expansion Git hands to a shell, and a chain longer than the
+ * limit. A third has no lookup to make at all — an invocation whose own
  * directory expanded, and a shell whose directory the walker lost — and the
  * fallback is the directory the tool was called in, which is the repository
  * whose config the aliases almost certainly come from. With no directory
@@ -1164,14 +1163,19 @@ function gitInvocation(words, shellCwd, start, toolCwd) {
 			return invocation;
 		}
 		if (recognizedSubcommand(invocation.subcommand)) return invocation;
-		// A selector the guard could not read is a config it cannot ask about.
-		if (invocation.gitDir === UNREADABLE) return renamingInvocation(invocation);
+		// A `--git-dir` whose value expands selects a config the guard cannot
+		// read. The lookup falls back to the directory it can reach, which is
+		// where the aliases almost certainly are; refusing instead would deny
+		// `git --git-dir="$X" status` everywhere, and a rewrite the guard does
+		// recognize is already refused for that selector alone.
+		const lookupGitDir =
+			invocation.gitDir === UNREADABLE ? null : invocation.gitDir;
 		const lookupCwd = invocation.cwd ?? toolCwd ?? null;
-		if (lookupCwd === null && invocation.gitDir === null) return invocation;
+		if (lookupCwd === null && lookupGitDir === null) return invocation;
 		if (expansions >= ALIAS_EXPANSION_LIMIT) return renamingInvocation(invocation);
 		const expansion = aliasExpansion(
 			lookupCwd,
-			invocation.gitDir,
+			lookupGitDir,
 			invocation.subcommand,
 		);
 		if (expansion === null) return invocation;
