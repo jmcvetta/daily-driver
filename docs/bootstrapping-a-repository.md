@@ -195,8 +195,9 @@ it starts, and loads each as `<name>@synced` — into
 `~/.claude/plugins/synced/`, with no marketplace registration and no
 `installed_plugins.json` entry. **The route is not the cloud's alone.** A
 terminal session signed in with the same account syncs them too, from Claude
-Code v2.1.273, into the same directory — which makes it the one half of this
-route a laptop can check, precedence included, without a container. So the Setup script's verification line is
+Code v2.1.273, into the same directory — documented rather than measured here,
+and the one half of this route a laptop could settle, precedence included,
+without a container. So the Setup script's verification line is
 blind to it by construction: a synced plugin is live with the file that line
 greps still `{"version": 2, "plugins": {}}`. `claude plugin list` may answer
 where that line cannot: [Anthropic's documentation][synced] says it prints
@@ -205,7 +206,7 @@ rather than measured here. Ask the session instead.
 
 Enabling is done from the web console — **Customize** in the sidebar, the
 **Plugins** tab, then either **Browse plugins** for a listed one or the upload
-beside it for a `.zip` you built (under 50 MB). It needs a paid plan. Two
+beside it for a `.zip` you built. It needs a paid plan. Two
 consequences for a plugin distributed the way this one is:
 
 - **It sidesteps the snapshot.** The environment keys its filesystem snapshot
@@ -220,8 +221,8 @@ consequences for a plugin distributed the way this one is:
 
 A same-named plugin from any other source — a marketplace install, the
 repository stanza, `--plugin-dir` — wins, and Claude Code reports the synced
-copy as not loaded. So the two cloud routes do not stack: pick one per
-environment, or the one you did not think you were testing is the one you are.
+copy as not loaded. So the two routes do not stack: pick one per environment,
+or the one you did not think you were testing is the one you are.
 
 The checks below are asked differently here. `claude plugin details` takes the
 plugin's ID, which is `daily-driver@synced` on this route and not
@@ -230,7 +231,8 @@ plugin's ID, which is `daily-driver@synced` on this route and not
 ends with one — is `~/.claude/plugins/synced/` rather than a marketplace cache
 nothing filled.
 
-None of this section's cloud behaviour has been measured here; it is
+None of this section's behaviour has been measured here, in the cloud or on a
+laptop; it is
 [Anthropic's documentation][synced] plus the shape of the failure the rest of
 this page exists for. Asking a session is what would settle it, which is the
 third of the checks below.
