@@ -14,12 +14,16 @@
  *
  *     the guard allowed it  =>  the primary checkout did not change
  *
- * The property is asserted over the commands this guard claims, which is the
- * `git checkout` and `git switch` family #269 names. `git reset`, `restore`,
- * `stash`, `merge`, `rebase` and `pull` move the primary too and are not
- * recognized yet; #289 carries them, and no shape here asserts otherwise. A
- * check that claimed the whole surface while the recognizer covered part of it
- * would be the overstatement this guard was rewritten to stop making.
+ * The property is asserted over the commands this guard claims. #269 named
+ * `git checkout` and `git switch`; #289 widened the claim to every subcommand
+ * that rewrites tracked files in the working tree, and the shapes below cover
+ * `reset --hard`, `restore`, `merge`, `rebase`, `cherry-pick` and `revert`
+ * alongside them. What the guard still does not claim gets no shape here: `git
+ * reset --soft` moves HEAD and stages the difference without touching a
+ * working-tree file, so it is allowed, and it would fail the property below —
+ * which reads the primary's HEAD as well as its files. A check that claimed
+ * the whole surface while the recognizer covered part of it would be the
+ * overstatement this guard was rewritten to stop making.
  *
  * A guard that denies something harmless fails no assertion here. That
  * asymmetry is the inversion #269 asks for: a false positive costs the model
@@ -106,6 +110,14 @@ function makeFixture() {
 	writeFileSync(resolve(primary, "tracked.txt"), "second\n");
 	git(primary, "commit", "-am", "Second commit");
 	git(primary, "branch", "feature/y", "HEAD~1");
+	// A branch genuinely ahead of master, so a merge, a rebase and a
+	// cherry-pick against it move the primary rather than reporting that there
+	// was nothing to do.
+	git(primary, "switch", "-c", "feature/ahead");
+	writeFileSync(resolve(primary, "ahead.txt"), "ahead\n");
+	git(primary, "add", "ahead.txt");
+	git(primary, "commit", "-m", "Ahead commit");
+	git(primary, "switch", "master");
 	git(primary, "worktree", "add", "-b", "feature/task", task);
 	git(primary, "worktree", "add", "--detach", detached);
 	return { root, primary, task, detached };
@@ -139,7 +151,7 @@ function blocked(command, cwd) {
  * command run from a task worktree is one the guard has no other reason to
  * refuse, so anything that reaches the primary from there is a hole.
  */
-function shapes({ primary, task, detached }) {
+function shapes({ root, primary, task, detached }) {
 	const move = (cwd) => `git -C ${cwd} switch feature/y`;
 	const cases = [];
 	const add = (label, from, command) => cases.push({ label, from, command });
@@ -242,6 +254,33 @@ function shapes({ primary, task, detached }) {
 	add("checkout with pathspec", primary, "git checkout -- tracked.txt");
 	add("checkout a branch", primary, "git checkout feature/y");
 	add("checkout new branch", primary, "git checkout -b feature/z");
+
+	// The working-tree rewrites beyond checkout and switch, which #289 added
+	// to the claim. Each one reaches the primary from the task worktree, where
+	// the guard has no other reason to refuse it.
+	add("reset --hard", task, `git -C ${primary} reset --hard HEAD~1`);
+	add("restore from a source", task, `git -C ${primary} restore --source=HEAD~1 tracked.txt`);
+	add("merge a branch ahead", task, `git -C ${primary} merge feature/ahead`);
+	add("rebase onto a branch ahead", task, `git -C ${primary} rebase feature/ahead`);
+	add("cherry-pick", task, `git -C ${primary} cherry-pick feature/ahead`);
+	add("revert the head commit", task, `git -C ${primary} revert --no-edit HEAD`);
+	add("cd then reset --hard", task, `cd ${primary} && git reset --hard HEAD~1`);
+	add("git rm", task, `git -C ${primary} rm -r tracked.txt`);
+	add("git mv", task, `git -C ${primary} mv tracked.txt other.txt`);
+	add("bisect start", task, `git -C ${primary} bisect start HEAD HEAD~1`);
+	add("sparse-checkout set", task, `git -C ${primary} sparse-checkout set nothing`);
+
+	// An alias renames a guarded subcommand into one the recognizer has never
+	// met, and a `cd` that fails leaves the shell in the primary. Both were
+	// allowed until the review of #297 measured them here.
+	add("inline alias definition", task, `git -C ${primary} -c alias.q=switch q feature/y`);
+	add("alias through --config-env", task, `SWV=switch git -C ${primary} --config-env=alias.q=SWV q feature/y`);
+	add("config value that expands", task, 'git -c core.pager="$PAGER" log --oneline -1');
+	add("substituted alias name", task, `git -C ${primary} -c "$(echo alias.q)=switch" q feature/y`);
+	add("backticked alias name", task, `git -C ${primary} -c \`echo alias.q\`=switch q feature/y`);
+	add("substituted --config-env alias name", task, `SWV=switch git -C ${primary} --config-env="$(echo alias.q)=SWV" q feature/y`);
+	add("cd into a missing directory", primary, `cd ${root}/never-created\ngit switch feature/y`);
+	add("restore in the primary", primary, "git restore --source=HEAD~1 tracked.txt");
 
 	// The detached worktree, and mutations that should run untouched.
 	add("switch in a detached worktree", detached, "git switch feature/y");

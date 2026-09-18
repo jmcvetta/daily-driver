@@ -6,7 +6,9 @@
  * runtime-adapter contract #145 delivers:
  *
  *   - Omp's `ask` tool is blocked with actionable text;
- *   - direct writes, edits, and branch switches in a primary worktree are
+ *   - direct writes, edits, and every Git command that rewrites the working
+ *     tree — checkout, switch, reset, restore, stash, merge, rebase, pull,
+ *     apply, am, cherry-pick, revert, clean — in a primary worktree are
  *     blocked, as are file mutations in a detached worktree;
  *   - attached feature-worktree mutations, worktree creation, detached branch
  *     attachment, non-Git paths, and synthetic devices pass;
@@ -214,7 +216,11 @@ function makeWorktreeFixture() {
 	runGit(primary, "worktree", "add", "--detach", detached);
 	const primaryFileLink = resolve(task, "primary-file-link.txt");
 	symlinkSync(resolve(primary, "tracked.txt"), primaryFileLink);
-	return { root, primary, task, detached, outside, primaryFileLink };
+	// A symlinked route to the task worktree: a symlinked worktrees root, a
+	// symlinked home, `/tmp` on macOS. A `cd` through one really does arrive.
+	const taskLink = resolve(root, "task-link");
+	symlinkSync(task, taskLink);
+	return { root, primary, task, taskLink, detached, outside, primaryFileLink };
 }
 
 const worktrees = makeWorktreeFixture();
@@ -498,10 +504,18 @@ checkGuard(
 );
 
 checkGuard(
-	"a primary checkout path restore is not mistaken for a branch switch",
-	false,
+	"a primary checkout path restore is blocked, as `git restore` is",
+	true,
 	"bash",
 	{ command: "git checkout -- tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a bare git checkout in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git checkout" },
 	worktrees.primary,
 );
 
@@ -555,6 +569,610 @@ checkGuard(
 			"switch feature/another-task",
 	},
 	worktrees.primary,
+);
+
+// --- the working-tree rewrites beyond checkout and switch (#289) -----------
+// Each pair is one subcommand: the destructive form denied in the primary
+// checkout, and — where the manual gives it one — the harmless form that must
+// stay available, so the guard does not become an obstacle to ordinary work.
+
+checkGuard(
+	"git reset --hard in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git reset --hard HEAD~1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git reset --merge in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git reset --merge" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git reset --keep in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git reset --keep HEAD~1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a reset mode the guard has never met is blocked, not assumed harmless",
+	true,
+	"bash",
+	{ command: "git reset --some-future-mode HEAD~1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a reset mode that expands is blocked rather than read",
+	true,
+	"bash",
+	{ command: "m=--hard; git reset $m HEAD~1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git reset --soft in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git reset --soft HEAD~1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an index-only git reset in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git reset -q -- tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git reset --hard inside an attached feature worktree passes",
+	false,
+	"bash",
+	{ command: "git reset --hard HEAD~1" },
+	worktrees.task,
+);
+
+checkGuard(
+	"git rm in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git rm -r tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git rm --cached in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git rm --cached tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git mv in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git mv tracked.txt other.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git mv --dry-run in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git mv -n tracked.txt other.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git bisect start in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git bisect start HEAD HEAD" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git bisect log in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git bisect log" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git sparse-checkout set in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git sparse-checkout set nothing" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git sparse-checkout list in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git sparse-checkout list" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git submodule update --force in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git submodule update --force" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git submodule status in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git submodule status" },
+	worktrees.primary,
+);
+
+// An alias renames a guarded subcommand into one the recognizer has never
+// met, so a command that defines one carries a subcommand it cannot read.
+checkGuard(
+	"an inline alias definition is refused rather than read past",
+	true,
+	"bash",
+	{ command: `git -C "${worktrees.primary}" -c alias.q=switch q feature/x` },
+	worktrees.task,
+);
+
+checkGuard(
+	"an inline alias definition with an attached value is refused too",
+	true,
+	"bash",
+	{ command: "git -calias.q=switch q feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an ordinary -c setting is still read past",
+	false,
+	"bash",
+	{ command: "git -c core.pager=cat log --oneline -1" },
+	worktrees.primary,
+);
+
+// A `cd` whose target does not exist fails, and the shell stays in the
+// primary: reading it as moved placed every later command somewhere the
+// shell never went.
+checkGuard(
+	"a rewrite after a cd into a directory that does not exist is refused",
+	true,
+	"bash",
+	{
+		command: `cd "${resolve(worktrees.root, "never-created")}"\ngit switch feature/x`,
+	},
+	worktrees.primary,
+	UNANCHORED_PATH_BLOCK_REASON,
+);
+
+checkGuard(
+	"a pushd into a directory that does not exist is refused the same way",
+	true,
+	"bash",
+	{
+		command: `pushd "${resolve(worktrees.root, "never-created")}"\ngit switch feature/x`,
+	},
+	worktrees.primary,
+	UNANCHORED_PATH_BLOCK_REASON,
+);
+
+checkGuard(
+	"an attached --config-env alias definition is refused too",
+	true,
+	"bash",
+	{
+		command:
+			`SWV=switch git -C "${worktrees.primary}" ` +
+			"--config-env=alias.q=SWV q feature/x",
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a separate --config-env alias definition is refused too",
+	true,
+	"bash",
+	{ command: "SWV=switch git --config-env alias.q=SWV q feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an include that can carry an alias is refused",
+	true,
+	"bash",
+	{ command: "git -c include.path=/tmp/aliases q feature/x" },
+	worktrees.primary,
+);
+
+// A setting the guard cannot read is not refused everywhere: it makes the
+// invocation a rewrite, and the ordinary placement decides. So it costs the
+// primary checkout, where the guard is meant to be an obstacle, and costs
+// neither the task worktree nor a directory outside Git.
+checkGuard(
+	"a -c setting that expands is refused in the primary checkout",
+	true,
+	"bash",
+	{ command: 'git -c core.pager="$PAGER" log --oneline -1' },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a -c setting that expands passes in a feature worktree",
+	false,
+	"bash",
+	{ command: 'git -c core.pager="$PAGER" log --oneline -1' },
+	worktrees.task,
+);
+
+checkGuard(
+	"a -c setting that expands passes outside Git",
+	false,
+	"bash",
+	{ command: 'git -c core.pager="$PAGER" --version' },
+	worktrees.outside,
+);
+
+// A substitution standing for the setting's name reaches the tokenizer with
+// the substitution already removed, so the text is not the name Git will
+// see. Reading it more closely is what let this through the first time.
+checkGuard(
+	"a substituted setting name cannot smuggle an alias past the guard",
+	true,
+	"bash",
+	{
+		command: `git -C "${worktrees.primary}" -c "$(echo alias.q)=switch" q feature/x`,
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a backticked setting name cannot either",
+	true,
+	"bash",
+	{
+		command:
+			`git -C "${worktrees.primary}" -c \`echo alias.q\`=switch q feature/x`,
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a substituted --config-env name cannot either",
+	true,
+	"bash",
+	{
+		command:
+			`SWV=switch git -C "${worktrees.primary}" ` +
+			'--config-env="$(echo alias.q)=SWV" q feature/x',
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"a -c setting that expands whole is refused",
+	true,
+	"bash",
+	{ command: 'git -c "$setting" q feature/x' },
+	worktrees.primary,
+);
+
+// A `cd` through a symlink arrives where the symlink points, so the shell
+// really is in the task worktree and the work that follows is sanctioned.
+checkGuard(
+	"a rewrite after a cd through a symlinked task worktree passes",
+	false,
+	"bash",
+	{ command: `cd "${worktrees.taskLink}" && git rm -r tracked.txt` },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a cd into a path that exists but is a file is refused",
+	true,
+	"bash",
+	{
+		command: `cd "${resolve(worktrees.primary, "tracked.txt")}"\ngit switch feature/x`,
+	},
+	worktrees.primary,
+	UNANCHORED_PATH_BLOCK_REASON,
+);
+
+// The whole widened set stays available where the work belongs.
+checkGuard(
+	"the widened set passes inside an attached feature worktree",
+	false,
+	"bash",
+	{
+		command:
+			"git restore tracked.txt && git stash pop && " +
+			"git merge feature/another-task && git rebase master && " +
+			"git cherry-pick HEAD~1 && git revert HEAD && " +
+			"git apply ../fix.patch && git clean -fd && git pull",
+	},
+	worktrees.task,
+);
+
+checkGuard(
+	"git restore in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git restore tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git restore --staged --worktree is blocked, as it writes both",
+	true,
+	"bash",
+	{ command: "git restore --staged --worktree tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a bundled -SW is read as --staged --worktree and blocked",
+	true,
+	"bash",
+	{ command: "git restore -SW tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git restore --staged in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git restore --staged tracked.txt" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git stash in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git stash" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git stash pop in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git stash pop" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git stash apply in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git stash apply stash@{0}" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git stash push in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: 'git stash push -m "wip" tracked.txt' },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a stash subcommand the guard has never met is blocked",
+	true,
+	"bash",
+	{ command: "git stash some-future-verb" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git stash list in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git stash list" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git stash show in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git stash show -p stash@{0}" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git stash drop in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git stash drop stash@{0}" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git merge in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git merge feature/another-task" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git merge --abort in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git merge --abort" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git merge-base in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git merge-base master HEAD" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git rebase in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git rebase master" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git rebase --continue in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git rebase --continue" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git pull in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git pull origin master" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git fetch in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git fetch origin master" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git cherry-pick in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git cherry-pick HEAD~1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git revert in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git revert --no-commit HEAD" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git am in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git am ../patch.mbox" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git apply in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git apply ../fix.patch" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git apply --index is blocked, as it writes the working tree too",
+	true,
+	"bash",
+	{ command: "git apply --index ../fix.patch" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git apply --check in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git apply --check ../fix.patch" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git apply --cached in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git apply --cached ../fix.patch" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git clean -fd in the primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git clean -fd" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git clean --dry-run in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git clean --dry-run" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"git clean -n in the primary worktree passes",
+	false,
+	"bash",
+	{ command: "git clean -n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an ordinary read of the primary worktree still passes",
+	false,
+	"bash",
+	{ command: "git status --porcelain && git log --oneline -1 && git diff" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a -C rewrite cannot reach the primary from a feature worktree",
+	true,
+	"bash",
+	{ command: `git -C "${worktrees.primary}" reset --hard HEAD~1` },
+	worktrees.task,
+);
+
+checkGuard(
+	"a cd then rewrite cannot reach the primary from a feature worktree",
+	true,
+	"bash",
+	{ command: `cd "${worktrees.primary}" && git stash pop` },
+	worktrees.task,
+);
+
+checkGuard(
+	"--work-tree cannot direct a rewrite into primary files",
+	true,
+	"bash",
+	{
+		command:
+			`git --git-dir="${resolve(worktrees.task, ".git")}" ` +
+			`--work-tree="${worktrees.primary}" restore tracked.txt`,
+	},
+	worktrees.task,
 );
 
 checkGuard(
@@ -692,6 +1310,84 @@ checkGuard(
 			"switch feature/wrong-place",
 	},
 	detachedPrimary.task,
+);
+
+// The exemption is for the attach, so it is granted to the two subcommands
+// that perform one. A rewrite that is not an attach destroys the detached
+// checkout's work exactly as it would an attached one.
+checkGuard(
+	"a reset inside a detached primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git reset --hard HEAD~1" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a stash pop inside a detached primary worktree is blocked",
+	true,
+	"bash",
+	{ command: "git stash pop" },
+	detachedPrimary.primary,
+);
+
+// The exemption is for the attach, and so is tested on the form. A pathspec
+// checkout and a forcing switch attach nothing and spend the checkout's
+// uncommitted work, so neither rides it.
+checkGuard(
+	"a pathspec checkout inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git checkout -- tracked.txt" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a commit-and-pathspec checkout inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git checkout HEAD -- tracked.txt" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a forcing checkout inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git checkout --force master" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a discarding switch inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git switch --discard-changes master" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"a detaching switch inside a detached primary is blocked",
+	true,
+	"bash",
+	{ command: "git switch --detach master" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"attaching a detached primary to an existing branch passes",
+	false,
+	"bash",
+	{ command: "git switch master" },
+	detachedPrimary.primary,
+);
+
+checkGuard(
+	"attaching a detached primary with checkout -b passes",
+	false,
+	"bash",
+	{ command: "git checkout -b feature/detached-primary master" },
+	detachedPrimary.primary,
 );
 
 checkGuard(
