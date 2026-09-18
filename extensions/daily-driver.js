@@ -93,9 +93,11 @@ export const UNREADABLE_COMMAND_BLOCK_REASON =
 export const GIT_UNAVAILABLE_BLOCK_REASON =
 	"Git could not be consulted, so this operation cannot be checked against " +
 	"the task worktree boundary. It is refused rather than allowed unchecked. " +
-	"Either `git` is missing from PATH, or the repository query timed out. Do " +
-	"not retry it blind: tell the user, so the cause is fixed before " +
-	"repository work continues.";
+	"Either `git` is missing from PATH, the repository query timed out, or " +
+	"Git refused the query \u2014 a `safe.directory` ownership refusal and a " +
+	"version too old for an option the guard uses are both that. Do not retry " +
+	"it blind: tell the user, so the cause is fixed before repository work " +
+	"continues.";
 
 /**
  * Git was never consulted: `git` is missing from PATH, or a query was killed
@@ -146,28 +148,66 @@ class UnanchoredPathError extends Error {
 export const REMINDER_CUSTOM_TYPE = "daily-driver.reminder";
 
 /**
- * Return command output, or null where `cwd` is not a usable Git repository.
- * The guard must fail open outside Git: ordinary files and synthetic tool
- * devices are not task worktrees. A non-zero exit is that answer from Git
- * itself; every other failure means Git never answered, which is a
- * `GitUnavailableError` so the caller can fail closed instead of mistaking an
- * unconsulted guard for a path outside Git.
+ * Git's own "this path is not in a repository" answer, as it reaches stderr.
+ * Every other non-zero exit is Git failing to answer rather than answering —
+ * a `safe.directory` refusal, an option an older Git does not know, a corrupt
+ * repository — and those must not be read as "no repository here".
+ *
+ * The match is on English because `gitEnvironment` pins the locale to `C` for
+ * the call; a translated Git would otherwise slip past it.
+ */
+const NOT_A_REPOSITORY = /^(?:fatal|error): not a git repository\b/imu;
+
+/**
+ * The environment Git is consulted in: the session's own, with the locale
+ * pinned so `NOT_A_REPOSITORY` reads a message Git wrote in English. `LC_ALL`
+ * settles every category; `LANGUAGE` is cleared because gettext consults it
+ * ahead of `LC_ALL` whenever the locale is not `C`, and an inherited value is
+ * one fewer thing to reason about.
+ */
+function gitEnvironment() {
+	return { ...process.env, LC_ALL: "C", LANGUAGE: "" };
+}
+
+/**
+ * Return command output, or null where Git answers that `cwd` is not in a
+ * repository. The guard must fail open outside Git: ordinary files and
+ * synthetic tool devices are not task worktrees. Only that one answer is read
+ * as an answer; every other failure — Git missing, a timeout, a
+ * `safe.directory` refusal, an unknown option — means Git never answered,
+ * which is a `GitUnavailableError` so the caller can fail closed instead of
+ * mistaking an unconsulted guard for a path outside Git.
  */
 function gitOutput(cwd, ...args) {
 	try {
 		return execFileSync("git", ["-C", cwd, ...args], {
 			encoding: "utf8",
-			stdio: ["ignore", "pipe", "ignore"],
+			stdio: ["ignore", "pipe", "pipe"],
 			timeout: 3000,
+			env: gitEnvironment(),
 		}).trim();
 	} catch (err) {
-		if (typeof err?.status === "number") return null;
-		const detail =
-			err?.code === "ENOENT" ? "git is not on PATH" : `${err?.code ?? err}`;
+		const stderr = typeof err?.stderr === "string" ? err.stderr : "";
+		if (typeof err?.status === "number" && NOT_A_REPOSITORY.test(stderr)) {
+			return null;
+		}
+		const detail = gitFailureDetail(err, stderr);
 		throw new GitUnavailableError(
 			`git ${args.join(" ")} in ${cwd} could not be run: ${detail}`,
 		);
 	}
+}
+
+/** Say why Git did not answer, in the terms an operator can act on. */
+function gitFailureDetail(err, stderr) {
+	if (err?.code === "ENOENT") return "git is not on PATH";
+	const message = stderr.trim().split("\n", 1)[0];
+	if (typeof err?.status === "number") {
+		return message === ""
+			? `it exited ${err.status} without explaining why`
+			: `it exited ${err.status}: ${message}`;
+	}
+	return `${err?.code ?? err}`;
 }
 
 /** Find and canonicalize the nearest existing directory for a Git lookup. */

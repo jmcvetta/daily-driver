@@ -1947,15 +1947,65 @@ function guardWithPath(binDir, target) {
 	return { decision: JSON.parse(child.stdout), stderr: child.stderr };
 }
 
-/** Two PATH directories: one with no `git`, one whose `git` always exits 128. */
+/**
+ * PATH directories holding one fake `git` each. `absent` holds none at all;
+ * every other entry exits 128 with the stderr Git itself writes for that
+ * case, because the guard now reads the message rather than the status.
+ */
 function makeFakeBinFixture() {
 	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-bin-"));
 	const absent = resolve(root, "absent");
-	const refusing = resolve(root, "refusing");
 	mkdirSync(absent);
-	mkdirSync(refusing);
-	writeFileSync(resolve(refusing, "git"), "#!/bin/sh\nexit 128\n", { mode: 0o755 });
-	return { root, absent, refusing };
+	/** Install a `git` that writes `stderr` to fd 2 and exits 128. */
+	const refusing = (name, stderr) => {
+		const dir = resolve(root, name);
+		mkdirSync(dir);
+		writeFileSync(
+			resolve(dir, "git"),
+			`#!/bin/sh\nprintf '%s\\n' ${JSON.stringify(stderr)} >&2\nexit 128\n`,
+			{ mode: 0o755 },
+		);
+		return dir;
+	};
+	return {
+		root,
+		absent,
+		notARepository: refusing(
+			"not-a-repository",
+			"fatal: not a git repository (or any of the parent directories): .git",
+		),
+		dubiousOwnership: refusing(
+			"dubious-ownership",
+			"fatal: detected dubious ownership in repository at '/home/user/repo'",
+		),
+		unknownOption: refusing("unknown-option", "error: unknown option `z'"),
+		silent: refusing("silent", ""),
+		localeSensitive: localeSensitiveGit(root),
+	};
+}
+
+/**
+ * A `git` that speaks English only under `LC_ALL=C`. It stands in for a Git
+ * whose messages are translated, so the fixture fails open only when the
+ * guard pinned the locale for the call.
+ */
+function localeSensitiveGit(root) {
+	const dir = resolve(root, "locale-sensitive");
+	mkdirSync(dir);
+	writeFileSync(
+		resolve(dir, "git"),
+		[
+			"#!/bin/sh",
+			'if [ "$LC_ALL" = C ] && [ -z "$LANGUAGE" ]; then',
+			"  echo 'fatal: not a git repository (or any of the parent directories): .git' >&2",
+			"else",
+			"  echo 'schwerwiegend: kein Git-Repository' >&2",
+			"fi",
+			"exit 128",
+		].join("\n") + "\n",
+		{ mode: 0o755 },
+	);
+	return dir;
 }
 
 const fakeBin = makeFakeBinFixture();
@@ -1971,8 +2021,46 @@ check("a missing git binary fails closed and reports why", () => {
 });
 
 check("git answering 'not a repository' still fails open", () => {
-	const { decision } = guardWithPath(fakeBin.refusing, worktrees.primary);
-	assert.equal(decision, null, "a non-zero exit is Git's own answer, not a fault");
+	const { decision } = guardWithPath(fakeBin.notARepository, worktrees.primary);
+	assert.equal(decision, null, "that message is Git's own answer, not a fault");
+});
+
+check("a dubious-ownership refusal fails closed", () => {
+	const { decision, stderr } = guardWithPath(
+		fakeBin.dubiousOwnership,
+		worktrees.primary,
+	);
+	assert.deepEqual(
+		decision,
+		{ block: true, reason: GIT_UNAVAILABLE_BLOCK_REASON },
+		"a safe.directory refusal is Git failing to answer, not answering",
+	);
+	assert.match(stderr, /dubious ownership/u, "the cause reaches the operator");
+});
+
+check("an option an older git rejects fails closed", () => {
+	const { decision } = guardWithPath(fakeBin.unknownOption, worktrees.primary);
+	assert.deepEqual(decision, {
+		block: true,
+		reason: GIT_UNAVAILABLE_BLOCK_REASON,
+	});
+});
+
+check("the guard pins git's locale, so the message it matches is English", () => {
+	// A `git` that answers "not a repository" only when the locale is pinned:
+	// unpinned, it writes a translated message the guard must not read as an
+	// answer. Fail-open here proves LC_ALL reached the call.
+	const { decision } = guardWithPath(fakeBin.localeSensitive, worktrees.primary);
+	assert.equal(decision, null, "git ran under LC_ALL=C");
+});
+
+check("a non-zero exit with no message fails closed", () => {
+	const { decision, stderr } = guardWithPath(fakeBin.silent, worktrees.primary);
+	assert.deepEqual(decision, {
+		block: true,
+		reason: GIT_UNAVAILABLE_BLOCK_REASON,
+	});
+	assert.match(stderr, /exited 128/u, "the bare status is reported as such");
 });
 
 // --- set_session_title ------------------------------------------------------
