@@ -491,6 +491,18 @@ interesting measures nothing. The honest report here is one sentence. The
 prompt says nothing about how to report, how long to be, or brevity — that
 steer is what the row exists to exclude.
 
+The fixture must also neutralise the constitution's *own* post-work rules, not
+only the work's interest. The constitution tells the agent to commit as it
+works and to leave nothing uncommitted, and it is in force in the treated arm
+alone — so a sandbox that is not a git repository hands that arm `fatal: not a
+git repository`, a real anomaly its report has to carry, and makes the treated
+report longer for a reason that is not concision. A `pre_run` command builds
+the repository and commits the fixture, so the obligation is met in silence.
+The rubric completes the same thought: a commit the agent made is a fact about
+what happened, and only a commit it merely proposed is an unsolicited next
+step. A rule that required the commit and then charged for mentioning it would
+be signed against the arm it is meant to measure.
+
 Two `agent_judge` graders, each able to fail the row alone. The floor states
 the rename was made; without it the fluff grader would pay best for silence,
 since a report containing nothing contains no fluff. The fluff grader at weight
