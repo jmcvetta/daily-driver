@@ -17,9 +17,10 @@ description: >-
 
 # Review cycle
 
-One full review per scope, then at most two independent fix-delta passes. Every
-finding is answered, and a behavioral fix is verified without repeatedly
-auditing unchanged pull-request content. A standalone review records its
+One full review per scope, then an independent fix-delta pass for every batch
+of corrections pushed under it, until one comes back clean or three in a row
+do not. Every finding is answered, and a behavioral fix is verified without
+repeatedly auditing unchanged pull-request content. A standalone review records its
 findings and stops; it does not turn into an implementation run.
 
 The analysis is the harness's own review surface, and this skill does not
@@ -336,14 +337,31 @@ does not. Mixed changes require a pass. This content comparison also applies
 after a rebase, amend, or squash: a missing ancestor is never evidence of no
 change.
 
-**The limit is two passes per full-review scope.** The first pass either records
-no defects, or records concrete defects. Batch corrections for those defects,
-push them, obtain CI results, and make one final targeted confirmation of the
-correction delta and regression risk. A defect in that final pass, an incomplete
-pass, or an unavailable reviewer stops unattended progress and leaves (or
-returns) the pull request in draft. Commits, resumes, rewrites, late bot
-findings, and further CI fixes do not renew the limit. A materially changed
-scope runs `Review the head` as a new full round; it does not disguise a budget
+**A pushed fix batch always earns the pass that confirms it.** Verification of
+a pushed fix is never refused for having spent a budget: an unverified fix
+sitting on a pull request is worse than the pass that would have read it, and
+a caller left holding one has no way to reach its own gate. The bound below
+counts what actually goes wrong — fixes that do not converge — rather than
+passes as such.
+
+**The loop ends on the first clean pass.** A pass that records concrete
+defects earns one batched correction, pushed, with CI results obtained, and
+one more targeted pass over that correction delta and its regression risk.
+That repeats while the passes keep finding defects.
+
+**Three consecutive passes that each record defects is the wall**, in the
+sense the constitution's *When you hit a wall* gives it: the corrections are
+not converging, and a fourth attempt is the push-through that rule forbids.
+Stop there. Post the outstanding defects on the pull request, leave (or
+return) the pull request in draft, keep the caller's watch armed, and say in
+one line what is blocking. An incomplete pass and an unavailable reviewer
+stop unattended progress the same way, and neither is approval.
+
+The count runs from the first pass of the scope. A clean pass resets nothing,
+because a clean pass ends the loop. Commits, resumes, rewrites, late bot
+findings, and further CI fixes are not passes and do not move the count; only
+a pass that records defects moves it. A materially changed scope runs `Review
+the head` as a new full round and starts a new count; it does not disguise a
 reset as a fix.
 
 Rejected findings remain closed unless new evidence defeats the recorded
@@ -352,7 +370,7 @@ and does not consume a pass.
 
 Record every pass on the pull request: reviewed SHA, verified SHA, pass number,
 original findings and dispositions, outcome, actionable defects, and whether
-the cap was hit. Record reviewer token usage where the harness exposes it;
+the wall was reached. Record reviewer token usage where the harness exposes it;
 otherwise record `unavailable`, never an estimate or a telemetry service.
 
 
@@ -379,6 +397,10 @@ Where it stops and waits
   owns. That skill owns the gate, and it is the gate for every question this
   round would otherwise ask. A finding whose fix the standard already picks is
   not one of these — fix it and say so.
+- **Fixes that will not converge**, at `Verify the fix delta`: three
+  consecutive passes each recording defects. A report, not a question — the
+  defects go on the pull request, it stays draft, and nothing waits on an
+  answer.
 
 Everything else runs through. No permission is asked to fix a finding, to
 reply, to resolve, or to push.
