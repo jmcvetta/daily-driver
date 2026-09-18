@@ -1019,8 +1019,8 @@ function recognizedSubcommand(word) {
 /**
  * The configured expansion of one alias, or null where the word names none.
  *
- * The lookup runs in the invocation's own directory, because that is the
- * repository whose config Git would read. A config read Git cannot answer at
+ * The lookup runs in the invocation's own directory where it has one, because
+ * that is the repository whose config Git would read. A config read Git cannot answer at
  * all is a `GitUnavailableError` from `gitOutput`, not an absent alias: the
  * guard must not fail open on a Git it could not consult.
  *
@@ -1104,20 +1104,27 @@ function renamingInvocation(invocation) {
  * own — `alias.co = -C /elsewhere checkout` selects another repository, and
  * `alias.x = -c alias.y=switch y` renames again.
  *
- * Three cases cannot be resolved and are marked as renaming rather than
- * answered: a directory the lookup cannot run in, an expansion Git hands to a
- * shell, and a chain longer than the limit.
+ * Two cases cannot be resolved and are marked as renaming rather than
+ * answered: an expansion Git hands to a shell, and a chain longer than the
+ * limit. A third has no lookup to make at all — an invocation whose own
+ * directory expanded, and a shell whose directory the walker lost — and the
+ * fallback is the directory the tool was called in, which is the repository
+ * whose config the aliases almost certainly come from. With no directory
+ * anywhere the word stands unresolved: the guard cannot place such a command
+ * either way, and a rewrite it does recognize is already refused as
+ * unanchored.
  */
-function gitInvocation(words, shellCwd, start) {
+function gitInvocation(words, shellCwd, start, toolCwd) {
 	let invocation = parseGitInvocation(words, shellCwd, start);
 	for (let expansions = 0; ; expansions++) {
 		if (invocation === null || invocation.unreadable || invocation.mayRename) {
 			return invocation;
 		}
 		if (recognizedSubcommand(invocation.subcommand)) return invocation;
-		if (invocation.cwd === null) return renamingInvocation(invocation);
+		const lookupCwd = invocation.cwd ?? toolCwd ?? null;
+		if (lookupCwd === null) return invocation;
 		if (expansions >= ALIAS_EXPANSION_LIMIT) return renamingInvocation(invocation);
-		const expansion = aliasExpansion(invocation.cwd, invocation.subcommand);
+		const expansion = aliasExpansion(lookupCwd, invocation.subcommand);
 		if (expansion === null) return invocation;
 		const expanded = splitAliasExpansion(expansion);
 		if (expanded === null) return renamingInvocation(invocation);
@@ -1130,6 +1137,9 @@ function gitInvocation(words, shellCwd, start) {
 			invocation.cwd,
 			0,
 		);
+		// The expansion is read against the invocation's own directory, which
+		// may be unknown; the lookup directory stands in for the config, never
+		// for the place the command runs.
 		// An alias of options alone — `alias.p = -p` — runs no subcommand, so
 		// it moves nothing, and an expansion that selects no repository leaves
 		// the selectors the original invocation carried in force.
@@ -1544,7 +1554,7 @@ function walkShellCommand(command, toolCwd) {
 		if (arithmeticStack.at(-1) === true) continue;
 
 		for (const start of gitWordIndices(segment.words)) {
-			const invocation = gitInvocation(segment.words, shellCwd, start);
+			const invocation = gitInvocation(segment.words, shellCwd, start, toolCwd);
 			if (invocation === null || !rewritesWorkingTree(invocation)) continue;
 			if (invocation.unreadable) {
 				throw new UnreadableCommandError(

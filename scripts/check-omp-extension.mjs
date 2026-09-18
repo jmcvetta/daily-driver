@@ -852,10 +852,11 @@ checkGuard(
 	worktrees.task,
 );
 
-// A `-C` value that expands leaves no directory to ask Git about the alias
-// in, so the word the guard reads may be a guarded command in a coat.
+// A `-C` value that expands leaves the invocation with no directory of its
+// own, so the alias is looked up in the directory the tool was called in —
+// the same repository, and the same config.
 checkGuard(
-	"an unreadable -C leaves an unrecognized subcommand unresolvable",
+	"an alias behind an unreadable -C is resolved through the tool's directory",
 	true,
 	"bash",
 	{ command: `d="${worktrees.primary}"; git -C "$d" co feature/x` },
@@ -1997,6 +1998,17 @@ checkGuard(
 	false,
 	"bash",
 	{ command: "git status --short" },
+	undefined,
+);
+
+// With no directory anywhere there is no config to read, so the word stands
+// as itself. A rewrite the guard does recognize is still refused as
+// unanchored, which is the case above.
+checkGuard(
+	"an unrecognized subcommand without a working directory is left unresolved",
+	false,
+	"bash",
+	{ command: "git co feature/x" },
 	undefined,
 );
 
