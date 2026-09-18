@@ -39,12 +39,12 @@ The author records the result with `gh pr comment <number> --body-file <path>`:
 ```text
 Review verification
 scope reviewed: <sha>
-pass: <1|2>
+pass: <n>
 verified: <sha>
 findings: <finding ids and dispositions>
 outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>
-cap: <open|hit>
+wall: <open|reached>
 usage: unavailable
 ```
 
