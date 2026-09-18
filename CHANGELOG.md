@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.30.3](https://github.com/jmcvetta/daily-driver/compare/v0.30.2...v0.30.3) (2026-09-18)
+
+
+### Bug Fixes
+
+* **task-worktree:** resolve configured Git aliases in the worktree guard ([#305](https://github.com/jmcvetta/daily-driver/issues/305)) ([be8523d](https://github.com/jmcvetta/daily-driver/commit/be8523de9bdb65b32193c24425747394894e313c))
+
+## [0.30.2](https://github.com/jmcvetta/daily-driver/compare/v0.30.1...v0.30.2) (2026-09-18)
+
+
+### Bug Fixes
+
+* **skills:** mark a ready pull request ready, and verify every pushed fix ([#302](https://github.com/jmcvetta/daily-driver/issues/302)) ([135db21](https://github.com/jmcvetta/daily-driver/commit/135db217d86ac30c05d07d664f64d7087445aeb6))
+* **task-worktree:** read Git's answer rather than its exit status in the Omp guard ([#304](https://github.com/jmcvetta/daily-driver/issues/304)) ([0ea4979](https://github.com/jmcvetta/daily-driver/commit/0ea4979750ce05922708f682b88c06a7cb02a039))
+
 ## [0.30.1](https://github.com/jmcvetta/daily-driver/compare/v0.30.0...v0.30.1) (2026-09-18)
 
 

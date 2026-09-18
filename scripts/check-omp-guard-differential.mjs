@@ -118,6 +118,15 @@ function makeFixture() {
 	git(primary, "add", "ahead.txt");
 	git(primary, "commit", "-m", "Ahead commit");
 	git(primary, "switch", "master");
+	// Configured aliases: the spelling a guarded subcommand takes in a user's
+	// own config. Repository config is shared with every worktree cut from
+	// it, so a command run in the task worktree carries them too.
+	git(primary, "config", "alias.co", "checkout");
+	git(primary, "config", "alias.sw", "switch");
+	git(primary, "config", "alias.undo", "reset --hard");
+	git(primary, "config", "alias.lg", "log --oneline");
+	git(primary, "config", "alias.chain", "co");
+	git(primary, "config", "alias.visual", "!git switch feature/y");
 	git(primary, "worktree", "add", "-b", "feature/task", task);
 	git(primary, "worktree", "add", "--detach", detached);
 	return { root, primary, task, detached };
@@ -279,6 +288,16 @@ function shapes({ root, primary, task, detached }) {
 	add("substituted alias name", task, `git -C ${primary} -c "$(echo alias.q)=switch" q feature/y`);
 	add("backticked alias name", task, `git -C ${primary} -c \`echo alias.q\`=switch q feature/y`);
 	add("substituted --config-env alias name", task, `SWV=switch git -C ${primary} --config-env="$(echo alias.q)=SWV" q feature/y`);
+	// A configured alias, which is the same rename without a command line to
+	// read it off: the guard has to ask Git what the word means.
+	add("configured alias for switch", task, `git -C ${primary} sw feature/y`);
+	add("configured alias for checkout", task, `git -C ${primary} co feature/y`);
+	add("configured alias carrying --hard", task, `git -C ${primary} undo HEAD~1`);
+	add("alias naming another alias", task, `git -C ${primary} chain feature/y`);
+	add("shell alias in the primary", primary, "git visual");
+	add("aliased subcommand under --git-dir", task, `git --git-dir=${primary}/.git --work-tree=${primary} co feature/y`);
+	add("alias defined in the environment", task, `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.q GIT_CONFIG_VALUE_0=switch git -C ${primary} q feature/y`);
+	add("alias for a read-only command", primary, "git lg -1");
 	add("cd into a missing directory", primary, `cd ${root}/never-created\ngit switch feature/y`);
 	add("restore in the primary", primary, "git restore --source=HEAD~1 tracked.txt");
 

@@ -14,6 +14,9 @@
  *     attachment, non-Git paths, and synthetic devices pass;
  *   - a mutation the guard cannot place in a repository is refused, the way
  *     one it cannot ask Git about is;
+ *   - a subcommand that is a configured alias is read as the command it
+ *     expands to, and one whose expansion the guard cannot read is refused
+ *     where it would reach the primary;
  *   - daily_driver_set_session_title calls pi.setSessionName;
  *   - daily_driver_get_session reads the session manager's id and the model;
  *   - daily_driver_schedule emits exactly one reminder after its delay and
@@ -212,6 +215,18 @@ function makeWorktreeFixture() {
 	writeFileSync(resolve(primary, "tracked.txt"), "primary\n");
 	runGit(primary, "add", "tracked.txt");
 	runGit(primary, "commit", "-m", "Initial fixture");
+	// Configured aliases, which rename a guarded subcommand into a word no
+	// recognizer set holds. Repository config is shared with every worktree
+	// cut from it, so the task worktree carries the same aliases.
+	runGit(primary, "config", "alias.co", "checkout");
+	runGit(primary, "config", "alias.sw", "switch");
+	runGit(primary, "config", "alias.undo", "reset --hard");
+	runGit(primary, "config", "alias.lg", "log --oneline");
+	runGit(primary, "config", "alias.elsewhere", "-C . switch");
+	runGit(primary, "config", "alias.chain", "co");
+	runGit(primary, "config", "alias.visual", "!git switch master");
+	runGit(primary, "config", "alias.loop", "hoop");
+	runGit(primary, "config", "alias.hoop", "loop");
 	runGit(primary, "worktree", "add", "-b", "feature/worktree-guard", task);
 	runGit(primary, "worktree", "add", "--detach", detached);
 	const primaryFileLink = resolve(task, "primary-file-link.txt");
@@ -762,6 +777,186 @@ checkGuard(
 	"bash",
 	{ command: "git -c core.pager=cat log --oneline -1" },
 	worktrees.primary,
+);
+
+// A configured alias renames a guarded subcommand just as an inline one does,
+// and the word alone says nothing about it. The guard asks Git what the word
+// means rather than reading past it.
+checkGuard(
+	"a configured alias for checkout is blocked in the primary worktree",
+	true,
+	"bash",
+	{ command: "git co feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a configured alias for switch is blocked in the primary worktree",
+	true,
+	"bash",
+	{ command: "git sw feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a configured alias carrying the destructive form is blocked",
+	true,
+	"bash",
+	{ command: "git undo HEAD~1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an alias naming another alias is followed to the guarded command",
+	true,
+	"bash",
+	{ command: "git chain feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an alias whose expansion selects the primary is blocked from elsewhere",
+	true,
+	"bash",
+	{ command: `git -C "${worktrees.primary}" elsewhere feature/x` },
+	worktrees.task,
+);
+
+checkGuard(
+	"a shell alias the guard cannot read is blocked in the primary worktree",
+	true,
+	"bash",
+	{ command: "git visual" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a loop of aliases is refused rather than followed",
+	true,
+	"bash",
+	{ command: "git loop feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an alias for a read-only command still passes in the primary worktree",
+	false,
+	"bash",
+	{ command: "git lg -1" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a shell alias passes inside an attached feature worktree",
+	false,
+	"bash",
+	{ command: "git visual" },
+	worktrees.task,
+);
+
+checkGuard(
+	"a subcommand that is no alias is still read as itself",
+	false,
+	"bash",
+	{ command: "git status --porcelain" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an alias for checkout passes inside an attached feature worktree",
+	false,
+	"bash",
+	{ command: "git co feature/x" },
+	worktrees.task,
+);
+
+// A `--git-dir` selects the repository whose config the alias comes from, so
+// the lookup follows it: reading the alias in the shell's own directory finds
+// nothing and lets the aliased spelling through where the plain one is
+// blocked.
+checkGuard(
+	"an alias is read from the repository --git-dir selects",
+	true,
+	"bash",
+	{
+		command:
+			`git --git-dir="${resolve(worktrees.primary, ".git")}" ` +
+			`--work-tree="${worktrees.primary}" co feature/x`,
+	},
+	worktrees.outside,
+);
+
+// A `--git-dir` whose value expands hides that repository's own config, so
+// the lookup falls back to the directory it can reach. Refusing instead would
+// deny every read-only command carrying such a selector, wherever it runs.
+checkGuard(
+	"a read-only command with an unreadable --git-dir still passes",
+	false,
+	"bash",
+	{ command: 'd=.git; git --git-dir="$d" lg -1' },
+	worktrees.task,
+);
+
+checkGuard(
+	"a read-only command with an unreadable GIT_DIR still passes",
+	false,
+	"bash",
+	{ command: 'd=.git; GIT_DIR="$d" git log --oneline -1' },
+	worktrees.task,
+);
+
+checkGuard(
+	"an alias reached through an unreadable --git-dir is still refused",
+	true,
+	"bash",
+	{ command: 'd=.git; git --git-dir="$d" co feature/x' },
+	worktrees.primary,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+// Config carried in the environment defines an alias exactly as `-c` does.
+checkGuard(
+	"an alias defined through GIT_CONFIG_KEY is refused rather than read past",
+	true,
+	"bash",
+	{
+		command:
+			"GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.q GIT_CONFIG_VALUE_0=switch " +
+			"git q feature/x",
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"a config file named in the environment is refused too",
+	true,
+	"bash",
+	{ command: "GIT_CONFIG_GLOBAL=/tmp/aliases git q feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an environment setting that renames nothing is still read past",
+	false,
+	"bash",
+	{
+		command:
+			"GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.pager GIT_CONFIG_VALUE_0=cat " +
+			"git log --oneline -1",
+	},
+	worktrees.primary,
+);
+
+// A `-C` value that expands leaves the invocation with no directory of its
+// own, so the alias is looked up in the directory the tool was called in —
+// the same repository, and the same config.
+checkGuard(
+	"an alias behind an unreadable -C is resolved through the tool's directory",
+	true,
+	"bash",
+	{ command: `d="${worktrees.primary}"; git -C "$d" co feature/x` },
+	worktrees.task,
+	UNANCHORED_PATH_BLOCK_REASON,
 );
 
 // A `cd` whose target does not exist fails, and the shell stays in the
@@ -1935,6 +2130,17 @@ checkGuard(
 	undefined,
 );
 
+// With no directory anywhere there is no config to read, so the word stands
+// as itself. A rewrite the guard does recognize is still refused as
+// unanchored, which is the case above.
+checkGuard(
+	"an unrecognized subcommand without a working directory is left unresolved",
+	false,
+	"bash",
+	{ command: "git co feature/x" },
+	undefined,
+);
+
 check("the unplaceable-mutation denial says what to do instead", () => {
 	assert.match(UNANCHORED_PATH_BLOCK_REASON, /refused rather than allowed/iu);
 	assert.match(UNANCHORED_PATH_BLOCK_REASON, /absolute path/iu);
@@ -1990,9 +2196,11 @@ function fakeGitMessage(binDir) {
  * alone. A fake or absent `git` cannot be installed in this process, and the
  * guard's stderr is what proves the failure is visible to an operator.
  * `env` overlays the child's environment, which is how the locale case sets
- * the ambient locale the guard must override.
+ * the ambient locale the guard must override. `call` replaces the write with
+ * another tool call, which is how the config read is reached: it is a `bash`
+ * command's alias lookup rather than a path placement.
  */
-function guardWithPath(binDir, target, env = {}) {
+function guardWithPath(binDir, target, env = {}, call = null) {
 	const child = spawnSync(
 		process.execPath,
 		[
@@ -2007,8 +2215,9 @@ function guardWithPath(binDir, target, env = {}) {
 				"  sendMessage: () => {}, setTimeout: () => 1, clearTimer: () => {} };",
 				"mod.default(pi);",
 				`const target = ${JSON.stringify(target)};`,
+				`const call = ${JSON.stringify(call ?? { toolName: "write", input: { path: "new.txt", content: "x" } })};`,
 				'const decision = handlers.get("tool_call")(',
-				'  { type: "tool_call", toolCallId: "child", toolName: "write", input: { path: "new.txt", content: "x" } },',
+				'  { type: "tool_call", toolCallId: "child", toolName: call.toolName, input: call.input },',
 				"  { cwd: target, ui: {} },",
 				");",
 				"process.stdout.write(JSON.stringify(decision ?? null));",
@@ -2152,6 +2361,24 @@ check("the guard pins git's locale, so the message it matches is English", () =>
 		LANGUAGE: "de",
 	});
 	assert.equal(decision, null, "git ran under LC_ALL=C");
+});
+
+check("a config read Git declines fails closed", () => {
+	// The alias lookup runs before any placement, so this is the config read
+	// failing rather than the worktree query. An absent alias is an exit of 1
+	// with nothing on stderr; a refusal is anything else, and must not be
+	// read as "no alias, carry on".
+	const { decision, stderr } = guardWithPath(
+		fakeBin.dubiousOwnership,
+		worktrees.primary,
+		{},
+		{ toolName: "bash", input: { command: "git lg -1" } },
+	);
+	assert.deepEqual(decision, {
+		block: true,
+		reason: GIT_UNAVAILABLE_BLOCK_REASON,
+	});
+	assert.match(stderr, /config --get alias\.lg/u, "the config read is named");
 });
 
 check("a non-zero exit with no message fails closed", () => {
