@@ -1,6 +1,6 @@
 {
   "name": "daily-driver",
-  "version": "0.30.0",
+  "version": "0.30.1",
   "description": "Daily-driver skills for Claude Code, Omp and Codex: the PR workflow, and whatever else earns its place.",
   "author": {
     "name": "Jason McVetta",

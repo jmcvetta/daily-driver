@@ -346,13 +346,16 @@ and wait for CI on that head. Then run `Verify the fix delta` when the
 pull-request content changed behavior, contracts, or workflow rules. It is one
 pass for the batch, never one per commit or finding.
 
-A first pass that finds defects returns to `Fix, answer, resolve, push`, then
-receives exactly one final targeted confirmation after CI. A defect in that
-confirmation, an unavailable reviewer, incomplete verification, or an
-exhausted pass limit keeps the pull request draft and reports the blocker.
-Initial execution and a resumed session read the durable review record before
-acting; they do not reset the allowance for a resume, rewritten history, bot
-finding, or late CI correction.
+A pass that finds defects returns to `Fix, answer, resolve, push`, and the
+correction pushed from there earns the pass that confirms it — every time,
+because an unverified fix is what the round exists to prevent. The loop ends
+on the first clean pass, and `review-cycle`'s wall ends it the other way,
+with the defects reported on the pull request. How many passes that takes is
+that skill's number, read there rather than carried here. An
+unavailable reviewer or an incomplete pass keeps the pull request draft and
+reports the blocker. Initial execution and a resumed session read the durable
+review record before acting; a resume, a rewritten history, a bot finding and
+a late CI correction are not passes and move nothing.
 
 Only a material scope change runs a new `Review the head` round. A base merge
 or history rewrite with unchanged pull-request content does not. `review-cycle`
@@ -365,9 +368,9 @@ The harness pull-request client takes it out of draft only after `The gate`
 below holds. It does not review; `review-cycle` supplies the full review and
 independent verification that the gate consumes.
 
-It does not review. Marking a draft ready is a natural moment to reach for one,
-and the branch was already reviewed at `Review the head` — whether that review
-is stale is `review-cycle`'s provenance test and is answered inside the round,
+Marking a draft ready is a natural moment to reach for a review, and the
+branch was already reviewed at `Review the head` — whether that review is
+stale is `review-cycle`'s provenance test and is answered inside the round,
 not here.
 Where `review` is live rather than in `attic/skills/`, this is also what
 discharges the leaving-draft trigger in its description: it fires on exactly
@@ -395,7 +398,7 @@ it has not reached the milestone the report would name, and a report naming
 readiness over a bar only a person can clear is the false claim the gate
 exists to refuse.
 
-10 — Keep it current
+11 — Keep it current
 --------------------
 
 Commits land on the base branch while the work is written and while a
@@ -531,41 +534,95 @@ this skill's, and it is the one `Ready for review` turns on.
 Ready is a gate, not a step
 ---------------------------
 
-"After fixing, set the PR to ready" reads as unconditional. It is not. The
-pull request goes to ready only when **all** of these hold:
-- The branch is current with its base branch and merges cleanly. `Keep it
-  current` owns the merge that makes this true, and it is tested first because
-  the merge moves the head: every condition below is about the head a reviewer
-  will actually read, and a merge run after them would leave them answered
-  about a commit nobody sees. A conflict is that step's stop, arriving early.
-- CI is green on the head commit. **Pending is not green** — wait for it the
-  way `review-cycle`'s `How to wait` says, rather than treating an unreported
-  check as either answer. The mechanism has one home, and it is not this one.
-- No review thread is unanswered or unresolved — from any reviewer, not only
-  from the round at `Review the head`.
-- Every finding that round raised has been fixed, or rejected with a reason on
-  its thread, or deferred with the user's agreement.
-- The independent verification record for the scope is clear on the current
-  behavioral head. When the first pass found defects, the second pass must be
-  the clear final confirmation of those corrections. Unavailable or incomplete
-  verification, a final-pass defect, or a cap hit is not approval.
-- The pull request waits on no human action. `pr-body`'s human-action notice
-  marks a pull request whose Tofu changes must be applied, and the updated
-  state committed, before it merges — a bar only a person clears, and
-  unlike a pending check nothing will ever report it. `Ready for review`
-  pauses on it; this condition is what the sequence returns to once the
-  branch carries the result.
+"After fixing, set the PR to ready" reads as unconditional. It is not. It is
+also not a judgement: **the gate is a read**. Six conditions decide it, five
+reads answer them, and every read is a call the reference file for the harness
+in use names. A gate that has to be weighed is a gate that gets taken to the
+user, and the user is not the one who can answer it.
 
+Take the reads in this order. The first that does not hold is where the
+sequence stops, and the reason is stated in one line.
+
+1. **The branch against its base**, for the condition that it is current and
+   merges cleanly. GitHub's merge state answers it, and only three of its
+   values are this read's: `behind` is a base the branch does not carry, so
+   `Keep it current` runs its merge and this read is taken again; `dirty` is
+   that step's conflict; `unknown` is GitHub saying it cannot answer yet,
+   which is a wait under `review-cycle`'s `How to wait` rather than either
+   answer. This read comes first because the merge moves the head: every
+   condition below is about the head a reviewer will actually read, and a
+   merge run after them would leave them answered about a commit nobody sees.
+
+   **The other values are not this gate's business, and reading them as
+   stops is what jams it shut.** A draft reports `draft` or, where the
+   repository requires a review, `blocked` — measured on a draft of this
+   toolkit with every check green and the branch current, 2026-09-18, which
+   answered `blocked`. Neither describes the work: `draft` is the state this
+   gate exists to change, and `blocked` is the approval that marking ready is
+   what asks for. Treating either as a no is the stall in its purest form —
+   a pull request held draft until it is approved, and unapprovable until it
+   is out of draft. `has_hooks` is a passing state with a hook configured.
+   **`clean` is the yes only after the draft is cleared**, which is why
+   `The milestone` reads this same field again and this gate does not wait
+   for that value.
+2. **CI on the head commit**, for the condition that it is green. Read the
+   checks themselves rather than inferring them from the merge state, which
+   reports a draft's status before its checks': the union of check runs and
+   commit statuses that `review-cycle`'s wait reads is the same union here,
+   and the reference file names what answers it on this harness. **Pending
+   is not green** — wait for it the way `How to wait` says, rather than
+   treating an unreported check as either answer. The mechanism has one
+   home, and it is not this one.
+3. **Every review thread**, from any reviewer and not only from the round at
+   `Review the head`. This read answers two conditions, which is why five
+   reads close over six: no thread is unanswered or unresolved, and every
+   finding that round raised is fixed, or rejected with a reason on its
+   thread, or deferred with the user's agreement. An open thread is work at
+   `Fix, answer, resolve, push`, never a reason to stay draft.
+4. **The review record on the pull request.** The independent verification
+   record for the scope is clear on the current behavioral head: the last
+   pushed fix has a pass that found nothing. The bound on those passes is
+   `review-cycle`'s, cited here rather than restated — and its wall is the
+   opposite of this condition, never a way through it. A walled scope has
+   outstanding defects and stays a draft, as do an incomplete pass and an
+   unavailable reviewer. **A full review that raised no actionable finding
+   leaves nothing to verify**, and this condition is satisfied with no pass
+   owed — a clean review produces no verification record, so waiting for one
+   waits forever.
+5. **The pull request waits on no human action.** `pr-body`'s human-action
+   notice marks a pull request whose Tofu changes must be applied, and the
+   updated state committed, before it merges — a bar only a person clears,
+   and unlike a pending check nothing will ever report it. `Ready for review`
+   pauses on it; this condition is what the sequence returns to once the
+   branch carries the result.
+
+**When the reads agree, mark the pull request ready in the same turn.** The
+call is the reference file's, and nothing comes between the last read and it:
+no summary written first, no permission sought, no turn ended on the
+intention to do it next time.
+
+**The user is never a gate condition.** Every stop this sequence takes is
+named under `Where it stops and waits`, and none of them is a confirmation
+that the work is ready. The reads above are the only thing that knows. The
+user did not do the work and cannot answer for it, so a question here asks
+somebody else to carry a claim this session is the one holding the evidence
+for.
 
 A branch behind its base, red CI, an open thread, or a human action still
 owed means it **stays a draft**, and the reason is stated in one line. A red
 pull request marked ready is a claim about the work that is not true, and so
-is a ready one that does not merge.
+is a ready one that does not merge. **So is a draft that satisfies every
+condition**: it tells a reviewer there is nothing to read yet, which is the
+same false claim pointing the other way, and "left in draft to be safe" is
+the sentence it gets written in.
 
 The gate is also what a round at `Keep it current` returns through. That round
-sends the pull request back to draft, and these five conditions are what let
-it out again — the same five, tested again, rather than a second gate written
-for the second round.
+sends the pull request back to draft, and these conditions are what let it out
+again — the same ones, read again, rather than a second gate written for the
+second round.
+
+[`0021`](../../docs/notes/0021-the-gate-is-a-read.md) is the decision, and the
+two stalls that prompted it.
 
 
 The milestone
@@ -720,13 +777,16 @@ it to report, and wait on something other than an answer.
   until the branch carries the result. An apply is not something CI reports,
   and no check a session can read answers for it.
 
-The round at `Review the head` and `Fix, answer, resolve, push` has two stops
-of its own — its own wait on CI, and a review finding whose fix is a real
-trade-off. Both are `review-cycle`'s, and the second is `judgement-call`'s gate
-applied inside it.
+The round at `Review the head` and `Fix, answer, resolve, push` has three stops
+of its own — its own wait on CI, a review finding whose fix is a real
+trade-off, and fixes that will not converge, which is the wall at `Verify the
+fix delta`. All three are `review-cycle`'s; the second is `judgement-call`'s
+gate applied inside it, and the third reports rather than asks.
 
 Everything else runs through. No permission is asked to open the issue, to
-claim it, to commit, to push, or to open the draft.
+claim it, to commit, to push, to open the draft, or to mark it ready. The last
+of those is the one most often asked for anyway, and `The gate` is why it is
+not: readiness is read, so there is nothing a confirmation could add.
 
 
 Non-goals

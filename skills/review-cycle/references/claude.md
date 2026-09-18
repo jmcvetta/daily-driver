@@ -53,12 +53,12 @@ publication, and threads` route below, then record the pass with
 ```text
 Review verification
 scope reviewed: <sha>
-pass: <1|2>
+pass: <n>
 verified: <sha>
 findings: <finding ids and dispositions>
 outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>
-cap: <open|hit>
+wall: <open|reached>
 usage: <exact value if exposed|unavailable>
 ```
 
