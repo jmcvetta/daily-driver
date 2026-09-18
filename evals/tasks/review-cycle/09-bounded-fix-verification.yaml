@@ -1,13 +1,15 @@
 task_id: review-cycle-09-bounded-fix-verification
 description: >-
-  A behavior-changing batch of review fixes is independently checked once, then
-  at most once more after concrete defects; a final defect blocks readiness.
+  A behavior-changing batch of review fixes is independently checked, and every
+  further pushed correction earns the pass that confirms it; the loop ends on
+  the first clean pass or at the three-defect wall.
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
   On PR #25, the full review at aaa111 found two defects. I fixed both plus a
   CI-reported Markdown workflow regression in one batch and pushed bbb222; CI
   is green. Explain the next review action, the evidence it must use, what you
-  record, and what happens if this pass or its final confirmation finds defects.
+  record, and what happens if this pass finds defects — and if the pass after
+  the correction for those finds more.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Task]
@@ -48,15 +50,19 @@ success_criteria:
       gets ONE independent reviewer delta pass after CI. The reviewer receives
       the reviewed SHA, current SHA, original findings, and dispositions; it
       checks fixes and regressions, not a whole-PR audit or style. The result is
-      durably recorded with SHAs, pass count, outcome, defects, cap state, and
-      unavailable usage. A first-pass defect allows one batched correction and
-      one final confirmation; a final-pass defect, incomplete or unavailable
-      pass, or cap hit leaves the PR draft and reports a blocker. It must not
-      treat CI as verification or reset the cap for commits, resumes, rewrites,
-      bot findings, or CI fixes.
+      durably recorded with SHAs, pass number, outcome, defects, wall state, and
+      unavailable usage. A pass that finds defects earns one batched correction,
+      pushed, and the pass that confirms it — a pushed fix is never left
+      unverified for want of an allowance. The loop ends on the first clean
+      pass. Three consecutive defect-finding passes is the wall: the defects go
+      on the PR, it stays draft, and the blocker is reported. An incomplete or
+      unavailable pass stops progress the same way. Commits, resumes, rewrites,
+      bot findings, and CI fixes are not passes and do not move the count, and
+      CI is never verification.
 
       Score 1.0 only if the REPLY states all parts. Score 0.5 if it describes
-      the independent batch pass and one final confirmation but misses material
-      record or blocking details. Score 0.0 if it offers a full re-review,
-      verifies per finding, accepts CI as verification, renews the allowance,
-      or approves after a final defect.
+      the independent batch pass and the confirmation the next correction earns
+      but misses material record or blocking details. Score 0.0 if it offers a
+      full re-review, verifies per finding, accepts CI as verification, counts a
+      commit or CI fix as a pass, refuses a pass to a pushed correction before
+      the wall, or approves after a defect.
