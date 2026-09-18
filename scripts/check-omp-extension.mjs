@@ -226,14 +226,16 @@ function makeWorktreeFixture() {
 const worktrees = makeWorktreeFixture();
 
 /**
- * A checkout whose worktree listing carries a stale record — a worktree
- * removed from disk and never pruned — ordered before a live detached
- * worktree, so the stale record is read first during classification.
+ * A checkout whose worktree listing carries two stale records — a worktree
+ * removed from disk, and one whose path is now an ordinary file — both
+ * ordered before a live detached worktree, so they are read first during
+ * classification. Git fails the same way on each.
  */
 function makeStaleWorktreeFixture() {
 	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-stale-"));
 	const primary = resolve(root, "primary");
 	const gone = resolve(root, "agone");
+	const goneFile = resolve(root, "bgonefile");
 	const detached = resolve(root, "zdetached");
 	mkdirSync(primary);
 	runGit(primary, "init", "-b", "master");
@@ -243,12 +245,28 @@ function makeStaleWorktreeFixture() {
 	runGit(primary, "add", "tracked.txt");
 	runGit(primary, "commit", "-m", "Initial fixture");
 	runGit(primary, "worktree", "add", "-b", "feature/gone", gone);
+	runGit(primary, "worktree", "add", "-b", "feature/gone-file", goneFile);
 	runGit(primary, "worktree", "add", "--detach", detached);
 	rmSync(gone, { recursive: true, force: true });
+	rmSync(goneFile, { recursive: true, force: true });
+	writeFileSync(goneFile, "a file where a worktree was\n");
 	return { root, primary, detached };
 }
 
 const staleWorktrees = makeStaleWorktreeFixture();
+
+/**
+ * A bare repository. Git locates it but answers that the operation must be
+ * run in a work tree, which is an answer the guard acts on rather than a
+ * failure to answer.
+ */
+function makeBareRepository() {
+	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-bare-"));
+	runGit(root, "init", "--bare", "-b", "master");
+	return root;
+}
+
+const bareRepository = makeBareRepository();
 
 /**
  * A detached primary checkout — the shape `setup.sh detached` builds, and the
@@ -1250,7 +1268,7 @@ checkGuard(
 	worktrees.task,
 );
 
-check("the stale worktree record precedes the detached worktree", () => {
+check("the stale worktree records precede the detached worktree", () => {
 	const listing = runGit(
 		staleWorktrees.primary,
 		"worktree",
@@ -1258,8 +1276,9 @@ check("the stale worktree record precedes the detached worktree", () => {
 		"--porcelain",
 	);
 	assert.ok(
-		listing.indexOf("agone") < listing.indexOf("zdetached"),
-		"the fixture must list the stale record first",
+		listing.indexOf("agone") < listing.indexOf("bgonefile") &&
+			listing.indexOf("bgonefile") < listing.indexOf("zdetached"),
+		"the fixture must list both stale records first",
 	);
 });
 
@@ -1269,6 +1288,39 @@ checkGuard(
 	"write",
 	{ path: resolve(staleWorktrees.detached, "a.txt"), content: "unsafe\n" },
 	staleWorktrees.detached,
+);
+
+// The selected Git directory is the detached worktree's, so classification
+// must walk past the stale record to reach it. A `switch` there moves no
+// primary checkout, so the guard's own answer is to pass it; a stale record
+// must not turn that answer into "Git could not be consulted".
+checkGuard(
+	"a stale worktree record does not make --git-dir unreadable",
+	false,
+	"bash",
+	{
+		command:
+			`git --git-dir="${resolve(staleWorktrees.detached, ".git")}" ` +
+			"switch feature/wrong-place",
+	},
+	staleWorktrees.primary,
+);
+
+// --- a repository with no working tree is still Git answering ---------------
+checkGuard(
+	"a write inside the primary's .git directory passes",
+	false,
+	"write",
+	{ path: resolve(worktrees.primary, ".git", "scratch.txt"), content: "x\n" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a write in a bare repository passes",
+	false,
+	"write",
+	{ path: resolve(bareRepository, "scratch.txt"), content: "x\n" },
+	worktrees.primary,
 );
 
 // --- a detached primary keeps the attach the block reason prescribes --------
@@ -1915,11 +1967,32 @@ checkGuard(
 
 // --- Git that cannot be consulted fails closed and says so ----------------
 /**
+ * The stderr each fake `git` directory writes, keyed by that directory.
+ * `guardWithPath` hands it to the child in the environment rather than baking
+ * it into the script, so Git's own punctuation stays out of the shell.
+ */
+const fakeGitMessages = new Map();
+
+/**
+ * The stderr registered for one fake `git` directory. An unregistered
+ * directory throws rather than defaulting to no message: a silent empty
+ * message is the vacuous pass these fixtures exist to rule out.
+ */
+function fakeGitMessage(binDir) {
+	if (!fakeGitMessages.has(binDir)) {
+		throw new Error(`no fake git message registered for ${binDir}`);
+	}
+	return fakeGitMessages.get(binDir);
+}
+
+/**
  * Fire one write through the guard in a child process whose PATH is `binDir`
  * alone. A fake or absent `git` cannot be installed in this process, and the
  * guard's stderr is what proves the failure is visible to an operator.
+ * `env` overlays the child's environment, which is how the locale case sets
+ * the ambient locale the guard must override.
  */
-function guardWithPath(binDir, target) {
+function guardWithPath(binDir, target, env = {}) {
 	const child = spawnSync(
 		process.execPath,
 		[
@@ -1941,21 +2014,93 @@ function guardWithPath(binDir, target) {
 				"process.stdout.write(JSON.stringify(decision ?? null));",
 			].join("\n"),
 		],
-		{ encoding: "utf8", env: { ...process.env, PATH: binDir } },
+		{
+			encoding: "utf8",
+			env: {
+				...process.env,
+				PATH: binDir,
+				DAILY_DRIVER_STDERR: fakeGitMessage(binDir),
+				...env,
+			},
+		},
 	);
 	assert.equal(child.status, 0, `child exited ${child.status}: ${child.stderr}`);
 	return { decision: JSON.parse(child.stdout), stderr: child.stderr };
 }
 
-/** Two PATH directories: one with no `git`, one whose `git` always exits 128. */
+/**
+ * PATH directories holding one fake `git` each. `absent` holds none at all;
+ * every other entry exits 128 with the stderr Git itself writes for that
+ * case, because the guard now reads the message rather than the status.
+ */
 function makeFakeBinFixture() {
 	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-bin-"));
 	const absent = resolve(root, "absent");
-	const refusing = resolve(root, "refusing");
 	mkdirSync(absent);
-	mkdirSync(refusing);
-	writeFileSync(resolve(refusing, "git"), "#!/bin/sh\nexit 128\n", { mode: 0o755 });
-	return { root, absent, refusing };
+	// Registered empty on purpose: there is no `git` here to print anything.
+	fakeGitMessages.set(absent, "");
+	/** Install a `git` that writes `stderr` to fd 2 and exits 128. */
+	const refusing = (name, stderr) => {
+		const dir = resolve(root, name);
+		mkdirSync(dir);
+		writeFileSync(
+			resolve(dir, "git"),
+			// The message reaches the script as $DAILY_DRIVER_STDERR, never
+			// interpolated into it: a backtick or a quote in Git's own wording
+			// would otherwise make the fixture a shell syntax error, and the
+			// check would pass on that instead of on what it names.
+			[
+				"#!/bin/sh",
+				'printf \'%s\\n\' "$DAILY_DRIVER_STDERR" >&2',
+				"exit 128",
+			].join("\n") + "\n",
+			{ mode: 0o755 },
+		);
+		fakeGitMessages.set(dir, stderr);
+		return dir;
+	};
+	return {
+		root,
+		absent,
+		notARepository: refusing(
+			"not-a-repository",
+			"fatal: not a git repository (or any of the parent directories): .git",
+		),
+		dubiousOwnership: refusing(
+			"dubious-ownership",
+			"fatal: detected dubious ownership in repository at '/home/user/repo'",
+		),
+		unknownOption: refusing("unknown-option", "error: unknown option `z'"),
+		silent: refusing("silent", ""),
+		localeSensitive: localeSensitiveGit(root),
+	};
+}
+
+/**
+ * A `git` that speaks English only under `LC_ALL=C`. It stands in for a Git
+ * whose messages are translated, so the fixture fails open only when the
+ * guard pinned the locale for the call.
+ */
+function localeSensitiveGit(root) {
+	const dir = resolve(root, "locale-sensitive");
+	mkdirSync(dir);
+	writeFileSync(
+		resolve(dir, "git"),
+		[
+			"#!/bin/sh",
+			'if [ "$LC_ALL" = C ] && [ -z "$LANGUAGE" ]; then',
+			"  echo 'fatal: not a git repository (or any of the parent directories): .git' >&2",
+			"else",
+			"  echo 'schwerwiegend: kein Git-Repository' >&2",
+			"fi",
+			"exit 128",
+		].join("\n") + "\n",
+		{ mode: 0o755 },
+	);
+	// Registered empty on purpose: this script writes its own message and
+	// ignores the variable.
+	fakeGitMessages.set(dir, "");
+	return dir;
 }
 
 const fakeBin = makeFakeBinFixture();
@@ -1971,8 +2116,51 @@ check("a missing git binary fails closed and reports why", () => {
 });
 
 check("git answering 'not a repository' still fails open", () => {
-	const { decision } = guardWithPath(fakeBin.refusing, worktrees.primary);
-	assert.equal(decision, null, "a non-zero exit is Git's own answer, not a fault");
+	const { decision } = guardWithPath(fakeBin.notARepository, worktrees.primary);
+	assert.equal(decision, null, "that message is Git's own answer, not a fault");
+});
+
+check("a dubious-ownership refusal fails closed", () => {
+	const { decision, stderr } = guardWithPath(
+		fakeBin.dubiousOwnership,
+		worktrees.primary,
+	);
+	assert.deepEqual(
+		decision,
+		{ block: true, reason: GIT_UNAVAILABLE_BLOCK_REASON },
+		"a safe.directory refusal is Git failing to answer, not answering",
+	);
+	assert.match(stderr, /dubious ownership/u, "the cause reaches the operator");
+});
+
+check("an option an older git rejects fails closed", () => {
+	const { decision } = guardWithPath(fakeBin.unknownOption, worktrees.primary);
+	assert.deepEqual(decision, {
+		block: true,
+		reason: GIT_UNAVAILABLE_BLOCK_REASON,
+	});
+});
+
+check("the guard pins git's locale, so the message it matches is English", () => {
+	// A `git` that answers "not a repository" only when the locale is pinned:
+	// unpinned, it writes a translated message the guard must not read as an
+	// answer. The child starts from a German locale, so fail-open here can
+	// only mean the guard overrode it — an inherited `LC_ALL=C` cannot carry
+	// the check.
+	const { decision } = guardWithPath(fakeBin.localeSensitive, worktrees.primary, {
+		LC_ALL: "de_DE.UTF-8",
+		LANGUAGE: "de",
+	});
+	assert.equal(decision, null, "git ran under LC_ALL=C");
+});
+
+check("a non-zero exit with no message fails closed", () => {
+	const { decision, stderr } = guardWithPath(fakeBin.silent, worktrees.primary);
+	assert.deepEqual(decision, {
+		block: true,
+		reason: GIT_UNAVAILABLE_BLOCK_REASON,
+	});
+	assert.match(stderr, /exited 128/u, "the bare status is reported as such");
 });
 
 // --- set_session_title ------------------------------------------------------
