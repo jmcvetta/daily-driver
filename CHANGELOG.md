@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.30.0](https://github.com/jmcvetta/daily-driver/compare/v0.29.1...v0.30.0) (2026-09-18)
+
+
+### Features
+
+* **undertake:** read an issue's comments as content, not only for the claim ([#292](https://github.com/jmcvetta/daily-driver/issues/292)) ([aa6c6d1](https://github.com/jmcvetta/daily-driver/commit/aa6c6d1ad293eb61fc63e8ebce071f67be035906))
+
 ## [0.29.1](https://github.com/jmcvetta/daily-driver/compare/v0.29.0...v0.29.1) (2026-09-17)
 
 
