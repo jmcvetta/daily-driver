@@ -365,9 +365,9 @@ The harness pull-request client takes it out of draft only after `The gate`
 below holds. It does not review; `review-cycle` supplies the full review and
 independent verification that the gate consumes.
 
-It does not review. Marking a draft ready is a natural moment to reach for one,
-and the branch was already reviewed at `Review the head` — whether that review
-is stale is `review-cycle`'s provenance test and is answered inside the round,
+Marking a draft ready is a natural moment to reach for a review, and the
+branch was already reviewed at `Review the head` — whether that review is
+stale is `review-cycle`'s provenance test and is answered inside the round,
 not here.
 Where `review` is live rather than in `attic/skills/`, this is also what
 discharges the leaving-draft trigger in its description: it fires on exactly
@@ -395,7 +395,7 @@ it has not reached the milestone the report would name, and a report naming
 readiness over a bar only a person can clear is the false claim the gate
 exists to refuse.
 
-10 — Keep it current
+11 — Keep it current
 --------------------
 
 Commits land on the base branch while the work is written and while a
@@ -531,41 +531,74 @@ this skill's, and it is the one `Ready for review` turns on.
 Ready is a gate, not a step
 ---------------------------
 
-"After fixing, set the PR to ready" reads as unconditional. It is not. The
-pull request goes to ready only when **all** of these hold:
-- The branch is current with its base branch and merges cleanly. `Keep it
-  current` owns the merge that makes this true, and it is tested first because
-  the merge moves the head: every condition below is about the head a reviewer
-  will actually read, and a merge run after them would leave them answered
-  about a commit nobody sees. A conflict is that step's stop, arriving early.
-- CI is green on the head commit. **Pending is not green** — wait for it the
-  way `review-cycle`'s `How to wait` says, rather than treating an unreported
-  check as either answer. The mechanism has one home, and it is not this one.
-- No review thread is unanswered or unresolved — from any reviewer, not only
-  from the round at `Review the head`.
-- Every finding that round raised has been fixed, or rejected with a reason on
-  its thread, or deferred with the user's agreement.
-- The independent verification record for the scope is clear on the current
-  behavioral head. When the first pass found defects, the second pass must be
-  the clear final confirmation of those corrections. Unavailable or incomplete
-  verification, a final-pass defect, or a cap hit is not approval.
-- The pull request waits on no human action. `pr-body`'s human-action notice
-  marks a pull request whose Tofu changes must be applied, and the updated
-  state committed, before it merges — a bar only a person clears, and
-  unlike a pending check nothing will ever report it. `Ready for review`
-  pauses on it; this condition is what the sequence returns to once the
-  branch carries the result.
+"After fixing, set the PR to ready" reads as unconditional. It is not. It is
+also not a judgement: **the gate is a read**. Six conditions decide it, four
+reads answer them, and every read is a call the reference file for the harness
+in use names. A gate that has to be weighed is a gate that gets taken to the
+user, and the user is not the one who can answer it.
 
+Take the reads in this order. The first that does not hold is where the
+sequence stops, and the reason is stated in one line.
+
+1. **The pull request's readiness state**, which answers two conditions at
+   once: the branch is current with its base and merges cleanly, and CI is
+   green on the head commit. GitHub's merge state is the answer and `clean`
+   is the only yes. `behind` is a base the branch does not carry, so `Keep it
+   current` runs its merge and this read is taken again; `dirty` is that
+   step's conflict; `unstable` is a check that is no longer green; `blocked`
+   is a required review outstanding; `unknown` is GitHub saying it cannot
+   answer yet. This read comes first because the merge moves the head: every
+   condition below is about the head a reviewer will actually read, and a
+   merge run after them would leave them answered about a commit nobody sees.
+   **Pending is not green**, and `unknown` is not a no — both are waited for
+   the way `review-cycle`'s `How to wait` says, rather than treated as either
+   answer. The mechanism has one home, and it is not this one.
+2. **Every review thread**, from any reviewer and not only from the round at
+   `Review the head`. An unanswered or unresolved thread is work at `Fix,
+   answer, resolve, push`, never a reason to stay draft. Every finding that
+   round raised is fixed, or rejected with a reason on its thread, or
+   deferred with the user's agreement.
+3. **The review record on the pull request.** The independent verification
+   record for the scope is clear on the current behavioral head: the last
+   pushed fix has a clear pass, or `review-cycle`'s wall has been reported.
+   The bound on those passes is that skill's, cited here rather than
+   restated. **A full review that raised no actionable finding leaves nothing
+   to verify**, and this condition is satisfied with no pass owed — a clean
+   review produces no verification record, so waiting for one waits forever.
+4. **The pull request waits on no human action.** `pr-body`'s human-action
+   notice marks a pull request whose Tofu changes must be applied, and the
+   updated state committed, before it merges — a bar only a person clears,
+   and unlike a pending check nothing will ever report it. `Ready for review`
+   pauses on it; this condition is what the sequence returns to once the
+   branch carries the result.
+
+**When the reads agree, mark the pull request ready in the same turn.** The
+call is the reference file's, and nothing comes between the last read and it:
+no summary written first, no permission sought, no turn ended on the
+intention to do it next time.
+
+**The user is never a gate condition.** Every stop this sequence takes is
+named under `Where it stops and waits`, and none of them is a confirmation
+that the work is ready. The reads above are the only thing that knows. The
+user did not do the work and cannot answer for it, so a question here asks
+somebody else to carry a claim this session is the one holding the evidence
+for.
 
 A branch behind its base, red CI, an open thread, or a human action still
 owed means it **stays a draft**, and the reason is stated in one line. A red
 pull request marked ready is a claim about the work that is not true, and so
-is a ready one that does not merge.
+is a ready one that does not merge. **So is a draft that satisfies every
+condition**: it tells a reviewer there is nothing to read yet, which is the
+same false claim pointing the other way, and "left in draft to be safe" is
+the sentence it gets written in.
 
 The gate is also what a round at `Keep it current` returns through. That round
-sends the pull request back to draft, and these five conditions are what let
-it out again — the same five, tested again, rather than a second gate written
-for the second round.
+sends the pull request back to draft, and these conditions are what let it out
+again — the same ones, read again, rather than a second gate written for the
+second round.
+
+[`0021`](../../docs/notes/0021-the-gate-is-a-read.md) is the decision, and the
+two stalls that prompted it.
 
 
 The milestone
@@ -726,7 +759,9 @@ trade-off. Both are `review-cycle`'s, and the second is `judgement-call`'s gate
 applied inside it.
 
 Everything else runs through. No permission is asked to open the issue, to
-claim it, to commit, to push, or to open the draft.
+claim it, to commit, to push, to open the draft, or to mark it ready. The last
+of those is the one most often asked for anyway, and `The gate` is why it is
+not: readiness is read, so there is nothing a confirmation could add.
 
 
 Non-goals

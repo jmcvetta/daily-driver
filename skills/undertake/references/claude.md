@@ -52,6 +52,8 @@ The pull request
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the draft` | Open it | `pr`, which owns the call |
+| `The gate` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable_state`, `head.sha` |
+| `The gate` | Read the review threads | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments` and `get_comments` — `review-cycle`'s reference owns them |
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
@@ -102,17 +104,15 @@ The milestone
 `SKILL.md` owns what the report says and when it is owed; these are the calls
 that read the readiness state, find the claim's timestamp, and post it.
 
-**The readiness state is `mcp__github__pull_request_read`, method `get`.**
-Three fields answer `SKILL.md`'s questions: `draft`; `mergeable_state`,
-which carries both the mergeability answer and the gate's — `clean` is the
-only yes, `behind` is a base the branch does not carry, `unstable` a check
-that is no longer green, `dirty` a conflict, `blocked` a required review
-outstanding, and `unknown` GitHub saying it cannot determine the answer
-yet, which is the indeterminate readiness `SKILL.md` rules out, so a state
-that disagrees with the gate is a wait, not a milestone; and `head.sha`,
-the SHA the report binds to. This call returns no `mergeable` boolean —
-measured on the server this session holds, 2026-09-18 — so `mergeable_state`
-is the whole answer rather than half of it.
+**The readiness state is `mcp__github__pull_request_read`, method `get`** —
+the same read `The gate` takes, one step earlier. Three fields answer
+`SKILL.md`'s questions: `draft`; `mergeable_state`, whose values `The gate`
+decodes and this file does not restate; and `head.sha`, the SHA the report
+binds to. The read confirms, on this head, what the gate answered, so a
+state that disagrees with it is a wait, not a milestone. This call returns
+no `mergeable` boolean — measured on the server this session holds,
+2026-09-18 — so `mergeable_state` is the whole answer rather than half of
+it.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the
