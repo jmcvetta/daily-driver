@@ -1150,8 +1150,8 @@ function recognizedSubcommand(word) {
  * directory, and under its `--git-dir` where it selects one, because a
  * selected repository's config is the config the alias comes from. An absent
  * key is `gitConfigValue`'s null; a Git that declines to answer is a
- * `GitUnavailableError`, so the guard does not fail open on a config read it
- * never got. A config read Git cannot answer at
+ * `GitUnavailableError` from that same reader, so the guard does not fail
+ * open on a config read it never got. A config read Git cannot answer at
  * all is a `GitUnavailableError` from `gitOutput`, not an absent alias: the
  * guard must not fail open on a Git it could not consult.
  *
@@ -1258,6 +1258,14 @@ function gitInvocation(words, shellCwd, start, toolCwd) {
 		// where the aliases almost certainly are; refusing instead would deny
 		// `git --git-dir="$X" status` everywhere, and a rewrite the guard does
 		// recognize is already refused for that selector alone.
+		//
+		// The trade is one shape: an alias defined only in the repository an
+		// expanding selector names is missed, because the fallback directory's
+		// config does not hold it. Refusing every command carrying such a
+		// selector would close it, and would cost every `git --git-dir="$X"
+		// status` on the machine. The guard is an obstacle to a model moving
+		// the primary checkout by accident, and that shape needs a variable
+		// selector and a repository-local alias together.
 		const lookupGitDir =
 			invocation.gitDir === UNREADABLE ? null : invocation.gitDir;
 		const lookupCwd = invocation.cwd ?? toolCwd ?? null;
