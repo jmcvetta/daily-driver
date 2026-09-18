@@ -219,7 +219,12 @@ repository stanza, `--plugin-dir` — wins, and Claude Code reports the synced
 copy as not loaded. So the two cloud routes do not stack: pick one per
 environment, or the one you did not think you were testing is the one you are.
 
-None of this paragraph's cloud behaviour has been measured here; it is
+The two readers below change their answers here too. `claude plugin details`
+takes the plugin's ID, which is `daily-driver@synced` on this route and not
+`daily-driver@daily-driver`, and the `ls` the third check ends with points at
+`~/.claude/plugins/synced/` rather than at a marketplace cache nothing filled.
+
+None of this section's cloud behaviour has been measured here; it is
 [Anthropic's documentation][synced] plus the shape of the failure the rest of
 this page exists for. The checks below are the ones that would settle it, and
 the third is the only one that answers on this route at all.

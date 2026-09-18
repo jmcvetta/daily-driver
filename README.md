@@ -300,8 +300,17 @@ An uploaded ZIP is a snapshot of whatever you zipped: re-upload it to move to a
 new release. Anthropic documents the menu and the sync
 ([plugins][help-plugins], [skills][help-skills], [synced plugins][synced]);
 neither the upload nor what a session makes of it has been measured here, so
-[check what the session got](docs/bootstrapping-a-repository.md#checking-whether-it-loaded)
-with the question above before trusting it.
+**ask the session what it got** before trusting it — and ask it a different
+question, because this route fills none of the files the one above reads. The
+marketplace cache stays empty, and so does `installed_plugins.json`:
+
+> Without reading any file, say what the constitution tells you about
+> production systems. Then list the skills available to you whose names begin
+> `daily-driver:`. Then run `ls ~/.claude/plugins/synced/`.
+
+[Checking whether it loaded](docs/bootstrapping-a-repository.md#checking-whether-it-loaded)
+is why the first two are the answer on either route: asking the session is the
+only check that reads what loaded rather than what some file says.
 
 [help-plugins]: https://support.claude.com/en/articles/13837440-use-plugins-in-claude
 [help-skills]: https://support.claude.com/en/articles/12512180-use-skills-in-claude
