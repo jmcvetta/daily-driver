@@ -144,11 +144,16 @@ session-title, reminder, and session-info tools
 `daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
 `ExtensionAPI` makes natural. It also closes the failure that weaker models
 exposed in `task-worktree`: direct `write` and `edit` calls in the primary
-checkout or a detached worktree are denied before they change state, as are
-branch-changing `git checkout` and `git switch` calls in a primary checkout
-that is on a branch. Attached feature-worktree mutations, worktree creation,
-branch attachment in a detached worktree — the primary included, where that is
-the only way out — non-Git paths, and synthetic devices remain available. The
+checkout or a detached worktree are denied before they change state, as is
+every Git command that rewrites the primary checkout's working tree —
+`checkout`, `switch`, `reset --hard`, `restore`, `stash`, `merge`, `rebase`,
+`pull`, `apply`, `am`, `cherry-pick`, `revert` and `clean`. The test is whether
+the command rewrites tracked files, not whether it moves HEAD, so the harmless
+forms stay available: `git reset --soft`, `git restore --staged`, `git stash
+list`, `git apply --check` and `git clean --dry-run` all pass. Attached
+feature-worktree mutations, worktree creation, branch attachment in a detached
+worktree — the primary included, where that is the only way out, and for the
+attach alone — non-Git paths, and synthetic devices remain available. The
 denial sends the model through the skill to establish the task worktree.
 
 **The shell recognizer refuses what it cannot read.** It either enumerates
