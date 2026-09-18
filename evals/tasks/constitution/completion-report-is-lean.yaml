@@ -4,10 +4,9 @@
 # lands.
 #
 # Every other concision probe in this repository grades an answer to a
-# question. `reply-is-concise.yaml` asks why a slice drops its last item;
-# `answer-selects-from-findings.yaml` — which is NOT on this branch, it lives
-# on `claude/undertake-279-amuprt` (PR #296) — asks which defect breaks first
-# under load. Both have one honest factual answer, both sit at or near
+# question. `reply-is-concise.yaml` asks why a slice drops its last item, and
+# `answer-selects-from-findings.yaml` asks which defect breaks first under
+# load. Both have one honest factual answer, both sit at or near
 # ceiling, and issue #279's comparison across five probes of that shape
 # measured a paired difference of exactly 0.000. A probe both arms pass cannot
 # show a rule working.

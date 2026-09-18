@@ -1,0 +1,19 @@
+modelRoles:
+  # Strong default coding and tool use with lower latency than the full model.
+  default: vercel-ai-gateway/zai/glm-5.3-flash:high
+  # Economical help for small tasks.
+  smol: vercel-ai-gateway/zai/glm-5.3-flash:low
+  # Maximum reasoning for deep analysis and code review.
+  slow: vercel-ai-gateway/zai/glm-5.3:max
+  # Maximum reasoning for architecture and task decomposition.
+  plan: vercel-ai-gateway/zai/glm-5.3:max
+  # Fast delegated implementation at subagent fan-out scale.
+  task: vercel-ai-gateway/zai/glm-5.3-fast:high
+  # Maximum reasoning for independent oversight.
+  advisor: vercel-ai-gateway/zai/glm-5.3:max
+  # GLM 5.3 Flash supports image input without using an older vision model.
+  vision: vercel-ai-gateway/zai/glm-5.3-flash:high
+  # Low-cost summaries and commit-message generation.
+  commit: vercel-ai-gateway/zai/glm-5.3-flash:low
+  # Lightweight background work such as titles and classification.
+  tiny: vercel-ai-gateway/zai/glm-5.3-flash:low
