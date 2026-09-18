@@ -176,7 +176,8 @@ it, which is what makes a cadence across turns possible at all.
    with the check rollup on the head beside it. `clean`, `draft`, and
    `unstable` with a run in flight need nothing this tick.
 3. **Act on what it finds.** A `state` of `merged` or `closed` cancels the
-   trigger step 1 just armed with `mcp__Claude_Code_Remote__delete_trigger`
+   trigger the re-arm step just armed with
+   `mcp__Claude_Code_Remote__delete_trigger`
    and ends the watch — the exits `SKILL.md` names. `behind` runs
    `mcp__github__update_pull_request_branch`; `dirty` is the conflict stop
    `SKILL.md` writes under `Where it stops and waits`; a run in flight holds
