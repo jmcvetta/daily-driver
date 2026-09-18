@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.31.0](https://github.com/jmcvetta/daily-driver/compare/v0.30.3...v0.31.0) (2026-09-18)
+
+
+### Features
+
+* **git_sync:** remove stale worktrees of gone-upstream branches ([#314](https://github.com/jmcvetta/daily-driver/issues/314)) ([8bea676](https://github.com/jmcvetta/daily-driver/commit/8bea6762436b8c907ca0f4f4ab6c8fb25170ebe0))
+* give the embark orchestrator's session title its EPIC notice ([#316](https://github.com/jmcvetta/daily-driver/issues/316)) ([f892ce9](https://github.com/jmcvetta/daily-driver/commit/f892ce90b2675e7c43328a61dd1658cedfcd1650))
+
 ## [0.30.3](https://github.com/jmcvetta/daily-driver/compare/v0.30.2...v0.30.3) (2026-09-18)
 
 
