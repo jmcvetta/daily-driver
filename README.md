@@ -279,6 +279,34 @@ Do **not** ask what plugins are installed: that question has a known wrong
 answer. After a release, bump the `CACHEBUST` number and ask again — an
 existing environment does not pick up a new release on its own.
 
+### The other cloud route: enable it on your account
+
+A cloud session also loads the plugins and skills **enabled for your claude.ai
+account**, downloaded into the session's own environment at session start and
+loaded as `daily-driver@synced` — no marketplace, no install record, and
+nothing for the Setup script to do. That route is per-account rather than
+per-environment, so it reaches every cloud environment at once, and an update
+arrives at the next session's sync rather than waiting on a `CACHEBUST` bump.
+It needs a paid plan (Pro, Max, Team, Enterprise).
+
+In the web console: **Customize** in the left sidebar → the **Plugins** tab →
+**Browse plugins** for the listed ones. This plugin is not in that directory,
+so its route is the upload beside it — a valid `.zip` of the plugin tree, under
+50 MB, holding `.claude-plugin/plugin.json` at its root. Skills upload the same
+way from the **Skills** tab, one ZIP per skill folder, but a whole-plugin
+upload is the one that also carries `hooks/`, and so the constitution.
+
+An uploaded ZIP is a snapshot of whatever you zipped: re-upload it to move to a
+new release. Anthropic documents the menu and the sync
+([plugins][help-plugins], [skills][help-skills], [synced plugins][synced]);
+neither the upload nor what a session makes of it has been measured here, so
+[check what the session got](docs/bootstrapping-a-repository.md#checking-whether-it-loaded)
+with the question above before trusting it.
+
+[help-plugins]: https://support.claude.com/en/articles/13837440-use-plugins-in-claude
+[help-skills]: https://support.claude.com/en/articles/12512180-use-skills-in-claude
+[synced]: https://code.claude.com/docs/en/plugins-reference#synced-plugins
+
 [docs/bootstrapping-a-repository.md](docs/bootstrapping-a-repository.md) has
 the mechanism under all of this, and *the stanza* a repository can carry in
 `.claude/settings.json` to say it wants the plugin.

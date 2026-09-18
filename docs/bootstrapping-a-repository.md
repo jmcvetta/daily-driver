@@ -186,6 +186,46 @@ invalidates the key. A `# CACHEBUST: n` comment is the cheapest byte to
 change, and unlike the `FOO=1` this was first proved with it leaves behind no
 dead variable for shellcheck to flag (SC2034).
 
+## The account route: plugins synced from claude.ai
+
+The Setup script is not the only writer that beats the plugin scan. Claude Code
+also loads the plugins and skills **enabled for a claude.ai account**: in a
+cloud or Cowork session it downloads them into the session's own environment as
+it starts, and loads each as `<name>@synced` — into
+`~/.claude/plugins/synced/`, with no marketplace registration and no
+`installed_plugins.json` entry. So the two checks that read the install route
+(`claude plugin list`, and the Setup script's `grep` of
+`installed_plugins.json`) are both blind to it by construction: a synced plugin
+is live with that file still `{"version": 2, "plugins": {}}`. Ask the session
+instead.
+
+Enabling is done from the web console — **Customize** in the sidebar, the
+**Plugins** tab, then either **Browse plugins** for a listed one or the upload
+beside it for a `.zip` you built (under 50 MB). It needs a paid plan. Two
+consequences for a plugin distributed the way this one is:
+
+- **It sidesteps the snapshot.** The environment keys its filesystem snapshot
+  on the Setup script's text, which is why the install route needs a
+  `CACHEBUST` bump to move to a new release. The sync runs per session against
+  the account, so a new upload reaches existing environments on their next
+  start.
+- **An upload is a snapshot of its own.** Nothing fetches from
+  `jmcvetta/daily-driver` on this route, so a release moves an account only
+  when someone re-uploads the ZIP. The install route's version question
+  reappears one level up.
+
+A same-named plugin from any other source — a marketplace install, the
+repository stanza, `--plugin-dir` — wins, and Claude Code reports the synced
+copy as not loaded. So the two cloud routes do not stack: pick one per
+environment, or the one you did not think you were testing is the one you are.
+
+None of this paragraph's cloud behaviour has been measured here; it is
+[Anthropic's documentation][synced] plus the shape of the failure the rest of
+this page exists for. The checks below are the ones that would settle it, and
+the third is the only one that answers on this route at all.
+
+[synced]: https://code.claude.com/docs/en/plugins-reference#synced-plugins
+
 ## Checking whether it loaded
 
 The habit worth having: **when a session feels unusually unconstrained, verify
