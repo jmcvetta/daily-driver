@@ -274,6 +274,8 @@ function shapes({ root, primary, task, detached }) {
 	// met, and a `cd` that fails leaves the shell in the primary. Both were
 	// allowed until the review of #297 measured them here.
 	add("inline alias definition", task, `git -C ${primary} -c alias.q=switch q feature/y`);
+	add("alias through --config-env", task, `SWV=switch git -C ${primary} --config-env=alias.q=SWV q feature/y`);
+	add("config value that expands", task, 'git -c core.pager="$PAGER" log --oneline -1');
 	add("cd into a missing directory", primary, `cd ${root}/never-created\ngit switch feature/y`);
 	add("restore in the primary", primary, "git restore --source=HEAD~1 tracked.txt");
 

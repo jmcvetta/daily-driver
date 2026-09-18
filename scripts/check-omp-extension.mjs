@@ -216,7 +216,11 @@ function makeWorktreeFixture() {
 	runGit(primary, "worktree", "add", "--detach", detached);
 	const primaryFileLink = resolve(task, "primary-file-link.txt");
 	symlinkSync(resolve(primary, "tracked.txt"), primaryFileLink);
-	return { root, primary, task, detached, outside, primaryFileLink };
+	// A symlinked route to the task worktree: a symlinked worktrees root, a
+	// symlinked home, `/tmp` on macOS. A `cd` through one really does arrive.
+	const taskLink = resolve(root, "task-link");
+	symlinkSync(task, taskLink);
+	return { root, primary, task, taskLink, detached, outside, primaryFileLink };
 }
 
 const worktrees = makeWorktreeFixture();
@@ -764,6 +768,85 @@ checkGuard(
 	"bash",
 	{
 		command: `pushd "${resolve(worktrees.root, "never-created")}"\ngit switch feature/x`,
+	},
+	worktrees.primary,
+	UNANCHORED_PATH_BLOCK_REASON,
+);
+
+checkGuard(
+	"an attached --config-env alias definition is refused too",
+	true,
+	"bash",
+	{
+		command:
+			`SWV=switch git -C "${worktrees.primary}" ` +
+			"--config-env=alias.q=SWV q feature/x",
+	},
+	worktrees.task,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+checkGuard(
+	"a separate --config-env alias definition is refused too",
+	true,
+	"bash",
+	{ command: "SWV=switch git --config-env alias.q=SWV q feature/x" },
+	worktrees.primary,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+checkGuard(
+	"an include that can carry an alias is refused",
+	true,
+	"bash",
+	{ command: "git -c include.path=/tmp/aliases q feature/x" },
+	worktrees.primary,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+// Only the setting's name bears on the subcommand. A value that expands
+// cannot rename one, and refusing it would refuse ordinary work everywhere.
+checkGuard(
+	"a -c value that expands is still read past",
+	false,
+	"bash",
+	{ command: 'git -c core.pager="$PAGER" log --oneline -1' },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a -c value that expands is read past in a feature worktree too",
+	false,
+	"bash",
+	{ command: 'git -c core.pager="$PAGER" log --oneline -1' },
+	worktrees.task,
+);
+
+checkGuard(
+	"a -c setting that expands whole is refused",
+	true,
+	"bash",
+	{ command: 'git -c "$setting" q feature/x' },
+	worktrees.primary,
+	UNREADABLE_COMMAND_BLOCK_REASON,
+);
+
+// A `cd` through a symlink arrives where the symlink points, so the shell
+// really is in the task worktree and the work that follows is sanctioned.
+checkGuard(
+	"a rewrite after a cd through a symlinked task worktree passes",
+	false,
+	"bash",
+	{ command: `cd "${worktrees.taskLink}" && git rm -r tracked.txt` },
+	worktrees.primary,
+);
+
+checkGuard(
+	"a cd into a path that exists but is a file is refused",
+	true,
+	"bash",
+	{
+		command: `cd "${resolve(worktrees.primary, "tracked.txt")}"\ngit switch feature/x`,
 	},
 	worktrees.primary,
 	UNANCHORED_PATH_BLOCK_REASON,

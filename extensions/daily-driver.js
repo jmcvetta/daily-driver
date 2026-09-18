@@ -842,9 +842,52 @@ function selectedPath(gitCwd, value) {
 	return resolveAgainst(gitCwd, value);
 }
 
-/** True where one `-c`/`--config-env` value sets a Git alias. */
-function definesAlias(setting) {
-	return /^alias\./iu.test(setting);
+/**
+ * Config names that can rename a subcommand: an alias directly, and an
+ * include that can carry one in another file.
+ */
+const RENAMES_SUBCOMMANDS = /^(alias\.|include\.path|includeIf\.)/iu;
+
+/**
+ * How one `-c`/`--config-env` setting bears on the subcommand that follows.
+ *
+ * Only the setting's **name** decides it, and the name is the part before the
+ * first `=`. `git -c core.pager="$PAGER" log` names `core.pager`, which
+ * renames nothing however the value expands, so refusing it would refuse
+ * ordinary read-only work everywhere for a word that cannot reach a checkout.
+ * A name that expands is a different matter: `git -c "$setting" q` may be
+ * defining the alias `q` runs as.
+ */
+function settingReach(word) {
+	const name = word.text.split("=")[0];
+	if (RENAMES_SUBCOMMANDS.test(name)) return "renames";
+	if (word.literal) return "inert";
+	return word.text.includes("=") && !/[$*?~]/u.test(name)
+		? "inert"
+		: "renames";
+}
+
+/**
+ * The config setting one word carries, in any of the four spellings Git takes
+ * it in — `-c x=y`, `-cx=y`, `--config-env x=y`, `--config-env=x=y` — or null
+ * where the word carries none. `consumed` says how many further words the
+ * spelling took.
+ */
+function configSetting(word, literal, words, index) {
+	if (["-c", "--config-env"].includes(word)) {
+		const next = words[index + 1];
+		return next === undefined ? null : { word: next, consumed: 1 };
+	}
+	if (word.startsWith("--config-env=")) {
+		return {
+			word: { text: word.slice("--config-env=".length), literal },
+			consumed: 0,
+		};
+	}
+	if (word.startsWith("-c") && word.length > 2 && !word.startsWith("-c=")) {
+		return { word: { text: word.slice(2), literal }, consumed: 0 };
+	}
+	return null;
 }
 
 /** An invocation whose subcommand the guard could not read. */
@@ -909,19 +952,14 @@ function gitInvocation(words, shellCwd, start) {
 			gitDir = value(word.slice("--git-dir=".length), literal);
 			continue;
 		}
-		if (["-c", "--config-env"].includes(word) && words[index + 1] !== undefined) {
-			// An alias renames a subcommand, so a command that defines one on
-			// its own line carries a subcommand this recognizer cannot read:
-			// `git -c alias.q=switch q` is `git switch`. The value is read for
-			// that, and a value that expands may be one.
-			const next = words[++index];
-			if (!next.literal || definesAlias(next.text)) {
-				return unreadableInvocation(gitCwd, gitDir, workTree, environmentGitDir, environmentWorkTree);
-			}
-			continue;
-		}
-		if (word.startsWith("-c") && word.length > 2 && !word.startsWith("-c=")) {
-			if (!literal || definesAlias(word.slice(2))) {
+		// An alias renames a subcommand, so a command that sets one on its own
+		// line carries a subcommand this recognizer cannot read: `git -c
+		// alias.q=switch q` is `git switch`. Every spelling of the two flags
+		// that carry a setting is read for that, attached and separate alike.
+		const setting = configSetting(word, literal, words, index);
+		if (setting !== null) {
+			index += setting.consumed;
+			if (settingReach(setting.word) === "renames") {
 				return unreadableInvocation(gitCwd, gitDir, workTree, environmentGitDir, environmentWorkTree);
 			}
 			continue;
@@ -1227,8 +1265,10 @@ function rewritesWorkingTree(invocation) {
  * `WORKTREE_BLOCK_REASON` prescribes attaching such a worktree in place, so
  * denying that attach would leave the model nothing to do. Reaching a detached
  * primary from another worktree is not that attach, and neither is a `git
- * reset --hard` run inside one: the exemption is for the attach, so it is
- * granted to the two subcommands that perform it and to nothing else.
+ * reset --hard`, a `git checkout -- a.txt` or a `git switch
+ * --discard-changes` run inside one: the exemption is for the attach, so
+ * `attachesBranch` decides it on the invocation's form rather than on its
+ * subcommand.
  */
 function movesGuardedPrimary(state, shellCwd, attaches) {
 	if (state === null || state.root !== state.primaryRoot) return false;
@@ -1271,7 +1311,14 @@ function directoryAfterChange(base, words) {
 	// note rules out, and reading it as moved places every later command in a
 	// directory the shell never entered. Unknown is the answer that holds
 	// whichever way the `cd` went.
-	if (moved === null || existingDirectory(moved) !== moved) return null;
+	//
+	// Both sides of the test are canonical, because `existingDirectory` walks
+	// up and canonicalizes: comparing it against the uncanonical path would
+	// call every symlinked directory nonexistent, and a symlinked worktrees
+	// root is an ordinary thing to have.
+	if (moved === null || existingDirectory(moved) !== resolvedPath(moved)) {
+		return null;
+	}
 	return moved;
 }
 
