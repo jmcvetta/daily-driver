@@ -19,11 +19,11 @@
  *    harder to work with than prose, and the operator's answer is the same
  *    every time.
  *
- * 2. Block direct file mutations and branch switches in a repository's
- *    primary checkout, plus file mutations in a detached worktree. The
- *    model-directed `task-worktree` workflow still chooses the task identity
- *    and establishes or reuses its dedicated worktree; this guard makes
- *    forgetting it fail before the user's checkout is changed.
+ * 2. Block direct file mutations and the Git commands that rewrite a
+ *    repository's primary working tree, plus file mutations in a detached
+ *    worktree. The model-directed `task-worktree` workflow still chooses the
+ *    task identity and establishes or reuses its dedicated worktree; this
+ *    guard makes forgetting it fail before the user's checkout is changed.
  *
  * 3. Provide session-title, scheduled-reminder, and session-info tools that
  *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,
@@ -60,12 +60,16 @@ export const ASK_BLOCK_REASON =
 
 /** What an unsafe repository mutation is told to do instead. */
 export const WORKTREE_BLOCK_REASON =
-	"Direct file changes are blocked in the primary checkout and in detached " +
-	"worktrees, and branch switches are blocked in the primary checkout. Do " +
-	"not retry the mutation there. Invoke the `task-worktree` skill, establish " +
-	"the task's feature branch in its dedicated worktree (attaching this " +
-	"worktree in place when it is already dedicated), and repeat the operation " +
-	"with its path rooted there.";
+	"Direct `write` and `edit` calls are blocked in the primary checkout and " +
+	"in detached worktrees, and so is every Git command that rewrites the " +
+	"primary " +
+	"checkout's working tree \u2014 `checkout`, `switch`, `reset --hard`, " +
+	"`restore`, `stash`, `merge`, `rebase`, `pull`, `apply`, `am`, " +
+	"`cherry-pick`, `revert` and `clean` among them. Do not retry the " +
+	"mutation there. Invoke the `task-worktree` skill, establish the task's " +
+	"feature branch in its dedicated worktree (attaching this worktree in " +
+	"place when it is already dedicated), and repeat the operation with its " +
+	"path rooted there.";
 
 /** What a mutation whose repository could not be located is told. */
 export const UNANCHORED_PATH_BLOCK_REASON =
@@ -838,6 +842,76 @@ function selectedPath(gitCwd, value) {
 	return resolveAgainst(gitCwd, value);
 }
 
+/**
+ * Config names that can rename a subcommand: an alias directly, and an
+ * include that can carry one in another file.
+ */
+const RENAMES_SUBCOMMANDS = /^(alias\.|include\.path|includeIf\.)/iu;
+
+/**
+ * True where one `-c`/`--config-env` setting may rename the subcommand that
+ * follows it.
+ *
+ * A literal setting is read: `git -c core.pager=less log` names `core.pager`,
+ * which renames nothing. Anything else is not read at all, because a word's
+ * text is not the word Git will see — the tokenizer pulls a substitution out
+ * of it, so `"$(echo alias.q)=switch"` arrives here as `=switch` and any test
+ * on that text answers about a name that was never there. That is the hole
+ * the first attempt at this left open, and inspecting the text more closely
+ * would not have closed it.
+ *
+ * Refusing an unreadable setting costs little, because it is not refused
+ * everywhere: the caller marks the invocation as a working-tree rewrite and
+ * the ordinary placement decides. `git -c core.pager="$PAGER" log` runs in a
+ * task worktree and outside Git; in the primary checkout it is refused, which
+ * is where the guard is meant to be an obstacle.
+ */
+function mayRenameSubcommand(word) {
+	if (!word.literal) return true;
+	return RENAMES_SUBCOMMANDS.test(word.text.split("=")[0]);
+}
+
+/**
+ * The config setting one word carries, in any of the four spellings Git takes
+ * it in — `-c x=y`, `-cx=y`, `--config-env x=y`, `--config-env=x=y` — or null
+ * where the word carries none. `consumed` says how many further words the
+ * spelling took.
+ */
+function configSetting(word, literal, words, index) {
+	if (["-c", "--config-env"].includes(word)) {
+		const next = words[index + 1];
+		return next === undefined ? null : { word: next, consumed: 1 };
+	}
+	if (word.startsWith("--config-env=")) {
+		return {
+			word: { text: word.slice("--config-env=".length), literal },
+			consumed: 0,
+		};
+	}
+	if (word.startsWith("-c") && word.length > 2 && !word.startsWith("-c=")) {
+		return { word: { text: word.slice(2), literal }, consumed: 0 };
+	}
+	return null;
+}
+
+/** An invocation whose subcommand the guard could not read. */
+function unreadableInvocation(
+	gitCwd,
+	gitDir,
+	workTree,
+	environmentGitDir,
+	environmentWorkTree,
+) {
+	return {
+		subcommand: UNREADABLE,
+		unreadable: true,
+		args: [],
+		cwd: gitCwd,
+		gitDir: selectedPath(gitCwd, gitDir ?? environmentGitDir),
+		workTree: selectedPath(gitCwd, workTree ?? environmentWorkTree),
+	};
+}
+
 /** Resolve one Git invocation's subcommand and repository selectors. */
 function gitInvocation(words, shellCwd, start) {
 	let index = start;
@@ -851,6 +925,9 @@ function gitInvocation(words, shellCwd, start) {
 	const environmentWorkTree = environmentValue(words, index, "GIT_WORK_TREE");
 	let gitDir = null;
 	let workTree = null;
+	// Set by a `-c`/`--config-env` setting that may rename the subcommand, so
+	// the word read as the subcommand below may be an alias for a guarded one.
+	let mayRename = false;
 	index++;
 	for (; index < words.length; index++) {
 		const { text: word, literal } = words[index];
@@ -882,7 +959,17 @@ function gitInvocation(words, shellCwd, start) {
 			gitDir = value(word.slice("--git-dir=".length), literal);
 			continue;
 		}
-		if (["-c", "--config-env", "--exec-path", "--namespace"].includes(word)) {
+		// An alias renames a subcommand, so a command that sets one on its own
+		// line carries a subcommand this recognizer cannot read: `git -c
+		// alias.q=switch q` is `git switch`. Every spelling of the two flags
+		// that carry a setting is read for that, attached and separate alike.
+		const setting = configSetting(word, literal, words, index);
+		if (setting !== null) {
+			index += setting.consumed;
+			if (mayRenameSubcommand(setting.word)) mayRename = true;
+			continue;
+		}
+		if (["--exec-path", "--namespace"].includes(word)) {
 			index++;
 			continue;
 		}
@@ -890,19 +977,13 @@ function gitInvocation(words, shellCwd, start) {
 			// It could be an option, and `-C <primary>` is an option. Whether
 			// this word is a flag or the subcommand cannot be told apart, so
 			// neither is assumed.
-			return {
-				subcommand: UNREADABLE,
-				unreadable: true,
-				args: [],
-				cwd: gitCwd,
-				gitDir: selectedPath(gitCwd, gitDir ?? environmentGitDir),
-				workTree: selectedPath(gitCwd, workTree ?? environmentWorkTree),
-			};
+			return unreadableInvocation(gitCwd, gitDir, workTree, environmentGitDir, environmentWorkTree);
 		}
 		if (word.startsWith("-")) continue;
 		return {
 			subcommand: word,
 			unreadable: false,
+			mayRename,
 			args: words.slice(index + 1),
 			cwd: gitCwd,
 			gitDir: selectedPath(gitCwd, gitDir ?? environmentGitDir),
@@ -914,46 +995,294 @@ function gitInvocation(words, shellCwd, start) {
 }
 
 /**
- * Checkout with an explicit pathspec edits files but does not move HEAD. A
- * subcommand the guard could not read is treated as a branch move, because the
- * one that moves a branch is the one that matters.
+ * Git subcommands that rewrite tracked files in the primary working tree in
+ * every form they take, so no argument reading places them.
+ *
+ * The test is whether the command rewrites tracked files in the working tree,
+ * not whether it moves HEAD: that is what puts `merge` and `rebase` here
+ * beside `switch`, and what #289 recorded after the first guard recognized
+ * only the two commands #269 named. `git merge --quit` and `git rebase --quit`
+ * do leave the working tree alone, and are denied with the rest: an
+ * exhaustively enumerated harmless form nobody runs buys a reader two more
+ * branches to check.
  */
-function changesBranch(invocation) {
-	if (invocation.subcommand === UNREADABLE) return true;
-	if (invocation.subcommand === "switch") return true;
-	if (invocation.subcommand !== "checkout" || invocation.args.length === 0) {
-		return false;
-	}
-	const args = invocation.args.map((arg) => arg.text);
+const REWRITES_ALWAYS = new Set([
+	"am",
+	"cherry-pick",
+	"merge",
+	"pull",
+	"rebase",
+	"revert",
+	"switch",
+]);
+
+/**
+ * Forms of `checkout` and `switch` that overwrite the working tree instead of
+ * attaching it: the force spellings, and `--detach`, which is the opposite of
+ * the attach the exemption exists for.
+ */
+const ATTACH_OVERWRITES = new Set([
+	"--detach",
+	"--discard-changes",
+	"--force",
+	"-f",
+]);
+
+/**
+ * True where this invocation is the in-place attach `WORKTREE_BLOCK_REASON`
+ * prescribes, which is the only thing a detached primary is exempt for.
+ *
+ * The test is on the form, not on the subcommand: `git checkout -- a.txt` and
+ * `git switch --discard-changes master` are a `checkout` and a `switch` that
+ * attach nothing and destroy the checkout's uncommitted work, so exempting
+ * them would reopen inside a detached primary exactly the inconsistency #289
+ * closed in an attached one.
+ *
+ * `switch` never takes a pathspec, so any non-forcing form of it attaches.
+ * `checkout` does, and a bare operand is a branch name or a path with nothing
+ * in the text to tell them apart — so only the explicit branch-creating forms
+ * qualify, and `git checkout master` inside a detached primary is refused in
+ * favour of the `git switch master` that says the same thing unambiguously.
+ */
+function attachesBranch(invocation) {
+	const { subcommand, args } = invocation;
+	if (subcommand !== "switch" && subcommand !== "checkout") return false;
+	if (args.some((arg) => !arg.literal)) return false;
+	const words = args.map((arg) => arg.text);
 	if (
-		args.some(
-			(arg) =>
-				arg === "-b" ||
-				arg === "-B" ||
-				arg === "--orphan" ||
-				arg === "--detach" ||
-				arg.startsWith("--orphan="),
+		words.some(
+			(word) =>
+				ATTACH_OVERWRITES.has(word) ||
+				(shortBundle(word) && word.includes("f")),
 		)
 	) {
-		return true;
+		return false;
 	}
-	if (args.includes("--")) return false;
-	return !args.some((arg) =>
-		["-p", "--patch", "--ours", "--theirs"].includes(arg),
+	if (subcommand === "switch") return true;
+	return words.includes("-b") || words.includes("-B");
+}
+
+/**
+ * One command's option words, ending where `--` ends them. After the
+ * separator every word is an operand, whatever it starts with, so a file
+ * called `-hard` is never read as `--hard`'s neighbour.
+ */
+function optionWords(args) {
+	const options = [];
+	for (const arg of args) {
+		if (arg === "--") break;
+		if (arg.startsWith("-") && arg !== "-") options.push(arg);
+	}
+	return options;
+}
+
+/** A bundle of single-letter options, which `-SW` and `-fd` both are. */
+function shortBundle(option) {
+	return /^-[A-Za-z]+$/u.test(option);
+}
+
+/**
+ * `git reset` touches the working tree in `--hard`, `--merge` and `--keep`,
+ * and only there. The safe forms are enumerated rather than the destructive
+ * ones, so a form this guard has never met — a new mode, a misread bundle —
+ * lands on the destructive side.
+ */
+const RESET_KEEPS_WORKTREE = new Set([
+	"--mixed",
+	"--patch",
+	"--quiet",
+	"--soft",
+	"-p",
+	"-q",
+]);
+
+function resetRewrites(args) {
+	return !optionWords(args).every((option) =>
+		RESET_KEEPS_WORKTREE.has(option),
 	);
 }
 
 /**
- * True where a branch move would change a guarded primary checkout. An
- * attached primary is always guarded. A detached primary is exempt only for a
- * command operating from inside it: `WORKTREE_BLOCK_REASON` prescribes
- * attaching such a worktree in place, so denying that attach would leave the
- * model nothing to do. Reaching a detached primary from another worktree is
- * not that attach, and stays guarded.
+ * `git restore` writes the working tree unless `--staged` is given alone:
+ * `--staged --worktree` writes both. Those two flags decide it between them,
+ * so an option the guard has not met cannot change the answer and is not made
+ * to.
  */
-function movesGuardedPrimary(state, shellCwd) {
+function restoreRewrites(args) {
+	let staged = false;
+	let worktree = false;
+	for (const option of optionWords(args)) {
+		if (option === "--staged") staged = true;
+		else if (option === "--worktree") worktree = true;
+		else if (shortBundle(option)) {
+			if (option.includes("S")) staged = true;
+			if (option.includes("W")) worktree = true;
+		}
+	}
+	return !staged || worktree;
+}
+
+/** `git apply` forms that inspect the patch or the index and write no file. */
+const APPLY_READS_ONLY = new Set([
+	"--check",
+	"--numstat",
+	"--stat",
+	"--summary",
+]);
+
+function applyRewrites(args) {
+	const options = optionWords(args);
+	if (options.some((option) => APPLY_READS_ONLY.has(option))) return false;
+	// `--cached` applies to the index alone; `--index` applies to both, and
+	// Git refuses the two together.
+	return !(options.includes("--cached") && !options.includes("--index"));
+}
+
+/**
+ * `git clean` deletes untracked files rather than rewriting tracked ones, so
+ * it fails the letter of the test above and meets its reason exactly: it
+ * destroys uncommitted work in the checkout this guard exists to protect.
+ * `-n` and `--dry-run` only report.
+ */
+function cleanRewrites(args) {
+	return !optionWords(args).some(
+		(option) =>
+			option === "--dry-run" || (shortBundle(option) && option.includes("n")),
+	);
+}
+
+/**
+ * `git checkout` with any operand at all writes the working tree: a branch
+ * name moves HEAD and the files with it, and a pathspec overwrites the files
+ * named. The pathspec form was allowed until #289, which is the boundary that
+ * issue called inconsistent — `git checkout -- a.txt` is `git restore a.txt`
+ * spelled the old way, and denying one while allowing the other says nothing
+ * a reader can act on. Bare `git checkout` reports and changes nothing.
+ */
+function checkoutRewrites(args) {
+	return args.length > 0;
+}
+
+/**
+ * `git rm` deletes tracked files from the working tree and `git mv` renames
+ * them in place. Both are everyday porcelain, and both spend the user's
+ * uncommitted work. `--cached` keeps `rm` to the index; `-n` and `--dry-run`
+ * report and write nothing.
+ */
+function reportsOnly(args) {
+	return optionWords(args).some(
+		(option) =>
+			option === "--dry-run" || (shortBundle(option) && option.includes("n")),
+	);
+}
+
+function rmRewrites(args) {
+	return !(optionWords(args).includes("--cached") || reportsOnly(args));
+}
+
+function mvRewrites(args) {
+	return !reportsOnly(args);
+}
+
+/**
+ * A subcommand-shaped command: the first operand names the verb, and the
+ * verbs that leave the working tree alone are the ones enumerated. A verb the
+ * guard has never met, and a command with no verb at all, are destructive.
+ */
+function verbRewrites(readOnly) {
+	return (args) => {
+		for (const arg of args) {
+			if (arg === "--") continue;
+			if (arg.startsWith("-") && arg !== "-") continue;
+			return !readOnly.has(arg);
+		}
+		return true;
+	};
+}
+
+/**
+ * The `git stash` verbs that leave the working tree alone. Everything else
+ * writes it — `pop` and `apply` restore files, `push` and `save` remove them,
+ * `branch` checks one out, and a bare `git stash` is `push`.
+ */
+const STASH_READS_ONLY = new Set([
+	"clear",
+	"create",
+	"drop",
+	"list",
+	"show",
+	"store",
+]);
+
+/**
+ * `git bisect start`, `good`, `bad`, `run`, `reset`, `replay` and `skip` all
+ * check a commit out; the reporting verbs do not.
+ */
+const BISECT_READS_ONLY = new Set(["log", "terms", "view", "visualize"]);
+
+/** `git sparse-checkout set` and friends add and remove working-tree files. */
+const SPARSE_CHECKOUT_READS_ONLY = new Set(["list"]);
+
+/**
+ * `git submodule update`, `deinit` and `foreach` all write working trees
+ * nested inside this one. `init` and the reporting verbs write config or
+ * nothing.
+ */
+const SUBMODULE_READS_ONLY = new Set(["init", "status", "summary"]);
+
+/** Subcommands destructive in one form and harmless in another. */
+const REWRITE_FORM = new Map([
+	["apply", applyRewrites],
+	["bisect", verbRewrites(BISECT_READS_ONLY)],
+	["checkout", checkoutRewrites],
+	["clean", cleanRewrites],
+	["mv", mvRewrites],
+	["reset", resetRewrites],
+	["restore", restoreRewrites],
+	["rm", rmRewrites],
+	["sparse-checkout", verbRewrites(SPARSE_CHECKOUT_READS_ONLY)],
+	["stash", verbRewrites(STASH_READS_ONLY)],
+	["submodule", verbRewrites(SUBMODULE_READS_ONLY)],
+]);
+
+/**
+ * True where this Git invocation would rewrite the working tree it runs in.
+ *
+ * The recognizer fails closed twice over: a subcommand it could not read is
+ * destructive, and so is a recognized subcommand carrying a word it could not
+ * read — `git reset "$mode"` may be `--hard`. A subcommand outside both sets
+ * is not a guess that it is safe: it is the statement that no form of it
+ * writes the working tree, which is why each one is enumerated from the
+ * manual rather than assumed.
+ */
+function rewritesWorkingTree(invocation) {
+	if (invocation.subcommand === UNREADABLE) return true;
+	// A setting the guard could not read may have renamed a guarded
+	// subcommand into the word it just read, so the word decides nothing.
+	if (invocation.mayRename) return true;
+	if (REWRITES_ALWAYS.has(invocation.subcommand)) return true;
+	const form = REWRITE_FORM.get(invocation.subcommand);
+	if (form === undefined) return false;
+	if (invocation.args.some((arg) => !arg.literal)) return true;
+	return form(invocation.args.map((arg) => arg.text));
+}
+
+/**
+ * True where a working-tree rewrite would change a guarded primary checkout.
+ * An attached primary is always guarded. A detached primary is exempt in one
+ * case only: a command that attaches a branch, operating from inside it.
+ * `WORKTREE_BLOCK_REASON` prescribes attaching such a worktree in place, so
+ * denying that attach would leave the model nothing to do. Reaching a detached
+ * primary from another worktree is not that attach, and neither is a `git
+ * reset --hard`, a `git checkout -- a.txt` or a `git switch
+ * --discard-changes` run inside one: the exemption is for the attach, so
+ * `attachesBranch` decides it on the invocation's form rather than on its
+ * subcommand.
+ */
+function movesGuardedPrimary(state, shellCwd, attaches) {
 	if (state === null || state.root !== state.primaryRoot) return false;
 	if (state.branch.length > 0) return true;
+	if (!attaches) return true;
 	const from = worktreeState(".", shellCwd);
 	return from === null || from.root !== state.primaryRoot;
 }
@@ -985,12 +1314,26 @@ function directoryAfterChange(base, words) {
 	if (operands.length !== 1) return null;
 	const [target] = operands;
 	if (!target.literal || target.text === "-") return null;
-	return resolveAgainst(base, target.text);
+	const moved = resolveAgainst(base, target.text);
+	// A `cd` into something that is not a directory fails, and the shell stays
+	// where it was — but reading it as unchanged is the stale answer #272's
+	// note rules out, and reading it as moved places every later command in a
+	// directory the shell never entered. Unknown is the answer that holds
+	// whichever way the `cd` went.
+	//
+	// Both sides of the test are canonical, because `existingDirectory` walks
+	// up and canonicalizes: comparing it against the uncanonical path would
+	// call every symlinked directory nonexistent, and a symlinked worktrees
+	// root is an ordinary thing to have.
+	if (moved === null || existingDirectory(moved) !== resolvedPath(moved)) {
+		return null;
+	}
+	return moved;
 }
 
 /**
- * A checkout, switch, or otherwise unreadable command that would change the
- * primary HEAD or its files.
+ * A command that would rewrite the primary checkout's working tree, or one
+ * unreadable enough that it might.
  *
  * The walk is the inversion this guard turns on: it does not look for proof
  * that a command is dangerous, it looks for proof that every command is
@@ -998,16 +1341,17 @@ function directoryAfterChange(base, words) {
  * recognizer cannot read is refused where it could be running in the primary
  * checkout, rather than allowed because nothing matched a dangerous shape.
  */
-function movesPrimaryBranch(event, cwd) {
+function rewritesPrimaryWorkingTree(event, cwd) {
 	if (event.toolName !== "bash" || typeof event.input?.command !== "string") {
 		return false;
 	}
 
 	// A relative tool cwd is relative to the session's directory, never to the
 	// directory this Node process happens to run in. It is null where there is
-	// no session directory to read it against: a command that moves no branch
-	// still passes, and one that moves a branch is refused below, because the
-	// repository it would change cannot be identified.
+	// no session directory to read it against: a command that rewrites no
+	// working tree still passes, and one that rewrites a working tree is
+	// refused below, because the repository it would change cannot be
+	// identified.
 	const toolCwd = anchoredPath(
 		cwd,
 		typeof event.input.cwd === "string" ? event.input.cwd : ".",
@@ -1052,7 +1396,7 @@ function walkShellCommand(command, toolCwd) {
 
 		for (const start of gitWordIndices(segment.words)) {
 			const invocation = gitInvocation(segment.words, shellCwd, start);
-			if (invocation === null || !changesBranch(invocation)) continue;
+			if (invocation === null || !rewritesWorkingTree(invocation)) continue;
 			if (invocation.unreadable) {
 				throw new UnreadableCommandError(
 					"a git invocation carries an option the guard cannot read",
@@ -1060,12 +1404,12 @@ function walkShellCommand(command, toolCwd) {
 			}
 			if (invocation.cwd === null) {
 				throw new UnanchoredPathError(
-					"a branch move arrived with no working directory to place it in",
+					"a working-tree rewrite arrived with no working directory to place it in",
 				);
 			}
 			if (invocation.gitDir === UNREADABLE || invocation.workTree === UNREADABLE) {
 				throw new UnreadableCommandError(
-					"a branch move selects its repository with a value that expands",
+					"a working-tree rewrite selects its repository with a value that expands",
 				);
 			}
 			const gitDirState = invocation.gitDir
@@ -1074,7 +1418,8 @@ function walkShellCommand(command, toolCwd) {
 			// A Git directory that resolves to no repository must not skip the
 			// cwd check. Skipping it lets an unresolvable selector fail open.
 			const repositoryState = gitDirState ?? worktreeState(".", invocation.cwd);
-			if (movesGuardedPrimary(repositoryState, shellCwd)) return true;
+			const attaches = attachesBranch(invocation);
+			if (movesGuardedPrimary(repositoryState, shellCwd, attaches)) return true;
 			if (invocation.workTree) {
 				// Writing primary files from elsewhere is blocked whether or not
 				// the primary is attached: an in-place attach never names a work
@@ -1160,8 +1505,8 @@ function walkShellCommand(command, toolCwd) {
 				// Whether this `cd` ran at all depends on an exit status the
 				// guard cannot know. `false && cd elsewhere` leaves the shell
 				// where it was, and reading the `cd` as having happened is how a
-				// later branch move in the primary looked like one somewhere
-				// else.
+				// later working-tree rewrite in the primary looked like one
+				// somewhere else.
 				shellCwd = null;
 				continue;
 			}
@@ -1176,7 +1521,7 @@ function walkShellCommand(command, toolCwd) {
 
 /** True when a mutation would bypass the task worktree boundary. */
 function blocksTaskWorktree(event, cwd) {
-	if (movesPrimaryBranch(event, cwd)) return true;
+	if (rewritesPrimaryWorkingTree(event, cwd)) return true;
 	for (const path of mutationPaths(event, cwd)) {
 		const state = worktreeState(path, cwd);
 		if (
