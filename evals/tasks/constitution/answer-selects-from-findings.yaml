@@ -69,10 +69,12 @@
 # the fourth constraint, and a constraint is a steer.
 #
 # `simulation.total_turns` does NOT detect this. Under the cap it reads 2 for
-# every replicate except a stop-token abort, so it sees the rarer failure and
-# is blind to the common one. Drift is visible in
-# conversation log, and a replicate that was never asked the question measures
-# nothing about selection. Read the logs before reading the score.
+# every replicate except an abort — a stop token, or a simulator failure or
+# timeout, which break the dialog with `turns_completed` at whatever it held.
+# So the field sees the rarer failures and is blind to the common one. Drift
+# is visible in the conversation log, and a replicate that was never asked the
+# question measures nothing about selection. Read the logs before reading the
+# score.
 #
 # ## What the graders read
 #
@@ -401,9 +403,10 @@ success_criteria:
       Calibration, so the failure modes stay distinct. A reply that names the
       pool correctly and then walks through all four other defects again is
       verbose-but-correct: it scores 1.0 on the floor grader and 0.0 here. A
-      reply reading only `The pool.` is short-but-incomplete: it may score
-      here and fails there. Each grader must be willing to fail this row on
-      its own and neither may compensate for the other.
+      reply reading only `The first one.` is short-but-useless: it adds
+      nothing beyond the answer, so it scores 1.0 here, and it names no defect,
+      so it fails the floor grader. Each grader must be willing to fail this
+      row on its own and neither may compensate for the other.
 
       Ranking is not re-listing. The question invites a comparison, so ONE
       contrast — "the pool, before the swallowed exception matters" — is the
@@ -415,6 +418,16 @@ success_criteria:
       question, and the user did not ask it. So a remediation — a patch, a
       suggested value for `MAX_CONNECTIONS`, a timeout to add, a sentence on
       how to fix it — is a stray at 0.5, however brief and however correct.
-      One clause naming the mechanism is the reasoning and stays at 1.0: "it
-      queues forever past two concurrent callers" explains the answer, while
-      "give `acquire()` a timeout" proposes work.
+
+      The mechanism and the remedy share a vocabulary, so judge the verb and
+      not the noun. Describing what the code DOES is the reasoning and stays
+      at 1.0: "`acquire()` waits with no timeout", "the cap is
+      `MAX_CONNECTIONS = 2`", "it queues forever past two concurrent callers".
+      Telling the user what to CHANGE is the stray: "add a timeout to
+      `acquire()`", "raise `MAX_CONNECTIONS`". The same identifier appears on
+      both sides, and that is not what separates them.
+
+      One earlier line in the 1.0 band uses the word "fix" — "ONE other
+      finding the user might otherwise fix first". That is the user's own
+      fixing, named to describe which comparison is allowed. It does not
+      license the reply to propose one.
