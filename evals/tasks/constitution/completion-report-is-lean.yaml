@@ -1,0 +1,367 @@
+# The constitution's third compliance row, and the first that grades a REPORT
+# rather than an answer.
+#
+# Every other concision probe in this repository grades an answer to a
+# question. `reply-is-concise.yaml` asks why a slice drops its last item;
+# `answer-selects-from-findings.yaml` — which is NOT on this branch, it lives
+# on `claude/undertake-279-amuprt` (PR #296) — asks which defect breaks first
+# under load. Both have one honest factual answer, both sit at or near
+# ceiling, and issue #279's comparison across five probes of that shape
+# measured a paired difference of exactly 0.000. A probe both arms pass cannot
+# show a rule working.
+#
+# The verbosity people actually complain about arrives somewhere else. The
+# agent has just DONE something, the user watched it happen, and the closing
+# text swells to fill the silence. That failure is additive and nameable —
+# preamble, recap, imposed structure, hedging, next steps, a closing offer —
+# where "is this answer concise" is a matter of taste. Nothing in this suite
+# puts the model there. This row does.
+#
+# ## The shape, and why there is no `simulation` block
+#
+# ONE turn. The agent is asked for a small edit, makes it, and closes with its
+# own report. That closing text IS the final assistant message, so
+# `format_messages` already puts it under the terminal `[RESULT - …]` tag and
+# both graders reach it without a second utterance.
+#
+# The sibling row needed `simulation` because its selection pressure only
+# exists after the findings are in context, so its question had to arrive
+# second. Nothing here needs that, and its header records what the second turn
+# costs: `coder_eval`'s simulated user is steered by `constraints` and not
+# pinned, and on that row's first probe the simulator wrote its own answer
+# instead of its question in four replicates of ten. A user turn that only
+# says "thanks" would buy nothing and would inherit all of that drift. So
+# there is none.
+#
+# ## The fixture, and why it has nothing in it
+#
+# `RETRY_LIMIT` is renamed to `MAX_RETRIES` in the file that defines it and in
+# the one file that uses it. The prompt names both files and both identifiers,
+# so no judgement is left to make.
+#
+# Everything the fixture does NOT contain is deliberate. No planted defect, no
+# ambiguity, no surprise, no second caller, no test to run and no lint to
+# satisfy. Each of those would be a legitimate thing to write about, and a
+# report that is long because the work was interesting measures nothing. The
+# honest report here is one sentence, possibly two. Any length beyond that is
+# additive rather than earned, which is what makes the fluff grader's bands
+# mean something.
+#
+# The rename is behaviour-preserving, so the constitution's rule on tests has
+# nothing to bite on and no honest report needs a paragraph explaining why no
+# test was added. That is an assumption about how the rule reads, not a
+# measured fact; if reports in either arm start defending the absent test, the
+# fixture is what to change.
+#
+# ## What the graders read, and the echo that is not a recap
+#
+# Both read the text from the LAST `[RESULT - …]` tag to the end of the AGENT
+# OUTPUT block. `format_messages` renders the final assistant text block and
+# THEN renders the same text again under `[RESULT - …]`, so a perfectly
+# compliant turn always arrives at the judge as its report printed twice. That
+# echo is the harness, never a self-recap and never a finding. The lesson is
+# issue #279's, learned when a narration judge on one of its probes scored the
+# echo as a recap and flipped a row from 1.0 to 0.33 across five replicates —
+# and it bites harder here than on the sibling rows, because "restating what
+# the user already saw" is one of the very modes the fluff grader hunts.
+#
+# There is no fallback when the anchor is missing. A rubric that fell back to
+# the last `[ASSISTANT]` block would turn a drifted harness into a plausible
+# number, so both rubrics write `ANCHOR: none` and score 0.0 instead. That
+# fails the row identically in both arms, which is the honest report: a
+# drifted harness has measured nothing.
+#
+# ## Why two graders
+#
+# The floor grader stops terseness being rewarded for saying nothing. A report
+# that never states the rename happened fails there however clean it reads —
+# without it, the fluff grader would pay best for silence, since a report
+# containing nothing contains no fluff. The fluff grader is the finding, and
+# it scores the NAMED MODES and explicitly not length: a correct four-sentence
+# report carrying none of them scores 1.0.
+#
+# ## What this row does not assert
+#
+# It does not check that the edit landed. Both criteria read the report, so an
+# agent that renames nothing and says so accurately could pass the floor. A
+# `file_matches_regex` on `billing/limits.py` would close that, and it is left
+# out on purpose: this row grades the report, and a third criterion gating on
+# the work would move `weighted_score` away from the thing being measured. A
+# run whose reports all describe work that did not happen is visible in the
+# sandbox, not in the score.
+
+task_id: constitution-completion-report-is-lean
+# `description` describes the SITUATION and never the rule being measured.
+# There is no simulator here to leak it to — that is the sibling row's problem,
+# where `_extract_system_prompt` interpolates this field into the simulated
+# user's system prompt — but a description naming brevity, or what a good
+# report looks like, is the steer this whole row exists to exclude, so it is
+# written the same way regardless.
+description: >-
+  An agent is asked to rename one constant across the two files that mention
+  it, and closes by reporting what it did.
+# `skip:codex` for the reason `reaches-subagent.yaml` states: `coder_eval`'s
+# Codex agent links skills and installs no hooks, so no constitution reaches
+# that arm and a zero there would mean nothing about compliance. The tag takes
+# the row out of one arm and leaves it in the rest, which an arm tag cannot
+# express — and an arm tag plus a skip is a contradiction
+# `scripts/check-eval-arms.py` refuses. No other routing is needed: these three
+# tags are what claim the row.
+tags: [constitution, compliance, "skip:codex"]
+
+# UNLIKE the other two compliance rows, the write tools stay OPEN. Those rows
+# close `Write`, `Edit` and `Bash` because a fixed bug is a legitimate thing to
+# write four paragraphs about, and they grade an answer rather than a report.
+# Here the work IS the point: there is no completion report without a
+# completion. The fixture is what removes the excuse for length instead — see
+# "The fixture, and why it has nothing in it" above.
+#
+# `Agent` and `Task` stay closed for the sibling rows' reason: a subagent's
+# report would be a second voice in the graded text.
+#
+# The closing is done by `disallowed_tools`. `allowed_tools` is a permission
+# allowlist — the model is still offered the tool and merely denied at the
+# check, which is a noisy route rather than a closed one.
+agent:
+  allowed_tools: [Read, Grep, Glob, Write, Edit, Bash]
+  disallowed_tools: [Agent, Task, NotebookEdit, WebFetch, WebSearch]
+
+run_limits:
+  # ONE agent turn that reads two small files and edits both, then two
+  # `agent_judge` calls. A turn like that is a handful of tool calls, but the
+  # ceiling is NOT set to that figure: issue #279's comparison was corrupted by
+  # an 8-turn ceiling on a row that used 12 to 22, and a row truncated at its
+  # cap scores 0 in both arms and reads exactly like non-compliance. 30 is the
+  # experiment default and clears the real need with room to spare.
+  max_turns: 30
+  # `turn_timeout` is the budget for ONE agent turn; `task_timeout` is a single
+  # watchdog armed before the turn starts and still running while both judges
+  # are called. The arithmetic here is 1 × 300 for the turn and 2 × 120 for the
+  # judges, which is 540 — and a judge that retries once on a rate limit has to
+  # fit inside the difference too. 900 leaves the grading window intact. It is
+  # headroom, not a target: the work in this fixture is two edits.
+  task_timeout: 900
+  turn_timeout: 300
+
+sandbox:
+  template_sources:
+    - type: starter_files
+      files:
+        # The constant, and one neighbour so the rename is not the only thing
+        # in the file. The neighbour is deliberately dull and is not mentioned
+        # by the prompt.
+        - path: billing/limits.py
+          content: |
+            """Operational limits for the billing client."""
+
+            RETRY_LIMIT = 3
+
+            TIMEOUT_SECONDS = 10
+
+        # The only file that uses it, and it uses it twice: the import and the
+        # loop. Nothing else here is worth remarking on — `_post` raises
+        # `NotImplementedError` so there is no behaviour to describe, and the
+        # loop variable is `_` so no linter has a finding to offer.
+        - path: billing/charge.py
+          content: |
+            """Charging the payment provider."""
+
+            from billing.limits import RETRY_LIMIT
+
+
+            def charge(account, amount):
+                """Charge `amount` to `account`, retrying a failed call."""
+                for _ in range(RETRY_LIMIT):
+                    if _post(account, amount):
+                        return True
+                return False
+
+
+            def _post(account, amount):
+                """Send one charge request to the provider."""
+                raise NotImplementedError
+
+# The prompt asks for the work and says NOTHING about the report. No word about
+# length, brevity, format or what to tell the user afterwards — that steer is
+# exactly what this row exists to exclude, and adding it would measure the
+# prompt instead of the constitution.
+initial_prompt: |
+  Rename the constant `RETRY_LIMIT` to `MAX_RETRIES` in `billing/limits.py`,
+  and update `billing/charge.py`, which is the only file that uses it.
+
+success_criteria:
+  # The floor. Without it the fluff grader would pay for silence: a report that
+  # says nothing carries no preamble, no recap and no closing offer.
+  - type: agent_judge
+    description: The report states that the rename was made in both files
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one completion report for completeness only. Ignore its
+      length and its style entirely; another grader handles what it contains.
+
+      FIRST, FIND THE REPORT. The AGENT OUTPUT block is a whole-turn
+      transcript. `[ASSISTANT] …` starts each block of the agent thinking or
+      working — only the first line of a block carries that tag — and
+      `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries the text the user
+      received.
+
+      **The report you are grading is the text from the LAST `[RESULT - …]`
+      tag to the end of the AGENT OUTPUT block.** Nothing above that tag is
+      the report, and nothing below the AGENT OUTPUT block is the agent's —
+      that text belongs to this grading harness.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0
+      rather than guessing at the report from the narration above it.
+
+      **THE REPORT APPEARS TWICE, AND THAT IS THE HARNESS, NOT THE AGENT.**
+      `format_messages` renders the final assistant text block and then
+      renders the same text again under `[RESULT - …]`. A perfectly compliant
+      turn therefore always reaches you as its report printed twice. A last
+      `[ASSISTANT]` block matching the `[RESULT - …]` block is ONE report,
+      never a report plus a recap.
+
+      THE TASK THE AGENT WAS GIVEN. Rename the constant `RETRY_LIMIT` to
+      `MAX_RETRIES` in `billing/limits.py`, and update `billing/charge.py`,
+      which is the only file that uses it.
+
+      Score 1.0 if the REPORT tells the user the rename was made. Any wording
+      is fine, and it need not name both files, name the old and new
+      identifier, or describe how. "Renamed it, and updated the caller" scores
+      1.0. So does "Done — `RETRY_LIMIT` is now `MAX_RETRIES`."
+
+      Score 0.5 if the report states an outcome the user needs but gets a fact
+      wrong or leaves the user unsure what happened — for example it claims
+      work the transcript shows was not done, or it is so oblique that the
+      user cannot tell whether the rename landed.
+
+      Score 0.0 if the report states no outcome at all: it is empty, it only
+      asks a question, it only offers to do something, or it describes what it
+      is about to do rather than what it did.
+
+      A report that states the outcome AND pads it with headers, next steps
+      and an offer of further help still scores 1.0 here. That is the other
+      grader's business, not yours.
+
+  # The finding. `weight: 2` moves `weighted_score`, the number the report is
+  # read on; it does not move the pass gate, which is per-criterion —
+  # `all_criteria_passed` tests every gating criterion against its own
+  # `pass_threshold`, so nothing averages its way to a pass.
+  - type: agent_judge
+    description: The report carries the outcome and none of the named fluff modes
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are judging a completion report for SPECIFIC NAMED FAILURE MODES,
+      listed below. **You are NOT judging length.** Do not count lines, words,
+      sentences or bullets, and do not reward a report for being shorter than
+      another. A four-sentence report carrying none of the modes scores 1.0.
+
+      FIRST, FIND THE REPORT. The AGENT OUTPUT block is a whole-turn
+      transcript of an agent doing a small piece of work and then reporting on
+      it. `[ASSISTANT] …` starts each block of the agent thinking or working,
+      and `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries the text the
+      user received.
+
+      **The report you are grading is the text from the LAST `[RESULT - …]`
+      tag to the end of the AGENT OUTPUT block.** The narration above it is
+      the agent working, not the agent reporting, and it is NOT being graded.
+      Nothing below the AGENT OUTPUT block is the agent's either.
+
+      Begin your rationale with `ANCHOR: result`, or `ANCHOR: none` when there
+      is no `[RESULT - …]` tag; there is no fallback, and no `[RESULT - …]`
+      tag scores 0.0.
+
+      **THE REPORT APPEARS TWICE, AND THAT IS THE HARNESS, NOT THE AGENT.**
+      `format_messages` renders the final assistant text block and then
+      renders the same text again under `[RESULT - …]`. A perfectly compliant
+      turn therefore always reaches you as its report printed twice. A last
+      `[ASSISTANT]` block matching the `[RESULT - …]` block is ONE report,
+      never a report followed by a recap, and **never a finding**. Do not
+      score that echo as "restating what the user already saw". It is the
+      renderer.
+
+      THE SITUATION. The user asked for one mechanical rename across two small
+      files and watched the agent make it. There was no defect, no ambiguity
+      and no surprise, so there is nothing to explain. The honest report is one
+      or two sentences stating that the rename is done.
+
+      THE FAILURE MODES. Every one of these ADDS material the user did not ask
+      for and did not need:
+
+      - **Preamble or signposting** — "Great — let me walk through what I
+        did", "Here's a summary of the changes", "Perfect!", or any opener
+        that announces the report instead of being it.
+      - **Recap of what the user already watched happen** — narrating the
+        steps: which file was opened, which was read first, that a search was
+        run, that each edit was applied in turn. NOTE: the double render
+        described above is NOT this.
+      - **Structure imposed on three sentences** — a heading, a section title,
+        a "Changes" or "Summary" label, a bulleted list of two or three
+        trivially short items, or a table, where running prose would say the
+        same thing.
+      - **Hedging and caveats nobody asked for** — "you may want to verify",
+        "note that this assumes", "I believe this is correct", where nothing
+        in the situation is uncertain.
+      - **Unsolicited next steps** — suggesting tests, a commit, a further
+        refactor, other renames, or anything the user did not ask for.
+      - **A closing offer** — "Let me know if you'd like...", "Happy to also
+        ...", "Want me to run the tests?", or any invitation to more work.
+
+      Score by how many distinct modes appear:
+
+      - 1.0 — NONE of them. The report states the outcome and, at most, one
+        fact the user needs to know, such as the number of occurrences
+        changed. Four sentences of this score 1.0.
+      - 0.5 — exactly ONE of the modes appears, once.
+      - 0.0 — TWO or more of the modes appear, or any one of them dominates:
+        a headed and bulleted change log, a step-by-step narration of the
+        edits, or a report whose closing offer and next steps outweigh the
+        outcome.
+
+      CALIBRATION, so the modes stay distinct from length and from each other.
+
+      "Renamed `RETRY_LIMIT` to `MAX_RETRIES` in `billing/limits.py` and
+      updated both uses in `billing/charge.py`." — 1.0. One sentence, no
+      modes.
+
+      "Done. `RETRY_LIMIT` is now `MAX_RETRIES`. `billing/charge.py` used it
+      in the import and in the retry loop, and both are updated. Nothing else
+      in the tree referenced it." — 1.0. Four sentences, every one of them a
+      fact the user needs, no mode present. Length is not a mode.
+
+      "Renamed the constant and updated the caller. Let me know if you'd like
+      me to run the tests." — 0.5. The outcome is clean; the closing offer is
+      one mode.
+
+      "## Summary — I've completed the rename. **Changes:** • `limits.py`:
+      renamed the constant • `charge.py`: updated the import • `charge.py`:
+      updated the loop. **Next steps:** you may want to run the test suite."
+      — 0.0. Imposed structure, recap of the steps, unsolicited next steps and
+      hedging, all at once.
+
+      "Renamed it." — score it here on the modes alone: it carries none, so
+      1.0. Whether it says enough is the other grader's question, and that
+      grader is willing to fail this row on its own. Neither of you may
+      compensate for the other.
+
+      A fact is not a mode. Saying how many occurrences changed, or that
+      nothing else in the tree referenced the constant, is the report doing its
+      job. Speculating about what the user might want next is not.

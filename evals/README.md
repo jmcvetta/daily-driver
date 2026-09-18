@@ -384,7 +384,7 @@ row records a false negative a full run would never have produced.
 
 ## The constitution suite: reach, then compliance
 
-Both rows carry `skip:codex` and are absent from the Codex arm. `coder_eval`'s
+All three rows carry `skip:codex` and are absent from the Codex arm. `coder_eval`'s
 Codex agent links skills and installs no hooks, so the constitution never
 reaches that session and a zero there would say nothing about the constitution.
 See "The Codex arm" below.
@@ -467,6 +467,51 @@ Its weakness is the threshold. Four lines is the constitution's number, and the
 rubric inherits it — so the case measures compliance with the budget as written
 and says nothing about whether the budget is set at the right place. Moving the
 number means moving it in both files, together.
+
+### `completion-report-is-lean`, the report half
+
+`reply-is-concise` grades an *answer*. So does `answer-selects-from-findings`,
+which is not on this branch — it lives on `claude/undertake-279-amuprt`, PR
+#296. Both ask a question with one honest factual answer, and issue #279's
+comparison across five probes of that shape measured a paired difference of
+exactly 0.000, three of them at ceiling in both arms. A probe both arms pass
+cannot show a rule working.
+
+The verbosity people complain about arrives somewhere else: in the text an
+agent writes *after* doing work the user watched it do. This row grades that.
+One turn. The agent is asked to rename one constant across the two files that
+mention it, makes the edit, and closes with its own report — which is already
+the final assistant message, so both graders reach it with no simulated second
+turn and none of the simulator drift the sibling row's header records.
+
+The fixture is empty on purpose: no planted defect, no ambiguity, no surprise,
+no second caller, no test and no lint. Every one of those would be a legitimate
+thing to write about, and a report that is long because the work was
+interesting measures nothing. The honest report here is one sentence. The
+prompt says nothing about how to report, how long to be, or brevity — that
+steer is what the row exists to exclude.
+
+Two `agent_judge` graders, each able to fail the row alone. The floor states
+the rename was made; without it the fluff grader would pay best for silence,
+since a report containing nothing contains no fluff. The fluff grader at weight
+2 is the finding, and it scores six **named** modes and explicitly not length —
+preamble and signposting, recap of what the user already watched, structure
+imposed on three sentences, unasked-for hedging, unsolicited next steps, and a
+closing offer. Naming the modes is what makes this gradable where "is it
+concise" is not, and a correct four-sentence report carrying none of them
+scores 1.0.
+
+Both rubrics carry the `format_messages` warning the rows above carry, and it
+matters more here than anywhere: the final text is rendered twice, and
+"restating what the user already saw" is one of the very modes being hunted, so
+a naive judge scores the renderer's echo as the agent's recap. A sibling row
+lost five replicates to exactly that.
+
+What the row does not assert is that the edit landed. Both criteria read the
+report, so an agent that renames nothing and says so accurately passes the
+floor. A `file_matches_regex` would close it, and it is left out so
+`weighted_score` stays about the report. Nothing here has been run: no score
+for this row has been measured in either arm.
 
 ## The review-depth suite
 
@@ -785,8 +830,8 @@ grades `--body`.
 so. That tag takes a row out of one arm and leaves it in the rest, which an arm
 tag cannot express. The reason is that `coder_eval`'s Codex agent links skills
 and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` and no
-`PreToolUse` on the `Agent` tool, and no constitution in the session. Both rows
-would score 0 for a reason that has nothing to do with the constitution. #181
+`PreToolUse` on the `Agent` tool, and no constitution in the session. All three
+rows would score 0 for a reason that has nothing to do with the constitution. #181
 measured that a *real* Codex session does load the hook file and does deliver
 the constitution, behind persisted hook trust and an exactly-echoed
 `hookEventName`; whether the SDK's app-server can be driven through those gates
