@@ -193,11 +193,12 @@ also loads the plugins and skills **enabled for a claude.ai account**: in a
 cloud or Cowork session it downloads them into the session's own environment as
 it starts, and loads each as `<name>@synced` — into
 `~/.claude/plugins/synced/`, with no marketplace registration and no
-`installed_plugins.json` entry. So the two checks that read the install route
-(`claude plugin list`, and the Setup script's `grep` of
-`installed_plugins.json`) are both blind to it by construction: a synced plugin
-is live with that file still `{"version": 2, "plugins": {}}`. Ask the session
-instead.
+`installed_plugins.json` entry. So the Setup script's verification line is
+blind to it by construction: a synced plugin is live with the file that line
+greps still `{"version": 2, "plugins": {}}`. `claude plugin list` may answer
+where that line cannot: [Anthropic's documentation][synced] says it prints
+synced plugins under a `Synced from claude.ai` heading, which is documented
+rather than measured here. Ask the session instead.
 
 Enabling is done from the web console — **Customize** in the sidebar, the
 **Plugins** tab, then either **Browse plugins** for a listed one or the upload
@@ -219,15 +220,16 @@ repository stanza, `--plugin-dir` — wins, and Claude Code reports the synced
 copy as not loaded. So the two cloud routes do not stack: pick one per
 environment, or the one you did not think you were testing is the one you are.
 
-The two readers below change their answers here too. `claude plugin details`
-takes the plugin's ID, which is `daily-driver@synced` on this route and not
-`daily-driver@daily-driver`, and the `ls` the third check ends with points at
-`~/.claude/plugins/synced/` rather than at a marketplace cache nothing filled.
+The checks below are asked differently here. `claude plugin details` takes the
+plugin's ID, which is `daily-driver@synced` on this route and not
+`daily-driver@daily-driver`, and the directory to list beside the third check —
+[the README's question](../README.md#installing-it) ends with one — is
+`~/.claude/plugins/synced/` rather than a marketplace cache nothing filled.
 
 None of this section's cloud behaviour has been measured here; it is
 [Anthropic's documentation][synced] plus the shape of the failure the rest of
-this page exists for. The checks below are the ones that would settle it, and
-the third is the only one that answers on this route at all.
+this page exists for. Asking a session is what would settle it, which is the
+third of the checks below.
 
 [synced]: https://code.claude.com/docs/en/plugins-reference#synced-plugins
 
