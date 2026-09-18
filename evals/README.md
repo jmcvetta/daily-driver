@@ -266,9 +266,9 @@ lands on the graded turn instead of a spare one. Both graders now read the
 dialog and mark a replicate the drift spoiled. The mark does not remove it
 from anything: a spoiled replicate still scores 0.0 and still drags the mean
 until somebody drops it by hand. What it buys is that the reader can now tell
-which zeros those are. What the row establishes
-today is that it is not at ceiling; the number itself needs a fresh run
-before any amendment is tested against it.
+which zeros those are. What the row establishes today is that it is not at
+ceiling; the number itself needs a fresh run before any amendment is tested
+against it.
 
 `review-depth/` asks whether `review` sends the *right panel* at the right
 diff. Every case is anchored on something a person would notice if routing
