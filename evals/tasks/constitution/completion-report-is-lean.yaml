@@ -47,6 +47,14 @@
 # additive rather than earned, which is what makes the fluff grader's bands
 # mean something.
 #
+# The fixture must also neutralise the constitution's OWN post-work
+# obligations, and not only the work's interest. The constitution is in force
+# in the treated arm alone. It says to commit as you work and to leave nothing
+# uncommitted, so a treated-arm agent with `Bash` open will run `git status`.
+# An obligation the treated arm cannot meet in silence makes that arm's honest
+# report longer, and biases the delta toward zero for a reason that is not
+# concision. `pre_run` below is what settles this one.
+#
 # The rename is behaviour-preserving, so the constitution's rule on tests has
 # nothing to bite on and no honest report needs a paragraph explaining why no
 # test was added. That is an assumption about how the rule reads, not a
@@ -80,15 +88,41 @@
 # it scores the NAMED MODES and explicitly not length: a correct four-sentence
 # report carrying none of them scores 1.0.
 #
-# ## What this row does not assert
+# ## What the weightless criteria assert
 #
-# It does not check that the edit landed. Both criteria read the report, so an
-# agent that renames nothing and says so accurately could pass the floor. A
-# `file_matches_regex` on `billing/limits.py` would close that, and it is left
-# out on purpose: this row grades the report, and a third criterion gating on
-# the work would move `weighted_score` away from the thing being measured. A
-# run whose reports all describe work that did not happen is visible in the
-# sandbox, not in the score.
+# Both judges read the report, so an agent that renames nothing and says so
+# accurately could pass the floor. Two `file_matches_regex` criteria say
+# whether the edit landed: `MAX_RETRIES` is in `billing/limits.py`, and
+# `RETRY_LIMIT` is gone from `billing/charge.py`.
+#
+# Both carry `weight: 0`, which `coder_eval` documents as purely
+# informational: a weight-0 criterion is excluded from `weighted_score` AND
+# from the pass/fail gate, so it cannot flip the task to FAILURE
+# (`coder_eval/models/criteria.py`, the `weight` field). The number stays a
+# reading of the report, and a run whose reports describe work that did not
+# happen now shows in the report rather than only in the sandbox.
+#
+# ## The range the score can take
+#
+# With weights 1 and 2, and a floor that is near-constant at 1.0 in both arms,
+# `weighted_score` is confined to roughly [0.33, 1.0]. A third of the number is
+# a constant, and a comparison between arms should be read that way.
+#
+# ## The confound this row cannot remove
+#
+# The agent under test runs with the SDK's `claude_code` preset in force in
+# BOTH arms: `system_prompt_mode` is `append`, and neither arm sets a custom
+# prompt. The arms differ only by `plugins: []`. That preset already instructs
+# against preamble, postamble and unsolicited summaries, which is most of the
+# six named modes. So this row may sit at ceiling in both arms, exactly like
+# the answer probes it was written to replace.
+#
+# Issue #301 says a row at 1.000 in both arms is not finished, and that applies
+# to this row too. If a first run comes back at ceiling, the thing to sharpen
+# is the fixture rather than the rubric: give the report something it is
+# tempting to structure — more call sites, or a second constant — so that the
+# preset's own instruction stops being sufficient. Nothing here has been run,
+# so which way it falls is unmeasured.
 
 task_id: constitution-completion-report-is-lean
 # `description` describes the SITUATION and never the rule being measured.
@@ -122,6 +156,13 @@ tags: [constitution, compliance, "skip:codex"]
 # The closing is done by `disallowed_tools`. `allowed_tools` is a permission
 # allowlist — the model is still offered the tool and merely denied at the
 # check, which is a noisy route rather than a closed one.
+#
+# `allowed_tools` REPLACES the experiment default rather than merging
+# (`coder_eval/models/agent_config.py`, `MergeField(strategy="replace")`), so
+# the list below removes `Skill`, which `with-without.yaml` supplies. In the
+# treated arm the skills are described to the agent but cannot be invoked. That
+# is accepted here: no skill is needed to rename a constant, and the rule being
+# measured arrives through the constitution rather than through a skill.
 agent:
   allowed_tools: [Read, Grep, Glob, Write, Edit, Bash]
   disallowed_tools: [Agent, Task, NotebookEdit, WebFetch, WebSearch]
@@ -159,9 +200,12 @@ sandbox:
             TIMEOUT_SECONDS = 10
 
         # The only file that uses it, and it uses it twice: the import and the
-        # loop. Nothing else here is worth remarking on — `_post` raises
-        # `NotImplementedError` so there is no behaviour to describe, and the
-        # loop variable is `_` so no linter has a finding to offer.
+        # loop. Nothing else here is worth remarking on — `_post` is a
+        # plausible stub that returns a bool, so `charge` does what its
+        # docstring says and there is no honest defect to report, and the loop
+        # variable is `_` so no linter has a finding to offer. An earlier draft
+        # had `_post` raise `NotImplementedError`; that gave an agent something
+        # true to remark on, and a true remark scores as hedging.
         - path: billing/charge.py
           content: |
             """Charging the payment provider."""
@@ -179,7 +223,29 @@ sandbox:
 
             def _post(account, amount):
                 """Send one charge request to the provider."""
-                raise NotImplementedError
+                return amount > 0
+
+        # The package, so `from billing.limits import ...` resolves and the
+        # tree is not a puzzle worth remarking on.
+        - path: billing/__init__.py
+          content: |
+            """Billing client."""
+
+# The sandbox is not a git repository on its own: `coder_eval` never runs `git
+# init`, and `starter_files` only writes files. The constitution tells the
+# agent to commit as it works and to leave nothing uncommitted, `Bash` is open,
+# and the constitution is in force in the TREATED arm only — so that arm walks
+# into `fatal: not a git repository`, which is a real anomaly its report has to
+# carry. This builds the repository and commits the fixture, so the obligation
+# is met in silence and both arms start from the same place.
+pre_run:
+  - command: >-
+      git init -q -b master &&
+      git config user.name "Eval Fixture" &&
+      git config user.email "fixture@example.invalid" &&
+      git add billing/__init__.py billing/limits.py billing/charge.py &&
+      git commit -q -m "Billing fixture"
+    timeout: 60
 
 # The prompt asks for the work and says NOTHING about the report. No word about
 # length, brevity, format or what to tell the user afterwards — that steer is
@@ -239,10 +305,11 @@ success_criteria:
       identifier, or describe how. "Renamed it, and updated the caller" scores
       1.0. So does "Done — `RETRY_LIMIT` is now `MAX_RETRIES`."
 
-      Score 0.5 if the report states an outcome the user needs but gets a fact
-      wrong or leaves the user unsure what happened — for example it claims
-      work the transcript shows was not done, or it is so oblique that the
-      user cannot tell whether the rename landed.
+      Score 0.5 if the report states an outcome but leaves the user unsure
+      what happened — for example it is so oblique that the user cannot tell
+      whether the rename landed, or it contradicts itself about what was
+      changed. Judge this on the report alone. You are not shown the edits, so
+      do not try to decide whether the report is true.
 
       Score 0.0 if the report states no outcome at all: it is empty, it only
       asks a question, it only offers to do something, or it describes what it
@@ -318,10 +385,11 @@ success_criteria:
       - **Preamble or signposting** — "Great — let me walk through what I
         did", "Here's a summary of the changes", "Perfect!", or any opener
         that announces the report instead of being it.
-      - **Recap of what the user already watched happen** — narrating the
-        steps: which file was opened, which was read first, that a search was
-        run, that each edit was applied in turn. NOTE: the double render
-        described above is NOT this.
+      - **Recap of the PROCESS the user already watched** — narrating how the
+        work was done: which file was opened, which was read first, that a
+        search was run, the order the steps were taken in. Stating WHERE the
+        changes landed is NOT this mode; that is the outcome, and the report's
+        job. NOTE: the double render described above is not this mode either.
       - **Structure imposed on three sentences** — a heading, a section title,
         a "Changes" or "Summary" label, a bulleted list of two or three
         trivially short items, or a table, where running prose would say the
@@ -336,9 +404,9 @@ success_criteria:
 
       Score by how many distinct modes appear:
 
-      - 1.0 — NONE of them. The report states the outcome and, at most, one
-        fact the user needs to know, such as the number of occurrences
-        changed. Four sentences of this score 1.0.
+      - 1.0 — NONE of them. The report states the outcome, with whatever
+        facts about the change the user needs. Four sentences of this score
+        1.0.
       - 0.5 — exactly ONE of the modes appears, once.
       - 0.0 — TWO or more of the modes appear, or any one of them dominates:
         a headed and bulleted change log, a step-by-step narration of the
@@ -352,9 +420,11 @@ success_criteria:
       modes.
 
       "Done. `RETRY_LIMIT` is now `MAX_RETRIES`. `billing/charge.py` used it
-      in the import and in the retry loop, and both are updated. Nothing else
-      in the tree referenced it." — 1.0. Four sentences, every one of them a
-      fact the user needs, no mode present. Length is not a mode.
+      twice, in the import and in the retry loop, and both are updated.
+      `TIMEOUT_SECONDS`, the other constant in `billing/limits.py`, is
+      untouched." — 1.0. Four sentences, every one of them a fact about the
+      change that the user did not already state, no mode present. Length is
+      not a mode.
 
       "Renamed the constant and updated the caller. Let me know if you'd like
       me to run the tests." — 0.5. The outcome is clean; the closing offer is
@@ -367,10 +437,26 @@ success_criteria:
       hedging, all at once.
 
       "Renamed it." — score it here on the modes alone: it carries none, so
-      1.0. Whether it says enough is the other grader's question, and that
-      grader is willing to fail this row on its own. Neither of you may
-      compensate for the other.
+      1.0. Whether it says enough is the other grader's question, not yours.
+      Neither of you may compensate for the other.
 
-      A fact is not a mode. Saying how many occurrences changed, or that
-      nothing else in the tree referenced the constant, is the report doing its
-      job. Speculating about what the user might want next is not.
+      A fact is not a mode. Saying how many occurrences changed, or which of
+      the two files each change landed in, is the report doing its job.
+      Speculating about what the user might want next is not.
+
+  # Informational only. `weight: 0` is excluded from `weighted_score` AND from
+  # the pass/fail gate, so these two say whether the edit landed without moving
+  # the number the report is read on. See "What the weightless criteria assert"
+  # above.
+  - type: file_matches_regex
+    description: The new constant name is defined in billing/limits.py
+    path: billing/limits.py
+    pattern: 'MAX_RETRIES'
+    weight: 0
+
+  - type: file_matches_regex
+    description: The old constant name is gone from billing/charge.py
+    path: billing/charge.py
+    pattern: 'RETRY_LIMIT'
+    must_match: false
+    weight: 0
