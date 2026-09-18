@@ -165,8 +165,16 @@ simulation:
   max_turns: 2
 
 run_limits:
-  # Two agent turns, the first of which reads five files and writes a full
-  # audit. 30 is the experiment default and clears it with room; issue #279's
+  # NOT a budget across the two dialog turns. `RunLimits.max_turns` is "Max
+  # agent inner-loop turns per iteration", enforced inside the SDK, so it caps
+  # the steps ONE agent turn may take. Setting it to 2 would cut the audit off
+  # mid-turn, and an exhausted inner cap ends the dialog as well: `orchestrator`
+  # breaks on `turn_record.max_turns_exhausted` with `stop_reason=MAX_TURNS`,
+  # leaving the audit as the last turn record. The dialog turns are
+  # `simulation.max_turns` above.
+  #
+  # Turn one reads five files and writes a full audit, so the cap has to clear
+  # that with room. 30 is the experiment default and does; issue #279's
   # comparison was corrupted by an 8-turn ceiling on a row that used 12 to 22,
   # so this one is not set tight.
   max_turns: 30
