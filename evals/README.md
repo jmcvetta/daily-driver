@@ -233,10 +233,42 @@ constitution's own test, described under "Checks" in the repository README. Its 
 `scripts/check-constitution.py`.
 
 It asks two questions, not one. `reaches-subagent` asks whether the text
-arrives; `reply-is-concise` asks whether it changes anything once it has. The
+arrives; the compliance rows ask whether it changes anything once it has. The
 second is what a delivery test cannot tell you, and until it existed every
 amendment to the constitution shipped on argument alone. See "The constitution
 suite" below for why that case is the one the file gets first.
+
+**The compliance rows differ in how much true material the model is holding,
+and that turns out to be the axis that matters.** `reply-is-concise` asks a
+question with one honest answer, so the model gives it: measured at 1.000 in
+every arm of every run, treated and bare alike, which means it separates
+nothing — not two versions of the rule, and not a session carrying the
+constitution from one without it.
+`answer-selects-from-findings` first spends a turn filling the context with
+five true findings the model wrote itself, and only then asks for one of them.
+That is a selection problem rather than a compression one, and it is where the
+rule is actually load-bearing. A compliance row that scores 1.000 everywhere is
+proving the model's default, not the constitution — issue #279's comparison
+concluded nothing for exactly that reason, and this row is what came out of it.
+
+Its first probe run scored 0.40 bare against 0.80 treated, five replicates
+each, with the correctness floor at 1.000 in all ten. **That figure is
+indicative and has not been re-measured.** Reviewing the run showed the
+simulated interlocutor drifting off the question it was given: in one of the
+ten replicates it answered itself and ended the dialog, so the graders read the
+audit instead of the reply, and in three more an extra turn let it state the
+answer before the question arrived. The row's `simulation` block has
+since been narrowed — two turns instead of three, the model pinned, the
+`description` stripped of anything describing the rule — so the run that
+produced 0.40/0.80 was made under a configuration this repository no longer
+holds. The narrowing does not remove the drift: at two turns a self-answer
+lands on the graded turn instead of a spare one. Both graders now read the
+dialog and mark a replicate the drift spoiled. The mark does not remove it
+from anything: a spoiled replicate still scores 0.0 and still drags the mean
+until somebody drops it by hand. What it buys is that the reader can now tell
+which zeros those are. What the row establishes today is that it is not at
+ceiling; the number itself needs a fresh run before any amendment is tested
+against it.
 
 `review-depth/` asks whether `review` sends the *right panel* at the right
 diff. Every case is anchored on something a person would notice if routing
@@ -384,8 +416,8 @@ row records a false negative a full run would never have produced.
 
 ## The constitution suite: reach, then compliance
 
-Both rows carry `skip:codex` and are absent from the Codex arm. `coder_eval`'s
-Codex agent links skills and installs no hooks, so the constitution never
+Every row there carries `skip:codex` and is absent from the Codex arm.
+`coder_eval`'s Codex agent links skills and installs no hooks, so the constitution never
 reaches that session and a zero there would say nothing about the constitution.
 See "The Codex arm" below.
 
@@ -415,7 +447,7 @@ bubble into the parent's telemetry tagged with `parent_tool_use_id`, and
 same hole — the parent could simply type the answer. Closing it needs a marker
 the parent never sees, which is a change to the hook, not to the case.
 
-### `reply-is-concise`, the compliance half
+### `reply-is-concise`, the first compliance row
 
 Reach is settled; whether an injected rule *lands* is not, and `reply-is-concise`
 is the first case here that asks. It picks the `Before you reply` rule because
@@ -467,6 +499,44 @@ Its weakness is the threshold. Four lines is the constitution's number, and the
 rubric inherits it — so the case measures compliance with the budget as written
 and says nothing about whether the budget is set at the right place. Moving the
 number means moving it in both files, together.
+
+### `answer-selects-from-findings`, the row that is not at ceiling
+
+`reply-is-concise` scores 1.000 in every arm of every run, bare arms included,
+so it separates nothing: a row at ceiling on both sides is measuring the
+model's default rather than the rule. This row is built to separate.
+Turn one asks for an audit of a five-file service, is meant to be long, and is
+not graded — it exists to fill the context with five true findings the model
+wrote itself. Turn two asks which of them breaks first under load, and it is
+the reply to that turn both graders read. Four of the five are load-independent
+by construction, so the answer is not arguable, and the four decoys are real
+bugs rather than trivia: repeating them is repeating things worth knowing,
+which is the pull the rule has to overcome.
+
+Two graders, each able to fail the row alone. The floor grader checks the pool
+is named, so silence is never rewarded. The selection grader scores what the
+reply carried beyond the answer, explicitly not its length.
+
+Its weakness is the interlocutor. `coder_eval` has no scripted user turn, so
+turn two's wording is a `constraints` instruction to a roleplaying model rather
+than a pin, and the first probe run showed it drifting — see the block above
+and the file's own header for what that cost and what was narrowed in
+response.
+
+The graders read the dialog, so the drift is scored rather than hidden. Both
+criteria set `include_dialog: true`, and each judge checks the second user
+turn before it grades anything: a turn that never arrived scores 0.0 under
+`ANCHOR: no-question`, and one that asked the question while giving the answer
+away scores 0.0 under `ANCHOR: tainted-question`. Grep those tokens to tell a
+replicate that measured nothing from one that measured non-compliance, which
+scores under `ANCHOR: result`.
+
+`simulation.total_turns` does not do that job. It catches only an abort — a
+stop token, or a simulator failure or timeout — and reads 2 for every
+self-answer, which is the common failure. What the anchors still leave to the
+reader: a lost replicate scores 0.0 like any other, so it drags the mean until
+someone drops it by hand, and the check itself is a judgement by the grading
+model rather than a field. Read the dialogs before trusting a mean.
 
 ## The review-depth suite
 
@@ -785,8 +855,8 @@ grades `--body`.
 so. That tag takes a row out of one arm and leaves it in the rest, which an arm
 tag cannot express. The reason is that `coder_eval`'s Codex agent links skills
 and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` and no
-`PreToolUse` on the `Agent` tool, and no constitution in the session. Both rows
-would score 0 for a reason that has nothing to do with the constitution. #181
+`PreToolUse` on the `Agent` tool, and no constitution in the session. Every row
+there would score 0 for a reason that has nothing to do with the constitution. #181
 measured that a *real* Codex session does load the hook file and does deliver
 the constitution, behind persisted hook trust and an exactly-echoed
 `hookEventName`; whether the SDK's app-server can be driven through those gates
