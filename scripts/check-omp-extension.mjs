@@ -852,6 +852,55 @@ checkGuard(
 	worktrees.task,
 );
 
+// A `--git-dir` selects the repository whose config the alias comes from, so
+// the lookup follows it: reading the alias in the shell's own directory finds
+// nothing and lets the aliased spelling through where the plain one is
+// blocked.
+checkGuard(
+	"an alias is read from the repository --git-dir selects",
+	true,
+	"bash",
+	{
+		command:
+			`git --git-dir="${resolve(worktrees.primary, ".git")}" ` +
+			`--work-tree="${worktrees.primary}" co feature/x`,
+	},
+	worktrees.outside,
+);
+
+// Config carried in the environment defines an alias exactly as `-c` does.
+checkGuard(
+	"an alias defined through GIT_CONFIG_KEY is refused rather than read past",
+	true,
+	"bash",
+	{
+		command:
+			"GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.q GIT_CONFIG_VALUE_0=switch " +
+			"git q feature/x",
+	},
+	worktrees.primary,
+);
+
+checkGuard(
+	"a config file named in the environment is refused too",
+	true,
+	"bash",
+	{ command: "GIT_CONFIG_GLOBAL=/tmp/aliases git q feature/x" },
+	worktrees.primary,
+);
+
+checkGuard(
+	"an environment setting that renames nothing is still read past",
+	false,
+	"bash",
+	{
+		command:
+			"GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.pager GIT_CONFIG_VALUE_0=cat " +
+			"git log --oneline -1",
+	},
+	worktrees.primary,
+);
+
 // A `-C` value that expands leaves the invocation with no directory of its
 // own, so the alias is looked up in the directory the tool was called in —
 // the same repository, and the same config.

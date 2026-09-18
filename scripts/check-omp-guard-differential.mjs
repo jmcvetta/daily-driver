@@ -295,6 +295,8 @@ function shapes({ root, primary, task, detached }) {
 	add("configured alias carrying --hard", task, `git -C ${primary} undo HEAD~1`);
 	add("alias naming another alias", task, `git -C ${primary} chain feature/y`);
 	add("shell alias in the primary", primary, "git visual");
+	add("aliased subcommand under --git-dir", task, `git --git-dir=${primary}/.git --work-tree=${primary} co feature/y`);
+	add("alias defined in the environment", task, `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.q GIT_CONFIG_VALUE_0=switch git -C ${primary} q feature/y`);
 	add("alias for a read-only command", primary, "git lg -1");
 	add("cd into a missing directory", primary, `cd ${root}/never-created\ngit switch feature/y`);
 	add("restore in the primary", primary, "git restore --source=HEAD~1 tracked.txt");

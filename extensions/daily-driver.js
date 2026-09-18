@@ -872,6 +872,45 @@ function mayRenameSubcommand(word) {
 }
 
 /**
+ * Environment variables that hand Git a whole config file, which can hold any
+ * setting at all — an alias among them. `GIT_CONFIG_PARAMETERS` is Git's own
+ * internal channel and is read the same way.
+ */
+const CONFIG_FILE_ENVIRONMENT = new Set([
+	"GIT_CONFIG",
+	"GIT_CONFIG_GLOBAL",
+	"GIT_CONFIG_PARAMETERS",
+	"GIT_CONFIG_SYSTEM",
+]);
+
+/**
+ * True where an environment assignment before the Git executable may rename
+ * the subcommand.
+ *
+ * `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.q GIT_CONFIG_VALUE_0=switch`
+ * defines an alias exactly as `-c alias.q=switch` does, and a config file
+ * named in the environment can hold one too. The count itself renames
+ * nothing; the keys are read the way an inline setting's name is, so
+ * `GIT_CONFIG_KEY_0=core.pager` is still read past.
+ */
+function environmentMayRename(words, end) {
+	for (let index = 0; index < end; index++) {
+		const word = words[index];
+		if (!isEnvironmentAssignment(word)) continue;
+		const name = word.text.slice(0, word.text.indexOf("="));
+		if (CONFIG_FILE_ENVIRONMENT.has(name)) return true;
+		if (!/^GIT_CONFIG_KEY_\d+$/u.test(name)) continue;
+		if (mayRenameSubcommand({
+			text: word.text.slice(name.length + 1),
+			literal: word.literal,
+		})) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * The config setting one word carries, in any of the four spellings Git takes
  * it in — `-c x=y`, `-cx=y`, `--config-env x=y`, `--config-env=x=y` — or null
  * where the word carries none. `consumed` says how many further words the
@@ -929,9 +968,10 @@ function parseGitInvocation(words, shellCwd, start) {
 	const environmentWorkTree = environmentValue(words, index, "GIT_WORK_TREE");
 	let gitDir = null;
 	let workTree = null;
-	// Set by a `-c`/`--config-env` setting that may rename the subcommand, so
-	// the word read as the subcommand below may be an alias for a guarded one.
-	let mayRename = false;
+	// Set by a `-c`/`--config-env` setting, or by config carried in the
+	// environment, that may rename the subcommand — so the word read as the
+	// subcommand below may be an alias for a guarded one.
+	let mayRename = environmentMayRename(words, index);
 	index++;
 	for (; index < words.length; index++) {
 		const { text: word, literal } = words[index];
@@ -1019,8 +1059,9 @@ function recognizedSubcommand(word) {
 /**
  * The configured expansion of one alias, or null where the word names none.
  *
- * The lookup runs in the invocation's own directory where it has one, because
- * that is the repository whose config Git would read. A config read Git cannot answer at
+ * The lookup runs where Git would read the config: in the invocation's own
+ * directory, and under its `--git-dir` where it selects one, because a
+ * selected repository's config is the config the alias comes from. A config read Git cannot answer at
  * all is a `GitUnavailableError` from `gitOutput`, not an absent alias: the
  * guard must not fail open on a Git it could not consult.
  *
@@ -1032,10 +1073,11 @@ function recognizedSubcommand(word) {
  * A directory that does not exist is no alias: Git would fail to start there,
  * so the command the guard is reading rewrites nothing.
  */
-function aliasExpansion(cwd, word) {
-	const anchor = existingDirectory(cwd);
+function aliasExpansion(cwd, gitDir, word) {
+	const anchor = existingDirectory(cwd ?? gitDir);
 	if (anchor === null) return null;
-	return gitOutput(anchor, "config", "--get", `alias.${word}`);
+	const selectors = gitDir === null ? [] : [`--git-dir=${gitDir}`];
+	return gitOutput(anchor, ...selectors, "config", "--get", `alias.${word}`);
 }
 
 /**
@@ -1104,9 +1146,10 @@ function renamingInvocation(invocation) {
  * own — `alias.co = -C /elsewhere checkout` selects another repository, and
  * `alias.x = -c alias.y=switch y` renames again.
  *
- * Two cases cannot be resolved and are marked as renaming rather than
- * answered: an expansion Git hands to a shell, and a chain longer than the
- * limit. A third has no lookup to make at all — an invocation whose own
+ * Three cases cannot be resolved and are marked as renaming rather than
+ * answered: an expansion Git hands to a shell, a chain longer than the limit,
+ * and a `--git-dir` whose value expands, which selects a config the guard
+ * cannot read. A third has no lookup to make at all — an invocation whose own
  * directory expanded, and a shell whose directory the walker lost — and the
  * fallback is the directory the tool was called in, which is the repository
  * whose config the aliases almost certainly come from. With no directory
@@ -1121,10 +1164,16 @@ function gitInvocation(words, shellCwd, start, toolCwd) {
 			return invocation;
 		}
 		if (recognizedSubcommand(invocation.subcommand)) return invocation;
+		// A selector the guard could not read is a config it cannot ask about.
+		if (invocation.gitDir === UNREADABLE) return renamingInvocation(invocation);
 		const lookupCwd = invocation.cwd ?? toolCwd ?? null;
-		if (lookupCwd === null) return invocation;
+		if (lookupCwd === null && invocation.gitDir === null) return invocation;
 		if (expansions >= ALIAS_EXPANSION_LIMIT) return renamingInvocation(invocation);
-		const expansion = aliasExpansion(lookupCwd, invocation.subcommand);
+		const expansion = aliasExpansion(
+			lookupCwd,
+			invocation.gitDir,
+			invocation.subcommand,
+		);
 		if (expansion === null) return invocation;
 		const expanded = splitAliasExpansion(expansion);
 		if (expanded === null) return renamingInvocation(invocation);
