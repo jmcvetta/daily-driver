@@ -223,8 +223,9 @@ environment, or the one you did not think you were testing is the one you are.
 The checks below are asked differently here. `claude plugin details` takes the
 plugin's ID, which is `daily-driver@synced` on this route and not
 `daily-driver@daily-driver`, and the directory to list beside the third check —
-[the README's question](../README.md#installing-it) ends with one — is
-`~/.claude/plugins/synced/` rather than a marketplace cache nothing filled.
+[the README's account-route question](../README.md#the-other-cloud-route-enable-it-on-your-account)
+ends with one — is `~/.claude/plugins/synced/` rather than a marketplace cache
+nothing filled.
 
 None of this section's cloud behaviour has been measured here; it is
 [Anthropic's documentation][synced] plus the shape of the failure the rest of
@@ -266,13 +267,16 @@ Two readers are routinely mistaken for one of the three, and are not:
 - **The harness `ListPlugins` tool answers a different question.** In two
   separate cloud environments it returned an empty list while the plugin was
   live — skills firing, constitution injected.
-- **`claude plugin list` reads one route only.** It reports
-  `installed_plugins.json`, so it is honest about a plugin the Setup script
-  installed and says nothing about one arriving by stanza. Measured: in the
-  trusted stanza-only repository, where the marketplace was registered and the
-  plugin cached, it still said `No plugins installed`. Worth reading on a
-  cloud container, where `installed_plugins.json` is the file the Setup
-  script's verification line greps.
+- **`claude plugin list` reads `installed_plugins.json`.** So it is honest
+  about a plugin the Setup script installed and says nothing about one
+  arriving by stanza. Measured: in the trusted stanza-only repository, where
+  the marketplace was registered and the plugin cached, it still said `No
+  plugins installed`. Worth reading on a cloud container, where
+  `installed_plugins.json` is the file the Setup script's verification line
+  greps. It is not the one-route reader this bullet once called it:
+  [Anthropic's documentation][synced] gives the account route a
+  `Synced from claude.ai` heading of its own in that output — documented, and
+  measured here no more than the rest of that route.
 
 ## The route that would be genuinely per-repository, and is blocked
 
