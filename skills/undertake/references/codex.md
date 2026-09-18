@@ -25,9 +25,12 @@ links, and a double-quoted shell argument substitutes the backticks before
 `gh` sees them. `pr-body`'s [`codex.md`](../../pr-body/references/codex.md)
 makes the same argument at length.
 
-`comments` is in that field list because `Claim the issue` needs it: a claim
+`comments` is in that field list because `SKILL.md` reads the comments as
+content: a correction to the body, a constraint an earlier session found, a
+decision taken in the thread. It serves `Claim the issue` as well — a claim
 already on the issue is what says the sequence is being re-entered, or that
-another session got there first. A read without it cannot tell either.
+another session got there first — but that is the smaller of the two reasons.
+A read without the field has neither.
 
 The `--json` fields in the read row need `gh` at its stated floor.
 `issue-deps` owns the edge reads and picks its own client — two clients here

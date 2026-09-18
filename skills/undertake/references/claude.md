@@ -12,11 +12,18 @@ The issue
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `mcp__github__search_issues` |
 | `Open the issue` | Open one, labelled | `mcp__github__issue_write`, method `create`, with `labels` |
-| `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read` |
+| `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read`, method `get` |
+| `Read the issue and its edges` | Read the comments | `mcp__github__issue_read`, method `get_comments` |
 | `Read the issue and its edges` | Label an issue that carries none | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, method `update`, sending that set plus the new label |
 | `Claim the issue` | Comment on the issue | `mcp__github__add_issue_comment` |
 
-**The read in that row is not optional.** `labels` replaces the whole set, so
+**The comments are a second call on this client.** `mcp__github__issue_read`
+takes a `method`, and `get` returns the body, the labels and the hierarchy
+flags — not the comments. `get_comments` is what returns them, so a session
+that makes only the `get` call reads none of the handoff content `SKILL.md`
+asks for, and cannot tell whether the issue is claimed either.
+
+**The read in the labelling row is not optional.** `labels` replaces the whole set, so
 an update sending one label deletes every other label the issue had — the
 stock and bot-owned ones `issue-labels` says to leave alone included. An
 issue carrying none of the standard's six is not an issue carrying none.
