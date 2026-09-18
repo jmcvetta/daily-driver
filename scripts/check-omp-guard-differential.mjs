@@ -14,6 +14,13 @@
  *
  *     the guard allowed it  =>  the primary checkout did not change
  *
+ * The property is asserted over the commands this guard claims, which is the
+ * `git checkout` and `git switch` family #269 names. `git reset`, `restore`,
+ * `stash`, `merge`, `rebase` and `pull` move the primary too and are not
+ * recognized yet; #289 carries them, and no shape here asserts otherwise. A
+ * check that claimed the whole surface while the recognizer covered part of it
+ * would be the overstatement this guard was rewritten to stop making.
+ *
  * A guard that denies something harmless fails no assertion here. That
  * asymmetry is the inversion #269 asks for: a false positive costs the model
  * one rewritten command, and a false negative costs the user their checkout.
