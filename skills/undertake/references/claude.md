@@ -12,11 +12,18 @@ The issue
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `mcp__github__search_issues` |
 | `Open the issue` | Open one, labelled | `mcp__github__issue_write`, method `create`, with `labels` |
-| `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read` |
+| `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read`, method `get` |
+| `Read the issue and its edges` | Read the comments | `mcp__github__issue_read`, method `get_comments` |
 | `Read the issue and its edges` | Label an issue that carries none | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, method `update`, sending that set plus the new label |
 | `Claim the issue` | Comment on the issue | `mcp__github__add_issue_comment` |
 
-**The read in that row is not optional.** `labels` replaces the whole set, so
+**The comments are a second call on this client.** `mcp__github__issue_read`
+takes a `method`, and `get` returns the body, the labels and the hierarchy
+flags — not the comments. `get_comments` is what returns them, so a session
+that makes only the `get` call reads none of the handoff content `SKILL.md`
+asks for, and cannot tell whether the issue is claimed either.
+
+**The read in the labelling row is not optional.** `labels` replaces the whole set, so
 an update sending one label deletes every other label the issue had — the
 stock and bot-owned ones `issue-labels` says to leave alone included. An
 issue carrying none of the standard's six is not an issue carrying none.
@@ -48,8 +55,8 @@ The pull request
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
-| `The milestone` | Read the readiness state | `mcp__github__get_pull_request` — `isDraft`, `mergeable`, `mergeStateStatus`, `headRefOid` |
-| `The milestone` | Read the existing comments | `mcp__github__get_issue_comments` |
+| `The milestone` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable_state`, `head.sha` |
+| `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
 | `The milestone` | Post the report | `mcp__github__add_issue_comment` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
@@ -95,19 +102,21 @@ The milestone
 `SKILL.md` owns what the report says and when it is owed; these are the calls
 that read the readiness state, find the claim's timestamp, and post it.
 
-**The readiness state is `mcp__github__get_pull_request`.** The fields answer
-`SKILL.md`'s questions directly: `isDraft`; `mergeable`, which answers
-`true`, `false`, or `null` — only `true` is a yes, and `null` is GitHub
-saying it cannot determine the answer yet, which is the unknown readiness
-`SKILL.md` rules out; `mergeStateStatus`, which must agree with `The gate`
-as well — `BEHIND` is a base the branch does not carry, `UNSTABLE` a check
-that is no longer green, `BLOCKED` a required review outstanding, and
-`UNKNOWN` the indeterminate answer `SKILL.md` rules out outright, so a state
-that disagrees with the gate is a wait, not a milestone; and `headRefOid`,
-the SHA the report binds to.
+**The readiness state is `mcp__github__pull_request_read`, method `get`.**
+Three fields answer `SKILL.md`'s questions: `draft`; `mergeable_state`,
+which carries both the mergeability answer and the gate's — `clean` is the
+only yes, `behind` is a base the branch does not carry, `unstable` a check
+that is no longer green, `dirty` a conflict, `blocked` a required review
+outstanding, and `unknown` GitHub saying it cannot determine the answer
+yet, which is the indeterminate readiness `SKILL.md` rules out, so a state
+that disagrees with the gate is a wait, not a milestone; and `head.sha`,
+the SHA the report binds to. This call returns no `mergeable` boolean —
+measured on the server this session holds, 2026-09-18 — so `mergeable_state`
+is the whole answer rather than half of it.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
-with `mcp__github__get_issue_comments`, find the claim by its branch link and
+with `mcp__github__issue_read`, method `get_comments` — the read `Read the
+issue and its edges` already makes — find the claim by its branch link and
 `Model:` and `session:` lines, and take `created_at`; where more than one
 comment carries that shape, the earliest of them is the start — a later
 claim does not restart the clock. The resumed sequence
@@ -116,8 +125,8 @@ recoverable claim leaves the timing `n/a`, per `SKILL.md`.
 
 **The report posts with `mcp__github__add_issue_comment`** — a pull request's
 comments are issue comments, so the claim's write is the report's. The same
-call only writes, so read first: `mcp__github__get_issue_comments` on the
-pull request, the report found by its opening line, `First-readiness
+call only writes, so read first: `mcp__github__pull_request_read`, method
+`get_comments`, on the pull request, the report found by its opening line, `First-readiness
 report`, the marker `SKILL.md` fixes, and a resumed sequence that finds it
 posts nothing.
 

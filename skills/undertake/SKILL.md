@@ -177,9 +177,22 @@ it, on a write that needs no more permission than the claim a moment later.
 Naming the label and moving on leaves the next session asking the same
 question of the same issue.
 
-The comments too, because `Claim the issue` needs to know whether it is claimed
-already — by this session, which means the sequence is being re-entered, or by
-another.
+The comments too, and they are read as content rather than as a checkbox. A
+comment may carry a correction to the body, a constraint a session that came
+before discovered, a decision the user made in the thread, or the record of an
+attempt that failed. That material is often the most current thing on the
+issue, so read it the way the body is read. **Where a comment contradicts the
+body, the body is not automatically right**: report the discrepancy rather
+than resolve it silently. `issue-body`'s update rule says a stale handoff is
+reported rather than followed, and this is the same rule at the reading end.
+
+A comment can also carry a stop the body does not, and this step already stops
+on what it reads — a blocking edge, an `epic` label, a `proposal`. One in a
+comment is the same stop.
+
+The claim is the second reason, and it stays: `Claim the issue` needs to know
+whether the issue is claimed already — by this session, which means the
+sequence is being re-entered, or by another.
 
 3 — Establish task worktree
 ---------------------------

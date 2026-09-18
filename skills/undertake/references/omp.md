@@ -17,9 +17,15 @@ The issue
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `github.search_issues`, or `gh search issues` |
 | `Open the issue` | Open one, labelled | `gh issue create --label task` |
-| `Read the issue and its edges` | Read the body and the graph | `issue://<number>` |
+| `Read the issue and its edges` | Read the body, the graph and the comments | `issue://<number>`, comments included |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> -b "…"` |
+
+**`issue://<number>` carries the comments**, so the read in that row is one
+call and returns the handoff content `SKILL.md` asks for. Where a cache miss
+or a truncated resource leaves them out, `gh issue view <number> --json
+comments` is the read that returns them — the same call the readiness report
+makes further down this file.
 
 `issue-deps` owns the edge writes, and has its own routes. So does
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
@@ -90,10 +96,11 @@ a check that is no longer green, and `UNKNOWN` and `BLOCKED` are states
 what the gate answered; a state that disagrees with it is a wait, not a
 milestone. `headRefOid` is the SHA the report binds to.
 
-**The start is the claim comment's `createdAt`.** `gh issue view <issue>
---json comments` is the read `Read the issue and its edges` already makes —
-`comments` is in its field list — and the claim is the comment carrying the
-branch link and the `Model:` and `session:` lines. Take its `createdAt`;
+**The start is the claim comment's `createdAt`.** `issue://<issue>` carries
+the comments, so `Read the issue and its edges` already has them; `gh issue
+view <issue> --json comments` is the same read where that resource is not to
+hand. The claim is the comment carrying the branch link and the `Model:` and
+`session:` lines. Take its `createdAt`;
 where more than one comment carries that shape, the earliest of them is the
 start — a later claim does not restart the clock. A resumed session finds
 the start with the read it makes anyway. An issue with no recoverable claim
