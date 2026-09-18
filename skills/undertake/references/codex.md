@@ -56,6 +56,11 @@ The pull request
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the draft` | Open it | `pr`, which owns the call |
+| `The gate` | Read the branch against its base | `gh pr view <number> --json mergeStateStatus` |
+| `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
+| `The gate` | Read the review threads | `review-cycle`'s `references/codex.md` owns them |
+| `The gate` | Read the review record | `gh pr view <number> --json comments` — the round's own `Review` and `Review verification` comments |
+| `The gate` | Read the human-action notice | `gh pr view <number> --json body`, where `pr-body`'s notice sits |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
@@ -95,12 +100,15 @@ are `gh` throughout, as everywhere on this harness.
     gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid
 
 `isDraft` false and `mergeable` `MERGEABLE` are two of the answers the report
-needs, and neither is sufficient alone. `mergeStateStatus` must agree with
-`The gate` as well: `BEHIND` is a base the branch does not carry, `UNSTABLE`
-a check that is no longer green, and `UNKNOWN` and `BLOCKED` are states
-`SKILL.md` rules out as readiness outright. The read confirms, on this head,
-what the gate answered; a state that disagrees with it is a wait, not a
-milestone. `headRefOid` is the SHA the report binds to.
+needs, and neither is sufficient alone. `mergeStateStatus` answers the rest,
+and here — after the draft is cleared — `CLEAN` is the only yes: `BEHIND` is
+a base the branch does not carry, `UNSTABLE` a check that is no longer green,
+`DIRTY` a conflict, and `UNKNOWN` and `BLOCKED` are states `SKILL.md` rules
+out as readiness outright. Each is a wait, not a milestone. **`The gate` reads
+the same field for less**, because a draft reports `DRAFT` or `BLOCKED` there
+whatever its branch and checks are doing: only `BEHIND`, `DIRTY` and `UNKNOWN`
+are that read's, and CI at the gate comes from `statusCheckRollup` instead.
+`headRefOid` is the SHA the report binds to.
 
 **The start is the claim comment's `createdAt`.** `gh issue view <issue>
 --json comments` is the read `Read the issue and its edges` already makes —
