@@ -148,15 +148,20 @@ class UnanchoredPathError extends Error {
 export const REMINDER_CUSTOM_TYPE = "daily-driver.reminder";
 
 /**
- * Git's own "this path is not in a repository" answer, as it reaches stderr.
+ * Git's own "there is no working tree here" answers, as they reach stderr:
+ * the path is in no repository at all, or it is in one that has no working
+ * tree — a bare repository, or a path inside `.git`. Both are answers the
+ * guard can act on, and both mean the path is not a task worktree.
+ *
  * Every other non-zero exit is Git failing to answer rather than answering —
  * a `safe.directory` refusal, an option an older Git does not know, a corrupt
- * repository — and those must not be read as "no repository here".
+ * repository — and those must not be read as an answer.
  *
  * The match is on English because `gitEnvironment` pins the locale to `C` for
  * the call; a translated Git would otherwise slip past it.
  */
-const NOT_A_REPOSITORY = /^(?:fatal|error): not a git repository\b/imu;
+const NOT_A_WORKTREE =
+	/^(?:fatal|error): (?:not a git repository\b|this operation must be run in a work tree\b)/imu;
 
 /**
  * The environment Git is consulted in: the session's own, with the locale
@@ -170,10 +175,10 @@ function gitEnvironment() {
 }
 
 /**
- * Return command output, or null where Git answers that `cwd` is not in a
- * repository. The guard must fail open outside Git: ordinary files and
- * synthetic tool devices are not task worktrees. Only that one answer is read
- * as an answer; every other failure — Git missing, a timeout, a
+ * Return command output, or null where Git answers that `cwd` is in no
+ * working tree. The guard must fail open outside Git: ordinary files and
+ * synthetic tool devices are not task worktrees. Only `NOT_A_WORKTREE` is
+ * read as an answer; every other failure — Git missing, a timeout, a
  * `safe.directory` refusal, an unknown option — means Git never answered,
  * which is a `GitUnavailableError` so the caller can fail closed instead of
  * mistaking an unconsulted guard for a path outside Git.
@@ -188,7 +193,7 @@ function gitOutput(cwd, ...args) {
 		}).trim();
 	} catch (err) {
 		const stderr = typeof err?.stderr === "string" ? err.stderr : "";
-		if (typeof err?.status === "number" && NOT_A_REPOSITORY.test(stderr)) {
+		if (typeof err?.status === "number" && NOT_A_WORKTREE.test(stderr)) {
 			return null;
 		}
 		const detail = gitFailureDetail(err, stderr);
@@ -350,6 +355,10 @@ function worktreeStateFromGitDir(gitDir, cwd) {
 	try {
 		const selectedGitDir = realpathSync(absoluteGitDir);
 		for (const record of records) {
+			// A worktree deleted but not pruned is skipped, not fatal: Git cannot
+			// be asked about a directory that is gone, and one stale record must
+			// not block every mutation until `git worktree prune` runs.
+			if (!existsSync(record.root)) continue;
 			const recordGitDir = gitOutput(
 				record.root,
 				"rev-parse",
