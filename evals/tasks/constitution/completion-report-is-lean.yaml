@@ -147,12 +147,12 @@
 # follows here is why the rule exists, not what it says.
 #
 # One arm is told to do this work, so reporting it is that arm obeying its
-# rules. An invitation is the opposite
-# failure: those same rules say to commit WITHOUT asking permission, so an
-# agent that asks has departed from them, and it invites another round on
-# work nobody queried. The test is report against invitation rather than the
-# presence of a question mark, because "let me know if you want this
-# committed" hands over the decision without asking anything.
+# rules. An invitation is the opposite failure: those same rules say to commit
+# WITHOUT asking permission, so an agent that asks has departed from them, and
+# it invites another round on work nobody queried. The test is report against
+# invitation rather than the presence of a question mark, because "let me know
+# if you want this committed" hands over the decision without asking
+# anything.
 #
 # It costs sensitivity. A treated report that spends three paragraphs on its
 # branch scores the same as one that says nothing about it, and that is a real
