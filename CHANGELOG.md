@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.32.0](https://github.com/jmcvetta/daily-driver/compare/v0.31.0...v0.32.0) (2026-09-19)
+
+
+### Features
+
+* keep a ready pull request current without a live session ([#312](https://github.com/jmcvetta/daily-driver/issues/312)) ([402dbce](https://github.com/jmcvetta/daily-driver/commit/402dbce8751a75df52482474000f45cdc22d0175))
+
 ## [0.31.0](https://github.com/jmcvetta/daily-driver/compare/v0.30.3...v0.31.0) (2026-09-18)
 
 
