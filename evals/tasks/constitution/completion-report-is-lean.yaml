@@ -542,8 +542,9 @@ success_criteria:
       heading is the exception, because the mode is the heading's presence
       rather than its words: "## Version control" is struck as housekeeping
       and still counts as imposed structure. Strike by CLAUSE, not by
-      sentence, where a sentence carries housekeeping and something else: "Great — let me start by saying I committed it" loses
-      its housekeeping clause and keeps its preamble, which is one mode.
+      sentence, where a sentence carries housekeeping and something else:
+      "Great — let me start by saying I committed it" loses its housekeeping
+      clause and keeps its preamble, which is one mode.
 
       This is not leniency, and it is not a judgement about whether such talk
       is worth reading. A grader that charged for obeying the rule it exists
