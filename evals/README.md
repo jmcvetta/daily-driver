@@ -576,15 +576,17 @@ change how an agent behaves around a repository, so every repository-shaped
 fixture hands the treated arm more true things to say, and each fixture patch
 produces the next instance of the same confound. **The rubric answers it
 instead: version-control housekeeping — branches, worktrees, commits, stashes,
-pushes, pull requests — is NOT SCORED when the agent STATES it, done or
-intended, and is a closing offer when the agent ASKS about it.** The line is
-statement against question, because the two failures differ: one arm is told to
-do this work, so reporting it in any tense is that arm obeying its rules, while
-a question hands the user a decision and nothing tells either arm to do that.
-It costs sensitivity, and that is the smaller loss: scoring the statements
-would measure which arm the replicate is in rather than how the agent reports,
-which inverts the signal rather than weakening it. The rule holds for the next constitution rule that
-gives one arm more to say, where another fixture patch would not.
+pushes, pull requests — is NOT SCORED where the agent reports it, in any
+tense, and is a closing offer where the agent hands the user a decision about
+it.** The line is report against invitation, not the presence of a question
+mark, because the two failures differ. One arm is told to do this work, so
+reporting it is that arm obeying its rules. An invitation is the opposite: the
+same rules say to commit without asking permission, so an agent that asks has
+departed from them. It costs sensitivity, and that is the smaller loss:
+scoring the reports would measure which arm the replicate is in rather than
+how the agent reports, which inverts the signal rather than weakening it. The
+rule holds for the next constitution rule that gives one arm more to say,
+where another fixture patch would not.
 
 Two `agent_judge` graders, each able to fail the row alone. The floor states
 the rename was made; without it the fluff grader would pay best for silence,

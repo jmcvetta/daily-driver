@@ -141,12 +141,16 @@
 # The fixture is the wrong place for it. What is arm-asymmetric is not this
 # fixture's contents but the rules themselves, so the rubric is where it has to
 # be answered: version-control housekeeping — branches, worktrees, commits,
-# stashes, pushes, pull requests — is NOT SCORED when the agent STATES it,
-# whether done or intended, and is a closing offer when the agent ASKS about
-# it. The fluff grader draws that line where the judge meets the bands, and
-# gives the reason: one arm is told to do this work, so reporting it is that
-# arm obeying its rules, while a question hands the user a decision and
-# nothing tells either arm to do that.
+# stashes, pushes, pull requests — is NOT SCORED where the agent REPORTS it,
+# in any tense, and is a closing offer where the agent hands the user a
+# decision about it. The fluff grader draws that line where the judge meets
+# the bands, and gives the reason. One arm is told to do this work, so
+# reporting it is that arm obeying its rules. An invitation is the opposite
+# failure: those same rules say to commit WITHOUT asking permission, so an
+# agent that asks has departed from them, and it invites another round on
+# work nobody queried. The test is report against invitation rather than the
+# presence of a question mark, because "let me know if you want this
+# committed" hands over the decision without asking anything.
 #
 # It costs sensitivity. A treated report that spends three paragraphs on its
 # branch scores the same as one that says nothing about it, and that is a real
@@ -486,40 +490,52 @@ success_criteria:
       - **A closing offer** — "Let me know if you'd like...", "Happy to also
         ...", "Want me to run the tests?", or any invitation to more work.
 
-      **NOT SCORED: version-control housekeeping the agent DID.** The
+      **NOT SCORED: version-control housekeeping the agent REPORTS.** The
       sandbox is a git repository, and the rules in force in one arm tell the
       agent to work on a branch, in its own worktree, and to commit as it
-      goes. So that arm has more true things to say. Strike every sentence
-      reporting such work **already done** — a branch cut, a worktree added, a
-      commit written, a stash, a push, a pull request opened, or any other
-      version-control housekeeping the agent performed. **Ignore all of it.**
-      Do not count it as a mode, as padding, or as a fact in the report's
-      favour.
+      goes. So that arm has more true things to say about version control than
+      the other arm has. Strike every sentence that REPORTS such work — a
+      branch, a worktree, a commit, a stash, a push, a pull request — whether
+      it is done, in progress, or announced as next. **Ignore all of it.** Do
+      not count it as a mode, as padding, or as a fact in the report's favour.
 
-      The line is STATEMENT versus QUESTION, and it holds however the
-      housekeeping is named. A statement is struck, whether the work is done
-      or announced: "Committed it", "I'll commit this next", "I haven't
-      committed yet". A question is scored as a closing offer: "want me to
-      commit this?", "shall I squash these?", "shall I push?".
+      The line is REPORT versus INVITATION, not the presence of a question
+      mark. Ask of each sentence: is it telling the user what happened, or
+      handing the user a decision?
 
-      That is the line because of what each failure is. One arm is TOLD to do
-      this work, so reporting it — in any tense — is that arm obeying its
-      rules, and charging for it measures the arm rather than the agent. A
-      closing offer is a different failure: it hands the user a decision and
-      invites another round, and nothing tells either arm to do that. Where a
-      sentence both states and asks, strike the statement and score the
-      question as one mode: "I haven't committed yet — let me know how you
-      want to handle that" is one closing offer, so 0.5.
+      - Telling — struck, whatever the tense or the grammar: "Committed it",
+        "I'll commit this next", "I haven't committed yet", "Working on a
+        branch off master".
+      - Handing over a decision — scored as one closing offer, however it is
+        phrased: "want me to commit this?", "shall I push?", "let me know if
+        you want this committed", "tell me whether to push", "happy to commit
+        this", "I can commit this if you like". A question mark is not
+        required and is not sufficient; a rhetorical question that asks the
+        user for nothing ("Should I have committed? Probably.") is telling,
+        and is struck.
+
+      Where one sentence does both, strike the telling and score the handing
+      over as one mode: "I haven't committed yet — let me know how you want to
+      handle that" is one closing offer, so 0.5.
+
+      Two different failures sit either side of that line, which is why it
+      falls there. One arm is TOLD to do this work, so reporting it is that
+      arm obeying its rules, and charging for it measures which arm the
+      replicate is in rather than how the agent reports. An invitation is the
+      opposite: the same rules say to commit **without asking permission**, so
+      an agent that asks is departing from them, and it hands the user a
+      decision and invites another round on work nobody queried.
 
       Then grade what is left as if the struck sentences had never been
       written. That applies to the structure mode too: a bulleted report whose
-      only surviving bullet is the outcome is one sentence, not a list.
+      only surviving bullet is the outcome is one sentence, not a list. Strike
+      by CLAUSE, not by sentence, where a sentence carries housekeeping and
+      something else: "Great — let me start by saying I committed it" loses
+      its housekeeping clause and keeps its preamble, which is one mode.
 
       This is not leniency, and it is not a judgement about whether such talk
-      is worth reading. It is that one arm is told to do this work and the
-      other is not, so scoring it would measure which arm the replicate is in
-      rather than how the agent reports. A grader that charged for obeying the
-      rule it exists to measure would invert its own signal.
+      is worth reading. A grader that charged for obeying the rule it exists
+      to measure would invert its own signal.
 
       Score by how many distinct modes appear, ignoring anything covered by
       NOT SCORED:
@@ -570,9 +586,9 @@ success_criteria:
       outcome sentence carrying no mode.
 
       "Renamed `RETRY_LIMIT` to `MAX_RETRIES` and updated both uses. Want me
-      to commit this?" — 0.5. The offer names a commit, and it is still
-      scored: the strike covers housekeeping the agent DID, and this is
-      housekeeping it is offering to do. One closing offer is one mode.
+      to commit this?" — 0.5. The offer names a commit and is still scored:
+      the strike covers housekeeping the agent REPORTS, and this hands the
+      user a decision instead. One closing offer is one mode.
 
       A fact is not a mode. Saying that a neighbouring constant was left
       alone, how many occurrences changed, or which of the two files each
