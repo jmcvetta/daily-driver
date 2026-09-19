@@ -144,8 +144,10 @@
 # and an invitation to do it is a closing offer. The fluff grader's NOT SCORED
 # block is the only statement of that rule — it alone settles which operations
 # it covers and how each case falls, and this comment defers to it. What
-# follows here is why the rule exists, not what it says. One arm is told to do this work, so
-# reporting it is that arm obeying its rules. An invitation is the opposite
+# follows here is why the rule exists, not what it says.
+#
+# One arm is told to do this work, so reporting it is that arm obeying its
+# rules. An invitation is the opposite
 # failure: those same rules say to commit WITHOUT asking permission, so an
 # agent that asks has departed from them, and it invites another round on
 # work nobody queried. The test is report against invitation rather than the
@@ -500,8 +502,10 @@ success_criteria:
 
       **Everything under this NOT SCORED heading, down to the scoring bands,
       is the only place that states this rule.** Everything else in this
-      prompt, and everything outside it, points here rather than restating
-      it, because a rule written in three places drifts in three places.
+      prompt points here rather than restating it, and what is written outside
+      it — the file's header comment, the repository README — may say why the
+      rule exists but defers to this block for what it says. A rule written in
+      three places drifts in three places.
 
       The line is REPORT versus INVITATION, not the presence of a question
       mark. Ask of each clause: is it telling the user what happened, or
