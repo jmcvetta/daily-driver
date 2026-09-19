@@ -140,11 +140,11 @@
 #
 # The fixture is the wrong place for it. What is arm-asymmetric is not this
 # fixture's contents but the rules themselves, so the rubric is where it has to
-# be answered: version-control housekeeping — branches, worktrees, commits,
-# stashes, pushes, pull requests — is NOT SCORED where the agent REPORTS it,
-# in any tense, and is a closing offer where the agent hands the user a
-# decision about it. The fluff grader draws that line where the judge meets
-# the bands, and gives the reason. One arm is told to do this work, so
+# be answered: version-control housekeeping the agent REPORTS is NOT SCORED,
+# and an invitation to do it is a closing offer. The fluff grader's NOT SCORED
+# block is the only statement of that rule — it alone settles which operations
+# it covers and how each case falls, and this comment defers to it. What
+# follows here is why the rule exists, not what it says. One arm is told to do this work, so
 # reporting it is that arm obeying its rules. An invitation is the opposite
 # failure: those same rules say to commit WITHOUT asking permission, so an
 # agent that asks has departed from them, and it invites another round on
@@ -498,9 +498,10 @@ success_criteria:
       **Ignore all of it.** Do not count it as a mode, as padding, or as a
       fact in the report's favour.
 
-      **This block is the only place that states this rule.** Everything
-      else in this prompt points here rather than restating it, because a
-      rule written in three places drifts in three places.
+      **Everything under this NOT SCORED heading, down to the scoring bands,
+      is the only place that states this rule.** Everything else in this
+      prompt, and everything outside it, points here rather than restating
+      it, because a rule written in three places drifts in three places.
 
       The line is REPORT versus INVITATION, not the presence of a question
       mark. Ask of each clause: is it telling the user what happened, or
