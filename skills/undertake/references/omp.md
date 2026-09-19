@@ -163,8 +163,8 @@ move, readable with `hub logs`.
 Its exits are `Keep it current`'s three, and nothing narrower. It exits 0
 when the pull request is merged or closed. It exits 3 on a conflict — the
 call fails and changes nothing, and the stop is left for the session's
-catch-up look below, which re-arms the loop with `hub start` once the
-conflict is resolved and pushed. When the user says to stop, the session
+catch-up look below, whose `DIRTY` row restarts the loop with `hub start`
+once the conflict is resolved and pushed. When the user says to stop, the session
 stops the process with `hub stop`, `name` `keep-current-<number>`. Thirty
 consecutive failed reads exit 2: a watch polling a repository it cannot read
 is noise, not a watch.
@@ -193,7 +193,7 @@ to the pull request on a user turn starts with:
 | `mergeStateStatus` | Meaning | Move |
 | ------------------ | ------- | ---- |
 | `BEHIND` | the base moved; the branch does not conflict | `gh pr update-branch <number>` — `Keep it current`'s merge — then continue the turn |
-| `DIRTY` | the branch conflicts with the base | the conflict stop `SKILL.md` writes under `Where it stops and waits` |
+| `DIRTY` | the branch conflicts with the base | the conflict stop `SKILL.md` writes under `Where it stops and waits`; once the resolution is pushed, `hub start` the loop again, the same call `Ready for review` made |
 | `CLEAN`, `DRAFT`, `UNSTABLE` | current, or held by draft state or checks | nothing; continue the turn |
 | `BLOCKED`, `UNKNOWN` | not a currency answer: required reviews, or a state GitHub cannot currently determine | the update-branch call anyway — it is the test as well as the merge, and its own "already up to date" answer settles currency where this read has not; a call that fails changes nothing and reaches the conflict stop |
 

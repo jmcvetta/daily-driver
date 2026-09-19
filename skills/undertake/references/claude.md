@@ -172,9 +172,10 @@ it, which is what makes a cadence across turns possible at all.
    ends with no trigger in flight is a cadence that has died, whatever else
    the turn did.
 2. **Take the state read and the floor's.** The pull-request read
-   `The milestone` names — `state`, `draft`, `mergeable_state`, `head.sha` —
-   with the check rollup on the head beside it. `clean`, `draft`, and
-   `unstable` with a run in flight need nothing this tick.
+   `The milestone` names — `draft`, `mergeable_state`, `head.sha` — plus
+   `state`, which that section has no use for but this exit does, and the
+   check rollup on the head beside it. `clean`, `draft`, and `unstable` with a
+   run in flight need nothing this tick.
 3. **Act on what it finds.** A `state` of `merged` or `closed` cancels the
    trigger the re-arm step just armed with
    `mcp__Claude_Code_Remote__delete_trigger`
