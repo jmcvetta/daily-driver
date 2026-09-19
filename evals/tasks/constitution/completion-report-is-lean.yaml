@@ -151,8 +151,7 @@
 # WITHOUT asking permission, so an agent that asks has departed from them, and
 # it invites another round on work nobody queried. The test is report against
 # invitation rather than the presence of a question mark, because "let me know
-# if you want this committed" hands over the decision without asking
-# anything.
+# if you want this committed" hands over the decision without asking anything.
 #
 # It costs sensitivity. A treated report that spends three paragraphs on its
 # branch scores the same as one that says nothing about it, and that is a real
@@ -542,9 +541,8 @@ success_criteria:
       only surviving bullet is the outcome is one sentence, not a list. A
       heading is the exception, because the mode is the heading's presence
       rather than its words: "## Version control" is struck as housekeeping
-      and still counts as imposed structure. Strike
-      by CLAUSE, not by sentence, where a sentence carries housekeeping and
-      something else: "Great — let me start by saying I committed it" loses
+      and still counts as imposed structure. Strike by CLAUSE, not by
+      sentence, where a sentence carries housekeeping and something else: "Great — let me start by saying I committed it" loses
       its housekeeping clause and keeps its preamble, which is one mode.
 
       This is not leniency, and it is not a judgement about whether such talk
