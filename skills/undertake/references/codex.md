@@ -144,8 +144,10 @@ guessed one.
 There is no durable wake
 ========================
 
-**No wake on this harness is known to outlive the turn that armed it**, so
-`Keep it current`'s cadence does not run here. After `Ready for review`, say
+**No actor on this harness outlives the turn that armed it** — no durable
+process, no scheduled wake — so `Keep it current`'s split buys Codex nothing:
+the mechanical merge has nothing here to run it, and the judgment waits for
+a session either way. After `Ready for review`, say
 once that the watch is the catch-up look below, and stop.
 
 **The catch-up look is the first read of every turn that lands back on the

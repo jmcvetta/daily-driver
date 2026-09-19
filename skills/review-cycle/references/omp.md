@@ -115,11 +115,16 @@ Process durability is not session resumption
 unref'd and cleared on `session_shutdown`, so a reminder dies with the
 session. Use one only for a follow-up inside the current session. It cannot
 replace the persistent Hub watcher. Its pair is `daily_driver_cancel_schedule`:
-a wait that borrows the caller's cadence timer — `undertake`'s `Keep it
-current` check-in — borrows it by cancelling it, and the owner re-arms with
-`daily_driver_schedule` after the wait. An armed reminder does not lapse, it
+a wait that must not have a follow-up fire into the review borrows the slot
+by cancelling the armed follow-up, and the owner re-arms with
+`daily_driver_schedule` after the wait.
+An armed reminder does not lapse, it
 fires: left pending, it injects *read the checks again* as a follow-up in the
-middle of the review, restarting a wait on a run that finished.
+middle of the review, restarting a wait on a run that finished. On this
+harness `undertake`'s `Keep it current` watch is the detached
+`keep-current-<number>` loop, not a timer, so the wait here borrows nothing
+from it — the loop's floor is what keeps a merge from restarting a run in
+flight.
 
 A durable Hub process also does not launch or resume an Omp session. It can
 finish while the owner is absent and preserve its completion for replay, but
