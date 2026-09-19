@@ -427,23 +427,38 @@ When it looks
 -------------
 
 Once before `Ready for review`, as the gate's look rather than the cadence's.
-The cadence itself starts from the ready pull request, and it needs a **durable
-wake** — a scheduled wake that survives the session that armed it. Where the
-harness has one, the cadence is a check-in every two minutes, one scheduled
-wake at a time, carrying the instruction to look again — the discipline
-`review-cycle`'s `The backstop` states for the same reason. The reference file
-says whether the harness in use has such a wake, and names the call.
+The cadence itself starts from the ready pull request, and the step splits in
+two, because its halves do not need the same kind of actor. The **merge** is
+mechanical: one update-branch call, tested by the call itself, with the floor
+below. The **watch** is whatever keeps that call running, and what can keep it
+running is the one thing each harness decides for itself. The reference file
+names the actor; this section states the rules every actor obeys.
 
-**Where it has none, what remains is the reference file's to name.** A surface
-whose scheduler dies with the session still runs the cadence while the session
-lives: the reference file names the timer and its cancel, and the catch-up look
-below covers the gaps the timer's death leaves. A surface with neither a
-scheduler nor session control has no cadence: say once, at `Ready for review`,
-that the watch is the catch-up look below, and stop. A watch a surface cannot
-keep is worse claimed than skipped. A timer that dies with the session is not
-a durable wake, whatever it is called;
-[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) is the
-decision, and names the harness that has one of those.
+**Where the harness supervises processes that survive it, the watch is one of
+those processes.** Started once at `Ready for review`, it runs the merge on a
+two-minute tick and nothing else: read the pull request's state and merge
+status, skip the tick while a run on the head is in flight, merge when the
+branch is behind, and stop on a conflict. It never judges. The ready gate, a
+red check, the milestone, and the conflict stop stay with the session, which
+meets them on the catch-up look below and on every turn that lands back on
+the pull request.
+
+**Where the harness has a durable scheduled wake and no such process, the
+cadence is a check-in every two minutes, one wake at a time — and each wake
+carries its own instructions.** The prompt given to the scheduler states the
+whole check-in, in order: arm the next wake first, then take the
+base-currency read, then act on what it finds. A rule kept only in session
+memory dies on the first wake turn that ends without re-arming; the
+instruction travels with the wake instead, and `review-cycle`'s `The
+backstop` discipline holds for it.
+
+**Where the harness has neither, the watch is the catch-up look below, and
+the sequence says so once, at `Ready for review`.** A watch a surface cannot
+keep is worse claimed than skipped. The split is why three answers are
+legitimate and a fourth is not — a timer that dies with the session, claimed
+as a watch, is the failure
+[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) measured and
+[`0022`](../../docs/notes/0022-the-merge-is-mechanical.md) closed.
 
 **No cadence is not no looks.** On such a surface, every turn the session
 already has is a look: a turn that resumes the session, reconnects it to its
@@ -485,9 +500,10 @@ A merge-conflict notice does not wait for the cadence either. It is the case
 where behind has already cost something, and it is answered on the wake that
 reports it.
 
-The check-ins end when the pull request is merged or closed, or when the user
-says to stop. A pull request nobody merges is not a reason to wake a session
-for ever.
+The watch ends when the pull request is merged or closed, or when the user
+says to stop. A process stops itself on the first two; a scheduled wake ends
+on them and on the user's word alike. A pull request nobody merges is not a
+reason to keep an actor running for ever.
 
 
 After the merge
@@ -495,10 +511,12 @@ After the merge
 
 The head moved, so CI runs again. Wait for it the way `review-cycle`'s
 `How to wait` says, and answer a red check under `Fix, answer, resolve, push`.
-That wait borrows the wake slot for its backstop and gives it back at
-`End the wait`: the check-ins above are armed again before that turn ends,
-whichever way the wait ended, and after the round the wait was clearing the way
-for rather than into it.
+Where the watch is a process, nothing is borrowed: the floor above is what
+keeps a merge from restarting a run in flight, so the wait and the watch
+coexist. Where the watch is a scheduled wake, that wait borrows the wake slot
+for its backstop and gives it back at `End the wait`: the check-ins above are
+armed again before that turn ends, whichever way the wait ended, and after
+the round the wait was clearing the way for rather than into it.
 **Red CI is how a base merge reports that it broke something**: the base
 changed what the branch depends on, the branch's own diff is untouched, and no
 review of that diff would have found it.
@@ -639,8 +657,8 @@ harness in use names the calls that read the readiness state, find the
 claim's timestamp, and post it.
 
 **The report is a milestone, not the end.** Posting it does not stop the
-watch at `Keep it current`, does not cancel a check-in or leave the wake slot
-empty, does not close the issue, and does not merge anything. The watch's
+watch at `Keep it current`, does not stop a process or cancel a scheduled
+wake, does not close the issue, and does not merge anything. The watch's
 exits — merged, closed, or the user says to stop — are what they were before
 the comment existed, and a base-branch advance after it runs the same update,
 CI wait, and return through the gate as any other.

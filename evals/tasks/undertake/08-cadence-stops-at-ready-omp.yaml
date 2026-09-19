@@ -1,36 +1,36 @@
 # The Omp half of `08-wake-slot-is-refilled`, which is tagged `claude-only`
-# because the rule it guards is Claude's. `docs/notes/0011` amends
-# `docs/notes/0010-the-wake-slot-is-never-empty.md` on exactly this point:
-# Omp's `daily_driver_schedule` is an in-process managed timer, unref'd and
-# cleared on `session_shutdown`, so it is not a `send_later` and nothing here
-# can wake a session that has ended. `skills/undertake/references/omp.md`
-# draws the conclusion: `Keep it current`'s cadence does not run on this
-# harness. After `Ready for review`, say once that the watch is the catch-up
-# look — the base-currency read every turn that lands back on the pull
-# request takes, whose `BEHIND` answer runs the step's merge — and stop.
+# because the rule it guards is Claude's. `docs/notes/0022-the-merge-is-
+# mechanical.md` splits `Keep it current` into the merge and the watch. On
+# this harness the watch is a detached hub process —
+# `skills/undertake/references/omp.md` names the call — because
+# `daily_driver_schedule` is an in-process managed timer, unref'd and cleared
+# on `session_shutdown`, and `docs/notes/0011` measured that nothing else
+# here can wake a session that has ended. A watch that lives only in the
+# session dies with it; the loop survives it.
 #
-# So this row does not grade a refilled wake slot. It grades the Omp-side
-# truth in its place — that the session claims no watch it cannot keep. The
-# Claude sibling could not be reused because its rule is the one `0011`
-# removed: an Omp run that armed a replacement timer would be arming a timer
-# that dies with the session, which is the failure here and the pass there.
+# So this row grades the Omp-side truth in 0022's shape: the session arms a
+# watch that survives it rather than one that dies with the session, and it
+# does not hand the whole cadence to a future session that may never come.
+# The Claude sibling could not be reused because its rule is the wake slot's:
+# an Omp run here arms a process instead, and the slot rule stays Claude's.
 #
 # What this row can and cannot see. The sandbox has no GitHub client and no
-# Omp runtime adapter, so nothing the agent does with a tool can show a watch
-# being armed or declined. What is observable is what the agent says it does
-# next, so the graded assertion is a judge on the reply, plus the skill having
-# fired at all.
+# Omp runtime adapter, so nothing the agent does with a tool can show a
+# process being started. What is observable is what the agent says it does
+# next, so the graded assertion is a judge on the reply, plus the skill
+# having fired at all.
 #
-# Why this fails the `without` arm: "I'll keep an eye on it and come back when
-# CI reports" is the reflex answer, and on this harness it is a promise the
-# runtime cannot keep. A model with no plugin loaded has no reason to know
-# that the only timer available dies with the session, nor that the cadence is
-# therefore handed to the next session rather than held by this one.
+# Why this fails the `without` arm: "I'll keep an eye on it and come back
+# when CI reports" is the reflex answer, and an in-session timer is the
+# plausible wrong one — both are watches that die with the session. A model
+# with no plugin loaded has no reason to know that the merge is mechanical
+# and that a process can run it after the session is gone.
 
 task_id: undertake-08-cadence-stops-at-ready-omp
 description: >-
-  A CI wait ending on a ready pull request hands `Keep it current` to the next
-  session rather than claiming a watch this harness cannot keep.
+  A ready pull request's keep-current watch on Omp is a detached process the
+  session arms, not a timer that dies with the session or a promise to check
+  later.
 tags: [undertake, behaviour, fire, omp-only, forks:undertake-08-wake-slot-is-refilled]
 
 initial_prompt: >-
@@ -62,7 +62,7 @@ success_criteria:
 
   # The finding.
   - type: agent_judge
-    description: The reply hands the cadence on rather than claiming a watch
+    description: The reply arms a watch that survives the session
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -89,20 +89,18 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
       is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: this harness has no wake that survives the session, so the
-      recurring keep-it-current check does not run here. The reply must say
-      once that the watch is the catch-up look: every turn that lands back on
-      the pull request reads whether the branch has fallen behind its base,
-      and `Keep it current`'s merge runs when it has. It must not claim a
-      watch of its own.
+      The rule: `Keep it current`'s watch on this harness is a detached hub
+      process the session arms at ready — one that runs the mechanical
+      base-merge loop after the session is gone — and every turn that lands
+      back on the pull request still takes the catch-up look, the
+      base-currency read whose BEHIND answer runs `Keep it current`'s merge.
 
-      Score 1.0 if the REPLY names the catch-up look — the base-currency read
-      every turn that lands back on the pull request takes, whose BEHIND
-      answer runs `Keep it current`'s merge — and claims no watch beyond this
-      turn. Saying why the cadence does not run is correct and optional; the
-      look is what full credit grades.
+      Score 1.0 if the REPLY arms or names a watch that survives the session —
+      a detached hub process running the keep-current loop, or plainly a
+      process that merges the base branch after the session ends — whether or
+      not it also names the catch-up look.
 
-      Score 0.0 if the reply claims a watch this harness cannot keep: a
-      scheduled check-in meant to outlive the session, a timer armed as a
-      standing watch, or a promise to come back when CI or a reviewer
-      reports.
+      Score 0.0 if the reply's only watch dies with the session — an
+      in-session timer, a scheduled reminder of the session's own runtime, a
+      promise to check again when CI or a reviewer reports — or if it hands
+      the cadence to a future session with no watch surviving this one.
