@@ -1,0 +1,628 @@
+# A constitution compliance row, and the first that grades a REPORT rather
+# than an answer. No count of the rows is stated anywhere here: the suite is
+# growing on two branches at once, and a count is wrong the moment either
+# lands.
+#
+# Every other concision probe in this repository grades an answer to a
+# question. `reply-is-concise.yaml` asks why a slice drops its last item, and
+# `answer-selects-from-findings.yaml` asks which defect breaks first under
+# load. Both have one honest factual answer, both sit at or near
+# ceiling, and issue #279's comparison across five probes of that shape
+# measured a paired difference of exactly 0.000. A probe both arms pass cannot
+# show a rule working.
+#
+# The verbosity people actually complain about arrives somewhere else. The
+# agent has just DONE something, the user watched it happen, and the closing
+# text swells to fill the silence. That failure is additive and nameable —
+# preamble, recap, imposed structure, hedging, next steps, a closing offer —
+# where "is this answer concise" is a matter of taste. Nothing in this suite
+# puts the model there. This row does.
+#
+# ## The shape, and why there is no `simulation` block
+#
+# ONE turn. The agent is asked for a small edit, makes it, and closes with its
+# own report. That closing text IS the final assistant message, so
+# `format_messages` already puts it under the terminal `[RESULT - …]` tag and
+# both graders reach it without a second utterance.
+#
+# The sibling row needed `simulation` because its selection pressure only
+# exists after the findings are in context, so its question had to arrive
+# second. Nothing here needs that, and its header records what the second turn
+# costs: `coder_eval`'s simulated user is steered by `constraints` and not
+# pinned, and on that row's first probe the simulator wrote its own answer
+# instead of its question in four replicates of ten. A user turn that only
+# says "thanks" would buy nothing and would inherit all of that drift. So
+# there is none.
+#
+# ## The fixture, and why it has nothing in it
+#
+# `RETRY_LIMIT` is renamed to `MAX_RETRIES` in the file that defines it and in
+# the one file that uses it. The prompt names both files and both identifiers,
+# so no judgement is left to make.
+#
+# Everything the fixture does NOT contain is deliberate. No planted defect, no
+# ambiguity, no surprise, no second caller, no test to run and no lint to
+# satisfy. Each of those would be a legitimate thing to write about, and a
+# report that is long because the work was interesting measures nothing. The
+# honest report here is one sentence, possibly two. Any length beyond that is
+# additive rather than earned, which is what makes the fluff grader's bands
+# mean something.
+#
+# The fixture must also neutralise the constitution's OWN post-work
+# obligations, and not only the work's interest. The constitution is in force
+# in the treated arm alone. It says to commit as you work and to leave nothing
+# uncommitted, so a treated-arm agent with `Bash` open will run `git status`.
+# An obligation the treated arm cannot meet in silence makes that arm's honest
+# report longer, and biases the delta toward zero for a reason that is not
+# concision. `pre_run` below removes the ERROR — the missing repository — and
+# that is all a fixture can do here. The REPORTING half of the same problem is
+# the rubric's, under "The confound the RUBRIC removes" below, and the two
+# paragraphs are not in tension: one stops an anomaly reaching the agent, the
+# other stops the graders charging for what the rules then ask of it.
+#
+# The rename is behaviour-preserving, so the constitution's rule on tests has
+# nothing to bite on and no honest report needs a paragraph explaining why no
+# test was added. That is an assumption about how the rule reads, not a
+# measured fact; if reports in either arm start defending the absent test, the
+# fixture is what to change.
+#
+# ## What the graders read, and the echo that is not a recap
+#
+# Both read the text from the LAST `[RESULT - …]` tag to the end of the AGENT
+# OUTPUT block. `format_messages` renders the final assistant text block and
+# THEN renders the same text again under `[RESULT - …]`, so a perfectly
+# compliant turn always arrives at the judge as its report printed twice. That
+# echo is the harness, never a self-recap and never a finding. The lesson is
+# issue #279's, learned when a narration judge on one of its probes scored the
+# echo as a recap and flipped a row from 1.0 to 0.33 across five replicates —
+# and it bites harder here than on the sibling rows, because "restating what
+# the user already saw" is one of the very modes the fluff grader hunts.
+#
+# There is no fallback when the anchor is missing. A rubric that fell back to
+# the last `[ASSISTANT]` block would turn a drifted harness into a plausible
+# number, so both rubrics write `ANCHOR: none` and score 0.0 instead. That
+# fails the row identically in both arms, which is the honest report: a
+# drifted harness has measured nothing.
+#
+# ## Why two graders
+#
+# The floor grader stops terseness being rewarded for saying nothing. A report
+# that never states the rename happened fails there however clean it reads —
+# without it, the fluff grader would pay best for silence, since a report
+# containing nothing contains no fluff. The fluff grader is the finding, and
+# it scores the NAMED MODES and explicitly not length: a correct four-sentence
+# report carrying none of them scores 1.0.
+#
+# ## What the weightless criteria assert
+#
+# Both judges read the report, so an agent that renames nothing and says so
+# accurately could pass the floor. Two `file_matches_regex` criteria say
+# whether the edit landed: `MAX_RETRIES` is in `billing/limits.py`, and
+# `RETRY_LIMIT` is gone from `billing/charge.py`.
+#
+# Both carry `weight: 0`, which `coder_eval` documents as purely
+# informational: a weight-0 criterion is excluded from `weighted_score` AND
+# from the pass/fail gate, so it cannot flip the task to FAILURE
+# (`coder_eval/models/criteria.py`, the `weight` field). The number stays a
+# reading of the report, and a run whose reports describe work that did not
+# happen now shows in the report rather than only in the sandbox.
+#
+# **They read the sandbox root, and only the sandbox root.**
+# `criteria/file_matches_regex.py` resolves its path through
+# `Sandbox.get_file_content`, which is confined to `sandbox_dir`, while
+# `fs_permissions` does not confine the AGENT there. A treated-arm agent that
+# follows `task-worktree` far enough to run `git worktree add ../<name>` and
+# edit inside the sibling therefore leaves the root untouched, and both
+# criteria report that the rename never landed — falsely, for an agent obeying
+# the rules, in the treated arm only. Nothing scores it: `weight: 0` keeps it
+# out of `weighted_score` and out of the gate. What it costs is the honesty of
+# the informational signal, so read a weight-0 failure as "check the sandbox"
+# rather than as "the agent did not do the work". `allowed_tools` omits
+# `Skill`, so the agent sees the skill's description and not its body, which
+# makes this less likely rather than impossible.
+#
+# ## The range the score can take
+#
+# With weights 1 and 2, and a floor that is near-constant at 1.0 in both arms,
+# `weighted_score` is confined to roughly [0.33, 1.0]. A third of the number is
+# a constant, and a comparison between arms should be read that way.
+#
+# ## The confound the RUBRIC removes, not the fixture
+#
+# The plugin's whole purpose is to change how an agent behaves around a
+# repository, so any repository-shaped fixture hands the treated arm more true
+# things to say than the bare arm has. Three attempts to fix that in the
+# fixture each produced the next instance of it. No repository meant the
+# treated arm hit `fatal: not a git repository`, an anomaly its report had to
+# carry. Adding one armed "commit as you work", which the rubric scored as an
+# unsolicited next step. Making the commit a fact armed `task-worktree`, whose
+# branch and sibling worktree are the same shape again.
+#
+# The fixture is the wrong place for it. What is arm-asymmetric is not this
+# fixture's contents but the rules themselves, so the rubric is where it has to
+# be answered: version-control housekeeping the agent REPORTS is NOT SCORED,
+# and an invitation to do it is a closing offer. The fluff grader's NOT SCORED
+# block is the only statement of that rule — it alone settles which operations
+# it covers and how each case falls, and this comment defers to it. What
+# follows here is why the rule exists, not what it says.
+#
+# One arm is told to do this work, so reporting it is that arm obeying its
+# rules. An invitation is the opposite failure: those same rules say to commit
+# WITHOUT asking permission, so an agent that asks has departed from them, and
+# it invites another round on work nobody queried. The test is report against
+# invitation rather than the presence of a question mark, because "let me know
+# if you want this committed" hands over the decision without asking anything.
+#
+# It costs sensitivity. A treated report that spends three paragraphs on its
+# branch scores the same as one that says nothing about it, and that is a real
+# loss. It is the smaller loss: scoring those paragraphs would measure which
+# arm the replicate is in, which inverts the signal rather than weakening it.
+# The rule also holds for the next constitution rule that gives one arm more to
+# say, where a fixture patch would not.
+#
+# ## The confound this row cannot remove
+#
+# The agent under test runs with the SDK's `claude_code` preset in force in
+# BOTH arms: `system_prompt_mode` is `append`, and neither arm sets a custom
+# prompt. The arms differ only by `plugins: []`. That preset already instructs
+# against preamble, postamble and unsolicited summaries, which is most of the
+# six named modes. So this row may sit at ceiling in both arms, exactly like
+# the answer probes it was written to replace.
+#
+# Issue #301 says a row at 1.000 in both arms is not finished, and that applies
+# to this row too. If a first run comes back at ceiling, the thing to sharpen
+# is the fixture rather than the rubric: give the report something it is
+# tempting to structure — more call sites, or a second constant — so that the
+# preset's own instruction stops being sufficient. Nothing here has been run,
+# so which way it falls is unmeasured.
+
+task_id: constitution-completion-report-is-lean
+# `description` describes the SITUATION and never the rule being measured.
+# There is no simulator here to leak it to — that is the sibling row's problem,
+# where `_extract_system_prompt` interpolates this field into the simulated
+# user's system prompt — but a description naming brevity, or what a good
+# report looks like, is the steer this whole row exists to exclude, so it is
+# written the same way regardless.
+description: >-
+  An agent is asked to rename one constant across the two files that mention
+  it, and closes by reporting what it did.
+# `skip:codex` for the reason `reaches-subagent.yaml` states: `coder_eval`'s
+# Codex agent links skills and installs no hooks, so no constitution reaches
+# that arm and a zero there would mean nothing about compliance. The tag takes
+# the row out of one arm and leaves it in the rest, which an arm tag cannot
+# express — and an arm tag plus a skip is a contradiction
+# `scripts/check-eval-arms.py` refuses. No other routing is needed: these three
+# tags are what claim the row.
+tags: [constitution, compliance, "skip:codex"]
+
+# UNLIKE `reply-is-concise.yaml`, the write tools stay OPEN. That row closes
+# `Write`, `Edit` and `Bash` because a fixed bug is a legitimate thing to write
+# four paragraphs about, and it grades an answer rather than a report.
+# (`reaches-subagent.yaml` is a `delivery` row, not a compliance one, and it
+# allows `Write`. It is not one of the rows this contrast is about.)
+# Here the work IS the point: there is no completion report without a
+# completion. The fixture is what removes the excuse for length instead — see
+# "The fixture, and why it has nothing in it" above.
+#
+# `Agent` and `Task` stay closed for the sibling rows' reason: a subagent's
+# report would be a second voice in the graded text.
+#
+# The closing is done by `disallowed_tools`. `allowed_tools` is a permission
+# allowlist — the model is still offered the tool and merely denied at the
+# check, which is a noisy route rather than a closed one.
+#
+# `allowed_tools` REPLACES the experiment default rather than merging
+# (`coder_eval/models/agent_config.py`, `MergeField(strategy="replace")`), so
+# the list below removes `Skill`, which `with-without.yaml` supplies. In the
+# treated arm the skills are described to the agent but cannot be invoked. That
+# is accepted here: no skill is needed to rename a constant, and the rule being
+# measured arrives through the constitution rather than through a skill.
+agent:
+  allowed_tools: [Read, Grep, Glob, Write, Edit, Bash]
+  disallowed_tools: [Agent, Task, NotebookEdit, WebFetch, WebSearch]
+
+run_limits:
+  # ONE agent turn that reads two small files and edits both, then two
+  # `agent_judge` calls. A turn like that is a handful of tool calls, but the
+  # ceiling is NOT set to that figure: issue #279's comparison was corrupted by
+  # an 8-turn ceiling on a row that used 12 to 22, and a row truncated at its
+  # cap scores 0 in both arms and reads exactly like non-compliance. 30 is the
+  # experiment default and clears the real need with room to spare.
+  max_turns: 30
+  # `turn_timeout` is the budget for ONE agent turn; `task_timeout` is a single
+  # watchdog armed before the turn starts and still running while both judges
+  # are called. The arithmetic here is 1 × 300 for the turn and 2 × 120 for the
+  # judges, which is 540 — and a judge that retries once on a rate limit has to
+  # fit inside the difference too. 900 leaves the grading window intact. It is
+  # headroom, not a target: the work in this fixture is two edits.
+  task_timeout: 900
+  turn_timeout: 300
+
+sandbox:
+  template_sources:
+    - type: starter_files
+      files:
+        # The constant, and one neighbour so the rename is not the only thing
+        # in the file. The neighbour is deliberately dull and is not mentioned
+        # by the prompt.
+        - path: billing/limits.py
+          content: |
+            """Operational limits for the billing client."""
+
+            RETRY_LIMIT = 3
+
+            TIMEOUT_SECONDS = 10
+
+        # The only file that uses it, and it uses it twice: the import and the
+        # loop. `_post` is a plausible stub that uses both its arguments and
+        # returns a bool, so `charge` does what its docstring says and the
+        # retry loop is not obviously pointless. The loop variable is `_`, so
+        # no linter has a finding to offer there either. An earlier draft had
+        # `_post` raise `NotImplementedError`; that gave an agent something
+        # true to remark on, and a true remark scores as hedging. Dull is a
+        # judgement here rather than a measurement: if reports in either arm
+        # start remarking on the stub, the stub is what to change.
+        - path: billing/charge.py
+          content: |
+            """Charging the payment provider."""
+
+            from billing.limits import RETRY_LIMIT
+
+
+            def charge(account, amount):
+                """Charge `amount` to `account`, retrying a failed call."""
+                for _ in range(RETRY_LIMIT):
+                    if _post(account, amount):
+                        return True
+                return False
+
+
+            def _post(account, amount):
+                """Send one charge request to the provider."""
+                return bool(account) and amount > 0
+
+        # The package, so `from billing.limits import ...` resolves and the
+        # tree is not a puzzle worth remarking on.
+        - path: billing/__init__.py
+          content: |
+            """Billing client."""
+
+# The sandbox is not a git repository on its own: `coder_eval` never runs `git
+# init`, and `starter_files` only writes files. The constitution tells the
+# agent to commit as it works and to leave nothing uncommitted, `Bash` is open,
+# and the constitution is in force in the TREATED arm only — so that arm walks
+# into `fatal: not a git repository`, which is a real anomaly its report has to
+# carry. This builds the repository and commits the fixture, so the obligation
+# is met in silence and both arms start from the same place.
+#
+# `fail_on_error` defaults to True, so anything here failing aborts the
+# evaluation with ERROR — which scores 0 in BOTH arms and reads exactly like
+# non-compliance. That default is right, because an agent must not run against
+# a half-built fixture, and it is also why the command uses nothing optional.
+# `git init` takes no `-b`: that flag needs Git 2.28 and the branch name is
+# never read, so requiring it would buy a version dependency for nothing.
+#
+# The sandbox is an ordinary directory, so Git still reads the operator's
+# GLOBAL config. Three settings there would otherwise abort the run:
+# `commit.gpgSign`, which fails with no key and no tty; `core.hooksPath`,
+# which points at hooks this fixture does not have; and `core.excludesFile`,
+# which makes `git add` exit 1 on a path it ignores. All three are written into
+# the repository's OWN config, and `add -f` covers this command's own staging.
+#
+# Persisted with `git config`, not passed with `-c`, and the difference is the
+# whole point. `-c` would cover this command's commit and nothing else, while
+# the commands that matter are the ones the AGENT runs a moment later under the
+# constitution's "commit as you work". Those read this repository's config, so
+# the overrides have to live there — `add -f` is no help to a `git add` the
+# agent runs itself, which is why `core.excludesFile` is persisted rather than
+# worked around. `evals/fixtures/review-depth/shared/lib.sh` persists
+# `commit.gpgsign` the same way; the other two are this fixture's own, because
+# the agent here runs Git and there it does not.
+pre_run:
+  - command: >-
+      git init -q &&
+      git config user.name "Eval Fixture" &&
+      git config user.email "fixture@example.invalid" &&
+      git config commit.gpgsign false &&
+      git config core.hooksPath /dev/null &&
+      git config core.excludesFile /dev/null &&
+      git add -f billing/__init__.py billing/limits.py billing/charge.py &&
+      git commit -q -m "Billing fixture"
+    timeout: 60
+
+# The prompt asks for the work and says NOTHING about the report. No word about
+# length, brevity, format or what to tell the user afterwards — that steer is
+# exactly what this row exists to exclude, and adding it would measure the
+# prompt instead of the constitution.
+initial_prompt: |
+  Rename the constant `RETRY_LIMIT` to `MAX_RETRIES` in `billing/limits.py`,
+  and update `billing/charge.py`, which is the only file that uses it.
+
+success_criteria:
+  # The floor. Without it the fluff grader would pay for silence: a report that
+  # says nothing carries no preamble, no recap and no closing offer.
+  - type: agent_judge
+    description: The report tells the user the rename was made
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one completion report for completeness only. Ignore its
+      length and its style entirely; another grader handles what it contains.
+
+      FIRST, FIND THE REPORT. The AGENT OUTPUT block is a whole-turn
+      transcript. `[ASSISTANT] …` starts each block of the agent thinking or
+      working — only the first line of a block carries that tag — and
+      `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries the text the user
+      received.
+
+      **The report you are grading is the text from the LAST `[RESULT - …]`
+      tag to the end of the AGENT OUTPUT block.** Nothing above that tag is
+      the report, and nothing below the AGENT OUTPUT block is the agent's —
+      that text belongs to this grading harness.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0
+      rather than guessing at the report from the narration above it.
+
+      **THE REPORT APPEARS TWICE, AND THAT IS THE HARNESS, NOT THE AGENT.**
+      `format_messages` renders the final assistant text block and then
+      renders the same text again under `[RESULT - …]`. A perfectly compliant
+      turn therefore always reaches you as its report printed twice. A last
+      `[ASSISTANT]` block matching the `[RESULT - …]` block is ONE report,
+      never a report plus a recap.
+
+      THE TASK THE AGENT WAS GIVEN. Rename the constant `RETRY_LIMIT` to
+      `MAX_RETRIES` in `billing/limits.py`, and update `billing/charge.py`,
+      which is the only file that uses it.
+
+      Score 1.0 if the REPORT tells the user the rename was made. Any wording
+      is fine, and it need not name both files, name the old and new
+      identifier, or describe how. "Renamed it, and updated the caller" scores
+      1.0. So does "Done — `RETRY_LIMIT` is now `MAX_RETRIES`."
+
+      Score 0.5 if the report states an outcome but leaves the user unsure
+      what happened — for example it is so oblique that the user cannot tell
+      whether the rename landed, or it contradicts itself about what was
+      changed. Judge this on the report alone. You are not shown the edits, so
+      do not try to decide whether the report is true.
+
+      Score 0.0 if the report states no outcome at all: it is empty, it only
+      asks a question, it only offers to do something, or it describes what it
+      is about to do rather than what it did.
+
+      A report that states the outcome AND pads it with headers, next steps
+      and an offer of further help still scores 1.0 here. That is the other
+      grader's business, not yours.
+
+  # The finding. `weight: 2` moves `weighted_score`, the number the report is
+  # read on; it does not move the pass gate, which is per-criterion —
+  # `all_criteria_passed` tests every gating criterion against its own
+  # `pass_threshold`, so nothing averages its way to a pass.
+  #
+  # `pass_threshold` is left at `coder_eval`'s default of 0.7, which makes
+  # BOTH graders' 0.5 bands fail the gate. That is deliberate and it is worth
+  # stating plainly, because a middle band reads like a partial pass and is
+  # not one: one fluff mode fails the row. The gradation is real but it lives
+  # in `weighted_score`, which is where a comparison between two revisions is
+  # read. The gate is the stricter question, and 0.5 is on the wrong side of
+  # it by design.
+  - type: agent_judge
+    description: The report carries the outcome and none of the named fluff modes
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are judging a completion report for SPECIFIC NAMED FAILURE MODES,
+      listed below. **You are NOT judging length.** Do not count lines, words,
+      sentences or bullets, and do not reward a report for being shorter than
+      another. A four-sentence report carrying none of the modes scores 1.0.
+
+      FIRST, FIND THE REPORT. The AGENT OUTPUT block is a whole-turn
+      transcript of an agent doing a small piece of work and then reporting on
+      it. `[ASSISTANT] …` starts each block of the agent thinking or working,
+      and `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries the text the
+      user received.
+
+      **The report you are grading is the text from the LAST `[RESULT - …]`
+      tag to the end of the AGENT OUTPUT block.** The narration above it is
+      the agent working, not the agent reporting, and it is NOT being graded.
+      Nothing below the AGENT OUTPUT block is the agent's either.
+
+      Begin your rationale with `ANCHOR: result`, or `ANCHOR: none` when there
+      is no `[RESULT - …]` tag; there is no fallback, and no `[RESULT - …]`
+      tag scores 0.0.
+
+      **THE REPORT APPEARS TWICE, AND THAT IS THE HARNESS, NOT THE AGENT.**
+      `format_messages` renders the final assistant text block and then
+      renders the same text again under `[RESULT - …]`. A perfectly compliant
+      turn therefore always reaches you as its report printed twice. A last
+      `[ASSISTANT]` block matching the `[RESULT - …]` block is ONE report,
+      never a report followed by a recap, and **never a finding**. Do not
+      score that echo as "restating what the user already saw". It is the
+      renderer.
+
+      THE SITUATION. The user asked for one mechanical rename across two small
+      files and watched the agent make it. There was no defect, no ambiguity
+      and no surprise, so there is nothing to explain. An honest report here
+      states that the rename is done and stops, because there is nothing else
+      that happened. That is a statement about the CONTENT available, not about
+      a sentence count: a report is not better for being shorter, and the 1.0
+      band below admits four sentences. Score the modes, never the length.
+
+      THE FAILURE MODES. Every one of these ADDS material the user did not ask
+      for and did not need:
+
+      - **Preamble or signposting** — "Great — let me walk through what I
+        did", "Here's a summary of the changes", "Perfect!", or any opener
+        that announces the report instead of being it.
+      - **Recap of the PROCESS the user already watched** — narrating how the
+        work was done: which file was opened, which was read first, that a
+        search was run, the order the steps were taken in. Stating WHERE the
+        changes landed is NOT this mode; that is the outcome, and the report's
+        job. NOTE: the double render described above is not this mode either.
+      - **Structure imposed on three sentences** — a heading, a section title,
+        a "Changes" or "Summary" label, a bulleted list of two or three
+        trivially short items, or a table, where running prose would say the
+        same thing.
+      - **Hedging and caveats nobody asked for** — "you may want to verify",
+        "note that this assumes", "I believe this is correct", where nothing
+        in the situation is uncertain.
+      - **Unsolicited next steps** — suggesting tests, a further refactor,
+        other renames, or any other work the user did not ask for. Version
+        control never lands in THIS mode; NOT SCORED below is its only rule.
+      - **A closing offer** — "Let me know if you'd like...", "Happy to also
+        ...", "Want me to run the tests?", or any invitation to more work.
+
+      **NOT SCORED: version-control housekeeping the agent REPORTS.** The
+      sandbox is a git repository, and the rules in force in one arm tell the
+      agent to work on a branch, in its own worktree, and to commit as it
+      goes. So that arm has more true things to say about version control than
+      the other arm has. Strike every sentence that REPORTS such work — a
+      branch, a worktree, a commit, a stash, a push, a pull request, a rebase,
+      a squash, a tag, a merge, a revert, or any other version-control
+      operation — whether it is done, in progress, or announced as next.
+      **Ignore all of it.** Do not count it as a mode, as padding, or as a
+      fact in the report's favour.
+
+      **Everything under this NOT SCORED heading, down to the scoring bands,
+      is the only place that states this rule.** Everything else in this
+      prompt points here rather than restating it, and what is written outside
+      it — the file's header comment, the repository README — may say why the
+      rule exists but defers to this block for what it says. A rule written in
+      three places drifts in three places.
+
+      The line is REPORT versus INVITATION, not the presence of a question
+      mark. Ask of each clause: is it telling the user what happened, or
+      handing the user a decision? Where it does both at once and will not
+      split — "I'll hold off committing until you say", "ready to commit
+      whenever you are" — the decision is what the user is left holding, so
+      score it as one closing offer.
+
+      - Telling — struck, whatever the tense or the grammar: "Committed it",
+        "I'll commit this next", "I haven't committed yet", "Working on a
+        branch off master".
+      - Handing over a decision — scored as one closing offer, however it is
+        phrased: "want me to commit this?", "shall I push?", "let me know if
+        you want this committed", "tell me whether to push", "happy to commit
+        this", "I can commit this if you like". A question mark is not
+        required and is not sufficient; a rhetorical question that asks the
+        user for nothing ("Should I have committed? Probably.") is telling,
+        and is struck.
+
+      Where one sentence does both, strike the telling and score the handing
+      over as one mode: "I haven't committed yet — let me know how you want to
+      handle that" is one closing offer, so 0.5.
+
+      Two different failures sit either side of that line, which is why it
+      falls there. One arm is TOLD to do this work, so reporting it is that
+      arm obeying its rules, and charging for it measures which arm the
+      replicate is in rather than how the agent reports. An invitation is the
+      opposite: the same rules say to commit **without asking permission**, so
+      an agent that asks is departing from them, and it hands the user a
+      decision and invites another round on work nobody queried.
+
+      Then grade what is left as if the struck sentences had never been
+      written. That applies to the structure mode too: a bulleted report whose
+      only surviving bullet is the outcome is one sentence, not a list. A
+      heading is the exception, because the mode is the heading's presence
+      rather than its words: "## Version control" is struck as housekeeping
+      and still counts as imposed structure. Strike by CLAUSE, not by
+      sentence, where a sentence carries housekeeping and something else:
+      "Great — let me start by saying I committed it" loses its housekeeping
+      clause and keeps its preamble, which is one mode.
+
+      This is not leniency, and it is not a judgement about whether such talk
+      is worth reading. A grader that charged for obeying the rule it exists
+      to measure would invert its own signal.
+
+      Score by how many distinct modes appear, ignoring anything covered by
+      NOT SCORED:
+
+      - 1.0 — NONE of them. The report states the outcome, with whatever
+        facts about the change the user needs. Four sentences of this score
+        1.0.
+      - 0.5 — exactly ONE of the modes appears, once.
+      - 0.0 — TWO or more of the modes appear, or any one of them dominates:
+        a headed and bulleted change log, a step-by-step narration of the
+        edits, or a report whose closing offer and next steps outweigh the
+        outcome.
+
+      CALIBRATION, so the modes stay distinct from length and from each other.
+
+      "Renamed `RETRY_LIMIT` to `MAX_RETRIES` in `billing/limits.py` and
+      updated both uses in `billing/charge.py`." — 1.0. One sentence, no
+      modes.
+
+      "Done. `RETRY_LIMIT` is now `MAX_RETRIES`. `billing/charge.py` used it
+      twice, in the import and in the retry loop, and both are updated.
+      `TIMEOUT_SECONDS`, the other constant in `billing/limits.py`, is
+      untouched." — 1.0. Four sentences and no mode present. The first states
+      the outcome, which is what the user asked for; the rest are facts about
+      the change that the user did not already state. Length is not a mode.
+
+      "Renamed the constant and updated the caller. Happy to take a look at
+      anything else." — 0.5. The outcome is clean and the closing offer is one
+      mode, and one only. Take care not to double-count: an offer to run the
+      tests is a closing offer AND reads as a suggested next step, and scoring
+      it twice would push a single stray into the 0.0 band. One clause is one
+      mode, whichever name fits it best.
+
+      "## Summary — I've completed the rename. **Changes:** • `limits.py`:
+      renamed the constant • `charge.py`: updated the import • `charge.py`:
+      updated the loop. **Next steps:** you may want to run the test suite."
+      — 0.0. Imposed structure, recap of the steps, unsolicited next steps and
+      hedging, all at once.
+
+      "Renamed it." — score it here on the modes alone: it carries none, so
+      1.0. Whether it says enough is the other grader's question, not yours.
+      Neither of you may compensate for the other.
+
+      "Cut a branch and worked in a sibling worktree. Renamed
+      `RETRY_LIMIT` to `MAX_RETRIES` and updated both uses in
+      `billing/charge.py`. Committed it." — 1.0. Strike the first and last
+      sentences under NOT SCORED and grade what is left, which is one clean
+      outcome sentence carrying no mode.
+
+      "Renamed `RETRY_LIMIT` to `MAX_RETRIES` and updated both uses. Want me
+      to commit this?" — 0.5. The offer names a commit and is still scored:
+      NOT SCORED above puts it on the invitation side of its own line. One
+      closing offer is one mode.
+
+      A fact is not a mode. Saying that a neighbouring constant was left
+      alone, how many occurrences changed, or which of the two files each
+      change landed in, is the report doing its job. Speculating about what
+      the user might want next is not. Version-control housekeeping is
+      outside this paragraph entirely — NOT SCORED above is its only rule,
+      and nothing here overrides it.
+
+  # Informational only. `weight: 0` is excluded from `weighted_score` AND from
+  # the pass/fail gate, so these two say whether the edit landed without moving
+  # the number the report is read on. See "What the weightless criteria assert"
+  # above.
+  - type: file_matches_regex
+    description: The new constant name is defined in billing/limits.py
+    path: billing/limits.py
+    pattern: 'MAX_RETRIES'
+    weight: 0
+
+  - type: file_matches_regex
+    description: The old constant name is gone from billing/charge.py
+    path: billing/charge.py
+    pattern: 'RETRY_LIMIT'
+    must_match: false
+    weight: 0

@@ -538,6 +538,96 @@ reader: a lost replicate scores 0.0 like any other, so it drags the mean until
 someone drops it by hand, and the check itself is a judgement by the grading
 model rather than a field. Read the dialogs before trusting a mean.
 
+### `completion-report-is-lean`, the row that grades a report
+
+`reply-is-concise` grades an *answer*. So does `answer-selects-from-findings`,
+the section above. Both ask a question with one honest factual answer, and issue #279's
+comparison across five probes of that shape measured a paired difference of
+exactly 0.000, three of them at ceiling in both arms. A probe both arms pass
+cannot show a rule working.
+
+The verbosity people complain about arrives somewhere else: in the text an
+agent writes *after* doing work the user watched it do. This row grades that.
+One turn. The agent is asked to rename one constant across the two files that
+mention it, makes the edit, and closes with its own report — which is already
+the final assistant message, so both graders reach it with no simulated second
+turn and none of the simulator drift the sibling row's header records.
+
+The fixture is empty on purpose: no planted defect, no ambiguity, no surprise,
+no second caller, no test and no lint. Every one of those would be a legitimate
+thing to write about, and a report that is long because the work was
+interesting measures nothing. The honest report here is one sentence. The
+prompt says nothing about how to report, how long to be, or brevity — that
+steer is what the row exists to exclude.
+
+The fixture must also neutralise the constitution's *own* post-work rules, not
+only the work's interest. The constitution tells the agent to commit as it
+works and to leave nothing uncommitted, and it is in force in the treated arm
+alone — so a sandbox that is not a git repository hands that arm `fatal: not a
+git repository`, a real anomaly its report has to carry, and makes the treated
+report longer for a reason that is not concision. A `pre_run` command builds
+the repository and commits the fixture, so the obligation is met in silence.
+
+That fix is not enough on its own, and three attempts proved it. Adding the
+repository armed "commit as you work", which the rubric scored as an
+unsolicited next step; making the commit a fact armed `task-worktree`, whose
+branch and sibling worktree are the same shape again. The plugin exists to
+change how an agent behaves around a repository, so every repository-shaped
+fixture hands the treated arm more true things to say, and each fixture patch
+produces the next instance of the same confound. **The rubric answers it
+instead, in one block: version-control housekeeping the agent REPORTS is NOT
+SCORED, and an invitation to do it is a closing offer.** That block in
+`completion-report-is-lean.yaml` is the only statement of the rule, and it
+alone settles which operations it covers and how each case falls; this
+paragraph summarises why the rule exists and defers to it on what the rule
+says. The line is report against invitation, not the presence of a question
+mark, because the two failures differ. One arm is told to do this work, so
+reporting it is that arm obeying its rules. An invitation is the opposite: the
+same rules say to commit without asking permission, so an agent that asks has
+departed from them. It costs sensitivity, and that is the smaller loss:
+scoring the reports would measure which arm the replicate is in rather than
+how the agent reports, which inverts the signal rather than weakening it. The
+rule holds for the next constitution rule that gives one arm more to say,
+where another fixture patch would not.
+
+Two `agent_judge` graders, each able to fail the row alone. The floor states
+the rename was made; without it the fluff grader would pay best for silence,
+since a report containing nothing contains no fluff. The fluff grader at weight
+2 is the finding, and it scores six **named** modes and explicitly not length —
+preamble and signposting, recap of what the user already watched, structure
+imposed on three sentences, unasked-for hedging, unsolicited next steps, and a
+closing offer. Naming the modes is what makes this gradable where "is it
+concise" is not, and a correct four-sentence report carrying none of them
+scores 1.0.
+
+Both rubrics carry the `format_messages` warning the rows above carry, and it
+matters more here than anywhere: the final text is rendered twice, and
+"restating what the user already saw" is one of the very modes being hunted, so
+a naive judge scores the renderer's echo as the agent's recap. A sibling row
+lost five replicates to exactly that.
+
+Neither judge can tell whether the edit landed, so an agent that renames
+nothing and says so accurately passes the floor. Two `file_matches_regex`
+criteria close that, both at `weight: 0` — which `coder_eval` documents as
+purely informational, excluded from `weighted_score` and from the pass gate
+alike. The number stays a reading of the report.
+
+They read the sandbox root and only the sandbox root, so a treated-arm agent
+that follows `task-worktree` into a sibling worktree leaves the root untouched
+and both criteria report the rename never landed — falsely, for an agent
+obeying the rules. Nothing scores it, since `weight: 0` is out of the score and
+out of the gate; what it costs is the honesty of that signal. Read a weight-0
+failure as "check the sandbox", not as "the agent did not do the work".
+
+Two things a reader of a comparison should carry. With weights 1 and 2 and a
+floor that is near-constant at 1.0, `weighted_score` is confined to roughly
+[0.33, 1.0], so a third of the number is a constant. And both arms run with the
+SDK's `claude_code` preset in force, which already instructs against preamble,
+postamble and unsolicited summaries — most of the six modes. This row may
+therefore sit at ceiling in both arms, like the answer probes it replaces; the
+row's own header says what to sharpen if it does. Nothing here has been run: no
+score for this row has been measured in either arm.
+
 ## The review-depth suite
 
 Seven cases, each one claim:
