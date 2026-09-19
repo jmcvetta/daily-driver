@@ -567,10 +567,20 @@ alone — so a sandbox that is not a git repository hands that arm `fatal: not a
 git repository`, a real anomaly its report has to carry, and makes the treated
 report longer for a reason that is not concision. A `pre_run` command builds
 the repository and commits the fixture, so the obligation is met in silence.
-The rubric completes the same thought: a commit the agent made is a fact about
-what happened, and only a commit it merely proposed is an unsolicited next
-step. A rule that required the commit and then charged for mentioning it would
-be signed against the arm it is meant to measure.
+
+That fix is not enough on its own, and three attempts proved it. Adding the
+repository armed "commit as you work", which the rubric scored as an
+unsolicited next step; making the commit a fact armed `task-worktree`, whose
+branch and sibling worktree are the same shape again. The plugin exists to
+change how an agent behaves around a repository, so every repository-shaped
+fixture hands the treated arm more true things to say, and each fixture patch
+produces the next instance of the same confound. **The rubric answers it
+instead: repository hygiene — branches, worktrees, commits, proposed or
+performed — is NOT SCORED, neither as a mode nor as a fact.** It costs
+sensitivity, and that is the smaller loss: scoring it would measure which arm
+the replicate is in rather than how the agent reports, which inverts the signal
+rather than weakening it. The rule holds for the next constitution rule that
+gives one arm more to say, where another fixture patch would not.
 
 Two `agent_judge` graders, each able to fail the row alone. The floor states
 the rename was made; without it the fluff grader would pay best for silence,

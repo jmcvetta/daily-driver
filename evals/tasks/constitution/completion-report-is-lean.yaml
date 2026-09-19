@@ -109,6 +109,30 @@
 # `weighted_score` is confined to roughly [0.33, 1.0]. A third of the number is
 # a constant, and a comparison between arms should be read that way.
 #
+# ## The confound the RUBRIC removes, not the fixture
+#
+# The plugin's whole purpose is to change how an agent behaves around a
+# repository, so any repository-shaped fixture hands the treated arm more true
+# things to say than the bare arm has. Three attempts to fix that in the
+# fixture each produced the next instance of it. No repository meant the
+# treated arm hit `fatal: not a git repository`, an anomaly its report had to
+# carry. Adding one armed "commit as you work", which the rubric scored as an
+# unsolicited next step. Making the commit a fact armed `task-worktree`, whose
+# branch and sibling worktree are the same shape again.
+#
+# The fixture is the wrong place for it. What is arm-asymmetric is not this
+# fixture's contents but the rules themselves, so the rubric is where it has to
+# be answered: repository hygiene — branches, worktrees, commits, proposed or
+# performed — is NOT SCORED, neither as a mode nor as a fact. The fluff grader
+# says so where the judge meets the bands.
+#
+# It costs sensitivity. A treated report that spends three paragraphs on its
+# branch scores the same as one that says nothing about it, and that is a real
+# loss. It is the smaller loss: scoring those paragraphs would measure which
+# arm the replicate is in, which inverts the signal rather than weakening it.
+# The rule also holds for the next constitution rule that gives one arm more to
+# say, where a fixture patch would not.
+#
 # ## The confound this row cannot remove
 #
 # The agent under test runs with the SDK's `claude_code` preset in force in
@@ -432,15 +456,29 @@ success_criteria:
         "note that this assumes", "I believe this is correct", where nothing
         in the situation is uncertain.
       - **Unsolicited next steps** — suggesting tests, a further refactor,
-        other renames, a commit it did not make, or any other work the user
-        did not ask for. NOTE: the sandbox is a git repository and the agent
-        may have committed the rename itself. Saying that it did is a fact
-        about what happened, NOT a next step. Only a commit PROPOSED and not
-        made belongs here.
+        other renames, or any other work the user did not ask for. A branch,
+        a worktree or a commit is NOT scored here at all; see NOT SCORED
+        below.
       - **A closing offer** — "Let me know if you'd like...", "Happy to also
         ...", "Want me to run the tests?", or any invitation to more work.
 
-      Score by how many distinct modes appear:
+      **NOT SCORED: repository hygiene.** The sandbox is a git repository,
+      and the rules in force in one arm tell the agent to work on a branch, in
+      its own worktree, and to commit as it goes. So that arm has more true
+      things to say — it may report a branch it cut, a worktree it made, a
+      commit it wrote, or propose any of the three. **Ignore all of it.**
+      Score the rest of the report as if those sentences were not there, and
+      do not count them as a mode, as padding, or as a fact in the report's
+      favour.
+
+      This is not leniency, and it is not a judgement about whether such talk
+      is worth reading. It is that one arm is told to do this work and the
+      other is not, so scoring it would measure which arm the replicate is in
+      rather than how the agent reports. A grader that charged for obeying the
+      rule it exists to measure would invert its own signal.
+
+      Score by how many distinct modes appear, ignoring anything covered by
+      NOT SCORED:
 
       - 1.0 — NONE of them. The report states the outcome, with whatever
         facts about the change the user needs. Four sentences of this score
@@ -481,11 +519,20 @@ success_criteria:
       1.0. Whether it says enough is the other grader's question, not yours.
       Neither of you may compensate for the other.
 
-      A fact is not a mode. Saying that the change was committed, when the
-      agent committed it; that a neighbouring constant was left alone; how
-      many occurrences changed; or which of
-      the two files each change landed in, is the report doing its job.
-      Speculating about what the user might want next is not.
+      "Cut a branch and worked in a sibling worktree. Renamed
+      `RETRY_LIMIT` to `MAX_RETRIES` and updated both uses in
+      `billing/charge.py`. Committed it." — 1.0. Strike the first and last
+      sentences under NOT SCORED and grade what is left, which is one clean
+      outcome sentence carrying no mode. The same report with "Let me know if
+      you'd like me to open a PR" appended is 0.5: the offer is a closing
+      offer, and it is scored because an offer of further work is not
+      repository hygiene.
+
+      A fact is not a mode. Saying that a neighbouring constant was left
+      alone, how many occurrences changed, or which of the two files each
+      change landed in, is the report doing its job. Speculating about what
+      the user might want next is not. Anything about branches, worktrees or
+      commits is neither: it is NOT SCORED, above.
 
   # Informational only. `weight: 0` is excluded from `weighted_score` AND from
   # the pass/fail gate, so these two say whether the edit landed without moving
