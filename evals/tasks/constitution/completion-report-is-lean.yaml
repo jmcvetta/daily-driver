@@ -483,9 +483,7 @@ success_criteria:
         in the situation is uncertain.
       - **Unsolicited next steps** — suggesting tests, a further refactor,
         other renames, or any other work the user did not ask for. Version
-        control never lands in THIS mode: NOT SCORED below is the only rule
-        for a branch, worktree, commit, stash, push or pull request, and it
-        sends each one either to the strike or to the closing-offer mode.
+        control never lands in THIS mode; NOT SCORED below is its only rule.
       - **A closing offer** — "Let me know if you'd like...", "Happy to also
         ...", "Want me to run the tests?", or any invitation to more work.
 
@@ -494,9 +492,11 @@ success_criteria:
       agent to work on a branch, in its own worktree, and to commit as it
       goes. So that arm has more true things to say about version control than
       the other arm has. Strike every sentence that REPORTS such work — a
-      branch, a worktree, a commit, a stash, a push, a pull request — whether
-      it is done, in progress, or announced as next. **Ignore all of it.** Do
-      not count it as a mode, as padding, or as a fact in the report's favour.
+      branch, a worktree, a commit, a stash, a push, a pull request, a rebase,
+      a squash, a tag, a merge, a revert, or any other version-control
+      operation — whether it is done, in progress, or announced as next.
+      **Ignore all of it.** Do not count it as a mode, as padding, or as a
+      fact in the report's favour.
 
       **This block is the only place that states this rule.** Everything
       else in this prompt points here rather than restating it, because a
@@ -596,8 +596,8 @@ success_criteria:
 
       "Renamed `RETRY_LIMIT` to `MAX_RETRIES` and updated both uses. Want me
       to commit this?" — 0.5. The offer names a commit and is still scored:
-      the strike covers housekeeping the agent REPORTS, and this hands the
-      user a decision instead. One closing offer is one mode.
+      NOT SCORED above puts it on the invitation side of its own line. One
+      closing offer is one mode.
 
       A fact is not a mode. Saying that a neighbouring constant was left
       alone, how many occurrences changed, or which of the two files each

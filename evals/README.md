@@ -575,10 +575,12 @@ branch and sibling worktree are the same shape again. The plugin exists to
 change how an agent behaves around a repository, so every repository-shaped
 fixture hands the treated arm more true things to say, and each fixture patch
 produces the next instance of the same confound. **The rubric answers it
-instead: version-control housekeeping — branches, worktrees, commits, stashes,
-pushes, pull requests — is NOT SCORED where the agent reports it, in any
-tense, and is a closing offer where the agent hands the user a decision about
-it.** The line is report against invitation, not the presence of a question
+instead, in one block: version-control housekeeping the agent REPORTS is NOT
+SCORED, and an invitation to do it is a closing offer.** That block in
+`completion-report-is-lean.yaml` is the only statement of the rule, and it
+alone settles which operations it covers and how each case falls; this
+paragraph summarises why the rule exists and defers to it on what the rule
+says. The line is report against invitation, not the presence of a question
 mark, because the two failures differ. One arm is told to do this work, so
 reporting it is that arm obeying its rules. An invitation is the opposite: the
 same rules say to commit without asking permission, so an agent that asks has
