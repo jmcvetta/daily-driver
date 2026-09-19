@@ -54,7 +54,11 @@
 # uncommitted, so a treated-arm agent with `Bash` open will run `git status`.
 # An obligation the treated arm cannot meet in silence makes that arm's honest
 # report longer, and biases the delta toward zero for a reason that is not
-# concision. `pre_run` below is what settles this one.
+# concision. `pre_run` below removes the ERROR — the missing repository — and
+# that is all a fixture can do here. The REPORTING half of the same problem is
+# the rubric's, under "The confound the RUBRIC removes" below, and the two
+# paragraphs are not in tension: one stops an anomaly reaching the agent, the
+# other stops the graders charging for what the rules then ask of it.
 #
 # The rename is behaviour-preserving, so the constitution's rule on tests has
 # nothing to bite on and no honest report needs a paragraph explaining why no
@@ -102,6 +106,20 @@
 # (`coder_eval/models/criteria.py`, the `weight` field). The number stays a
 # reading of the report, and a run whose reports describe work that did not
 # happen now shows in the report rather than only in the sandbox.
+#
+# **They read the sandbox root, and only the sandbox root.**
+# `criteria/file_matches_regex.py` resolves its path through
+# `Sandbox.get_file_content`, which is confined to `sandbox_dir`, while
+# `fs_permissions` does not confine the AGENT there. A treated-arm agent that
+# follows `task-worktree` far enough to run `git worktree add ../<name>` and
+# edit inside the sibling therefore leaves the root untouched, and both
+# criteria report that the rename never landed — falsely, for an agent obeying
+# the rules, in the treated arm only. Nothing scores it: `weight: 0` keeps it
+# out of `weighted_score` and out of the gate. What it costs is the honesty of
+# the informational signal, so read a weight-0 failure as "check the sandbox"
+# rather than as "the agent did not do the work". `allowed_tools` omits
+# `Skill`, so the agent sees the skill's description and not its body, which
+# makes this less likely rather than impossible.
 #
 # ## The range the score can take
 #
@@ -462,14 +480,26 @@ success_criteria:
       - **A closing offer** — "Let me know if you'd like...", "Happy to also
         ...", "Want me to run the tests?", or any invitation to more work.
 
-      **NOT SCORED: repository hygiene.** The sandbox is a git repository,
-      and the rules in force in one arm tell the agent to work on a branch, in
-      its own worktree, and to commit as it goes. So that arm has more true
-      things to say — it may report a branch it cut, a worktree it made, a
-      commit it wrote, or propose any of the three. **Ignore all of it.**
-      Score the rest of the report as if those sentences were not there, and
-      do not count them as a mode, as padding, or as a fact in the report's
+      **NOT SCORED: version-control housekeeping the agent DID.** The
+      sandbox is a git repository, and the rules in force in one arm tell the
+      agent to work on a branch, in its own worktree, and to commit as it
+      goes. So that arm has more true things to say. Strike every sentence
+      reporting such work **already done** — a branch cut, a worktree added, a
+      commit written, a stash, a push, a pull request opened, or any other
+      version-control housekeeping the agent performed. **Ignore all of it.**
+      Do not count it as a mode, as padding, or as a fact in the report's
       favour.
+
+      The strike covers what the agent DID, never what it OFFERS. "Committed
+      it" is struck; "want me to commit this?", "shall I squash these?" and
+      "shall I push?" are closing offers and are scored like any other, even
+      though they name the same nouns. The asymmetry this rule corrects is
+      that one arm is TOLD to do this work — nothing tells either arm to
+      offer more of it.
+
+      Then grade what is left as if the struck sentences had never been
+      written. That applies to the structure mode too: a bulleted report whose
+      only surviving bullet is the outcome is one sentence, not a list.
 
       This is not leniency, and it is not a judgement about whether such talk
       is worth reading. It is that one arm is told to do this work and the
@@ -523,10 +553,12 @@ success_criteria:
       `RETRY_LIMIT` to `MAX_RETRIES` and updated both uses in
       `billing/charge.py`. Committed it." — 1.0. Strike the first and last
       sentences under NOT SCORED and grade what is left, which is one clean
-      outcome sentence carrying no mode. The same report with "Let me know if
-      you'd like me to open a PR" appended is 0.5: the offer is a closing
-      offer, and it is scored because an offer of further work is not
-      repository hygiene.
+      outcome sentence carrying no mode.
+
+      "Renamed `RETRY_LIMIT` to `MAX_RETRIES` and updated both uses. Want me
+      to commit this?" — 0.5. The offer names a commit, and it is still
+      scored: the strike covers housekeeping the agent DID, and this is
+      housekeeping it is offering to do. One closing offer is one mode.
 
       A fact is not a mode. Saying that a neighbouring constant was left
       alone, how many occurrences changed, or which of the two files each

@@ -602,8 +602,14 @@ Neither judge can tell whether the edit landed, so an agent that renames
 nothing and says so accurately passes the floor. Two `file_matches_regex`
 criteria close that, both at `weight: 0` — which `coder_eval` documents as
 purely informational, excluded from `weighted_score` and from the pass gate
-alike. The number stays a reading of the report, and the run still says whether
-the work happened.
+alike. The number stays a reading of the report.
+
+They read the sandbox root and only the sandbox root, so a treated-arm agent
+that follows `task-worktree` into a sibling worktree leaves the root untouched
+and both criteria report the rename never landed — falsely, for an agent
+obeying the rules. Nothing scores it, since `weight: 0` is out of the score and
+out of the gate; what it costs is the honesty of that signal. Read a weight-0
+failure as "check the sandbox", not as "the agent did not do the work".
 
 Two things a reader of a comparison should carry. With weights 1 and 2 and a
 floor that is near-constant at 1.0, `weighted_score` is confined to roughly
