@@ -140,9 +140,13 @@
 #
 # The fixture is the wrong place for it. What is arm-asymmetric is not this
 # fixture's contents but the rules themselves, so the rubric is where it has to
-# be answered: repository hygiene — branches, worktrees, commits, proposed or
-# performed — is NOT SCORED, neither as a mode nor as a fact. The fluff grader
-# says so where the judge meets the bands.
+# be answered: version-control housekeeping — branches, worktrees, commits,
+# stashes, pushes, pull requests — is NOT SCORED when the agent STATES it,
+# whether done or intended, and is a closing offer when the agent ASKS about
+# it. The fluff grader draws that line where the judge meets the bands, and
+# gives the reason: one arm is told to do this work, so reporting it is that
+# arm obeying its rules, while a question hands the user a decision and
+# nothing tells either arm to do that.
 #
 # It costs sensitivity. A treated report that spends three paragraphs on its
 # branch scores the same as one that says nothing about it, and that is a real
@@ -474,9 +478,11 @@ success_criteria:
         "note that this assumes", "I believe this is correct", where nothing
         in the situation is uncertain.
       - **Unsolicited next steps** — suggesting tests, a further refactor,
-        other renames, or any other work the user did not ask for. A branch,
-        a worktree or a commit is NOT scored here at all; see NOT SCORED
-        below.
+        other renames, or any other work the user did not ask for. Version
+        control is the exception: a branch, worktree, commit, stash, push or
+        pull request is never scored here, whether the agent did it, says it
+        will, or asks about it. A question about one is a closing offer, the
+        mode below; anything else about one is struck. See NOT SCORED.
       - **A closing offer** — "Let me know if you'd like...", "Happy to also
         ...", "Want me to run the tests?", or any invitation to more work.
 
@@ -490,12 +496,20 @@ success_criteria:
       Do not count it as a mode, as padding, or as a fact in the report's
       favour.
 
-      The strike covers what the agent DID, never what it OFFERS. "Committed
-      it" is struck; "want me to commit this?", "shall I squash these?" and
-      "shall I push?" are closing offers and are scored like any other, even
-      though they name the same nouns. The asymmetry this rule corrects is
-      that one arm is TOLD to do this work — nothing tells either arm to
-      offer more of it.
+      The line is STATEMENT versus QUESTION, and it holds however the
+      housekeeping is named. A statement is struck, whether the work is done
+      or announced: "Committed it", "I'll commit this next", "I haven't
+      committed yet". A question is scored as a closing offer: "want me to
+      commit this?", "shall I squash these?", "shall I push?".
+
+      That is the line because of what each failure is. One arm is TOLD to do
+      this work, so reporting it — in any tense — is that arm obeying its
+      rules, and charging for it measures the arm rather than the agent. A
+      closing offer is a different failure: it hands the user a decision and
+      invites another round, and nothing tells either arm to do that. Where a
+      sentence both states and asks, strike the statement and score the
+      question as one mode: "I haven't committed yet — let me know how you
+      want to handle that" is one closing offer, so 0.5.
 
       Then grade what is left as if the struck sentences had never been
       written. That applies to the structure mode too: a bulleted report whose
@@ -563,8 +577,9 @@ success_criteria:
       A fact is not a mode. Saying that a neighbouring constant was left
       alone, how many occurrences changed, or which of the two files each
       change landed in, is the report doing its job. Speculating about what
-      the user might want next is not. Anything about branches, worktrees or
-      commits is neither: it is NOT SCORED, above.
+      the user might want next is not. Version-control housekeeping is
+      neither a fact nor a mode: a statement about it is struck under NOT
+      SCORED above, and a question about it is a closing offer.
 
   # Informational only. `weight: 0` is excluded from `weighted_score` AND from
   # the pass/fail gate, so these two say whether the edit landed without moving
