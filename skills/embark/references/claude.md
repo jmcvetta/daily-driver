@@ -45,12 +45,12 @@ What `create_session` is given
 
 | Field | What goes in it |
 | ----- | --------------- |
-| `prompt` | The task issue, and the ask to undertake it. Nothing else. |
+| `prompt` | The task issue and the ask to undertake it. Nothing else. |
 | `title` | `session-title`'s form for that task issue. |
-| `model` | The task issue's `Model:` line, or omitted to inherit this session's. |
-| `environment_id` | Omitted. The default is the calling session's environment, which is where the plugin is installed. |
-| `permission_mode` | Omitted, to inherit. |
-| `outcome_branch` | `Recover a session` only — the branch the dead session was pushing to. |
+| `model` | A concrete identifier resolved from the required class and current session availability. |
+| `environment_id` | Omitted to inherit the calling environment. |
+| `permission_mode` | Omitted to inherit. |
+| `outcome_branch` | `Recover a session` only. |
 
 **Never `permission_mode: "plan"`.** The call's own contract says a `plan`
 session proposes a plan and then blocks for a human approval in the web UI. A
@@ -80,18 +80,15 @@ member the listing does not name cannot be reached** — a session that has
 already stopped is the usual reason — and that is the reopen path in
 `Recover a session` rather than a retry.
 
-**There is no effort parameter.** Effort is session configuration —
-`session_context.effort_level` — rather than a dispatch argument, which is why
-`epic` records a model on a task issue and not a level.
+The required class
+------------------
 
-The model identifier
---------------------
-
-It has to be one `create_session` accepts: a marketing name recalled from
-training is not one, and the session it opens fails rather than falling back.
-[`epic`'s own Claude routes](../../epic/references/claude.md) name the family
-and carry the date that measurement was taken. That table is not copied here —
-one home for it is what stops the two drifting.
+Resolve the task's `Model class` using
+[`issue-body`'s shared guidance](../../issue-body/references/model-classes.md)
+before calling `create_session`. `session_context.model` is a candidate
+concrete identifier only after that assessment; `configured_model` can be an
+alias or unsupported suffix. Never pass a class name to `model`, and never
+silently inherit an unchecked model.
 
 Reading a session, and what cannot be read
 ------------------------------------------

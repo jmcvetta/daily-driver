@@ -58,25 +58,16 @@ a stop at dispatch, with the wave named, not a declaration that the skill
 does not run.
 
 
-What this surface has not been measured to do
-=============================================
+Class resolution limits
+=======================
 
-**The namespace has never been driven.** [#181](https://github.com/jmcvetta/daily-driver/issues/181)
-could not reach the delegation path — a stub router rejected every spelling
-of `spawn_agent`, and `multi_agent_v2` is not stable — so this file specifies
-the fallback against the namespace rather than against its tools, and the
-provenance below records it. Three things in particular are unmeasured, and
-each is written the way the round should read it:
+The delegation namespace has not been driven. No model or effort argument is
+measured, so do not invent either. Resolve a task's required class only where
+the offered configured route and its actual capabilities can be established;
+otherwise stop that task and report the configuration gap. The muster roll
+records the required class, selected implementor route, and actual model as
+`unreported` when the surface does not report one.
 
-- **A model argument.** No delegation argument is measured to select a model.
-  The cheaper default of `Open the sessions` is therefore expressed as the
-  delegation's default implementor, and the model an implementor actually ran
-  on is read back from what the harness reports of that subagent where it
-  reports one, never recalled; where nothing reports it, the muster-roll row
-  records the implementor's agent type and marks the model unreported — a
-  guessed identifier is not a measurement. The task issue's `Model:` line is
-  advisory, the bypass is the orchestrator's judgement, and `SKILL.md`'s
-  wording is the rule this file does not restate.
 - **Agent-to-agent messaging.** Whether a delegated implementor can send a
   question back to the delegating session is not measured. The route this
   file specifies is `SKILL.md`'s: the advisor is the orchestrator itself, and

@@ -1,0 +1,44 @@
+task_id: undertake-11-checks-model-class-suitability
+description: >-
+  A standalone undertaking checks the task class against the current session
+  before claiming or changing the repository.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  Undertake task #52. Its valid Model class is `standard`; the current session
+  is assessed `advanced`. Explain what happens before the claim. Then consider
+  the same task if the current session were unassessable.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires for assigned task work"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: Suitability is checked before claim and unsuitable sessions stop
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      Find the final reply. Score 1.0 only if it says the advanced session may
+      undertake the standard task directly after validating the class metadata,
+      without opening a cheaper implementer, and says an unassessable session
+      reports a configuration mismatch before claim or repository changes.
+      Score 0.0 if it delegates solely to cut cost or starts work before the
+      suitability check.

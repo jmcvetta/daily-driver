@@ -9,10 +9,9 @@ description: >-
   move from a planned epic to opening a session per task — a web session on
   Claude Code, one harness-local subagent per task on Omp and Codex. Supplies
   the wave it reads off the graph, the session or subagent it dispatches per
-  task — on the recorded model, or the cheaper implementation default where
-  web sessions are not the route — the muster roll it posts to the epic
-  instead of asking, the watch it keeps through the pull requests rather than
-  through the session client, and the backstop for a session that has gone
+  task through the required model class, and the muster roll it posts to the
+  epic instead of asking, the watch it keeps through the pull requests rather
+  than the session client, and the backstop for a session that has gone
   quiet. Not for breaking work into task issues, which is `epic`, taking one
   task issue to a pull request, which is `undertake`, or a single issue.
 ---
@@ -155,70 +154,40 @@ here to be routed again:
 3 — Open the sessions
 ---------------------
 
-**Where the harness can open web sessions, one session per task issue in the
-wave**, opened in the same environment as this one, all of them before the
-watch starts. **Where it cannot, the fallback is one implementation subagent
-per task issue, dispatched concurrently through the harness's own subagent
-surface** — a wave is one batch either way, and every ship in it carries four
-things and no more:
+Open one implementation session or subagent per task issue, all before the
+watch starts. Each ship carries the task issue, the instruction to undertake
+it, a `session-title` title where the surface supports one, and inherited
+permissions. The issue is the task statement; do not copy its scope into the
+prompt.
 
-- **A prompt naming its task issue and asking for it to be undertaken**, and
-  nothing else. The issue is the statement of the work; a summary of it in the
-  prompt is a second copy that can disagree with the first, and the session
-  reads the issue itself at `undertake`'s `Read the issue and its edges`. The
-  boundary holds in the fallback: the subagent is given the issue number and
-  the instruction, no more.
-- **The model the task issue records**, taken from the `Model:` line that
-  ends the task body, written under `issue-body`'s contract. Where there is
-  no such line the session inherits this one's model, which that contract
-  states is the working default.
-  **This skill does not choose**, and does not second-guess a line it is
-  given: the judgement was made when the task was sized, and re-making it here
-  on less information is how it gets made worse. That binds the web route.
-  **In the fallback the line is advisory, and the default is a cheaper
-  implementation model** — an unattended routine edit does not need the
-  orchestrator's own strength, and quota spent on one is quota the rest of
-  the wave does not get. Two exceptions, both the orchestrator's judgement
-  and neither appealed: work that is security-sensitive, and work whose
-  complexity makes a weaker implementor unsafe. Either is dispatched to a
-  stronger implementor — a stronger subagent or session, never the
-  orchestrator itself. **Delegation is unconditional**: the orchestrator
-  keeps responsibility for claim, dispatch, watch and gates, and never
-  implements. A task too
-  underspecified for any subagent is a planning defect, not an escape
-  hatch — its body failed the readiness test, and the fix is a tighter
-  task body through `epic`, never the orchestrator's hands on the code.
-- **A title**, in `session-title`'s form for the task issue. It is what makes a
-  list of five running sessions readable at the moment the wave launches,
-  which is before any of them has reached its own `Title the session` and set
-  the same string. Where the dispatch surface takes no title, the issue
-  number in the prompt is the identifier the muster roll carries instead.
-- **The environment's own permissions**, inherited rather than narrowed or
-  named. A task session runs unattended, and a session opened in a mode that
-  blocks for a human approval is a session that never starts work.
+**Resolve the task's required class before dispatch.** Read its `Model class`
+section, then filter available routes for assessed capability, tools, context,
+modalities, and availability. Choose the lowest expected reliable cost among
+eligible routes. Unknown prices use an operator preference, never an invented
+free or globally cheapest result. A stronger eligible route may run lower-class
+work. An under-capable or tool-incompatible cheap route is excluded.
+
+The selected route and actual model are distinct from the required class.
+Record `unreported` when actual identity is unavailable; visible provider
+fallbacks are mismatches to report and reassess. No eligible route stops only
+that task; the rest of the wave launches. An underspecified task is a planning
+defect, not an excuse to dispatch a stronger model.
+
+Each harness reference owns concrete dispatch. Claude resolves to a valid
+concrete identifier before session creation. Omp selects an implementation
+agent, not a per-item model. Codex keeps unmeasured delegation controls
+unclaimed. `sonic` is a mechanical-only candidate; reviewers and scouts are
+not implementation routes.
 
 **An implementor may ask for help, and must have someone to ask.** The route
-is the harness's agent messaging, and the advisor is the orchestrator itself
-or one shared subagent running a strong model — one advisor for the wave,
-never one per task unless a task's context is genuinely separate. An
-implementor that fails silently instead of asking is the failure this rule
-exists to surface, and advisor-on-demand alone does not catch it.
+is harness messaging. The advisor is the orchestrator or one shared
+advanced-capable advisor, never one per task without separate context.
 
-**So a strong-model review gates every pull request an implementor
-produced.** An implementor that reaches `undertake`'s ready gate does not
-take the gate itself: it hands its head to the advisor over the messaging
-and waits, and the strong model — the orchestrator or the shared advisor —
-runs `review-cycle`'s round and returns its findings the same way. The
-implementor answers them under the round's protocol, and `Ready for review`
-waits for the round to close. The implementor does not review its own work,
-and a reviewer at the implementor's own strength is not a review.
+**Independent review gates every pull request an implementor produces.** The
+implementor does not review its own work; `review-cycle` owns the round.
 
-**A dispatch that fails sinks one ship, not the fleet.** A model identifier
-the session client rejects fails the call rather than falling back; report
-that task, launch the rest of the wave, and do not substitute an identifier
-of your own — the constitution forbids the guess, and `issue-body` owns the
-line that was wrong. The same holds in the fallback: a subagent that fails to
-launch is reported, and the rest of the batch sails.
+**A dispatch failure sinks one ship, not the fleet.** Report the affected task,
+preserve its class requirement, and launch the rest.
 
 No permission is asked here. `Waves launch without confirmation` below is why.
 
@@ -235,30 +204,17 @@ one row per task:
 ```markdown
 ### Wave 2 — after #143 · in progress
 
-| Task | Session | Model |
-| ---- | ------- | ----- |
-| #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `claude-sonnet-5` |
-| #147 — Document the format. | [session_01DeF…](https://claude.ai/code/session_01DeF…) | `claude-opus-5`, inherited |
-| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — |
+| Task | Implementor | Required class | Actual model |
+| ---- | ----------- | -------------- | ------------ |
+| #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `standard` | `claude-sonnet-5` |
+| #147 — Document the format. | subagent `agent://abc` | `mechanical` | `unreported` |
+| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — |
 ```
 
-**A `human` task gets a row and no session.** It is in the wave's heading
-because a reader counting the epic's open work would otherwise have to go
-looking for it, and the row says why no session is named. A wave that is
-nothing but `human` tasks still posts its roll: the roll is what says the
-epic is waiting on a person.
-
-**Say which model was inherited.** A reader cannot otherwise tell a judgement
-`epic` made from a default nobody chose, and the difference is the whole reason
-the `Model:` line exists.
-
-**The fallback's roll names subagents, not sessions.** The columns are the
-task, the implementor's subagent identifier, the model it ran on, and any
-advisor — the dispatch decision made visible, which is the point of the roll.
-A web-session row links; a fallback row names what the harness's own listing
-resolves. `Say which model was inherited` holds in both: where a fallback
-implementor ran on the cheaper default rather than the task's recorded line,
-the row says so.
+The roll distinguishes the requested class, selected route, and actual model.
+A `human` task gets a row and no implementor. A fallback roll names the
+subagent and any shared advisor; a web-session row links. Do not describe an
+actual model that the harness did not report.
 
 **The wave headings carry state, and nothing else moves it.** `epic` writes
 that state into the epic's `Sequencing` at decomposition time and never

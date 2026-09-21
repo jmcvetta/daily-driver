@@ -46,27 +46,24 @@ Each item's prompt is the task issue number and the instruction to undertake
 it, and nothing else. The prompt boundary of `Open the sessions` holds.
 
 
-The model an implementor runs
+The route an implementor runs
 =============================
 
-The `task` surface selects an agent type, not a model identifier, and this
-plugin ships no agents of its own. The cheaper default of `Open the sessions`
-is therefore the default implementation agent type, made cheaper by the
-harness's own task-role model configuration — and **what each implementor
-actually ran on is read back from what the harness reports of that
-subagent**, never recalled. Where that report names the orchestrator's own
-model for a routine task, the muster roll records it as it is: a cheaper
-default that configuration did not deliver is a configuration gap, reported
-rather than papered over.
+The `task` surface selects an `agent`, not a model argument. Resolve the
+required class against `task.agentModelOverrides`, discovered agent frontmatter
+model selectors, then the parent/session fallback. Inspect `modelRoles`,
+`task.agentModelOverrides`, and the candidate model catalog before dispatch;
+catalog presence is not a successful inference request.
 
-The task issue's `Model:` line is advisory here, exactly as `SKILL.md` says:
-it is the judgement `epic` made, and the orchestrator reads it before
-deciding whether the cheaper default is safe for this task. The bypass is
-the orchestrator's judgement too, made the same way: dispatch a stronger
-agent type for security-sensitive or unusually complex work — a stronger
-subagent, never the orchestrator itself. Work too underspecified for any
-subagent is a planning defect reported back into the task body, not a task
-the orchestrator takes.
+`sonic` is a mechanical-only candidate. The general-purpose `task` agent may
+satisfy any class only when its resolved concrete model does. Reviewers and
+scouts are not implementation routes. Do not alter a shared role during a
+concurrent wave to satisfy one task; report the configuration gap instead.
+Per-spawn effort exists only when `task.enableEffort` exposes it.
+
+Each batch item sets only its selected `agent`; no per-item `model` argument
+exists. The muster roll records the required class, selected agent, and actual
+reported model separately.
 
 
 Asking for help

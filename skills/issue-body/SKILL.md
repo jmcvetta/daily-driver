@@ -2,16 +2,10 @@
 name: issue-body
 description: >-
   This skill should be used whenever the body of a GitHub issue is being
-  written or revised — including when the user says "write the issue body",
-  "update #123's body", or asks for an issue to be made ready for an agent,
-  and including any call Claude makes on its own initiative that sets an issue
-  `body`. It is invoked from `issue` and also fires on direct body edits, so
-  no write bypasses it. Supplies what a `task` issue's body must carry — the
-  grounded handoff, the readiness test, and the `Model:` line — and the update
-  rule that preserves valid content. Any other label's edit runs under the
-  rules that already govern it and acquires nothing here. Not for the label
-  itself, which is `issue-labels`, for the relationship graph, which is
-  `issue-deps`, or for a pull request body, which is `pr-body`.
+  written or revised. It supplies the grounded handoff, readiness test, and
+  provider-neutral model class for `task`; every other label's edit keeps its
+  own body rules. It is invoked from `issue` and direct body edits. Not for
+  labels, issue relationships, or pull request bodies.
 ---
 
 # Issue body
@@ -33,11 +27,13 @@ model metadata, no generic template. The standard does not claim the
 namespace, in the way `issue-labels` says of labels themselves.
 
 **The routes are per harness, and they live beside this file.** The calls
-that open an issue or replace its body, and the model identifiers a `Model:`
-line may name, are in [`references/claude.md`](references/claude.md),
-[`references/omp.md`](references/omp.md) and
-[`references/codex.md`](references/codex.md). Read the one for the harness in
-use before the first call.
+that open an issue or replace its body are in
+[`references/claude.md`](references/claude.md),
+[`references/omp.md`](references/omp.md), and
+[`references/codex.md`](references/codex.md). The class definitions and
+changeable routing guidance are in
+[`references/model-classes.md`](references/model-classes.md). Read the
+applicable route and the shared guidance before the first call.
 
 
 The task body
@@ -47,66 +43,42 @@ Six information requirements. **They are requirements on information, not a
 quota of headings or paragraphs** — a small task stays small, and
 inapplicable detail is omitted rather than manufactured into boilerplate.
 
-1. **Outcome and reason.** The observable change, the current behaviour, and
-   why the change is needed.
-2. **Scope.** What must change, what must remain unchanged, and the explicit
-   non-goals. One task is one reviewable pull request; `epic` is used only
-   where its own gates hold.
-3. **Grounded implementation map.** Written after inspecting the repository
-   guidance and the relevant code, not from memory: the affected files,
-   symbols or sections, the existing patterns to follow, and the relevant
-   callers. Reference the context rather than copying source into the issue.
-   **Never invent a path, an API, or a command** — a handoff that sends its
-   implementer to a file that does not exist is worse than none.
-4. **Settled design.** The substantive engineering choices are resolved at
-   authoring time: the contracts that change, the invariants, the edge cases
-   that matter, and the compatibility or migration requirements where they
-   apply. Routine local choices stay with the implementer — prescribing every
-   line is not grounding, it is dictation.
-5. **Acceptance and verification.** The observable pass/fail conditions, the
-   existing tests, fixtures and project gates that cover the change —
-   identified through inspection, not assumed — and the plausible regressions
-   coverage must catch. Tests are not required of prose or plumbing merely to
-   fill a template.
-6. **Execution model.** The lightest agent that can execute the task
-   reliably, chosen by the model and harness conventions that already exist,
-   written as the `Model:` line below. Heavier capability is justified in a
-   sentence when it is necessary: cost comes down by removing uncertainty,
-   never by weakening a quality gate or by assigning arbitrary work to the
-   smallest model.
+1. **Outcome and reason.** The observable change, current behaviour, and why
+   the change is needed.
+2. **Scope.** What changes, what remains unchanged, and explicit non-goals.
+   One task is one reviewable pull request; use `epic` only where its gates
+   hold.
+3. **Grounded implementation map.** Inspect repository guidance, affected
+   files, symbols, callers, tests, and gates. Reference that context; never
+   invent a path, API, or command.
+4. **Settled design.** Resolve substantive contracts, invariants, edge cases,
+   and compatibility or migration requirements. Routine local choices remain
+   with the implementer.
+5. **Acceptance and verification.** State observable pass/fail conditions,
+   existing coverage, plausible regressions, and relevant project gates.
+6. **Model class.** Choose the lowest class in
+   [`references/model-classes.md`](references/model-classes.md) that can
+   reliably implement the settled work. Improve the specification before
+   raising the class; do not weaken scope or checks to choose a cheaper route.
 
-**A task body opens in a fixed shape, and the requirements above land in it
-in a fixed order — requirements 1 through 5 in the four parts below, and
-requirement 6 on the `Model:` line that closes the body.** The opening has
-four parts, in this order:
+**A task body opens in a fixed shape.** Its parts appear in this order:
 
-1. **A one-line summary.** The first line of the body, and one line — very
-   concise — stating the observable outcome. No character limit is imposed:
-   an issue body has no surface that renders its first line in a list, so
-   "very concise" and "one line" are the whole rule.
-2. **A haiku.** Immediately after the summary line, separated by a blank
-   line. Three lines, 5-7-5, italicised line by line — the form
-   [`HAIKU.md`](../../HAIKU.md) shows — conveying the gist of the task. The
-   verse form is what tells a task issue and a pull request apart on sight:
-   a pull request carries a classical salutation, a task issue a haiku.
-3. **`Summary`.** What changes and why it is wanted, for a reader who will
-   not read `Detail` — requirements 1 and 2 above, in plain terms. **A short
-   paragraph or two, and it stops there.** The budget is part of the rule: a
-   `Summary` that grows into a second telling of `Detail` is the failure
-   mode, because the requirements below invite it. Nothing an implementer
-   needs lives here — that is `Detail`'s — and nothing is said twice.
-4. **`Detail`.** Free form, and as long as the task needs: the grounded
-   implementation map, the settled design, and the acceptance and
-   verification conditions — requirements 3, 4 and 5. Headings inside it
-   are the author's choice.
+1. **A one-line summary.** The first line states the observable outcome.
+2. **A haiku.** Immediately after the summary, separated by a blank line:
+   three 5-7-5 lines, italicised line by line, as
+   [`HAIKU.md`](../../HAIKU.md) shows.
+3. **`## Summary`.** A short human-facing paragraph or two describing the
+   change and reason, without duplicating `Detail`.
+4. **`## Model class`.** Immediately after `Summary`, before `Detail`. Its
+   first paragraph is exactly one backtick-wrapped lowercase class token;
+   one short rationale paragraph follows.
+5. **`## Detail`.** The grounded map, settled design, acceptance, and
+   verification. Its internal headings are the author's choice.
 
-The `Model:` line keeps the rule it has below: the last line of the body,
-after `Detail`, and nothing after it.
+The class is implementation metadata, not authoring, review, judging, effort,
+or concrete-model provenance. A task body has no trailing `Model:` or
+`Effort:` line. This shape is `task`'s alone; an `epic` body is untouched.
 
-**The shape is `task`'s alone**, as the standing rule at the top of this
-skill already says of everything defined here — an `epic` body is untouched.
-And it is not swept backwards: bodies written before it are not backfilled,
-because the update rule below already says what an update preserves.
 
 **Relationships are edges, not prose.** What the task waits on is
 `issue-deps`' to record, and a body states only what an edge cannot — that
@@ -116,48 +88,46 @@ rule is `issue-deps`'s, cited here rather than restated.
 The readiness test
 ==================
 
-Before an issue is presented as ready: **can another agent implement it from
-the issue and the repository context it references, without making an
-unstated product or architecture decision?**
+Before an issue is presented as ready: **can an implementer assessed for the
+chosen class implement it from the issue and referenced repository context,
+without making an unstated product or architecture decision?**
 
-A repository-answerable question is answered now, by the author — that is
-what the implementation map is for, not work delegated to whoever implements.
-An unresolved decision that belongs to the user is asked about, and until it
-is answered the issue is not ready. **Never fabricate certainty, and never
-silently change scope or a label to pass the gate.**
+A repository-answerable question is answered now, by the author. An unresolved
+user decision means the task is not ready at any class. Unknown class tokens,
+multiple class sections, and a missing rationale are invalid metadata, not a
+default to `standard`.
 
 
 Updating a body
 ===============
 
-An update preserves what is valid. The user's content and the requirements
-that still hold stay; the affected part of the specification changes; the
-readiness test runs again. Unrelated text is not reflowed, and existing
-issues are not swept. Where an implementation later contradicts what the
-handoff assumed, the discrepancy is reported rather than the stale
-instructions followed blindly.
+An update preserves valid content. The user's content and requirements that
+still hold stay; the affected specification changes; and readiness runs again.
+Unrelated text is not reflowed and existing issues are not swept.
+
+A deliberately revised task emits the new section and removes its trailing
+task `Model:` field. When selecting an old task for work, assess its body
+against the class rubric and migrate only that issue before dispatch. Do not
+infer a class from the old identifier. A valid new section is authoritative
+when both forms exist.
 
 
-The Model line
-==============
+The model class section
+=======================
 
-A task body's last line, and nothing after it:
+The section is immediately below `## Summary` and before `## Detail`:
 
+```markdown
+## Model class
+
+`standard`
+
+The API contract and edge cases are fixed; implementation follows the existing
+adapter pattern.
 ```
-Model: <identifier>
-```
 
-The identifier is the lightest one that can execute the task reliably, in the
-form the harness's session client accepts — the reference file for the
-harness in use names them, and it is read rather than recalled. **Where no
-valid identifier can be named, write no line at all**: a missing line is a
-working default on every route, and a session opened on a model that does not
-exist is not.
-
-**Reasoning effort cannot be recorded.** The session clients take a model and
-have no effort parameter, so an `Effort:` line beside the model would be read
-by nothing. Do not write one.
-
-`embark` parses this line to dispatch each task's session, and the format
-above is what it parses. The line therefore lives here and nowhere else — a
-second copy of the format is a second thing `embark` would have to follow.
+`embark` resolves the required class to an eligible concrete route. It never
+uses the issue body as concrete-model provenance. `undertake` checks the
+current implementation session against the selected class before it claims or
+changes repository files. Claim comments, readiness reports, and execution
+records retain the concrete model the harness actually reports.

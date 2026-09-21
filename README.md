@@ -28,7 +28,7 @@ seventeen skills:
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
 | `issue-labels` | The six labels an issue may carry — `epic`, `task`, `bug`, `proposal`, `research`, `human` — and the readiness each one states, which is what decides whether an agent may start unattended. |
 | `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
-| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a `Model:` line for `task`; every other label's edit runs under existing rules and acquires nothing. |
+| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a provider-neutral `Model class` section for `task`; every other label's edit runs under existing rules and acquires nothing. |
 | `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |
 | `readme` | Writes a README that answers what this is and how to use it, and nothing else: the shape, the reading of length as a symptom, and the list of what belongs in a commit message, a changelog or `docs/` instead. |
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |

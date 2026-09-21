@@ -62,17 +62,16 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
       is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the decomposition was already agreed, so the wave is launched
-      without asking again. One session is opened per task issue, and a muster
-      roll — the tasks, the session opened for each, and the model each is
-      running — is posted to the epic as the wave launches. Saying the tools to
-      do this are unavailable in the environment, and stating that this is what
-      would otherwise happen, counts as launching.
+      The rule: the decomposition was already agreed, so the wave launches
+      without asking again. One eligible implementor is opened per task issue.
+      A muster roll on the epic records each task's required class, selected
+      route, and actual model (or `unreported`), instead of conflating them.
+      Saying the tools are unavailable and this is what would otherwise happen
+      counts as launching.
 
-      Score 1.0 if the REPLY opens the wave, or says it would, and names the
-      muster roll or its equivalent record on the epic.
+      Score 1.0 if the REPLY launches unasked and names the class-separated
+      muster roll. Score 0.5 if it launches unasked but records nothing.
 
-      Score 0.5 if the reply launches unasked but records nothing on the epic.
 
       Score 0.0 if the reply asks the user to approve or confirm the launch
       before opening any session, offers a menu of waves or tasks to choose

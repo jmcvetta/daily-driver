@@ -1,0 +1,38 @@
+task_id: epic-06-assigns-model-classes
+description: >-
+  Epic planning assigns the lowest justified task class and repairs a missing
+  specification before escalating model capability.
+tags: [epic, behaviour, fire]
+
+initial_prompt: >-
+  Break this agreed change into task issues. One child is a documented rename
+  across named files with an existing replacement example. Another changes a
+  concurrent lease protocol but does not state its required invariant. Show the
+  plan only; do not create issues.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`epic` fires for multi-issue planning"
+    expected_skill: epic
+    skill_name: epic
+  - type: llm_judge
+    description: Planning records a mechanical class and refuses to use advanced as an underspecification workaround
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    prompt: |
+      Find the final reply. Score 1.0 only if it gives the documented rename
+      `mechanical` with a short rationale, identifies the concurrent lease task
+      as missing its invariant instead of ready merely because it could be
+      `advanced`, and says the missing design must be settled before authoring.
+      Score 0.0 if it treats large or difficult work as automatically advanced
+      or uses a stronger model to bypass the missing specification.
