@@ -92,9 +92,10 @@ check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-manifest-fixtures check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-cache-clean \
 	check-omp-review-cycle-route \
-	check-review-cycle-fix-delta-route check-omp-agent \
-	check-eval-arms check-step-names check-evals-preflight check-labels \
-	check-labels-fixtures check-epic-child-fixtures
+	check-review-cycle-fix-delta-route check-omp-agent check-codex-agent \
+	check-eval-fixtures check-task-worktree-fixture check-eval-arms \
+	check-step-names check-evals-preflight check-labels check-labels-fixtures \
+	check-epic-child-fixtures
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named

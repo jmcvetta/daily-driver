@@ -152,6 +152,13 @@ The description strings are duplicated in the skill's tables, and
 leg of `check` rather than of `check-infra`: it needs only Python, so a laptop
 editing a skill runs it without OpenTofu installed.
 
+After the human applies this stack, that person runs one backfill for existing
+open epic children. For each open issue, read its native direct parent and the
+parent's labels. Add only `epic-child` when the parent is confirmed and carries
+`epic`; preserve every existing label. Do not infer a parent from issue text or
+add a marker after a failed graph read. This rollout step waits on the same
+human who applies the Tofu stack.
+
 ## Renaming the Repository
 
 `local.repository` in `main.tf` is the repository's name, so a rename is an
