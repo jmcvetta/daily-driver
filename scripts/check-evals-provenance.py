@@ -157,6 +157,21 @@ def main() -> int:
             result.returncode != 0 and "experiment model" in result.stderr,
             "changed experiment model was accepted",
         )
+        run["task_results"][1]["agent_config"]["model"] = "other-model"
+        (run_dir / "run.json").write_text(json.dumps(run))
+        result = subprocess.run(
+            [sys.executable, str(RECORDER), str(run_dir), "--experiment", str(experiment)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        require(
+            result.returncode != 0 and "experiment model" in result.stderr,
+            "mixed resolved models were accepted",
+        )
+        run["task_results"][1]["agent_config"]["model"] = "requested-model"
+        (run_dir / "run.json").write_text(json.dumps(run))
         cloud_env = {**base_env, "CLAUDE_CODE_SESSION_ID": "session-123"}
         cloud = json.loads(run_recorder(run_dir, experiment, temp / "cloud", cloud_env).read_text())
         require(cloud["host"]["kind"] == "cloud", "web session was not recorded as cloud")
