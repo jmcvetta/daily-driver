@@ -19,6 +19,16 @@ Reading and writing a label
 sends one label drops every other label the issue had, the bot-owned ones
 included. Read the current set first and send it back with the change applied.
 
+Reconciling the epic-child marker
+=================================
+
+`issue-deps` supplies a verified direct-parent read. If that parent's labels
+include `epic`, include `epic-child` in the replacement `labels` set. If no
+parent is confirmed or its labels omit `epic`, remove `epic-child` from that
+set. A failed graph read preserves the current set and reports the limitation.
+The replacement write includes the existing issue kind, stock labels, bot
+labels, and unrelated labels; `epic-child` is never a substitute for a kind.
+
 Finding the issues that carry a label is `mcp__github__list_issues` with
 `labels`, or `mcp__github__search_issues` with `label:task` in the query —
 the search is what answers "which of these could I hand to an agent".

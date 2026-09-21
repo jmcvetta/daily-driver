@@ -80,6 +80,11 @@ its output. Verify that a read target is an issue before believing an empty
 graph. After a write, read the other end with `--json blocking` or
 `--json subIssues`.
 
+After every parent read or write, read the confirmed parent's labels and invoke
+`issue-labels` to reconcile `epic-child` on the child. A graph read that fails
+or cannot name the direct parent preserves the child labels and reports the
+limitation; it does not remove the marker.
+
 The fallback script
 ===================
 

@@ -14,8 +14,8 @@ SHELL := /bin/bash
 	check-review-cycle-fix-delta-route \
 	check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
-	check-evals-preflight check-labels check-infra evals-install evals-plan \
-	evals-variants evals-preflight evals-run evals-run-omp \
+	check-evals-preflight check-labels check-labels-fixtures \
+	check-epic-child-fixtures check-infra evals-install evals-plan \
 	evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex mcp-usage
 
@@ -93,8 +93,8 @@ check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-omp-extension check-omp-guard-differential check-omp-cache-clean \
 	check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route check-omp-agent \
-	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
-	check-eval-arms check-step-names check-evals-preflight check-labels
+	check-eval-arms check-step-names check-evals-preflight check-labels \
+	check-labels-fixtures check-epic-child-fixtures
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -315,6 +315,18 @@ check-evals-preflight:
 # See the script's docstring.
 check-labels:
 	python3 scripts/check-labels.py
+
+# check-labels-fixtures: exercise both marked skill tables against temporary
+# Tofu fixtures. The real-tree checker alone cannot prove that a supplemental
+# marker is still parsed or that its silent drift failures remain failures.
+check-labels-fixtures:
+	python3 scripts/check-labels-fixtures.py
+
+# check-epic-child-fixtures: execute offline direct-parent scenarios for the
+# supplemental marker. It proves no live issue, label, or graph write is needed
+# to cover additions, removals, graph failures, closure, and kind invariants.
+check-epic-child-fixtures:
+	python3 scripts/check-epic-child-fixtures.py
 
 # check-infra: parse the OpenTofu stack without credentials. Not part of
 # `check`, which must not start requiring OpenTofu on a laptop that is only
