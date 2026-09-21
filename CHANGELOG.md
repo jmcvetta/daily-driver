@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.33.0](https://github.com/jmcvetta/daily-driver/compare/v0.32.0...v0.33.0) (2026-09-21)
+
+
+### Features
+
+* **embark:** backstop prompt must carry non-goals posture ([#321](https://github.com/jmcvetta/daily-driver/issues/321)) ([32f61e1](https://github.com/jmcvetta/daily-driver/commit/32f61e1ae9df56fcae7d86d560f0503728b01524))
+
 ## [0.32.0](https://github.com/jmcvetta/daily-driver/compare/v0.31.0...v0.32.0) (2026-09-21)
 
 
