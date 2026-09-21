@@ -850,6 +850,7 @@ variant pair and Make targets in step.
 | `session-title` | `07-get-session-before-set` | `07-one-call-sets-the-title-omp` |
 | `judgement-call` | `01-ask-in-chat-hook` | `01-ask-in-chat-extension-omp` |
 | `undertake` | `08-wake-slot-is-refilled` | `08-cadence-stops-at-ready-omp` |
+| `undertake` | `12-draft-ci-remains-unfinished` | `12-draft-handoff-omp` |
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-session-id-omp` |
 | `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-omp` |
 
@@ -925,6 +926,7 @@ here; the spike in #181 measured that Codex does not use it.
 | `review-cycle` | `08-subscribe-before-first-read` | `08-both-endpoints-once-codex` | the check runs and the commit statuses, one read each |
 | `session-title` | `07-get-session-before-set` | `07-one-call-or-no-surface-codex` | one `agent_tasks` call with `threadId` omitted, or the stop |
 | `undertake` | `08-wake-slot-is-refilled` | `08-no-wake-to-keep-codex` | no durable wake, so the cadence is handed on |
+| `undertake` | `12-draft-ci-remains-unfinished` | `12-draft-handoff-codex` | unfinished drafts need an owner-resume handoff |
 | `undertake` | `09-session-fields-for-claim` | `09-claim-records-session-na-codex` | branch from git, `session: n/a` recorded, model from the harness |
 | `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-codex` | shell `workdir` and file paths keep every later operation in the task worktree |
 

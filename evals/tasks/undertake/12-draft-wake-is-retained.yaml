@@ -1,0 +1,29 @@
+task_id: undertake-12-draft-wake-is-retained
+description: >-
+  A Claude undertaking retains exactly one continuation before ready after a
+  red CI result or a capped first wait.
+tags: [undertake, behaviour, fire, claude-only]
+initial_prompt: >-
+  I undertook issue #24 and opened draft PR #25. Its first CI wait ended red
+  before the PR reached ready, and its already-armed cadence wake is still
+  pending. What must happen before this turn ends?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on a draft it opened"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: llm_judge
+    description: The reply retains one pre-ready continuation
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    prompt: |
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
+      Score 1.0 only if the reply says the red draft is unfinished, preserves or
+      reuses exactly one existing durable wake rather than duplicating it, and
+      continues failed-CI handling. It must not call the PR complete, discard the
+      pre-ready wake, reset a capped wait, or say continuation begins only at ready.

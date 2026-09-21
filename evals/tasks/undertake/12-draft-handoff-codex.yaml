@@ -1,0 +1,30 @@
+task_id: undertake-12-draft-handoff-codex
+description: >-
+  Codex reports unfinished pre-ready work and the owner-resume requirement
+  without inventing a timer, shell loop, or autonomous review.
+tags: [undertake, behaviour, fire, codex-only, "forks:undertake-12-draft-ci-remains-unfinished"]
+initial_prompt: >-
+  On Codex, undertaken issue #24 has a draft PR #25 with a pending current-head
+  check and the session is ending. What continuation exists before ready?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on unfinished Codex draft work"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The reply names the actual Codex handoff
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
+      Score 1.0 only if it calls the draft unfinished and says the owner must resume
+      to assess the pending CI result. Score 0.0 if it claims a durable timer,
+      shell sleep loop, background agent, autonomous review, or completion.

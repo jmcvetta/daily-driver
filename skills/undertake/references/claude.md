@@ -165,35 +165,30 @@ reports is `n/a`, never a guessed one.
 The cadence
 ===========
 
-`Keep it current`'s check-ins need a durable wake, and Claude has one:
+`Open the draft` starts the one durable cadence on this harness:
 `mcp__Claude_Code_Remote__send_later`, two minutes out, cancelled with
 `mcp__Claude_Code_Remote__delete_trigger`. It survives the session that armed
-it, which is what makes a cadence across turns possible at all.
+it, which is what makes continuation across turns possible at all. Reaching
+ready retains this cadence; it does not arm a second one.
 
-**Each wake carries its own instructions.** The prompt handed to
-`send_later` states the whole check-in, self-contained, in this order:
+**Each wake carries its own instructions.** The prompt handed to `send_later`
+states the whole check-in, self-contained, in this order:
 
 1. **Re-arm first.** `mcp__Claude_Code_Remote__send_later`, two minutes out,
-   the same prompt. This is the wake's first act, not its last: a wake that
-   ends with no trigger in flight is a cadence that has died, whatever else
-   the turn did.
-2. **Take the state read and the floor's.** The pull-request read
-   `The milestone` names — `draft`, `mergeable_state`, `head.sha` — plus
-   `state`, which that section has no use for but this exit does, and the
-   check rollup on the head beside it. `clean`, `draft`, and `unstable` with a
-   run in flight need nothing this tick.
-3. **Act on what it finds.** A `state` of `merged` or `closed` cancels the
-   trigger the re-arm step just armed with
-   `mcp__Claude_Code_Remote__delete_trigger`
-   and ends the watch — the exits `SKILL.md` names. `behind` runs
-   `mcp__github__update_pull_request_branch`; `dirty` is the conflict stop
-   `SKILL.md` writes under `Where it stops and waits`; a run in flight holds
-   the floor.
-
-A wake turn is then stateless: nothing depends on the previous turn having
-briefed it, and the one-slot rule below is enforced at the start of the wake
-rather than wherever the turn happens to remember it.
+   with the same prompt. A pending trigger is reused; a wake that ends with no
+   trigger in flight has lost the undertaking's continuation.
+2. **Read state and currency.** Read `state`, `draft`, `mergeable_state`, and
+   `head.sha`. A merged or closed pull request deletes the re-armed trigger and
+   exits. `behind` runs `mcp__github__update_pull_request_branch`; `dirty` is
+   the conflict stop; a run in flight holds the merge floor.
+3. **Assess the resulting head.** Read both `get_check_runs` and `get_status`.
+   A changed head invalidates earlier CI and readiness evidence. Pending or
+   unregistered checks use `review-cycle`'s bounded wait; failed checks return
+   to `Fix, answer, resolve, push`, and missing logs remain an evidence
+   blocker. Continue the remaining review or ready-gate work when CI permits
+   it. A capped wait, review wall, or human action reports unfinished work and
+   its resume path; it never becomes completion.
 
 The slot it occupies is the same slot `review-cycle`'s wait borrows and hands
-back, and the rule for both is
-[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md).
+back. That ownership starts before ready, including red results and capped
+waits; a still-pending cadence wake is never duplicated.
