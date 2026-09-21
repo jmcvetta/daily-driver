@@ -154,6 +154,12 @@ that parent's labels. Add `story` only when the confirmed parent carries the
 Closing the child does not change a confirmed qualifying edge, so it
 keeps the marker.
 
+A kind swap that removes `epic` from a parent is a reconciliation event even
+though its parent edges do not move. Invoke `issue-deps` to read that issue's
+direct children, then reconcile `story` on each one against the parent's new
+labels. A failed or unavailable child read preserves their labels and reports
+the limitation.
+
 A failed or unavailable graph read is not evidence that a parent is absent.
 Preserve the marker and report the limitation. Never create, change, or remove
 an edge to justify a marker. Preserve the issue kind, stock labels, bot labels,
