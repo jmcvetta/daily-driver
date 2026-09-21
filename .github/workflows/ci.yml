@@ -216,7 +216,7 @@ jobs:
       # which needs the pinned `coder_eval` beside the adapter. `make
       # check-omp-agent-settle` builds that environment with `uv run --with`
       # (no install step, no cache to warm), and the fake binary it drives
-      # needs no network. Same scope gate as the plugin check above: the two
+      # needs no network. Same scope gate as the plugin check above: the three
       # paths added to the diff filter are the files that can break it.
       - name: make check-omp-agent-settle
         if: steps.scope.outputs.run == 'true'

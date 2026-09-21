@@ -74,8 +74,15 @@ then `require_token_telemetry` defaults to false, which is the opposite of
 not proof of a broken turn.
 
 A first paid run did once observe answers to both, but its raw artifacts were
-not preserved, so nothing here cites them and the questions stand open. They
-are cheap to settle again on the next authorized run.
+not preserved, so nothing here cites them and the questions stand open.
+
+Settling them again needs one more thing first. Both sets are populated while
+turns run, and `coder_eval` snapshots `get_environment_info()` during setup —
+before the first turn — so neither ever reaches a run's `environment_info`, and
+the sentence above promises a recording the arm does not currently make. Any
+fix is a capture the harness reads *after* the run; note that an agent-side
+`get_sdk_options` override is not it, since `resolve_agent_settings` prefers
+`sdk_options` over `agent_config` and would blank the report's Agent Settings.
 
 ## What is tested, and what is not
 
