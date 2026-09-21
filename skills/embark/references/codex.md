@@ -44,6 +44,21 @@ exists to reach.
 | `Open the sessions` | Dispatch one implementor per task, concurrently | `multi_agent_v1`, one delegation per task issue in a single wave |
 | `Post the muster roll` | Comment on the epic | `gh issue comment <number> --body-file <path>` |
 | `Post the muster roll` | Mark the wave in the epic's body | `gh issue edit <number> --body-file <path>` |
+| `Land the pull request` | Read draft, merge state, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,labels,body` |
+| `Land the pull request` | Read review threads | `review-cycle`'s `references/codex.md` thread read |
+| `Land the pull request` | Squash merge | `gh pr merge <number> --squash` |
+| `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
+| `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
+
+`Land the pull request` uses the same readiness fields as `undertake`'s `The
+milestone`: `isDraft` must be false and `mergeStateStatus` must be `CLEAN`.
+The labels and body answer the human-action read in the same call. The complete
+thread graph is the paginated GraphQL read named by `review-cycle`; a REST
+comments page is not a substitute.
+
+The merge is one `gh pr merge <number> --squash` call after the gate holds.
+`Close the epic` posts its evidence comment before `gh issue close`, and never
+calls the latter when a `Summary` claim is missing or landing is by hand.
 
 Each delegation's prompt is the task issue number and the instruction to
 undertake it, and nothing else. Duplicate-dispatch protection is unchanged:

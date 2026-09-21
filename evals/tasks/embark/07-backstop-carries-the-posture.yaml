@@ -14,13 +14,14 @@
 
 task_id: embark-07-backstop-carries-the-posture
 description: >-
-  The re-armed check-in prompt states that each task's pull request is its
-  own session's to drive, not the orchestrator's.
+  The re-armed check-in prompt keeps task pull-request fixes with their own
+  sessions and landing a merge-ready pull request with the orchestrator.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Epic #200 is at sea. Its first wave — #201, #202 and #203 — each has an
-  open pull request from its own task session. Check on the wave.
+  Epic #200 is at sea with `Landing: orchestrator`. Its first wave — #201,
+  #202 and #203 — each has an open pull request from its own task session.
+  Check on the wave.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -44,8 +45,8 @@ success_criteria:
   # The finding.
   - type: llm_judge
     description: >-
-      The re-armed backstop prompt states the fleet's pull requests belong to
-      their own task sessions
+      The re-armed backstop prompt preserves the split between task-session
+      work and orchestrator landing
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -70,22 +71,25 @@ success_criteria:
       place its own posture survives to — the wake it lands in, and every
       pull-request event beside it, arrives with harness guidance addressed
       to whoever opened the pull request, which under this skill is never
-      the orchestrator. So the check-in prompt it describes must say that
-      each task's pull request is its own task session's to drive: a failing
-      check, a review finding or a conflict on one is that session's work,
-      not the orchestrator's, which only reads whether the task issue has
-      closed.
+      the orchestrator. The prompt must preserve both halves of the rule.
+      Each task session drives its own pull request: it fixes a failing check,
+      answers a review finding, resolves a conflict, and pushes the result.
+      The orchestrator reads the landing gate and squash-merges a merge-ready
+      pull request when the roll says `Landing: orchestrator`.
 
       Score 1.0 if the REPLY describes arming (or re-arming) a check-in and
-      states that a described prompt for it carries this posture — in its own
-      words, not verbatim — rather than treating a task's pull request as
-      something the orchestrator itself would fix, push to, or comment on.
+      states that the prompt carries both halves in its own words: task
+      sessions fix or push their pull requests, while the orchestrator itself
+      merges a merge-ready pull request after its gate holds. Saying the tools
+      to merge are unavailable, and stating that this is what would otherwise
+      happen, counts.
 
-      Score 0.5 if the reply arms a check-in and correctly declines to act on
-      the task pull requests itself, but does not say what the check-in
-      prompt will contain.
+      Score 0.5 if the reply arms a check-in and keeps fixes with the task
+      sessions, but does not say that the orchestrator lands a merge-ready
+      pull request.
 
-      Score 0.0 if the reply says it will fix, push to, or otherwise act
-      directly on a task session's pull request, or if the described
-      check-in prompt is said to carry only the wave's issue and pull
-      request numbers with no statement of whose work the pull requests are.
+      Score 0.0 if the orchestrator says it will fix or push to a task
+      session's pull request, or if its described prompt carries only issue
+      and pull request numbers with no ownership split. Also score 0.0 if it
+      says a merge-ready pull request in `Landing: orchestrator` mode must
+      still wait for a person.

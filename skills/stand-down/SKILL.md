@@ -230,15 +230,15 @@ reports instead:
   residual twice.
 
 The one wait this skill never takes is the one `embark`'s own ends take:
-`Report the epic ready` is `embark`'s, and a stand-down is not asked for
-when the last wave comes in.
+`Close the epic` is `embark`'s, and a stand-down is not asked for when the
+last wave comes in.
 
 
 Non-goals
 =========
 
 - **Does not merge, review, or close anything.** The pull requests stand
-  where they stood; what lands is still a person's decision.
+  where they stood; a resumed `embark` applies its recorded landing mode.
 - **Does not edit the epic's body.** No third wave state, no wave marked
   anything — the stand-down comment is the record.
 - **Does not re-dispatch.** The resume is `embark`'s: a resumed watch finds
@@ -248,8 +248,8 @@ Non-goals
   not through `Recover a session` itself.
 - **Does not message the fleet.** A correction or a wrap-up request is a
   wait for an answer, and the handoff is written from the record instead.
-- **Does not fire on a worked-out epic.** `Report the epic ready` ends an
-  embark that succeeded; this skill ends one that was interrupted.
+- **Does not fire on a worked-out epic.** `Close the epic` ends an embark that
+  succeeded; this skill ends one that was interrupted.
 - **Does not fire on a single issue.** One `undertake` has no fleet; the
   session holding it can simply stop, and its claim comment is already the
   record.
