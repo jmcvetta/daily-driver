@@ -32,7 +32,7 @@ SKILL_TEXT = """<!-- issue-kind-labels-table -->
 
 | Label | Description | Meaning |
 | ----- | ----------- | ------- |
-| `story` | Direct child of an epic | Visual |
+| `story` | A focused piece of work within an epic | Visual |
 """
 
 
@@ -50,7 +50,7 @@ TF_TEXT = "".join(
     (
         label("epic", "epic", "Coordinates work", "5319e7"),
         label("task", "task", "Discrete work", "0e8a16"),
-        label("story", "story", "Direct child of an epic", "d4c5f9"),
+        label("story", "story", "A focused piece of work within an epic", "d4c5f9"),
     )
 )
 
@@ -95,7 +95,7 @@ def main() -> int:
         rows == [
             ("epic", "Coordinates work"),
             ("task", "Discrete work"),
-            ("story", "Direct child of an epic"),
+            ("story", "A focused piece of work within an epic"),
         ],
         f"supplemental table was not parsed: {rows}",
     )
@@ -105,14 +105,14 @@ def main() -> int:
         (
             "missing supplemental declaration",
             SKILL_TEXT,
-            TF_TEXT.replace(label("story", "story", "Direct child of an epic", "d4c5f9"), ""),
+            TF_TEXT.replace(label("story", "story", "A focused piece of work within an epic", "d4c5f9"), ""),
             1,
             "`story` is in the skill's table but not declared",
         ),
         (
             "supplemental description drift",
             SKILL_TEXT,
-            TF_TEXT.replace("Direct child of an epic", "Different description", 1),
+            TF_TEXT.replace("A focused piece of work within an epic", "Different description", 1),
             1,
             "`story` has two descriptions",
         ),

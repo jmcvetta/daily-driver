@@ -50,7 +50,7 @@ harness in use before writing a label.
 
 | Label | Description | Meaning |
 | ----- | ----------- | ------- |
-| `story` | Direct child of an epic | Visual marker only; no readiness effect |
+| `story` | A focused piece of work within an epic | Visual marker only; no readiness effect |
 
 The descriptions are the ones GitHub shows, verbatim. They live twice — here
 and in `infra/github/labels.tf` — and `scripts/check-labels.py` fails

@@ -35,7 +35,7 @@ resource "github_issue_label" "story" {
   repository  = github_repository.this.name
   name        = "story"
   color       = "d4c5f9"
-  description = "Direct child of an epic"
+  description = "A focused piece of work within an epic"
 }
 
 resource "github_issue_label" "task" {
