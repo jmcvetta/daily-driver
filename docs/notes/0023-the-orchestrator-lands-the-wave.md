@@ -23,11 +23,12 @@ must be clean. Every review thread must be resolved. It must carry no `human`
 label and no human-action notice. The first failed read stops that pull request
 and names the reason in one line.
 
-When the reads hold, the orchestrator squash-merges in the same turn. The
-repository is squash-only and uses the pull request title as the squash
-subject. This keeps release-please's input unchanged. The orchestrator does
-not enable auto-merge, because auto-merge could land a head that the
-orchestrator did not read.
+When the reads hold, the orchestrator squash-merges in the same turn,
+conditional on the head SHA read by the gate. A task-session push makes that
+merge fail closed and earns a fresh gate. The repository is squash-only and
+uses the pull request title as the squash subject. This keeps release-please's
+input unchanged. The orchestrator does not enable auto-merge, because
+auto-merge could land a head that the orchestrator did not read.
 
 **Landing is not driving the pull request.** The task session still fixes a
 check, answers a review, resolves a conflict, and keeps its branch current.

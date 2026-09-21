@@ -391,8 +391,9 @@ Reached from `Watch the wave` on every wake, once for every task pull request
 in the wave, and returns there.
 
 **The landing gate is a read, not a judgement.** It follows `undertake`'s
-`Ready is a gate, not a step`: take the reads in order, and the first one that
-does not hold is the reason this pull request does not land.
+`Ready is a gate, not a step`: take the reads in order, record the head SHA
+with the state read, and let the first condition that does not hold stop this
+pull request.
 
 1. **The pull request is not a draft.** `undertake` clears the draft at `Ready
    for review`; this skill never does.
@@ -409,17 +410,20 @@ does not hold is the reason this pull request does not land.
 A failed read produces one line in the task's muster-roll record and no merge.
 A later wake that finds the same state stays silent. A change in state earns
 the reads again.
+The merge is conditional on the recorded head SHA. If the head moves after
+the read, the merge call fails closed and the next wake repeats the whole gate.
+
 
 When all four reads hold and the roll says `Landing: by hand`, report the
 merge-ready pull request once and return without merging. That is the whole
 opt-out.
 
 When all four reads hold and the roll says `Landing: orchestrator`, squash
-merge in the same turn. The repository is squash-only and uses the pull
-request title as the squash subject, which is load-bearing for
+merge the recorded head in the same turn. The repository is squash-only and
+uses the pull request title as the squash subject, which is load-bearing for
 release-please. No summary comes first, no permission is sought, and no turn
-ends on an intention to merge later. This is a direct merge call, not GitHub
-auto-merge.
+ends on an intention to merge later. This is a conditional direct merge call,
+not GitHub auto-merge.
 
 7 — Recover a session
 ---------------------

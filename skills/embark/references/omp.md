@@ -90,21 +90,23 @@ The watch
 | `Watch the wave` | Preserve a pull request CI watch | `review-cycle`'s persistent `hub start` route |
 | `Watch the wave` | Find the pull request for a task issue | `issue://<number>` — `closed_by_pull_requests` |
 | `Watch the wave` | Read a pull request's state and checks | `pr://<number>` |
-| `Land the pull request` | Read draft, merge state, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,labels,body` |
+| `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/omp.md` thread read |
-| `Land the pull request` | Squash merge | `gh pr merge <number> --squash` |
+| `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
 | `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
 `Land the pull request` uses the same readiness fields as `undertake`'s `The
-milestone`: `isDraft` must be false and `mergeStateStatus` must be `CLEAN`.
-The labels and body answer the human-action read in the same call. The complete
-thread graph is the paginated GraphQL read named by `review-cycle`; a REST
-comments page is not a substitute.
+milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
+`headRefOid` is the head the merge binds to. The labels and body answer the
+human-action read in the same call. The complete thread graph is the paginated
+GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
 
-The merge is one `gh pr merge <number> --squash` call after the gate holds.
-`Close the epic` posts its evidence comment before `gh issue close`, and never
-calls the latter when a `Summary` claim is missing or landing is by hand.
+The merge is one conditional `gh pr merge` call after the gate holds.
+`--match-head-commit <headRefOid>` makes it fail closed if the task session
+pushes after the read. `Close the epic` posts its evidence comment before
+`gh issue close`, and never calls the latter when a `Summary` claim is missing
+or landing is by hand.
 
 **A live subagent's result or failure arrives as a wake of its own.** The
 orchestrator ends its turn holding the dispatch handles, and each implementor
