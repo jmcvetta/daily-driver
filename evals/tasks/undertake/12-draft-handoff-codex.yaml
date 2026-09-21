@@ -2,7 +2,7 @@ task_id: undertake-12-draft-handoff-codex
 description: >-
   Codex reports unfinished pre-ready work and the owner-resume requirement
   without inventing a timer, shell loop, or autonomous review.
-tags: [undertake, behaviour, fire, codex-only, "forks:undertake-12-draft-ci-remains-unfinished"]
+tags: [undertake, behaviour, fire, codex-only, "forks:undertake-12-draft-wake-is-retained"]
 initial_prompt: >-
   On Codex, undertaken issue #24 has a draft PR #25 with a pending current-head
   check and the session is ending. What continuation exists before ready?

@@ -1,7 +1,7 @@
 task_id: undertake-12-currency-precedes-current-head-ci
 description: >-
-  A resumed draft that is behind merges its base first, then assesses CI on the
-  resulting head rather than accepting old-head green evidence.
+  A resumed draft applies the in-flight CI floor, settles currency when safe,
+  then assesses CI on the resulting head rather than accepting old-head green evidence.
 tags: [undertake, behaviour, fire]
 initial_prompt: >-
   Resume undertaking issue #24. Draft PR #25 is behind master. The old head was
@@ -26,7 +26,9 @@ success_criteria:
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
     prompt: |
       Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
-      Score 1.0 only if it merges or updates the base first, then reads check runs
-      and commit statuses for the resulting current head before continuing review
-      or readiness. Score 0.0 if it accepts the old green result, treats currency
-      as completion, or assesses CI before the merge changes the head.
+      Score 1.0 only if it first checks whether CI is in flight on the old head
+      and skips the update while that floor holds. When the floor clears, it
+      updates or tests currency, then reads check runs and commit statuses for
+      the resulting current head before review or readiness. Score 0.0 if it
+      blindly merges during in-flight CI, accepts the old green result, treats
+      currency as completion, or assesses only before a head-changing merge.

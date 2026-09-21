@@ -2,7 +2,7 @@ task_id: undertake-12-draft-handoff-omp
 description: >-
   Omp reports unfinished pre-ready work and the owner-resume requirement; its
   detached merge loop does not perform CI assessment or review.
-tags: [undertake, behaviour, fire, omp-only, "forks:undertake-12-draft-ci-remains-unfinished"]
+tags: [undertake, behaviour, fire, omp-only, "forks:undertake-12-draft-wake-is-retained"]
 initial_prompt: >-
   On Omp, undertaken issue #24 has a draft PR #25 with a failed current-head
   check. The owning session is ending. What continuation exists before ready?

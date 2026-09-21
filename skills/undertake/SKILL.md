@@ -482,10 +482,12 @@ Merged and closed pull requests exit without further work.
 
 Failed checks return to `Fix, answer, resolve, push`; missing logs are an
 explicit failed-CI evidence blocker, not green and not "no action needed".
-Pending or unregistered checks use `review-cycle`'s bounded wait and
-registration rules. A cap, review wall, human action, or evidence blocker
-pauses with the outstanding condition and the actual path to resume; it does
-not reset the bound, authorize a retry, or call the undertaking complete.
+Every failed-CI or evidence-blocker handoff names the failed checks, current
+head, unavailable evidence, and concrete action needed to resume. Pending or
+unregistered checks use `review-cycle`'s bounded wait and registration rules.
+A cap, review wall, human action, or evidence blocker pauses with the
+outstanding condition and the actual path to resume; it does not reset the
+bound, authorize a retry, or call the undertaking complete.
 
 **Never end a turn with the wake slot empty while check-ins are available.**
 They run from `Open the draft` until the pull request is merged or closed or
