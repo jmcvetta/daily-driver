@@ -70,8 +70,8 @@ Never estimate usage when the invocation does not expose it.
 Review-cycle completion notice
 ==============================
 
-After a non-standalone round meets `SKILL.md`'s completion conditions, read
-the current head with `mcp__github__pull_request_read`, method `get`, and
+After a non-standalone round meets `SKILL.md`'s completion conditions and
+`Does it go again?` starts no new full review, read the current head with `mcp__github__pull_request_read`, method `get`, and
 conversation comments with the same tool, method `get_comments`. If no existing
 comment starts with `## 🎉 Review cycle complete! 🎉` and names that head, post
 the separate notice with `mcp__github__add_issue_comment`. Its body starts with

@@ -374,6 +374,17 @@ the wall was reached. Record reviewer token usage where the harness exposes it;
 otherwise record `unavailable`, never an estimate or a telemetry service.
 
 
+
+4 — Does it go again?
+=====================
+
+**A material scope change earns a full review.** New feature work, a scope
+addition, a redesign, or a conflict resolution that changes the pull request's
+own behavior starts `Review the head` again and establishes a new scope. A
+comment reflow, changelog line, or clean base merge does not. The classification
+is content-based, so rewritten history preserves the existing scope when its
+pull-request content is unchanged.
+
 Review-cycle completion notice
 ------------------------------
 
@@ -399,16 +410,6 @@ This notice reports the review cycle, not merge readiness. It never approves,
 merges, changes draft state, or replaces `undertake`'s first-readiness report.
 A standalone review ends at `Review the head` and never posts it. The
 harness reference names the read and publication route.
-
-4 — Does it go again?
-=====================
-
-**A material scope change earns a full review.** New feature work, a scope
-addition, a redesign, or a conflict resolution that changes the pull request's
-own behavior starts `Review the head` again and establishes a new scope. A
-comment reflow, changelog line, or clean base merge does not. The classification
-is content-based, so rewritten history preserves the existing scope when its
-pull-request content is unchanged.
 
 
 Where it stops and waits

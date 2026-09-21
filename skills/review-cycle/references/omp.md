@@ -55,9 +55,9 @@ token-usage value, so `usage: unavailable` is required.
 Review-cycle completion notice
 ==============================
 
-After a non-standalone round meets `SKILL.md`'s completion conditions, read
-the current head and existing conversation comments with
-`gh pr view <number> --json headRefOid,comments`. If no existing comment
+After a non-standalone round meets `SKILL.md`'s completion conditions and
+`Does it go again?` starts no new full review, read the current head and
+existing conversation comments with `gh pr view <number> --json headRefOid,comments`. If no existing comment
 starts with `## 🎉 Review cycle complete! 🎉` and names that head, write the
 separate notice with `gh pr comment <number> --body-file <path>`. The body
 starts with that heading, gives a short factual completion status, and names
