@@ -8,48 +8,11 @@ description: >-
   session for each of these", or "how is the epic going", and on Claude's own
   move from a planned epic to opening a session per task — a web session on
   Claude Code, one harness-local subagent per task on Omp and Codex. Supplies
-1:   the graph-derived wave, each task's implementor resolved through its required
+  the graph-derived wave, each task's implementor resolved through its required
   model class, the muster roll, the pull-request watch, merge-ready landing,
   the epic close, and the quiet-session backstop. Not for decomposing work,
   which is `epic`, taking one task issue to a pull request, which is
   `undertake`, or a single issue.
-2: Landing: orchestrator
-
-| Task | Implementor | Required class | Actual model |
-| ---- | ----------- | -------------- | ------------ |
-| #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `standard` | `claude-sonnet-5` |
-| #147 — Document the format. | subagent `agent://abc` | `mechanical` | `unreported` |
-| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — |
-3: The roll distinguishes required class, selected route, and actual model. A
-`human` task gets a row and no implementor. A fallback roll names the subagent
-and shared advisor; a web-session row links. Do not describe an actual model
-that the harness did not report.
-
-**Landing is read once from the invocation and written into the roll.** The
-default is `Landing: orchestrator`. An explicit request such as "leave the
-merges to me" writes `Landing: by hand` instead. `judgement-call` does not
-fire: the user's words decide who lands pull requests. Every later invocation
-reads the latest roll and keeps that mode.
-4: - **Does not implement, drive, or answer a review.** Each task session does
-  its own work through `undertake` and the round that skill runs. It fixes a
-  failing check, answers a review finding, and resolves a conflict. The
-  exception is the strong-model review `Open the sessions` requires of a
-  fallback implementor's pull request: that round is the orchestrator's or
-  the shared advisor's to run, because the rule exists precisely so the
-  implementor does not review itself. Landing is narrower: a mechanical read
-  followed by one squash-merge call.
-- **Does not lower a task's required class.** It resolves that class through
-  eligible harness routes and chooses the lowest expected reliable cost. A
-  missing route is reported for that task; it is never replaced by unchecked
-  inheritance, a concrete identifier copied from the body, or a shared-role
-  change.
-- **Does not manage sibling branches.** It does not serialise their merges and
-  it does not resolve a conflict between them. Landing one pull request moves
-  the base; each sibling's `undertake` session brings that base into its own
-  head through `Keep it current`.
-- **Does not close the epic in `Landing: by hand` mode.** It reports the epic
-  ready and stops there. The default `Landing: orchestrator` mode closes it
-  only after `Close the epic` reads every `Summary` claim as delivered.
 ---
 
 # Embark
@@ -244,92 +207,25 @@ one row per task:
 ```markdown
 ### Wave 2 — after #143 · in progress
 
-1:   the graph-derived wave, each task's implementor resolved through its required
-  model class, the muster roll, the pull-request watch, merge-ready landing,
-  the epic close, and the quiet-session backstop. Not for decomposing work,
-  which is `epic`, taking one task issue to a pull request, which is
-  `undertake`, or a single issue.
-2: Landing: orchestrator
+Landing: orchestrator
 
 | Task | Implementor | Required class | Actual model |
 | ---- | ----------- | -------------- | ------------ |
 | #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `standard` | `claude-sonnet-5` |
 | #147 — Document the format. | subagent `agent://abc` | `mechanical` | `unreported` |
 | #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — |
-3: The roll distinguishes required class, selected route, and actual model. A
-`human` task gets a row and no implementor. A fallback roll names the subagent
-and shared advisor; a web-session row links. Do not describe an actual model
-that the harness did not report.
-
-**Landing is read once from the invocation and written into the roll.** The
-default is `Landing: orchestrator`. An explicit request such as "leave the
-merges to me" writes `Landing: by hand` instead. `judgement-call` does not
-fire: the user's words decide who lands pull requests. Every later invocation
-reads the latest roll and keeps that mode.
-4: - **Does not implement, drive, or answer a review.** Each task session does
-  its own work through `undertake` and the round that skill runs. It fixes a
-  failing check, answers a review finding, and resolves a conflict. The
-  exception is the strong-model review `Open the sessions` requires of a
-  fallback implementor's pull request: that round is the orchestrator's or
-  the shared advisor's to run, because the rule exists precisely so the
-  implementor does not review itself. Landing is narrower: a mechanical read
-  followed by one squash-merge call.
-- **Does not lower a task's required class.** It resolves that class through
-  eligible harness routes and chooses the lowest expected reliable cost. A
-  missing route is reported for that task; it is never replaced by unchecked
-  inheritance, a concrete identifier copied from the body, or a shared-role
-  change.
-- **Does not manage sibling branches.** It does not serialise their merges and
-  it does not resolve a conflict between them. Landing one pull request moves
-  the base; each sibling's `undertake` session brings that base into its own
-  head through `Keep it current`.
-- **Does not close the epic in `Landing: by hand` mode.** It reports the epic
-  ready and stops there. The default `Landing: orchestrator` mode closes it
-  only after `Close the epic` reads every `Summary` claim as delivered.
 ```
 
-1:   the graph-derived wave, each task's implementor resolved through its required
-  model class, the muster roll, the pull-request watch, merge-ready landing,
-  the epic close, and the quiet-session backstop. Not for decomposing work,
-  which is `epic`, taking one task issue to a pull request, which is
-  `undertake`, or a single issue.
-2: Landing: orchestrator
-
-| Task | Implementor | Required class | Actual model |
-| ---- | ----------- | -------------- | ------------ |
-| #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `standard` | `claude-sonnet-5` |
-| #147 — Document the format. | subagent `agent://abc` | `mechanical` | `unreported` |
-| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — |
-3: The roll distinguishes required class, selected route, and actual model. A
-`human` task gets a row and no implementor. A fallback roll names the subagent
-and shared advisor; a web-session row links. Do not describe an actual model
-that the harness did not report.
-
 **Landing is read once from the invocation and written into the roll.** The
 default is `Landing: orchestrator`. An explicit request such as "leave the
 merges to me" writes `Landing: by hand` instead. `judgement-call` does not
-fire: the user's words decide who lands pull requests. Every later invocation
-reads the latest roll and keeps that mode.
-4: - **Does not implement, drive, or answer a review.** Each task session does
-  its own work through `undertake` and the round that skill runs. It fixes a
-  failing check, answers a review finding, and resolves a conflict. The
-  exception is the strong-model review `Open the sessions` requires of a
-  fallback implementor's pull request: that round is the orchestrator's or
-  the shared advisor's to run, because the rule exists precisely so the
-  implementor does not review itself. Landing is narrower: a mechanical read
-  followed by one squash-merge call.
-- **Does not lower a task's required class.** It resolves that class through
-  eligible harness routes and chooses the lowest expected reliable cost. A
-  missing route is reported for that task; it is never replaced by unchecked
-  inheritance, a concrete identifier copied from the body, or a shared-role
-  change.
-- **Does not manage sibling branches.** It does not serialise their merges and
-  it does not resolve a conflict between them. Landing one pull request moves
-  the base; each sibling's `undertake` session brings that base into its own
-  head through `Keep it current`.
-- **Does not close the epic in `Landing: by hand` mode.** It reports the epic
-  ready and stops there. The default `Landing: orchestrator` mode closes it
-  only after `Close the epic` reads every `Summary` claim as delivered.
+fire: the user's words decide who lands the pull requests. Every later
+invocation reads the latest roll and keeps that mode.
+
+The roll distinguishes required class, selected route, and actual model. A
+`human` task gets a row and no implementor. A fallback roll names the subagent
+and shared advisor; a web-session row links. Do not describe an actual model
+that the harness did not report.
 
 **The wave headings carry state, and nothing else moves it.** `epic` writes
 that state into the epic's `Sequencing` at decomposition time and never
@@ -606,29 +502,7 @@ Non-goals
 - **Does not decompose.** The tasks, the edges and the waves are `epic`'s, and
   an epic whose plan is wrong is corrected there rather than worked around
   here.
-1:   the graph-derived wave, each task's implementor resolved through its required
-  model class, the muster roll, the pull-request watch, merge-ready landing,
-  the epic close, and the quiet-session backstop. Not for decomposing work,
-  which is `epic`, taking one task issue to a pull request, which is
-  `undertake`, or a single issue.
-2: Landing: orchestrator
-
-| Task | Implementor | Required class | Actual model |
-| ---- | ----------- | -------------- | ------------ |
-| #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `standard` | `claude-sonnet-5` |
-| #147 — Document the format. | subagent `agent://abc` | `mechanical` | `unreported` |
-| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — |
-3: The roll distinguishes required class, selected route, and actual model. A
-`human` task gets a row and no implementor. A fallback roll names the subagent
-and shared advisor; a web-session row links. Do not describe an actual model
-that the harness did not report.
-
-**Landing is read once from the invocation and written into the roll.** The
-default is `Landing: orchestrator`. An explicit request such as "leave the
-merges to me" writes `Landing: by hand` instead. `judgement-call` does not
-fire: the user's words decide who lands pull requests. Every later invocation
-reads the latest roll and keeps that mode.
-4: - **Does not implement, drive, or answer a review.** Each task session does
+- **Does not implement, drive, or answer a review.** Each task session does
   its own work through `undertake` and the round that skill runs. It fixes a
   failing check, answers a review finding, and resolves a conflict. The
   exception is the strong-model review `Open the sessions` requires of a
