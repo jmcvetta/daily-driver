@@ -12,7 +12,7 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin \
 	check-omp-cache-clean check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route \
-	check-omp-agent check-codex-agent check-eval-fixtures \
+	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra evals-install evals-plan \

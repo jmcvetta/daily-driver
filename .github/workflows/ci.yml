@@ -129,8 +129,12 @@ jobs:
       # comparison and the check passes either way. Running it on skill diffs
       # would assert nothing a skill diff can change.
       #
-      # The Makefile is absent too: it holds the command line, not the
-      # integration.
+      # The Makefile used to be absent, on the grounds that it held the command
+      # line and not the integration. `check-omp-agent-settle` ended that: the
+      # `CODER_EVAL_VERSION` it pins is the version the adapter is driven
+      # against, so a bump there changes what the check tests while touching no
+      # file this filter would otherwise catch — and the check would be skipped
+      # over exactly the diff most likely to break it.
       - name: Decide whether this diff can affect Omp
         id: scope
         env:
@@ -156,7 +160,7 @@ jobs:
           fi
           changed=$(git diff --name-only "$base" "$GITHUB_SHA" -- \
             package.json .claude-plugin extensions scripts/check-omp-plugin.py \
-            evals/coder-eval-omp scripts/check-omp-agent-settle.py)
+            evals/coder-eval-omp scripts/check-omp-agent-settle.py Makefile)
           if [[ -n "$changed" ]]; then
             echo "files that can affect Omp changed:"
             echo "$changed"

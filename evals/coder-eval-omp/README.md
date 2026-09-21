@@ -64,27 +64,18 @@ puts the answer in each run's `environment_info`:
 | `omp_argument_keys_seen` | which key a tool frame carried its arguments under |
 | `omp_usage_keys_seen` | which telemetry fields carried the token counts |
 
-The last two were open questions until the first live run answered them
-(2026-09-16, the run that also found the settle defect below). The answers:
-tool frames carry their arguments under `args`, and token counts sit in a
-`usage` dict on the last entry of `agent_end`'s `messages`, spelled `input`
-(the uncached slice), `output`, `cacheRead` and `cacheWrite` — with one
-caveat the run also measured: an aborted turn books all zeros there, so
-early-stopped and max-turn-exhausted replicates carry no token accounting
-and `require_token_telemetry` stays false for a measured reason, not an
-unsettled one.
+The last two are open questions rather than settled facts. Omp's `docs/rpc.md`
+shows `toolName` on `tool_execution_start` without showing the arguments, and
+places token accounting in "telemetry fields on `agent_end`" without naming
+them. The adapter reads every plausible spelling and records the one that
+answered, so the first live run settles it instead of a guess doing so. Until
+then `require_token_telemetry` defaults to false, which is the opposite of
+`coder_eval`'s OpenCode agent: a missing count here is a gap in this adapter,
+not proof of a broken turn.
 
-That run's raw artifacts were not preserved, so nothing here cites them. The
-shapes above are held instead by `scripts/check-omp-agent.py`, which asserts
-them against recorded frames — a test that fails loudly if the wire format
-moves, which a lost transcript could never do.
-
-One capture-timing note the run also settled: `coder_eval` merges an agent's
-`environment_info` into the result once, at agent start — before any turn
-has run — so these two fields would always be empty in `task.json`'s
-`environment_info`. The agent therefore replays the same facts through
-`get_sdk_options`, which the harness reads at finalize time, after the run:
-the two fields appear per replicate under `sdk_options`, same names.
+A first paid run did once observe answers to both, but its raw artifacts were
+not preserved, so nothing here cites them and the questions stand open. They
+are cheap to settle again on the next authorized run.
 
 ## What is tested, and what is not
 

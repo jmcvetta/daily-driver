@@ -149,17 +149,13 @@ class OmpAgentConfig(BaseAgentConfig):
     require_token_telemetry: bool = False
     """Fail a turn that captured no token counts.
 
-    Off, and now for a measured reason, not only an unknown-vocabulary one.
-    The live run settled which fields carry the counts — `messages[].usage` on
-    `agent_end`, spelled `input`, `output`, `cacheRead`, `cacheWrite` — but it
-    also settled that an ABORTED turn books zeros there: Omp reports the
-    all-zero payload on the `agent_end` of every early-stopped and
-    max-turn-exhausted turn, so the positive rows' replicates would fail a
-    require-telemetry turn without any field having moved. A zero count on a
-    completed turn is a gap in this adapter; a zero count on an aborted one
-    is Omp's own accounting. The distinction is recorded per replicate in
-    `omp_usage_keys_seen` (which spellings answered) and the turn's own
-    `token_usage` (all-zero collapses to None, per `coder_eval`'s rule).
+    Off, unlike `coder_eval`'s OpenCode agent, and the reason is honesty:
+    Omp's `docs/rpc.md` places per-turn accounting in "telemetry fields on
+    `agent_end`" without naming them, so this agent reads every plausible
+    spelling and records which one answered. Until a live run says which it is,
+    a missing count is a gap in this adapter rather than proof of a broken
+    turn. Turn it on once `usage_keys_seen` in a run's `environment_info` names
+    the real fields.
     """
 
     extra_args: list[str] = []
@@ -330,21 +326,6 @@ class OmpAgent(Agent[OmpAgentConfig]):
             info["omp_argument_keys_seen"] = sorted(self._argument_keys_seen)
         if self._usage_keys_seen:
             info["omp_usage_keys_seen"] = sorted(self._usage_keys_seen)
-        return info
-
-    def get_sdk_options(self) -> dict[str, Any] | None:
-        """The Omp facts a run's record needs, read after the task ran.
-
-        `coder_eval` merges `get_environment_info` into the result once, at
-        agent start — before any turn has run, so the two "what did the live
-        frames actually carry" sets (`omp_argument_keys_seen`,
-        `omp_usage_keys_seen`) are always empty there. The harness reads this
-        snapshot at finalize time instead, after every turn has run, so the
-        answers `docs/notes/0013` leaves open are recorded per replicate
-        rather than per setup. Same facts, same names, one later capture.
-        """
-        info = self.get_environment_info()
-        info.pop("coder_eval", None)
         return info
 
     # --- the turn ----------------------------------------------------------
