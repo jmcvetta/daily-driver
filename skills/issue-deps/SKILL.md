@@ -168,8 +168,8 @@ relationships.
 
 **The `epic` label and the parent edge are not the same statement**, and both
 are wanted. The label says an issue coordinates others, which stops `undertake`
-starting on it; the edge says *which* children it has. `epic-child` is the
-derived list marker for a confirmed direct child of an epic. After creating,
+starting on it; the edge says *which* children it has. `story` is the derived
+list marker for a confirmed direct child of an epic. After creating,
 changing, removing, or reading a parent relationship, verify the child's
 direct parent, then invoke `issue-labels` to reconcile that marker. The label
 skill owns its write rules: preserve it when the graph read fails, and never

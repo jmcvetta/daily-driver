@@ -192,7 +192,7 @@ supplies it. The epic gets `epic`, which stops `undertake` starting on it; each
 task gets `task`, `bug`, `research` or `human`. A child whose work is a person's
 is written and sequenced like any other, and `human` tells `embark` to leave it
 for the person rather than open a session on it. When the create route sets the
-task's parent, verify that edge and invoke `issue-labels` to add `epic-child`.
+task's parent, verify that edge and invoke `issue-labels` to add `story`.
 The marker supplements the task's kind; it is never sent in place of one.
 
 An issue converted into the epic is **relabelled** rather than labelled: it
@@ -214,7 +214,7 @@ always the same client, and on a web worker they are not.
 - **Parent.** Every task is a sub-issue of the epic. Where the harness's issue
   client sets the parent as the task is created, that write already happened at
   `Open the issues`; otherwise write it here. After every parent write, verify
-  the direct edge, then invoke `issue-labels` to reconcile `epic-child`.
+  the direct edge, then invoke `issue-labels` to reconcile `story`.
 - **Blocked-by.** Only the edges `Draft the plan` named.
 
 **An epic's children are not its blockers.** `issue-deps` says why:

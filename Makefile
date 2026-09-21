@@ -15,7 +15,7 @@ SHELL := /bin/bash
 	check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
 	check-evals-preflight check-labels check-labels-fixtures \
-	check-epic-child-fixtures check-infra evals-install evals-plan \
+	check-story-fixtures check-infra evals-install evals-plan \
 	evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex mcp-usage
 
@@ -95,7 +95,7 @@ check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-review-cycle-fix-delta-route check-omp-agent check-codex-agent \
 	check-eval-fixtures check-task-worktree-fixture check-eval-arms \
 	check-step-names check-evals-preflight check-labels check-labels-fixtures \
-	check-epic-child-fixtures
+	check-story-fixtures
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -323,11 +323,11 @@ check-labels:
 check-labels-fixtures:
 	python3 scripts/check-labels-fixtures.py
 
-# check-epic-child-fixtures: execute offline direct-parent scenarios for the
+# check-story-fixtures: execute offline direct-parent scenarios for the
 # supplemental marker. It proves no live issue, label, or graph write is needed
 # to cover additions, removals, graph failures, closure, and kind invariants.
-check-epic-child-fixtures:
-	python3 scripts/check-epic-child-fixtures.py
+check-story-fixtures:
+	python3 scripts/check-story-fixtures.py
 
 # check-infra: parse the OpenTofu stack without credentials. Not part of
 # `check`, which must not start requiring OpenTofu on a laptop that is only

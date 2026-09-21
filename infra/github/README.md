@@ -31,8 +31,8 @@ exclusion below.
   default-token fallback needs the latter)
 - **`github_branch_protection`** on `master` — required `CI Success` check,
   linear history, conversation resolution, no force pushes or deletions
-- **`github_issue_label`** ×7 — six issue kinds plus the `epic-child`
-  supplemental marker. The `issue-labels` skill defines their contract.
+- **`github_issue_label`** ×7 — six issue kinds plus the `story` supplemental
+  marker. The `issue-labels` skill defines their contract.
 
 ## The `CI Success` Check
 
@@ -128,11 +128,11 @@ same file.
 
 ## The Issue Labels
 
-`labels.tf` declares six issue kinds plus the supplemental `epic-child`
-marker from `skills/issue-labels/SKILL.md`. The kinds decide agent readiness.
-The marker only makes a confirmed direct child of an epic visible in issue
-lists; it never replaces its kind or its parent edge. The skill is the
-standard; this is where all seven labels are declared.
+`labels.tf` declares six issue kinds plus the supplemental `story` marker from
+`skills/issue-labels/SKILL.md`. The kinds decide agent readiness. The marker
+only makes a confirmed direct child of an epic visible in issue lists; it
+never replaces its kind or its parent edge. The skill is the standard; this is
+where all seven labels are declared.
 
 Two properties are worth knowing before an apply:
 
@@ -143,9 +143,9 @@ Two properties are worth knowing before an apply:
   claims no more of the namespace than that.
 - **Pre-existing labels must be imported.** Every repository GitHub creates
   ships with `bug`, and creating an existing label fails rather than adopting
-  it. `import.sh` carries `bug`. If `epic-child` was created before this
-  managed apply, import it with `tofu import
-  'github_issue_label.epic_child' 'daily-driver:epic-child'` before planning.
+  it. `import.sh` carries `bug`. If `story` was created before this managed
+  apply, import it with `tofu import 'github_issue_label.story'
+  'daily-driver:story'` before planning.
 
 The description strings are duplicated in the skill's tables, and
 `scripts/check-labels.py` fails `make check` when they drift. That check is a
@@ -153,8 +153,8 @@ leg of `check` rather than of `check-infra`: it needs only Python, so a laptop
 editing a skill runs it without OpenTofu installed.
 
 After the human applies this stack, that person runs one backfill for existing
-open epic children. For each open issue, read its native direct parent and the
-parent's labels. Add only `epic-child` when the parent is confirmed and carries
+open stories. For each open issue, read its native direct parent and the
+parent's labels. Add only `story` when the parent is confirmed and carries
 `epic`; preserve every existing label. Do not infer a parent from issue text or
 add a marker after a failed graph read. This rollout step waits on the same
 human who applies the Tofu stack.
@@ -199,7 +199,7 @@ export GITHUB_TOKEN=$(gh auth token)
 
 tofu apply -target=github_repository.this               # the rename, alone
 
-for label in epic epic-child task bug proposal research human; do
+for label in epic story task bug proposal research human; do
 	tofu state rm "github_issue_label.${label//-/_}"
 	tofu import "github_issue_label.${label//-/_}" "daily-driver:$label"
 done

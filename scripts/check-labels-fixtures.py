@@ -32,7 +32,7 @@ SKILL_TEXT = """<!-- issue-kind-labels-table -->
 
 | Label | Description | Meaning |
 | ----- | ----------- | ------- |
-| `epic-child` | Direct sub-issue of an epic | Visual |
+| `story` | Direct child of an epic | Visual |
 """
 
 
@@ -50,7 +50,7 @@ TF_TEXT = "".join(
     (
         label("epic", "epic", "Coordinates work", "5319e7"),
         label("task", "task", "Discrete work", "0e8a16"),
-        label("epic_child", "epic-child", "Direct sub-issue of an epic", "d4c5f9"),
+        label("story", "story", "Direct child of an epic", "d4c5f9"),
     )
 )
 
@@ -95,7 +95,7 @@ def main() -> int:
         rows == [
             ("epic", "Coordinates work"),
             ("task", "Discrete work"),
-            ("epic-child", "Direct sub-issue of an epic"),
+            ("story", "Direct child of an epic"),
         ],
         f"supplemental table was not parsed: {rows}",
     )
@@ -105,20 +105,20 @@ def main() -> int:
         (
             "missing supplemental declaration",
             SKILL_TEXT,
-            TF_TEXT.replace(label("epic_child", "epic-child", "Direct sub-issue of an epic", "d4c5f9"), ""),
+            TF_TEXT.replace(label("story", "story", "Direct child of an epic", "d4c5f9"), ""),
             1,
-            "`epic-child` is in the skill's table but not declared",
+            "`story` is in the skill's table but not declared",
         ),
         (
             "supplemental description drift",
             SKILL_TEXT,
-            TF_TEXT.replace("Direct sub-issue of an epic", "Different description", 1),
+            TF_TEXT.replace("Direct child of an epic", "Different description", 1),
             1,
-            "`epic-child` has two descriptions",
+            "`story` has two descriptions",
         ),
         (
             "duplicate table name",
-            SKILL_TEXT.replace("`epic-child`", "`task`"),
+            SKILL_TEXT.replace("`story`", "`task`"),
             TF_TEXT,
             1,
             "`task` appears more than once in the skill's label tables",
@@ -128,7 +128,7 @@ def main() -> int:
             SKILL_TEXT,
             TF_TEXT.replace('color       = "d4c5f9"', 'color       = "5319e7"'),
             1,
-            "`epic-child` and `epic` share the colour 5319e7",
+            "`story` and `epic` share the colour 5319e7",
         ),
     )
     for name, skill_text, tf_text, expected_status, expected_message in cases:

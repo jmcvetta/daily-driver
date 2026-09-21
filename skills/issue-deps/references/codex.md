@@ -81,7 +81,7 @@ graph. After a write, read the other end with `--json blocking` or
 `--json subIssues`.
 
 After every parent read or write, read the confirmed parent's labels and invoke
-`issue-labels` to reconcile `epic-child` on the child. A failed or unavailable
+`issue-labels` to reconcile `story` on the child. A failed or unavailable
 graph read preserves the child labels and reports the limitation. A successful
 read with no parent is confirmation to remove the marker.
 

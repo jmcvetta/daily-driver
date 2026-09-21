@@ -1,17 +1,17 @@
 [
   {
-    "name": "direct epic child gains marker",
+    "name": "direct epic child gains story marker",
     "labels": ["task", "documentation"],
     "parent_labels": ["epic"],
     "graph_read": "confirmed",
     "closed": false,
-    "expected_labels": ["task", "documentation", "epic-child"],
+    "expected_labels": ["task", "documentation", "story"],
     "expected_action": "add",
     "expected_classification": "ready"
   },
   {
     "name": "standalone issue loses stale marker",
-    "labels": ["task", "epic-child", "dependencies"],
+    "labels": ["task", "story", "dependencies"],
     "parent_labels": [],
     "graph_read": "confirmed",
     "closed": false,
@@ -21,7 +21,7 @@
   },
   {
     "name": "non-epic parent loses marker",
-    "labels": ["research", "epic-child"],
+    "labels": ["research", "story"],
     "parent_labels": ["task"],
     "graph_read": "confirmed",
     "closed": false,
@@ -31,41 +31,41 @@
   },
   {
     "name": "failed graph read preserves marker",
-    "labels": ["bug", "epic-child", "github_actions"],
+    "labels": ["bug", "story", "github_actions"],
     "parent_labels": [],
     "graph_read": "failed",
     "closed": false,
-    "expected_labels": ["bug", "epic-child", "github_actions"],
+    "expected_labels": ["bug", "story", "github_actions"],
     "expected_action": "preserve",
     "expected_classification": "ready"
   },
   {
     "name": "closed qualifying child retains marker",
-    "labels": ["bug", "epic-child"],
+    "labels": ["bug", "story"],
     "parent_labels": ["epic"],
     "graph_read": "confirmed",
     "closed": true,
-    "expected_labels": ["bug", "epic-child"],
+    "expected_labels": ["bug", "story"],
     "expected_action": "keep",
     "expected_classification": "ready"
   },
   {
     "name": "kind swap preserves qualifying marker",
-    "labels": ["research", "epic-child", "help wanted"],
+    "labels": ["research", "story", "help wanted"],
     "parent_labels": ["epic"],
     "graph_read": "confirmed",
     "closed": false,
-    "expected_labels": ["research", "epic-child", "help wanted"],
+    "expected_labels": ["research", "story", "help wanted"],
     "expected_action": "keep",
     "expected_classification": "ready"
   },
   {
     "name": "marker alone remains unclassified",
-    "labels": ["epic-child"],
+    "labels": ["story"],
     "parent_labels": ["epic"],
     "graph_read": "confirmed",
     "closed": false,
-    "expected_labels": ["epic-child"],
+    "expected_labels": ["story"],
     "expected_action": "keep",
     "expected_classification": "unclassified"
   },
@@ -75,7 +75,7 @@
     "parent_labels": ["epic"],
     "graph_read": "confirmed",
     "closed": false,
-    "expected_labels": ["task", "bug", "epic-child"],
+    "expected_labels": ["task", "bug", "story"],
     "expected_action": "add",
     "expected_classification": "conflicting kinds"
   }

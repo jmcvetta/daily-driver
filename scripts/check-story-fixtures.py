@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify offline epic-child reconciliation scenarios.
+"""Verify offline story-label reconciliation scenarios.
 
 Skills are prose, so live GitHub writes cannot prove this contract safely. These
 fixtures model only the inputs that the skills must distinguish: a confirmed
@@ -15,10 +15,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FIXTURES = ROOT / "scripts" / "fixtures" / "epic-child-labels.json"
+FIXTURES = ROOT / "scripts" / "fixtures" / "story-labels.json"
 KINDS = frozenset({"epic", "task", "bug", "proposal", "research", "human"})
 READY_KINDS = frozenset({"task", "bug", "research"})
-MARKER = "epic-child"
+MARKER = "story"
 
 
 def reconcile(labels: list[str], parent_labels: list[str], graph_read: str) -> tuple[list[str], str]:
@@ -59,10 +59,10 @@ def main() -> int:
         if classification != case["expected_classification"]:
             failures.append(f'{case["name"]}: classification {classification!r}')
     if failures:
-        print("epic-child fixture failures:", file=sys.stderr)
+        print("story fixture failures:", file=sys.stderr)
         print(*[f"  - {failure}" for failure in failures], sep="\n", file=sys.stderr)
         return 1
-    print(f"epic-child fixtures: {len(cases)} reconciliation scenarios passed")
+    print(f"story fixtures: {len(cases)} reconciliation scenarios passed")
     return 0
 
 

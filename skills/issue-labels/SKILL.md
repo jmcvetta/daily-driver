@@ -8,7 +8,7 @@ description: >-
   are ready for an agent?", and including any call Claude makes on its own
   initiative that sets a label on an issue. It fires too whenever `undertake`
   opens an issue or reads one it is about to start on. Supplies the six issue
-  kinds and the supplemental epic-child marker, including their write rules.
+  kinds and the supplemental story marker, including their write rules.
   The kind decides readiness. Not for pull request labels or graph writes,
   which are `issue-deps`'.
 ---
@@ -24,9 +24,9 @@ to start. Six issue-kind labels answer one question:
 Every issue carries **exactly one** of them. A second answer to one question is
 a disagreement, and nothing resolves it.
 
-`epic-child` is a supplemental marker. It makes a confirmed direct child of an
-epic visible in a list. It is not an issue kind, does not decide readiness, and
-may sit beside one of the six kinds.
+`story` is a supplemental marker. It makes a confirmed direct child of an epic
+visible in a list. It is not an issue kind, does not decide readiness, and may
+sit beside one of the six kinds.
 
 **The routes are per harness, and they live beside this file.** Reading a
 label and writing one are named in words here and resolved to a route there:
@@ -50,7 +50,7 @@ harness in use before writing a label.
 
 | Label | Description | Meaning |
 | ----- | ----------- | ------- |
-| `epic-child` | Direct sub-issue of an epic | Visual marker only; no readiness effect |
+| `story` | Direct child of an epic | Visual marker only; no readiness effect |
 
 The descriptions are the ones GitHub shows, verbatim. They live twice — here
 and in `infra/github/labels.tf` — and `scripts/check-labels.py` fails
@@ -144,14 +144,14 @@ that a swap is one call carrying both the add and the remove. On a harness
 whose write *replaces*, the swap is free and the read-first rule is what
 bites instead: see `Where the standard is declared`.
 
-Maintaining the epic-child marker
-=================================
+Maintaining the story marker
+============================
 
 `issue-deps` owns parent edges. After it creates, changes, removes, or reads a
 parent edge, it invokes this policy. Read the child's direct parent and read
-that parent's labels. Add `epic-child` only when the confirmed parent carries
-the `epic` kind. Remove it when the confirmed parent is absent or is not an
-epic. Closing the child does not change a confirmed qualifying edge, so it
+that parent's labels. Add `story` only when the confirmed parent carries the
+`epic` kind. Remove it when the confirmed parent is absent or is not an epic.
+Closing the child does not change a confirmed qualifying edge, so it
 keeps the marker.
 
 A failed or unavailable graph read is not evidence that a parent is absent.
@@ -176,8 +176,8 @@ What a label is not
   an agent may start.
 - **Not a relationship authority.** Blocked-by, parent and sub-issue are edges
   in a graph GitHub keeps, and `issue-deps` owns reading and writing them.
-  `epic-child` is the sole derived visual cue: it repeats a confirmed direct
-  parent edge for lists, never replaces it, and cannot prove a relationship.
+  `story` is the sole derived visual cue: it repeats a confirmed direct parent
+  edge for lists, never replaces it, and cannot prove a relationship.
 
 A repository wanting another relationship view wants a field or project board,
 not another issue kind.
@@ -215,8 +215,8 @@ here.
 Where the standard is declared
 ==============================
 
-`infra/github/labels.tf` declares six issue kinds and the supplemental
-`epic-child` `github_issue_label` resource. The names, colours and descriptions
+`infra/github/labels.tf` declares six issue kinds and the supplemental `story`
+`github_issue_label` resource. The names, colours and descriptions
 come from a file under review rather than from whoever clicked last. OpenTofu
 owns only what it declares, so stock labels survive an apply untouched.
 
@@ -225,8 +225,8 @@ Three consequences worth knowing:
 - **A label that already exists must be imported before the first apply.**
   Creating one GitHub already has fails the apply rather than adopting it.
   `infra/github/import.sh` carries the import for `bug`, which every
-  repository ships with. If somebody created `epic-child` before the managed
-  apply, import it too.
+  repository ships with. If somebody created `story` before the managed apply,
+  import it too.
 - **Applying is a person's job.** `make check-infra` validates the stack
   without credentials, and CI runs it; the apply needs a token with admin
   rights and is not something a session does on its own.
@@ -237,6 +237,6 @@ Three consequences worth knowing:
   broken stack.
 
 Applying the standard to a repository that does not run this Tofu stack means
-copying `labels.tf`, or creating the six kinds and `epic-child` by hand with
-the descriptions in the tables above. The descriptions are what a person
-hovering a label reads.
+copying `labels.tf`, or creating the six kinds and `story` by hand with the
+descriptions in the tables above. The descriptions are what a person hovering
+a label reads.
