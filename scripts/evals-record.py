@@ -116,6 +116,16 @@ def run_model(run: dict[str, Any], variant_id: str, client_name: str) -> str:
     return served.pop() if len(served) == 1 else "unknown"
 
 
+def run_requested_model(run: dict[str, Any], variant_id: str) -> str:
+    """Return the resolved requested model for one variant."""
+    requested = {
+        row.get("agent_config", {}).get("model")
+        for row in run.get("task_results", [])
+        if row.get("variant_id") == variant_id and row.get("agent_config", {}).get("model")
+    }
+    return requested.pop() if len(requested) == 1 else "unknown"
+
+
 def run_task_ids(run: dict[str, Any], variant_id: str) -> list[str]:
     """Return distinct task ids in run order for one variant."""
     task_ids: list[str] = []
@@ -145,6 +155,12 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
     )
     variants = []
     for variant_id in experiment["variant_ids"]:
+        observed_requested_model = run_requested_model(run, variant_id)
+        if (
+            observed_requested_model != "unknown"
+            and requested.get(variant_id) != observed_requested_model
+        ):
+            raise ValueError(f"experiment model does not match run artifact for {variant_id}")
         variants.append(
             {
                 "variant_id": variant_id,

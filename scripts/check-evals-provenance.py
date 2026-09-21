@@ -76,17 +76,26 @@ def main() -> int:
                         {
                             "task_id": "one",
                             "variant_id": "bare",
-                            "agent_config": {"type": "claude-code"},
+                            "agent_config": {
+                                "type": "claude-code",
+                                "model": "requested-model",
+                            },
                         },
                         {
                             "task_id": "one",
                             "variant_id": "bare",
-                            "agent_config": {"type": "claude-code"},
+                            "agent_config": {
+                                "type": "claude-code",
+                                "model": "requested-model",
+                            },
                         },
                         {
                             "task_id": "one",
                             "variant_id": "with-plugin",
-                            "agent_config": {"type": "claude-code"},
+                            "agent_config": {
+                                "type": "claude-code",
+                                "model": "treated-model",
+                            },
                             "model_used": "served-model",
                         },
                     ],
@@ -121,7 +130,9 @@ def main() -> int:
         omp = json.loads(run_recorder(run_dir, experiment, temp / "omp", base_env).read_text())
         require(omp["variants"][0]["model_served"] == "unknown", "Omp request was recorded as served")
         wrong_experiment = temp / "wrong-experiment.yaml"
-        wrong_experiment.write_text(experiment.read_text().replace("experiment_id: synthetic", "experiment_id: wrong"))
+        wrong_experiment.write_text(
+            experiment.read_text().replace("experiment_id: synthetic", "experiment_id: wrong")
+        )
         result = subprocess.run(
             [sys.executable, str(RECORDER), str(run_dir), "--experiment", str(wrong_experiment)],
             cwd=ROOT,
@@ -132,6 +143,19 @@ def main() -> int:
         require(
             result.returncode != 0 and "experiment_id" in result.stderr,
             "mismatched experiment file was accepted",
+        )
+        changed_model_experiment = temp / "changed-model-experiment.yaml"
+        changed_model_experiment.write_text(experiment.read_text().replace("treated-model", "other-model"))
+        result = subprocess.run(
+            [sys.executable, str(RECORDER), str(run_dir), "--experiment", str(changed_model_experiment)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        require(
+            result.returncode != 0 and "experiment model" in result.stderr,
+            "changed experiment model was accepted",
         )
         cloud_env = {**base_env, "CLAUDE_CODE_SESSION_ID": "session-123"}
         cloud = json.loads(run_recorder(run_dir, experiment, temp / "cloud", cloud_env).read_text())
