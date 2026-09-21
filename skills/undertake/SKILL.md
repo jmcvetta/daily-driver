@@ -332,12 +332,12 @@ has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
 closes.
 
-**The body is `pr-body`'s, and so is the notice that goes with a Tofu
+**The body is `pr-body`'s, and so are the blockers that go with a Tofu
 diff.** Where the branch's changes touch the infrastructure Tofu stack, the
-body carries that skill's human-action notice and the pull request the
+body carries that skill's human-action blocker and the pull request the
 `human` label: the changes must be applied, and the updated state committed,
 before the pull request merges. `Ready for review` is what honours the
-notice when the round is over — the pause is stated there.
+blocker when the round is over — the pause is stated there.
 
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate
@@ -387,7 +387,7 @@ the moment this step occupies, and a round already run on this head is that
 trigger already answered.
 
 **A pull request that waits on a person stops here instead.** Where the body
-carries `pr-body`'s human-action notice — a Tofu change awaiting its apply,
+carries `pr-body`'s human-action blocker — a Tofu change awaiting its apply,
 or any other action only a person can take before merge — the round at
 `Review the head` still runs to its end. The round's end is then a comment
 on the pull request, not a state change: it says the review cycle is

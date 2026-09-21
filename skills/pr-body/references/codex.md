@@ -24,4 +24,4 @@ Omp eval rows grade, and correcting it is a change with its own rows to
 rewrite.
 
 - **Labelling the pull request `human`** beside a body that carries the
-  human-action notice. `gh pr edit --add-label human`.
+  human-action blocker. `gh pr edit --add-label human`.
