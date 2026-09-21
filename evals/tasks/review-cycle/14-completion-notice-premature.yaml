@@ -1,0 +1,46 @@
+task_id: review-cycle-14-completion-notice-premature
+description: >-
+  A review cycle does not celebrate while CI, findings, or required verification
+  leave completion incomplete.
+tags: [review-cycle, behaviour, fire]
+initial_prompt: >-
+  A PR has a clean full review at aaa111, but after the fixes were pushed at
+  bbb222 the independent fix-delta reviewer is unavailable. CI is still green
+  and the threads are resolved. Explain whether to post a review-cycle completion
+  comment and what happens next. Also state the answer if CI were pending, the
+  three-defect non-convergence wall had been reached, or `Does it go again?`
+  found a material scope change requiring a new full review. Finally, explain
+  the publication decision for a clean standalone review.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Task]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash]
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+success_criteria:
+  - type: skill_triggered
+    description: "`review-cycle` fires for incomplete-round publication"
+    expected_skill: review-cycle
+    skill_name: review-cycle
+  - type: agent_judge
+    description: The reply rejects premature completion notices
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      Find the reply after the last `[RESULT - …]` tag. Score 1.0 only when it
+      says no completion notice is posted for unavailable verification, pending
+      CI, the non-convergence wall, a material scope change awaiting its new
+      full review, or a standalone review; preserves ordinary review records;
+      and reports the incomplete or blocked round rather than claiming
+      completion. Score 0.0 if it celebrates after CI alone, before the scope
+      decision, for a standalone review, or treats an unavailable pass as clear.
+      Otherwise score 0.5.

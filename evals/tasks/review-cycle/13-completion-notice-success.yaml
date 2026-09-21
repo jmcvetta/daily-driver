@@ -1,0 +1,47 @@
+task_id: review-cycle-13-completion-notice-success
+description: >-
+  A completed non-standalone review round posts one distinct completion notice
+  while preserving the normal review and verification records.
+tags: [review-cycle, behaviour, fire]
+initial_prompt: >-
+  PR #25 is in an undertaking at head bbb222. First, the full review is clean
+  with no fixes: CI is green and its findings have no actionable work. Then,
+  separately, consider a completed round with implemented or rejected findings,
+  resolved threads, and one required independent fix-delta pass that is clear.
+  Explain the final review-cycle publication in both cases: what stays
+  unchanged, what separate comment is published, and what it binds to. Do not
+  approve, merge, or change draft state.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Task]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash]
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+success_criteria:
+  - type: skill_triggered
+    description: "`review-cycle` fires for completed-round publication"
+    expected_skill: review-cycle
+    skill_name: review-cycle
+  - type: agent_judge
+    description: The reply publishes only the qualified completion notice
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      Find the reply after the last `[RESULT - …]` tag. Score 1.0 only when it
+      keeps the submitted COMMENT review and Review verification record intact,
+      posts a separate top-level PR conversation comment with a prominent
+      completion heading, factual completion status, and head `bbb222` for both
+      a clean no-fix round and a round with a required clear delta pass, and
+      states that this does not approve, merge, or change draft state. Score 0.0
+      if it invents a delta pass for the no-fix case, appends the notice to a
+      normal review result, treats it as merge readiness, or changes the PR
+      state. Otherwise score 0.5.
