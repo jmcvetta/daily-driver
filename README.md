@@ -26,7 +26,7 @@ seventeen skills:
 | `conventional-commits-type` | Picks the type — `fix`, `feat`, `refactor` and the rest — from what the change *does*, never from what the diff looks like. |
 | `pr-body` | The body: a one-line summary, a salutation in verse, optional `Blockers` and `Issues` sections, an executive summary, and engineering detail. |
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
-| `issue-labels` | The six labels an issue may carry — `epic`, `task`, `bug`, `proposal`, `research`, `human` — and the readiness each one states, which is what decides whether an agent may start unattended. |
+| `issue-labels` | Six mutually exclusive issue kinds — `epic`, `task`, `bug`, `proposal`, `research`, `human` — decide readiness. `story` marks a confirmed direct child of an epic without changing its kind. |
 | `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
 | `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a provider-neutral `Model class` section for `task`; every other label's edit runs under existing rules and acquires nothing. |
 | `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |

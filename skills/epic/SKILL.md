@@ -183,18 +183,20 @@ the parent must exist to be named. The epic's body at this point is `Summary`
 and `Justification`, and stops there: `Sequencing` is made of issue numbers
 that do not exist yet, which is why `Fill in the epic` is a step of its own.
 
-**Every issue this step writes carries a label**, and `issue-labels` supplies
-them. The epic gets `epic`, which is the one word that stops `undertake`
-starting on it; each task gets `task`, `bug`, `research` or `human`, whichever
-it is. A child whose work is a person's is written and sequenced like any
-other, and `human` is what tells `embark` to leave it for the person rather
-than open a session on it.
+**Every issue this step writes carries an issue kind**, and `issue-labels`
+supplies it. The epic gets `epic`, which stops `undertake` starting on it; each
+task gets `task`, `bug`, `research` or `human`. A child whose work is a person's
+is written and sequenced like any other, and `human` tells `embark` to leave it
+for the person rather than open a session on it. When the create route sets the
+task's parent, verify that edge and invoke `issue-labels` to add `story`.
+The marker supplements the task's kind; it is never sent in place of one.
+
 An issue converted into the epic is **relabelled** rather than labelled: it
-carried something before, and two of the six on one issue is a stop in its
-own right. Both harnesses make that swap awkward, in opposite ways, and the
-reference file for the one in use says how: a write that *adds* needs the
-remove in the same call, and a write that *replaces* needs the issue's
-current labels read first, or the stock and bot-owned ones go with the swap.
+carried something before, and two of the six kinds on one issue is a stop in
+its own right. Both harnesses make that swap awkward, in opposite ways, and the
+reference file for the one in use says how: an additive write needs the remove
+in the same call, and a replacement write needs the issue's current labels
+read first, or stock, bot-owned, and supplemental labels go with the swap.
 
 No permission is asked here. It was asked once at `Agree the plan`, and asking
 again per issue is the same question eight times.
@@ -207,7 +209,8 @@ always the same client, and on a web worker they are not.
 
 - **Parent.** Every task is a sub-issue of the epic. Where the harness's issue
   client sets the parent as the task is created, that write already happened at
-  `Open the issues`.
+  `Open the issues`; otherwise write it here. After every parent write, verify
+  the direct edge, then invoke `issue-labels` to reconcile `story`.
 - **Blocked-by.** Only the edges `Draft the plan` named.
 
 **An epic's children are not its blockers.** `issue-deps` says why:
