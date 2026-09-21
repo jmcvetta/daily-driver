@@ -177,8 +177,9 @@ the second harness that is true of, and it is true here more sharply than on
 Omp — Omp at least blocks on the Actions runs, so its wait completes inside the
 turn. This one does not wait at all.
 
-`undertake`'s `Keep it current` cadence stops at `Ready for review` here too,
-and for the same reason.
+`undertake` has no cadence or wake slot on this harness. Its owner-resume
+catch-up obligation starts at `Open the draft` and continues before and after
+`Ready for review` until the pull request merges, closes, or the user stops it.
 
 
 Review history, publication, and threads
