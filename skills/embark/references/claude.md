@@ -117,6 +117,7 @@ The watch
 | `Watch the wave` | Find the pull request for a task issue | `mcp__github__issue_read`, `method: get` — `closed_by_pull_requests` |
 | `Watch the wave` | Read a pull request's state and checks | `mcp__github__pull_request_read` |
 | `Watch the wave` | Arm the backstop | `mcp__Claude_Code_Remote__send_later`, ten minutes out |
+| `Watch the wave` | Archive a finished session | `mcp__Claude_Code_Remote__archive_session` |
 | `Report the epic ready` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger` |
 | `Report the epic ready` | Drop each subscription | `mcp__github__unsubscribe_pr_activity` |
 
