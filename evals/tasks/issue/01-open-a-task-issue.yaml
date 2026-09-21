@@ -41,7 +41,7 @@ success_criteria:
     skill_name: issue-body
 
   - type: agent_judge
-    description: The draft body is a grounded task handoff ending in a Model line
+    description: The draft body is a grounded task handoff with model class metadata
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -68,16 +68,14 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the REPLY proposes an issue body for a settled task. That
-      body must state the observable outcome and why the change is needed,
-      and must end with a `Model:` line as the last line. It must not
-      dictate every implementation line, and the surrounding REPLY must say
-      which part is the grounded map and which choices were left to the
-      implementer.
+      The rule: the REPLY proposes an issue body for a settled task. It must
+      state the observable outcome and why the change is needed. It must contain
+      `## Summary`, immediately followed by `## Model class`, then `## Detail`.
+      The class section starts with exactly one backtick-wrapped lowercase class
+      token and a short rationale. The body must not contain a trailing
+      `Model:` or an `Effort:` line. The surrounding REPLY distinguishes the
+      grounded map from routine implementer choices.
 
-      Score 1.0 if the body carries the outcome and reason, ends with the
-      `Model:` line, and the reply distinguishes grounded map from
-      implementer choices. Score 0.5 if the body is a plausible task
-      handoff but misses one of those. Score 0.0 if there is no body, or if
-      it carries an `Effort:` line, or if it ends with anything after the
-      `Model:` line.
+      Score 1.0 if the exact class-section order, rationale, and no-concrete-ID
+      rule hold. Score 0.5 if the handoff is plausible but misses one. Score 0.0
+      if it lacks a body, a class section, or includes `Model:`/`Effort:`.

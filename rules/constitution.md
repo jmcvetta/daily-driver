@@ -71,6 +71,14 @@ locally. List the scripts you mean, one by one.
 so listen to it. Never skip, disable, silence, or delete a test to reach
 green. Say that it is failing, and make a plan to fix it.
 
+**Isolate repository-changing tasks before research.** Invoke the
+`task-worktree` skill and establish the task's feature branch in a dedicated
+worktree before reading task files or making a change. A new task uses a sibling
+worktree; an already-dedicated detached worktree attaches the branch in place.
+Keep every task operation there and leave the primary worktree untouched.
+Read-only work needs no isolation. A delegated slice reuses its parent's task
+worktree.
+
 ## While you write code
 
 - **RTFM.** The manual first — before the web, before the source, before the
@@ -137,9 +145,12 @@ manifest or a lockfile.
 
 ## Delegation
 
-Plan first, then delegate the implementation. Quota is the user's money. Do
-not spend a capable model on work that does not need capability, and do not
-open a subagent per task where one subagent can take the batch. Open separate
+Plan first, then delegate what runs in parallel. Delegation buys parallelism;
+where there is none to buy it buys a second copy of the context you are
+already holding, so a single task stays in the session that took it on.
+Quota is the user's money. Do not spend a capable model on work that does not
+need capability, and do not open a subagent per task where one subagent can
+take the batch. Open separate
 subagents only where the work genuinely requires them. Subagents touching
 different files run in the background in parallel, all launched before you
 start your own share of the plan.

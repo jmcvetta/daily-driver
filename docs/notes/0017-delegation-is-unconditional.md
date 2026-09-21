@@ -1,6 +1,10 @@
 # Delegation is unconditional — the orchestrator never implements
 
-**Status:** decided, 2026-09-15.
+**Status:** superseded in part, 2026-09-17, by
+[`0019`](0019-the-undertaker-implements.md), which keeps the rule inside
+`embark` and drops it from `undertake`: delegation buys parallelism across
+task issues, and there is none to buy inside one undertaking.
+Decided 2026-09-15.
 **Resolves:** [#251](https://github.com/jmcvetta/daily-driver/issues/251).
 
 **Observed.** On `jmcvetta/career` epic #283, "undertake 283" read the epic,

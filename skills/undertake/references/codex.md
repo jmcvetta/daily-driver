@@ -25,9 +25,12 @@ links, and a double-quoted shell argument substitutes the backticks before
 `gh` sees them. `pr-body`'s [`codex.md`](../../pr-body/references/codex.md)
 makes the same argument at length.
 
-`comments` is in that field list because `Claim the issue` needs it: a claim
+`comments` is in that field list because `SKILL.md` reads the comments as
+content: a correction to the body, a constraint an earlier session found, a
+decision taken in the thread. It serves `Claim the issue` as well — a claim
 already on the issue is what says the sequence is being re-entered, or that
-another session got there first. A read without it cannot tell either.
+another session got there first — but that is the smaller of the two reasons.
+A read without the field has neither.
 
 The `--json` fields in the read row need `gh` at its stated floor.
 `issue-deps` owns the edge reads and picks its own client — two clients here
@@ -35,18 +38,22 @@ rather than three — so read that skill's routes before believing an empty
 answer. So does `issue-labels`, whose `references/codex.md` says why
 `--add-label` needs no read-first and the Claude route does.
 
+For a `task`, read the `Model class` section and assess the current session
+against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
+before its claim or repository change. A suitable stronger session implements
+directly. An unsuitable or unassessable session reports the mismatch; it does
+not delegate merely to change cost.
+
 
 The implementor
 ===============
 
-| Step | Operation | Call |
-| ---- | --------- | ---- |
-| `Implement` | Dispatch the implementor subagent | `multi_agent_v1`, one delegation per undertaking |
-
-`SKILL.md`'s `Implement` owns the rule: delegation is unconditional on a
-surface that has the route, and the orchestrator keeps responsibility for
-claim, pull request, watch and gates. Codex has the route through the
-delegation namespace.
+No route, and that is the rule rather than a gap. `SKILL.md`'s `Implement`
+owns it: the session running the sequence writes the code itself, so
+`multi_agent_v1` carries no delegation here. That namespace belongs to
+`embark`, which uses it to run several task issues at once. The one dispatch
+inside this sequence is `review-cycle`'s briefed subagent at `Verify the fix
+delta`, named in that skill's own reference file.
 
 
 The pull request
@@ -55,6 +62,11 @@ The pull request
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the draft` | Open it | `pr`, which owns the call |
+| `The gate` | Read the branch against its base | `gh pr view <number> --json mergeStateStatus` |
+| `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
+| `The gate` | Read the review threads | `review-cycle`'s `references/codex.md` owns them |
+| `The gate` | Read the review record | `gh pr view <number> --json comments` — the round's own `Review` and `Review verification` comments |
+| `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
@@ -64,7 +76,8 @@ The pull request
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/codex.md` names the full-review surface and
-the unavailable-delta stop that keeps the pull request draft.
+the briefed-subagent route `Verify the fix delta` runs on; a pass that dispatch
+genuinely fails is what keeps the pull request draft.
 
 
 The session
@@ -93,12 +106,15 @@ are `gh` throughout, as everywhere on this harness.
     gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid
 
 `isDraft` false and `mergeable` `MERGEABLE` are two of the answers the report
-needs, and neither is sufficient alone. `mergeStateStatus` must agree with
-`The gate` as well: `BEHIND` is a base the branch does not carry, `UNSTABLE`
-a check that is no longer green, and `UNKNOWN` and `BLOCKED` are states
-`SKILL.md` rules out as readiness outright. The read confirms, on this head,
-what the gate answered; a state that disagrees with it is a wait, not a
-milestone. `headRefOid` is the SHA the report binds to.
+needs, and neither is sufficient alone. `mergeStateStatus` answers the rest,
+and here — after the draft is cleared — `CLEAN` is the only yes: `BEHIND` is
+a base the branch does not carry, `UNSTABLE` a check that is no longer green,
+`DIRTY` a conflict, and `UNKNOWN` and `BLOCKED` are states `SKILL.md` rules
+out as readiness outright. Each is a wait, not a milestone. **`The gate` reads
+the same field for less**, because a draft reports `DRAFT` or `BLOCKED` there
+whatever its branch and checks are doing: only `BEHIND`, `DIRTY` and `UNKNOWN`
+are that read's, and CI at the gate comes from `statusCheckRollup` instead.
+`headRefOid` is the SHA the report binds to.
 
 **The start is the claim comment's `createdAt`.** `gh issue view <issue>
 --json comments` is the read `Read the issue and its edges` already makes —
@@ -134,8 +150,10 @@ guessed one.
 There is no durable wake
 ========================
 
-**No wake on this harness is known to outlive the turn that armed it**, so
-`Keep it current`'s cadence does not run here. After `Ready for review`, say
+**No actor on this harness outlives the turn that armed it** — no durable
+process, no scheduled wake — so `Keep it current`'s split buys Codex nothing:
+the mechanical merge has nothing here to run it, and the judgment waits for
+a session either way. After `Ready for review`, say
 once that the watch is the catch-up look below, and stop.
 
 **The catch-up look is the first read of every turn that lands back on the

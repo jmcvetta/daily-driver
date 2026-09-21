@@ -7,26 +7,26 @@ description: >-
   get?", "is this an epic or a task?", "that label is wrong", "which issues
   are ready for an agent?", and including any call Claude makes on its own
   initiative that sets a label on an issue. It fires too whenever `undertake`
-  opens an issue or reads one it is about to start on. Supplies the six labels
-  this toolkit recognises, the
-  one question that picks between them, and the readiness each one states —
-  which is what decides whether an agent may start on an issue unattended. Not
-  for pull request labels, which nothing here sets, and not for issue
-  relationships — blocked-by, sub-issue, parent — which are `issue-deps`.
+  opens an issue or reads one it is about to start on. Supplies the six issue
+  kinds and the supplemental story marker, including their write rules.
+  The kind decides readiness. Not for pull request labels or graph writes,
+  which are `issue-deps`'.
 ---
 
 # Issue labels
 
 A label is read by a person scanning a list and by an agent deciding whether
-to start. Both are asking one question, and it is the only question a label
-here answers:
+to start. Six issue-kind labels answer one question:
 
 > **What kind of issue is this, and is it ready for an agent to work
 > unattended?**
 
-Six labels answer it. Every issue carries **exactly one** of them, because a
-second answer to a single question is not extra information — it is a
-disagreement, and nothing resolves it.
+Every issue carries **exactly one** of them. A second answer to one question is
+a disagreement, and nothing resolves it.
+
+`story` is a supplemental marker. It makes a confirmed direct child of an epic
+visible in a list. It is not an issue kind, does not decide readiness, and may
+sit beside one of the six kinds.
 
 **The routes are per harness, and they live beside this file.** Reading a
 label and writing one are named in words here and resolved to a route there:
@@ -35,7 +35,7 @@ label and writing one are named in words here and resolved to a route there:
 [`references/codex.md`](references/codex.md) for Codex. Read the one for the
 harness in use before writing a label.
 
-<!-- labels-table -->
+<!-- issue-kind-labels-table -->
 
 | Label | Description | Ready for an agent |
 | ----- | ----------- | ------------------ |
@@ -46,9 +46,15 @@ harness in use before writing a label.
 | `research` | A question to settle | Yes |
 | `human` | Work only a person can do | No — the work is a person's |
 
+<!-- supplemental-labels-table -->
+
+| Label | Description | Meaning |
+| ----- | ----------- | ------- |
+| `story` | A focused piece of work within an epic | Visual marker only; no readiness effect |
+
 The descriptions are the ones GitHub shows, verbatim. They live twice — here
 and in `infra/github/labels.tf` — and `scripts/check-labels.py` fails
-`make check` when the two disagree.
+`make check` when either table disagrees.
 
 
 Picking one
@@ -138,6 +144,27 @@ that a swap is one call carrying both the add and the remove. On a harness
 whose write *replaces*, the swap is free and the read-first rule is what
 bites instead: see `Where the standard is declared`.
 
+Maintaining the story marker
+============================
+
+`issue-deps` owns parent edges. After it creates, changes, removes, or reads a
+parent edge, it invokes this policy. Read the child's direct parent and read
+that parent's labels. Add `story` only when the confirmed parent carries the
+`epic` kind. Remove it when the confirmed parent is absent or is not an epic.
+Closing the child does not change a confirmed qualifying edge, so it
+keeps the marker.
+
+A kind swap that removes `epic` from a parent is a reconciliation event even
+though its parent edges do not move. Invoke `issue-deps` to read that issue's
+direct children, then reconcile `story` on each one against the parent's new
+labels. A failed or unavailable child read preserves their labels and reports
+the limitation.
+
+A failed or unavailable graph read is not evidence that a parent is absent.
+Preserve the marker and report the limitation. Never create, change, or remove
+an edge to justify a marker. Preserve the issue kind, stock labels, bot labels,
+and unrelated labels on every marker write.
+
 
 What a label is not
 ===================
@@ -153,13 +180,13 @@ What a label is not
   and the issue keeps the label its work earns.
 - **Not a size.** An estimate is not a kind, and it does not change whether
   an agent may start.
-- **Not a relationship.** Blocked-by, parent and sub-issue are edges in a
-  graph GitHub keeps, and `issue-deps` owns reading and writing them. An
-  `epic` says an issue coordinates others; it does not say *which*, and a
-  label never can.
+- **Not a relationship authority.** Blocked-by, parent and sub-issue are edges
+  in a graph GitHub keeps, and `issue-deps` owns reading and writing them.
+  `story` is the sole derived visual cue: it repeats a confirmed direct parent
+  edge for lists, never replaces it, and cannot prove a relationship.
 
-A repository wanting any of those wants a field or a project board, not a
-sixth label.
+A repository wanting another relationship view wants a field or project board,
+not another issue kind.
 
 
 Labels outside the standard
@@ -183,38 +210,37 @@ It does not claim the namespace, and it deletes nothing.
 What the body carries
 =====================
 
-The label decides readiness; it does not decide what the body says. The body
-requirements a labelled issue must satisfy are `issue-body`'s — which label's
-contract applies, the readiness test an issue must pass before it is
-presented as ready, and the `Model:` line a `task` body ends with. Read that
-skill whenever a body is being written or revised, alongside the label picked
-here.
+The label decides readiness; it does not decide what the body says. `issue-body`
+defines the task-only grounded handoff, readiness test, and `Model class`
+section. Read that skill whenever a body is being written or revised, alongside
+the label picked here.
 
 
 Where the standard is declared
 ==============================
 
-`infra/github/labels.tf` declares the six as `github_issue_label` resources,
-so the names, colours and descriptions on GitHub come from a file under
-review rather than from whoever clicked last. OpenTofu owns only what it
-declares, so the stock labels above survive an apply untouched.
+`infra/github/labels.tf` declares six issue kinds and the supplemental `story`
+`github_issue_label` resource. The names, colours and descriptions
+come from a file under review rather than from whoever clicked last. OpenTofu
+owns only what it declares, so stock labels survive an apply untouched.
 
 Three consequences worth knowing:
 
 - **A label that already exists must be imported before the first apply.**
   Creating one GitHub already has fails the apply rather than adopting it.
   `infra/github/import.sh` carries the import for `bug`, which every
-  repository ships with.
+  repository ships with. If somebody created `story` before the managed apply,
+  import it too.
 - **Applying is a person's job.** `make check-infra` validates the stack
   without credentials, and CI runs it; the apply needs a token with admin
   rights and is not something a session does on its own.
 - **A label applied to an issue before that apply creates itself.** GitHub
   makes a missing label the moment one is set on an issue, with a colour
   nobody chose — and the label then exists, so the first apply fails on it
-  exactly as it would on `bug`. Import it, the way `import.sh` imports `bug`,
-  rather than reading the failure as a broken stack.
+  exactly as it would on `bug`. Import it rather than reading the failure as a
+  broken stack.
 
 Applying the standard to a repository that does not run this Tofu stack means
-copying `labels.tf`, or creating the six by hand with the descriptions in
-the table above. The descriptions are the part worth copying exactly — they
-are what a person hovering a label reads.
+copying `labels.tf`, or creating the six kinds and `story` by hand with the
+descriptions in the tables above. The descriptions are what a person hovering
+a label reads.

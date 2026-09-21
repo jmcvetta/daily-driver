@@ -8,7 +8,7 @@ description: >-
   GitHub issue begins, when the session's subject changes materially, or on
   any call to the harness's session-title tool. Supplies the
   character budget a title is written to for the Claude mobile list, and
-  the two forms that title may take. Not the title of a pull request —
+  the three forms that title may take. Not the title of a pull request —
   that is `pr-title`.
 ---
 
@@ -82,6 +82,21 @@ client"*, loses its type prefix to **Tracker prefix**, then `the`, `with`,
 `for` and finally the adjective `exponential` to **Empty words**, fitting at
 35: `#212 Retry backoff S3 upload client`. **Words from the end** never runs,
 and `client` — the noun the title is about — survives because of it.
+
+
+Orchestrating an epic
+=====================
+
+The session a fleet is watched from — the orchestrator `embark` runs an epic
+from — takes a form of its own, the fleet notice ahead of the epic's number:
+
+    ⛵ EPIC #{number} {shortened epic title}
+
+The notice is the point: a list of five running sessions is one orchestrator
+among the task sessions it opened, and the notice is what tells them apart at
+a glance. The budget counts the whole string, notice included. The epic title
+is shortened by the same cuts `Working on an issue` defines, over whatever
+room the notice leaves.
 
 
 Not working on an issue
