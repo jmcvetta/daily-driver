@@ -31,6 +31,12 @@ makes further down this file.
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
 read-first and the Claude route does.
 
+For a `task`, read the `Model class` section and assess the current session
+against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
+before its claim or repository change. A suitable stronger session implements
+directly. An unsuitable or unassessable session reports the mismatch; it does
+not delegate merely to change cost.
+
 
 The implementor
 ===============

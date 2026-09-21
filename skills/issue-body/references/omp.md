@@ -13,21 +13,12 @@ lists, and passing that through a shell argument is where the quoting breaks.
 Write the body to a file and hand over the path.
 
 
-The model a task records
-========================
+The required class
+==================
 
-The task body's `Model:` line is read two ways. On Claude Code, `embark`
-passes it to the session client, binding. On this harness, `embark` runs its
-subagent fallback, and there the line is advisory: the fallback's default is
-a cheaper implementation model, and the line is the judgement `embark`'s
-orchestrator reads before deciding whether that default is safe for this
-task.
-
-Write it anyway. The judgement is made at authoring time, and a task issue
-planned on Omp is undertaken wherever the wave is put to sea. The identifiers
-are the ones the Claude session client accepts, and [`claude.md`](claude.md)
-is where they are named.
-
-Nothing here reports the running session's own model, so the identifier
-cannot be read off the session the way the Claude route reads it. Where
-`claude.md` cannot be read, write no line rather than guess at a name.
+Task bodies use the provider-neutral `Model class` section defined in
+[`model-classes.md`](model-classes.md). An Omp task issue does not carry a
+Claude identifier. `embark` resolves a class against the effective
+implementation-agent configuration and records the actual model the harness
+reports. Existing Omp roles and YAML selectors stay concrete execution
+configuration, not issue metadata.

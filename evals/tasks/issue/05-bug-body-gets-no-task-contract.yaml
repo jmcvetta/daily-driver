@@ -27,7 +27,7 @@ success_criteria:
     skill_name: issue-body
 
   - type: agent_judge
-    description: The bug body carries no invented task sections or Model line
+    description: The bug body carries no invented task sections or model class
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -56,13 +56,10 @@ success_criteria:
 
       The rule: the REPLY proposes a bug issue body. It must record the bug —
       what happens and under what input. The task contract is defined for
-      `task` issues alone, so the body must NOT carry the task sections
-      (settled-design or execution-model machinery), must NOT end with a
-      `Model:` line, and must not be padded into a generic template the bug
-      does not need.
+      `task` issues alone, so the body must NOT carry `Model class`, a trailing
+      `Model:` line, or a generic task template.
 
-      Score 1.0 if the body records the bug plainly and carries no `Model:`
-      line and no invented task machinery. Score 0.5 if it records the bug
-      but pads it with boilerplate that imposes nothing wrong. Score 0.0 if
-      it ends with a `Model:` line, or imposes task sections, or there is no
-      body.
+      Score 1.0 if the body records the bug plainly and carries no model
+      metadata or invented task machinery. Score 0.5 if it records the bug but
+      adds harmless boilerplate. Score 0.0 if it adds `Model class`, `Model:`,
+      task machinery, or no body.

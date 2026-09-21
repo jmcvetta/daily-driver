@@ -183,12 +183,10 @@ It does not claim the namespace, and it deletes nothing.
 What the body carries
 =====================
 
-The label decides readiness; it does not decide what the body says. The body
-requirements a labelled issue must satisfy are `issue-body`'s — which label's
-contract applies, the readiness test an issue must pass before it is
-presented as ready, and the `Model:` line a `task` body ends with. Read that
-skill whenever a body is being written or revised, alongside the label picked
-here.
+The label decides readiness; it does not decide what the body says. `issue-body`
+defines the task-only grounded handoff, readiness test, and `Model class`
+section. Read that skill whenever a body is being written or revised, alongside
+the label picked here.
 
 
 Where the standard is declared
