@@ -180,16 +180,18 @@ states the whole check-in, self-contained, in this order:
 2. **Read state, currency, and the merge floor.** Read `state`, `draft`,
    `mergeable_state`, `head.sha`, `get_check_runs`, and `get_status`. A merged
    or closed pull request deletes the re-armed trigger and exits. If either CI
-   endpoint reports a run in flight, skip the merge. Otherwise `behind` runs
-   `mcp__github__update_pull_request_branch`; `dirty` is the conflict stop.
-3. **Assess the resulting head.** After a merge, read both CI endpoints again;
-   without one, the floor read is the assessment. A changed head invalidates
-   earlier CI and readiness evidence. Pending or unregistered checks use
-   `review-cycle`'s bounded wait; failed checks return to `Fix, answer,
-   resolve, push`, and missing logs remain an evidence blocker. Continue the
-   remaining review or ready-gate work when CI permits it. A capped wait,
-   review wall, or human action reports unfinished work and its resume path;
-   it never becomes completion.
+   endpoint reports a run in flight, skip the merge. Otherwise `behind`,
+   `draft`, `blocked`, or an indeterminate merge state runs
+   `mcp__github__update_pull_request_branch`, whose own reply settles
+   currency; `dirty` is the conflict stop.
+3. **Assess the resulting head.** After a currency test that can move the
+   head, read both CI endpoints again; without one, the floor read is the
+   assessment. A changed head invalidates earlier CI and readiness evidence.
+   Pending or unregistered checks use `review-cycle`'s bounded wait; failed
+   checks return to `Fix, answer, resolve, push`, and missing logs remain an
+   evidence blocker. Continue the remaining review or ready-gate work when CI
+   permits it. A capped wait, review wall, or human action reports unfinished
+   work and its resume path; it never becomes completion.
 
 The slot it occupies is the same slot `review-cycle`'s wait borrows and hands
 back. That ownership starts before ready, including red results and capped

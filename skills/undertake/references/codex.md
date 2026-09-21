@@ -162,16 +162,17 @@ resume, a continuation, a user turn about it — starts with:
 
     gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
 
-Merged and closed pull requests exit. `BEHIND` runs `gh pr update-branch
-<number>` before the turn continues; `DIRTY` is the conflict stop. `CLEAN`,
-`DRAFT`, and `UNSTABLE` need no currency action. `BLOCKED` and an
-indeterminate answer run the update-branch call, whose own reply settles
-currency.
+Read `statusCheckRollup` and `review-cycle`'s check and status endpoints
+before a currency merge; if either reports a run in flight, skip that merge.
+Otherwise `BEHIND`, `DRAFT`, `BLOCKED`, and an indeterminate answer run `gh pr
+update-branch <number>`, whose own reply settles currency. `DIRTY` is the
+conflict stop; `CLEAN` and `UNSTABLE` need no currency action.
 
-**Then assess the resulting current head.** Read `gh pr view <number> --json
-statusCheckRollup` and the check and status endpoints `review-cycle` owns.
-Earlier green evidence does not survive a head change. Pending or unregistered
-checks follow its bounded limits; failed checks return to `Fix, answer,
-resolve, push`, and unavailable logs are an explicit evidence blocker. State
-the unfinished condition and owner-resume requirement; never call a clean
-branch, an already-up-to-date response, or a draft completion.
+**Then assess the resulting current head.** After a currency test that can move
+the head, read `gh pr view <number> --json statusCheckRollup` and the check and
+status endpoints `review-cycle` owns. Earlier green evidence does not survive
+a head change. Pending or unregistered checks follow its bounded limits; failed
+checks return to `Fix, answer, resolve, push`, and unavailable logs are an
+explicit evidence blocker. State the unfinished condition and owner-resume
+requirement; never call a clean branch, an already-up-to-date response, or a
+draft completion.

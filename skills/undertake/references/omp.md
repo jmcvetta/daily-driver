@@ -195,12 +195,14 @@ any pending CI-watcher completion, then runs:
 
     gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
 
-Merged and closed pull requests end continuation. `BEHIND` runs `gh pr
-update-branch <number>` before the assessment continues; `DIRTY` is the
-conflict stop. `CLEAN`, `DRAFT`, and `UNSTABLE` need no currency action.
-`BLOCKED` and `UNKNOWN` run the update-branch call as the currency test.
+Merged and closed pull requests end continuation. Read `statusCheckRollup` and
+`review-cycle`'s check and status endpoints before a currency merge; if either
+reports a run in flight, skip that merge. Otherwise `BEHIND`, `DRAFT`,
+`BLOCKED`, and `UNKNOWN` run `gh pr update-branch <number>`, whose own reply
+settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
+`CLEAN` and `UNSTABLE` need no currency action.
 
-**Currency is not completion.** After a merge or an already-current answer,
+**Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s two endpoint reads remain the CI verdict.
 Pending or unregistered checks use its persistent bounded watcher. Failed
