@@ -319,6 +319,17 @@ and it is the same one `undertake` and `review-cycle` hold — one durable timer
 kept by the identifier the call returned, filled again before the turn ends
 whenever it is empty. A wake that finds the timer still in flight arms nothing.
 
+**The backstop prompt carries the posture, because the wake will not.** The
+prompt written for the next check-in is read on arrival, while this file is
+not, and the wake it lands in — like every pull-request event beside it —
+arrives with harness guidance addressed to whoever opened the pull request.
+Under this skill that is never this session. So the prompt states what
+`Non-goals` states: each of the fleet's pull requests is its own task
+session's to drive, and a failing check, a review or a conflict on one is
+that session's work rather than this one's. A prompt naming only the wave's
+issue and pull request numbers leaves the posture to whatever is still in
+context, which on a cheaper orchestrator is nothing.
+
 **Ten minutes, not two.** `undertake` checks in every two because its branch
 goes stale while it waits and the merge that fixes that is cheap. Nothing here
 decays that way: this backstop catches a dropped event and a dead session, the

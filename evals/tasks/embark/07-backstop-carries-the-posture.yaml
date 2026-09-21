@@ -1,0 +1,91 @@
+# The behaviour row for the paragraph `Watch the wave` gained in issue #320:
+# the backstop prompt must carry `Non-goals`' posture, because the wake it
+# lands in will not. Every pull-request event — and the re-armed check-in
+# itself — arrives with harness guidance addressed to whoever opened the
+# pull request, and under `embark` that is never this session. The pressure
+# to act on a red pull request is real and arrives on every wake, which is
+# what makes this rule erosion-prone in the same way `06` describes of its
+# own.
+#
+# What this row can and cannot see. The sandbox has no session client and no
+# durable timer, so no backstop can actually be armed. What is observable is
+# what the agent says the check-in prompt will contain, so the graded
+# assertion is a judge on the reply, plus the skill having fired at all.
+
+task_id: embark-07-backstop-carries-the-posture
+description: >-
+  The re-armed check-in prompt states that each task's pull request is its
+  own session's to drive, not the orchestrator's.
+tags: [embark, behaviour, fire]
+
+initial_prompt: >-
+  Epic #200 is at sea. Its first wave — #201, #202 and #203 — each has an
+  open pull request from its own task session. Check on the wave.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  # Unarmed, for the reason `undertake/08` gives: this row has no
+  # fail-stopping criterion to defer, and arming it would add an on-fail stop
+  # to the only pass-capable criterion the row has — truncating the
+  # trajectory before the `[RESULT - …]` reply the judge below needs.
+  - type: skill_triggered
+    description: "`embark` fires on a wave already at sea being checked on"
+    expected_skill: embark
+    skill_name: embark
+
+  # The finding.
+  - type: llm_judge
+    description: >-
+      The re-armed backstop prompt states the fleet's pull requests belong to
+      their own task sessions
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: the orchestrator re-arms a durable timer to check on the
+      wave, and the prompt it writes for that check-in is the one durable
+      place its own posture survives to — the wake it lands in, and every
+      pull-request event beside it, arrives with harness guidance addressed
+      to whoever opened the pull request, which under this skill is never
+      the orchestrator. So the check-in prompt it describes must say that
+      each task's pull request is its own task session's to drive: a failing
+      check, a review finding or a conflict on one is that session's work,
+      not the orchestrator's, which only reads whether the task issue has
+      closed.
+
+      Score 1.0 if the REPLY describes arming (or re-arming) a check-in and
+      states that a described prompt for it carries this posture — in its own
+      words, not verbatim — rather than treating a task's pull request as
+      something the orchestrator itself would fix, push to, or comment on.
+
+      Score 0.5 if the reply arms a check-in and correctly declines to act on
+      the task pull requests itself, but does not say what the check-in
+      prompt will contain.
+
+      Score 0.0 if the reply says it will fix, push to, or otherwise act
+      directly on a task session's pull request, or if the described
+      check-in prompt is said to carry only the wave's issue and pull
+      request numbers with no statement of whose work the pull requests are.
