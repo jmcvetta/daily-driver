@@ -4,9 +4,10 @@ description: >-
   then assesses CI on the resulting head rather than accepting old-head green evidence.
 tags: [undertake, behaviour, fire]
 initial_prompt: >-
-  Resume undertaking issue #24. Draft PR #25 is behind master. The old head was
-  green, but merging master will create a new head. What do you assess before
-  considering review or readiness?
+  Resume undertaking issue #24. Draft PR #25 is behind master. An earlier
+  old-head result was green, but do not infer that the current head is idle:
+  read both CI endpoints and apply the run-in-flight floor before any update.
+  A safe merge creates a new head. What do you assess before review or readiness?
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
