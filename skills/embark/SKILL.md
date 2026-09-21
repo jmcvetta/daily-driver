@@ -303,16 +303,22 @@ So on every wake:
 - **The wave is in when every task issue in it is closed.** Mark the wave `done`
   in the epic's body, and go back to `Take the wave`, which routes what happens
   next — the following wave, or `Report the epic ready`.
-- **A task that is home has no session left to run.** When a task issue
-  closes, archive the session that carried it: its branch is merged, so
-  `undertake`'s `Keep it current` cadence has nothing left to merge and its
-  review threads have nothing left to answer. **Not one moment earlier.** A
-  session whose pull request is merely green and waiting on a reviewer is
-  still working — it holds that cadence and it is what answers the next
-  review comment — and archiving it there stops both silently, with nobody
-  else holding the branch. In the fallback the ship is a subagent that has
-  already ended, so there is no session to archive. The muster roll records
-  the archive the way `Recover a session` records a replacement.
+- **A task that is home has no session left to run, archived once.** When a
+  task issue closes, archive the session that carried it: its branch is
+  merged, so `undertake`'s `Keep it current` cadence has nothing left to
+  merge and its review threads have nothing left to answer. **Not one
+  moment earlier.** A session whose pull request is merely green and
+  waiting on a reviewer is still working — it holds that cadence and it is
+  what answers the next review comment — and archiving it there stops both
+  silently, with nobody else holding the branch. **Once per task, not once
+  per wake**: a later wake that re-reads the graph for a still-open
+  sibling task finds this task closed again, and finds its own muster roll
+  comment already posted for it — read that before archiving a second
+  time. In the fallback the ship is a subagent that has already ended, so
+  there is no session to archive. **The muster roll records the archive**:
+  one comment naming the task and the session retired, the way `Recover a
+  session` records a replacement minus the session that took over, since
+  none did.
 - **A pull request closed without merging is somebody's decision.** Its task
   issue stays open and its session is spent, so nothing here re-dispatches it:
   say which task it was, and leave it to the person who closed it.
