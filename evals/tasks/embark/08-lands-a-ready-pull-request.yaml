@@ -18,7 +18,7 @@ initial_prompt: >-
   Epic #200 is at sea, and its latest muster roll says `Landing: orchestrator`.
   Task #201 has pull request #301. It is not a draft, its merge state is clean,
   every review thread is resolved, and it has neither a `human` label nor a
-  human-action notice. Check on the wave.
+  human-action blocker in the `Blockers` section. Check on the wave.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]

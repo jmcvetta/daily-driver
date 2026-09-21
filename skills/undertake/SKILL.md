@@ -332,12 +332,12 @@ has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
 closes.
 
-**The body is `pr-body`'s, and so is the notice that goes with a Tofu
+**The body is `pr-body`'s, and so are the blockers that go with a Tofu
 diff.** Where the branch's changes touch the infrastructure Tofu stack, the
-body carries that skill's human-action notice and the pull request the
+body carries that skill's human-action blocker and the pull request the
 `human` label: the changes must be applied, and the updated state committed,
 before the pull request merges. `Ready for review` is what honours the
-notice when the round is over — the pause is stated there.
+blocker when the round is over — the pause is stated there.
 
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate
@@ -387,7 +387,7 @@ the moment this step occupies, and a round already run on this head is that
 trigger already answered.
 
 **A pull request that waits on a person stops here instead.** Where the body
-carries `pr-body`'s human-action notice — a Tofu change awaiting its apply,
+carries `pr-body`'s human-action blocker — a Tofu change awaiting its apply,
 or any other action only a person can take before merge — the round at
 `Review the head` still runs to its end. The round's end is then a comment
 on the pull request, not a state change: it says the review cycle is
@@ -616,8 +616,8 @@ sequence stops, and the reason is stated in one line.
    leaves nothing to verify**, and this condition is satisfied with no pass
    owed — a clean review produces no verification record, so waiting for one
    waits forever.
-5. **The pull request waits on no human action.** `pr-body`'s human-action
-   notice marks a pull request whose Tofu changes must be applied, and the
+5. **The pull request waits on no human action.** The `Blockers` section's human-action
+   bullet marks a pull request whose Tofu changes must be applied, and the
    updated state committed, before it merges — a bar only a person clears,
    and unlike a pending check nothing will ever report it. `Ready for review`
    pauses on it; this condition is what the sequence returns to once the
@@ -691,7 +691,7 @@ when all of these hold on the current head:
   milestone, and the reads `review-cycle`'s `How to wait` prescribes are what
   distinguish them.
 - No review thread is unresolved, and the pull request waits on no human
-  action. The pause `Ready for review` takes on `pr-body`'s notice keeps the
+  action. The pause `Ready for review` takes on the `Blockers` section keeps the
   report unpublished with the pull request itself.
 
 Any one of them missing keeps the comment unpublished, and the sequence keeps
@@ -797,7 +797,7 @@ it to report, and wait on something other than an answer.
   behaviour, and that is the constitution's rule against guessing at intent:
   name the conflicting files and wait.
 - **A human action the pull request waits on**, at `Ready for review`. The
-  notice `pr-body` requires marks a Tofu change awaiting its apply — the
+  human-action blocker in `Blockers` marks a Tofu change awaiting its apply — the
   updated state committed — or any other bar only a person clears. The
   review round runs to its end first; its end is a comment that says so and
   names the action, the pull request stays a draft, and the sequence pauses

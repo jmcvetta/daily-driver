@@ -367,7 +367,7 @@ pull request.
 3. **No review thread is unresolved.** Use the thread read named by
    `review-cycle`'s reference for the active harness.
 4. **No human action is owed.** The pull request carries neither the `human`
-   label nor `pr-body`'s human-action notice.
+   label nor `pr-body`'s human-action blocker.
 
 A failed read produces one line in the task's muster-roll record and no merge.
 A later wake that finds the same state stays silent. A change in state earns
