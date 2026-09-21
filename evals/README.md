@@ -38,12 +38,19 @@ evals/
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
 
+## Provenance
+
+Every measured figure must cite a committed record under
+[`provenance/`](provenance/). A figure without that citation is an
+**unrecorded** anecdote: its run artifacts are no longer available for audit.
+
 ## Running them
 
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
 make evals-run        # the whole suite on Claude Code, both variants. Real money.
+make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
@@ -232,18 +239,12 @@ the id it returned.
 constitution's own test, described under "Checks" in the repository README. Its credential-free half is
 `scripts/check-constitution.py`.
 
-It asks two questions, not one. `reaches-subagent` asks whether the text
-arrives; the compliance rows ask whether it changes anything once it has. The
-second is what a delivery test cannot tell you, and until it existed every
-amendment to the constitution shipped on argument alone. See "The constitution
-suite" below for why that case is the one the file gets first.
-
 **The compliance rows differ in how much true material the model is holding,
 and that turns out to be the axis that matters.** `reply-is-concise` asks a
 question with one honest answer, so the model gives it: measured at 1.000 in
 every arm of every run, treated and bare alike, which means it separates
 nothing — not two versions of the rule, and not a session carrying the
-constitution from one without it.
+constitution from one without it. **Unrecorded.**
 `answer-selects-from-findings` first spends a turn filling the context with
 five true findings the model wrote itself, and only then asks for one of them.
 That is a selection problem rather than a compression one, and it is where the
@@ -252,23 +253,22 @@ proving the model's default, not the constitution — issue #279's comparison
 concluded nothing for exactly that reason, and this row is what came out of it.
 
 Its first probe run scored 0.40 bare against 0.80 treated, five replicates
-each, with the correctness floor at 1.000 in all ten. **That figure is
-indicative and has not been re-measured.** Reviewing the run showed the
-simulated interlocutor drifting off the question it was given: in one of the
-ten replicates it answered itself and ended the dialog, so the graders read the
-audit instead of the reply, and in three more an extra turn let it state the
-answer before the question arrived. The row's `simulation` block has
-since been narrowed — two turns instead of three, the model pinned, the
-`description` stripped of anything describing the rule — so the run that
-produced 0.40/0.80 was made under a configuration this repository no longer
-holds. The narrowing does not remove the drift: at two turns a self-answer
-lands on the graded turn instead of a spare one. Both graders now read the
-dialog and mark a replicate the drift spoiled. The mark does not remove it
-from anything: a spoiled replicate still scores 0.0 and still drags the mean
-until somebody drops it by hand. What it buys is that the reader can now tell
-which zeros those are. What the row establishes today is that it is not at
-ceiling; the number itself needs a fresh run before any amendment is tested
-against it.
+each, with the correctness floor at 1.000 in all ten. **Unrecorded; the run
+record is not committed.** Reviewing the run showed the simulated interlocutor
+drifting off the question it was given: in one of the ten replicates it answered
+itself and ended the dialog, so the graders read the audit instead of the reply,
+and in three more an extra turn let it state the answer before the question
+arrived. The row's `simulation` block has since been narrowed — two turns
+instead of three, the model pinned, the `description` stripped of anything
+describing the rule — so the run that produced 0.40/0.80 was made under a
+configuration this repository no longer holds. The narrowing does not remove
+the drift: at two turns a self-answer lands on the graded turn instead of a
+spare one. Both graders now read the dialog and mark a replicate the drift
+spoiled. The mark does not remove it from anything: a spoiled replicate still
+scores 0.0 and still drags the mean until somebody drops it by hand. What it
+buys is that the reader can now tell which zeros those are. What the row
+establishes today is that it is not at ceiling; the number itself needs a fresh
+run before any amendment is tested against it.
 
 `review-depth/` asks whether `review` sends the *right panel* at the right
 diff. Every case is anchored on something a person would notice if routing
@@ -502,9 +502,9 @@ number means moving it in both files, together.
 
 ### `answer-selects-from-findings`, the row that is not at ceiling
 
-`reply-is-concise` scores 1.000 in every arm of every run, bare arms included,
-so it separates nothing: a row at ceiling on both sides is measuring the
-model's default rather than the rule. This row is built to separate.
+`reply-is-concise` scores 1.000 in every arm of every run, bare arms included.
+**Unrecorded.** It separates nothing: a row at ceiling on both sides is
+measuring the model's default rather than the rule. This row is built to separate.
 Turn one asks for an audit of a five-file service, is meant to be long, and is
 not graded — it exists to fill the context with five true findings the model
 wrote itself. Turn two asks which of them breaks first under load, and it is
@@ -541,10 +541,10 @@ model rather than a field. Read the dialogs before trusting a mean.
 ### `completion-report-is-lean`, the row that grades a report
 
 `reply-is-concise` grades an *answer*. So does `answer-selects-from-findings`,
-the section above. Both ask a question with one honest factual answer, and issue #279's
-comparison across five probes of that shape measured a paired difference of
-exactly 0.000, three of them at ceiling in both arms. A probe both arms pass
-cannot show a rule working.
+the section above. Both ask a question with one honest factual answer, and issue
+#279's comparison across five probes of that shape measured a paired difference
+of exactly 0.000, three of them at ceiling in both arms. **Unrecorded.** A probe
+both arms pass cannot show a rule working.
 
 The verbosity people complain about arrives somewhere else: in the text an
 agent writes *after* doing work the user watched it do. This row grades that.
@@ -659,13 +659,12 @@ control, and both failures read exactly like a router that dispatched nothing.
 `llm_judge` and `agent_judge` are no help either: their tool-call summariser
 renders an `Agent` call as its `description`, a three-word label the model
 writes.
-
-**Measured, so the size of the risk is on the page rather than assumed.** Three
-live `review` dispatches (CLI 2.1.263, `coder_eval` 0.11.6, `claude-opus-5`,
-2026-09-07 — the three-agent panel over a 1,397-line diff) serialised to 1,437 /
-1,382 / 1,387 characters with `subagent_type` as the **first** key, comfortably
-inside the window: `review` hands its agents a summary and a file list, not the
-diff. So the truncation does not bite this skill today, and an earlier reading of
+**Measured, but unrecorded.** Three live `review` dispatches (CLI 2.1.263,
+`coder_eval` 0.11.6, `claude-opus-5`, 2026-09-07 — the three-agent panel over
+a 1,397-line diff) serialised to 1,437 / 1,382 / 1,387 characters with
+`subagent_type` as the **first** key, comfortably inside the window: `review`
+hands its agents a summary and a file list, not the diff. So the truncation
+does not bite this skill today, and an earlier reading of
 this section — that key order is fixed at `description, prompt, subagent_type`
 and the prompt therefore pushes the field past the window on *every* dispatch of
 consequence — was wrong.
