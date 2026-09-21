@@ -73,7 +73,7 @@ Review-cycle completion notice
 After a non-standalone round meets `SKILL.md`'s completion conditions and
 `Does it go again?` starts no new full review, read the current head with `mcp__github__pull_request_read`, method `get`, and
 conversation comments with the same tool, method `get_comments`. If no existing
-comment starts with `## 🎉 Review cycle complete! 🎉` and names that head, post
+comment starts with `## Review cycle complete! 🎉` and names that head, post
 the separate notice with `mcp__github__add_issue_comment`. Its body starts with
 that heading, gives a short factual completion status, and names the completed
 SHA. Re-read the head immediately before writing; a changed head does not
