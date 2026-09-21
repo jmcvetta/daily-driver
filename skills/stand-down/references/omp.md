@@ -22,6 +22,7 @@ The fleet
 | `Read the fleet` | Read the epic's muster rolls | `gh issue view <epic> --json comments` |
 | `Read the fleet` | Read a task issue's claim and handoff | `issue://<number>`, comments included |
 | `Read the fleet` | Read the live dispatch handles | `hub jobs` over the dispatch batch's job ids |
+| `Write the handoff` | Read a task's pull-request state | `pr://<number>` |
 | `Write the handoff` | Comment on a task issue or the epic | `gh issue comment <number> --body-file <path>` |
 | `Stop the fleet` | Cancel a subagent | `hub cancel`, `ids:` the dispatch job ids |
 | `Cancel the watches` | Cancel the backstop timer | `daily_driver_cancel_schedule`, by the trigger id the call returned |

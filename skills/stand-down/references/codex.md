@@ -29,6 +29,7 @@ The fleet
 | ---- | --------- | ---- |
 | `Read the fleet` | Read the epic's muster rolls | `gh issue view <epic> --json comments` |
 | `Read the fleet` | Read a task issue's claim and handoff | `gh issue view <number> --json comments` |
+| `Write the handoff` | Read a task's pull-request state | `gh pr view <number>` |
 | `Write the handoff` | Comment on a task issue or the epic | `gh issue comment <number> --body-file <path>` |
 | `Stop the fleet` | Cancel a delegation | `multi_agent_v1`, one attempt per implementor — unmeasured; a refusal is a residual |
 | `Cancel the watches` | — | no timer, no watcher, no subscription exists on this surface |
@@ -40,6 +41,8 @@ would mangle.
 The fallback's worktrees follow the repository's `task-worktree` convention
 and live beside the primary worktree; the handoff names the path, and the
 branch carries what was pushed. Nothing else of a delegation survives it.
+There is nothing to archive on this harness: a delegation is stopped and
+reported, not archived — the archive call is a web-session route.
 
 
 The watches

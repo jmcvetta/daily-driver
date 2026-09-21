@@ -43,10 +43,12 @@ The watches
 ===========
 
 The backstop is a `send_later` trigger held by the identifier its arming
-call returned — the one wake slot [`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md)
+call returned — the one wake slot [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md)
 records. `delete_trigger` takes that identifier; a trigger id the session
-no longer holds is read from the latest muster roll's watch list, where
-`Write the handoff` records it. Each pull-request subscription is dropped
+no longer holds is read from the epic's stand-down comment, where
+`Write the handoff` records the watch inventory — and a first stand-down
+has no earlier comment of that shape, so the id is then the one the wake
+slot holds. Each pull-request subscription is dropped
 by the same call that opened it, and where a PR Steward watches the pull
 request instead, the call still succeeds — dropping this session's
 subscription is the point, and the steward is unaffected.

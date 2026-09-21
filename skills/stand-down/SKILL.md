@@ -110,9 +110,13 @@ check the branch before assuming anything was lost. A local worktree
 survives the retirement and carries whatever was never pushed.
 ```
 
-**One stand-down comment on the epic**, shaped like a muster roll so
-`embark`'s latest-entry-wins read treats its rows as superseding the rolls
-before them:
+**One stand-down comment on the epic**, shaped like a muster roll with its
+rows marked retired. What the retired rows buy is honesty in the epic's
+latest record: a resumed `embark` reads that the named implementors no
+longer exist, instead of steering or re-reading sessions that are gone. The
+claims on the task issues still read at sea, so the resume converges
+through `Recover a session`, which reopens each quiet task on the branch
+its claim comment or pull request names:
 
 ```markdown
 ## Stand-down — <UTC timestamp>
@@ -128,8 +132,10 @@ This comment supersedes the muster rolls above it.
 Watches retired with this session: <timer ids>, <watcher names>,
 <subscriptions>.
 
-Each task issue carries its own handoff. Resume: run `/embark` — it
-re-reads the graph and re-dispatches on the same branches.
+Each task issue carries its own handoff. Resume: run `/embark` — it reads
+the muster rolls and this comment, watches the tasks still open, and
+recovers each quiet task by reopening on the branch its claim or pull
+request names.
 ```
 
 The epic's body is **not** edited. `epic`'s wave states are `in progress`
@@ -139,10 +145,12 @@ state. A wave left at sea still reads `in progress` in the body; what
 changed is on the epic's comments, which is where `Take the wave` reads
 at-sea status from.
 
-**Idempotent re-entry.** If the latest comment of this shape on the epic is
-already a stand-down, the handoff is written and this step goes straight to
-the stops — a stand-down interrupted by a session death is re-run, not
-duplicated.
+**Idempotent re-entry.** A stand-down interrupted by a session death is
+re-run, not duplicated, and the writes are idempotent one by one: a handoff
+comment already on a task issue is not posted twice, and a stand-down
+comment already on the epic is not posted again. `Write the handoff` writes
+only what is missing, and a record that is complete sends this step
+straight to the stops.
 
 2 — Stop the fleet
 ------------------
@@ -233,8 +241,11 @@ Non-goals
   where they stood; what lands is still a person's decision.
 - **Does not edit the epic's body.** No third wave state, no wave marked
   anything — the stand-down comment is the record.
-- **Does not re-dispatch.** The resume is `embark`'s `Recover a session`
-  path, reading the handoff each task issue now carries.
+- **Does not re-dispatch.** The resume is `embark`'s: a resumed watch finds
+  each task quiet and reaches `Recover a session`, which reopens on the
+  branch the claim comment or pull request names. The replacement session
+  reaches the handoff through `undertake`'s read of its issue's comments,
+  not through `Recover a session` itself.
 - **Does not message the fleet.** A correction or a wrap-up request is a
   wait for an answer, and the handoff is written from the record instead.
 - **Does not fire on a worked-out epic.** `Report the epic ready` ends an
