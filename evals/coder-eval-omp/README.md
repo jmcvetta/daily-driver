@@ -73,6 +73,17 @@ then `require_token_telemetry` defaults to false, which is the opposite of
 `coder_eval`'s OpenCode agent: a missing count here is a gap in this adapter,
 not proof of a broken turn.
 
+A first paid run did once observe answers to both, but its raw artifacts were
+not preserved, so nothing here cites them and the questions stand open.
+
+Settling them again needs one more thing first. Both sets are populated while
+turns run, and `coder_eval` snapshots `get_environment_info()` during setup —
+before the first turn — so neither ever reaches a run's `environment_info`, and
+the sentence above promises a recording the arm does not currently make. Any
+fix is a capture the harness reads *after* the run; note that an agent-side
+`get_sdk_options` override is not it, since `resolve_agent_settings` prefers
+`sdk_options` over `agent_config` and would blank the report's Agent Settings.
+
 ## What is tested, and what is not
 
 `rpc.py` imports nothing — not `coder_eval`, not `omp` — and
@@ -83,6 +94,16 @@ That is where the three things above live, and it is why they live there.
 binary, and CI here has neither. What it holds is process lifecycle and the
 event protocol, both copied from `coder_eval`'s OpenCode agent and from
 `scripts/check-omp-plugin.py`, which drives a real `omp --mode rpc` today.
+
+One part of that lifecycle carries its own acceptance test:
+`scripts/check-omp-agent-settle.py` (`make check-omp-agent-settle`) drives the
+real `communicate` against a fake `omp --mode rpc` and asserts the
+early-stop invariant the first live run violated — a replicate that
+early-stops on `skill_triggered` cannot final-score 0 on that same criterion,
+because the abort settle emitted the frames it had been swallowing. It needs
+the `coder-eval` install (`make evals-install`), so it is not a `make check`
+leg, and it needs no network, so it is cheap to run whenever `agent.py`
+changes.
 
 ## Installing it
 
