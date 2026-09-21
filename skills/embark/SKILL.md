@@ -8,20 +8,18 @@ description: >-
   session for each of these", or "how is the epic going", and on Claude's own
   move from a planned epic to opening a session per task — a web session on
   Claude Code, one harness-local subagent per task on Omp and Codex. Supplies
-  the wave it reads off the graph, the session or subagent it dispatches per
-  task — on the recorded model, or the cheaper implementation default where
-  web sessions are not the route — the muster roll it posts to the epic
-  instead of asking, the watch it keeps through the pull requests rather than
-  through the session client, and the backstop for a session that has gone
-  quiet. Not for breaking work into task issues, which is `epic`, taking one
-  task issue to a pull request, which is `undertake`, or a single issue.
+  the graph-derived wave, each task's implementor, the muster roll, the
+  pull-request watch, merge-ready landing, the epic close, and the
+  quiet-session backstop. Not for decomposing work, which is `epic`, taking
+  one task issue to a pull request, which is `undertake`, or a single issue.
 ---
 
 # Embark
 
-An epic in, a fleet of sessions out, and the epic reported ready to close when
-the last of them is home. `epic` decomposes the work and stops; this skill is
-what then works it, wave after wave, one session per task issue.
+An epic in, a fleet of sessions out, each merge-ready pull request landed,
+and the epic closed when the last task is home. `epic` decomposes the work and
+stops; this skill works it, wave after wave, unless the user keeps landing by
+hand.
 
 It is an orchestrator, in the same shape as `epic` and `undertake`: **it
 invokes, it does not restate**. The decomposition is `epic`'s, taking one task
@@ -31,9 +29,9 @@ is the constitution's. Where a step below names a rule one of those owns, it
 names it as a pointer and cites the owner — a rule that acquires a second home
 is one whose copy goes stale.
 
-What this skill owns is the dispatch and the watch: which tasks sail together,
-what is written down as they sail, and what is done about one that does not
-come back.
+What this skill owns is the dispatch, the watch, and the landing: which tasks
+sail together, what is written down as they sail, what is done about one that
+does not come back, and when the finished fleet closes its epic.
 
 **The routes are per harness, and they live beside this file.** Every call the
 steps below need is named in words here and resolved to a route there:
@@ -65,14 +63,16 @@ The sequence
 | 3 | `Open the sessions` | this skill, `undertake` |
 | 4 | `Post the muster roll` | this skill |
 | 5 | `Watch the wave` | this skill |
-| 6 | `Recover a session` | this skill |
-| 7 | `Report the epic ready` | this skill |
+| 6 | `Land the pull request` | this skill, `undertake`, `review-cycle` |
+| 7 | `Recover a session` | this skill |
+| 8 | `Close the epic` | this skill, `epic` |
 
 `Take the wave` is the loop point rather than `Read the epic`, and it is the
 router: a wave that comes in returns there, the epic is read again from GitHub
 because the graph moved while the fleet was out, and what it finds decides
-whether the next wave sails, the watch resumes, or the epic is reported.
-`Recover a session` is reached from `Watch the wave` and returns to it.
+whether the next wave sails, the watch resumes, or the epic closes.
+`Land the pull request` and `Recover a session` are reached from `Watch the
+wave`, and each returns there.
 
 0 — Read the epic
 -----------------
@@ -129,7 +129,8 @@ already claimed is two agents writing one branch.
 **The latest entry wins.** `Recover a session` posts a replacement entry when
 it retires a session, so a task named twice on the epic is read at its most
 recent one. The earlier entry names a session that is gone, and reading it is
-how a resumed watcher loses the live one.
+how a resumed watcher loses the live one. The latest roll also carries the
+landing mode, so a resumed watcher reads it rather than choosing again.
 
 **A claim from a session this skill did not open is worth a line to the user**,
 and is still not a reason to launch a second one. That collision is the thing
@@ -139,8 +140,8 @@ and is still not a reason to launch a second one. That collision is the thing
 This step is the router, and the wave that comes in at `Watch the wave` returns
 here to be routed again:
 
-- **No open task issue left at all.** The epic is worked out. Go to `Report the
-  epic ready`.
+- **No open task issue left at all.** The epic is worked out. Go to `Close the
+  epic`.
 - **Every task still open is at sea.** The fleet is out and this session has
   nothing to launch — which is exactly the state a watcher resumed after the
   last one died finds. Go to `Watch the wave`, over the tasks at sea.
@@ -235,12 +236,20 @@ one row per task:
 ```markdown
 ### Wave 2 — after #143 · in progress
 
+Landing: orchestrator
+
 | Task | Session | Model |
 | ---- | ------- | ----- |
 | #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `claude-sonnet-5` |
 | #147 — Document the format. | [session_01DeF…](https://claude.ai/code/session_01DeF…) | `claude-opus-5`, inherited |
 | #149 — Rotate the deploy key. | none — `human`, waiting on a person | — |
 ```
+
+**Landing is read once from the invocation and written into the roll.** The
+default is `Landing: orchestrator`. An explicit request such as "leave the
+merges to me" writes `Landing: by hand` instead. `judgement-call` does not
+fire: the user's words decide who lands the pull requests. Every later
+invocation reads the latest roll and keeps that mode.
 
 **A `human` task gets a row and no session.** It is in the wave's heading
 because a reader counting the epic's open work would otherwise have to go
@@ -297,12 +306,14 @@ So on every wake:
 
 - **Subscribe to each task's pull request** as it appears, once. Events then
   start a turn on their own.
+- **Send every task pull request through `Land the pull request`.** That step
+  reads the gate and returns here, whether it merges or waits.
 - **Read the epic's graph.** A task issue closes when the pull request that
   names it merges, and that is the test for a task being home — not the session
   status, which reports a session that has stopped, never a job that is done.
 - **The wave is in when every task issue in it is closed.** Mark the wave `done`
   in the epic's body, and go back to `Take the wave`, which routes what happens
-  next — the following wave, or `Report the epic ready`.
+  next — the following wave, or `Close the epic`.
 - **A task that is home has no session left to run, archived once.** When a
   task issue closes, archive the session that carried it: its branch is
   merged, so `undertake`'s `Keep it current` cadence has nothing left to
@@ -340,11 +351,12 @@ prompt written for the next check-in is read on arrival, while this file is
 not, and the wake it lands in — like every pull-request event beside it —
 arrives with harness guidance addressed to whoever opened the pull request.
 Under this skill that is never this session. So the prompt states what
-`Non-goals` states: each of the fleet's pull requests is its own task
-session's to drive, and a failing check, a review or a conflict on one is
-that session's work rather than this one's. A prompt naming only the wave's
-issue and pull request numbers leaves the posture to whatever is still in
-context, which on a cheaper orchestrator is nothing.
+`Non-goals` states: each pull request is its task session's to drive — a
+failing check, a review finding or a conflict is that session's work. Landing
+a merge-ready pull request, marking the wave, and closing the epic are this
+session's work. A prompt naming only the wave's issue and pull request numbers
+leaves the posture to whatever is still in context, which on a cheaper
+orchestrator is nothing.
 
 **Ten minutes, not two.** `undertake` checks in every two because its branch
 goes stale while it waits and the merge that fixes that is cheap. Nothing here
@@ -372,11 +384,48 @@ a pull request can be legitimately waiting on a person, and a large task can
 take two check-ins to reach its draft. Read the task's pull request and its
 session before acting, and act at `Recover a session`.
 
-**A pull request green, ready for review and unmerged is waiting on a person.**
-Say so once, and then let the check-ins run silently. Repeating it on every
-wake is a session shouting at somebody who has already been told.
+6 — Land the pull request
+-------------------------
 
-6 — Recover a session
+Reached from `Watch the wave` on every wake, once for every task pull request
+in the wave, and returns there.
+
+**The landing gate is a read, not a judgement.** It follows `undertake`'s
+`Ready is a gate, not a step`: take the reads in order, record the head SHA
+with the state read, and let the first condition that does not hold stop this
+pull request.
+
+1. **The pull request is not a draft.** `undertake` clears the draft at `Ready
+   for review`; this skill never does.
+2. **Its merge state is `clean`.** This is the value `undertake`'s `The
+   milestone` reads, and only `clean` is a yes here. `behind`, `dirty`,
+   `unstable`, and `unknown` belong to the task session or to a wait.
+   `blocked` after the draft is clear means a required approval only a person
+   can give; record that once on the epic in the task's muster-roll entry.
+3. **No review thread is unresolved.** Use the thread read named by
+   `review-cycle`'s reference for the active harness.
+4. **No human action is owed.** The pull request carries neither the `human`
+   label nor `pr-body`'s human-action notice.
+
+A failed read produces one line in the task's muster-roll record and no merge.
+A later wake that finds the same state stays silent. A change in state earns
+the reads again.
+The merge is conditional on the recorded head SHA. If the head moves after
+the read, the merge call fails closed and the next wake repeats the whole gate.
+
+
+When all four reads hold and the roll says `Landing: by hand`, report the
+merge-ready pull request once and return without merging. That is the whole
+opt-out.
+
+When all four reads hold and the roll says `Landing: orchestrator`, squash
+merge the recorded head in the same turn. The repository is squash-only and
+uses the pull request title as the squash subject, which is load-bearing for
+release-please. No summary comes first, no permission is sought, and no turn
+ends on an intention to merge later. This is a conditional direct merge call,
+not GitHub auto-merge.
+
+7 — Recover a session
 ---------------------
 
 Reached from `Watch the wave`, and it returns there.
@@ -417,18 +466,26 @@ Reached from `Watch the wave`, and it returns there.
   waits`. The question cannot be read from here, so it cannot be answered from
   here.
 
-7 — Report the epic ready
--------------------------
+8 — Close the epic
+------------------
 
-Reached from `Take the wave`, when no task issue of the epic is open any
-longer. One comment on the epic saying it is ready to be closed, and stop —
-the backstop is cancelled and every pull request subscription is dropped, so
-the check-ins end there.
+Reached from `Take the wave`, when no task issue of the epic is open.
 
-**The epic is not closed here.** `epic` states that no pull request closes an
-epic and that it is closed by hand against its own `Summary`, which is a test
-about the repository rather than about the tasks. This skill has merged nothing
-and is the wrong judge of it.
+Read every claim in the epic's `Summary` against the merged pull requests of
+its task issues. Each claim must be delivered by at least one of those pull
+requests. This is `epic`'s existing close test made mechanical: the task pull
+requests are the evidence, and no open task count stands in for it.
+
+When every claim is delivered and the roll says `Landing: orchestrator`,
+post one comment listing the pull requests that landed, then close the epic
+with `state_reason: completed`. When a claim is delivered by none of them,
+post one comment that names the missing claim and leave the epic open. That
+report-and-wait path is the only outcome here that asks a person for
+anything.
+
+When the roll says `Landing: by hand`, report that the epic is ready and leave
+it open. In every outcome, cancel the backstop and drop every pull-request
+subscription, so the check-ins end here.
 
 
 Waves launch without confirmation
@@ -452,7 +509,7 @@ touches the constitution's own gates.
 Where it stops and waits
 ========================
 
-Four, and two of them are reports rather than questions.
+Five, and three of them are reports rather than questions.
 
 - **An issue that is not an epic**, at `Read the epic`. A report: say which
   issue it is and which skill takes it — `undertake` for a task issue, `epic`
@@ -471,10 +528,14 @@ Four, and two of them are reports rather than questions.
   wave`. The graph wins, so the wave is not in doubt; the body is wrong, and
   fixing it is `epic`'s `Fill in the epic` rather than an edit made in passing
   here.
+- **A `Summary` claim that no merged task pull request delivers**, at `Close
+  the epic`. Name the claim, leave the epic open, cancel the watch, and wait
+  for a person to resolve the mismatch.
 
 Everything else runs through. No permission is asked to open a session, to
-comment on the epic, to subscribe to a pull request, or to launch the next
-wave.
+comment on the epic, to subscribe to a pull request, to launch the next wave,
+to merge a pull request whose landing gate holds, or to close an epic whose
+`Summary` is delivered.
 
 
 Non-goals
@@ -483,24 +544,26 @@ Non-goals
 - **Does not decompose.** The tasks, the edges and the waves are `epic`'s, and
   an epic whose plan is wrong is corrected there rather than worked around
   here.
-- **Does not implement, review, or answer a review.** Each task session does
-  its own, through `undertake` and the round that skill runs. The exception is
-  the strong-model review `Open the sessions` requires of a fallback
-  implementor's pull request: that round is the orchestrator's or the shared
-  advisor's to run, because the rule exists precisely so the implementor does
-  not review itself.
+- **Does not implement, drive, or answer a review.** Each task session does
+  its own work through `undertake` and the round that skill runs. It fixes a
+  failing check, answers a review finding, and resolves a conflict. The
+  exception is the strong-model review `Open the sessions` requires of a
+  fallback implementor's pull request: that round is the orchestrator's or
+  the shared advisor's to run, because the rule exists precisely so the
+  implementor does not review itself. Landing is narrower: a mechanical read
+  followed by one squash-merge call.
 - **Does not choose a model on the web route.** The task issue records one and
   this skill passes it on. Staying dumb is the point: the planner knew which
   task was a documentation edit, and this skill does not. In the fallback it
   applies the cheaper default `Open the sessions` states, and the bypass is
   the orchestrator's judgement to make.
-- **Does not manage the branches.** It does not serialise merges and it does not
-  resolve a conflict between two sibling branches. `undertake`'s `Keep it
-  current` does the first, and the session that owns the code does the second.
-- **Does not merge a pull request.** `undertake` does not either, for the same
-  reason: what lands is the one decision worth a person. A green, ready pull
-  request is reported, once.
-- **Does not close the epic.** It says the epic is ready and stops there.
+- **Does not manage sibling branches.** It does not serialise their merges and
+  it does not resolve a conflict between them. Landing one pull request moves
+  the base; each sibling's `undertake` session brings that base into its own
+  head through `Keep it current`.
+- **Does not close the epic in `Landing: by hand` mode.** It reports the epic
+  ready and stops there. The default `Landing: orchestrator` mode closes it
+  only after `Close the epic` reads every `Summary` claim as delivered.
 - **Does not fire on one issue, and takes nothing with it.** Undertaking a
   single task is the task session's own job, and running a fleet of one costs
   an epic, a muster roll and a watch to save nothing. The dispatch does not

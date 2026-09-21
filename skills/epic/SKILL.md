@@ -243,12 +243,12 @@ takes in.
 `Where it stops and waits`. It carries no code; the tasks named above are what
 a session takes.
 
-**No pull request closes the epic.** A pull request implements one task, and
-that task is the issue its body closes. Closing a sub-issue does not close its
-parent — GitHub has no such rule — so the epic is closed by hand, and the test
-is its own `Summary`: the epic closes when what that section describes is true
-of the repository, which is usually but not always the moment the last task
-merges.
+**No task pull request closes the epic.** A pull request implements one task,
+and that task is the issue its body closes. Closing a sub-issue does not close
+its parent — GitHub has no such rule. When the fleet runs through `embark`,
+its `Close the epic` step closes the epic against its own `Summary`. Without
+an embarked fleet, a person closes it against the same test. The close is
+usually, but not always, the moment the last task merges.
 
 
 The epic body
@@ -266,7 +266,7 @@ finished. Concise, and about the end state rather than the route to it — the
 tasks are listed under `Sequencing`, and repeating them here is a second list
 to keep current.
 
-It is also the test `Hand off` closes the epic against.
+It is also the test `embark`'s `Close the epic` step closes against.
 
 Justification
 -------------
@@ -368,8 +368,9 @@ Non-goals
 - **Does not keep a second copy of what the panel shows.** A wave heading
   carries its own state, because a wave is not something the sub-issue panel
   knows about. A checkbox beside each task is, and it rots.
-- **Does not close a task.** Merging its pull request does that. The epic is
-  closed by hand instead, against its `Summary` — see `Hand off`.
+- **Does not close a task.** Merging its pull request does that. `embark`
+  closes an embarked epic at `Close the epic`, against its `Summary`; without
+  a fleet, a person applies the same test.
 - **Does not sweep the issue list.** An epic is drafted for the work in hand.
   Reading through open issues looking for a set that could be grouped under one
   is `issue-deps`' manufacturing failure, one level up.
