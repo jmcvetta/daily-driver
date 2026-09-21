@@ -84,21 +84,30 @@ def git_is_dirty(root: Path) -> bool:
     return result.returncode != 0 or bool(result.stdout.strip())
 
 
-def experiment_models(experiment_path: Path) -> dict[str, str]:
-    """Read each variant's requested model from an experiment YAML file."""
+def experiment_config(experiment_path: Path) -> dict[str, Any]:
+    """Read and validate an experiment YAML document."""
     if yaml is None:
         raise RuntimeError("PyYAML is required to read experiment files")
     data = yaml.safe_load(experiment_path.read_text()) or {}
-    defaults = data.get("defaults", {}).get("agent", {}).get("model", "unknown")
+    if not isinstance(data, dict):
+        raise ValueError(f"{experiment_path} must contain an object")
+    return data
+
+
+def experiment_models(experiment: dict[str, Any]) -> dict[str, str]:
+    """Read each variant's requested model from an experiment document."""
+    defaults = experiment.get("defaults", {}).get("agent", {}).get("model", "unknown")
     models: dict[str, str] = {}
-    for variant in data.get("variants", []):
+    for variant in experiment.get("variants", []):
         agent = variant.get("agent", {})
         models[variant["variant_id"]] = agent.get("model", defaults)
     return models
 
 
-def run_model(run: dict[str, Any], variant_id: str) -> str:
-    """Return the served model for one variant without copying its request."""
+def run_model(run: dict[str, Any], variant_id: str, client_name: str) -> str:
+    """Return a served model without treating Omp's requested model as served."""
+    if client_name == "omp":
+        return "unknown"
     served = {
         row.get("model_used")
         for row in run.get("task_results", [])
@@ -123,20 +132,29 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
     """Build a committed provenance record from a coder_eval run directory."""
     run = json.loads((run_dir / "run.json").read_text())
     experiment = json.loads((run_dir / "experiment.json").read_text())
-    requested = experiment_models(experiment_path)
+    configured_experiment = experiment_config(experiment_path)
+    configured_variants = [variant["variant_id"] for variant in configured_experiment.get("variants", [])]
+    if configured_experiment.get("experiment_id") != experiment.get("experiment_id"):
+        raise ValueError("experiment file does not match run artifact experiment_id")
+    if configured_variants != experiment.get("variant_ids"):
+        raise ValueError("experiment file does not match run artifact variants")
+    requested = experiment_models(configured_experiment)
+    client_name = run.get("task_results", [{}])[0].get("agent_config", {}).get(
+        "type",
+        "unknown",
+    )
     variants = []
     for variant_id in experiment["variant_ids"]:
         variants.append(
             {
                 "variant_id": variant_id,
                 "model_requested": requested.get(variant_id, "unknown"),
-                "model_served": run_model(run, variant_id),
+                "model_served": run_model(run, variant_id, client_name),
                 "task_ids": run_task_ids(run, variant_id),
                 "per_replicate_scores": experiment["per_replicate_scores"].get(variant_id, {}),
             }
         )
 
-    client_name = run.get("task_results", [{}])[0].get("agent_type", "unknown")
     client_command = {
         "claude-code": "claude",
         "omp": "omp",
@@ -188,6 +206,9 @@ def validate_record(record: dict[str, Any]) -> list[str]:
         errors.append("host.kind must be laptop or cloud")
     if not isinstance(host, dict) or not host.get("hostname"):
         errors.append("host.hostname must be non-empty")
+    if isinstance(host, dict) and host.get("kind") == "cloud":
+        if not isinstance(host.get("session_id"), str) or not host["session_id"]:
+            errors.append("host.session_id must be non-empty for cloud runs")
     if not isinstance(record.get("variants"), list) or not record["variants"]:
         errors.append("variants must be non-empty")
     else:

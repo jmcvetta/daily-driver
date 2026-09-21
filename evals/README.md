@@ -50,6 +50,7 @@ Every measured figure must cite a committed record under
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
 make evals-run        # the whole suite on Claude Code, both variants. Real money.
+make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half

@@ -73,12 +73,20 @@ def main() -> int:
                     "end_time": "2026-09-21T10:02:00+00:00",
                     "framework_version": "0.11.6",
                     "task_results": [
-                        {"task_id": "one", "variant_id": "bare", "agent_type": "claude-code"},
-                        {"task_id": "one", "variant_id": "bare", "agent_type": "claude-code"},
+                        {
+                            "task_id": "one",
+                            "variant_id": "bare",
+                            "agent_config": {"type": "claude-code"},
+                        },
+                        {
+                            "task_id": "one",
+                            "variant_id": "bare",
+                            "agent_config": {"type": "claude-code"},
+                        },
                         {
                             "task_id": "one",
                             "variant_id": "with-plugin",
-                            "agent_type": "claude-code",
+                            "agent_config": {"type": "claude-code"},
                             "model_used": "served-model",
                         },
                     ],
@@ -104,6 +112,27 @@ def main() -> int:
         require(laptop["variants"][0]["model_served"] == "unknown", "missing served model was fabricated")
         require(laptop["variants"][1]["model_requested"] == "treated-model", "variant request was not recorded")
         require(laptop["variants"][0]["task_ids"] == ["one"], "task ids were not de-duplicated")
+        require(laptop["client"]["name"] == "claude-code", "client type was not read from agent_config")
+        run = json.loads((run_dir / "run.json").read_text())
+        for row in run["task_results"]:
+            row["agent_config"]["type"] = "omp"
+            row["model_used"] = "requested-model"
+        (run_dir / "run.json").write_text(json.dumps(run))
+        omp = json.loads(run_recorder(run_dir, experiment, temp / "omp", base_env).read_text())
+        require(omp["variants"][0]["model_served"] == "unknown", "Omp request was recorded as served")
+        wrong_experiment = temp / "wrong-experiment.yaml"
+        wrong_experiment.write_text(experiment.read_text().replace("experiment_id: synthetic", "experiment_id: wrong"))
+        result = subprocess.run(
+            [sys.executable, str(RECORDER), str(run_dir), "--experiment", str(wrong_experiment)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        require(
+            result.returncode != 0 and "experiment_id" in result.stderr,
+            "mismatched experiment file was accepted",
+        )
         cloud_env = {**base_env, "CLAUDE_CODE_SESSION_ID": "session-123"}
         cloud = json.loads(run_recorder(run_dir, experiment, temp / "cloud", cloud_env).read_text())
         require(cloud["host"]["kind"] == "cloud", "web session was not recorded as cloud")
@@ -123,6 +152,20 @@ def main() -> int:
             result.returncode != 0 and "coder_eval_version" in result.stdout,
             "record missing a required field was accepted",
         )
+        cloud["host"]["session_id"] = None
+        invalid.write_text(json.dumps(cloud))
+        result = subprocess.run(
+            [sys.executable, str(RECORDER), str(invalid), "--experiment", str(experiment), "--validate"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        require(
+            result.returncode != 0 and "host.session_id" in result.stdout,
+            "cloud record without a session id was accepted",
+        )
+        cloud["host"]["session_id"] = "session-123"
         cloud["host"]["kind"] = "desktop"
         invalid.write_text(json.dumps(cloud))
         result = subprocess.run(
