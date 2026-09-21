@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.34.0](https://github.com/jmcvetta/daily-driver/compare/v0.33.0...v0.34.0) (2026-09-21)
+
+
+### Features
+
+* **embark:** archive a task session once its issue closes ([#325](https://github.com/jmcvetta/daily-driver/issues/325)) ([2a8b039](https://github.com/jmcvetta/daily-driver/commit/2a8b0394e355fa706395d33ea929ded4dc4511f3))
+* **stand-down:** stand down an embarked fleet with a handoff record ([#329](https://github.com/jmcvetta/daily-driver/issues/329)) ([031fcdf](https://github.com/jmcvetta/daily-driver/commit/031fcdff7c6a68fe4efad2a8ba6036deb3f51833))
+
 ## [0.33.0](https://github.com/jmcvetta/daily-driver/compare/v0.32.0...v0.33.0) (2026-09-21)
 
 
