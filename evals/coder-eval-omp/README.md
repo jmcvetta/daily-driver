@@ -74,6 +74,11 @@ early-stopped and max-turn-exhausted replicates carry no token accounting
 and `require_token_telemetry` stays false for a measured reason, not an
 unsettled one.
 
+That run's raw artifacts were not preserved, so nothing here cites them. The
+shapes above are held instead by `scripts/check-omp-agent.py`, which asserts
+them against recorded frames — a test that fails loudly if the wire format
+moves, which a lost transcript could never do.
+
 One capture-timing note the run also settled: `coder_eval` merges an agent's
 `environment_info` into the result once, at agent start — before any turn
 has run — so these two fields would always be empty in `task.json`'s

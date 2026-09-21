@@ -10,13 +10,16 @@ install, and `make check` must not require that toolchain -- the same split
 THE INVARIANT
 
     A replicate that early-stops on `skill_triggered` cannot final-score 0 on
-    that same criterion. The 2026-09-16 run (`evals/runs/2026-09-16_19-29-28/`,
-    kept as invalid-instrument evidence for issue #206) violated it: the
-    watcher latched a pass on the in-flight `Skill` call, the turn aborted, the
-    tool's `tool_execution_end` frame landed during the abort settle -- and the
-    settle fed those frames to the reducer while emitting nothing, so the
-    frozen trajectory the final check scores held no command at all and every
-    positive row read 0 with the plugin provably loaded.
+    that same criterion. The first paid run violated it (2026-09-16, issue
+    #206): the watcher latched a pass on the in-flight `Skill` call, the turn
+    aborted, the tool's `tool_execution_end` frame landed during the abort
+    settle -- and the settle fed those frames to the reducer while emitting
+    nothing, so the frozen trajectory the final check scores held no command at
+    all and every positive row read 0 with the plugin provably loaded.
+
+    That run's raw artifacts were not preserved and cannot be cited. This
+    script is the standing evidence in their place: it reproduces the failure
+    against the pre-fix agent from a script, offline.
 
     Here a fake `omp --mode rpc` replays exactly that: a skill read whose end
     frame arrives only after the stop. The frozen record must carry the `Skill`
@@ -39,6 +42,7 @@ import stat
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "evals" / "coder-eval-omp" / "src"))

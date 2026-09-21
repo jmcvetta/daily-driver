@@ -114,9 +114,9 @@ jobs:
       #     import costs one stderr line and the session runs on without it.
       #   - `scripts/check-omp-plugin.py` — the check.
       #   - `evals/coder-eval-omp/**` — the eval arm. Its `agent.py` holds the
-      #     early-stop record handling whose defect silently zeroed the first
-      #     paid run (docs/notes/0018), and its reducer is the other half of
-      #     that arm's scoring.
+      #     early-stop record handling whose defect silently zeroed every
+      #     positive row of the first paid run (issue #206), and its reducer is
+      #     the other half of that arm's scoring.
       #   - `scripts/check-omp-agent-settle.py` — the arm's second check.
       #
       # `skills/**` is deliberately absent. An added or renamed skill is
@@ -208,7 +208,7 @@ jobs:
         run: make check-omp-plugin
 
       # The eval arm's early-stop invariant — the defect that silently zeroed
-      # the first paid run (docs/notes/0018) — has its own acceptance test,
+      # the first paid run (issue #206) — has its own acceptance test,
       # which needs the pinned `coder_eval` beside the adapter. `make
       # check-omp-agent-settle` builds that environment with `uv run --with`
       # (no install step, no cache to warm), and the fake binary it drives
