@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.35.0](https://github.com/jmcvetta/daily-driver/compare/v0.34.0...v0.35.0) (2026-09-21)
+
+
+### Features
+
+* **embark:** land ready pull requests and close epics ([#334](https://github.com/jmcvetta/daily-driver/issues/334)) ([148ac25](https://github.com/jmcvetta/daily-driver/commit/148ac2522cec16febd72345d37fc279859b8e5d3))
+* **model-classes:** use provider-neutral task classes ([#337](https://github.com/jmcvetta/daily-driver/issues/337)) ([d808e54](https://github.com/jmcvetta/daily-driver/commit/d808e547375aeb58a5dd4d4b686a2e2b1780fcb1))
+
 ## [0.34.0](https://github.com/jmcvetta/daily-driver/compare/v0.33.0...v0.34.0) (2026-09-21)
 
 
