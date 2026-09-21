@@ -10,7 +10,7 @@ description: >-
   sends work too big for the one issue it takes in, and it fires on an attempt
   to undertake an epic, which carries no code. Supplies the two gates that
   decide whether there is an epic at all, what a task issue is and the model
-  it records, the one stop where the plan is agreed before anything is
+  class it records, the one stop where the plan is agreed before anything is
   written, and the shape of the epic body — the sequencing and the waves
   neither the sub-issue panel nor the dependency graph renders. The graph
   writes are `issue-deps`'. Not for taking a task issue to a pull request,
@@ -128,22 +128,18 @@ edge means and what it must not be used to record.
 it to be true. What the epic body carries is the *reading* of it, under
 `The epic body` below.
 
-**Each task records the model that should undertake it.** Sizing a task is the
-moment it is known whether the work is a documentation edit or a schema
-migration, and that judgement is otherwise thrown away. What the record says
-and how it is written is `issue-body`'s — the execution-model rule, the
-`Model:` line's format, the missing-line fallback and the per-harness
-identifier routes — and `embark` parses the line that contract defines. This
-skill does not restate them.
+**Each task records its required model class.** Sizing is when the remaining
+implementation difficulty is known. `issue-body` owns the taxonomy, section
+format, readiness test, and routing guidance; `embark` resolves a concrete
+implementer later. This skill does not restate them.
 
 2 — Agree the plan
 ------------------
 
-The one stop. Put the plan in the reply — each task as a title, a line, and the
-model it suggests, each edge as what it waits on, the gates' answer from
-`Size the work`, and, where an existing issue is to become the epic, which
-issue that is and that its body is replaced — and write nothing until the user
-agrees.
+It clears `judgement-call`'s gate on scope. Each task entry states its required
+model class and short rationale, each edge states what it waits on, and the
+plan names any existing issue that becomes the epic. Nothing is written until
+the user agrees.
 
 It clears `judgement-call`'s gate on scope. A decomposition is a statement of
 scope: it says what the pieces are and what done means for each, and craft does
@@ -164,8 +160,8 @@ writes them and reports each one, and asks nothing a second time.
 a change described in a prompt has often been described in an issue already,
 and a second issue for it splits the trail in two.
 
-Each task's body follows `issue-body`'s contract and ends with its `Model`
-line, both settled at `Draft the plan`.
+Each task body follows `issue-body`'s contract, including its `Model class`
+section, settled at `Draft the plan`.
 
 Where an issue already describes the whole change, **that issue becomes the
 epic**. Do not open a second one beside it: rewrite its body the way a new
@@ -246,12 +242,12 @@ takes in.
 `Where it stops and waits`. It carries no code; the tasks named above are what
 a session takes.
 
-**No pull request closes the epic.** A pull request implements one task, and
-that task is the issue its body closes. Closing a sub-issue does not close its
-parent — GitHub has no such rule — so the epic is closed by hand, and the test
-is its own `Summary`: the epic closes when what that section describes is true
-of the repository, which is usually but not always the moment the last task
-merges.
+**No task pull request closes the epic.** A pull request implements one task,
+and that task is the issue its body closes. Closing a sub-issue does not close
+its parent — GitHub has no such rule. When the fleet runs through `embark`,
+its `Close the epic` step closes the epic against its own `Summary`. Without
+an embarked fleet, a person closes it against the same test. The close is
+usually, but not always, the moment the last task merges.
 
 
 The epic body
@@ -269,7 +265,7 @@ finished. Concise, and about the end state rather than the route to it — the
 tasks are listed under `Sequencing`, and repeating them here is a second list
 to keep current.
 
-It is also the test `Hand off` closes the epic against.
+It is also the test `embark`'s `Close the epic` step closes against.
 
 Justification
 -------------
@@ -371,8 +367,9 @@ Non-goals
 - **Does not keep a second copy of what the panel shows.** A wave heading
   carries its own state, because a wave is not something the sub-issue panel
   knows about. A checkbox beside each task is, and it rots.
-- **Does not close a task.** Merging its pull request does that. The epic is
-  closed by hand instead, against its `Summary` — see `Hand off`.
+- **Does not close a task.** Merging its pull request does that. `embark`
+  closes an embarked epic at `Close the epic`, against its `Summary`; without
+  a fleet, a person applies the same test.
 - **Does not sweep the issue list.** An epic is drafted for the work in hand.
   Reading through open issues looking for a set that could be grouped under one
   is `issue-deps`' manufacturing failure, one level up.

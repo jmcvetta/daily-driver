@@ -11,26 +11,34 @@ initial_prompt: >-
 
   ---
 
-  ## Outcome
-
   The sync job retries a failed upload instead of dropping the batch on the
   floor.
 
-  ## Scope
+  *Retries hold the line*
+  *Failures wait before retries*
+  *Batches reach the shore*
+
+  ## Summary
 
   Change `sync/uploads.py` only. Non-goal: no retry for auth failures — those
   re-authenticate once and fail loudly.
 
-  ## Design
+  ## Model class
+
+  `standard`
+
+  The design is settled and the existing retry path supplies the local pattern.
+
+  ## Detail
+
+  ### Design
 
   Three retries with fixed 5-second delay, in `upload_batch`.
 
-  ## Verification
+  ### Verification
 
   `tests/test_uploads.py::test_retry_on_timeout` covers the happy path; a
   retry test does not exist yet and is part of this task.
-
-  Model: claude-sonnet-5
 
   ---
 
@@ -82,14 +90,12 @@ success_criteria:
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
       The rule: the REPLY proposes an updated task body. The design section
-      must say exponential backoff; the outcome, the scope and its non-goal,
-      and the verification requirement must survive the update unchanged in
-      substance, and the body must still end with its `Model:` line. Valid
-      requirements dropped, reworded into different requirements, or
-      unspecified new sections invented are all preservation failures.
+      must say exponential backoff. The outcome, scope and non-goal, verification,
+      and valid `Model class` section must survive unchanged in substance.
+      Valid requirements dropped, reworded into different requirements, or a
+      trailing concrete `Model:` line are preservation failures.
 
-      Score 1.0 if only the design requirement changed and everything valid
-      is preserved. Score 0.5 if the design changed correctly but something
-      valid was reworded beyond substance while still present. Score 0.0 if
-      a valid requirement is gone, if the `Model:` line is gone, or if there
-      is no updated body.
+      Score 1.0 if only the design changes and all valid requirements survive.
+      Score 0.5 if the design changes correctly but a valid requirement is
+      reworded beyond substance. Score 0.0 if a valid requirement is gone, the
+      class section is gone, a concrete `Model:` remains, or there is no body.

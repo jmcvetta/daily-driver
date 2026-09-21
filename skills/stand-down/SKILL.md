@@ -67,13 +67,14 @@ The record decides what is at sea, never a session status.
 
 Read the epic's comments — **all the muster rolls, not only the latest** —
 and every task issue a roll names, read at its claim comments and any
-handoff a previous stand-down left. A task is at sea when the latest entry
-for it names a live implementor; a row already marked retired, and an
-implementor the harness reports as finished or failed, are not the fleet.
-On the harness-local fallback, the dispatch handles the orchestrator holds
-are the second half of the read — but the GitHub record is what outlives
-them, and a stand-down asked of a cold session, its dispatch handles gone,
-works from the record alone.
+handoff a previous stand-down left. Read the landing mode from the latest
+record that carries it. A task is at sea when the latest entry for it names
+a live implementor; a row already marked retired, and an implementor the
+harness reports as finished or failed, are not the fleet. On the
+harness-local fallback, the dispatch handles the orchestrator holds are the
+second half of the read — but the GitHub record is what outlives them, and a
+stand-down asked of a cold session, its dispatch handles gone, works from the
+record alone.
 
 The reads run in one parallel batch. No full comment histories are paged:
 the rolls and the claims carry what this step needs.
@@ -125,6 +126,8 @@ The watch was ended at the user's instruction. Every implementor below was
 retired; a row marked retired names an implementor that no longer exists.
 This comment supersedes the muster rolls above it.
 
+Landing: <orchestrator|by hand>
+
 | Task | Implementor | State at the stop |
 | ---- | ----------- | ----------------- |
 | #144 — Validate against the schema. | `session_01AbC…` — retired | branch `…`, PR #… open, unmerged |
@@ -137,6 +140,10 @@ the muster rolls and this comment, watches the tasks still open, and
 recovers each quiet task by reopening on the branch its claim or pull
 request names.
 ```
+
+The landing mode is copied unchanged from the latest record into this
+superseding comment. A resumed `embark` therefore reads the same opt-out or
+default after every earlier muster roll has been superseded.
 
 The epic's body is **not** edited. `epic`'s wave states are `in progress`
 and `done` and nothing else — a third state invented here is one `epic`'s
@@ -230,15 +237,15 @@ reports instead:
   residual twice.
 
 The one wait this skill never takes is the one `embark`'s own ends take:
-`Report the epic ready` is `embark`'s, and a stand-down is not asked for
-when the last wave comes in.
+`Close the epic` is `embark`'s, and a stand-down is not asked for when the
+last wave comes in.
 
 
 Non-goals
 =========
 
 - **Does not merge, review, or close anything.** The pull requests stand
-  where they stood; what lands is still a person's decision.
+  where they stood; a resumed `embark` applies its recorded landing mode.
 - **Does not edit the epic's body.** No third wave state, no wave marked
   anything — the stand-down comment is the record.
 - **Does not re-dispatch.** The resume is `embark`'s: a resumed watch finds
@@ -248,8 +255,8 @@ Non-goals
   not through `Recover a session` itself.
 - **Does not message the fleet.** A correction or a wrap-up request is a
   wait for an answer, and the handoff is written from the record instead.
-- **Does not fire on a worked-out epic.** `Report the epic ready` ends an
-  embark that succeeded; this skill ends one that was interrupted.
+- **Does not fire on a worked-out epic.** `Close the epic` ends an embark that
+  succeeded; this skill ends one that was interrupted.
 - **Does not fire on a single issue.** One `undertake` has no fleet; the
   session holding it can simply stop, and its claim comment is already the
   record.

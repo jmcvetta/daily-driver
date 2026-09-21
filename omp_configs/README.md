@@ -63,3 +63,13 @@ omp models find mercury-2.5
 Catalog entries do not guarantee that a provider still serves a model. An inference request can fail even when `omp models find` lists it.
 
 The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. The `openai-codex` models use Omp's configured OpenAI Codex credentials.
+
+## Capability classes
+
+These overlays select concrete model roles. They do not prove that a role or
+model satisfies a task capability class. Task issues record `mechanical`,
+`standard`, or `advanced` through
+[`issue-body`'s shared guidance](../skills/issue-body/references/model-classes.md);
+dispatch inspects the effective agent configuration and actual route before
+selecting a compatible implementer. Keep concrete selectors in these YAML
+files unchanged.

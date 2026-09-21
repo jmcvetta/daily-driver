@@ -167,6 +167,15 @@ Where `Implement` reaches that conclusion, say so and stop: the answer goes
 on the issue, `epic` writes the issues where there are issues to write, and
 this sequence does not open a pull request with nothing in it.
 
+**A `task` also carries a required model class.** Validate its one
+`## Model class` section and rationale through `issue-body` before the claim.
+For an old or invalid body, assess the grounded handoff, update only that issue
+to the current contract, and then assess the current implementation session
+against the class guidance. A suitable stronger session implements directly;
+an unsuitable or unassessable session reports the configuration mismatch before
+any repository change. Concrete `Model:` lines in claim provenance remain
+actual-model records, not task metadata.
+
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
 issue in passing too; what is special here is that nothing unlabelled gets

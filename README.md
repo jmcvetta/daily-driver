@@ -28,7 +28,7 @@ seventeen skills:
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
 | `issue-labels` | Six mutually exclusive issue kinds — `epic`, `task`, `bug`, `proposal`, `research`, `human` — decide readiness. `story` marks a confirmed direct child of an epic without changing its kind. |
 | `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
-| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a `Model:` line for `task`; every other label's edit runs under existing rules and acquires nothing. |
+| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a provider-neutral `Model class` section for `task`; every other label's edit runs under existing rules and acquires nothing. |
 | `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |
 | `readme` | Writes a README that answers what this is and how to use it, and nothing else: the shape, the reading of length as a symptom, and the list of what belongs in a commit message, a changelog or `docs/` instead. |
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |
@@ -36,7 +36,7 @@ seventeen skills:
 | `undertake` | Takes a piece of work from its description to a pull request ready for review, opening the issue first where there is none, posting a first-readiness report — elapsed time from the claim, and the model, harness and session provenance — the first time the pull request is genuinely merge-ready, and keeping the branch current with its base after. |
 | `task-worktree` | Gives every repository-changing task a feature branch and sibling worktree before task research, then keeps all task operations rooted there without changing the primary worktree. |
 | `epic` | Breaks work too big for one pull request into task issues under an epic: the two gates that decide there is one, the plan agreed before anything is written, and the waves the sub-issue panel cannot render. |
-| `embark` | Works an epic: one session per task issue in the current wave — or, where the harness cannot open web sessions, one harness-local subagent per task — the muster roll posted to the epic in place of a confirmation, and the watch kept through the pull requests rather than the session client. |
+| `embark` | Works an epic: one session per task issue in the current wave — or one harness-local subagent per task where web sessions are unavailable — the muster roll in place of confirmation, a pull-request watch, the squash merge of each merge-ready task, and the close of the finished epic. |
 | `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
 
 A skill fires on its slash command where it has one, on natural phrasings of
