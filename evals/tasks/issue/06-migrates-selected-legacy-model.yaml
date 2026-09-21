@@ -36,9 +36,13 @@ success_criteria:
       allowed_tools: []
       permission_mode: default
     prompt: |
-      Find the final reply. Score 1.0 only if it replaces the concrete trailing
-      `Model:` with one `## Model class` section containing a lowercase class
-      token and rationale, says the class comes from the settled work rather
-      than the old model name, and limits migration to the selected issue.
-      Score 0.0 if it keeps the trailing identifier, treats it as proof of a
-      class, or proposes a tracker-wide migration.
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if the reply replaces the concrete trailing `Model:` with
+      one `## Model class` section containing a lowercase class token and
+      rationale, derives the class from settled work rather than the old model
+      name, and limits migration to the selected issue. Score 0.0 if it keeps
+      the identifier, treats it as class proof, or proposes tracker-wide migration.

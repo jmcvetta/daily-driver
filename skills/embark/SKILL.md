@@ -445,11 +445,11 @@ Non-goals
   implementor's pull request: that round is the orchestrator's or the shared
   advisor's to run, because the rule exists precisely so the implementor does
   not review itself.
-- **Does not choose a model on the web route.** The task issue records one and
-  this skill passes it on. Staying dumb is the point: the planner knew which
-  task was a documentation edit, and this skill does not. In the fallback it
-  applies the cheaper default `Open the sessions` states, and the bypass is
-  the orchestrator's judgement to make.
+- **Does not lower a task's required class.** It resolves that class through
+  the eligible harness routes and chooses the lowest expected reliable cost.
+  A missing eligible route is reported for that task; it is never replaced by
+  unchecked inheritance, a concrete identifier copied from the body, or a
+  shared-role change.
 - **Does not manage the branches.** It does not serialise merges and it does not
   resolve a conflict between two sibling branches. `undertake`'s `Keep it
   current` does the first, and the session that owns the code does the second.

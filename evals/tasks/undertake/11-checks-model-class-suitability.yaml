@@ -36,9 +36,13 @@ success_criteria:
       allowed_tools: []
       permission_mode: default
     prompt: |
-      Find the final reply. Score 1.0 only if it says the advanced session may
-      undertake the standard task directly after validating the class metadata,
-      without opening a cheaper implementer, and says an unassessable session
-      reports a configuration mismatch before claim or repository changes.
-      Score 0.0 if it delegates solely to cut cost or starts work before the
-      suitability check.
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if it says the advanced session may undertake the standard
+      task directly after validating class metadata, without opening a cheaper
+      implementer, and says an unassessable session reports a configuration
+      mismatch before claim or repository changes. Score 0.0 if it delegates
+      solely to cut cost or starts before the suitability check.

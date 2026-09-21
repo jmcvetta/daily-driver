@@ -30,9 +30,13 @@ success_criteria:
     include_reference: false
     weight: 2
     prompt: |
-      Find the final reply. Score 1.0 only if it gives the documented rename
-      `mechanical` with a short rationale, identifies the concurrent lease task
-      as missing its invariant instead of ready merely because it could be
-      `advanced`, and says the missing design must be settled before authoring.
-      Score 0.0 if it treats large or difficult work as automatically advanced
-      or uses a stronger model to bypass the missing specification.
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if it gives the documented rename `mechanical` with a
+      short rationale, identifies the concurrent lease task as missing its
+      invariant instead of ready merely because it could be `advanced`, and
+      says the missing design must be settled before authoring. Score 0.0 if it
+      treats difficulty as automatically advanced or uses strength to bypass it.
