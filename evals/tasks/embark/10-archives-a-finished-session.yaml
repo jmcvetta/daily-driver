@@ -10,18 +10,18 @@
 # what the agent says it will do, so the graded assertion is a judge on the
 # reply, plus the skill having fired at all.
 
-task_id: embark-08-archives-a-finished-session
+task_id: embark-10-archives-a-finished-session
 description: >-
-  A task whose pull request merged and issue closed has its session
-  archived; a task whose pull request is only green and waiting on a
+  In by-hand mode, a task whose pull request merged and issue closed has its
+  session archived; a task whose pull request is only green and waiting on a
   reviewer keeps its session running.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Epic #210 is at sea. Its wave is #211 and #212. #211's pull request has
-  merged and its task issue is closed. #212's pull request is green, ready
-  for review, and still waiting on its reviewer — its task issue is open.
-  Check on the wave.
+  Epic #210 is at sea, and its latest muster roll says `Landing: by hand`.
+  Its wave is #211 and #212. #211's pull request has merged and its task issue
+  is closed. #212's pull request is green, ready for review, and still waiting
+  on its reviewer — its task issue is open. Check on the wave.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
