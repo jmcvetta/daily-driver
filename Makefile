@@ -14,8 +14,8 @@ SHELL := /bin/bash
 	check-review-cycle-fix-delta-route \
 	check-omp-agent check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
-	check-evals-preflight check-labels check-infra evals-install evals-plan \
-	evals-variants evals-preflight evals-run evals-run-omp \
+	check-evals-preflight check-evals-provenance check-labels check-infra evals-install evals-plan \
+	evals-variants evals-preflight evals-record evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex mcp-usage
 
@@ -94,7 +94,8 @@ check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route check-omp-agent \
 	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
-	check-eval-arms check-step-names check-evals-preflight check-labels
+	check-eval-arms check-step-names check-evals-preflight \
+	check-evals-provenance check-labels
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -306,6 +307,11 @@ check-step-names:
 check-evals-preflight:
 	uv run --frozen python3 scripts/check-evals-preflight.py
 
+# check-evals-provenance: validate committed records and exercise the recorder
+# against synthetic run artifacts. It never starts a model or reads a paid run.
+check-evals-provenance:
+	uv run --frozen python3 scripts/check-evals-provenance.py
+
 # check-labels: the issue-label standard is written twice -- the table in
 # `issue-labels` and the resources in infra/github/labels.tf -- and this leg
 # asserts the two say the same thing. Part of `check` because it needs nothing
@@ -387,6 +393,14 @@ TASKS ?= tasks/*/*.yaml
 evals-preflight:
 	cd evals && uv run --project $(CURDIR) --frozen python3 ../scripts/evals-preflight.py $(TASKS)
 
+# evals-record: commit provenance for an existing run. `runs/latest` is the
+# stable coder_eval pointer; pass RUN= for an older run directory.
+RUN ?= evals/runs/latest
+EXPERIMENT ?= evals/experiments/with-without.yaml
+evals-record:
+	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
+		--experiment "$(EXPERIMENT)" --output evals/provenance
+
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and
 # `make check-eval-arms` is what keeps the three sets in step.
@@ -398,6 +412,7 @@ evals-preflight:
 evals-run: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/with-without.yaml \
 		--exclude-tags omp-only,codex-only,skip:claude $(TASKS)
+	$(MAKE) evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml
 
 # evals-run-omp: run every recorded Omp model. Each named target keeps one
 # model's two-arm result separate, so reports compare the plugin against the
@@ -411,14 +426,17 @@ evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro evals-run-omp
 evals-run-omp-glm-5-3: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
+	$(MAKE) evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3.yaml
 
 evals-run-omp-deepseek-v4-pro: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-deepseek-v4-pro.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
+	$(MAKE) evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-deepseek-v4-pro.yaml
 
 evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-gpt-5.6-sol.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
+	$(MAKE) evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-5.6-sol.yaml
 
 # evals-run-codex: the same suites on Codex. Needs the Codex SDK, which
 # `evals-install` brings in with `coder-eval-codex`, and OpenAI credentials the
@@ -432,6 +450,7 @@ evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 evals-run-codex: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/codex.yaml \
 		--exclude-tags claude-only,omp-only,skip:codex $(TASKS)
+	$(MAKE) evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/codex.yaml
 
 # mcp-usage: which GitHub MCP tools were actually called, rolled up to the
 # toolsets that supply them. Laptop-only like git_sync — it reads Claude
