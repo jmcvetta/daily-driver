@@ -374,6 +374,32 @@ the wall was reached. Record reviewer token usage where the harness exposes it;
 otherwise record `unavailable`, never an estimate or a telemetry service.
 
 
+Review-cycle completion notice
+------------------------------
+
+**Post a separate top-level PR conversation comment only when a non-standalone
+round is complete.** Keep the normal submitted `COMMENT` review and every
+`Review verification` record unchanged. The notice starts with
+`## 🎉 Review cycle complete! 🎉`, states that the round completed, and names
+the completed head SHA.
+
+Completion requires green CI for that head, every finding's required
+disposition and resolved thread, and a clean required independent verification
+pass. A clean full review with no fixes needs no invented delta pass. Pending,
+failed, or unregistered CI; outstanding findings; incomplete or unavailable
+verification; and the non-convergence wall do not qualify.
+
+Before publication, re-read the pull request head and conversation comments.
+The head must still be the one the notice names. Do not post another notice
+whose heading and SHA already identify that completed head; a later completed
+round at a different head may receive one. If publication fails, report that
+failure and do not claim success.
+
+This notice reports the review cycle, not merge readiness. It never approves,
+merges, changes draft state, or replaces `undertake`'s first-readiness report.
+A standalone review ends at `Review the head` and never posts it. The
+harness reference names the read and publication route.
+
 4 — Does it go again?
 =====================
 
