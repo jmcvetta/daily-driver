@@ -15,3 +15,16 @@ reasoning-effort setting.
 Improve the task specification before raising its class. A stronger model does
 not make an underspecified task ready.
 
+## Selection
+
+At dispatch, filter candidates for the required class, tools, context,
+modalities, and current availability. Prefer the lowest expected reliable cost,
+including known rework and quota costs. Unknown or incomparable prices use the
+operator's configured eligible preference; do not call missing or zero catalog
+cost free. A stronger eligible model may run lower-class work. If no eligible
+route exists, stop only that task and report the configuration gap.
+
+Record the requested class separately from the selected route and actual model.
+Use `unreported` when the harness does not report actual execution identity;
+report visible runtime fallback mismatches and reassess before continuing.
+

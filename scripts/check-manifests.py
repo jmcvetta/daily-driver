@@ -127,9 +127,12 @@ ROUTES = {
 # model. `Claude Code` remains valid because it names a harness, not its active
 # agent. Harness-specific reference files are the boundary for those facts.
 MODEL_IDENTITIES = {
-    "Claude identity": re.compile(r"\bClaude\b(?!\s+Code\b)"),
-    "provider identity": re.compile(r"\b(?:Anthropic|OpenAI)\b"),
-    "concrete model": re.compile(r"\b(?:GPT|GLM)-\d|(?:\bDeepSeek(?:\s+V\d+)?)"),
+    "model identity": re.compile(
+        r"\b(?:claude\b(?!\s+code\b|\.md\b)|gpt|glm|deepseek|kimi|qwen|"
+        r"mercury|minimax|mimo)\b(?:[- .]?[a-z0-9.]+)?",
+        re.IGNORECASE,
+    ),
+    "provider identity": re.compile(r"\b(?:Anthropic|OpenAI)\b", re.IGNORECASE),
 }
 
 HARNESS_REFERENCES = frozenset({"claude.md", "omp.md", "codex.md"})

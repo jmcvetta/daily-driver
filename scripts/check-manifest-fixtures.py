@@ -238,12 +238,18 @@ def main() -> int:
                 "# Fixture\n\n"
                 "Read [`references/model-classes.md`](references/model-classes.md).\n"
             ),
-            references={"model-classes.md": "DeepSeek V4 is a concrete model.\n"},
+            references={
+                "model-classes.md": (
+                    "gpt-5.6-sol is a concrete model.\n"
+                    "Kimi K3 is another concrete model.\n"
+                )
+            },
         )
         found = guard.shared_guidance_errors([skill], root=root)
         require(
-            len(found) == 2
-            and "references/model-classes.md:1" in found[1],
+            len(found) == 3
+            and "gpt-5.6" in found[1]
+            and "Kimi K3" in found[2],
             f"case 4 (shared reference): expected rule and reference errors, got {found}",
         )
 
