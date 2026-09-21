@@ -391,7 +391,7 @@ Review-cycle completion notice
 **Post a separate top-level PR conversation comment only when a non-standalone
 round is complete.** Keep the normal submitted `COMMENT` review and every
 `Review verification` record unchanged. The notice starts with
-`## 🎉 Review cycle complete! 🎉`, states that the round completed, and names
+`## Review cycle complete! 🎉`, states that the round completed, and names
 the completed head SHA.
 
 Completion requires green CI for that head, every finding's required

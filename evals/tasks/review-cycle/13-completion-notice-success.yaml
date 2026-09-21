@@ -38,10 +38,12 @@ success_criteria:
     prompt: |
       Find the reply after the last `[RESULT - …]` tag. Score 1.0 only when it
       keeps the submitted COMMENT review and Review verification record intact,
-      posts a separate top-level PR conversation comment with a prominent
-      completion heading, factual completion status, and head `bbb222` for both
-      a clean no-fix round and a round with a required clear delta pass, and
-      states that this does not approve, merge, or change draft state. Score 0.0
-      if it invents a delta pass for the no-fix case, appends the notice to a
-      normal review result, treats it as merge readiness, or changes the PR
-      state. Otherwise score 0.5.
+      posts a separate top-level PR conversation comment starting exactly with
+      `## Review cycle complete! 🎉`, never uses the old
+      `## 🎉 Review cycle complete! 🎉` heading, includes factual completion
+      status and head `bbb222` for both a clean no-fix round and a round with a
+      required clear delta pass, and states that this does not approve, merge,
+      or change draft state. Score 0.0 if it uses the old mirrored heading,
+      omits the restrained heading, invents a delta pass for the no-fix case,
+      appends the notice to a normal review result, treats it as merge
+      readiness, or changes the PR state. Otherwise score 0.5.
