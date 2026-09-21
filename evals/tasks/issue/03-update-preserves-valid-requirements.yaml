@@ -15,7 +15,7 @@ initial_prompt: >-
   floor.
 
   *Retries hold the line*
-  *Failures wait before returning*
+  *Failures wait before retries*
   *Batches reach the shore*
 
   ## Summary
