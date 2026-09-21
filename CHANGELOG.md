@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.36.0](https://github.com/jmcvetta/daily-driver/compare/v0.35.0...v0.36.0) (2026-09-21)
+
+
+### Features
+
+* **review-cycle:** announce completed review cycles ([#341](https://github.com/jmcvetta/daily-driver/issues/341)) ([135c220](https://github.com/jmcvetta/daily-driver/commit/135c22081f9305b3d36546c7f7348b16b3f7d243))
+
 ## [0.35.0](https://github.com/jmcvetta/daily-driver/compare/v0.34.0...v0.35.0) (2026-09-21)
 
 
