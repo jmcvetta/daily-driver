@@ -123,6 +123,17 @@ ROUTES = {
     "pr_create op": re.compile(r"\bpr_create\b"),
 }
 
+# Shared model-consumed guidance must not identify a provider or a concrete
+# model. `Claude Code` remains valid because it names a harness, not its active
+# agent. Harness-specific reference files are the boundary for those facts.
+MODEL_IDENTITIES = {
+    "Claude identity": re.compile(r"\bClaude\b(?!\s+Code\b)"),
+    "provider identity": re.compile(r"\b(?:Anthropic|OpenAI)\b"),
+    "concrete model": re.compile(r"\b(?:GPT|GLM)-\d|(?:\bDeepSeek(?:\s+V\d+)?)"),
+}
+
+HARNESS_REFERENCES = frozenset({"claude.md", "omp.md", "codex.md"})
+
 # What Codex's prompt renderer keeps of a `description`. Beyond this the
 # description is cut mid-word and `...` is appended, so the tail triggers
 # nothing on that harness -- and the cut lands in the middle of the sentences
@@ -335,6 +346,63 @@ def route_errors(
     return errors
 
 
+def model_identity_errors(
+    where: str, lines: list[str], place: str, offset: int = 0
+) -> list[str]:
+    """Every concrete model identity named in shared guidance."""
+    errors: list[str] = []
+    for lineno, line in enumerate(lines, start=offset or 1):
+        for name, pattern in MODEL_IDENTITIES.items():
+            match = pattern.search(line)
+            if match:
+                at = f"{where}:{lineno}" if offset else where
+                errors.append(
+                    f"{at}: names {name} ({match.group(0)}) in {place}; "
+                    "keep model identity in a harness-specific reference or "
+                    "runtime configuration"
+                )
+    return errors
+
+
+def shared_guidance_errors(skills: list[Path], root: Path = ROOT) -> list[str]:
+    """Every model identity leaked into shared model-consumed guidance."""
+    errors: list[str] = []
+    for rule in sorted((root / "rules").glob("*.md")):
+        errors.extend(
+            model_identity_errors(
+                str(rule.relative_to(root)),
+                rule.read_text(encoding="utf-8").splitlines(),
+                "a shared rule",
+                1,
+            )
+        )
+    for skill in skills:
+        where = str(skill.relative_to(root))
+        fields = frontmatter(skill)
+        if fields is not None:
+            errors.extend(
+                model_identity_errors(
+                    where, [fields.get("description", "")], "the description"
+                )
+            )
+        body, offset = body_of(skill)
+        errors.extend(
+            model_identity_errors(where, body.splitlines(), "the body", offset)
+        )
+        for reference in sorted((skill.parent / "references").glob("*.md")):
+            if reference.name in HARNESS_REFERENCES:
+                continue
+            errors.extend(
+                model_identity_errors(
+                    str(reference.relative_to(root)),
+                    reference.read_text(encoding="utf-8").splitlines(),
+                    "a shared reference",
+                    1,
+                )
+            )
+    return errors
+
+
 def reference_errors(skills: list[Path], root: Path = ROOT) -> list[str]:
     """The four things `0011`'s reference-file split needs to stay true.
 
@@ -514,6 +582,7 @@ def main() -> int:
                 claimed[name] = agent
 
     errors.extend(reference_errors(skills))
+    errors.extend(shared_guidance_errors(skills))
     errors.extend(stanza_errors())
 
     for error in errors:

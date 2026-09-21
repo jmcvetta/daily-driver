@@ -4,8 +4,8 @@ description: >-
   This skill should be used whenever a GitHub issue, or a task this skill is
   explicitly invoked on, is being taken from its description to a pull request
   ready for review — "/undertake", "undertake #34", "undertake adding a retry
-  loop", "implement #191" — and on Claude's own move from reading an issue to
-  writing code for it. It covers keeping that pull request current after it
+  loop", "implement #191" — and on the agent's own move from reading an issue
+  to writing code for it. It covers keeping that pull request current after it
   goes ready too: "the PR is behind master", "bring the branch up to date".
   Two things fire it: an issue handed over to be worked on, or an explicit
   invocation. An invocation carrying no issue opens one itself, but one of the
@@ -129,11 +129,9 @@ before reading the body. A web session otherwise takes its name from the first
 prompt it received, which is the prompt that invoked this skill.
 `session-title` has the form and the budget.
 
-`session-title` stops where its surfaces do not exist — on a laptop without
-the Claude Code Remote tools, and outside it on no Omp runtime — and on the
-tools alone there is no title to set. That stop is the step's, not the
-sequence's: say so in a
-line and go on to `Read the issue and its edges`.
+`session-title` stops where its applicable reference names no title surface.
+That stop is the step's, not the sequence's: say so in a line and go on to
+`Read the issue and its edges`.
 
 2 — Read the issue and its edges
 --------------------------------
@@ -251,10 +249,10 @@ Beyond the claim itself the comment always carries:
   both.
 - **The session**, as `session: <id>` where the id is reachable by any means
   the harness offers, and `session: n/a` where it is not. The identifier is
-  what the reader needs; on Claude Code the link form is that identifier and
-  somewhere to go with it, and the reference file has its form. A missing id
-  is recorded as `n/a`, never narrated: a claim that explains why it has no
-  session publishes a diagnostic instead of a record.
+  what the reader needs; where the harness provides a session link, the
+  reference file gives its form. A missing id is recorded as `n/a`, never
+  narrated: a claim that explains why it has no session publishes a diagnostic
+  instead of a record.
 - **A brief poem, in the claiming agent's own style, placed last** — after
   the branch, the model and the session, so that a reader looking for the
   branch or the model finds them in a fixed place and is never made to read
@@ -491,8 +489,8 @@ still in flight arms nothing, and a wake that found nothing to do still leaves
 a wake behind it. A turn that ends with no timer and no subscription is a
 session asleep on a pull request nobody else is watching, which is the report
 [`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md) records, and
-[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) scopes to
-Claude Code.
+[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) scopes to a
+single harness.
 
 **Two minutes, the same interval `review-cycle` waits on CI with.** A busy
 `master` takes a commit every few minutes, so a slower check-in is a branch

@@ -5,8 +5,8 @@ description: >-
   work in more than one session at once, or a fleet already at sea is
   watched — when the user says "/embark", "work the epic", "launch
   the wave", "start the next wave", "run these issues in parallel", "open a
-  session for each of these", or "how is the epic going", and on Claude's own
-  move from a planned epic to opening a session per task — a web session on
+  session for each of these", or "how is the epic going", and on the agent's
+  own move from a planned epic to opening a session per task — a web session on
   Claude Code, one harness-local subagent per task on Omp and Codex. Supplies
   the graph-derived wave, each task's implementor resolved through its required
   model class, the muster roll, the pull-request watch, merge-ready landing,
@@ -180,11 +180,10 @@ fallbacks are mismatches to report and reassess. No eligible route stops only
 that task; the rest of the wave launches. An underspecified task is a planning
 defect, not an excuse to dispatch a stronger model.
 
-Each harness reference owns concrete dispatch. Claude resolves to a valid
-concrete identifier before session creation. Omp selects an implementation
-agent, not a per-item model. Codex keeps unmeasured delegation controls
-unclaimed. `sonic` is a mechanical-only candidate; reviewers and scouts are
-not implementation routes.
+Each harness reference owns concrete dispatch. It resolves the applicable
+route before session creation and records the actual model separately from the
+required class. `sonic` is a mechanical-only candidate; reviewers and scouts
+are not implementation routes.
 
 **An implementor may ask for help, and must have someone to ask.** The route
 is harness messaging. The advisor is the orchestrator or one shared
@@ -215,7 +214,7 @@ Landing: orchestrator
 
 | Task | Implementor | Required class | Selected route | Actual model |
 | ---- | ----------- | -------------- | -------------- | ------------ |
-| #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `standard` | `claude-sonnet-5` | `claude-sonnet-5` |
+| #144 — Validate against the schema. | session `session_01AbC` | `standard` | `route-standard` | `model-standard` |
 | #147 — Document the format. | subagent `agent://abc` | `mechanical` | `sonic` | `unreported` |
 | #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — | — |
 ```

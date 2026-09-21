@@ -62,9 +62,9 @@ The question
 caller of a library, a user of a CLI, CI running a workflow the repository
 publishes, a session loading a plugin. **In a plugin whose product is prose,
 prose is code.** What
-Claude reads and acts on is `skills/`, `agents/`, `rules/` and `hooks/`, so
+an agent reads and acts on is `skills/`, `agents/`, `rules/` and `hooks/`, so
 a change there goes to the tests below exactly as code would, and one that
-changes what Claude does is never `docs` however much it reads as writing. A
+changes agent behavior is never `docs` however much it reads as writing. A
 typo or a rewording there that changes nothing still is. Outside those
 directories — `README.md`, `docs/` and their kind — prose is documentation.
 The consumer list has a boundary, and it is where `test` lives: **ships

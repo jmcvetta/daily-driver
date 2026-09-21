@@ -185,15 +185,71 @@ def main() -> int:
                 "the one for the harness in use before the first call.\n"
             ),
             references={
-                "claude.md": routes,
+                "claude.md": routes + "\n- Model: GPT-5.6 Terra\n",
                 "omp.md": routes,
                 "codex.md": routes,
             },
         )
         found = guard.reference_errors([skill], root=root)
         require(found == [], f"case 3 (neutral skill): expected no errors, got {found}")
+        found = guard.shared_guidance_errors([skill], root=root)
+        require(
+            found == [],
+            f"case 3 (harness exceptions): expected no errors, got {found}",
+        )
 
-        # 4. Every pattern added with #229 is exercised: a description
+        # 4. Model identities are rejected in every shared surface. The
+        #    description case is folded, so it also exercises `frontmatter()`.
+        skill = write_skill(
+            root,
+            description="A DeepSeek\nV4 route is selected here.",
+            body="# Fixture\n",
+        )
+        found = guard.shared_guidance_errors([skill], root=root)
+        require(
+            len(found) == 1 and "description" in found[0],
+            f"case 4 (folded description): expected one description error, got {found}",
+        )
+
+        skill = write_skill(
+            root,
+            description="A neutral skill description.",
+            body="# Fixture\n\nA Claude session runs this body.\n",
+        )
+        found = guard.shared_guidance_errors([skill], root=root)
+        require(
+            len(found) == 1 and "the body" in found[0] and ":9:" in found[0],
+            f"case 4 (skill body): expected one body error, got {found}",
+        )
+
+        rule = root / "rules" / "fixture.md"
+        rule.parent.mkdir(exist_ok=True)
+        rule.write_text("An OpenAI route is not shared guidance.\n", encoding="utf-8")
+        found = guard.shared_guidance_errors([skill], root=root)
+        require(
+            len(found) == 2 and "rules/fixture.md:1" in found[0],
+            f"case 4 (shared rule): expected rule and body errors, got {found}",
+        )
+
+        skill = write_skill(
+            root,
+            description="A neutral skill description.",
+            body=(
+                "# Fixture\n\n"
+                "Read [`references/model-classes.md`](references/model-classes.md).\n"
+            ),
+            references={"model-classes.md": "DeepSeek V4 is a concrete model.\n"},
+        )
+        found = guard.shared_guidance_errors([skill], root=root)
+        require(
+            len(found) == 2
+            and "references/model-classes.md:1" in found[1],
+            f"case 4 (shared reference): expected rule and reference errors, got {found}",
+        )
+
+        shutil.rmtree(rule.parent)
+
+        # 5. Every pattern added with #229 is exercised: a description
         #    carrying each one is rejected, and the error names that rule.
         for name, spelling in NEW_ROUTES.items():
             skill = write_skill(
@@ -222,8 +278,8 @@ def main() -> int:
     if errors:
         return 1
     print(
-        "manifest route guard behaves correctly; "
-        f"{3 + len(NEW_ROUTES)} case(s) checked"
+        "manifest route and model identity guards behave correctly; "
+        f"{7 + len(NEW_ROUTES)} case(s) checked"
     )
     return 0
 

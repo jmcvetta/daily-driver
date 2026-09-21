@@ -4,7 +4,7 @@ description: >-
   This skill should be used whenever the body of a GitHub pull request is
   being written or revised — including when the user says "rewrite the PR
   description", "update the PR body", "the PR description is thin", or asks
-  for more detail in a PR, and including any call Claude makes on its own
+  for more detail in a PR, and including any call the agent makes on its own
   initiative that writes or revises a pull request's body while opening or
   updating one. Supplies the required
   structure: one-line summary, salutation in verse, optional blockers and

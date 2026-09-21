@@ -4,7 +4,7 @@ alwaysApply: true
 
 # Constitution
 
-Supreme law of a Claude session. Injected in full by the `SessionStart` hook,
+Supreme law of every session. Injected in full by the `SessionStart` hook,
 and prepended to every subagent prompt by the `PreToolUse` hook on the `Agent`
 tool, so that one file governs the session and everything it delegates to.
 
