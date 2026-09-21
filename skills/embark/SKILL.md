@@ -163,12 +163,16 @@ it, a `session-title` title where the surface supports one, and inherited
 permissions. The issue is the task statement; do not copy its scope into the
 prompt.
 
-**Resolve the task's required class before dispatch.** Read its `Model class`
-section, then filter available routes for assessed capability, tools, context,
-modalities, and availability. Choose the lowest expected reliable cost among
-eligible routes. Unknown prices use an operator preference, never an invented
-free or globally cheapest result. A stronger eligible route may run lower-class
-work. An under-capable or tool-incompatible cheap route is excluded.
+**Validate and, when needed, migrate the required class before dispatch.**
+Read the selected task's `Model class` section and rationale through
+`issue-body`. An old task with a trailing `Model:` field, or invalid class
+metadata, is assessed from its grounded handoff and repaired on that issue
+before route resolution; no tracker-wide migration follows. Then filter
+available routes for assessed capability, tools, context, modalities, and
+availability. Choose the lowest expected reliable cost among eligible routes.
+Unknown prices use an operator preference, never an invented free or globally
+cheapest result. A stronger eligible route may run lower-class work. An
+under-capable or tool-incompatible cheap route is excluded.
 
 The selected route and actual model are distinct from the required class.
 Record `unreported` when actual identity is unavailable; visible provider
@@ -209,11 +213,11 @@ one row per task:
 
 Landing: orchestrator
 
-| Task | Implementor | Required class | Actual model |
-| ---- | ----------- | -------------- | ------------ |
-| #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `standard` | `claude-sonnet-5` |
-| #147 — Document the format. | subagent `agent://abc` | `mechanical` | `unreported` |
-| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — |
+| Task | Implementor | Required class | Selected route | Actual model |
+| ---- | ----------- | -------------- | -------------- | ------------ |
+| #144 — Validate against the schema. | [session_01AbC…](https://claude.ai/code/session_01AbC…) | `standard` | `claude-sonnet-5` | `claude-sonnet-5` |
+| #147 — Document the format. | subagent `agent://abc` | `mechanical` | `sonic` | `unreported` |
+| #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — | — |
 ```
 
 **Landing is read once from the invocation and written into the roll.** The
