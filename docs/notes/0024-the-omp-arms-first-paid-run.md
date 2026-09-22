@@ -1,7 +1,7 @@
 # The Omp arm's first paid run
 
 **Status:** measured, 2026-09-22.
-**Records:** [scores and run metadata](../../evals/provenance/omp-glm-5-3-2026-09-22-2026-09-22_14-39-00.json) and [attempt evidence](../../evals/provenance/omp-glm-5-3-2026-09-22-2026-09-22_14-39-00-evidence.json).
+**Provenance:** [`omp-glm-5-3-2026-09-22-2026-09-22_14-39-00.json`](../../evals/provenance/omp-glm-5-3-2026-09-22-2026-09-22_14-39-00.json).
 
 Issue #206 ran the authorized replacement once. The earlier GLM attempt and
 its raw artifacts are unrecorded. This note does not use them as evidence.
@@ -19,7 +19,7 @@ times against these four rows:
 
 That is 40 attempts. All finished and their preserved sandboxes remain at
 `evals/runs/2026-09-22_14-39-00/` until this pull request merges. The committed
-records above preserve every score, status, criterion result, protocol capture,
+record above preserves every score, status, criterion result, protocol capture,
 and cost figure used below.
 
 ## Scores
