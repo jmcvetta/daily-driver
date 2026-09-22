@@ -1,7 +1,820 @@
 {
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 0,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 0,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 0,
+      "status": "MAX_TURNS_EXHAUSTED",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": {
+        "armed_criteria": [
+          "skill_triggered: `deps` fires when the open Dependabot pull requests are the thing to answer"
+        ],
+        "deciding_criterion_description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+        "deciding_criterion_type": "skill_triggered",
+        "elapsed_seconds": 7.625807520002127,
+        "gate_threshold": 1.0,
+        "reason": "criterion_passed",
+        "sdk_turn_index": 1,
+        "tool_call_index": 1,
+        "turns_remaining_at_stop": 4
+      },
+      "replicate_index": 0,
+      "status": "FAILURE",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 0,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 0,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.3333333333333333
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 0,
+      "status": "FAILURE",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare",
+      "weighted_score": 0.25
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 0,
+      "status": "FAILURE",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.75
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 1,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 1,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 1,
+      "status": "MAX_TURNS_EXHAUSTED",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": {
+        "armed_criteria": [
+          "skill_triggered: `deps` fires when the open Dependabot pull requests are the thing to answer"
+        ],
+        "deciding_criterion_description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+        "deciding_criterion_type": "skill_triggered",
+        "elapsed_seconds": 7.161854558973573,
+        "gate_threshold": 1.0,
+        "reason": "criterion_passed",
+        "sdk_turn_index": 1,
+        "tool_call_index": 1,
+        "turns_remaining_at_stop": 4
+      },
+      "replicate_index": 1,
+      "status": "FAILURE",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 1,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 1,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.3333333333333333
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 1,
+      "status": "FAILURE",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare",
+      "weighted_score": 0.25
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 1,
+      "status": "SUCCESS",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 2,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 2,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 2,
+      "status": "MAX_TURNS_EXHAUSTED",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": {
+        "armed_criteria": [
+          "skill_triggered: `deps` fires when the open Dependabot pull requests are the thing to answer"
+        ],
+        "deciding_criterion_description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+        "deciding_criterion_type": "skill_triggered",
+        "elapsed_seconds": 6.332255617016926,
+        "gate_threshold": 1.0,
+        "reason": "criterion_passed",
+        "sdk_turn_index": 1,
+        "tool_call_index": 1,
+        "turns_remaining_at_stop": 4
+      },
+      "replicate_index": 2,
+      "status": "FAILURE",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 2,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 2,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.3333333333333333
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 2,
+      "status": "FAILURE",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare",
+      "weighted_score": 0.25
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 2,
+      "status": "SUCCESS",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 3,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 3,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 3,
+      "status": "MAX_TURNS_EXHAUSTED",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": {
+        "armed_criteria": [
+          "skill_triggered: `deps` fires when the open Dependabot pull requests are the thing to answer"
+        ],
+        "deciding_criterion_description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+        "deciding_criterion_type": "skill_triggered",
+        "elapsed_seconds": 6.27881637099199,
+        "gate_threshold": 1.0,
+        "reason": "criterion_passed",
+        "sdk_turn_index": 1,
+        "tool_call_index": 1,
+        "turns_remaining_at_stop": 4
+      },
+      "replicate_index": 3,
+      "status": "FAILURE",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 3,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 3,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.3333333333333333
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 3,
+      "status": "FAILURE",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare",
+      "weighted_score": 0.5
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 3,
+      "status": "FAILURE",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.75
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 4,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 4,
+      "status": "SUCCESS",
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin",
+      "weighted_score": 1.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 4,
+      "status": "MAX_TURNS_EXHAUSTED",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        }
+      ],
+      "early_stop": {
+        "armed_criteria": [
+          "skill_triggered: `deps` fires when the open Dependabot pull requests are the thing to answer"
+        ],
+        "deciding_criterion_description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+        "deciding_criterion_type": "skill_triggered",
+        "elapsed_seconds": 6.00897503097076,
+        "gate_threshold": 1.0,
+        "reason": "criterion_passed",
+        "sdk_turn_index": 1,
+        "tool_call_index": 1,
+        "turns_remaining_at_stop": 4
+      },
+      "replicate_index": 4,
+      "status": "FAILURE",
+      "task_id": "deps-02-dependabot-is-complaining",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 4,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "bare",
+      "weighted_score": 0.0
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "skill_triggered"
+        },
+        {
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "score": 0.0,
+          "type": "agent_judge"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 4,
+      "status": "FAILURE",
+      "task_id": "deps-05-references-search-not-list-omp",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.3333333333333333
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 4,
+      "status": "FAILURE",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare",
+      "weighted_score": 0.25
+    },
+    {
+      "criteria": [
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "file_matches_regex"
+        },
+        {
+          "error": null,
+          "score": 0.0,
+          "type": "command_executed"
+        },
+        {
+          "error": null,
+          "score": 1.0,
+          "type": "command_executed"
+        }
+      ],
+      "early_stop": null,
+      "replicate_index": 4,
+      "status": "FAILURE",
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin",
+      "weighted_score": 0.75
+    }
+  ],
   "client": {
     "name": "omp",
-    "version": "omp/18.2.8"
+    "recorded_version": "omp/18.2.8",
+    "version": "unknown"
   },
   "coder_eval_version": "0.11.6",
   "completed_at": "2026-09-16T18:21:07.034053",
@@ -13,10 +826,10 @@
     "session_id": null
   },
   "plugin_revision": {
-    "commit": "bb108b56b64b5123e25856c54296cbf8daa21200",
+    "commit": "3d0087a595f954f14264c25005ba94f08abd09d8",
     "dirty": false
   },
-  "recorded_at": "2026-09-22T12:46:10.538580+00:00",
+  "recorded_at": "2026-09-22T13:01:32.364872+00:00",
   "run_id": "2026-09-16_18-01-07",
   "schema_version": 1,
   "started_at": "2026-09-16T18:01:07.806835",

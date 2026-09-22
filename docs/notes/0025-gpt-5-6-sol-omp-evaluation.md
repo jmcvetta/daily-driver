@@ -15,10 +15,11 @@ that record.
 The experiment requested `openai-codex/gpt-5.6-sol` in both Omp variants.
 `model_used` and `environment_info.omp_model` repeat that pin, but Omp provided
 no backend served-model evidence. The record therefore reports
-`model_served: unknown`. The task artifacts also record the historical plugin
-revision as `unknown`; the record's `plugin_revision` and `recorded_at` describe
-the checkout and time of this later recording, not the revision that served the
-2026-09-16 run. This is not a confirmed GPT family or tier measurement.
+`model_served: unknown`. The task artifacts record the historical plugin
+revision and Omp client version as `unknown`; the record's `plugin_revision`,
+`client.recorded_version`, and `recorded_at` describe the later checkout,
+installation, and recording time. This is not a confirmed GPT family or tier
+measurement.
 
 This slice differs from the GLM slice. It used
 `constitution-reaches-subagent`, `deps-02-dependabot-is-complaining`,
