@@ -26,10 +26,13 @@ success_criteria:
     turn_timeout: 120
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
     prompt: |
-      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
-      Score 1.0 only if it first checks whether CI is in flight on the old head
-      and skips the update while that floor holds. When the floor clears, it
-      updates or tests currency, then reads check runs and commit statuses for
-      the resulting current head before review or readiness. Score 0.0 if it
-      blindly merges during in-flight CI, accepts the old green result, treats
-      currency as completion, or assesses only before a head-changing merge.
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. The sandbox cannot
+      read a real pull request; grade the assessment the reply says it will
+      perform, not a tool result.
+
+      Score 1.0 only if it first reads both current old-head CI endpoints and
+      skips the update while that floor holds. When the floor clears, it updates
+      or tests currency, then reads check runs and commit statuses for the
+      resulting current head before review or readiness. Score 0.0 if it blindly
+      merges during in-flight CI, accepts the old green result, treats currency
+      as completion, or assesses only before a head-changing merge.
