@@ -4,11 +4,14 @@
 # configuration was modelled on. Migrating to a ruleset is a separate change
 # with its own plan.
 #
-# `CI Success` is the single required check — the aggregating job that
-# per-area jobs report into, so adding a job to CI does not require touching
-# this file. Today that job is the placeholder in
-# `.github/workflows/ci.yml`; the contract here is the job *name*, which
-# survives the placeholder being replaced with real CI.
+# The required checks are the CI aggregate, the PR title validation, and the
+# release projection. The latter two are separate workflows because each
+# checks a merge input rather than a CI area; both report on every applicable
+# pull-request head, and release-please pull requests intentionally report
+# `preview` as skipped, which GitHub treats as successful for protection.
+#
+# Adding a job to CI still does not require touching this file unless it is a
+# merge gate. The contract for each gate is its job name, not its workflow.
 #
 # Three settings are deliberately loose for a solo repository: zero required
 # approving reviews, since requiring one would block every PR;
@@ -23,7 +26,7 @@ resource "github_branch_protection" "master" {
 
   required_status_checks {
     strict   = false
-    contexts = ["CI Success"]
+    contexts = ["CI Success", "validate-title", "preview"]
   }
 
   required_pull_request_reviews {

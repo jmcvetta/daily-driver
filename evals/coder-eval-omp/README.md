@@ -54,35 +54,31 @@ skills, the extension and the manifest together.
 
 Issue #173 asks that a red arm be distinguishable from an arm whose plugin
 never arrived. The agent therefore asks the running session what it got and
-puts the answer in each run's `environment_info`:
+puts the startup answer in each run's `environment_info`:
 
 | Field | What it answers |
 | --- | --- |
 | `omp_skills_loaded` | the skills the session offers, read from its own command registry |
 | `omp_linked_plugins` | the roots `omp plugin link` installed |
 | `omp_extension_errors` | every `extension_error` frame — the constitution rides on the extension |
-| `omp_argument_keys_seen` | which key a tool frame carried its arguments under |
-| `omp_usage_keys_seen` | which telemetry fields carried the token counts |
 
-The last two are open questions rather than settled facts. Omp's `docs/rpc.md`
-shows `toolName` on `tool_execution_start` without showing the arguments, and
-places token accounting in "telemetry fields on `agent_end`" without naming
-them. The adapter reads every plausible spelling and records the one that
-answered, so the first live run settles it instead of a guess doing so. Until
-then `require_token_telemetry` defaults to false, which is the opposite of
-`coder_eval`'s OpenCode agent: a missing count here is a gap in this adapter,
-not proof of a broken turn.
+The two protocol questions use a later capture. Omp's `docs/rpc.md` shows
+`toolName` on `tool_execution_start` without showing the arguments, and places
+token accounting in "telemetry fields on `agent_end`" without naming them.
+After each completed turn, the adapter atomically writes the sorted observed
+key union to `omp-protocol-observations.json` in the task sandbox:
 
-A first paid run did once observe answers to both, but its raw artifacts were
-not preserved, so nothing here cites them and the questions stand open.
+```json
+{"omp_argument_keys_seen":["args"],"omp_usage_keys_seen":["inputTokens","outputTokens"]}
+```
 
-Settling them again needs one more thing first. Both sets are populated while
-turns run, and `coder_eval` snapshots `get_environment_info()` during setup —
-before the first turn — so neither ever reaches a run's `environment_info`, and
-the sentence above promises a recording the arm does not currently make. Any
-fix is a capture the harness reads *after* the run; note that an agent-side
-`get_sdk_options` override is not it, since `resolve_agent_settings` prefers
-`sdk_options` over `agent_config` and would blank the report's Agent Settings.
+`omp-glm-5.3.yaml` reads that file through its experiment-default `post_run`
+command. Its stdout is each task's durable `post_run_results` evidence. A task
+with no completed turn reports the explicit empty observation instead. These
+fields do not appear in `environment_info`, because `coder_eval` snapshots
+that object before the first turn. `get_sdk_options` is not a workaround:
+`resolve_agent_settings` prefers it over `agent_config` and would blank the
+report's Agent Settings.
 
 ## What is tested, and what is not
 
