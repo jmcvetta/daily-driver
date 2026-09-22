@@ -25,9 +25,9 @@ and these four rows in both variants:
 - `session-title-07-one-call-sets-the-title-omp`
 
 That is 40 attempts. The raw run remains in the ignored
-`evals/runs/2026-09-22_19-48-37/` directory. Its resume fingerprint is
-committed outside Git only as local run state. The committed record preserves
-all 40 attempts, criterion results, scores, statuses, and protocol captures.
+`evals/runs/2026-09-22_19-48-37/` directory. The resume fingerprint remains
+local run state outside Git. The committed record preserves all 40 attempts,
+criterion results, scores, statuses, and protocol captures.
 
 The corrected early-stop settle instrument was active for this run. Every
 attempt preserved `omp-protocol-observations.json`. All 40 recorded
@@ -35,11 +35,17 @@ attempt preserved `omp-protocol-observations.json`. All 40 recorded
 therefore observed the RPC argument field but did not establish token-usage
 accounting.
 
-The run recorded 25 successful attempts and 15 failed-criterion attempts. It
-recorded no execution errors and no criterion errors. The bare arm's failures
-were measured outcomes, not authentication failures. The run-level judge
-overhead was `$0.7781364`; Omp subject cost was unavailable because the
-Gateway route has no registered coder_eval price.
+The preserved file stdout is represented in each attempt's canonical
+`post_run_results`; the Flash experiment now carries the same capture command
+for future runs.
+
+The run recorded 25 successful attempts and 15 failed attempts. It recorded no
+execution errors. One bare constitution attempt had a grader error because
+`subagent-report.txt` did not exist; the record keeps that criterion error
+separate from the four measured pattern misses. The bare arm's failures were
+measured outcomes except for that invalid criterion result, not authentication
+failures. The run-level judge overhead was `$0.7781364`; Omp subject cost was
+unavailable because the Gateway route has no registered coder_eval price.
 
 ## Flash scores
 
@@ -58,8 +64,9 @@ does not mean that the model engaged the forbidden bulk dependency path.
 
 Criterion failures were stable across the bare repeats:
 
-- The bare constitution row missed `voice:.*Doubt outranks the register` in
-  all five attempts. The other two criteria passed.
+- Four bare constitution attempts missed `voice:.*Doubt outranks the register`.
+  The fifth has the `subagent-report.txt` grader error recorded above. The
+  other two criteria passed in the four measured attempts.
 - The bare `/deps` row did not trigger the `deps` skill in all five attempts.
 - The bare session-title row did not trigger `session-title` and its
   `agent_judge` returned 0.0 in all five attempts.

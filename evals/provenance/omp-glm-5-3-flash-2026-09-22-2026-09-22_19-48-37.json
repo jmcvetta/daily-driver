@@ -39,13 +39,15 @@
       "error_message": null,
       "final_status": "FAILURE",
       "measured_score": 0.5,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.5,
       "replicate_index": 0,
       "task_id": "constitution-reaches-subagent",
@@ -90,13 +92,15 @@
       "error_message": null,
       "final_status": "FAILURE",
       "measured_score": 0.5,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.5,
       "replicate_index": 1,
       "task_id": "constitution-reaches-subagent",
@@ -141,13 +145,15 @@
       "error_message": null,
       "final_status": "MAX_TURNS_EXHAUSTED",
       "measured_score": 0.5,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.5,
       "replicate_index": 2,
       "task_id": "constitution-reaches-subagent",
@@ -192,13 +198,15 @@
       "error_message": null,
       "final_status": "FAILURE",
       "measured_score": 0.5,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.5,
       "replicate_index": 3,
       "task_id": "constitution-reaches-subagent",
@@ -243,13 +251,15 @@
       "error_message": null,
       "final_status": "FAILURE",
       "measured_score": 0.5,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.5,
       "replicate_index": 4,
       "task_id": "constitution-reaches-subagent",
@@ -274,13 +284,15 @@
       "error_message": null,
       "final_status": "FAILURE",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 0,
       "task_id": "deps-01-slash-deps",
@@ -305,13 +317,15 @@
       "error_message": null,
       "final_status": "MAX_TURNS_EXHAUSTED",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 1,
       "task_id": "deps-01-slash-deps",
@@ -336,13 +350,15 @@
       "error_message": null,
       "final_status": "MAX_TURNS_EXHAUSTED",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 2,
       "task_id": "deps-01-slash-deps",
@@ -367,13 +383,15 @@
       "error_message": null,
       "final_status": "FAILURE",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 3,
       "task_id": "deps-01-slash-deps",
@@ -398,13 +416,15 @@
       "error_message": null,
       "final_status": "FAILURE",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 4,
       "task_id": "deps-01-slash-deps",
@@ -429,13 +449,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 0,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -460,13 +482,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 1,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -491,13 +515,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 2,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -522,13 +548,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 3,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -553,13 +581,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 4,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -609,13 +639,15 @@
       "error_message": null,
       "final_status": "MAX_TURNS_EXHAUSTED",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 0,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -665,13 +697,15 @@
       "error_message": null,
       "final_status": "MAX_TURNS_EXHAUSTED",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 1,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -721,13 +755,15 @@
       "error_message": null,
       "final_status": "MAX_TURNS_EXHAUSTED",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 2,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -776,13 +812,15 @@
       "error_message": null,
       "final_status": "MAX_TURNS_EXHAUSTED",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 3,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -832,13 +870,15 @@
       "error_message": null,
       "final_status": "MAX_TURNS_EXHAUSTED",
       "measured_score": 0.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 0.0,
       "replicate_index": 4,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -883,13 +923,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 0,
       "task_id": "constitution-reaches-subagent",
@@ -934,13 +976,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 1,
       "task_id": "constitution-reaches-subagent",
@@ -985,13 +1029,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 2,
       "task_id": "constitution-reaches-subagent",
@@ -1036,13 +1082,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 3,
       "task_id": "constitution-reaches-subagent",
@@ -1087,13 +1135,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 4,
       "task_id": "constitution-reaches-subagent",
@@ -1118,13 +1168,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 0,
       "task_id": "deps-01-slash-deps",
@@ -1149,13 +1201,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 1,
       "task_id": "deps-01-slash-deps",
@@ -1180,13 +1234,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 2,
       "task_id": "deps-01-slash-deps",
@@ -1211,13 +1267,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 3,
       "task_id": "deps-01-slash-deps",
@@ -1242,13 +1300,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 4,
       "task_id": "deps-01-slash-deps",
@@ -1273,13 +1333,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 0,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -1304,13 +1366,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 1,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -1335,13 +1399,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 2,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -1366,13 +1432,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 3,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -1397,13 +1465,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 4,
       "task_id": "deps-03-neg-one-named-dependency",
@@ -1453,13 +1523,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 0,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -1509,13 +1581,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 1,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -1566,13 +1640,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 2,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -1622,13 +1698,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 3,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -1678,13 +1756,15 @@
       "error_message": null,
       "final_status": "SUCCESS",
       "measured_score": 1.0,
-      "post_run_results": [],
-      "protocol_evidence": {
-        "omp_argument_keys_seen": [
-          "args"
-        ],
-        "omp_usage_keys_seen": []
-      },
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
       "raw_weighted_score": 1.0,
       "replicate_index": 4,
       "task_id": "session-title-07-one-call-sets-the-title-omp",
@@ -1707,13 +1787,6 @@
   "plugin_revision": {
     "commit": "8583eec6cdadf2608c6cefd1562a696023041177",
     "dirty": false
-  },
-  "protocol_summary": {
-    "argument_keys_seen": [
-      "args"
-    ],
-    "attempts_with_evidence": 40,
-    "usage_keys_seen": []
   },
   "recorded_at": "2026-09-22T13:22:27.242017+00:00",
   "run_id": "2026-09-22_19-48-37",
