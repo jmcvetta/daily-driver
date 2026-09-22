@@ -24,8 +24,16 @@ defaults:
 
   agent:
     type: omp
-    # Verified against the provider catalog borrowed into the throwaway Omp home.
-    model: deepseek/deepseek-v4-pro
+    # The model the issue pins is `deepseek/deepseek-v4-pro`. The direct
+    # `deepseek` provider carries no catalog entry in the throwaway Omp home —
+    # `omp models find deepseek-v4-pro` lists the id only under
+    # vercel-ai-gateway — so `omp` could not start a session on the direct
+    # route, and the report would not say which model ran. The id is served
+    # through the one gateway this machine is credentialed for, which is also
+    # the route the real home's own `modelRoles` take. Set as Omp's
+    # `provider/modelId` form and split on the first slash by the adapter's
+    # `set_model`.
+    model: vercel-ai-gateway/deepseek/deepseek-v4-pro
     permission_mode: acceptEdits
     # Recorded, not enforced: Omp RPC has no per-session tool allowlist.
     allowed_tools: [Skill]

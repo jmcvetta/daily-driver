@@ -1,0 +1,1659 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"name\": \"VoiceProbe\", \"agent\": \"task\", \"task\": \"Write)', 'Agent({\"context\": \"No shared context. This batch contains one self-contained task; fol)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026569366455078125,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.5,
+      "replicate_index": 0,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"name\": \"VoiceProbe\", \"agent\": \"task\", \"task\": \"Write)', 'Agent({\"context\": \"# Goal\\\\nComplete your assigned task exactly as instructed in the ta)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0027997493743896484,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.5,
+      "replicate_index": 1,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"# Goal\\\\nComplete your assigned task exactly as written.\", \"tasks\": )']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0029449462890625,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.5,
+      "replicate_index": 2,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"name\": \"ConstitutionProbe\", \"agent\": \"task\", \"task\":)', 'Agent({\"context\": \"No additional context.\", \"tasks\": [{\"name\": \"ConstitutionProbe\", \"a)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0030570030212402344,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.5,
+      "replicate_index": 3,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"name\": \"ConstitutionProbe\", \"agent\": \"task\", \"task\":)', 'Agent({\"context\": \"# Goal\\\\nCarry out the single self-contained task below exactly as i)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0030584335327148438,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.5,
+      "replicate_index": 4,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002546072006225586,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002691030502319336,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002741098403930664,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002770662307739258,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.003997087478637695,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026323795318603516,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0027322769165039062,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002669095993041992,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.003068685531616211,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0029032230377197266,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result. The reply after [RESULT - SUCCESS] is \"Unknown skill: set-session-title / Available: none\" \u2014 it names no specific call at all, let alone daily_driver_set_session_title.\nnotes: tokens: uncached_input_tokens=1446 output_tokens=616 cache_creation_input_tokens=5781 cache_read_input_tokens=75265 total_cost_usd=0.045731999999999995 input_tokens=82492; duration: 10.0s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.3333333333333333,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002613544464111328,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.3333333333333333,
+      "replicate_index": 0,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result \u2014 The reply is the text after the final [RESULT - SUCCESS] tag: \"No such tool: xd://__probe__. Mounted devices: ast_edit, debug, lsp. Active top-level tools are also dispatchable via xd://<tool>.\" It never names daily_driver_set_session_title (or any variant) or describes any call taking a title argument, so it fails the rule.\nnotes: tokens: uncached_input_tokens=1504 output_tokens=786 cache_creation_input_tokens=5937 cache_read_input_tokens=75344 total_cost_usd=0.0481098 input_tokens=82785; duration: 12.0s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026764869689941406,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result \u2014 The reply after [RESULT - SUCCESS] is merely an error message about unsupported glob patterns; it never names daily_driver_set_session_title or any titling call.\nnotes: tokens: uncached_input_tokens=1454 output_tokens=518 cache_creation_input_tokens=10084 cache_read_input_tokens=68160 total_cost_usd=0.060521 input_tokens=79698; duration: 9.1s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026640892028808594,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result \u2014 the reply (the RESULT block) only lists xd:// tool devices (ast_edit, debug, lsp) and gives no mention whatsoever of a daily_driver_set_session_title call or any session-title-setting call.\nnotes: tokens: uncached_input_tokens=1652 output_tokens=533 cache_creation_input_tokens=5933 cache_read_input_tokens=75547 total_cost_usd=0.0457624 input_tokens=83132; duration: 9.9s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.003371715545654297,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result \u2014 the reply (everything after [RESULT - SUCCESS]) is a slash-command discovery/documentation writeup and never mentions `daily_driver_set_session_title` or any session-title-setting call at all.\nnotes: tokens: uncached_input_tokens=4226 output_tokens=781 cache_creation_input_tokens=17735 cache_read_input_tokens=68160 total_cost_usd=0.096542 input_tokens=90121; duration: 13.1s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002651214599609375,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"# Goal\\\\nFollow the task instructions exactly as given.\\\\n\\\\n# Constra)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002731800079345703,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"name\": \"VoiceProbe\", \"agent\": \"task\", \"task\": \"Write)', 'Agent({\"context\": \"# Goal\\\\nExecute the task exactly as written, and nothing beyond it.)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026383399963378906,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"name\": \"ConstitutionProbe\", \"agent\": \"task\", \"task\":)', 'Agent({\"context\": \"# Goal\\\\nCarry out the assigned task exactly as written, with no add)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002761363983154297,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"agent\": \"task\", \"task\": \"Write a single line to the )', 'Agent({\"context\": \"No shared background for this batch. The single task below is self-)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002774477005004883,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"agent\": \"task\", \"task\": \"Write a single line to the )', 'Agent({\"context\": \"Single self-contained task; no shared background is needed.\", \"task)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0034706592559814453,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026521682739257812,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026235580444335938,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0029296875,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026590824127197266,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0035233497619628906,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002753019332885742,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.002883434295654297,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0026330947875976562,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0028734207153320312,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "Not evaluated after terminal agent failure: the criterion is not a deterministic, read-only artifact check.",
+          "error": null,
+          "evaluation_status": "not_evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 0.0
+        }
+      ],
+      "error_message": "Agent turn timed out after 120s (iteration 1)",
+      "final_status": "ERROR",
+      "measured_score": null,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.001255035400390625,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result. The reply's single RESULT block names exactly one call, daily_driver_set_session_title, with the title as its only argument, and explicitly states no session-id lookup or follow-up call was made.\nnotes: tokens: uncached_input_tokens=1686 output_tokens=537 cache_creation_input_tokens=6012 cache_read_input_tokens=75573 total_cost_usd=0.0461576 input_tokens=83271; duration: 10.0s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0025238990783691406,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result \u2014 the reply names a single call, daily_driver_set_session_title({ title: \"...\" }), explicitly states it takes the title alone with no session id, and describes no prior call to look up the session's own id.\nnotes: tokens: uncached_input_tokens=1736 output_tokens=693 cache_creation_input_tokens=6189 cache_read_input_tokens=75634 total_cost_usd=0.0484928 input_tokens=83559; duration: 10.2s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.003668546676635742,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result \u2014 The reply names exactly one call, daily_driver_set_session_title({ title: \"...\" }), with the title as its sole argument, and explicitly states no session-id lookup is needed.\nnotes: tokens: uncached_input_tokens=1694 output_tokens=547 cache_creation_input_tokens=10654 cache_read_input_tokens=68160 total_cost_usd=0.063351 input_tokens=80508; duration: 9.4s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.003265857696533203,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result \u2014 the reply names exactly one call, daily_driver_set_session_title({ title }), with the title as its sole argument, and explicitly states no session-id lookup is needed.\nnotes: tokens: uncached_input_tokens=1688 output_tokens=567 cache_creation_input_tokens=10705 cache_read_input_tokens=68160 total_cost_usd=0.06372900000000001 input_tokens=80553; duration: 9.9s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0029077529907226562,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result \u2014 the reply names exactly one call, daily_driver_set_session_title({ title }), taking only the title, and explicitly states no session-id lookup is performed.\nnotes: tokens: uncached_input_tokens=1682 output_tokens=500 cache_creation_input_tokens=10578 cache_read_input_tokens=68160 total_cost_usd=0.06256 input_tokens=80420; duration: 8.8s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.7,
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [
+        {
+          "command": "if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf \"%s\\n\" \"{\\\"omp_argument_keys_seen\\\":[],\\\"omp_usage_keys_seen\\\":[]}\"; fi",
+          "duration_seconds": 0.0027947425842285156,
+          "error": null,
+          "exit_code": 0,
+          "stderr": "",
+          "stdout": "{\"omp_argument_keys_seen\":[\"args\"],\"omp_usage_keys_seen\":[]}\n"
+        }
+      ],
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "version": "omp/18.2.8"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-09-22T19:10:03.042610",
+  "experiment_id": "omp-glm-5-3",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "54f4b79df07aaaaab3c8f46295286cd4fde05d28",
+    "dirty": false
+  },
+  "recorded_at": "2026-09-22T12:10:33.513297+00:00",
+  "run_id": "2026-09-22_14-39-00",
+  "run_summary": {
+    "agent_cost_usd": null,
+    "cost_complete": true,
+    "eval_overhead_cost_usd": 0.5809576000000001,
+    "tasks_error": 1,
+    "tasks_failed": 15,
+    "tasks_run": 40,
+    "tasks_succeeded": 24,
+    "total_cost_usd": 0.5809576000000001
+  },
+  "schema_version": 1,
+  "started_at": "2026-09-22T18:34:44.459512",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-reaches-subagent": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "deps-01-slash-deps": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "deps-03-neg-one-named-dependency": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "session-title-07-one-call-sets-the-title-omp": [
+          0.3333333333333333,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "task_ids": [
+        "session-title-07-one-call-sets-the-title-omp",
+        "deps-03-neg-one-named-dependency",
+        "constitution-reaches-subagent",
+        "deps-01-slash-deps"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-reaches-subagent": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "deps-01-slash-deps": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "deps-03-neg-one-named-dependency": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "session-title-07-one-call-sets-the-title-omp": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "session-title-07-one-call-sets-the-title-omp",
+        "deps-03-neg-one-named-dependency",
+        "constitution-reaches-subagent",
+        "deps-01-slash-deps"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

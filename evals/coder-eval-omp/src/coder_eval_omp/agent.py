@@ -121,6 +121,9 @@ _RESULT_STATUS: dict[ToolEndStatus, str] = {
 # run could not record which skills it loaded, which is what tells a red arm
 # from an arm whose plugin never arrived.
 _OMP_CONFIG = "skills:\n  enableSkillCommands: true\n"
+#: File in each task sandbox that persists post-turn Omp protocol observations.
+PROTOCOL_EVIDENCE_FILENAME = "omp-protocol-observations.json"
+
 
 
 class OmpAgentConfig(BaseAgentConfig):
@@ -320,13 +323,29 @@ class OmpAgent(Agent[OmpAgentConfig]):
         }
         if self._session_id:
             info["omp_session_id"] = self._session_id
-        if self._argument_keys_seen:
-            # The spike could not say whether a tool frame carries its input
-            # arguments, or under which key. A live run answers it here.
-            info["omp_argument_keys_seen"] = sorted(self._argument_keys_seen)
-        if self._usage_keys_seen:
-            info["omp_usage_keys_seen"] = sorted(self._usage_keys_seen)
         return info
+
+    def _write_protocol_evidence(self) -> None:
+        """Atomically persist the observed RPC keys for post-run collection."""
+        if self.working_directory is None:
+            raise RuntimeError("OmpAgent.start() must be called before recording protocol evidence")
+
+        evidence = {
+            "omp_argument_keys_seen": sorted(self._argument_keys_seen),
+            "omp_usage_keys_seen": sorted(self._usage_keys_seen),
+        }
+        destination = Path(self.working_directory) / PROTOCOL_EVIDENCE_FILENAME
+        temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+        try:
+            temporary.write_text(
+                json.dumps(evidence, separators=(",", ":"), sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            temporary.replace(destination)
+        finally:
+            with contextlib.suppress(FileNotFoundError):
+                temporary.unlink()
+
 
     # --- the turn ----------------------------------------------------------
 
@@ -534,6 +553,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
 
             self._argument_keys_seen.update(reducer.argument_keys_seen)
             self._usage_keys_seen.update(reducer.usage_keys_seen)
+            self._write_protocol_evidence()
 
             if reducer.recognized == 0:
                 # The vocabulary moved. A turn that recognized nothing captured

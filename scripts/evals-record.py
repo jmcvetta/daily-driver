@@ -31,6 +31,7 @@ REQUIRED_RECORD_FIELDS = {
     "client",
     "host",
     "variants",
+    "attempts",
 }
 
 
@@ -135,6 +136,31 @@ def run_task_ids(run: dict[str, Any], variant_id: str) -> list[str]:
             seen.add(task_id)
     return task_ids
 
+def run_attempts(run_dir: Path, run: dict[str, Any]) -> list[dict[str, Any]]:
+    """Read criterion and early-stop evidence from every preserved task artifact."""
+    attempts = []
+    for result in run.get("task_results", []):
+        variant_id = result["variant_id"]
+        task_id = result["task_id"]
+        replicate = result.get("replicate_index", 0)
+        artifact_path = run_dir / variant_id / task_id / f"{replicate:02d}" / "task.json"
+        if not artifact_path.is_file():
+            raise ValueError(f"missing task artifact: {artifact_path}")
+        artifact = json.loads(artifact_path.read_text())
+        attempts.append(
+            {
+                "variant_id": variant_id,
+                "task_id": task_id,
+                "replicate_index": replicate,
+                "final_status": result.get("status", "unknown"),
+                "measured_score": result.get("weighted_score", 0.0),
+                "raw_weighted_score": artifact.get("weighted_score", result.get("weighted_score", 0.0)),
+                "criteria": artifact["success_criteria_results"],
+                "early_stop": artifact.get("early_stop"),
+            }
+        )
+    return attempts
+
 
 def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, Any]:
     """Build a committed provenance record from a coder_eval run directory."""
@@ -171,7 +197,9 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
         "omp": "omp",
         "codex-daily-driver": "codex",
     }.get(client_name, "unknown")
-    client_version = command_version(client_command) if client_command != "unknown" else "unknown"
+    historical_client_version = run.get("environment_info", {}).get("cli_version", "unknown")
+    if not isinstance(historical_client_version, str) or not historical_client_version:
+        historical_client_version = "unknown"
     session_present = "CLAUDE_CODE_SESSION_ID" in os.environ
     return {
         "schema_version": 1,
@@ -187,7 +215,8 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
         "coder_eval_version": run.get("framework_version", "unknown"),
         "client": {
             "name": client_name,
-            "version": client_version,
+            "version": historical_client_version,
+            "recorded_version": command_version(client_command) if client_command != "unknown" else "unknown",
         },
         "host": {
             "kind": "cloud" if session_present else "laptop",
@@ -196,6 +225,7 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
             "platform": platform.platform(),
         },
         "variants": variants,
+        "attempts": run_attempts(run_dir, run),
     }
 
 def validate_record(record: dict[str, Any]) -> list[str]:
@@ -235,6 +265,32 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 errors.append(f"{prefix}.task_ids must be a list")
             if not isinstance(variant.get("per_replicate_scores"), dict):
                 errors.append(f"{prefix}.per_replicate_scores must be an object")
+    if not isinstance(record.get("attempts"), list) or not record["attempts"]:
+        errors.append("attempts must be non-empty")
+    else:
+        for index, attempt in enumerate(record["attempts"]):
+            prefix = f"attempts[{index}]"
+            if not isinstance(attempt, dict):
+                errors.append(f"{prefix} must be an object")
+                continue
+            for field in ("variant_id", "task_id"):
+                if not isinstance(attempt.get(field), str) or not attempt[field]:
+                    errors.append(f"{prefix}.{field} must be a non-empty string")
+            final_status = attempt.get("final_status", attempt.get("status"))
+            if not isinstance(final_status, str) or not final_status:
+                errors.append(f"{prefix}.final_status must be a non-empty string")
+            if not isinstance(attempt.get("replicate_index"), int):
+                errors.append(f"{prefix}.replicate_index must be an integer")
+            if not isinstance(attempt.get("criteria"), list):
+                errors.append(f"{prefix}.criteria must be a list")
+            if "early_stop" in attempt and attempt["early_stop"] is not None and not isinstance(attempt["early_stop"], dict):
+                errors.append(f"{prefix}.early_stop must be an object or null")
+            measured_score = attempt.get("measured_score", attempt.get("weighted_score"))
+            raw_weighted_score = attempt.get("raw_weighted_score", attempt.get("weighted_score"))
+            if measured_score is not None and not isinstance(measured_score, (int, float)):
+                errors.append(f"{prefix}.measured_score must be numeric or null")
+            if not isinstance(raw_weighted_score, (int, float)):
+                errors.append(f"{prefix}.raw_weighted_score must be numeric")
     return errors
 
 
