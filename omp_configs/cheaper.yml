@@ -1,9 +1,9 @@
 modelRoles:
-  default: vercel-ai-gateway/zai/glm-5.3-flash:high
+  default: vercel-ai-gateway/deepseek/deepseek-v4-pro
   smol: openai-codex/gpt-5.6-luna:medium
   slow: vercel-ai-gateway/deepseek/deepseek-v4-pro
   plan: vercel-ai-gateway/moonshotai/kimi-k3:high
   task: openai-codex/gpt-5.6-luna:high
-  advisor: vercel-ai-gateway/alibaba/qwen3.8-max-0902:high
+  advisor: vercel-ai-gateway/zai/glm-5.3-flash:high
   vision: vercel-ai-gateway/minimax/minimax-m3
   tiny: vercel-ai-gateway/inception/mercury-2.5
