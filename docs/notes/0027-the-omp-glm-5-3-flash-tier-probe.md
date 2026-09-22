@@ -35,9 +35,10 @@ attempt preserved `omp-protocol-observations.json`. All 40 recorded
 therefore observed the RPC argument field but did not establish token-usage
 accounting.
 
-The preserved file stdout is represented in each attempt's canonical
-`post_run_results`; the Flash experiment now carries the same capture command
-for future runs.
+The preserved file observations remain in each attempt's `protocol_evidence`
+and the record's `protocol_summary`. `post_run_results` are empty because the
+retired run predates the capture block; the Flash experiment now carries the
+same command for future runs.
 
 The run recorded 25 successful attempts and 15 failed attempts. It recorded no
 execution errors. One bare constitution attempt had a grader error because
