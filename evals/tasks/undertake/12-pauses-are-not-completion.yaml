@@ -1,0 +1,34 @@
+task_id: undertake-12-pauses-are-not-completion
+description: >-
+  A human-action pause, capped CI wait, or review wall remains unfinished;
+  only merged, closed, or explicitly stopped work ends continuation.
+tags: [undertake, behaviour, fire]
+initial_prompt: >-
+  Undertaken draft PR #25 is current but waits for a human infrastructure
+  action after its CI wait hit the fifteen-minute cap and its review scope hit
+  the verification wall. Is the undertaking complete, and when may continuation
+  stop?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on a paused undertaking"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The reply distinguishes pauses from completion
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
+      Score 1.0 only if it says the undertaking is unfinished, names the human
+      action, capped wait, and review wall as outstanding stops, and says the
+      continuation ends only when the PR is merged, closed, or the user explicitly
+      stops it. Score 0.0 if it calls the pauses completion, silently resets the
+      cap or wall, retries automatically, or authorizes the human action.

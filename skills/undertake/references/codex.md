@@ -151,28 +151,28 @@ There is no durable wake
 ========================
 
 **No actor on this harness outlives the turn that armed it** — no durable
-process, no scheduled wake — so `Keep it current`'s split buys Codex nothing:
-the mechanical merge has nothing here to run it, and the judgment waits for
-a session either way. After `Ready for review`, say
-once that the watch is the catch-up look below, and stop.
+process, no scheduled wake. From `Open the draft`, report that an unfinished
+pull request needs its owner to resume. Do not claim a cadence, timer, shell
+loop, subscription, or autonomous review. Reaching ready does not change that
+limit.
 
 **The catch-up look is the first read of every turn that lands back on the
 pull request.** A turn that returns the session to the pull request — a
-resume, a continuation, a user turn about it — starts with the base-currency
-read, before anything else the turn was going to do:
+resume, a continuation, a user turn about it — starts with:
 
-    gh pr view <number> --json mergeStateStatus,mergeable
+    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
 
-`BEHIND` runs `gh pr update-branch <number>` — `Keep it current`'s merge —
-before the turn continues; `DIRTY` is the conflict stop `SKILL.md` writes
-under `Where it stops and waits`; `CLEAN`, `DRAFT` and `UNSTABLE` need
-nothing. `BLOCKED` and an indeterminate answer are not currency answers: run
-the update-branch call anyway, whose own "already up to date" reply settles
-what this read has not.
+Read `statusCheckRollup` and `review-cycle`'s check and status endpoints
+before a currency merge; if either reports a run in flight, skip that merge.
+Otherwise `BEHIND`, `DRAFT`, `BLOCKED`, and an indeterminate answer run `gh pr
+update-branch <number>`, whose own reply settles currency. `DIRTY` is the
+conflict stop; `CLEAN` and `UNSTABLE` need no currency action.
 
-This is the Omp answer arrived at for a different reason. Omp has a timer and
-it is measured to die with the session; Codex has no timer this plugin has
-found at all. Either way `SKILL.md`'s own rule applies — a watch a surface
-cannot keep is worse claimed than skipped — and the never-empty wake slot,
-[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md), is the
-Claude Code rule this harness does not carry.
+**Then assess the resulting current head.** After a currency test that can move
+the head, read `gh pr view <number> --json statusCheckRollup` and the check and
+status endpoints `review-cycle` owns. Earlier green evidence does not survive
+a head change. Pending or unregistered checks follow its bounded limits; failed
+checks return to `Fix, answer, resolve, push`, and unavailable logs are an
+explicit evidence blocker. State the unfinished condition and owner-resume
+requirement; never call a clean branch, an already-up-to-date response, or a
+draft completion.

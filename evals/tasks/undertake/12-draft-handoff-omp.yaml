@@ -1,0 +1,30 @@
+task_id: undertake-12-draft-handoff-omp
+description: >-
+  Omp reports unfinished pre-ready work and the owner-resume requirement; its
+  detached merge loop does not perform CI assessment or review.
+tags: [undertake, behaviour, fire, omp-only, "forks:undertake-12-draft-wake-is-retained"]
+initial_prompt: >-
+  On Omp, undertaken issue #24 has a draft PR #25 with a failed current-head
+  check. The owning session is ending. What continuation exists before ready?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on unfinished Omp draft work"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The reply names the actual Omp handoff
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
+      Score 1.0 only if it calls the draft unfinished, says failed CI needs an owner
+      session to assess and repair it, and does not claim the detached keep-current
+      merge process resumes an agent, performs review, or marks the draft ready.

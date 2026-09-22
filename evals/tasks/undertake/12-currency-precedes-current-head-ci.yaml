@@ -1,0 +1,38 @@
+task_id: undertake-12-currency-precedes-current-head-ci
+description: >-
+  A resumed draft applies the in-flight CI floor, settles currency when safe,
+  then assesses CI on the resulting head rather than accepting old-head green evidence.
+tags: [undertake, behaviour, fire]
+initial_prompt: >-
+  Resume undertaking issue #24. Draft PR #25 is behind master. An earlier
+  old-head result was green, but do not infer that the current head is idle:
+  read both CI endpoints and apply the run-in-flight floor before any update.
+  A safe merge creates a new head. What do you assess before review or readiness?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on a resumed draft"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The reply assesses CI only after currency
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. The sandbox cannot
+      read a real pull request; grade the assessment the reply says it will
+      perform, not a tool result.
+
+      Score 1.0 only if it first reads both current old-head CI endpoints and
+      skips the update while that floor holds. When the floor clears, it updates
+      or tests currency, then reads check runs and commit statuses for the
+      resulting current head before review or readiness. Score 0.0 if it blindly
+      merges during in-flight CI, accepts the old green result, treats currency
+      as completion, or assesses only before a head-changing merge.

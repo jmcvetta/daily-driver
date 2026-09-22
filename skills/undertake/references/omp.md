@@ -187,31 +187,30 @@ bounded CI watcher itself stays `review-cycle`'s
 The catch-up look
 -----------------
 
-**The first read of every turn that lands back on the pull request is the
-base-currency read.** The loop merges without a session, but it does not
-judge: a conflict it hit, a red check its merge started, and the milestone
-are all things only a session can meet. The turn that resumes the owning
-session, reconnects to Hub, replays a pending completion, or simply returns
-to the pull request on a user turn starts with:
+**The first read of every turn that lands back on an open undertaking pull
+request is the base-currency read.** The detached loop merges without a
+session, but it does not judge: red CI, a review wall, a conflict, and the
+milestone still need the owner session. The turn reconnects to Hub, consumes
+any pending CI-watcher completion, then runs:
 
-    gh pr view <number> --json mergeStateStatus,mergeable
+    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
 
-| `mergeStateStatus` | Meaning | Move |
-| ------------------ | ------- | ---- |
-| `BEHIND` | the base moved; the branch does not conflict | `gh pr update-branch <number>` — `Keep it current`'s merge — then continue the turn |
-| `DIRTY` | the branch conflicts with the base | the conflict stop `SKILL.md` writes under `Where it stops and waits`; once the resolution is pushed, `hub start` the loop again, the same call `Ready for review` made |
-| `CLEAN`, `DRAFT`, `UNSTABLE` | current, or held by draft state or checks | nothing; continue the turn |
-| `BLOCKED`, `UNKNOWN` | not a currency answer: required reviews, or a state GitHub cannot currently determine | the update-branch call anyway — it is the test as well as the merge, and its own "already up to date" answer settles currency where this read has not; a call that fails changes nothing and reaches the conflict stop |
+Merged and closed pull requests end continuation. Read `statusCheckRollup` and
+`review-cycle`'s check and status endpoints before a currency merge; if either
+reports a run in flight, skip that merge. Otherwise `BEHIND`, `DRAFT`,
+`BLOCKED`, and `UNKNOWN` run `gh pr update-branch <number>`, whose own reply
+settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
+`CLEAN` and `UNSTABLE` need no currency action.
 
-The read is the look; the update-branch call is the merge. The call's own
-"already up to date" answer cannot stand in for the read, because something
-must decide to make the call — and a `DIRTY` answer must reach the stop
-rather than a failed merge. The resumed-owner order is: reconnect to Hub,
-consume any pending completion, take this read, then the CI reads the
-completion was replayed for. The loop, if it still runs, needs nothing from
-this turn.
+**Currency is not completion.** After a currency test that can move the head,
+read `gh pr view <number> --json statusCheckRollup` for the resulting
+`headRefOid`; `review-cycle`'s two endpoint reads remain the CI verdict.
+Pending or unregistered checks use its persistent bounded watcher. Failed
+checks return to `Fix, answer, resolve, push`; unavailable logs are a named
+evidence blocker, not green. A durable Hub process preserves its completion
+but cannot resume the owner: where no owner turn is running, report unfinished
+work and the owner-resume requirement rather than claiming autonomous review.
 
-This is the Omp boundary: the mechanical merge survives the session in the
-detached loop; the judgment — the gate, a red check, the conflict stop, the
-milestone — still needs a running agent session, and the catch-up look is how
-the judgment meets what the loop did while none was running.
+The detached `keep-current-<number>` merge loop still starts at ready and
+remains mechanical. It is not pre-ready CI supervision and never marks a
+draft ready.

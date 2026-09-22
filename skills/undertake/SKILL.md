@@ -330,6 +330,14 @@ has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
 closes.
 
+**Opening or reusing the draft starts supervision.** The undertaking owns its
+continuation from this point, including while CI, review, or `The gate` keeps
+the pull request draft. A durable scheduler arms its one wake before yielding;
+a harness without one reports the unfinished condition and that the owner must
+resume. Reaching `Ready for review` changes the work being watched; it does
+not start a second watch. Only a merged or closed pull request, or an explicit
+user stop, ends this obligation.
+
 **The body is `pr-body`'s, and so are the blockers that go with a Tofu
 diff.** Where the branch's changes touch the infrastructure Tofu stack, the
 body carries that skill's human-action blocker and the pull request the
@@ -339,9 +347,8 @@ blocker when the round is over — the pause is stated there.
 
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate
-step comes before this one. The draft may open red, and `Review the head`
-waits for the result either way. A red check is answered at `Fix, answer,
-resolve, push`, and the ready gate below is what it has to satisfy in the end.
+step comes before this one. A red check is answered at `Fix, answer, resolve,
+push`, and the ready gate below is what it has to satisfy in the end.
 
 7–9 — `Review the head`, `Fix, answer, resolve, push`, `Verify the fix delta`
 ----------------------------------------------------------------------------
@@ -398,12 +405,11 @@ over it once before the gate, the way any changed head earns a round.
 
 When the gate clears and the pull request is marked ready, the milestone's
 moment has arrived: the sequence publishes the first-readiness report through
-`The milestone` below — once, the way that section's own rules bound it — and
-then arms the watch at `Keep it current` exactly as it would have without the
-comment. A pull request that stops here on a human action publishes nothing:
-it has not reached the milestone the report would name, and a report naming
-readiness over a bar only a person can clear is the false claim the gate
-exists to refuse.
+`The milestone` below — once, the way that section's own rules bound it. The
+existing supervision continues without a second owner. A pull request that
+stops here on a human action publishes nothing: it has not reached the
+milestone the report would name, and a report naming readiness over a bar only
+a person can clear is the false claim the gate exists to refuse.
 
 11 — Keep it current
 --------------------
@@ -434,60 +440,59 @@ When it looks
 -------------
 
 Once before `Ready for review`, as the gate's look rather than the cadence's.
-The cadence itself starts from the ready pull request, and the step splits in
-two, because its halves do not need the same kind of actor. The **merge** is
-mechanical: one update-branch call, tested by the call itself, with the floor
-below. The **watch** is whatever keeps that call running, and what can keep it
-running is the one thing each harness decides for itself. The reference file
-names the actor; this section states the rules every actor obeys.
+**Continuation starts at `Open the draft`, not at ready.** The check-in and
+catch-up rules therefore cover every open undertaking pull request; ready
+changes what remains to be maintained, not whether unfinished work is
+supervised. The **merge** is mechanical: one update-branch call, tested by the
+call itself, with the floor below. The **assessment** is agent work: after
+currency is settled, it reads CI on the resulting head and continues the
+review or ready-gate work. The reference file names the actor and routes.
 
 **Where the harness supervises processes that survive it, the watch is one of
-those processes.** Started once at `Ready for review`, it runs the merge on a
-two-minute tick and nothing else: read the pull request's state and merge
-status, skip the tick while a run on the head is in flight, merge when the
-branch is behind, and stop on a conflict. It never judges. The ready gate, a
-red check, the milestone, and the conflict stop stay with the session, which
-meets them on the catch-up look below and on every turn that lands back on
-the pull request.
+those processes after ready.** It runs the merge on a two-minute tick and
+nothing else: read the pull request's state and merge status, skip the tick
+while a run on the head is in flight, merge when the branch is behind, and
+stop on a conflict. It never judges. Before ready, the persistent bounded CI
+watcher `review-cycle` owns is the available continuation; its completion
+still requires the owner session to assess the result.
 
 **Where the harness has a durable scheduled wake and no such process, the
-cadence is a check-in every two minutes, one wake at a time — and each wake
-carries its own instructions.** The prompt given to the scheduler states the
-whole check-in, in order: arm the next wake first, then take the
-base-currency read, then act on what it finds. A rule kept only in session
-memory dies on the first wake turn that ends without re-arming; the
-instruction travels with the wake instead, and `review-cycle`'s `The
-backstop` discipline holds for it.
+cadence is a check-in every two minutes, one wake at a time — from `Open the
+draft`.** The prompt given to the scheduler states the whole check-in,
+self-contained: arm the next wake first, take the state and base-currency
+read, merge when required, then assess CI on the resulting current head. A
+rule kept only in session memory dies on the first wake turn that ends without
+re-arming; the instruction travels with the wake instead, and
+`review-cycle`'s `The backstop` discipline holds for it.
 
-**Where the harness has neither, the watch is the catch-up look below, and
-the sequence says so once, at `Ready for review`.** A watch a surface cannot
-keep is worse claimed than skipped. The split is why three answers are
-legitimate and a fourth is not — a timer that dies with the session, claimed
-as a watch, is the failure
-[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) measured and
-[`0022`](../../docs/notes/0022-the-merge-is-mechanical.md) closed.
+**Where the harness has neither, report the unfinished handoff at `Open the
+draft`.** The next turn returning to the pull request takes the catch-up look
+below. A watch a surface cannot keep is worse claimed than skipped; a draft,
+red, pending, capped, walled, or human-blocked pull request is not complete.
 
-**No cadence is not no looks.** On such a surface, every turn the session
-already has is a look: a turn that resumes the session, reconnects it to its
-supervisor, or otherwise puts it back on this pull request takes the
-base-currency read first — before a CI read, a thread read, or whatever the
-turn was otherwise going to do — and a branch the read finds behind its base
-runs this step now, not next time. The reference file names the read and the
-answers it distinguishes. The look costs one call and merges nothing on its
-own; skipping it is how a branch stays behind for as long as nobody happens
-to look.
+**A catch-up look answers the pull-request question, not only currency.** It
+reads state and branch currency first, applies this step's existing merge and
+run-in-flight rules, then reads the check runs and commit statuses for the
+resulting head through `review-cycle`'s `How to wait`. A head change invalidates
+earlier CI and readiness evidence. A clean branch, matching local and remote
+SHA, draft state, or an already-up-to-date response never ends the assessment.
+Merged and closed pull requests exit without further work.
 
-**Never end a turn with the wake slot empty while the check-ins are running.**
-They run from `Ready for review` until the pull request is merged or closed or
-the user says to stop, and wherever the reference file arms a timer at all — the
-three exits below, and nothing narrower. Inside them the slot is that one
-timer, held by the identifier the call returned, and it empties two ways: the
-timer fires, or a CI wait cancels it at `End the wait`. Both are the same
-instruction — fill it before the turn ends. What arms a check-in is therefore
-an empty slot rather than a particular kind of wake: a wake with the timer
-still in flight arms nothing, and a wake that found nothing to do still leaves
-a wake behind it. A turn that ends with no timer and no subscription is a
-session asleep on a pull request nobody else is watching, which is the report
+Failed checks return to `Fix, answer, resolve, push`; missing logs are an
+explicit failed-CI evidence blocker, not green and not "no action needed".
+Every failed-CI or evidence-blocker handoff names the failed checks, current
+head, unavailable evidence, and concrete action needed to resume. Pending or
+unregistered checks use `review-cycle`'s bounded wait and registration rules.
+A cap, review wall, human action, or evidence blocker pauses with the
+outstanding condition and the actual path to resume; it does not reset the
+bound, authorize a retry, or call the undertaking complete.
+
+**Never end a turn with the wake slot empty while check-ins are available.**
+They run from `Open the draft` until the pull request is merged or closed or
+the user says to stop. Inside them the slot is one timer, held by the returned
+identifier, and it empties when the timer fires or `review-cycle` borrows it
+at `End the wait`. Fill it before the turn ends; a still-pending timer is
+reused rather than duplicated. This is the failure
 [`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md) records, and
 [`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) scopes to a
 single harness.
@@ -744,13 +749,12 @@ report does not touch it.
 
 **A short read is a reason to look again, not to stop.** A first readiness
 read that comes back blocked, unknown, or otherwise short of the conditions
-above leaves the report unpublished, and the watch carries the evaluation:
-every check-in at `Keep it current` and every catch-up look takes the
-milestone's readiness read with it, the way it already takes the
-base-currency read, and publishes the report on the first look where the
-conditions hold. An approval that arrives and a mergeability answer that
-settles move no head and no base — the look that notices them is what posts
-the report the first pass withheld.
+above leaves the report unpublished, and the standing continuation carries
+the evaluation. Every check-in and catch-up look reads current-head CI after
+currency, then takes the milestone's readiness read when CI permits progress.
+An approval that arrives and a mergeability answer that settles move no head
+and no base — the look that notices them is what posts the report the first
+pass withheld.
 
 
 Where it stops and waits
@@ -760,9 +764,10 @@ Autonomy is the point, so each pause has to earn itself. Twelve stop the
 sequence. Seven stop it to *ask* — the ambiguous issue, the request too vague
 to write one for, an issue labelled `proposal`, an issue carrying two of the
 six labels, the failing approach, a designated branch the harness states
-ambiguously, and a base merge whose conflict is a real one. A blocked issue, an
-epic, an issue labelled `human`, a running check, and a human action owed stop
-it to report, and wait on something other than an answer.
+ambiguously, and a base merge whose conflict is a real one. A blocked issue,
+an epic, an issue labelled `human`, running or failed CI, a review wall, and a
+human action owed stop it to report the unfinished condition and its actual
+resume path.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing

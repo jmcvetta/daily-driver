@@ -1,0 +1,35 @@
+task_id: undertake-12-draft-ci-remains-unfinished
+description: >-
+  A current draft with red CI and no logs remains unfinished and reports the
+  failed-CI evidence blocker rather than only reporting that nothing is pushed.
+tags: [undertake, behaviour, fire]
+initial_prompt: >-
+  Undertake issue #24 has an open draft PR #25 at head `a1b2c3d4`. Its branch
+  is current and every review finding has been answered, but `lint` and
+  `project` failed on that head and GitHub has no job logs. Nothing local
+  differs from the remote branch. What remains before this undertaking can finish?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on unfinished work for an assigned issue"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The reply identifies failed CI as unfinished work
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
+      Score 1.0 only if the reply says the draft is unfinished, names the failed
+      checks (`lint` and `project`), identifies head `a1b2c3d4` and unavailable
+      logs as the evidence blocker, and continues repair or names the concrete
+      evidence needed to resume. Score 0.0 if it says only that nothing needs
+      pushing, calls the undertaking complete, treats missing logs as green, or
+      proposes empty commits or automatic reruns.
