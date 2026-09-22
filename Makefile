@@ -515,8 +515,8 @@ evals-run-codex: evals-plan evals-preflight
 # a time -- MODEL= names the omp_configs/*.yml overlay stem, e.g.
 #   make evals-run-classes MODEL=glm-5.3
 # There is one experiment file per overlay (evals/experiments/classes-*.yaml),
-# not one Make target per model the way the ablation arm has: sixteen named
-# targets would carry no more information than the sixteen filenames already
+# not one Make target per model the way the ablation arm has: seventeen named
+# targets would carry no more information than the seventeen filenames already
 # do. `TASKS` is overridden here, not narrowed with the usual TASKS= override
 # -- the default `tasks/*/*.yaml` would also hand every other arm's rows to
 # this one, and `--exclude-tags` only screens out three of the four arms this

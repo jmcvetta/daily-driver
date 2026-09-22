@@ -18,7 +18,9 @@ if [[ ! -r "${manifest}" ]]; then
 	exit 1
 fi
 
-pattern='@pytest\.mark\.(skip|xfail)|pytest\.skip\(|\.skip\(|\bxfail\s*=|\bit\.skip\(|\bdescribe\.skip\('
+# `\.skip\(` alone already matches `pytest.skip(`, `it.skip(` and
+# `describe.skip(` as substrings, so those three forms are not named again.
+pattern='@pytest\.mark\.(skip|xfail)|\.skip\(|\bxfail\s*='
 
 fail=0
 while IFS=$'\t' read -r base_count path; do

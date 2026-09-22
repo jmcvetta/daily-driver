@@ -215,18 +215,27 @@ def read_elapsed_minutes(comments: list[dict[str, Any]]) -> int | None:
     """The elapsed minutes from the PR's `First-readiness report` comment, or
     None where there is no such comment or it names no readable duration.
     Two formats are in the wild (`elapsed wall time: H hours M minutes` and
-    `(H hour and M minutes)`); the first match of either wins.
+    `Timing: ... (H hour and M minutes)`); the first match of either wins.
+
+    Scoped to lines containing "elapsed" or "timing" rather than searched
+    against the whole comment body: an unrelated duration mentioned earlier
+    in the same comment (a flaky-CI aside, a retry count) would otherwise be
+    the first hour/minute match `re.search` finds.
     """
     for comment in comments:
         body = str(comment.get("body") or "")
         if not body.lstrip().startswith(_READINESS_MARKER):
             continue
-        hour_minute = _HOUR_MINUTE_RE.search(body)
-        if hour_minute:
-            return int(hour_minute.group(1)) * 60 + int(hour_minute.group(2))
-        minute_only = _MINUTE_ONLY_RE.search(body)
-        if minute_only:
-            return int(minute_only.group(1))
+        for line in body.splitlines():
+            lowered = line.lower()
+            if "elapsed" not in lowered and "timing" not in lowered:
+                continue
+            hour_minute = _HOUR_MINUTE_RE.search(line)
+            if hour_minute:
+                return int(hour_minute.group(1)) * 60 + int(hour_minute.group(2))
+            minute_only = _MINUTE_ONLY_RE.search(line)
+            if minute_only:
+                return int(minute_only.group(1))
         return None
     return None
 
@@ -588,20 +597,54 @@ def shallow_clone(repo_slug: str, sha: str, token: str, dest: Path) -> None:
     run("git", "checkout", "-q", "FETCH_HEAD")
 
 
+_SKIP_PATTERN = re.compile(
+    # `\.skip\(` alone already matches `pytest.skip(`, `it.skip(` and
+    # `describe.skip(` as substrings, so those three forms are not named
+    # again -- kept in step with the shell twin in
+    # evals/fixtures/model-classes/shared/check-no-skip.sh.
+    r"@pytest\.mark\.(?:skip|xfail)|\.skip\(|\bxfail\s*=",
+    re.IGNORECASE,
+)
+
+
+def count_skip_markers(base_path: Path, test_files: list[str]) -> list[str]:
+    """`<count><TAB><path>` per test file, read from `base_path`.
+
+    Must be called before any patch is applied to `base_path`: a count taken
+    after `tests.patch` describes the patch's own content, not the base SHA
+    the resulting `check-no-skip.sh` run is meant to compare the agent's tree
+    against.
+    """
+    lines = []
+    for path in test_files:
+        target = base_path / path
+        count = 0
+        if target.exists():
+            count = len(_SKIP_PATTERN.findall(target.read_text(encoding="utf-8", errors="replace")))
+        lines.append(f"{count}\t{path}")
+    return lines
+
+
 def verify_answer_key(
     repo_slug: str,
     record: dict[str, Any],
     tests_patch: str,
     test_command: str,
     token: str,
-) -> tuple[bool, str, float]:
+) -> tuple[bool, str, float, list[str]]:
     """Clone the base SHA, apply `tests.patch`, and require the test command to
     FAIL; clone the merge SHA and require it to PASS, under `_MAX_TEST_SECONDS`.
-    Returns (accepted, reason, merge_sha_seconds).
+    Returns (accepted, reason, merge_sha_seconds, base_skip_counts).
+
+    The base SHA is cloned once, here, and read for `base_skip_counts` before
+    `tests.patch` is applied to that same checkout -- not cloned a second
+    time later just to take that reading.
     """
     with tempfile.TemporaryDirectory(prefix="model-classes-base-") as base_dir:
         base_path = Path(base_dir)
         shallow_clone(repo_slug, record["base_sha"], token, base_path)
+        skip_counts = count_skip_markers(base_path, record["test_files"])
+
         patch_file = base_path / ".model-classes-tests.patch"
         patch_file.write_text(tests_patch, encoding="utf-8")
         apply = subprocess.run(
@@ -612,13 +655,18 @@ def verify_answer_key(
             timeout=30,
         )
         if apply.returncode != 0:
-            return False, f"tests.patch does not apply to the base SHA: {apply.stderr[:300]}", 0.0
+            return False, f"tests.patch does not apply to the base SHA: {apply.stderr[:300]}", 0.0, skip_counts
         try:
             code, _, _ = run_in(base_path, test_command, _MAX_TEST_SECONDS)
         except subprocess.TimeoutExpired:
-            return False, "test command on the base SHA did not finish within the build-time bound", 0.0
+            return (
+                False,
+                "test command on the base SHA did not finish within the build-time bound",
+                0.0,
+                skip_counts,
+            )
         if code == 0:
-            return False, "tests.patch passes on the base SHA; it is not an answer key", 0.0
+            return False, "tests.patch passes on the base SHA; it is not an answer key", 0.0, skip_counts
 
     with tempfile.TemporaryDirectory(prefix="model-classes-merge-") as merge_dir:
         merge_path = Path(merge_dir)
@@ -627,15 +675,26 @@ def verify_answer_key(
         try:
             code, out, err = run_in(merge_path, test_command, _MAX_TEST_SECONDS)
         except subprocess.TimeoutExpired:
-            return False, f"test command exceeded {_MAX_TEST_SECONDS}s on the merge SHA", 0.0
+            return False, f"test command exceeded {_MAX_TEST_SECONDS}s on the merge SHA", 0.0, skip_counts
         elapsed = time.monotonic() - started
         if code != 0:
-            return False, f"tests.patch fails on the merge SHA: {(out + err)[:300]}", elapsed
+            return False, f"tests.patch fails on the merge SHA: {(out + err)[:300]}", elapsed, skip_counts
 
-    return True, "", elapsed
+    return True, "", elapsed, skip_counts
 
 
-def write_case_fixture(case_name: str, repo_slug: str, record: dict[str, Any], tests_patch: str) -> None:
+def write_case_fixture(
+    case_name: str,
+    repo_slug: str,
+    record: dict[str, Any],
+    tests_patch: str,
+    base_skip_counts: list[str],
+) -> None:
+    """The fixture directory for one selected case: `case.sh`, `tests.patch`,
+    `base-test-files.txt`, and `base-skip-counts.txt` (from `base_skip_counts`
+    -- `verify_answer_key`'s reading of the base SHA it already cloned, taken
+    before it applied `tests.patch` to that checkout).
+    """
     case_dir = CASES_DIR / case_name
     case_dir.mkdir(parents=True, exist_ok=True)
 
@@ -643,8 +702,7 @@ def write_case_fixture(case_name: str, repo_slug: str, record: dict[str, Any], t
 
     base_test_files = "\n".join(record["test_files"]) + "\n"
     (case_dir / "base-test-files.txt").write_text(base_test_files, encoding="utf-8")
-    # `base-skip-counts.txt` is written by `emit_case`, from the base checkout
-    # `verify_answer_key` already produced -- not here, so nothing re-clones.
+    (case_dir / "base-skip-counts.txt").write_text("\n".join(base_skip_counts) + "\n", encoding="utf-8")
 
     case_sh = f"""#!/usr/bin/env bash
 # Clones {repo_slug}#{record['number']} at its base SHA. See `../../shared/lib.sh`.
@@ -655,32 +713,6 @@ fixture_clone_base "{repo_slug}" "{record['base_sha']}"
     case_path = case_dir / "case.sh"
     case_path.write_text(case_sh, encoding="utf-8")
     case_path.chmod(0o755)
-
-
-def emit_case(
-    case_name: str,
-    repo_slug: str,
-    record: dict[str, Any],
-    tests_patch: str,
-    base_checkout: Path,
-) -> None:
-    """`write_case_fixture`, plus a real skip/xfail count from the base
-    checkout `verify_answer_key` already produced -- read once, here, rather
-    than re-cloning just to count.
-    """
-    write_case_fixture(case_name, repo_slug, record, tests_patch)
-    skip_pattern = re.compile(
-        r"@pytest\.mark\.(?:skip|xfail)|pytest\.skip\(|\.skip\(|\bxfail\s*=|\bit\.skip\(|\bdescribe\.skip\(",
-        re.IGNORECASE,
-    )
-    lines = []
-    for path in record["test_files"]:
-        target = base_checkout / path
-        count = 0
-        if target.exists():
-            count = len(skip_pattern.findall(target.read_text(encoding="utf-8", errors="replace")))
-        lines.append(f"{count}\t{path}")
-    (CASES_DIR / case_name / "base-skip-counts.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 _TASK_TEMPLATE = """\
@@ -816,7 +848,9 @@ def try_build_one(candidate_id: str, record: dict[str, Any], token: str, smoke: 
         return False
 
     print(f"verifying {candidate_id}...", file=sys.stderr)
-    accepted, reason, merge_seconds = verify_answer_key(repo_slug, record, tests_patch, test_command, token)
+    accepted, reason, merge_seconds, skip_counts = verify_answer_key(
+        repo_slug, record, tests_patch, test_command, token
+    )
     if not accepted:
         record["selected"] = False
         record["rejection_reason"] = reason
@@ -824,10 +858,7 @@ def try_build_one(candidate_id: str, record: dict[str, Any], token: str, smoke: 
         return False
 
     case_name = case_name_for(candidate_id)
-    with tempfile.TemporaryDirectory(prefix="model-classes-base-count-") as base_dir:
-        base_path = Path(base_dir)
-        shallow_clone(repo_slug, record["base_sha"], token, base_path)
-        emit_case(case_name, repo_slug, record, tests_patch, base_path)
+    write_case_fixture(case_name, repo_slug, record, tests_patch, skip_counts)
     write_task_yaml(case_name, repo_slug, record, test_command, smoke=smoke)
 
     record["selected"] = True
@@ -940,6 +971,7 @@ def _run_self_tests() -> None:
     _test_read_elapsed_minutes()
     _test_derive_task_timeout()
     _test_filter_diff_to_paths()
+    _test_count_skip_markers()
     _test_resolve_test_command()
 
 
@@ -1071,6 +1103,19 @@ def _test_read_elapsed_minutes() -> None:
     no_marker = [{"body": "just a regular comment mentioning 5 minutes of downtime"}]
     assert read_elapsed_minutes(no_marker) is None
 
+    # A duration mentioned before the real elapsed-time line must not win.
+    distractor_first = [
+        {
+            "body": (
+                "First-readiness report\n\n"
+                "CI flaked and took 3 hours 40 minutes to stabilize before the "
+                "real run finished.\n"
+                "- elapsed wall time: 22 minutes\n"
+            )
+        }
+    ]
+    assert read_elapsed_minutes(distractor_first) == 22
+
     assert read_elapsed_minutes([]) is None
 
 
@@ -1102,6 +1147,27 @@ def _test_filter_diff_to_paths() -> None:
     assert "src/foo.py" not in filtered
     assert "tests/test_foo.py" in filtered
     assert "+def test_y" in filtered
+
+
+def _test_count_skip_markers() -> None:
+    with tempfile.TemporaryDirectory(prefix="model-classes-selftest-") as tmp:
+        base = Path(tmp)
+        (base / "tests").mkdir()
+        (base / "tests" / "test_a.py").write_text(
+            "@pytest.mark.skip(reason='wip')\ndef test_a(): ...\n"
+            "@pytest.mark.xfail\ndef test_b(): ...\n",
+            encoding="utf-8",
+        )
+        (base / "tests" / "test_b.py").write_text(
+            "def test_c(): ...\n",  # no markers
+            encoding="utf-8",
+        )
+        counts = count_skip_markers(base, ["tests/test_a.py", "tests/test_b.py", "tests/missing.py"])
+        assert counts == [
+            "2\ttests/test_a.py",
+            "0\ttests/test_b.py",
+            "0\ttests/missing.py",
+        ]
 
 
 def _test_resolve_test_command() -> None:

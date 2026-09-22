@@ -1066,7 +1066,7 @@ split, the class and elapsed reads, and `task_timeout` derivation.
 `scripts/check-eval-arms.py` treats `model-classes` as a fourth arm sharing
 the `omp` arm's agent kind — it is Omp under a different model, not a
 different harness — so `agent.type: omp` alone cannot say which arm a row
-belongs to; the `model-classes` tag is what does. Its sixteen experiment
+belongs to; the `model-classes` tag is what does. Its seventeen experiment
 files are read from `omp_configs/` at check time rather than hand-copied into
 the script, so a new overlay's required experiment file is a check failure
 rather than a silent gap.

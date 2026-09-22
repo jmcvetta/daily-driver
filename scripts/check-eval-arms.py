@@ -422,7 +422,7 @@ def check_skips(tasks: list[tuple[Path, dict]]) -> None:
             )
 
 
-def _check_exclude_tags(makefile: str, target: str, arm: str) -> None:
+def _check_exclude_tags(makefile: str, target: str, arm: str) -> str:
     """The named target's recipe excludes every other arm's tag and its own
     skip, in one comma-separated `--exclude-tags` value. Shared by the
     per-experiment loop below and the parameterized-target branch, because
@@ -462,7 +462,7 @@ def check_makefile_routing() -> None:
             # One Make target, parameterised by `MODEL=`, rather than one
             # target per experiment file -- `evals-run-classes` selects
             # `experiments/classes-$(MODEL).yaml` at recipe-expansion time, so
-            # there is one recipe to check, not sixteen, and the pattern it
+            # there is one recipe to check, not seventeen, and the pattern it
             # must contain names the Make variable literally rather than any
             # one resolved filename.
             target = str(parameterized_target)
