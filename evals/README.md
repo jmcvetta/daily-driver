@@ -1,6 +1,6 @@
 # Evals
 
-Sixteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
+Seventeen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
 than by `claude plugin eval`. The reasoning for the harness is
 [`docs/notes/0002-eval-harness.md`](../docs/notes/0002-eval-harness.md);
 the short version is that the built-in cannot be run on this account, is
@@ -12,7 +12,8 @@ evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
 │   ├── omp-*.yaml                  one two-variant Omp experiment per model
-│   └── codex.yaml                  the same suites, on Codex — see "The Codex arm"
+│   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
+│   └── classes-*.yaml              one model-classes experiment per omp_configs/ overlay
 ├── tasks/
 │   ├── pr/              does `pr` fire when a PR is opened, and only then?
 │   ├── pr-title/        … when a title is written, and only then?
@@ -30,10 +31,16 @@ evals/
 │   ├── session-title/   … when the session is named, and not the PR?
 │   ├── task-worktree/   … before repository-changing work, and not for read-only work?
 │   ├── constitution/    does the constitution reach a subagent, and land?
-│   └── review-depth/    does `review` send the right panel at the diff?
-├── fixtures/review-depth/
-│   ├── shared/          builds the git repository every case starts from
-│   └── cases/<name>/    one `case.sh`, mounted alone beside `shared/`
+│   ├── review-depth/    does `review` send the right panel at the diff?
+│   └── model-classes/   does this model finish real delegated work? see below
+├── fixtures/
+│   ├── review-depth/
+│   │   ├── shared/       builds the git repository every case starts from
+│   │   └── cases/<name>/ one `case.sh`, mounted alone beside `shared/`
+│   └── model-classes/
+│       ├── shared/       clones the source repo's base SHA; the two grading checks
+│       ├── cases/<repo>-<pr>/  `case.sh` + `tests.patch`, one per selected PR
+│       └── candidates.json     every qualifying PR the builder saw, selected or not
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
@@ -987,6 +994,82 @@ nothing while looking like a measurement. The one thing worth alarming on, a
 turn arriving with the anchor already in it, is logged where it happens instead:
 it means the built-in has started rendering the transcript itself and
 `coder-eval-codex` has become a no-op worth deleting.
+
+## The model-classes suite
+
+Every suite above is authored: a case is a fixture someone built to exercise
+one rule. `model-classes` is built instead, by `scripts/evals-cases-from-prs.py`,
+from pull requests this repository's own sources already merged. A merged
+pull request that closed a task issue and shipped its own tests is an answer
+key nobody has to write: the base SHA is the "before", the merge SHA is the
+"after", and the PR's diff to its test files is what a correct implementation
+must make pass. What it measures is the model, not the skill — the suite
+carries no plugin and no ablation, one variant per case, because the question
+is whether a given model, run in the `task` role real dispatch would put it
+in, finishes ordinary delegated work and leaves its own tests passing.
+
+**What it measures.** Six cases, drawn from `jmcvetta/career` and
+`apps/usd2oz-web` in `Green-Pagoda/pagoda`: three `mechanical`, three
+`standard`, the smallest qualifying candidate of each `class:` tag by changed
+lines, each verified once at build time to fail on the base SHA and pass on
+the merge SHA before it was shipped. A case's `initial_prompt` names the issue
+the pull request closed; its three `run_command` criteria check, in order,
+that no test file present at the base SHA was deleted, that no skip/xfail
+marker was added to one, and that the pull request's own tests pass once
+`tests.patch` is applied. `evals/fixtures/model-classes/candidates.json`
+records every qualifying pull request the builder saw, selected or not, so a
+later run can widen the suite without re-walking history.
+
+**What it does not measure.** No `advanced` case: that class is decided by
+the production table and public benchmarks, not by a fixture small enough to
+grade in two minutes (see `skills/issue-body/references/model-classes.md`).
+No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
+is the `omp` arm's, over a different question. And nothing here proves a
+model *should* run in the `task` role generally, only that it cleared six
+specific cases; `make evals-run-classes` is a floor to check before promoting
+a model into that role, not the whole case for doing so.
+
+**Running it.** One experiment file per `omp_configs/*.yml` overlay
+(`evals/experiments/classes-<overlay>.yaml`), its `agent.model` read from that
+overlay's `task` role (falling back to `default` where the overlay names no
+separate one, the same fallback Omp itself applies):
+
+```
+make evals-run-classes MODEL=glm-5.3
+make evals-run-classes MODEL=cocktail
+```
+
+`defaults.repeats` is 3 in every file, so a full run is 6 cases times 3
+repeats: 18 replicates per model, each a real `git apply` plus the
+repository's own test command (`pytest` or `pnpm exec vitest`) inside a
+shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
+`GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
+process, so a token exported before `coder-eval run` is what `case.sh` clones
+with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
+or use the `smoke`-tagged case per class (the smallest of each) to check a new
+overlay cheaply before spending a full run on it.
+
+**Building more cases.** `python3 scripts/evals-cases-from-prs.py owner/repo
+[--path-prefix DIR]` scans a source's merged pull requests and appends
+qualifying ones to `candidates.json`; `--select` then runs the build-time
+answer-key check on the smallest candidates of each class and emits fixtures
+and task YAMLs for the ones that pass, up to `--per-class` each (default 3).
+An `unlabelled` candidate — one whose closed issue carries no `## Model
+class` section — needs `--class-override owner/repo#N=mechanical` (or
+`standard`) before it can be selected; the six shipped cases include three,
+reviewed by hand against `skills/issue-body/references/model-classes.md`'s
+table. The script's own module docstring has the full usage, and its
+self-tests (run offline, every invocation, against inline JSON-shaped GitHub
+API fixtures) are the acceptance test for the qualifying filter, the test-file
+split, the class and elapsed reads, and `task_timeout` derivation.
+
+`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm sharing
+the `omp` arm's agent kind — it is Omp under a different model, not a
+different harness — so `agent.type: omp` alone cannot say which arm a row
+belongs to; the `model-classes` tag is what does. Its sixteen experiment
+files are read from `omp_configs/` at check time rather than hand-copied into
+the script, so a new overlay's required experiment file is a check failure
+rather than a silent gap.
 
 ## Two defaults, decided on purpose
 
