@@ -25,6 +25,8 @@ The requested Omp model was `vercel-ai-gateway/deepseek/deepseek-v4-pro`. `omp m
 
 The subject model was the requested Omp model. The `agent_judge` criterion in the session-title row used `claude-sonnet-5` on the subscription. The selected files contained no enabled `llm_judge` criterion; the exact preflight reported that fact. This judge asymmetry is part of the measurement.
 
+The measured revision is **unknown**. Every preserved task artifact reports `git_commit: unknown` and `skills_git_commit: unknown`, so the run does not prove the exact source revision that served it. The provenance record's `plugin_revision.commit` (`c10728743d463e67d811e779d4f78a85cbc818d8`) is the checkout used to re-record the historical run, not a claim about the measured revision. It was recorded at `2026-09-22T13:43:16.233803+00:00`; the run itself started at `2026-09-22T20:17:19.208509` in the run metadata.
+
 ## Per-replicate scores and deltas
 
 Scores are in replicate order `00, 01, 02, 03, 04`. Delta is `with-plugin - bare`.
