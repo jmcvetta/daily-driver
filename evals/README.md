@@ -38,12 +38,19 @@ evals/
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
 
+## Provenance
+
+Every measured figure must cite a committed record under
+[`provenance/`](provenance/). A figure without that citation is an
+**unrecorded** anecdote: its run artifacts are no longer available for audit.
+
 ## Running them
 
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
 make evals-run        # the whole suite on Claude Code, both variants. Real money.
+make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
@@ -182,11 +189,12 @@ work asked for, which is the shape a description reaching for "noticing" would
 misread as an invitation.
 
 `task-worktree/` tests the boundary and the work, not a narrated command.
-`01` runs the same Git fixture through each CLI arm and accepts only a branch
-from the remote default, a registered sibling worktree, the changed file there,
-and an unchanged primary checkout. `04` starts detached and requires the
-feature branch in place. `02` keeps read-only review out; `03` keeps an already
-attached worktree from nesting another one.
+`01` names the feature branch but says nothing about isolation; the rule and
+skill must supply the sibling worktree. The same Git fixture runs through each
+CLI arm and accepts only a branch from the remote default, the changed file in
+a registered sibling worktree, and an unchanged primary checkout. `04` starts
+detached and requires the feature branch in place. `02` keeps read-only review
+out; `03` keeps an already attached worktree from nesting another one.
 
 `issue-labels/` is separated from `issue-deps`, and the two are one word
 apart: both are about an issue, and both are reached for with "what does this
@@ -231,11 +239,36 @@ the id it returned.
 constitution's own test, described under "Checks" in the repository README. Its credential-free half is
 `scripts/check-constitution.py`.
 
-It asks two questions, not one. `reaches-subagent` asks whether the text
-arrives; `reply-is-concise` asks whether it changes anything once it has. The
-second is what a delivery test cannot tell you, and until it existed every
-amendment to the constitution shipped on argument alone. See "The constitution
-suite" below for why that case is the one the file gets first.
+**The compliance rows differ in how much true material the model is holding,
+and that turns out to be the axis that matters.** `reply-is-concise` asks a
+question with one honest answer, so the model gives it: measured at 1.000 in
+every arm of every run, treated and bare alike, which means it separates
+nothing — not two versions of the rule, and not a session carrying the
+constitution from one without it. **Unrecorded.**
+`answer-selects-from-findings` first spends a turn filling the context with
+five true findings the model wrote itself, and only then asks for one of them.
+That is a selection problem rather than a compression one, and it is where the
+rule is actually load-bearing. A compliance row that scores 1.000 everywhere is
+proving the model's default, not the constitution — issue #279's comparison
+concluded nothing for exactly that reason, and this row is what came out of it.
+
+Its first probe run scored 0.40 bare against 0.80 treated, five replicates
+each, with the correctness floor at 1.000 in all ten. **Unrecorded; the run
+record is not committed.** Reviewing the run showed the simulated interlocutor
+drifting off the question it was given: in one of the ten replicates it answered
+itself and ended the dialog, so the graders read the audit instead of the reply,
+and in three more an extra turn let it state the answer before the question
+arrived. The row's `simulation` block has since been narrowed — two turns
+instead of three, the model pinned, the `description` stripped of anything
+describing the rule — so the run that produced 0.40/0.80 was made under a
+configuration this repository no longer holds. The narrowing does not remove
+the drift: at two turns a self-answer lands on the graded turn instead of a
+spare one. Both graders now read the dialog and mark a replicate the drift
+spoiled. The mark does not remove it from anything: a spoiled replicate still
+scores 0.0 and still drags the mean until somebody drops it by hand. What it
+buys is that the reader can now tell which zeros those are. What the row
+establishes today is that it is not at ceiling; the number itself needs a fresh
+run before any amendment is tested against it.
 
 `review-depth/` asks whether `review` sends the *right panel* at the right
 diff. Every case is anchored on something a person would notice if routing
@@ -383,8 +416,8 @@ row records a false negative a full run would never have produced.
 
 ## The constitution suite: reach, then compliance
 
-Both rows carry `skip:codex` and are absent from the Codex arm. `coder_eval`'s
-Codex agent links skills and installs no hooks, so the constitution never
+Every row there carries `skip:codex` and is absent from the Codex arm.
+`coder_eval`'s Codex agent links skills and installs no hooks, so the constitution never
 reaches that session and a zero there would say nothing about the constitution.
 See "The Codex arm" below.
 
@@ -414,7 +447,7 @@ bubble into the parent's telemetry tagged with `parent_tool_use_id`, and
 same hole — the parent could simply type the answer. Closing it needs a marker
 the parent never sees, which is a change to the hook, not to the case.
 
-### `reply-is-concise`, the compliance half
+### `reply-is-concise`, the first compliance row
 
 Reach is settled; whether an injected rule *lands* is not, and `reply-is-concise`
 is the first case here that asks. It picks the `Before you reply` rule because
@@ -467,6 +500,134 @@ rubric inherits it — so the case measures compliance with the budget as writte
 and says nothing about whether the budget is set at the right place. Moving the
 number means moving it in both files, together.
 
+### `answer-selects-from-findings`, the row that is not at ceiling
+
+`reply-is-concise` scores 1.000 in every arm of every run, bare arms included.
+**Unrecorded.** It separates nothing: a row at ceiling on both sides is
+measuring the model's default rather than the rule. This row is built to separate.
+Turn one asks for an audit of a five-file service, is meant to be long, and is
+not graded — it exists to fill the context with five true findings the model
+wrote itself. Turn two asks which of them breaks first under load, and it is
+the reply to that turn both graders read. Four of the five are load-independent
+by construction, so the answer is not arguable, and the four decoys are real
+bugs rather than trivia: repeating them is repeating things worth knowing,
+which is the pull the rule has to overcome.
+
+Two graders, each able to fail the row alone. The floor grader checks the pool
+is named, so silence is never rewarded. The selection grader scores what the
+reply carried beyond the answer, explicitly not its length.
+
+Its weakness is the interlocutor. `coder_eval` has no scripted user turn, so
+turn two's wording is a `constraints` instruction to a roleplaying model rather
+than a pin, and the first probe run showed it drifting — see the block above
+and the file's own header for what that cost and what was narrowed in
+response.
+
+The graders read the dialog, so the drift is scored rather than hidden. Both
+criteria set `include_dialog: true`, and each judge checks the second user
+turn before it grades anything: a turn that never arrived scores 0.0 under
+`ANCHOR: no-question`, and one that asked the question while giving the answer
+away scores 0.0 under `ANCHOR: tainted-question`. Grep those tokens to tell a
+replicate that measured nothing from one that measured non-compliance, which
+scores under `ANCHOR: result`.
+
+`simulation.total_turns` does not do that job. It catches only an abort — a
+stop token, or a simulator failure or timeout — and reads 2 for every
+self-answer, which is the common failure. What the anchors still leave to the
+reader: a lost replicate scores 0.0 like any other, so it drags the mean until
+someone drops it by hand, and the check itself is a judgement by the grading
+model rather than a field. Read the dialogs before trusting a mean.
+
+### `completion-report-is-lean`, the row that grades a report
+
+`reply-is-concise` grades an *answer*. So does `answer-selects-from-findings`,
+the section above. Both ask a question with one honest factual answer, and issue
+#279's comparison across five probes of that shape measured a paired difference
+of exactly 0.000, three of them at ceiling in both arms. **Unrecorded.** A probe
+both arms pass cannot show a rule working.
+
+The verbosity people complain about arrives somewhere else: in the text an
+agent writes *after* doing work the user watched it do. This row grades that.
+One turn. The agent is asked to rename one constant across the two files that
+mention it, makes the edit, and closes with its own report — which is already
+the final assistant message, so both graders reach it with no simulated second
+turn and none of the simulator drift the sibling row's header records.
+
+The fixture is empty on purpose: no planted defect, no ambiguity, no surprise,
+no second caller, no test and no lint. Every one of those would be a legitimate
+thing to write about, and a report that is long because the work was
+interesting measures nothing. The honest report here is one sentence. The
+prompt says nothing about how to report, how long to be, or brevity — that
+steer is what the row exists to exclude.
+
+The fixture must also neutralise the constitution's *own* post-work rules, not
+only the work's interest. The constitution tells the agent to commit as it
+works and to leave nothing uncommitted, and it is in force in the treated arm
+alone — so a sandbox that is not a git repository hands that arm `fatal: not a
+git repository`, a real anomaly its report has to carry, and makes the treated
+report longer for a reason that is not concision. A `pre_run` command builds
+the repository and commits the fixture, so the obligation is met in silence.
+
+That fix is not enough on its own, and three attempts proved it. Adding the
+repository armed "commit as you work", which the rubric scored as an
+unsolicited next step; making the commit a fact armed `task-worktree`, whose
+branch and sibling worktree are the same shape again. The plugin exists to
+change how an agent behaves around a repository, so every repository-shaped
+fixture hands the treated arm more true things to say, and each fixture patch
+produces the next instance of the same confound. **The rubric answers it
+instead, in one block: version-control housekeeping the agent REPORTS is NOT
+SCORED, and an invitation to do it is a closing offer.** That block in
+`completion-report-is-lean.yaml` is the only statement of the rule, and it
+alone settles which operations it covers and how each case falls; this
+paragraph summarises why the rule exists and defers to it on what the rule
+says. The line is report against invitation, not the presence of a question
+mark, because the two failures differ. One arm is told to do this work, so
+reporting it is that arm obeying its rules. An invitation is the opposite: the
+same rules say to commit without asking permission, so an agent that asks has
+departed from them. It costs sensitivity, and that is the smaller loss:
+scoring the reports would measure which arm the replicate is in rather than
+how the agent reports, which inverts the signal rather than weakening it. The
+rule holds for the next constitution rule that gives one arm more to say,
+where another fixture patch would not.
+
+Two `agent_judge` graders, each able to fail the row alone. The floor states
+the rename was made; without it the fluff grader would pay best for silence,
+since a report containing nothing contains no fluff. The fluff grader at weight
+2 is the finding, and it scores six **named** modes and explicitly not length —
+preamble and signposting, recap of what the user already watched, structure
+imposed on three sentences, unasked-for hedging, unsolicited next steps, and a
+closing offer. Naming the modes is what makes this gradable where "is it
+concise" is not, and a correct four-sentence report carrying none of them
+scores 1.0.
+
+Both rubrics carry the `format_messages` warning the rows above carry, and it
+matters more here than anywhere: the final text is rendered twice, and
+"restating what the user already saw" is one of the very modes being hunted, so
+a naive judge scores the renderer's echo as the agent's recap. A sibling row
+lost five replicates to exactly that.
+
+Neither judge can tell whether the edit landed, so an agent that renames
+nothing and says so accurately passes the floor. Two `file_matches_regex`
+criteria close that, both at `weight: 0` — which `coder_eval` documents as
+purely informational, excluded from `weighted_score` and from the pass gate
+alike. The number stays a reading of the report.
+
+They read the sandbox root and only the sandbox root, so a treated-arm agent
+that follows `task-worktree` into a sibling worktree leaves the root untouched
+and both criteria report the rename never landed — falsely, for an agent
+obeying the rules. Nothing scores it, since `weight: 0` is out of the score and
+out of the gate; what it costs is the honesty of that signal. Read a weight-0
+failure as "check the sandbox", not as "the agent did not do the work".
+
+Two things a reader of a comparison should carry. With weights 1 and 2 and a
+floor that is near-constant at 1.0, `weighted_score` is confined to roughly
+[0.33, 1.0], so a third of the number is a constant. And both arms run with the
+SDK's `claude_code` preset in force, which already instructs against preamble,
+postamble and unsolicited summaries — most of the six modes. This row may
+therefore sit at ceiling in both arms, like the answer probes it replaces; the
+row's own header says what to sharpen if it does. Nothing here has been run: no
+score for this row has been measured in either arm.
+
 ## The review-depth suite
 
 Seven cases, each one claim:
@@ -498,13 +659,12 @@ control, and both failures read exactly like a router that dispatched nothing.
 `llm_judge` and `agent_judge` are no help either: their tool-call summariser
 renders an `Agent` call as its `description`, a three-word label the model
 writes.
-
-**Measured, so the size of the risk is on the page rather than assumed.** Three
-live `review` dispatches (CLI 2.1.263, `coder_eval` 0.11.6, `claude-opus-5`,
-2026-09-07 — the three-agent panel over a 1,397-line diff) serialised to 1,437 /
-1,382 / 1,387 characters with `subagent_type` as the **first** key, comfortably
-inside the window: `review` hands its agents a summary and a file list, not the
-diff. So the truncation does not bite this skill today, and an earlier reading of
+**Measured, but unrecorded.** Three live `review` dispatches (CLI 2.1.263,
+`coder_eval` 0.11.6, `claude-opus-5`, 2026-09-07 — the three-agent panel over
+a 1,397-line diff) serialised to 1,437 / 1,382 / 1,387 characters with
+`subagent_type` as the **first** key, comfortably inside the window: `review`
+hands its agents a summary and a file list, not the diff. So the truncation
+does not bite this skill today, and an earlier reading of
 this section — that key order is fixed at `description, prompt, subagent_type`
 and the prompt therefore pushes the field past the window on *every* dispatch of
 consequence — was wrong.
@@ -658,7 +818,7 @@ The Omp home the agent borrows configures each of these provider/model IDs:
 
 | Experiment | Model |
 | --- | --- |
-| `omp-glm-5.3.yaml` | `zai/glm-5.3` |
+| `omp-glm-5.3.yaml` | `vercel-ai-gateway/zai/glm-5.3` |
 | `omp-deepseek-v4-pro.yaml` | `deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
 
@@ -784,8 +944,8 @@ grades `--body`.
 so. That tag takes a row out of one arm and leaves it in the rest, which an arm
 tag cannot express. The reason is that `coder_eval`'s Codex agent links skills
 and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` and no
-`PreToolUse` on the `Agent` tool, and no constitution in the session. Both rows
-would score 0 for a reason that has nothing to do with the constitution. #181
+`PreToolUse` on the `Agent` tool, and no constitution in the session. Every row
+there would score 0 for a reason that has nothing to do with the constitution. #181
 measured that a *real* Codex session does load the hook file and does deliver
 the constitution, behind persisted hook trust and an exactly-echoed
 `hookEventName`; whether the SDK's app-server can be driven through those gates

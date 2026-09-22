@@ -4,7 +4,7 @@ description: >-
   This skill should be used whenever the title of a GitHub pull request is
   being written or revised — including when the user says "fix the PR title",
   "rename the PR", "that title is wrong", or asks what a PR should be called,
-  and including any call Claude makes on its own initiative that writes or
+  and including any call the agent makes on its own initiative that writes or
   revises a pull request's title while opening or updating one. Supplies the
   Conventional Commits convention the title must
   conform to; the type itself comes from `conventional-commits-type`. Not for

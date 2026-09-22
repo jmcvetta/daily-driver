@@ -5,7 +5,9 @@
 essential `hub` process supervisor and `bash` for explicit GitHub API reads.
 This credential-free check holds the persistent watcher lifecycle, bounded
 cleanup, owner-scoped completion replay, and the boundary between process
-durability and agent resumption.
+durability and agent resumption. It also holds `undertake`'s detached
+`keep-current` loop route, which note 0022 moved the `Keep it current` merge
+into.
 """
 
 from __future__ import annotations
@@ -37,6 +39,13 @@ REQUIRED_REVIEW_RULES = (
     "set `persist: true`",
     "`detached: true` goes further",
     "Do not use it here",
+)
+REQUIRED_UNDERTAKE_RULES = (
+    "`pr-keep-current.sh`",
+    "`hub start`",
+    "`hub stop`",
+    "`keep-current-<number>`",
+    "Thirty consecutive",
 )
 COMMON_DURABILITY_RULES = (
     "`daily_driver_schedule`",
@@ -120,6 +129,9 @@ def main() -> None:
         if stale:
             relative = path.relative_to(ROOT)
             fail(f"{relative} retains false durability claims: {', '.join(stale)}")
+    require_rules(
+        UNDERTAKE_REFERENCE, references[UNDERTAKE_REFERENCE], REQUIRED_UNDERTAKE_RULES
+    )
 
     print(
         "check-omp-review-cycle-route: Omp routes preserve durable bounded "

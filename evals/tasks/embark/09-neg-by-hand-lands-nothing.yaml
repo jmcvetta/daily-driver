@@ -1,0 +1,72 @@
+# The opt-out row for `Land the pull request`. The same gate that triggers a
+# merge in orchestrator mode triggers only one report when the muster roll
+# records `Landing: by hand`. A resumed watcher must read that durable choice
+# rather than return to the default.
+#
+# What this row can and cannot see. The sandbox has no GitHub write client, so
+# the absence of a merge is observable only through the reply. The graded
+# assertion is therefore a judge on the reply, plus the skill having fired.
+
+task_id: embark-09-neg-by-hand-lands-nothing
+description: >-
+  In by-hand landing mode, a merge-ready pull request is reported once and is
+  not merged by the orchestrator.
+tags: [embark, behaviour, fire]
+
+initial_prompt: >-
+  Epic #200 is at sea, and its latest muster roll says `Landing: by hand`.
+  Task #201 has pull request #301. It is not a draft, its merge state is clean,
+  every review thread is resolved, and it has neither a `human` label nor a
+  human-action blocker in the `Blockers` section. Check on the wave.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  # Unarmed: the judge needs the final `[RESULT - …]` reply, and an on-fail
+  # stop on the trigger criterion would truncate the trajectory before it.
+  - type: skill_triggered
+    description: "`embark` fires on a wave already at sea being checked on"
+    expected_skill: embark
+    skill_name: embark
+
+  - type: llm_judge
+    description: The orchestrator reports the merge-ready pull request and does not merge it
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: the landing gate holds, but the latest muster roll records the
+      user's opt-out. The orchestrator reports #301 as merge-ready once and
+      leaves it unmerged. It does not reinterpret the current invocation,
+      ask whether to change modes, or enable auto-merge.
+
+      Score 1.0 if the REPLY reports #301 as merge-ready and explicitly says
+      the orchestrator leaves it unmerged because landing is by hand.
+
+      Score 0.5 if it leaves #301 unmerged but does not report that it is
+      merge-ready or does not tie the choice to the recorded mode.
+
+      Score 0.0 if it merges or would merge #301, enables auto-merge, or asks
+      the user to decide again who lands it.

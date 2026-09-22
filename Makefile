@@ -9,11 +9,14 @@ SHELL := /bin/bash
 
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-plugin check-omp-cache-clean check-omp-review-cycle-route \
-	check-omp-agent check-codex-agent check-eval-fixtures \
+	check-omp-extension check-omp-guard-differential check-omp-plugin \
+	check-omp-cache-clean check-omp-review-cycle-route \
+	check-review-cycle-fix-delta-route \
+	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-step-names \
-	check-evals-preflight check-labels check-infra evals-install evals-plan \
-	evals-variants evals-preflight evals-run evals-run-omp \
+	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
+	check-story-fixtures check-infra evals-install evals-plan \
+	evals-variants evals-preflight evals-record evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex mcp-usage
 
@@ -54,15 +57,26 @@ CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
 # laptop and CI get PyYAML from the same lock and cannot drift apart.
 
 # git_sync: sync master with origin and delete local branches whose upstream
-# is gone. Branches checked out in a linked worktree (marked '+' by
-# `git branch -vv`) are reported as a warning rather than deleted — removal
-# needs an explicit `git worktree remove`
+# is gone. A gone branch still checked out in a linked worktree has the
+# worktree removed first; `git worktree remove` refuses a worktree holding
+# uncommitted or untracked files (or one that is locked), and any refused
+# worktree is warned about and kept, branch included.
 git_sync:
 	git checkout master
 	git pull
 	git fetch --prune
-	git branch -vv | awk '/: gone\]/ && !/^\+/ {print $$1}' | xargs -r git branch -D
-	@git branch -vv | awk '/: gone\]/ && /^\+/ {printf "WARN: worktree-linked branch kept (upstream gone): %s\n", $$2}' >&2
+	@git branch -vv | awk '/: gone\]/ {sub(/^\+ /, ""); print $$1}' | \
+	while read -r b; do \
+		wt=$$(git worktree list --porcelain | awk -v b="$$b" '/^worktree /{p = substr($$0, 10)} /^branch /{if (substr($$0, 8) == "refs/heads/" b) {print p; exit}}'); \
+		if [ -n "$$wt" ]; then \
+			if ! git worktree remove "$$wt"; then \
+				printf 'WARN: worktree for gone-upstream branch %s could not be removed; kept: %s\n' "$$b" "$$wt" >&2; \
+				continue; \
+			fi; \
+			printf 'removed stale worktree: %s\n' "$$wt"; \
+		fi; \
+		git branch -D "$$b"; \
+	done
 
 # omp-update-daily-driver: refresh this repository's installed Omp plugin
 # without deleting Omp's shared plugin state. Updating the marketplace replaces
@@ -77,9 +91,13 @@ omp-update-daily-driver:
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-cache-clean check-omp-review-cycle-route check-omp-agent \
+	check-omp-extension check-omp-guard-differential check-omp-cache-clean \
+	check-omp-review-cycle-route \
+	check-review-cycle-fix-delta-route check-omp-agent \
 	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
-	check-eval-arms check-step-names check-evals-preflight check-labels
+	check-eval-arms check-step-names check-evals-preflight \
+	check-evals-provenance check-labels check-labels-fixtures \
+	check-story-fixtures
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -154,13 +172,20 @@ check-ask-in-chat:
 	python3 scripts/check-ask-in-chat.py
 
 # The acceptance test for the Omp runtime adapter: import extensions/
-# daily-driver.js with a fake ExtensionAPI and assert the Omp `ask` tool is
-# blocked (with a reason that sends the question to chat), that the title and
-# schedule/cancel tools behave, and that package.json wires the extension.
-# Credential-free like the other script legs, so it runs on a laptop and CI
-# alike. Node ships with the harness; no package install is involved.
+# daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
+# primary/detached-worktree mutation guard, the four tools, and package wiring.
+# Credential-free like the other script legs, so it runs on a laptop and CI.
+# Node ships with the harness; no package install is involved.
 check-omp-extension:
 	node scripts/check-omp-extension.mjs
+
+# check-omp-guard-differential: the worktree guard measured against bash rather
+# than against what somebody thought of. Each command shape is run for real in
+# a throwaway repository, and the guard's verdict is checked against whether
+# the primary checkout actually moved. Credential-free and network-free, but it
+# runs git and bash dozens of times, so it is its own leg.
+check-omp-guard-differential:
+	node scripts/check-omp-guard-differential.mjs
 
 # check-omp-plugin: the discovery half of the Omp story, which
 # check-omp-extension cannot reach. It starts a real `omp --mode rpc` and asks
@@ -192,6 +217,14 @@ check-omp-cache-clean:
 check-omp-review-cycle-route:
 	python3 scripts/check-omp-review-cycle-route.py
 
+# Every harness's fix-delta route is executable guidance too. This
+# credential-free check rejects a blanket "unavailable on this harness" notice
+# for `Verify the fix delta`, holds the briefed-subagent route and the brief's
+# required elements in place across all three references, and holds the
+# pointers `undertake` keeps to them. See the script's docstring.
+check-review-cycle-fix-delta-route:
+	python3 scripts/check-review-cycle-fix-delta-route.py
+
 # check-scripts: lint the shell a skill ships. `claude plugin validate` reads
 # manifests and never opens a `scripts/` file, so without this leg the plugin's
 # executable half is the only part of the repository nothing checks.
@@ -218,6 +251,21 @@ check-scripts:
 # docstring, and evals/coder-eval-omp/README.md for the arm.
 check-omp-agent:
 	python3 scripts/check-omp-agent.py
+
+# check-omp-agent-settle: the acceptance test for the Omp arm's early-stop
+# record -- that a replicate which early-stops on `skill_triggered` cannot
+# final-score 0 on that same criterion, the failure the first live run
+# measured (2026-09-16, issue #206): the watcher latched a pass on the
+# in-flight skill call while the abort settle dropped every event the frozen
+# trajectory is built from. It drives `coder_eval_omp.agent` against a fake
+# `omp --mode rpc`, so unlike check-omp-agent it needs the pinned
+# `coder_eval` install -- `make evals-install` provides it -- and no network.
+# Not a `check` leg, for the toolchain reason check-omp-plugin's comment
+# records; the evals that need it installed are the ones it protects.
+check-omp-agent-settle:
+	uv run --python 3.13 --with coder-eval==$(CODER_EVAL_VERSION) \
+		--with ./evals/coder-eval-omp \
+		python3 scripts/check-omp-agent-settle.py
 
 # check-codex-agent: the acceptance test for the Codex eval arm's one
 # normalisation -- the `[RESULT - ...]` transcript every judge rubric here
@@ -276,6 +324,11 @@ check-step-names:
 check-evals-preflight:
 	uv run --frozen python3 scripts/check-evals-preflight.py
 
+# check-evals-provenance: validate committed records and exercise the recorder
+# against synthetic run artifacts. It never starts a model or reads a paid run.
+check-evals-provenance:
+	uv run --frozen python3 scripts/check-evals-provenance.py
+
 # check-labels: the issue-label standard is written twice -- the table in
 # `issue-labels` and the resources in infra/github/labels.tf -- and this leg
 # asserts the two say the same thing. Part of `check` because it needs nothing
@@ -285,6 +338,18 @@ check-evals-preflight:
 # See the script's docstring.
 check-labels:
 	python3 scripts/check-labels.py
+
+# check-labels-fixtures: exercise both marked skill tables against temporary
+# Tofu fixtures. The real-tree checker alone cannot prove that a supplemental
+# marker is still parsed or that its silent drift failures remain failures.
+check-labels-fixtures:
+	python3 scripts/check-labels-fixtures.py
+
+# check-story-fixtures: execute offline direct-parent scenarios for the
+# supplemental marker. It proves no live issue, label, or graph write is needed
+# to cover additions, removals, graph failures, closure, and kind invariants.
+check-story-fixtures:
+	python3 scripts/check-story-fixtures.py
 
 # check-infra: parse the OpenTofu stack without credentials. Not part of
 # `check`, which must not start requiring OpenTofu on a laptop that is only
@@ -357,6 +422,14 @@ TASKS ?= tasks/*/*.yaml
 evals-preflight:
 	cd evals && uv run --project $(CURDIR) --frozen python3 ../scripts/evals-preflight.py $(TASKS)
 
+# evals-record: commit provenance for an existing run. Pass its experiment
+# explicitly so a record cannot pair one run's scores with another model pin.
+RUN ?= evals/runs/latest
+evals-record:
+	test -n "$(EXPERIMENT)"
+	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
+		--experiment "$(EXPERIMENT)" --output evals/provenance
+
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and
 # `make check-eval-arms` is what keeps the three sets in step.
@@ -367,7 +440,9 @@ evals-preflight:
 # come back as rows run in the wrong arm, silently, at full price.
 evals-run: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/with-without.yaml \
-		--exclude-tags omp-only,codex-only,skip:claude $(TASKS)
+		--exclude-tags omp-only,codex-only,skip:claude $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-omp: run every recorded Omp model. Each named target keeps one
 # model's two-arm result separate, so reports compare the plugin against the
@@ -380,15 +455,21 @@ evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro evals-run-omp
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
 evals-run-omp-glm-5-3: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
+		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-deepseek-v4-pro: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-deepseek-v4-pro.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
+		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-deepseek-v4-pro.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-gpt-5.6-sol.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp $(TASKS)
+		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-5.6-sol.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-codex: the same suites on Codex. Needs the Codex SDK, which
 # `evals-install` brings in with `coder-eval-codex`, and OpenAI credentials the
@@ -397,11 +478,13 @@ evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 #
 # `skip:codex` is not a spare exclusion: `tasks/constitution/*` carries it,
 # because `coder_eval`'s Codex agent links skills and installs no hooks, so no
-# constitution reaches that arm and both rows would score 0 for the wrong
+# constitution reaches that arm and every row there would score 0 for the wrong
 # reason. See docs/notes/0015-the-codex-arm.md.
 evals-run-codex: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/codex.yaml \
-		--exclude-tags claude-only,omp-only,skip:codex $(TASKS)
+		--exclude-tags claude-only,omp-only,skip:codex $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/codex.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # mcp-usage: which GitHub MCP tools were actually called, rolled up to the
 # toolsets that supply them. Laptop-only like git_sync — it reads Claude

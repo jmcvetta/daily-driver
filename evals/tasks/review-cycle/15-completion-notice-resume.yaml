@@ -1,0 +1,42 @@
+task_id: review-cycle-15-completion-notice-resume
+description: >-
+  A resumed review cycle deduplicates a completion notice by completed head and
+  never attributes an earlier success to a changed head.
+tags: [review-cycle, behaviour, fire]
+initial_prompt: >-
+  Resume a completed non-standalone review round for PR #25. The current head
+  is bbb222 and its conversation comments already contain a review-cycle
+  completion banner naming bbb222. Explain the reads and publication decision.
+  Then explain what changes when the current head is ccc333 after a later clean
+  completed round.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Task]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash]
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+success_criteria:
+  - type: skill_triggered
+    description: "`review-cycle` fires for resumed completion publication"
+    expected_skill: review-cycle
+    skill_name: review-cycle
+  - type: agent_judge
+    description: The reply deduplicates per completed head
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      Find the reply after the last `[RESULT - …]` tag. Score 1.0 only when it
+      re-reads the current head and conversation comments, does not duplicate
+      the existing bbb222 notice, and permits a separate notice only after
+      ccc333 independently meets all completion conditions. It must reject
+      attributing bbb222's completion to ccc333. Score 0.0 if it duplicates the
+      banner or lets a changed head inherit the old result. Otherwise score 0.5.

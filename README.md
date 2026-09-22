@@ -24,11 +24,11 @@ seventeen skills:
 | `pr` | Opens the pull request for the current branch, or brings an open one up to date: branch guard, existing-PR check, draft state. Delegates the title and the body. |
 | `pr-title` | The title: concise, and Conventional Commits, which is what release-please reads to decide the next version. |
 | `conventional-commits-type` | Picks the type — `fix`, `feat`, `refactor` and the rest — from what the change *does*, never from what the diff looks like. |
-| `pr-body` | The body: a one-line summary, a salutation in verse, the `Issues` section that follows it, an executive summary, and engineering detail. |
+| `pr-body` | The body: a one-line summary, a salutation in verse, optional `Blockers` and `Issues` sections, an executive summary, and engineering detail. |
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
-| `issue-labels` | The six labels an issue may carry — `epic`, `task`, `bug`, `proposal`, `research`, `human` — and the readiness each one states, which is what decides whether an agent may start unattended. |
+| `issue-labels` | Six mutually exclusive issue kinds — `epic`, `task`, `bug`, `proposal`, `research`, `human` — decide readiness. `story` marks a confirmed direct child of an epic without changing its kind. |
 | `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
-| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a `Model:` line for `task`; every other label's edit runs under existing rules and acquires nothing. |
+| `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a provider-neutral `Model class` section for `task`; every other label's edit runs under existing rules and acquires nothing. |
 | `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |
 | `readme` | Writes a README that answers what this is and how to use it, and nothing else: the shape, the reading of length as a symptom, and the list of what belongs in a commit message, a changelog or `docs/` instead. |
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |
@@ -36,7 +36,7 @@ seventeen skills:
 | `undertake` | Takes a piece of work from its description to a pull request ready for review, opening the issue first where there is none, posting a first-readiness report — elapsed time from the claim, and the model, harness and session provenance — the first time the pull request is genuinely merge-ready, and keeping the branch current with its base after. |
 | `task-worktree` | Gives every repository-changing task a feature branch and sibling worktree before task research, then keeps all task operations rooted there without changing the primary worktree. |
 | `epic` | Breaks work too big for one pull request into task issues under an epic: the two gates that decide there is one, the plan agreed before anything is written, and the waves the sub-issue panel cannot render. |
-| `embark` | Works an epic: one session per task issue in the current wave — or, where the harness cannot open web sessions, one harness-local subagent per task — the muster roll posted to the epic in place of a confirmation, and the watch kept through the pull requests rather than the session client. |
+| `embark` | Works an epic: one session per task issue in the current wave — or one harness-local subagent per task where web sessions are unavailable — the muster roll in place of confirmation, a pull-request watch, the squash merge of each merge-ready task, and the close of the finished epic. |
 | `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
 
 A skill fires on its slash command where it has one, on natural phrasings of
@@ -71,13 +71,13 @@ every subagent. Nine sections:
 | ------- | --------------- |
 | Voice | Simplified Technical English for prose written in your own voice. |
 | Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
-| Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
+| Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; repository-changing tasks isolated before research; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
 | When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
 | Before you call it done | The project's own gates decide, not reasoning about them — and CI is where they run, not this machine. |
 | Dependencies | Added and pinned through the package manager; never a hand-edited manifest or lockfile. |
-| Delegation | Plan first, delegate the implementation, batch the subagents, spend no more quota than the work needs. |
+| Delegation | Plan first, delegate what runs in parallel, batch the subagents, spend no more quota than the work needs. |
 
 **What belongs there** is the admission test the file states on itself: a rule
 lives here only if it changes behaviour in most sessions, hangs off a nameable
@@ -137,13 +137,49 @@ never reach for the widget, and every session would pay for the rule.
 decision, and `judgement-call` is the skill it is ordered with: that gate
 decides *whether* to ask, the hook decides *how*.
 
-**Omp has no hook mechanism**, so `extensions/daily-driver.js` does the same
-two jobs there: it blocks the `ask` tool with the same wording, and it supplies
-the session-title, reminder, and session-info tools
+**Omp has no hook mechanism**, so `extensions/daily-driver.js` does those jobs
+there: it blocks the `ask` tool with the same wording and supplies the
+session-title, reminder, and session-info tools
 (`daily_driver_set_session_title`, `daily_driver_schedule`,
 `daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
-`ExtensionAPI` makes natural. The constitution needs no adapter on that side —
-Omp's rule provider injects `rules/*.md` carrying `alwaysApply: true`.
+`ExtensionAPI` makes natural. It also closes the failure that weaker models
+exposed in `task-worktree`: direct `write` and `edit` calls in the primary
+checkout or a detached worktree are denied before they change state, as is
+every Git command that rewrites the primary checkout's working tree —
+`checkout`, `switch`, `reset --hard`, `restore`, `stash`, `merge`, `rebase`,
+`pull`, `apply`, `am`, `cherry-pick`, `revert`, `clean`, `rm`, `mv`, `bisect`,
+`sparse-checkout` and `submodule`. The test is whether
+the command rewrites tracked files, not whether it moves HEAD, so the harmless
+forms stay available: `git reset --soft`, `git restore --staged`, `git stash
+list`, `git apply --check` and `git clean --dry-run` all pass. Attached
+feature-worktree mutations, worktree creation, branch attachment in a detached
+worktree — the primary included, where that is the only way out, and for the
+attach itself rather than for every form of `checkout` and `switch` —
+non-Git paths, and synthetic devices remain available. The
+denial sends the model through the skill to establish the task worktree.
+
+**The shell recognizer refuses what it cannot read.** It either enumerates
+every command a `bash` call will run, or says it could not, and a call it
+cannot enumerate is denied. That direction is deliberate. The first version
+asked whether a command *was* dangerous, which needs an understanding of all of
+bash, so every construct it had not met — a here-document, `cd` in a subshell,
+an arithmetic `<<`, a function body — resolved to "allow", and four review
+rounds found six such holes one at a time. Asking instead whether a command is
+*provably* inert turns that class from a silent hole into a visible false
+positive: an `eval` of a variable, an executable named by a variable, an
+unterminated quote are all refused, and the repair is to write the command
+literally. The cost is cheap because the primary checkout is meant to be
+read-only for agents in the first place.
+
+**What it does not claim.** The guard reads shell commands; it does not audit
+programs. A `make`, `python3` or shell script the model runs can reach the
+primary checkout, and nothing here would see it — only the `task-worktree` rule
+stops that. Saying so is the point: a boundary that overstates itself is the
+failure this guard was rewritten to avoid.
+
+The
+constitution needs no delivery adapter on this side — Omp's rule provider
+injects `rules/*.md` carrying `alwaysApply: true`.
 
 **Whether either still fires**: `scripts/check-constitution.py` and
 `scripts/check-ask-in-chat.py` run both hooks against synthetic event JSON, and
@@ -349,10 +385,17 @@ arm's; and `scripts/check-eval-arms.py`, which keeps the Claude, Omp and Codex
 thirds of the forked eval rows in step — and the Makefile's three run targets
 in step with them.
 
-**One of its legs is Omp's.** `scripts/check-omp-extension.mjs` imports the
-adapter under Node with a faked `ExtensionAPI` and asserts the `ask` deny and
-the three tools behave. It needs only Node, so it runs everywhere the rest of
-`check` does.
+**Two of its legs are Omp's.** `scripts/check-omp-extension.mjs` imports the
+adapter under Node with a faked `ExtensionAPI` and asserts the `ask` deny, the
+three tools, and the guard's verdict on commands a person thought of.
+`scripts/check-omp-guard-differential.mjs` asserts the property those verdicts
+are for, against the only authority on what a shell command does: it runs each
+command shape for real under bash in a throwaway repository and checks the
+guard's verdict against whether the primary checkout actually moved. The
+property is one-directional — allowed implies unmoved — so a guard that refuses
+something harmless fails nothing there, and over-blocking is held in check by
+the first script instead. Both need only Node and Git, so they run everywhere
+the rest of `check` does.
 
 Three more checks are deliberately outside it. `make check-omp-plugin` starts a
 real `omp --mode rpc` and asks the running agent what it got: every skill
@@ -374,7 +417,7 @@ credential-free — see [evals/README.md](evals/README.md); `TASKS='tasks/consti
 other half of the constitution's test, since only a real session can prove the
 harness honours the subagent hook. Those rows carry `skip:codex`: the Codex arm
 links skills and installs no hooks, so the constitution never reaches that
-session and both rows would score zero for a reason that is not the
+session and every row there would score zero for a reason that is not the
 constitution's.
 
 `make mcp-usage` is not a check. It counts which GitHub MCP tools this laptop

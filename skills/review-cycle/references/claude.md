@@ -30,26 +30,54 @@ the fallback below. Plain issue comments are not an equivalent artifact.
 Fix-delta verification
 ======================
 
-**Unavailable on the measured surface.** `/code-review --comment` reviews the
-pull request as a whole. It has no measured SHA-range or finding-disposition
-input, so it cannot be represented as an independent delta pass. Do not imply
-that a second full review is targeted verification. Record the unavailable
-result with `mcp__github__add_issue_comment`, leave or return the pull request
-to draft, and report the blocker:
+**Unavailable on `/code-review`, not on the harness.** `/code-review
+--comment` reviews the pull request as a whole; it has no measured SHA-range
+or finding-disposition input, so it cannot be represented as an independent
+delta pass, and a second full review through it is not targeted verification.
+The route is a briefed subagent instead: dispatch exactly one, through the
+`Agent` tool, carrying the bounded brief `SKILL.md`'s `Verify the fix delta`
+requires — the pull request, base branch, full-review SHA, current SHA,
+original findings, dispositions, and pass number. Require it to compare the
+pull request's three-dot content at the reviewed SHA with its three-dot
+content at the current SHA, exclude changes attributable only to the base
+branch, and inspect affected callers. It reports only whether each
+implemented finding is solved and any concrete regressions in that delta. It
+must not perform a full-PR audit, solicit style work, or supply the verdict —
+the session records the result from the subagent's report, never in place of
+it.
+
+Publish any findings it raises through this file's `Review history,
+publication, and threads` route below, then record the pass with
+`mcp__github__add_issue_comment`:
 
 ```text
 Review verification
 scope reviewed: <sha>
-pass: <1|2>
+pass: <n>
 verified: <sha>
 findings: <finding ids and dispositions>
-outcome: unavailable
+outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>
-cap: <open|hit>
+wall: <open|reached>
 usage: <exact value if exposed|unavailable>
 ```
 
+`outcome: unavailable` stays reachable for a dispatch that genuinely fails —
+the subagent returns nothing usable, or does not return at all — recorded as
+such rather than guessed at; a working dispatch is not unavailable by design.
 Never estimate usage when the invocation does not expose it.
+
+Review-cycle completion notice
+==============================
+
+After a non-standalone round meets `SKILL.md`'s completion conditions and
+`Does it go again?` starts no new full review, read the current head with `mcp__github__pull_request_read`, method `get`, and
+conversation comments with the same tool, method `get_comments`. If no existing
+comment starts with `## Review cycle complete! 🎉` and names that head, post
+the separate notice with `mcp__github__add_issue_comment`. Its body starts with
+that heading, gives a short factual completion status, and names the completed
+SHA. Re-read the head immediately before writing; a changed head does not
+inherit the notice. A failed write is reported, never claimed.
 
 The wait
 ========

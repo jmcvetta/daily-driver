@@ -4,7 +4,7 @@ description: >-
   This skill should be used whenever a GitHub pull request is being opened for
   the current branch, or an existing one is being brought up to date as a
   whole — including when the user says "/pr", "open a PR", "create a PR",
-  "raise a pull request", or "update the PR", and including any call Claude
+  "raise a pull request", or "update the PR", and including any call the agent
   makes on its own initiative before creating a pull request, or updating an
   existing pull request beyond its title or body alone. Supplies the branch
   guard, the existing-PR check, draft state and the call on whether there is

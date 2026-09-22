@@ -11,8 +11,8 @@ description: >-
   TODO?", "you decide"). It also fires on "/judgement-call", "just decide",
   "you pick", "use your judgement" (or "judgment") and "stop asking me".
   Supplies the test that separates a question only the user can answer from
-  one Claude can answer himself, and the rule that answers the second kind. It
-  waives no confirmation another rule requires — the constitution's discussion
+  one the agent can answer directly, and the rule that answers the second kind.
+  It waives no confirmation another rule requires — the constitution's discussion
   of an unavoidable workaround among them — and relaxes nothing governing an
   irreversible, destructive or outward-facing action.
 ---
