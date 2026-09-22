@@ -101,6 +101,7 @@ while True:
         emit({"type": "tool_execution_end", "toolCallId": "t1", "toolName": "read",
               "result": {"content": [{"type": "text", "text": "SKILL.md body"}]}})
         emit({"type": "agent_end", "isTerminal": True,
+              "usage": {"inputTokens": 22586, "outputTokens": 47},
               "messages": [{"role": "assistant",
                             "usage": {"input": 22586, "output": 47, "cacheRead": 10,
                                       "cacheWrite": 0, "totalTokens": 22643}}]})
@@ -120,7 +121,7 @@ async def run_scenario() -> None:
     from coder_eval.models.criteria import SkillTriggeredCriterion
     from coder_eval.streaming.events import ToolStartEvent
 
-    from coder_eval_omp.agent import OmpAgent, OmpAgentConfig
+    from coder_eval_omp.agent import OmpAgent, OmpAgentConfig, PROTOCOL_EVIDENCE_FILENAME
 
     class ToolStartCounter:
         """A StreamCallback that counts tool dispatches, like the watcher does."""
@@ -162,6 +163,15 @@ async def run_scenario() -> None:
         )
     finally:
         await agent.stop()
+
+    check(
+        json.loads((workdir / PROTOCOL_EVIDENCE_FILENAME).read_text())
+        == {
+            "omp_argument_keys_seen": ["args"],
+            "omp_usage_keys_seen": ["inputTokens", "outputTokens"],
+        },
+        "post-turn protocol evidence must contain the exact observed key union",
+    )
 
     check(
         counter.n == 1,

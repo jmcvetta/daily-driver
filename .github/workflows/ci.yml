@@ -1,9 +1,9 @@
 # Continuous integration.
 #
-# `CI Success` is the single required status check on master (see
-# infra/github/branch_protection.tf), and the contract with that configuration
-# is the job *name*. Real jobs report into it through `needs`, so adding one
-# never means touching the Tofu.
+# `CI Success` is one of the required status checks on master (see
+# infra/github/branch_protection.tf). The other required checks validate the
+# pull-request title and project its release. Real CI jobs report into the
+# aggregate through `needs`, so adding one never means touching the Tofu.
 #
 # What the jobs assert is the Makefile's `check` target, invoked rather than
 # restated. A CI leg that spelled out the same command line would be one edit
@@ -13,8 +13,7 @@
 # **No `paths:` filter here, and there must not be one.** A path-filtered
 # workflow does not report a skipped check, it reports nothing at all, and a
 # required check that never reports leaves the pull request pending forever.
-# infra.yml and pr-title-check.yml are filtered or narrow precisely because
-# neither is required.
+# infra.yml is filtered because it is not required.
 name: CI
 
 on:

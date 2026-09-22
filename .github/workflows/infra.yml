@@ -19,11 +19,11 @@
 # command line.
 #
 # Safe to gate this way only because `infra` is not a required check. Branch
-# protection requires `CI Success` and nothing else, and ci.yml carries no
-# `paths:` filter for exactly this reason: a path-filtered workflow does not
-# report a skipped check, it reports nothing, and a required check that never
-# reports leaves every pull request pending forever. So requiring this one
-# means dropping the filter first. Nothing checks that.
+# protection requires `CI Success`, `validate-title`, and `preview`; ci.yml
+# carries no `paths:` filter for exactly this reason: a path-filtered workflow
+# does not report a skipped check, it reports nothing, and a required check
+# that never reports leaves every pull request pending forever. So requiring
+# this one means dropping the filter first. Nothing checks that.
 name: Infra
 
 on:

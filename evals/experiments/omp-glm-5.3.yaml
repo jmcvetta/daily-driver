@@ -22,6 +22,9 @@ defaults:
     task_timeout: 780
     turn_timeout: 600
 
+  post_run:
+    - command: 'if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf "%s\n" "{\"omp_argument_keys_seen\":[],\"omp_usage_keys_seen\":[]}"; fi'
+
   agent:
     type: omp
     # Verified against the provider catalog borrowed into the throwaway Omp home.
