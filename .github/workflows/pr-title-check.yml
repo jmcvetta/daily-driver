@@ -29,10 +29,11 @@
 # release-please reads, and the failure modes above are silent, so there is no
 # version of this repository that stops wanting it guarded.
 #
-# It is nonetheless a check rather than a *required* context: branch
-# protection requires `CI Success` and nothing else. Which contexts are
-# required is a branch-protection decision, made in
-# infra/github/branch_protection.tf, not here.
+# It is nonetheless a check rather than a *required* context until the branch
+# protection configuration names it. Branch protection requires this context
+# alongside `CI Success` and `preview`. Which contexts are required is a
+# branch-protection decision, made in infra/github/branch_protection.tf, not
+# here.
 name: PR Title Check
 
 on:
