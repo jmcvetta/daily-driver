@@ -1,0 +1,107 @@
+{
+  "client": {
+    "name": "omp",
+    "version": "omp/18.2.8"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-09-16T18:21:07.034053",
+  "experiment_id": "omp-gpt-5-6-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "bb108b56b64b5123e25856c54296cbf8daa21200",
+    "dirty": false
+  },
+  "recorded_at": "2026-09-22T12:46:10.538580+00:00",
+  "run_id": "2026-09-16_18-01-07",
+  "schema_version": 1,
+  "started_at": "2026-09-16T18:01:07.806835",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-5.6-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-reaches-subagent": [
+          0.25,
+          0.25,
+          0.25,
+          0.5,
+          0.25
+        ],
+        "deps-02-dependabot-is-complaining": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "deps-03-neg-one-named-dependency": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "deps-05-references-search-not-list-omp": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "task_ids": [
+        "deps-03-neg-one-named-dependency",
+        "deps-02-dependabot-is-complaining",
+        "deps-05-references-search-not-list-omp",
+        "constitution-reaches-subagent"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "openai-codex/gpt-5.6-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-reaches-subagent": [
+          0.75,
+          1.0,
+          1.0,
+          0.75,
+          0.75
+        ],
+        "deps-02-dependabot-is-complaining": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "deps-03-neg-one-named-dependency": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "deps-05-references-search-not-list-omp": [
+          0.3333333333333333,
+          0.3333333333333333,
+          0.3333333333333333,
+          0.3333333333333333,
+          0.3333333333333333
+        ]
+      },
+      "task_ids": [
+        "deps-03-neg-one-named-dependency",
+        "deps-02-dependabot-is-complaining",
+        "deps-05-references-search-not-list-omp",
+        "constitution-reaches-subagent"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
