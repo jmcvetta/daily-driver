@@ -1,0 +1,35 @@
+task_id: undertake-12-draft-capped-wake-is-retained
+description: >-
+  A Claude undertaking returns the borrowed wake slot after a pre-ready CI
+  wait reaches its fifteen-minute cap.
+tags: [undertake, behaviour, fire, claude-only]
+initial_prompt: >-
+  /undertake catch-up for issue #24 and draft PR #25: its first CI wait reached
+  the fifteen-minute cap before ready, and the wait borrowed its cadence wake.
+  What must happen before this turn ends?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on a capped draft wait"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The capped wait returns exactly one pre-ready continuation
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
+    prompt: |
+      This sandbox has no live scheduler. Grade the final reply's stated actions,
+      not whether it contains scheduler tool calls.
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
+      Score 1.0 only if the reply says the capped draft remains unfinished,
+      cancels the wake borrowed by the completed wait, then arms exactly one
+      replacement durable cadence wake before the turn ends. It must preserve
+      the fifteen-minute cap as an outstanding stop: no deadline reset, automatic
+      retry, duplicate or stale wake, completion claim, or ready-only continuation.
