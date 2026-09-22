@@ -1,4 +1,519 @@
 {
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.000\nrationale: The final [RESULT - SUCCESS] reply is purely a clarifying-question response and performs none of the required stated actions.\nnotes: tokens: uncached_input_tokens=1773 output_tokens=681 cache_creation_input_tokens=11072 cache_read_input_tokens=68160 total_cost_usd=0.066432 input_tokens=81005; duration: 24.0s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Final [RESULT - SUCCESS] reply \u2014 does not state that the capped draft remains unfinished \u2014 issue",
+            "Final reply \u2014 does not state cancellation of the wake borrowed by the completed wait \u2014 issue",
+            "Final reply \u2014 does not state arming of a replacement durable cadence wake \u2014 issue",
+            "Final reply instead asks the user two clarifying questions about /undertake skill and repo location, deferring all action \u2014 issue",
+            "Reply explicitly says it does not want to guess at what 'borrowed its cadence wake' or the CI-wait cap means, confirming no attempt to satisfy the scored criteria \u2014 issue"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 11072,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 81005,
+            "output_tokens": 681,
+            "total_cost_usd": 0.066432,
+            "uncached_input_tokens": 1773
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.900\nrationale: The final [RESULT - SUCCESS] reply hits all three required story beats in the correct order \u2014 draft/undertaking stays unfinished, the capped wait's borrowed wake is reported released, and a single replacement two-minute check-in wake is committed to before the turn closes \u2014 while explicitly disclaiming a reset, retry, or completion claim.\nnotes: tokens: uncached_input_tokens=1893 output_tokens=5248 cache_creation_input_tokens=16181 cache_read_input_tokens=68160 total_cost_usd=0.132658 input_tokens=86234; duration: 71.7s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply states 'PR #25 stays draft, issue #24's undertaking stays under active watch' \u2014 satisfies 'capped draft remains unfinished' \u2014 correct",
+            "Reply states the borrowed wake 'was... released... at `End the wait` when it hit the fifteen-minute cap \u2014 so the slot is currently empty' \u2014 satisfies the cancel-of-borrowed-wake component \u2014 correct (reported as already done rather than newly performed in this turn, a minor phrasing gap but content-equivalent per grading instructions)",
+            "Reply states 'the next two-minute check-in must be scheduled before this turn closes' \u2014 a single (not duplicate) replacement wake stated as an obligation before turn end \u2014 acceptable per grading prompt's stated-action-as-obligation allowance \u2014 correct",
+            "Reply explicitly disclaims resetting the bound, authorizing a retry, or calling the undertaking complete, and says not to advance to 'Ready for review' \u2014 no completion claim or automatic retry \u2014 correct",
+            "No duplicate/stale wake language present; only one next check-in is referenced throughout \u2014 correct",
+            "Sandbox has no actual project files relevant to this narrative (working dir is an empty/unrelated throwaway copy per environment note), so grading relies entirely on the reply text as instructed by the prompt \u2014 consistent with grading instructions"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.9,
+          "token_usage": {
+            "cache_creation_input_tokens": 16181,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 86234,
+            "output_tokens": 5248,
+            "total_cost_usd": 0.132658,
+            "uncached_input_tokens": 1893
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 0.9333333333333332,
+      "raw_weighted_score": 0.9333333333333332,
+      "replicate_index": 0,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.000\nrationale: The final [RESULT - SUCCESS] reply refuses the task and asks for clarification instead of stating the required actions (unfinished capped draft, wake cancellation, single replacement durable cadence wake).\nnotes: tokens: uncached_input_tokens=1681 output_tokens=525 cache_creation_input_tokens=6031 cache_read_input_tokens=75601 total_cost_usd=0.0460942 input_tokens=83313; duration: 12.2s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Final [RESULT - SUCCESS] block: agent declines to act, citing missing /undertake skill, non-git empty working directory, and no scheduled jobs \u2014 issue",
+            "No statement that the capped draft (15-minute cap) remains unfinished \u2014 required element absent",
+            "No statement cancelling the wake borrowed by the completed wait \u2014 required element absent",
+            "No statement arming exactly one replacement durable cadence wake before turn end \u2014 required element absent",
+            "Reply ends by asking the user for clarification rather than taking/stating any of the required scheduling actions \u2014 issue"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 6031,
+            "cache_read_input_tokens": 75601,
+            "input_tokens": 83313,
+            "output_tokens": 525,
+            "total_cost_usd": 0.0460942,
+            "uncached_input_tokens": 1681
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=1.000\nrationale: The final [RESULT - SUCCESS] reply states, in the required order, that the borrowed wait timer is cancelled (delete_trigger/unsubscribe_pr_activity), that the caller must arm exactly one replacement two-minute check-in cadence wake before the turn ends, and that the draft PR remains unfinished/not ready \u2014 satisfying all required elements without any deadline reset, retry, duplicate wake, or completion claim.\nnotes: tokens: uncached_input_tokens=1941 output_tokens=5610 cache_creation_input_tokens=16682 cache_read_input_tokens=68160 total_cost_usd=0.138325 input_tokens=86783; duration: 54.9s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply step 1 explicitly cancels the borrowed wake: 'Cancel the timer in the wake slot (`delete_trigger`) and unsubscribe from PR activity (`unsubscribe_pr_activity`)' \u2014 correct, matches required 'cancel the wake borrowed by the completed wait'.",
+            "Reply step 2 explicitly arms exactly one replacement: 'the caller (`undertake`) must arm exactly one replacement \u2014 a fresh two-minute check-in wake ... before the turn ends' \u2014 correct, satisfies 'arms exactly one replacement durable cadence wake before the turn ends', with explicit anti-duplicate language ('not leave it empty', 'exactly one').",
+            "Reply step 3 states the draft remains unfinished: 'note that the pull request stays draft \u2014 the gate is untouched and nothing here calls the undertaking ready or complete' \u2014 correct, satisfies the 'capped draft remains unfinished' requirement and explicitly avoids a completion claim.",
+            "No deadline reset or automatic retry language is present \u2014 the new wake is a normal two-minute cadence check-in, not a reset/extension of the 15-minute wait cap, and step 1 explicitly notes 'This does not mean CI passed' \u2014 correct per negative constraints.",
+            "No 'ready-only continuation' phrasing \u2014 the reply never implies the undertaking proceeds only once checks become ready; it frames the two-minute wake as a routine currency check-in \u2014 correct.",
+            "Per grading-prompt instruction, the obligation-phrased actions ('must happen', 'must arm') are treated as fully satisfying stated-action criteria since no live scheduler exists in this sandbox \u2014 consistent with instructions, not treated as a deduction.",
+            "The [ASSISTANT] block duplicates the [RESULT - SUCCESS] text verbatim, which per the grading prompt is expected SDK behavior and not counted as a defect."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 16682,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 86783,
+            "output_tokens": 5610,
+            "total_cost_usd": 0.138325,
+            "uncached_input_tokens": 1941
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.000\nrationale: The final [RESULT - SUCCESS] reply is purely a clarification request about an unknown /undertake skill and missing repo context; it never mentions a capped draft, never states the wait's borrowed wake is being cancelled, and never states arming a replacement durable cadence wake.\nnotes: tokens: uncached_input_tokens=1775 output_tokens=721 cache_creation_input_tokens=11144 cache_read_input_tokens=67840 total_cost_usd=0.067033 input_tokens=80759; duration: 13.7s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Final [RESULT - SUCCESS] block asks three clarifying questions about /undertake, issue #24, and PR #25 \u2014 no mention of any draft, cap, or wake at all \u2014 issue",
+            "No statement that a capped draft remains unfinished \u2014 required element entirely absent \u2014 issue",
+            "No statement cancelling a wake borrowed by a completed wait \u2014 required element entirely absent \u2014 issue",
+            "No statement arming exactly one replacement durable cadence wake before turn end \u2014 required element entirely absent \u2014 issue",
+            "Reply instead defers all action pending user clarification, which is the opposite of performing/stating the required scheduling actions \u2014 issue"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 11144,
+            "cache_read_input_tokens": 67840,
+            "input_tokens": 80759,
+            "output_tokens": 721,
+            "total_cost_usd": 0.067033,
+            "uncached_input_tokens": 1775
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.250\nrationale: The reply correctly states the capped draft stays unfinished and blocked, but never definitively cancels the borrowed wake and arms exactly one replacement \u2014 it hedges with an \"either...or\" framing instead of committing to a single stated action.\nnotes: tokens: uncached_input_tokens=1781 output_tokens=2917 cache_creation_input_tokens=13654 cache_read_input_tokens=110296 total_cost_usd=0.1075572 input_tokens=125731; duration: 35.6s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply item 1: correctly states 'the PR stays draft with this [blocker] named as the outstanding condition' \u2014 satisfies the 'capped draft remains unfinished' requirement \u2014 correct.",
+            "Reply item 2: describes the wake slot as 'borrowed' but never states it is cancelled \u2014 the rubric requires the reply to cancel the wake borrowed by the completed wait before arming a replacement \u2014 issue (missing step).",
+            "Reply item 2: phrasing 'either the check-in cadence wake is re-armed now, or (if a persistent watch process is available) that's confirmed running' presents two alternative, undecided paths rather than committing to exactly one replacement durable cadence wake \u2014 issue (ready-only/hedged continuation, not a single definitive stated action).",
+            "Reply never explicitly names a concrete new cadence (e.g. 'wake in N minutes') \u2014 it only refers abstractly to 're-arming the check-in cadence wake', so it's unclear a genuinely new/durable wake is being stated as armed versus just referencing the old cadence \u2014 minor deviation bordering on stale-wake risk.",
+            "The final [RESULT - SUCCESS] label sits atop content describing an unresolved CI blocker and draft PR \u2014 arguably an implicit completion-claim mismatch, though the body text itself does not claim the underlying task succeeded \u2014 minor deviation.",
+            "Working directory /tmp/sub_agent_693j4gux is empty (no repo artifacts), consistent with this being a scheduler-simulation grading task with no code artifacts to verify \u2014 not applicable to scoring."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.25,
+          "token_usage": {
+            "cache_creation_input_tokens": 13654,
+            "cache_read_input_tokens": 110296,
+            "input_tokens": 125731,
+            "output_tokens": 2917,
+            "total_cost_usd": 0.1075572,
+            "uncached_input_tokens": 1781
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "raw_weighted_score": 0.5,
+      "replicate_index": 2,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.000\nrationale: The final [RESULT - SUCCESS] reply is a refusal asking for clarification; it never states that the draft remains unfinished, never cancels a borrowed wake, and never arms a replacement cadence wake.\nnotes: tokens: uncached_input_tokens=1877 output_tokens=763 cache_creation_input_tokens=11548 cache_read_input_tokens=68160 total_cost_usd=0.069255 input_tokens=81585; duration: 11.7s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Final reply content \u2014 the agent declines to act, citing no git repo, no `/undertake` skill, and no prior session state (fresh session) \u2014 correct as a factual refusal but not a response to the grading criteria",
+            "Required element 'draft remains unfinished' \u2014 absent from the reply \u2014 issue",
+            "Required element 'cancels the wake borrowed by the completed wait' \u2014 absent; reply explicitly states it has 'no prior turn' and 'nothing in active Monitor/ScheduleWakeup state' \u2014 issue",
+            "Required element 'arms exactly one replacement durable cadence wake before the turn ends' \u2014 absent; no ScheduleWakeup/CronCreate action or statement of one is present \u2014 issue",
+            "No deadline reset, retry, duplicate/stale wake, or completion claim appears either, but that alone does not satisfy the rubric since the affirmative required elements are all missing"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 11548,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 81585,
+            "output_tokens": 763,
+            "total_cost_usd": 0.069255,
+            "uncached_input_tokens": 1877
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.000\nrationale: The final reply ends the turn by asking the user a permission question (\"Want me to re-arm... and have you confirm...\") rather than stating that it cancels the borrowed wake and arms exactly one replacement durable cadence wake before the turn closes.\nnotes: tokens: uncached_input_tokens=1935 output_tokens=1050 cache_creation_input_tokens=6817 cache_read_input_tokens=75943 total_cost_usd=0.0548006 input_tokens=84695; duration: 17.1s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "[RESULT] reply correctly states the 15-minute cap is a pause, not completion, and that the draft/comment step is unfinished \u2014 correct",
+            "[RESULT] reply does NOT state a completed/committed action of arming a replacement wake; it instead poses an open question ('Want me to re-arm a 2-minute check-in cadence now via CronCreate, and have you... confirm') \u2014 issue: fails the 'arms exactly one replacement durable cadence wake before the turn ends' requirement",
+            "[RESULT] no explicit statement that the wake slot has been filled/cancelled-and-rearmed as an action taken this turn; it is left contingent on user confirmation \u2014 issue: turn ends without committing to the stop condition being addressed",
+            "No CronCreate call or equivalent stated action appears anywhere in the AGENT OUTPUT for the final turn \u2014 issue: criterion requires the reply itself to state the re-arm as an action, not defer it via a question"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 6817,
+            "cache_read_input_tokens": 75943,
+            "input_tokens": 84695,
+            "output_tokens": 1050,
+            "total_cost_usd": 0.0548006,
+            "uncached_input_tokens": 1935
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.3333333333333333,
+      "raw_weighted_score": 0.3333333333333333,
+      "replicate_index": 3,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.000\nrationale: The final [RESULT - SUCCESS] reply does not perform or state any of the required actions; it only asks clarifying questions and refuses to act, claiming it lacks the /undertake skill and repo access.\nnotes: tokens: uncached_input_tokens=1703 output_tokens=469 cache_creation_input_tokens=10752 cache_read_input_tokens=68160 total_cost_usd=0.062957 input_tokens=80615; duration: 10.5s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Final [RESULT - SUCCESS] block: agent asks 3 clarifying questions instead of stating the draft remains unfinished \u2014 issue: fails required content",
+            "No statement that the capped draft (15-minute cap) remains unfinished/outstanding anywhere in the reply \u2014 issue",
+            "No statement of canceling the wake borrowed by the completed wait \u2014 issue",
+            "No statement of arming exactly one replacement durable cadence wake \u2014 issue",
+            "Agent explicitly declines to act ('I'd rather confirm these than guess at actions'), which is the opposite of the required stated-action content \u2014 issue"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 10752,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 80615,
+            "output_tokens": 469,
+            "total_cost_usd": 0.062957,
+            "uncached_input_tokens": 1703
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a capped draft wait",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The capped wait returns exactly one pre-ready continuation",
+          "details": "score=0.900\nrationale: The final [RESULT - SUCCESS] reply correctly states PR #25 remains draft/unfinished with the pending-checks state named, frames the wake-slot return as inherent to the capped wait ending, and arms exactly one replacement 2-minute cadence job (ab5fca8e) with a self-contained check-in prompt, without resetting the cap, claiming completion, or moving the PR to ready.\nnotes: tokens: uncached_input_tokens=1705 output_tokens=6650 cache_creation_input_tokens=17224 cache_read_input_tokens=115002 total_cost_usd=0.16001239999999997 input_tokens=133931; duration: 77.4s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply states 'PR #25 stays draft with the pending-checks state named' \u2014 correct, no completion or ready-only claim.",
+            "Reply frames 'the wake slot has to be given back and re-armed' and cites note 0010 ('the wake slot is never empty') \u2014 states the cancel/return step conceptually; does not name a specific prior job ID being cancelled, a minor deviation, but consistent with the described mechanism where the borrowed wake is freed automatically when the capped wait ends.",
+            "Final [RESULT] reports exactly one new job, ab5fca8e, recurring every 2 minutes with a self-contained prompt (state/branch read, merge-if-behind, CI assessment, re-arm again) \u2014 correct, single replacement cadence wake, no duplicates or stale wakes.",
+            "No deadline reset of the fifteen-minute cap and no automatic retry of the CI wait itself \u2014 the cap is preserved as an outstanding/unresolved condition, matching the rubric.",
+            "Disclosed 7-day auto-expiry caveat on the cron job is accurate and does not amount to a stale or duplicate wake claim."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.9,
+          "token_usage": {
+            "cache_creation_input_tokens": 17224,
+            "cache_read_input_tokens": 115002,
+            "input_tokens": 133931,
+            "output_tokens": 6650,
+            "total_cost_usd": 0.16001239999999997,
+            "uncached_input_tokens": 1705
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 0.9333333333333332,
+      "raw_weighted_score": 0.9333333333333332,
+      "replicate_index": 4,
+      "task_id": "undertake-12-draft-capped-wake-is-retained",
+      "variant_id": "with-plugin"
+    }
+  ],
   "client": {
     "name": "claude-code",
     "version": "2.1.267 (Claude Code)"
