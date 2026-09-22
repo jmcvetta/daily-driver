@@ -102,6 +102,19 @@ def main() -> int:
                 }
             )
         )
+        for variant_id in ("bare", "with-plugin"):
+            artifact_dir = run_dir / variant_id / "one" / "00"
+            artifact_dir.mkdir(parents=True)
+            (artifact_dir / "task.json").write_text(
+                json.dumps(
+                    {
+                        "success_criteria_results": [
+                            {"criterion_type": "synthetic", "score": 1.0, "error": None}
+                        ],
+                        "early_stop": None,
+                    }
+                )
+            )
         (run_dir / "experiment.json").write_text(
             json.dumps(
                 {
@@ -122,6 +135,8 @@ def main() -> int:
         require(laptop["variants"][1]["model_requested"] == "treated-model", "variant request was not recorded")
         require(laptop["variants"][0]["task_ids"] == ["one"], "task ids were not de-duplicated")
         require(laptop["client"]["name"] == "claude-code", "client type was not read from agent_config")
+        require(len(laptop["attempts"]) == 3, "attempt-level evidence was not recorded")
+        require(laptop["attempts"][0]["criteria"][0]["type"] == "synthetic", "criterion evidence was not recorded")
         run = json.loads((run_dir / "run.json").read_text())
         for row in run["task_results"]:
             row["agent_config"]["type"] = "omp"
@@ -129,6 +144,7 @@ def main() -> int:
         (run_dir / "run.json").write_text(json.dumps(run))
         omp = json.loads(run_recorder(run_dir, experiment, temp / "omp", base_env).read_text())
         require(omp["variants"][0]["model_served"] == "unknown", "Omp request was recorded as served")
+        require(omp["client"]["version"] == "unknown", "Omp recorder version was recorded as historical evidence")
         wrong_experiment = temp / "wrong-experiment.yaml"
         wrong_experiment.write_text(
             experiment.read_text().replace("experiment_id: synthetic", "experiment_id: wrong")
