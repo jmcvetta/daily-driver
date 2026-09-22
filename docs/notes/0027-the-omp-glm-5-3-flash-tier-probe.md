@@ -66,8 +66,9 @@ does not mean that the model engaged the forbidden bulk dependency path.
 Criterion failures were stable across the bare repeats:
 
 - Four bare constitution attempts missed `voice:.*Doubt outranks the register`.
-  The fifth has the `subagent-report.txt` grader error recorded above. The
-  other two criteria passed in the four measured attempts.
+  The third attempt (replicate index 2) has the
+  `subagent-report.txt` grader error recorded above. The other two criteria
+  passed in the four measured attempts.
 - The bare `/deps` row did not trigger the `deps` skill in all five attempts.
 - The bare session-title row did not trigger `session-title` and its
   `agent_judge` returned 0.0 in all five attempts.
