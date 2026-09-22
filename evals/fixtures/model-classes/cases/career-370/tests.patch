@@ -1,0 +1,40 @@
+diff --git a/core/src/intros/store.test.ts b/core/src/intros/store.test.ts
+index 53cf8b71..1e89bbb4 100644
+--- a/core/src/intros/store.test.ts
++++ b/core/src/intros/store.test.ts
+@@ -187,6 +187,35 @@ describe("readIntro: finding the file", () => {
+ 
+     await expect(readIntro(corpusRoot, "hn-1")).rejects.toThrow("hn-1-acme.md");
+   });
++
++  it("answers no intro over kokoro's json sidecars, not a raise", async () => {
++    // The directory is shared: kokoro writes `.json` intro records keyed by
++    // opening id, and an opening id extends the posting id, so a posting with
++    // a multi-role ad prefixes files this module cannot parse as markdown.
++    // #368: all five matched `hn-49156689-`, splitFrontmatter failed on every
++    // one, and with no `.md` of its own the lookup raised instead of answering
++    // "no intro" -- stopping the worklist and the intro-writer for the whole
++    // posting. kokoro's store reads the same folder by globbing only `*.json`;
++    // ignoring markdown wholesale is its half of the contract, and skipping
++    // `.json` here is the mirror.
++    const corpusRoot = await corpus();
++    for (const role of [
++      "applied-ai-engineer",
++      "backend-engineer",
++      "data-engineer",
++      "frontend-engineer",
++      "full-stack-software-engineer",
++    ]) {
++      await withFile(
++        corpusRoot,
++        `hn-49156689--${role}.json`,
++        JSON.stringify({ opening_id: `hn-49156689--${role}`, intro: "kokoro's record" }),
++      );
++    }
++
++    expect(await introFilename(corpusRoot, "hn-49156689")).toBeUndefined();
++    expect(await readIntro(corpusRoot, "hn-49156689")).toBeUndefined();
++  });
+ });
+ 
+ describe("writeIntro", () => {

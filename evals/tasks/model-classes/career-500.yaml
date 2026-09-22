@@ -1,0 +1,48 @@
+task_id: model-classes-career-500
+description: >-
+  jmcvetta/career#500: ci: restore one release PR per component
+tags: [model-classes, class:standard]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/model-classes/shared
+      mount_point: .fixture
+    - type: template_dir
+      path: ../../fixtures/model-classes/cases/career-500
+      mount_point: .fixture
+
+pre_run:
+  - command: bash .fixture/case.sh
+    timeout: 120
+
+agent:
+  type: omp
+  allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+run_limits:
+  max_turns: 30
+  task_timeout: 780
+  turn_timeout: 660
+
+initial_prompt: >-
+  This is jmcvetta/career, checked out at its state before pull request #500. Implement the change described by issue #483 (title: 'ci: restore one release PR per component').
+
+success_criteria:
+  - type: run_command
+    description: No test file present at the base SHA was deleted
+    command: bash .fixture/check-no-deleted.sh
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: No skip or xfail marker was added to a test file
+    command: bash .fixture/check-no-skip.sh
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: The pull request's own tests pass after applying tests.patch
+    command: git apply --whitespace=nowarn .fixture/tests.patch && cd viewer && uv run pytest ../tests/test_infra_github.py ../tests/test_release_lock.py
+    timeout: 720
+    weight: 3
