@@ -800,15 +800,17 @@ pull-request lookup finds nothing and the skill assembles the diff from git.
 
 ## The Omp arm
 
-The same suites, the same plugin, three model families. Each model has one
-experiment file and the two variants every criterion must score: `bare` loads
-no plugin and `with-plugin` installs daily-driver. The delta is the signal.
-`docs/notes/0013-the-omp-arm.md` records the adapter decision; this section
-records the model set.
+The same suites and plugin run four configured subjects across three model
+families. GLM 5.3 Flash is the tier probe beside full GLM, not a fourth family.
+Each model has one experiment file and the two variants every criterion must
+score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
+delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
+decision; this section records the model set.
 
 ```sh
 make evals-run-omp                            # every configured Omp model
 make evals-run-omp-glm-5-3                    # GLM 5.3 only
+make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
 make evals-run-omp-deepseek-v4-pro            # DeepSeek v4 Pro only
 make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol only
 make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
@@ -819,6 +821,7 @@ The Omp home the agent borrows configures each of these provider/model IDs:
 | Experiment | Model |
 | --- | --- |
 | `omp-glm-5.3.yaml` | `vercel-ai-gateway/zai/glm-5.3` |
+| `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
 | `omp-deepseek-v4-pro.yaml` | `deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
 
