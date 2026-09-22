@@ -1,0 +1,31 @@
+# The model-classes capability arm for the cheaper Omp overlay.
+#
+# Measures whether this model, in the role it plays for delegated implementation
+# work (its `task` role), clears the mechanical/standard cases the suite builds from
+# real merged pull requests -- see `scripts/evals-cases-from-prs.py` and
+# `evals/tasks/model-classes/`. One variant: there is no plugin ablation here,
+# only the question "does this model finish this task and leave its own tests
+# passing". `make evals-run-classes MODEL=cheaper` runs it.
+
+experiment_id: classes-cheaper
+description: >-
+  Model-class capability on real merged-pull-request cases, openai-codex/gpt-5.6-luna:high in the
+  `task` role.
+
+defaults:
+  repeats: 3
+
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+
+  agent:
+    type: omp
+    model: openai-codex/gpt-5.6-luna:high
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+variants:
+  - variant_id: default
+    description: This model against the model-classes suite.
