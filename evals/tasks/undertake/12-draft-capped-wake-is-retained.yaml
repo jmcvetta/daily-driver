@@ -26,8 +26,14 @@ success_criteria:
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
     prompt: |
       This sandbox has no live scheduler. Grade the final reply's stated actions,
-      not whether it contains scheduler tool calls.
+      not whether it contains scheduler tool calls and not how the actions are
+      phrased: the agent cannot arm or cancel a wake here, so a reply that states
+      an action as an obligation ("re-arm the check-in wake now") satisfies a
+      stated-action criterion as fully as a completed-action report would.
       Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
+      The transcript may repeat that reply verbatim as an `[ASSISTANT]` block —
+      the SDK duplicates its final message. Grade the content once; the
+      repetition is not a defect in the reply.
       Score 1.0 only if the reply says the capped draft remains unfinished,
       cancels the wake borrowed by the completed wait, then arms exactly one
       replacement durable cadence wake before the turn ends. It must preserve
