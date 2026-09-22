@@ -259,9 +259,9 @@ Every finding gets a verdict, on its thread, and the thread is closed:
 1. **Implemented** — fix it, reply saying so, resolve the thread.
 2. **Rejected** — reply with the reason, and resolve it anyway. A rejection is
    an answer; only silence is not.
-3. **Deferred** — only where the user asks for it. Claude does not propose a
+3. **Deferred** — only where the user asks for it. The agent does not propose a
    deferral: `judgement-call` names "leave a TODO" as the option that is never
-   a real one, so a deferral Claude offers is the noise that skill deletes.
+   a real one, so a deferral the agent offers is the noise that skill deletes.
    When the user does defer, reply naming what was deferred and to where, then
    resolve — an open thread would claim the question is still live.
 4. **A repeat finding** — a reviewer opening a new thread for something already
@@ -272,8 +272,8 @@ Every finding gets a verdict, on its thread, and the thread is closed:
 5. **Never left open silently.** The rule the other four exist to serve.
 
 
-Every reviewer uses this protocol — Claude's own findings, a human's, a bot's,
-or locally returned output. GitHub threads are the durable record, so a
+Every reviewer uses this protocol — the agent's own findings, a human's, a
+bot's, or locally returned output. GitHub threads are the durable record, so a
 reviewer that did not create them is followed by publication rather than a
 transcript-only degradation.
 
