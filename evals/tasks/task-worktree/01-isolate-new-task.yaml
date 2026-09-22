@@ -15,10 +15,8 @@ pre_run:
     timeout: 60
 
 initial_prompt: >-
-  Add a line containing exactly `STRICT_MODE = True` to src/parser.py. Isolate
-  this as branch issue-52-strict-parser in the sibling path
-  ../task-worktree-issue-52 before inspecting the parser. Do not change the
-  primary worktree. Run `bash .fixture/verify.sh linked` from the task worktree
+  On branch issue-52-strict-parser, add a line containing exactly
+  `STRICT_MODE = True` to src/parser.py. Run `bash .fixture/verify.sh linked`
   when finished.
 
 agent:
@@ -44,6 +42,6 @@ success_criteria:
 
   - type: file_matches_regex
     description: The sibling task root passed every fixture invariant
-    path: ../task-worktree-issue-52/.fixture/verification.txt
-    pattern: '(?m)^mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=.*/task-worktree-issue-52\nverified=yes$'
+    path: .fixture/verification.txt
+    pattern: '(?m)^mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=.*\nverified=yes$'
     weight: 2

@@ -40,10 +40,10 @@ The graph
 skill's routes before `Write the graph`.
 
 
-The model a task records
-========================
+The required class
+==================
 
-The `Model:` line and the identifiers it may name are `issue-body`'s — see
-`skills/issue-body/references/omp.md` for how this harness reads it. The task
-bodies are written under that skill's contract at `Open the issues`; nothing
-here reads or writes the line.
+`issue-body` owns the `Model class` section and shared routing guidance in
+[`model-classes.md`](../../issue-body/references/model-classes.md). Task bodies
+are written under that contract at `Open the issues`; this skill neither
+duplicates the taxonomy nor records a concrete model.

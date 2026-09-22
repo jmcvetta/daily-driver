@@ -167,10 +167,14 @@ automatically its blockers, and saying so in edges would be inventing
 relationships.
 
 **The `epic` label and the parent edge are not the same statement**, and both
-are wanted. The label says an issue coordinates others, which is what a reader
-scanning a list needs and what stops an agent starting on it; the edges say
-*which* others, which a label can never say. `issue-labels` owns the first, and
-an epic with no children is a label with nothing behind it.
+are wanted. The label says an issue coordinates others, which stops `undertake`
+starting on it; the edge says *which* children it has. `story` is the derived
+list marker for a confirmed direct child of an epic. After creating,
+changing, removing, or reading a parent relationship, verify the child's
+direct parent, then invoke `issue-labels` to reconcile that marker. The label
+skill owns its write rules: preserve it when the graph read fails, and never
+write an edge to justify it. An epic with no children is a label with nothing
+behind it.
 
 
 Which PR closes an issue

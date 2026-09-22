@@ -4,7 +4,7 @@ description: >-
   This skill should be used whenever a README is being written or revised —
   including when the user says "/readme", "write a README", "update the
   README", "document this directory", "the README is stale", or asks what
-  belongs in one, and on Claude's own initiative before creating or editing
+  belongs in one, and on the agent's own initiative before creating or editing
   any `README.md`, at the root of a repository or inside a directory within
   one. Supplies the two questions a README answers, the shape that answers
   them, the rule that decides how long one runs, and the list of what must

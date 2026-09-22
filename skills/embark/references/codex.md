@@ -44,6 +44,23 @@ exists to reach.
 | `Open the sessions` | Dispatch one implementor per task, concurrently | `multi_agent_v1`, one delegation per task issue in a single wave |
 | `Post the muster roll` | Comment on the epic | `gh issue comment <number> --body-file <path>` |
 | `Post the muster roll` | Mark the wave in the epic's body | `gh issue edit <number> --body-file <path>` |
+| `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
+| `Land the pull request` | Read review threads | `review-cycle`'s `references/codex.md` thread read |
+| `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
+| `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
+| `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
+
+`Land the pull request` uses the same readiness fields as `undertake`'s `The
+milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
+`headRefOid` is the head the merge binds to. The labels and body answer the
+human-action read in the same call. The complete thread graph is the paginated
+GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
+
+The merge is one conditional `gh pr merge` call after the gate holds.
+`--match-head-commit <headRefOid>` makes it fail closed if the task session
+pushes after the read. `Close the epic` posts its evidence comment before
+`gh issue close`, and never calls the latter when a `Summary` claim is missing
+or landing is by hand.
 
 Each delegation's prompt is the task issue number and the instruction to
 undertake it, and nothing else. Duplicate-dispatch protection is unchanged:
@@ -58,25 +75,16 @@ a stop at dispatch, with the wave named, not a declaration that the skill
 does not run.
 
 
-What this surface has not been measured to do
-=============================================
+Class resolution limits
+=======================
 
-**The namespace has never been driven.** [#181](https://github.com/jmcvetta/daily-driver/issues/181)
-could not reach the delegation path — a stub router rejected every spelling
-of `spawn_agent`, and `multi_agent_v2` is not stable — so this file specifies
-the fallback against the namespace rather than against its tools, and the
-provenance below records it. Three things in particular are unmeasured, and
-each is written the way the round should read it:
+The delegation namespace has not been driven. No model or effort argument is
+measured, so do not invent either. Resolve a task's required class only where
+the offered configured route and its actual capabilities can be established;
+otherwise stop that task and report the configuration gap. The muster roll
+records the required class, selected implementor route, and actual model as
+`unreported` when the surface does not report one.
 
-- **A model argument.** No delegation argument is measured to select a model.
-  The cheaper default of `Open the sessions` is therefore expressed as the
-  delegation's default implementor, and the model an implementor actually ran
-  on is read back from what the harness reports of that subagent where it
-  reports one, never recalled; where nothing reports it, the muster-roll row
-  records the implementor's agent type and marks the model unreported — a
-  guessed identifier is not a measurement. The task issue's `Model:` line is
-  advisory, the bypass is the orchestrator's judgement, and `SKILL.md`'s
-  wording is the rule this file does not restate.
 - **Agent-to-agent messaging.** Whether a delegated implementor can send a
   question back to the delegating session is not measured. The route this
   file specifies is `SKILL.md`'s: the advisor is the orchestrator itself, and
@@ -104,8 +112,9 @@ hands its head over the messaging where the namespace carries one, and
 waits; the surface is
 `review-cycle`'s own [`codex.md`](../../review-cycle/references/codex.md):
 `codex exec review --base <branch>`, which starts a fresh session with its own
-model — that is what makes it a named surface rather than a bare subagent,
-and why the round runs it once per diff rather than once per push.
+model — that is what makes it a named surface carrying its own rubric and
+publication route, rather than an ad-hoc dispatch with neither, and why the
+round runs it once per diff rather than once per push.
 
 
 What would have to become true

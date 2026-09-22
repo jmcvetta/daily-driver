@@ -1,0 +1,75 @@
+# The fire row for `Land the pull request`. The landing gate has no judgement
+# in it: once every read holds, the orchestrator merges in the same turn. The
+# pressure this row guards against is the old rule, where a green ready pull
+# request was reported and left for a person.
+#
+# What this row can and cannot see. The sandbox has no GitHub write client, so
+# no pull request can actually be merged. What is observable is what the agent
+# says it will do, so the graded assertion is a judge on the reply, plus the
+# skill having fired at all.
+
+task_id: embark-08-lands-a-ready-pull-request
+description: >-
+  In orchestrator landing mode, a pull request whose complete landing gate
+  holds is squash-merged without a question.
+tags: [embark, behaviour, fire]
+
+initial_prompt: >-
+  Epic #200 is at sea, and its latest muster roll says `Landing: orchestrator`.
+  Task #201 has pull request #301. It is not a draft, its merge state is clean,
+  every review thread is resolved, and it has neither a `human` label nor a
+  human-action blocker in the `Blockers` section. Check on the wave.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  # Unarmed: the judge needs the final `[RESULT - …]` reply, and an on-fail
+  # stop on the trigger criterion would truncate the trajectory before it.
+  - type: skill_triggered
+    description: "`embark` fires on a wave already at sea being checked on"
+    expected_skill: embark
+    skill_name: embark
+
+  - type: llm_judge
+    description: The orchestrator lands the merge-ready pull request without asking
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: the latest muster roll gives landing to the orchestrator, and
+      all four ordered reads hold. It therefore squash-merges pull request
+      #301 in this turn. It does not ask permission, post a summary first,
+      wait for a person, or enable GitHub auto-merge. Saying the merge tool is
+      unavailable in the environment, and stating that this is what would
+      otherwise happen now, counts as merging.
+
+      Score 1.0 if the REPLY says the orchestrator squash-merges, or would
+      squash-merge, #301 now without asking.
+
+      Score 0.5 if it correctly identifies #301 as merge-ready but does not
+      say that the orchestrator merges it.
+
+      Score 0.0 if it asks for approval, leaves #301 for a person, enables
+      auto-merge, or claims that landing is still outside `embark`'s scope.

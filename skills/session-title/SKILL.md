@@ -1,23 +1,22 @@
 ---
 name: session-title
 description: >-
-  This skill should be used whenever the title of the current Claude session
-  is being set or revised — including when the user says "/session-title",
-  "set the session title", "rename this session", "name this session", or
-  "that session title is wrong", and on Claude's own initiative when work on a
-  GitHub issue begins, when the session's subject changes materially, or on
-  any call to the harness's session-title tool. Supplies the
-  character budget a title is written to for the Claude mobile list, and
-  the two forms that title may take. Not the title of a pull request —
-  that is `pr-title`.
+  This skill should be used whenever the title of the current session is being
+  set or revised — including when the user says "/session-title", "set the
+  session title", "rename this session", "name this session", or "that session
+  title is wrong", and on the agent's own initiative when work on a GitHub issue
+  begins, when the session's subject changes materially, or on any call to the
+  harness's session-title tool. Supplies the character budget a title is written
+  to for a mobile list, and the three forms that title may take. Not the title
+  of a pull request — that is `pr-title`.
 ---
 
 # Session title
 
 The name this session carries in the harness's own session list. It is read in
-a column of a dozen siblings, at a glance — on a phone in the Claude lists, in
-a picker in a terminal elsewhere, and in one harness it is an address as well
-as a label. That is the whole design constraint.
+a column of a dozen siblings, at a glance — on a phone, in a terminal picker,
+and in one harness as an address as well as a label. That is the whole design
+constraint.
 
 **The call that sets the title is per harness, and it lives beside this
 file.** [`references/claude.md`](references/claude.md) is the route for
@@ -74,14 +73,29 @@ A title that still overruns at `#{number} {noun}` has nothing left to give.
 Stop there and let it overrun: the identifier and the subject are the two
 things worth more than the budget.
 
-Issue #40, *"New skill: set the Claude session title"*, needs **Tracker
-prefix** alone: `#40 Set the Claude session title` — 32 characters.
+Issue #40, *"New skill: set the session title"*, needs **Tracker
+prefix** alone: `#40 Set the session title` — 29 characters.
 
 Issue #212, *"fix(storage): retry with exponential backoff for the S3 upload
 client"*, loses its type prefix to **Tracker prefix**, then `the`, `with`,
 `for` and finally the adjective `exponential` to **Empty words**, fitting at
 35: `#212 Retry backoff S3 upload client`. **Words from the end** never runs,
 and `client` — the noun the title is about — survives because of it.
+
+
+Orchestrating an epic
+=====================
+
+The session a fleet is watched from — the orchestrator `embark` runs an epic
+from — takes a form of its own, the fleet notice ahead of the epic's number:
+
+    ⛵ EPIC #{number} {shortened epic title}
+
+The notice is the point: a list of five running sessions is one orchestrator
+among the task sessions it opened, and the notice is what tells them apart at
+a glance. The budget counts the whole string, notice included. The epic title
+is shortened by the same cuts `Working on an issue` defines, over whatever
+room the notice leaves.
 
 
 Not working on an issue

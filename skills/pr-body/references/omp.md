@@ -9,4 +9,4 @@ session running in Oh My Pi. Claude Code's routes are in
 - **Revising the body of an existing pull request.**
   `gh pr edit --body "…"`.
 - **Labelling the pull request `human`** beside a body that carries the
-  human-action notice. `gh pr edit --add-label human`.
+  human-action blocker. `gh pr edit --add-label human`.
