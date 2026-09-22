@@ -287,8 +287,8 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 errors.append(f"{prefix}.early_stop must be an object or null")
             measured_score = attempt.get("measured_score", attempt.get("weighted_score"))
             raw_weighted_score = attempt.get("raw_weighted_score", attempt.get("weighted_score"))
-            if not isinstance(measured_score, (int, float)):
-                errors.append(f"{prefix}.measured_score must be numeric")
+            if measured_score is not None and not isinstance(measured_score, (int, float)):
+                errors.append(f"{prefix}.measured_score must be numeric or null")
             if not isinstance(raw_weighted_score, (int, float)):
                 errors.append(f"{prefix}.raw_weighted_score must be numeric")
     return errors
