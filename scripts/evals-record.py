@@ -206,6 +206,7 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
     historical_client_version = run.get("environment_info", {}).get("cli_version", "unknown")
     if not isinstance(historical_client_version, str) or not historical_client_version:
         historical_client_version = "unknown"
+    session_present = "CLAUDE_CODE_SESSION_ID" in os.environ
     return {
         "schema_version": 1,
         "run_id": run["run_id"],
