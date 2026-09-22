@@ -1,7 +1,7 @@
 # The Omp arm's first paid run
 
 **Status:** measured, 2026-09-22.
-**Provenance:** [`omp-glm-5-3-2026-09-22-2026-09-22_14-39-00.json`](../../evals/provenance/omp-glm-5-3-2026-09-22-2026-09-22_14-39-00.json).
+**Records:** [scores and run metadata](../../evals/provenance/omp-glm-5-3-2026-09-22-2026-09-22_14-39-00.json) and [attempt evidence](../../evals/provenance/omp-glm-5-3-2026-09-22-2026-09-22_14-39-00-evidence.json).
 
 Issue #206 ran the authorized replacement once. The earlier GLM attempt and
 its raw artifacts are unrecorded. This note does not use them as evidence.
@@ -18,8 +18,9 @@ times against these four rows:
 - `session-title-07-one-call-sets-the-title-omp`
 
 That is 40 attempts. All finished and their preserved sandboxes remain at
-`evals/runs/2026-09-22_14-39-00/` until this pull request merges. The
-provenance record above is the source for every measured figure below.
+`evals/runs/2026-09-22_14-39-00/` until this pull request merges. The committed
+records above preserve every score, status, criterion result, protocol capture,
+and cost figure used below.
 
 ## Scores
 
@@ -27,18 +28,20 @@ provenance record above is the source for every measured figure below.
 | --- | --- | --- | --- |
 | `constitution-reaches-subagent` | 0.500, 0.500, 0.500, 0.500, 0.500 | 1.000, 1.000, 1.000, 1.000, 1.000 | +0.500, +0.500, +0.500, +0.500, +0.500; mean +0.500 |
 | `deps-01-slash-deps` | 0.000, 0.000, 0.000, 0.000, 0.000 | 1.000, 1.000, 1.000, 1.000, 1.000 | +1.000, +1.000, +1.000, +1.000, +1.000; mean +1.000 |
-| `deps-03-neg-one-named-dependency` | 1.000, 1.000, 1.000, 1.000, 1.000 | 1.000, 1.000, 1.000, 1.000, 0.000 | 0.000, 0.000, 0.000, 0.000, -1.000; mean -0.200 |
+| `deps-03-neg-one-named-dependency` | 1.000, 1.000, 1.000, 1.000, 1.000 | 1.000, 1.000, 1.000, 1.000, ERROR | 0.000, 0.000, 0.000, 0.000, n/a; mean 0.000 over four measured pairs |
 | `session-title-07-one-call-sets-the-title-omp` | 0.333, 0.000, 0.000, 0.000, 0.000 | 1.000, 1.000, 1.000, 1.000, 1.000 | +0.667, +1.000, +1.000, +1.000, +1.000; mean +0.933 |
 
-The bare mean score was 0.392 and the treated mean was 0.950. The paired
-mean difference reported by `coder_eval` is -0.558 for bare minus treated
-(95% CI -1.437 to +0.320, $p = 0.136$). The results are recorded as observed;
-they are not grounds for another paid run.
+The measured bare mean was 0.392 across 20 attempts. The measured treated mean
+was 1.000 across 19 attempts. `coder_eval` reports 0.950 for the treated arm
+only because it retains the timed-out attempt's raw 0.000 placeholder. That is
+an error-as-zero aggregate, not a measured score or a valid paired delta.
+The results are recorded as observed; they are not grounds for another paid run.
 
 ## Every attempt and error
 
 24 attempts succeeded, 15 finished with a failed criterion, and one ended in
-an execution error. No criterion result carried an internal error.
+an execution error. No criterion result carried an internal error. The evidence
+record lists the status, result, and capture output for every attempt.
 
 - All five bare constitution attempts missed
   `voice:.*Doubt outranks the register` in `subagent-report.txt`.
