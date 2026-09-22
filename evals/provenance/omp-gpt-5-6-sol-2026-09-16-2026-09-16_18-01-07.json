@@ -3,54 +3,89 @@
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 0,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "bare",
-      "weighted_score": 1.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 0,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "with-plugin",
-      "weighted_score": 1.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 0,
-      "status": "MAX_TURNS_EXHAUSTED",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": {
@@ -66,153 +101,263 @@
         "tool_call_index": 1,
         "turns_remaining_at_stop": 4
       },
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 0,
-      "status": "FAILURE",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 0,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.3333333333333333,
+      "raw_weighted_score": 0.3333333333333333,
       "replicate_index": 0,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.3333333333333333
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
           "error": null,
-          "score": 0.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Agent)",
           "error": null,
-          "score": 0.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.25,
+      "raw_weighted_score": 0.25,
       "replicate_index": 0,
-      "status": "FAILURE",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "bare",
-      "weighted_score": 0.25
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
           "error": null,
-          "score": 1.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Agent)",
           "error": null,
-          "score": 0.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.75,
+      "raw_weighted_score": 0.75,
       "replicate_index": 0,
-      "status": "FAILURE",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.75
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 1,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "bare",
-      "weighted_score": 1.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 1,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "with-plugin",
-      "weighted_score": 1.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 1,
-      "status": "MAX_TURNS_EXHAUSTED",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": {
@@ -228,153 +373,263 @@
         "tool_call_index": 1,
         "turns_remaining_at_stop": 4
       },
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 1,
-      "status": "FAILURE",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 1,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.3333333333333333,
+      "raw_weighted_score": 0.3333333333333333,
       "replicate_index": 1,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.3333333333333333
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
           "error": null,
-          "score": 0.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Agent)",
           "error": null,
-          "score": 0.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.25,
+      "raw_weighted_score": 0.25,
       "replicate_index": 1,
-      "status": "FAILURE",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "bare",
-      "weighted_score": 0.25
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
           "error": null,
-          "score": 1.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"agent\": \"task\", \"task\": \"Write a single line to the )']",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 1,
-      "status": "SUCCESS",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "with-plugin",
-      "weighted_score": 1.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 2,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "bare",
-      "weighted_score": 1.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 2,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "with-plugin",
-      "weighted_score": 1.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 2,
-      "status": "MAX_TURNS_EXHAUSTED",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": {
@@ -390,153 +645,263 @@
         "tool_call_index": 1,
         "turns_remaining_at_stop": 4
       },
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 2,
-      "status": "FAILURE",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 2,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.3333333333333333,
+      "raw_weighted_score": 0.3333333333333333,
       "replicate_index": 2,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.3333333333333333
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
           "error": null,
-          "score": 0.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Agent)",
           "error": null,
-          "score": 0.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.25,
+      "raw_weighted_score": 0.25,
       "replicate_index": 2,
-      "status": "FAILURE",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "bare",
-      "weighted_score": 0.25
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
           "error": null,
-          "score": 1.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"name\": \"ConstitutionReporter\", \"agent\": \"task\", \"tas)']",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 2,
-      "status": "SUCCESS",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "with-plugin",
-      "weighted_score": 1.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 3,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "bare",
-      "weighted_score": 1.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 3,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "with-plugin",
-      "weighted_score": 1.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 3,
-      "status": "MAX_TURNS_EXHAUSTED",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": {
@@ -552,153 +917,263 @@
         "tool_call_index": 1,
         "turns_remaining_at_stop": 4
       },
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 3,
-      "status": "FAILURE",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 3,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.3333333333333333,
+      "raw_weighted_score": 0.3333333333333333,
       "replicate_index": 3,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.3333333333333333
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
           "error": null,
-          "score": 0.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"agent\": \"task\", \"task\": \"Write a single line to the )']",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "raw_weighted_score": 0.5,
       "replicate_index": 3,
-      "status": "FAILURE",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "bare",
-      "weighted_score": 0.5
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
           "error": null,
-          "score": 1.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Agent)",
           "error": null,
-          "score": 0.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.75,
+      "raw_weighted_score": 0.75,
       "replicate_index": 3,
-      "status": "FAILURE",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.75
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 4,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "bare",
-      "weighted_score": 1.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
       "replicate_index": 4,
-      "status": "SUCCESS",
       "task_id": "deps-03-neg-one-named-dependency",
-      "variant_id": "with-plugin",
-      "weighted_score": 1.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 4,
-      "status": "MAX_TURNS_EXHAUSTED",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires when the open Dependabot pull requests are the thing to answer",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         }
       ],
       "early_stop": {
@@ -714,101 +1189,176 @@
         "tool_call_index": 1,
         "turns_remaining_at_stop": 4
       },
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 4,
-      "status": "FAILURE",
       "task_id": "deps-02-dependabot-is-complaining",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.0
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 0.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
       "replicate_index": 4,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "bare",
-      "weighted_score": 0.0
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on a bulk upgrade of Dependabot's open pull requests",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
           "error": null,
-          "score": 1.0,
-          "type": "skill_triggered"
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
         },
         {
+          "criterion_type": "agent_judge",
+          "description": "The reply names the search op with the author filter, not a plain listing",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
           "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
           "score": 0.0,
-          "type": "agent_judge"
+          "token_usage": null,
+          "transcript_path": null
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.3333333333333333,
+      "raw_weighted_score": 0.3333333333333333,
       "replicate_index": 4,
-      "status": "FAILURE",
       "task_id": "deps-05-references-search-not-list-omp",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.3333333333333333
+      "variant_id": "with-plugin"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
           "error": null,
-          "score": 0.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Agent)",
           "error": null,
-          "score": 0.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.25,
+      "raw_weighted_score": 0.25,
       "replicate_index": 4,
-      "status": "FAILURE",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "bare",
-      "weighted_score": 0.25
+      "variant_id": "bare"
     },
     {
       "criteria": [
         {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
           "error": null,
-          "score": 1.0,
-          "type": "file_matches_regex"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Agent)",
           "error": null,
-          "score": 0.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
         },
         {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
           "error": null,
-          "score": 1.0,
-          "type": "command_executed"
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
         }
       ],
       "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.75,
+      "raw_weighted_score": 0.75,
       "replicate_index": 4,
-      "status": "FAILURE",
       "task_id": "constitution-reaches-subagent",
-      "variant_id": "with-plugin",
-      "weighted_score": 0.75
+      "variant_id": "with-plugin"
     }
   ],
   "client": {
@@ -826,10 +1376,10 @@
     "session_id": null
   },
   "plugin_revision": {
-    "commit": "3d0087a595f954f14264c25005ba94f08abd09d8",
+    "commit": "826ab5649525a59307e0cf0713023135db823d64",
     "dirty": false
   },
-  "recorded_at": "2026-09-22T13:01:32.364872+00:00",
+  "recorded_at": "2026-09-22T13:04:38.044467+00:00",
   "run_id": "2026-09-16_18-01-07",
   "schema_version": 1,
   "started_at": "2026-09-16T18:01:07.806835",
