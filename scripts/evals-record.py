@@ -152,16 +152,10 @@ def run_attempts(run_dir: Path, run: dict[str, Any]) -> list[dict[str, Any]]:
                 "variant_id": variant_id,
                 "task_id": task_id,
                 "replicate_index": replicate,
-                "status": result.get("status", "unknown"),
-                "weighted_score": result.get("weighted_score", 0.0),
-                "criteria": [
-                    {
-                        "type": criterion["criterion_type"],
-                        "score": criterion["score"],
-                        "error": criterion.get("error"),
-                    }
-                    for criterion in artifact["success_criteria_results"]
-                ],
+                "final_status": result.get("status", "unknown"),
+                "measured_score": result.get("weighted_score", 0.0),
+                "raw_weighted_score": artifact.get("weighted_score", result.get("weighted_score", 0.0)),
+                "criteria": artifact["success_criteria_results"],
                 "early_stop": artifact.get("early_stop"),
             }
         )
@@ -279,17 +273,24 @@ def validate_record(record: dict[str, Any]) -> list[str]:
             if not isinstance(attempt, dict):
                 errors.append(f"{prefix} must be an object")
                 continue
-            for field in ("variant_id", "task_id", "status"):
+            for field in ("variant_id", "task_id"):
                 if not isinstance(attempt.get(field), str) or not attempt[field]:
                     errors.append(f"{prefix}.{field} must be a non-empty string")
+            final_status = attempt.get("final_status", attempt.get("status"))
+            if not isinstance(final_status, str) or not final_status:
+                errors.append(f"{prefix}.final_status must be a non-empty string")
             if not isinstance(attempt.get("replicate_index"), int):
                 errors.append(f"{prefix}.replicate_index must be an integer")
             if not isinstance(attempt.get("criteria"), list):
                 errors.append(f"{prefix}.criteria must be a list")
-            if "early_stop" not in attempt:
-                errors.append(f"{prefix}.early_stop must be present")
-            if not isinstance(attempt.get("weighted_score"), (int, float)):
-                errors.append(f"{prefix}.weighted_score must be numeric")
+            if "early_stop" in attempt and attempt["early_stop"] is not None and not isinstance(attempt["early_stop"], dict):
+                errors.append(f"{prefix}.early_stop must be an object or null")
+            measured_score = attempt.get("measured_score", attempt.get("weighted_score"))
+            raw_weighted_score = attempt.get("raw_weighted_score", attempt.get("weighted_score"))
+            if not isinstance(measured_score, (int, float)):
+                errors.append(f"{prefix}.measured_score must be numeric")
+            if not isinstance(raw_weighted_score, (int, float)):
+                errors.append(f"{prefix}.raw_weighted_score must be numeric")
     return errors
 
 

@@ -136,7 +136,7 @@ def main() -> int:
         require(laptop["variants"][0]["task_ids"] == ["one"], "task ids were not de-duplicated")
         require(laptop["client"]["name"] == "claude-code", "client type was not read from agent_config")
         require(len(laptop["attempts"]) == 3, "attempt-level evidence was not recorded")
-        require(laptop["attempts"][0]["criteria"][0]["type"] == "synthetic", "criterion evidence was not recorded")
+        require(laptop["attempts"][0]["criteria"][0]["criterion_type"] == "synthetic", "criterion evidence was not recorded")
         run = json.loads((run_dir / "run.json").read_text())
         for row in run["task_results"]:
             row["agent_config"]["type"] = "omp"
