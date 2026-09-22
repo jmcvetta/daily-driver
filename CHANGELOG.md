@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.38.0](https://github.com/jmcvetta/daily-driver/compare/v0.37.0...v0.38.0) (2026-09-22)
+
+
+### Features
+
+* keep shared guidance model-neutral ([#350](https://github.com/jmcvetta/daily-driver/issues/350)) ([a45d937](https://github.com/jmcvetta/daily-driver/commit/a45d9376e1bc5cd5e040119dbccd331437113862))
+
+## [0.37.0](https://github.com/jmcvetta/daily-driver/compare/v0.36.0...v0.37.0) (2026-09-21)
+
+
+### Features
+
+* **issue-labels:** label epic stories ([#336](https://github.com/jmcvetta/daily-driver/issues/336)) ([b0790df](https://github.com/jmcvetta/daily-driver/commit/b0790df9411b3d038b74b4eba81e38f65f430ef4))
+
 ## [0.36.0](https://github.com/jmcvetta/daily-driver/compare/v0.35.0...v0.36.0) (2026-09-21)
 
 

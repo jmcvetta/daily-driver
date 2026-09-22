@@ -5,7 +5,7 @@ description: >-
   than one issue, or an epic issue is being opened, read or corrected —
   including when the user says "/epic", "break this down", "this is too big
   for one PR", "split #142", "make an epic for this", or "which of these has
-  to land first", and on Claude's own move from a request that will not fit
+  to land first", and on the agent's own move from a request that will not fit
   one pull request to writing issues for it. It is also where `undertake`
   sends work too big for the one issue it takes in, and it fires on an attempt
   to undertake an epic, which carries no code. Supplies the two gates that

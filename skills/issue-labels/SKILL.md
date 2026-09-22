@@ -5,7 +5,7 @@ description: >-
   label on one is being read as a statement about the work — including when
   the user says "/issue-labels", "label this issue", "what label does this
   get?", "is this an epic or a task?", "that label is wrong", "which issues
-  are ready for an agent?", and including any call Claude makes on its own
+  are ready for an agent?", and including any call the agent makes on its own
   initiative that sets a label on an issue. It fires too whenever `undertake`
   opens an issue or reads one it is about to start on. Supplies the six issue
   kinds and the supplemental story marker, including their write rules.

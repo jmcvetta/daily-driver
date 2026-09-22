@@ -421,6 +421,77 @@ class OmpAgent(Agent[OmpAgentConfig]):
             request_id = self._next_request_id()
             await self._send({"id": request_id, "type": "prompt", "message": user_input})
 
+            def dispatch(action: Any) -> bool:
+                """Emit one reducer action as a stream event.
+
+                Shared by the live loop and the abort settle, so a frame that
+                lands after a stop is recorded exactly as one that lands before
+                it. Returns True only for a terminal `AgentFinished`.
+                """
+                nonlocal sequence, current_turn_id
+                if isinstance(action, Text):
+                    emit(
+                        TextChunkEvent(
+                            task_id=self.task_id,
+                            turn_id=current_turn_id,
+                            text=action.text,
+                        )
+                    )
+                elif isinstance(action, TurnStarted):
+                    current_turn_id = action.turn_id
+                    emit(
+                        TurnStartEvent(
+                            task_id=self.task_id,
+                            turn_id=current_turn_id,
+                            model=self.config.model,
+                        )
+                    )
+                elif isinstance(action, TurnFinished):
+                    emit(
+                        TurnEndEvent(
+                            task_id=self.task_id,
+                            turn_id=action.turn_id,
+                            status=TurnEndStatus.COMPLETED,
+                            tokens=None,
+                        )
+                    )
+                    current_turn_id = ""
+                elif isinstance(action, ToolStarted):
+                    sequence += 1
+                    telemetry = CommandTelemetry(
+                        tool_name=action.tool_name,
+                        tool_id=action.call_id,
+                        assistant_turn_index=reducer.turn_count,
+                        timestamp=datetime.now(),
+                        execution_started_at=datetime.now(),
+                        parameters=dict(action.parameters),
+                        sequence_number=sequence,
+                    )
+                    open_tools[action.call_id] = telemetry
+                    emit(
+                        ToolStartEvent(
+                            task_id=self.task_id,
+                            turn_id=current_turn_id,
+                            tool=telemetry,
+                        )
+                    )
+                elif isinstance(action, ToolFinished):
+                    _emit_tool_end(emit, self.task_id, current_turn_id, open_tools, action)
+                elif isinstance(action, ExtensionFailed):
+                    # The constitution and the session tools ride on the
+                    # extension, so this is a defect in the arm rather than
+                    # in the skill under test. Recorded, not swallowed.
+                    self._extension_errors.append(
+                        f"{action.extension_path} on {action.event}: {action.error}"
+                    )
+                    logger.error("omp: extension error: %s", self._extension_errors[-1])
+                elif isinstance(action, AgentFinished) and action.terminal:
+                    # `isTerminal: false` means maintenance has scheduled
+                    # more work and the session will resume, so only a
+                    # terminal end settles the turn.
+                    return True
+                return False
+
             assert proc.stdout is not None
             settled = False
             while not settled:
@@ -447,77 +518,18 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     continue
 
                 for action in reducer.feed(frame):
-                    if isinstance(action, Text):
-                        emit(
-                            TextChunkEvent(
-                                task_id=self.task_id,
-                                turn_id=current_turn_id,
-                                text=action.text,
-                            )
-                        )
-                    elif isinstance(action, TurnStarted):
-                        current_turn_id = action.turn_id
-                        emit(
-                            TurnStartEvent(
-                                task_id=self.task_id,
-                                turn_id=current_turn_id,
-                                model=self.config.model,
-                            )
-                        )
-                    elif isinstance(action, TurnFinished):
-                        emit(
-                            TurnEndEvent(
-                                task_id=self.task_id,
-                                turn_id=action.turn_id,
-                                status=TurnEndStatus.COMPLETED,
-                                tokens=None,
-                            )
-                        )
-                        current_turn_id = ""
-                    elif isinstance(action, ToolStarted):
-                        sequence += 1
-                        telemetry = CommandTelemetry(
-                            tool_name=action.tool_name,
-                            tool_id=action.call_id,
-                            assistant_turn_index=reducer.turn_count,
-                            timestamp=datetime.now(),
-                            execution_started_at=datetime.now(),
-                            parameters=dict(action.parameters),
-                            sequence_number=sequence,
-                        )
-                        open_tools[action.call_id] = telemetry
-                        emit(
-                            ToolStartEvent(
-                                task_id=self.task_id,
-                                turn_id=current_turn_id,
-                                tool=telemetry,
-                            )
-                        )
-                    elif isinstance(action, ToolFinished):
-                        _emit_tool_end(emit, self.task_id, current_turn_id, open_tools, action)
-                    elif isinstance(action, ExtensionFailed):
-                        # The constitution and the session tools ride on the
-                        # extension, so this is a defect in the arm rather than
-                        # in the skill under test. Recorded, not swallowed.
-                        self._extension_errors.append(
-                            f"{action.extension_path} on {action.event}: {action.error}"
-                        )
-                        logger.error("omp: extension error: %s", self._extension_errors[-1])
-                    elif isinstance(action, AgentFinished) and action.terminal:
-                        # `isTerminal: false` means maintenance has scheduled
-                        # more work and the session will resume, so only a
-                        # terminal end settles the turn.
+                    if dispatch(action):
                         settled = True
 
                 if settled:
                     break
                 if max_turns is not None and reducer.turn_count > max_turns:
                     max_turns_exhausted = True
-                    await self._abort_and_settle(reducer)
+                    await self._abort_and_settle(reducer, dispatch)
                     break
                 if should_stop is not None and should_stop():
                     stopped_early = True
-                    await self._abort_and_settle(reducer)
+                    await self._abort_and_settle(reducer, dispatch)
                     break
 
             self._argument_keys_seen.update(reducer.argument_keys_seen)
@@ -795,14 +807,19 @@ class OmpAgent(Agent[OmpAgentConfig]):
         finally:
             self._capture_partial_turn(collector)
 
-    async def _abort_and_settle(self, reducer: TurnReducer) -> None:
+    async def _abort_and_settle(self, reducer: TurnReducer, dispatch: Callable[[Any], bool]) -> None:
         """Stop the in-flight prompt, then read the stream back to a settled state.
 
         The session outlives the turn, so an `agent_end` still in flight would
         be read at the top of the NEXT turn and settle it before the model had
-        said anything. The frames are fed to the reducer rather than dropped, so
-        a tool call that completed during the abort is still in the record — but
-        nothing is emitted for them, because the turn's events are closed.
+        said anything. The frames are fed to the reducer AND emitted, because
+        the turn's record is built from emitted events, not from reducer state:
+        a tool call that started before the stop and finished during the settle
+        must still land in the frozen trajectory. Dropping it here is how an
+        early-stopped replicate loses the very command its early-stop latched
+        on — the live verdict saw the in-flight call, the final check saw an
+        empty record, and every positive row scored 0 with the plugin provably
+        loaded. Measured live, 2026-09-16, and the reason this emits.
         """
         with contextlib.suppress(Exception):
             await self._send({"id": self._next_request_id(), "type": "abort"})
@@ -827,7 +844,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             if frame is None:
                 continue
             for action in reducer.feed(frame):
-                if isinstance(action, AgentFinished) and action.terminal:
+                if dispatch(action):
                     return
 
     def _crash(
