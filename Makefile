@@ -17,7 +17,7 @@ SHELL := /bin/bash
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra evals-install evals-plan \
 	evals-variants evals-preflight evals-record evals-run evals-run-omp \
-	evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro \
+	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
@@ -389,6 +389,7 @@ evals-install:
 evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
@@ -447,7 +448,7 @@ evals-run: evals-plan evals-preflight
 # evals-run-omp: run every recorded Omp model. Each named target keeps one
 # model's two-arm result separate, so reports compare the plugin against the
 # bare control without conflating model families.
-evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol
+evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
 # `omp` on PATH and a model configured in the caller's own `~/.omp/agent/`,
@@ -457,6 +458,12 @@ evals-run-omp-glm-5-3: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+evals-run-omp-glm-5-3-flash: evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3-flash.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3-flash.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-deepseek-v4-pro: evals-plan evals-preflight

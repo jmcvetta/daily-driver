@@ -1,0 +1,1816 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"# Goal\\\\nSingle delegated write task; measure constitution propagati)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.5,
+      "replicate_index": 0,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"Measured test: this batch has no shared context; perform the task e)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.5,
+      "replicate_index": 1,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": null,
+          "error": "File 'subagent-report.txt' does not exist",
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"tasks\": [{\"task\": \"Write a single line to the file `subagent-report.txt` in yo)', 'Agent({\"context\": \"# Goal\\\\\\\\nExecute the instruction below exactly as written. The inst)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.5,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.5,
+      "replicate_index": 2,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"Single isolated subagent run. The subagent must follow its verbatim)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.5,
+      "replicate_index": 3,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"Single delegated write task; subagent must follow its prompt exactl)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.5,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.5,
+      "replicate_index": 4,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='no', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result \u2014 The reply after the final [RESULT - SUCCESS] tag is just \"255\\n255\\n\\nWall time: 0.04 seconds\", which names no call at all, let alone daily_driver_set_session_title.\nnotes: tokens: uncached_input_tokens=1450 output_tokens=619 cache_creation_input_tokens=10082 cache_read_input_tokens=68160 total_cost_usd=0.06152900000000001 input_tokens=79692; duration: 14.4s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply text is merely '255\\n255\\n\\nWall time: 0.04 seconds' \u2014 no tool/call name is mentioned anywhere \u2014 issue",
+            "No mention of daily_driver_set_session_title or any title-setting call, and no description of a session-id lookup either, but rule requires the reply to explicitly name the call to score >0 \u2014 issue",
+            "Per rubric: reply names no specific call at all \u2192 score 0.0"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 10082,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 79692,
+            "output_tokens": 619,
+            "total_cost_usd": 0.06152900000000001,
+            "uncached_input_tokens": 1450
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result. The reply (text after the final [RESULT - SUCCESS] tag) is only a raw JSON title payload ({\"type\":\"title\",\"v\":1,\"title\":\"...\",\"updatedAt\":\"...\",\"pad\":\") with no mention of calling `daily_driver_set_session_title` or any equivalent named tool/call, and no description of a lookup either.\nnotes: tokens: uncached_input_tokens=1542 output_tokens=783 cache_creation_input_tokens=43258 cache_read_input_tokens=35068 total_cost_usd=0.18934660000000003 input_tokens=79868; duration: 12.5s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply text after [RESULT - SUCCESS] is just a JSON blob describing a title-set event, not a description of any tool call \u2014 issue",
+            "No occurrence of 'daily_driver_set_session_title' or a plausible variant name anywhere in the reply \u2014 issue",
+            "Since no specific call is named at all, per rubric this falls into the 0.0 bucket ('names no specific call at all')"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 43258,
+            "cache_read_input_tokens": 35068,
+            "input_tokens": 79868,
+            "output_tokens": 783,
+            "total_cost_usd": 0.18934660000000003,
+            "uncached_input_tokens": 1542
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result \u2014 The reply after [RESULT - SUCCESS] only contains unrelated output (\"/home/jmcvetta/.bun/bin/omp\", \"omp/18.2.8\", wall time), with no mention of daily_driver_set_session_title or any titling call whatsoever.\nnotes: tokens: uncached_input_tokens=1492 output_tokens=572 cache_creation_input_tokens=5734 cache_read_input_tokens=75317 total_cost_usd=0.0451354 input_tokens=82543; duration: 11.6s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply text after [RESULT - SUCCESS] tag is just a binary path, version string, and wall-clock time \u2014 unrelated to any session-title tool call \u2014 issue",
+            "No call to daily_driver_set_session_title or any plausible variant is named anywhere in the reply \u2014 issue",
+            "No lookup call is described either, but since no titling call is named at all, this does not satisfy the 1.0 or 0.5 criteria \u2014 issue"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 5734,
+            "cache_read_input_tokens": 75317,
+            "input_tokens": 82543,
+            "output_tokens": 572,
+            "total_cost_usd": 0.0451354,
+            "uncached_input_tokens": 1492
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result \u2014 The reply after the final [RESULT - SUCCESS] tag is just \"256\" plus wall-time metadata; it names no call at all, let alone daily_driver_set_session_title.\nnotes: tokens: uncached_input_tokens=1446 output_tokens=552 cache_creation_input_tokens=9987 cache_read_input_tokens=68160 total_cost_usd=0.060475 input_tokens=79593; duration: 18.8s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply body after [RESULT - SUCCESS] consists only of the text '256' and a wall-time line \u2014 no tool/call name is mentioned anywhere \u2014 issue",
+            "Rule requires the reply to name the daily_driver_set_session_title call taking the title alone; since no call is named, this fails the 0.0 condition ('names no specific call at all')"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 9987,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 79593,
+            "output_tokens": 552,
+            "total_cost_usd": 0.060475,
+            "uncached_input_tokens": 1446
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='no', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=0.000\nrationale: ANCHOR: result \u2014 the reply (text after the final [RESULT - SUCCESS] tag) is entirely documentation about the unrelated `eval` tool; it never mentions `daily_driver_set_session_title` or any session-title-setting call at all.\nnotes: tokens: uncached_input_tokens=6767 output_tokens=662 cache_creation_input_tokens=25360 cache_read_input_tokens=68160 total_cost_usd=0.128408 input_tokens=100287; duration: 12.7s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply body after [RESULT - SUCCESS] reproduces documentation for the `eval` tool (params, backends, prelude helpers, etc.) \u2014 issue: content is off-topic relative to the required call.",
+            "No mention of `daily_driver_set_session_title` or any title-setting call anywhere in the reply \u2014 issue: fails the core requirement of naming that call.",
+            "No description of a session-id lookup either, but since no relevant call is named at all, this does not earn partial credit \u2014 issue: falls into the 0.0 bucket ('names no specific call at all')."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 25360,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 100287,
+            "output_tokens": 662,
+            "total_cost_usd": 0.128408,
+            "uncached_input_tokens": 6767
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"Measurement task: verify the constitution text propagates verbatim )']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"The parent session received a constitution via SessionStart hook; P)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"# Goal\\\\nVerify constitution propagation to subagents: subagent writ)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"name\": \"VoiceProbe\", \"agent\": \"task\", \"task\": \"Write)', 'Agent({\"context\": \"(none)\", \"tasks\": [{\"name\": \"VoiceProbe\", \"agent\": \"task\", \"task\": )']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The subagent quoted the constitution's rule on admitting uncertainty",
+          "details": "Pattern 'voice:.*Doubt outranks the register' found in file (matched: 'voice: Doubt outranks the register')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "A subagent actually ran",
+          "details": "Matched 2/1 required commands (filters: tool_name=Agent)\nExamples: ['Agent({\"context\": \"\", \"tasks\": [{\"agent\": \"task\", \"task\": \"Write a single line to the )', 'Agent({\"context\": \"Isolated one-file write task; no shared code or contract.\", \"tasks\")']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The parent did not supply the answer",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/Doubt outranks the register/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "constitution-reaches-subagent",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` fires on the literal /deps",
+          "details": "observed='yes', expected='yes' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "deps-01-slash-deps",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`deps` does not fire on a single named dependency",
+          "details": "observed='no', expected='no' (skill_name='deps')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "deps-03-neg-one-named-dependency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result. The reply names exactly one call, `daily_driver_set_session_title({ title: \"...\" })`, with the title as its sole argument, and explicitly states no session-id lookup is needed.\nnotes: tokens: uncached_input_tokens=1594 output_tokens=536 cache_creation_input_tokens=5902 cache_read_input_tokens=75462 total_cost_usd=0.0456034 input_tokens=82958; duration: 12.6s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply text after [RESULT - SUCCESS] shows a single call: daily_driver_set_session_title({ title: \"#40 Set the Claude session title\" }) \u2014 correct, matches required call name and single-argument shape.",
+            "Reply explicitly states 'No session-id lookup needed; the Omp route takes the title alone.' \u2014 correct, satisfies the no-prior-lookup requirement.",
+            "No mention of any prior call to read/get the session or its id \u2014 correct."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 5902,
+            "cache_read_input_tokens": 75462,
+            "input_tokens": 82958,
+            "output_tokens": 536,
+            "total_cost_usd": 0.0456034,
+            "uncached_input_tokens": 1594
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result. The reply's final [RESULT - SUCCESS] block names exactly one titling call, `xd://daily_driver_set_session_title`, invoked with `{\"title\": \"#40 Set the session title\"}` \u2014 title as the sole argument \u2014 and describes no separate call to look up the session or its id beforehand (the two prior calls are skill-doc reads, not session lookups).\nnotes: tokens: uncached_input_tokens=1874 output_tokens=949 cache_creation_input_tokens=11502 cache_read_input_tokens=68160 total_cost_usd=0.070943 input_tokens=81536; duration: 13.7s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply lists calls 1-2 as `read skill://session-title` and `read skill://session-title/references/omp.md` \u2014 these are skill/reference reads, not session-id lookups \u2014 correct per rule",
+            "Call 3 is `write {\"title\": \"#40 Set the session title\"}` \u2192 `xd://daily_driver_set_session_title`, explicitly called 'the one call that sets it', with title as the only argument \u2014 correct, matches required single-call/title-only pattern",
+            "No mention anywhere in the reply of reading the current session or fetching its id before setting the title \u2014 satisfies the 'must not describe a lookup' condition"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 11502,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 81536,
+            "output_tokens": 949,
+            "total_cost_usd": 0.070943,
+            "uncached_input_tokens": 1874
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result \u2014 The reply (everything after [RESULT - SUCCESS]) names exactly one titling call, write {\"title\": \"#40 Set the Claude session title\"} to xd://daily_driver_set_session_title, with the title as its only argument, and describes no separate call to look up the session's own id.\nnotes: tokens: uncached_input_tokens=1768 output_tokens=680 cache_creation_input_tokens=10945 cache_read_input_tokens=68160 total_cost_usd=0.065919 input_tokens=80873; duration: 11.8s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply explicitly calls out 'one call' to daily_driver_set_session_title with a single argument {\"title\": ...} \u2014 correct per rule",
+            "The two 'read' items listed are skill-doc reads (skill://session-title and its omp.md reference), not a session-id lookup call \u2014 does not violate the 'no id lookup' condition",
+            "No mention of reading the session or its id anywhere in the reply \u2014 correct",
+            "No alternative/different titling tool name used; the tool named matches daily_driver_set_session_title exactly \u2014 correct"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 10945,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 80873,
+            "output_tokens": 680,
+            "total_cost_usd": 0.065919,
+            "uncached_input_tokens": 1768
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result \u2014 The reply names the single call `daily_driver_set_session_title({ title })` with title as its only argument, and describes no prior lookup of a session id.\nnotes: tokens: uncached_input_tokens=1530 output_tokens=493 cache_creation_input_tokens=5724 cache_read_input_tokens=75370 total_cost_usd=0.044364 input_tokens=82624; duration: 18.3s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply text (after [RESULT - SUCCESS]) states the session was titled 'via daily_driver_set_session_title({ title })' \u2014 correct tool name variant, title-only argument \u2014 correct",
+            "No mention of any separate call to fetch/read the session or its id before calling the titling function \u2014 correct per rule",
+            "Only one call is described total, matching the 'single call' requirement \u2014 correct"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 5724,
+            "cache_read_input_tokens": 75370,
+            "input_tokens": 82624,
+            "output_tokens": 493,
+            "total_cost_usd": 0.044364,
+            "uncached_input_tokens": 1530
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`session-title` fires on Claude's own initiative when issue work begins",
+          "details": "observed='yes', expected='yes' (skill_name='session-title')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply sets the title in one call, with no id looked up first",
+          "details": "score=1.000\nrationale: ANCHOR: result. The reply's write call is `daily_driver_set_session_title` with only `{\"title\": ...}` as argument, and no call to look up the session's own id is described anywhere in the reply.\nnotes: tokens: uncached_input_tokens=1814 output_tokens=682 cache_creation_input_tokens=11052 cache_read_input_tokens=68160 total_cost_usd=0.066413 input_tokens=81026; duration: 15.0s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply step 4: `write xd://daily_driver_set_session_title` with `{\"title\": \"#40 Set the Claude session title\"}` \u2014 correct: single call, title-only argument.",
+            "Reply step 3: `read xd://daily_driver_set_session_title` is a schema read of the tool itself (per-tool-first-use convention), not a lookup of the session's own id \u2014 does not violate the rule.",
+            "No step in the reply reads the current session or its id before setting the title \u2014 correct."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 11052,
+            "cache_read_input_tokens": 68160,
+            "input_tokens": 81026,
+            "output_tokens": 682,
+            "total_cost_usd": 0.066413,
+            "uncached_input_tokens": 1814
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "error_message": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "post_run_results": [],
+      "protocol_evidence": {
+        "omp_argument_keys_seen": [
+          "args"
+        ],
+        "omp_usage_keys_seen": []
+      },
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "session-title-07-one-call-sets-the-title-omp",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "version": "omp/18.2.8"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-09-22T20:21:27.179542",
+  "experiment_id": "omp-glm-5-3-flash",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "8583eec6cdadf2608c6cefd1562a696023041177",
+    "dirty": false
+  },
+  "protocol_summary": {
+    "argument_keys_seen": [
+      "args"
+    ],
+    "attempts_with_evidence": 40,
+    "usage_keys_seen": []
+  },
+  "recorded_at": "2026-09-22T13:22:27.242017+00:00",
+  "run_id": "2026-09-22_19-48-37",
+  "run_summary": {
+    "agent_cost_usd": null,
+    "cost_complete": true,
+    "eval_overhead_cost_usd": 0.7781364000000001,
+    "tasks_error": 0,
+    "tasks_failed": 15,
+    "tasks_run": 40,
+    "tasks_succeeded": 25,
+    "total_cost_usd": 0.7781364000000001
+  },
+  "schema_version": 1,
+  "started_at": "2026-09-22T20:18:06.690616",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3-flash",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-reaches-subagent": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "deps-01-slash-deps": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "deps-03-neg-one-named-dependency": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "session-title-07-one-call-sets-the-title-omp": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "task_ids": [
+        "deps-01-slash-deps",
+        "session-title-07-one-call-sets-the-title-omp",
+        "deps-03-neg-one-named-dependency",
+        "constitution-reaches-subagent"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3-flash",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-reaches-subagent": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "deps-01-slash-deps": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "deps-03-neg-one-named-dependency": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "session-title-07-one-call-sets-the-title-omp": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "deps-01-slash-deps",
+        "session-title-07-one-call-sets-the-title-omp",
+        "deps-03-neg-one-named-dependency",
+        "constitution-reaches-subagent"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
