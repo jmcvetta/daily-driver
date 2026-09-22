@@ -98,6 +98,13 @@ worktree.
 
 - On an error, a bug, an unexpected result, or any undesirable state, stop
   immediately and fix it before moving on.
+- When the defect or deficiency is in a Daily Driver component — including a
+  skill script, hook, extension, or harness-specific command supplied by Daily
+  Driver — stop and ask the user whether to file a bug in
+  `jmcvetta/daily-driver`. Do not file that issue, continue past the defective
+  component, or work around it before the user decides.
+- This rule does not change the handling of defects in the repository being
+  worked on. Fix those defects under the normal rules.
 - When the *approach* is what is failing — cascading complexity, assumptions
   turning out wrong — stop rather than push through, re-assess, and update the
   plan.

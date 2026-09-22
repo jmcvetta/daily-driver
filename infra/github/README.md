@@ -29,43 +29,25 @@ exclusion below.
 - **`github_workflow_repository_permissions`** — the default workflow token
   scope, and whether Actions may open a pull request (the release job's
   default-token fallback needs the latter)
-- **`github_branch_protection`** on `master` — required `CI Success` check,
-  linear history, conversation resolution, no force pushes or deletions
+- **`github_branch_protection`** on `master` — required `CI Success`,
+  `validate-title`, and `preview` checks, linear history, conversation
+  resolution, no force pushes or deletions
 - **`github_issue_label`** ×7 — six issue kinds plus the `story` supplemental
   marker. The `issue-labels` skill defines their contract.
 
-## The `CI Success` Check
+## Required Checks
 
-Branch protection requires a status check named `CI Success`, and a required
-check that never reports blocks every pull request. `.github/workflows/ci.yml`
-ships a job with exactly that name, which aggregates the real jobs through
-`needs`.
+Branch protection requires three status checks: `CI Success`, which aggregates
+the repository's CI jobs; `validate-title`, which checks the Conventional
+Commit pull-request title release-please consumes; and `preview`, which shows
+what release-please will ship. Each check reports on applicable pull-request
+heads, and release-please pull requests intentionally skip `preview`; GitHub
+treats that skipped result as successful for branch protection.
 
-Adding CI is therefore a change to the workflow, not to this configuration:
-the Tofu binds to the job *name*, so jobs can be added under `needs` without
-touching `branch_protection.tf`.
-
-Three consequences worth knowing:
-
-- A pull request whose branch predates the workflow will not report the check
-  at all, and must pick up `master` before it can merge. Nothing forces that:
-  `strict = false`, for the reason `branch_protection.tf` gives — requiring
-  every branch to be up to date re-invalidates every open pull request each
-  time another merges.
-- `enforce_admins = false` leaves an escape hatch for the case where CI
-  itself is what is broken.
-- **The release pull request no longer needs that escape hatch.**
-  `release-please.yml` authenticates as a GitHub App, which is a distinct
-  identity, so `CI Success` reports on the release pull request like any
-  other. It did need the hatch while the release job ran on the default
-  token: before 2026-06-11 GitHub created no workflow runs at all for
-  `github-actions[bot]` pull requests, so `CI Success` sat "expected"
-  indefinitely on the one pull request whose merge cuts a permanent tag, and
-  `enforce_admins = false` was what let it merge. Since that date the runs
-  are created but held in `action_required` until someone with write access
-  clicks **Approve workflows to run** — which is how #56 merged green without
-  the hatch, and why #59 was filed about the clicking rather than about a
-  stuck check.
+Adding a CI job is therefore a change to the workflow, not to this
+configuration, unless the job is a merge gate. The Tofu binds to each job
+name, so jobs can be added under `CI Success`'s `needs` without touching
+`branch_protection.tf`.
 
 `ci.yml` carries no `paths:` filter, and must not grow one. A path-filtered
 workflow does not report a *skipped* check, it reports nothing at all, so a
@@ -73,6 +55,24 @@ required context naming a filtered job leaves every unmatched pull request
 pending forever. `infra.yml` is filtered precisely because it is not required;
 requiring it later means dropping its filter in the same commit, and nothing
 enforces that.
+
+Three consequences worth knowing:
+
+- A pull request whose branch predates a workflow will not report its check at
+  all, and must pick up `master` before it can merge. Nothing forces that:
+  `strict = false`, for the reason `branch_protection.tf` gives — requiring
+  every branch to be up to date re-invalidates every open pull request each
+  time another merges.
+- `enforce_admins = false` leaves an escape hatch for the case where CI
+  itself is what is broken.
+- **The release pull request no longer needs that escape hatch.**
+  `release-please.yml` authenticates as a GitHub App, which is a distinct
+  identity, so the required checks report on the release pull request like any
+  other. It did need the hatch while the release job ran on the default token:
+  before 2026-06-11 GitHub created no workflow runs at all for
+  `github-actions[bot]` pull requests, so checks sat "expected" indefinitely.
+  Since that date the runs are created but held in `action_required` until
+  someone with write access clicks **Approve workflows to run**.
 
 ## The Release Job's Fallback Depends on a Workflow Permission
 
