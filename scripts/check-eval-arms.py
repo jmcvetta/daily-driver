@@ -91,6 +91,7 @@ except ImportError as exc:  # pragma: no cover - `make check` installs it first
 ROOT = Path(__file__).resolve().parent.parent
 TASKS = ROOT / "evals" / "tasks"
 EXPERIMENTS = ROOT / "evals" / "experiments"
+OMP_CONFIGS = ROOT / "omp_configs"
 
 # Every arm, by its short name. This table is the routing: the tag that claims a
 # row for the arm, the `task_id` suffix that says so a second time, the
@@ -135,12 +136,67 @@ ARMS: dict[str, dict[str, object]] = {
         "experiment": "codex.yaml",
         "run_target": "evals-run-codex",
     },
+    # Shares the `omp` arm's agent kind -- it is Omp under a different model,
+    # not a different harness -- so it is the one arm a straight kind->arm map
+    # cannot hold; see `KIND_OWNERS`. It has no fork
+    # convention of its own (`id_suffix: None`, like `claude`): its rows are
+    # built from real merged pull requests by `scripts/evals-cases-from-prs.py`,
+    # not forked from a Claude original. `run_target` is one Make target
+    # parameterised by `MODEL=`, not one target per experiment file, so it is
+    # checked by `parameterized_pattern` rather than by `arm_run_targets`.
+    # `ablation` is False: this arm measures one model against the suite, not
+    # a plugin loaded against a bare control, so `check_experiments` skips the
+    # `bare`/`with-plugin` variant-shape assertion it applies to `omp`.
+    "model-classes": {
+        "tag": "model-classes",
+        "id_suffix": None,
+        "kinds": ("omp",),
+        "ablation": False,
+        "experiments": lambda: _model_classes_experiments(),
+        "parameterized_target": "evals-run-classes",
+        "parameterized_pattern": "-e experiments/classes-$(MODEL).yaml",
+    },
 }
 
 
+def _model_classes_experiments() -> dict[str, str]:
+    """One `classes-<overlay>.yaml` per `omp_configs/*.yml`, mapped to the
+    overlay's `task` model role (falling back to `default`, the way an
+    overlay declaring no `task` role falls back for Omp itself -- see
+    `omp_configs/README.md`).
+
+    Read from `omp_configs/` rather than duplicated as a literal: a literal
+    list drifts the moment an overlay's role changes or a new overlay is
+    added, silently, because nothing would name the missing experiment file.
+    """
+    if not OMP_CONFIGS.is_dir():
+        raise CheckFailed(f"no {OMP_CONFIGS.relative_to(ROOT)} directory to read Omp overlays from")
+    experiments: dict[str, str] = {}
+    for path in sorted(OMP_CONFIGS.glob("*.yml")):
+        try:
+            document = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError) as exc:
+            raise CheckFailed(f"{path.relative_to(ROOT)} does not parse: {exc}") from exc
+        roles = (document or {}).get("modelRoles") if isinstance(document, dict) else None
+        model = (roles or {}).get("task") or (roles or {}).get("default")
+        if not isinstance(model, str) or not model:
+            raise CheckFailed(f"{path.relative_to(ROOT)}: no readable `task` or `default` model role")
+        experiments[f"classes-{path.stem}.yaml"] = model
+    if not experiments:
+        raise CheckFailed(f"no *.yml overlays found under {OMP_CONFIGS.relative_to(ROOT)}")
+    return experiments
+
+
 def arm_experiments(spec: dict[str, object]) -> dict[str, str | None]:
-    """The arm's experiment files, with an Omp model where one is pinned."""
+    """The arm's experiment files, with an Omp model where one is pinned.
+
+    `model-classes` names its experiments as a callable (`_model_classes_experiments`)
+    rather than a literal dict, read fresh from `omp_configs/` on every call --
+    see the `ARMS` entry's comment for why a literal would drift.
+    """
     experiments = spec.get("experiments")
+    if callable(experiments):
+        return {str(path): str(model) for path, model in experiments().items()}
     if isinstance(experiments, dict):
         return {str(path): str(model) for path, model in experiments.items()}
     return {str(spec["experiment"]): None}
@@ -154,7 +210,17 @@ def arm_run_targets(spec: dict[str, object]) -> dict[str, str]:
     return {str(spec["run_target"]): str(spec["experiment"])}
 
 ARM_TAGS = {str(arm["tag"]): name for name, arm in ARMS.items()}
-KIND_ARMS = {kind: name for name, arm in ARMS.items() for kind in arm["kinds"]}  # type: ignore[union-attr]
+
+# Kind -> every arm that owns it. Almost always one arm, but `omp` and
+# `model-classes` both pin `agent.type: omp` -- it is Omp under a different
+# model, not a different harness -- so a kind can have more than one owner.
+# `KIND_ARMS[kind]` (singular) does not exist for that reason: the pinned-kind
+# check below asks "is this row's arm among the kind's owners", never "which
+# one arm owns this kind".
+KIND_OWNERS: dict[str, list[str]] = {}
+for _name, _arm in ARMS.items():
+    for _kind in _arm["kinds"]:  # type: ignore[union-attr]
+        KIND_OWNERS.setdefault(str(_kind), []).append(_name)
 
 # The namespaced tag a forked row names the row it forks with. `coder_eval`
 # accepts a `key:value` tag, so the pairing needs no field of its own.
@@ -266,17 +332,18 @@ def check_arm_tags(tasks: list[tuple[Path, dict]]) -> None:
             # it in all three arms, bill each of them, and score 0.0 on every
             # judged criterion. That is the "registered but wrong kind" failure
             # `check_experiments` catches on the experiment side.
-            if pinned_kind not in KIND_ARMS:
+            if pinned_kind not in KIND_OWNERS:
                 raise CheckFailed(
                     f"{path.relative_to(ROOT)}: pins `agent.type: {pinned_kind!r}`, which belongs to no arm; "
-                    f"the kinds this repository runs are {sorted(KIND_ARMS)}, and an unowned kind runs in "
+                    f"the kinds this repository runs are {sorted(KIND_OWNERS)}, and an unowned kind runs in "
                     "every arm, is billed to each, and is reported as each"
                 )
-            wanted = KIND_ARMS[pinned_kind]
-            if arm != wanted:
+            wanted_arms = KIND_OWNERS[pinned_kind]
+            if arm not in wanted_arms:
+                wanted_tags = sorted(str(ARMS[name]["tag"]) for name in wanted_arms)
                 raise CheckFailed(
-                    f"{path.relative_to(ROOT)}: pins `agent.type: {pinned_kind}` but is not tagged "
-                    f"{ARMS[wanted]['tag']}, so another arm's run would bill a {wanted} session to itself "
+                    f"{path.relative_to(ROOT)}: pins `agent.type: {pinned_kind}` but is tagged for no arm "
+                    f"that owns it ({wanted_tags}), so another arm's run would bill a session to itself "
                     "and report it as one"
                 )
 
@@ -355,37 +422,62 @@ def check_skips(tasks: list[tuple[Path, dict]]) -> None:
             )
 
 
+def _check_exclude_tags(makefile: str, target: str, arm: str) -> None:
+    """The named target's recipe excludes every other arm's tag and its own
+    skip, in one comma-separated `--exclude-tags` value. Shared by the
+    per-experiment loop below and the parameterized-target branch, because
+    the requirement is the same either way: a target is one arm's route, and
+    every row belonging to another arm must be excluded from it.
+    """
+    start = makefile.find(f"\n{target}:")
+    if start < 0:
+        raise CheckFailed(f"Makefile declares no `{target}` target, so the {arm} arm cannot be run")
+    recipe = makefile[start + 1 :].split("\n\n", 1)[0]
+
+    occurrences = recipe.count("--exclude-tags")
+    if occurrences != 1:
+        raise CheckFailed(
+            f"Makefile `{target}` passes --exclude-tags {occurrences} time(s); it takes ONE "
+            "comma-separated value, and a repeated flag silently replaces the earlier one"
+        )
+    value = recipe.split("--exclude-tags", 1)[1].split()[0]
+    excluded = {tag.strip() for tag in value.split(",") if tag.strip()}
+
+    wanted = {str(other["tag"]) for name, other in ARMS.items() if name != arm} | {f"{SKIP_TAG}{arm}"}
+    if excluded != wanted:
+        raise CheckFailed(
+            f"Makefile `{target}` excludes {sorted(excluded)}; the {arm} arm must exclude "
+            f"{sorted(wanted)} — every other arm's tag, and its own skip"
+        )
+    return recipe
+
+
 def check_makefile_routing() -> None:
     """Each model target runs its experiment and excludes other arms and its skip."""
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
 
     for arm, spec in ARMS.items():
+        parameterized_target = spec.get("parameterized_target")
+        if parameterized_target is not None:
+            # One Make target, parameterised by `MODEL=`, rather than one
+            # target per experiment file -- `evals-run-classes` selects
+            # `experiments/classes-$(MODEL).yaml` at recipe-expansion time, so
+            # there is one recipe to check, not sixteen, and the pattern it
+            # must contain names the Make variable literally rather than any
+            # one resolved filename.
+            target = str(parameterized_target)
+            pattern = str(spec["parameterized_pattern"])
+            recipe = _check_exclude_tags(makefile, target, arm)
+            if pattern not in recipe:
+                raise CheckFailed(f"Makefile `{target}` does not run {pattern}, so its model is not recorded")
+            continue
+
         targets = arm_run_targets(spec)
         for target, experiment in targets.items():
-            # The recipe: from its target line to the first blank line.
-            start = makefile.find(f"\n{target}:")
-            if start < 0:
-                raise CheckFailed(f"Makefile declares no `{target}` target, so the {arm} arm cannot be run")
-            recipe = makefile[start + 1 :].split("\n\n", 1)[0]
-
+            recipe = _check_exclude_tags(makefile, target, arm)
             if f"-e experiments/{experiment}" not in recipe:
                 raise CheckFailed(
                     f"Makefile `{target}` does not run experiments/{experiment}, so its model is not recorded"
-                )
-            occurrences = recipe.count("--exclude-tags")
-            if occurrences != 1:
-                raise CheckFailed(
-                    f"Makefile `{target}` passes --exclude-tags {occurrences} time(s); it takes ONE "
-                    "comma-separated value, and a repeated flag silently replaces the earlier one"
-                )
-            value = recipe.split("--exclude-tags", 1)[1].split()[0]
-            excluded = {tag.strip() for tag in value.split(",") if tag.strip()}
-
-            wanted = {str(other["tag"]) for name, other in ARMS.items() if name != arm} | {f"{SKIP_TAG}{arm}"}
-            if excluded != wanted:
-                raise CheckFailed(
-                    f"Makefile `{target}` excludes {sorted(excluded)}; the {arm} arm must exclude "
-                    f"{sorted(wanted)} — every other arm's tag, and its own skip"
                 )
 
         bundle_target = spec.get("bundle_target")
@@ -449,6 +541,12 @@ def check_experiments() -> None:
             agent = defaults.get("agent") if isinstance(defaults, dict) else None
             if not isinstance(agent, dict) or agent.get("model") != model:
                 raise CheckFailed(f"{path.relative_to(ROOT)}: expected Omp model {model!r}")
+            if not ARMS[arm].get("ablation"):
+                # `model-classes` measures one model against the suite, not a
+                # plugin loaded against a bare control -- the `omp` arm's
+                # `bare`/`with-plugin` variant-shape requirement below is that
+                # ablation's, not every Omp-model experiment's.
+                continue
             variants_by_id = {
                 variant.get("variant_id"): variant
                 for variant in document.get("variants", [])
@@ -568,7 +666,12 @@ def check_the_checks() -> None:
         ),
         (
             "a row skipped from every arm",
-            [(here / "a.yaml", {"task_id": "x", "tags": ["skip:claude", "skip:omp", "skip:codex"]})],
+            [
+                (
+                    here / "a.yaml",
+                    {"task_id": "x", "tags": [f"{SKIP_TAG}{arm}" for arm in ARMS]},
+                )
+            ],
             check_skips,
         ),
     ]
