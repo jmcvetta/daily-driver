@@ -81,14 +81,14 @@ def classify(paths: list[str]) -> set[str]:
 
 
 def changed_paths(base: str, head: str, use_merge_base: bool) -> list[str]:
-    """Read changed paths against a PR merge base or push before-commit."""
+    """Read both sides of a rename against the PR base or push before-commit."""
     start = base
     if use_merge_base:
         start = subprocess.run(
             ["git", "merge-base", base, head], check=True, capture_output=True, text=True
         ).stdout.strip()
     result = subprocess.run(
-        ["git", "diff", "--name-only", start, head],
+        ["git", "diff", "--no-renames", "--name-only", start, head],
         check=True, capture_output=True, text=True,
     )
     return result.stdout.splitlines()
@@ -104,14 +104,8 @@ def scope_for(base: str, head: str, use_merge_base: bool = True) -> set[str]:
         return set(GROUPS)
 
 
-def aggregate(results: list[str]) -> bool:
-    """Treat successful and intentionally skipped jobs as a green aggregate."""
-    return bool(results) and all(result in {"success", "skipped"} for result in results)
-
-
 def main() -> int:
-    if len(sys.argv) >= 2 and sys.argv[1] == "--aggregate":
-        return 0 if aggregate(sys.argv[2:]) else 1
+    """Print step outputs for the diff, conservatively selecting all on bad input."""
     valid_scope_args = len(sys.argv) == 4 and sys.argv[3] in {"merge-base", "direct"}
     groups = (
         scope_for(sys.argv[1], sys.argv[2], sys.argv[3] == "merge-base")

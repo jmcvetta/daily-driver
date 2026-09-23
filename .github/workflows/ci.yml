@@ -30,18 +30,10 @@ jobs:
   validate:
     name: Scoped validation
     runs-on: ubuntu-latest
-    outputs:
-      plugin: ${{ steps.scope.outputs.run_plugin }}
-      runtime: ${{ steps.scope.outputs.run_runtime }}
-      eval: ${{ steps.scope.outputs.run_eval }}
-      issue: ${{ steps.scope.outputs.run_issue }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
 
       - name: Classify changed files
         id: scope
@@ -49,6 +41,11 @@ jobs:
           BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
           MODE: ${{ github.event_name == 'pull_request' && 'merge-base' || 'direct' }}
         run: python3 scripts/ci-scope.py "$BASE" "$GITHUB_SHA" "$MODE" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v7
+        if: steps.scope.outputs.run_plugin == 'true' || steps.scope.outputs.run_runtime == 'true'
+        with:
+          node-version: 24
 
       - name: Assert scope and aggregation behavior
         run: make check-ci-scope
@@ -244,7 +241,6 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
       - name: Verify every job succeeded
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
@@ -252,4 +248,10 @@ jobs:
           set -euo pipefail
           echo "upstream results: $RESULTS"
           read -r -a job_results <<< "$RESULTS"
-          python3 scripts/ci-scope.py --aggregate "${job_results[@]}"
+          [[ "${#job_results[@]}" -gt 0 ]]
+          for result in "${job_results[@]}"; do
+            if [[ "$result" != "success" ]]; then
+              echo "::error::a required job did not succeed: $RESULTS" >&2
+              exit 1
+            fi
+          done

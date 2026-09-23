@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib.util
+import os
+import subprocess
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -15,6 +17,7 @@ spec.loader.exec_module(ci_scope)
 
 
 def require(condition: bool, message: str) -> None:
+    """Fail loudly when an offline CI contract does not hold."""
     if not condition:
         raise AssertionError(message)
 
@@ -40,8 +43,54 @@ with patch.object(ci_scope, "changed_paths", side_effect=OSError("missing base")
 with patch.object(ci_scope, "changed_paths", return_value=["evals/tasks/example.yaml"]) as diff:
     require(ci_scope.scope_for("before", "head", False) == {"eval", "runtime"}, "pushes must classify before/after changes")
     diff.assert_called_once_with("before", "head", False)
-require(ci_scope.aggregate(["success", "success"]), "successful jobs must report green")
-require(not ci_scope.aggregate([]), "a missing upstream result must fail")
-require(ci_scope.aggregate(["success", "skipped"]), "intentional group skips must stay green")
-require(not ci_scope.aggregate(["failure", "success"]), "a failed applicable group must report red")
-print("check-ci-scope: classification and aggregation assertions passed")
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    overlays = root / "omp_configs"
+    overlays.mkdir()
+    (overlays / "old.yml").write_text("modelRoles:\n  task: example/model\n")
+    subprocess.run(["git", "-C", str(root), "add", "omp_configs/old.yml"], check=True)
+    subprocess.run(
+        ["git", "-C", str(root), "-c", "user.name=CI", "-c", "user.email=ci@example.invalid",
+         "commit", "-qm", "initial overlay"],
+        check=True,
+    )
+    before = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    subprocess.run(["git", "-C", str(root), "mv", "omp_configs/old.yml", "omp_configs/new.yml"], check=True)
+    subprocess.run(
+        ["git", "-C", str(root), "-c", "user.name=CI", "-c", "user.email=ci@example.invalid",
+         "commit", "-qm", "rename overlay"],
+        check=True,
+    )
+    after = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    previous = Path.cwd()
+    try:
+        os.chdir(root)
+        paths = ci_scope.changed_paths(before, after, False)
+    finally:
+        os.chdir(previous)
+    experiments = root / "evals" / "experiments"
+    experiments.mkdir(parents=True)
+    (experiments / "classes-old.yaml").touch()
+    with patch.object(ci_scope, "ROOT", root):
+        require(ci_scope.classify(paths) == {"eval"}, "renaming an overlay must detect its stale experiment")
+    require(set(paths) == {"omp_configs/old.yml", "omp_configs/new.yml"}, "renames must retain both changed input paths")
+
+# Exercise the exact shell block CI runs, not a second aggregate implementation.
+workflow = (SCRIPT.parent.parent / ".github/workflows/ci.yml").read_text()
+aggregate_step = workflow.split("      - name: Verify every job succeeded\n", 1)[1]
+run_block = aggregate_step.split("        run: |\n", 1)[1]
+commands = []
+for line in run_block.splitlines():
+    if not line.startswith("          "):
+        break
+    commands.append(line[10:])
+require(bool(commands), "CI Success must contain an executable aggregation step")
+for results, expected in (("success success", True), ("success failure", False),
+                          ("success cancelled", False), ("", False)):
+    completed = subprocess.run(
+        ["bash", "-c", "\n".join(commands)], env={"RESULTS": results},
+        capture_output=True, text=True,
+    )
+    require((completed.returncode == 0) == expected, f"CI Success aggregation mishandles {results!r}")
+print("check-ci-scope: classification and required-status assertions passed")
