@@ -1,7 +1,7 @@
 # The model-classes capability arm for the gpt Omp overlay.
 #
 # Measures whether this model, in the role it plays for delegated implementation
-# work (its `task` role), clears the mechanical/standard cases the suite builds from
+# work (its `task` role), clears the mechanical/implementation cases the suite builds from
 # real merged pull requests -- see `scripts/evals-cases-from-prs.py` and
 # `evals/tasks/model-classes/`. One variant: there is no plugin ablation here,
 # only the question "does this model finish this task and leave its own tests

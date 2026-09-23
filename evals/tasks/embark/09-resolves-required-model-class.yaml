@@ -5,11 +5,11 @@ description: >-
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Launch the agreed wave. Task #143 requires `standard`. Candidate A is cheaper
-  but mechanical-only; candidate B is standard-capable but lacks the required
-  browser tool; candidate C is advanced-capable, supports the tool, and has an
-  unknown price. Omp exposes C as the `task` agent and reports no actual model
-  after launch. What do you do?
+  Launch the agreed wave. Task #143 requires `implementation`. Candidate A is
+  cheaper but mechanical-only; candidate B is implementation-capable but lacks
+  the required browser tool; candidate C is reasoning-capable, supports the tool,
+  and has an unknown price. Omp exposes C as the `task` agent and reports no
+  actual model after launch. What do you do?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -38,6 +38,6 @@ success_criteria:
 
       Score 1.0 only if it launches unasked through agent C, explains that A
       lacks class capability and B lacks the required tool, does not call C
-      free or globally cheapest, and records required class `standard`, selected
+      free or globally cheapest, and records required class `implementation`, selected
       agent `task`, and actual model `unreported` separately. Score 0.0 if it
       lowers the class, invents a per-item model argument, or conflates metadata.
