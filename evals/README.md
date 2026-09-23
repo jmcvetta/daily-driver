@@ -1035,7 +1035,7 @@ overlay's `task` role (falling back to `default` where the overlay names no
 separate one, the same fallback Omp itself applies):
 
 ```
-make evals-run-classes MODEL=glm-5.3
+make evals-run-classes MODEL=glm
 make evals-run-classes MODEL=cocktail
 ```
 
@@ -1066,10 +1066,9 @@ split, the class and elapsed reads, and `task_timeout` derivation.
 `scripts/check-eval-arms.py` treats `model-classes` as a fourth arm sharing
 the `omp` arm's agent kind — it is Omp under a different model, not a
 different harness — so `agent.type: omp` alone cannot say which arm a row
-belongs to; the `model-classes` tag is what does. Its seventeen experiment
+belongs to; the `model-classes` tag is what does. The seven required experiment
 files are read from `omp_configs/` at check time rather than hand-copied into
-the script, so a new overlay's required experiment file is a check failure
-rather than a silent gap.
+the script, so a missing or mismatched file fails before a paid run.
 
 ## Two defaults, decided on purpose
 
