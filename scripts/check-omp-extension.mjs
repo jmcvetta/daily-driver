@@ -88,20 +88,19 @@ function fakeTimers() {
 }
 
 /**
- * Build a fake ExtensionAPI. `pi.on` records handlers keyed by event name;
- * `registerTool` records tool definitions; `setSessionName` and
- * `sendMessage` record calls. Returns { pi, rec, tools, fire }.
+ * Build a fake ExtensionAPI. `pi.on` records handlers by event; registered
+ * tools, session entries, statuses, and timers remain observable offline.
  */
 function fakeApi(overrides = {}) {
 	const handlers = new Map();
-	const calls = { sessionNames: [], sent: [] };
+	const calls = { sessionNames: [], sent: [], entries: [], statuses: [] };
 	const tools = new Map();
 	const timers = fakeTimers();
 
 	// A chainable fake zod that mirrors the Omp (omptype-backed) zod surface the
-// adapter actually targets: z.string, z.number().int().min().max(), and
-// z.object returning the spec keyed by name. It deliberately excludes
-// `z.integer` so a schema written against real Zod's alias fails here too.
+	// adapter actually targets: z.string, z.number().int().min().max(), and
+	// z.object returning the spec keyed by name. It deliberately excludes
+	// `z.integer` so a schema written against real Zod's alias fails here too.
 	function schemaNode(meta = {}) {
 		return {
 			describe(desc) {
@@ -131,10 +130,15 @@ function fakeApi(overrides = {}) {
 	const pi = {
 		zod,
 		on(event, handler) {
-			handlers.set(event, handler);
+			const registered = handlers.get(event) ?? [];
+			registered.push(handler);
+			handlers.set(event, registered);
 		},
 		registerTool(def) {
 			tools.set(def.name, def);
+		},
+		async appendEntry(customType, data) {
+			calls.entries.push({ type: "custom", customType, data });
 		},
 		async setSessionName(name) {
 			calls.sessionNames.push(name);
@@ -148,13 +152,15 @@ function fakeApi(overrides = {}) {
 	};
 
 	const fire = (event, payload, ctx) => {
-		const h = handlers.get(event);
-		if (!h) throw new Error(`no handler for ${event}`);
-		return h(payload, ctx);
+		const registered = handlers.get(event);
+		if (!registered) throw new Error(`no handler for ${event}`);
+		const results = registered.map((handler) => handler(payload, ctx));
+		return results.length === 1 ? results[0] : Promise.all(results);
 	};
 
 	return { pi, rec: calls, tools, timers, fire };
 }
+
 
 const results = [];
 let failures = 0;
@@ -206,6 +212,7 @@ function makeWorktreeFixture() {
 	const root = mkdtempSync(resolve(tmpdir(), "daily-driver-extension-"));
 	const primary = resolve(root, "primary");
 	const task = resolve(root, "task");
+	const secondTask = resolve(root, "second-task");
 	const detached = resolve(root, "detached");
 	const outside = resolve(root, "outside");
 	mkdirSync(primary);
@@ -229,6 +236,8 @@ function makeWorktreeFixture() {
 	runGit(primary, "config", "alias.loop", "hoop");
 	runGit(primary, "config", "alias.hoop", "loop");
 	runGit(primary, "branch", "feature/worktree-guard");
+	runGit(primary, "branch", "feature/second-task");
+	runGit(primary, "worktree", "add", secondTask, "feature/second-task");
 	runGit(primary, "worktree", "add", task, "feature/worktree-guard");
 	runGit(primary, "worktree", "add", "--detach", detached);
 	const primaryFileLink = resolve(task, "primary-file-link.txt");
@@ -237,7 +246,7 @@ function makeWorktreeFixture() {
 	// symlinked home, `/tmp` on macOS. A `cd` through one really does arrive.
 	const taskLink = resolve(root, "task-link");
 	symlinkSync(task, taskLink);
-	return { root, primary, task, taskLink, detached, outside, primaryFileLink };
+	return { root, primary, task, secondTask, taskLink, detached, outside, primaryFileLink };
 }
 
 const worktrees = makeWorktreeFixture();
@@ -2504,6 +2513,169 @@ check("get_session tolerates an unnamed session and no model", async () => {
 	const ctx = { sessionManager: { getSessionId: () => "s1", getSessionName: () => undefined } };
 	const result = await def.execute("c0b", {}, undefined, undefined, ctx);
 	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null });
+});
+
+// --- task worktree registration --------------------------------------------
+const TASK_WORKTREE_TYPE = "daily-driver.task-worktree";
+const TASK_WORKTREE_STATUS = "daily-driver-task-worktree";
+
+function taskWorktreeContext(cwd, entries = [], hasUI = true) {
+	const statuses = new Map();
+	return {
+		cwd,
+		hasUI,
+		ui: hasUI
+			? { setStatus: (key, text) => statuses.set(key, text) }
+			: {},
+		sessionManager: { getBranch: () => entries },
+		statuses,
+		entries,
+	};
+}
+
+check("registration canonicalizes and persists an attached task worktree", async () => {
+	const s = makeSession();
+	const ctx = taskWorktreeContext(worktrees.primary);
+	const register = s.tools.get("daily_driver_register_task_worktree");
+	assert.ok(register, "registration tool is available");
+	const result = await register.execute(
+		"task-worktree-1",
+		{ path: worktrees.taskLink },
+		undefined,
+		undefined,
+		ctx,
+	);
+	assert.deepEqual(result.details, {
+		registered: true,
+		path: worktrees.task,
+		branch: "feature/worktree-guard",
+	});
+	assert.deepEqual(s.rec.entries, [{
+		type: "custom",
+		customType: TASK_WORKTREE_TYPE,
+		data: { path: worktrees.task, branch: "feature/worktree-guard" },
+	}]);
+	assert.equal(
+		ctx.statuses.get(TASK_WORKTREE_STATUS),
+		`Task worktree: ${worktrees.task} (feature/worktree-guard)`,
+	);
+	ctx.entries.push(s.rec.entries[0]);
+	await register.execute(
+		"task-worktree-repeat",
+		{ path: worktrees.task },
+		undefined,
+		undefined,
+		ctx,
+	);
+	assert.equal(s.rec.entries.length, 1, "re-registering the same worktree adds no entry");
+});
+
+check("invalid registration leaves the prior task indicator unchanged", async () => {
+	const s = makeSession();
+	const ctx = taskWorktreeContext(worktrees.primary);
+	const register = s.tools.get("daily_driver_register_task_worktree");
+	const good = await register.execute("good", { path: worktrees.task }, undefined, undefined, ctx);
+	const previousStatus = ctx.statuses.get(TASK_WORKTREE_STATUS);
+	const previousEntries = [...s.rec.entries];
+	for (const path of [worktrees.primary, worktrees.detached, worktrees.outside]) {
+		const rejected = await register.execute("bad", { path }, undefined, undefined, ctx);
+		assert.equal(rejected.isError, true, `${path} must be rejected`);
+	}
+	assert.deepEqual(s.rec.entries, previousEntries);
+	assert.equal(ctx.statuses.get(TASK_WORKTREE_STATUS), previousStatus);
+	assert.equal(good.details.registered, true);
+});
+
+check("registration replacement is explicit and works without a UI", async () => {
+	const s = makeSession();
+	const ctx = taskWorktreeContext(worktrees.primary, [], false);
+	const register = s.tools.get("daily_driver_register_task_worktree");
+	for (const path of [worktrees.task, worktrees.secondTask]) {
+		const result = await register.execute("replace", { path }, undefined, undefined, ctx);
+
+		assert.equal(result.details.registered, true);
+	}
+	assert.equal(s.rec.entries.length, 2);
+	assert.deepEqual(s.rec.entries.at(-1).data, {
+		path: worktrees.secondTask,
+		branch: "feature/second-task",
+	});
+	assert.equal(s.rec.entries[0].data.path, worktrees.task);
+});
+
+check("a second explicit registration updates the visible indicator", async () => {
+	const s = makeSession();
+	const ctx = taskWorktreeContext(worktrees.primary);
+	const register = s.tools.get("daily_driver_register_task_worktree");
+	await register.execute("first", { path: worktrees.task }, undefined, undefined, ctx);
+	ctx.entries.push(s.rec.entries[0]);
+	await register.execute("second", { path: worktrees.secondTask }, undefined, undefined, ctx);
+	assert.equal(
+		ctx.statuses.get(TASK_WORKTREE_STATUS),
+		`Task worktree: ${worktrees.secondTask} (feature/second-task)`,
+	);
+});
+
+check("branch and tree changes restore or clear their own registration", async () => {
+	const s = makeSession();
+	const entry = {
+		type: "custom",
+		customType: TASK_WORKTREE_TYPE,
+		data: { path: worktrees.task, branch: "feature/worktree-guard" },
+	};
+	const branch = taskWorktreeContext(worktrees.primary, [entry]);
+	await s.fire("session_branch", {}, branch);
+	assert.equal(
+		branch.statuses.get(TASK_WORKTREE_STATUS),
+		`Task worktree: ${worktrees.task} (feature/worktree-guard)`,
+	);
+	const tree = taskWorktreeContext(worktrees.primary, []);
+	await s.fire("session_tree", {}, tree);
+	assert.equal(tree.statuses.get(TASK_WORKTREE_STATUS), "");
+});
+
+check("session startup restores only a valid task worktree registration", async () => {
+	const s = makeSession({ settingsManagerFactory: fakeModelClassSettings });
+	const valid = {
+		type: "custom",
+		customType: TASK_WORKTREE_TYPE,
+		data: { path: worktrees.task, branch: "stale-branch-is-not-trusted" },
+	};
+	const ctx = taskWorktreeContext(worktrees.primary, [valid]);
+	await s.fire("session_start", {}, ctx);
+	assert.equal(
+		ctx.statuses.get(TASK_WORKTREE_STATUS),
+		`Task worktree: ${worktrees.task} (feature/worktree-guard)`,
+	);
+	const detached = taskWorktreeContext(worktrees.primary, [{
+		...valid,
+		data: { path: worktrees.detached, branch: "refs/heads/old" },
+	}]);
+	await s.fire("session_start", {}, detached);
+	assert.equal(detached.statuses.get(TASK_WORKTREE_STATUS), "Task worktree: unavailable");
+});
+
+check("session changes clear another session's task worktree status", async () => {
+	const s = makeSession();
+	const otherSession = taskWorktreeContext(worktrees.primary, []);
+	await s.fire("session_switch", {}, otherSession);
+	assert.equal(otherSession.statuses.get(TASK_WORKTREE_STATUS), "");
+});
+
+check("ordinary primary-checkout reads do not change the explicit indicator", async () => {
+	const s = makeSession();
+	const entries = [];
+	const ctx = taskWorktreeContext(worktrees.primary, entries);
+	await s.tools.get("daily_driver_register_task_worktree").execute(
+		"explicit",
+		{ path: worktrees.task },
+		undefined,
+		undefined,
+		ctx,
+	);
+	const status = ctx.statuses.get(TASK_WORKTREE_STATUS);
+	readFileSync(resolve(worktrees.primary, "tracked.txt"), "utf8");
+	assert.equal(ctx.statuses.get(TASK_WORKTREE_STATUS), status);
 });
 
 // --- schedule emits exactly once --------------------------------------------
