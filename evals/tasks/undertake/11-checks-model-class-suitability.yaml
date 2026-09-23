@@ -1,13 +1,16 @@
 task_id: undertake-11-checks-model-class-suitability
 description: >-
-  A standalone undertaking checks the task class against the current session
-  before claiming or changing the repository.
+  A standalone undertaking checks task metadata and current-session capability
+  evidence before claiming or changing the repository.
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #52. Its valid Model class is `standard`; the current session
-  is assessed `advanced`. Explain what happens before the claim. Then consider
-  the same task if the current session were unassessable.
+  Undertake task #52, a settled `standard` task.
+  The current session has an explicit, rubric-based assessment of `advanced`
+  capability for this turn, but its concrete model id has no class mapping.
+  Explain what happens before the claim. Then consider a second session with
+  a current rubric-based `standard` assessment and an unmapped model id. Finally,
+  consider the same task if the session capability is unassessable.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -24,7 +27,7 @@ success_criteria:
     expected_skill: undertake
     skill_name: undertake
   - type: agent_judge
-    description: Suitability is checked before claim and unsuitable sessions stop
+    description: Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -41,8 +44,11 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it says the advanced session may undertake the standard
-      task directly after validating class metadata, without opening a cheaper
-      implementer, and says an unassessable session reports a configuration
-      mismatch before claim or repository changes. Score 0.0 if it delegates
-      solely to cut cost or starts before the suitability check.
+      Score 1.0 only if it says both the advanced and equal-standard sessions
+      may undertake directly after validating task metadata, and explains that
+      their explicit current-session capability assessments are evidence
+      grounded in the shared rubric, not model-id mappings. It must say the
+      unassessable session stops before worktree creation, claim, or repository
+      changes; model identity alone never establishes eligibility. Score 0.0
+      if it demands a provider catalog for the unmapped ids, delegates merely
+      to cut cost, or starts an unassessable session.

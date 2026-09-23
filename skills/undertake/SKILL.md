@@ -169,10 +169,20 @@ this sequence does not open a pull request with nothing in it.
 `## Model class` section and rationale through `issue-body` before the claim.
 For an old or invalid body, assess the grounded handoff, update only that issue
 to the current contract, and then assess the current implementation session
-against the class guidance. A suitable stronger session implements directly;
-an unsuitable or unassessable session reports the configuration mismatch before
-any repository change. Concrete `Model:` lines in claim provenance remain
-actual-model records, not task metadata.
+against the class guidance. Assess the work's demands against the shared
+rubric, and assess the session using capability evidence available for this
+turn, including an explicit harness or operator assessment. The session must
+give a concrete rationale tied to the task demands and its available
+capabilities. A concrete model identity is provenance, not a class mapping:
+do not require a provider catalog, and do not treat a model name, price, or
+reasoning-effort setting alone as capability evidence. A suitable stronger or
+equal-class session implements directly. If capability is below the
+requirement or cannot be established from evidence, stop before worktree
+creation, a claim, or repository research for implementation; report the
+required class, observed model identity (or `unreported`), and the missing
+evidence or mismatch. Reassess after any visible runtime fallback or model
+change. Concrete `Model:` lines in claim provenance remain actual-model
+records, not task metadata.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
@@ -760,15 +770,26 @@ pass withheld.
 Where it stops and waits
 ========================
 
-Autonomy is the point, so each pause has to earn itself. Twelve stop the
+Autonomy is the point, so each pause has to earn itself. Thirteen stop the
 sequence. Seven stop it to *ask* — the ambiguous issue, the request too vague
 to write one for, an issue labelled `proposal`, an issue carrying two of the
 six labels, the failing approach, a designated branch the harness states
-ambiguously, and a base merge whose conflict is a real one. A blocked issue,
-an epic, an issue labelled `human`, running or failed CI, a review wall, and a
-human action owed stop it to report the unfinished condition and its actual
-resume path.
+ambiguously, and a base merge whose conflict is a real one. A capability
+assessment below the requirement or unsupported by sufficient evidence stops
+before worktree creation and claim. A blocked issue, an epic, an issue labelled
+`human`, running or failed CI, a review wall, and a human action owed stop it
+to report the unfinished condition and its actual resume path.
 
+- **Capability below the required class or not established from evidence**, at
+  `Read the issue and its edges`. Compare the task demands with the shared
+  rubric and the current session's evidenced capabilities. An explicit
+  harness or operator assessment is usable evidence when it is current and
+  relevant. A concrete model name, price, or reasoning-effort setting alone
+  does not establish capability, and absence of a model-to-class catalog is
+  not itself a reason to stop. Report the required class, observed model
+  identity (or `unreported`), and the mismatch or missing evidence. Do not
+  create a worktree, claim the issue, or begin implementation research until an
+  eligible session or sufficient evidence is available.
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
   at intent; this is that rule, at `Open the issue` and at `Read the issue and

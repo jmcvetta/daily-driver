@@ -32,11 +32,18 @@ issue carrying none of the standard's six is not an issue carrying none.
 `issue-labels`, whose `references/claude.md` states that trap where the label
 write lives.
 
-For a `task`, read the `Model class` section and assess the current session
-against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
-before its claim or repository change. A suitable stronger session implements
-directly. An unsuitable or unassessable session reports the mismatch; it does
-not delegate merely to change cost.
+For a `task`, validate the `Model class` section, then assess the current
+session against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
+before its claim or repository change. Read session identity from
+`mcp__Claude_Code_Remote__get_session` before the assessment; the fields are
+listed under `The session`. Assess task demands against evidenced current
+session capabilities, including a current explicit harness or operator
+assessment. Give a brief rationale tied to those demands. The concrete model
+identity records provenance; it is not a model-to-class lookup. A suitable
+equal- or stronger-class session implements directly. Stop before worktree
+creation, claim, or implementation research if capability is below class or
+cannot be established. A model name alone is not evidence, and no provider
+catalog is required.
 
 
 The implementor
