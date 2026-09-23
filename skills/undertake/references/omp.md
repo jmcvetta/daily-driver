@@ -21,6 +21,8 @@ The issue
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> -b "…"` |
 
+**Before `Claim the issue`, check the session title.** Read `sessionName` from `daily_driver_get_session`, which the claim already needs for its model and session id. Format the expected title as `#{number} {shortened issue title}` using `session-title`'s forty-character budget and shortening rules. If it differs, call `daily_driver_set_session_title({ title })` before `gh issue comment`; if it already matches, do not rename it. If the title surface is unavailable, report that limitation and continue without an alternate route, as `session-title` requires.
+
 **`issue://<number>` carries the comments**, so the read in that row is one
 call and returns the handoff content `SKILL.md` asks for. Where a cache miss
 or a truncated resource leaves them out, `gh issue view <number> --json

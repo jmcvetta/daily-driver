@@ -1010,8 +1010,8 @@ in, finishes ordinary delegated work and leaves its own tests passing.
 
 **What it measures.** Six cases, drawn from `jmcvetta/career` and
 `apps/usd2oz-web` in `Green-Pagoda/pagoda`: three `mechanical`, three
-`standard`, the smallest qualifying candidate of each `class:` tag by changed
-lines, each verified once at build time to fail on the base SHA and pass on
+`implementation`, the smallest qualifying candidate of each `class:` tag by
+changed lines, each verified once at build time to fail on the base SHA and pass on
 the merge SHA before it was shipped. A case's `initial_prompt` names the issue
 the pull request closed; its three `run_command` criteria check, in order,
 that no test file present at the base SHA was deleted, that no skip/xfail
@@ -1020,7 +1020,7 @@ marker was added to one, and that the pull request's own tests pass once
 records every qualifying pull request the builder saw, selected or not, so a
 later run can widen the suite without re-walking history.
 
-**What it does not measure.** No `advanced` case: that class is decided by
+**What it does not measure.** No `reasoning` case: that class is decided by
 the production table and public benchmarks, not by a fixture small enough to
 grade in two minutes (see `skills/issue-body/references/model-classes.md`).
 No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
@@ -1056,7 +1056,7 @@ answer-key check on the smallest candidates of each class and emits fixtures
 and task YAMLs for the ones that pass, up to `--per-class` each (default 3).
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
-`standard`) before it can be selected; the six shipped cases include three,
+`implementation`) before it can be selected; the six shipped cases include three,
 reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
