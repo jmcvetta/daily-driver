@@ -5,7 +5,7 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Take assigned task #52 to the capability gate. Its task body has one valid
+  Undertake assigned task #52, stopping at its capability gate. Its task body has one valid
   `## Model class` section requiring `standard`. The latest issue comment says
   the requirement is still `standard` and must not be lowered to fit an
   available session. The settled work changes the undertaking skill, its
