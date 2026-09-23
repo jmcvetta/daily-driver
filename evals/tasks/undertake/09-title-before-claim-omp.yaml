@@ -1,0 +1,61 @@
+# The Omp session title is checked before the issue claim. The adapter's session state and title tool call are required evaluation evidence.
+
+task_id: undertake-09-title-before-claim-omp
+description: >-
+  An Omp undertaking corrects an unnamed session for an assigned issue before
+  its claim.
+tags: [undertake, references, behaviour, omp-only, forks:undertake-09-claim-carries-the-session-id-omp]
+
+initial_prompt: >-
+  Undertake issue #52, “Rotate the Aurora access token.” Its Model class is
+  standard. For this offline exercise, issue://52 returns that title, and
+  daily_driver_get_session returns {"sessionId":"0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
+  "sessionName":"", "model":"openai-codex/gpt-6-luna"}. Use this exact session
+  title: `#52 Rotate the Aurora access token`. Do not contact GitHub
+  or post the claim. The established task branch is `issue-52-rotate-token`,
+  and the push remote is `https://github.com/acme/widgets.git`. Show the exact
+  issue claim using those supplied values after titling.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on assigned task work"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: command_executed
+    description: The session title is set to the issue title
+    tool_name: Write
+    command_pattern: 'daily_driver_set_session_title.*#52 Rotate the Aurora access token'
+    min_count: 1
+    weight: 2
+
+  - type: agent_judge
+    description: The title-setting call precedes the proposed claim
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      Grade only the final [RESULT - SUCCESS] or [RESULT - ERROR] reply in the
+      supplied agent output. Score 1.0 if the reply says the session was titled
+      “#52 Rotate the Aurora access token” before presenting the proposed issue
+      claim, and explicitly says the claim was not posted in this offline
+      exercise. Score 0.0 if it presents the claim before the title correction,
+      omits the proposed claim, or says it posted to GitHub. The separate
+      command_executed criterion checks that the session-title tool was actually
+      called; do not require the reply to quote the tool call.
