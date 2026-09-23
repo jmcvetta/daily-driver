@@ -4,17 +4,17 @@ task_id: undertake-09-title-before-claim-omp
 description: >-
   An Omp undertaking corrects an unnamed session for an assigned issue before
   its claim.
-tags: [undertake, references, behaviour, omp-only, forks:undertake-09-claim-carries-the-session-id-omp]
+tags: [undertake, references, behaviour, omp-only, forks:undertake-09-session-fields-for-claim]
 
 initial_prompt: >-
   Undertake issue #52, “Rotate the Aurora access token.” Its Model class is
   standard. For this offline exercise, issue://52 returns that title, and
   daily_driver_get_session returns {"sessionId":"0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
   "sessionName":"", "model":"openai-codex/gpt-6-luna"}. Use this exact session
-  title: `#52 Rotate the Aurora access token`. Do not contact GitHub
-  or post the claim. The established task branch is `issue-52-rotate-token`,
-  and the push remote is `https://github.com/acme/widgets.git`. Show the exact
-  issue claim using those supplied values after titling.
+  title: `#52 Rotate the Aurora access token`. Do not contact GitHub or post the
+  claim. The established task branch is `issue-52-rotate-token`, and the push
+  remote is `https://github.com/acme/widgets.git`. Show the exact issue claim
+  using those supplied values after titling.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
