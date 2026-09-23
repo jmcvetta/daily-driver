@@ -25,7 +25,7 @@ initial_prompt: >-
 
   ## Model class
 
-  `standard`
+  `implementation`
 
   The design is settled and the existing retry path supplies the local pattern.
 

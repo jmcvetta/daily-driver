@@ -1,7 +1,7 @@
 task_id: model-classes-career-500
 description: >-
   jmcvetta/career#500: ci: restore one release PR per component
-tags: [model-classes, class:standard]
+tags: [model-classes, class:implementation]
 
 sandbox:
   template_sources:
