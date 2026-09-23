@@ -39,6 +39,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, resolve } from "node:path";
 
 /**
@@ -320,13 +321,14 @@ function stateForWorktree(records, currentRoot) {
 }
 
 /**
- * Anchor one tool-supplied path to the tool's working directory. Null where a
- * relative path arrives without a usable working directory: the guard cannot
- * tell which repository such a path names, and a guess would be worse than no
- * answer. An absolute path needs no anchor and is always usable.
+ * Anchor one tool-supplied path to the tool's working directory. Omp resolves
+ * `~/` against the user's home before using a file path; do the same before
+ * classifying its worktree. A relative path without a usable working directory
+ * remains unplaceable. An absolute path needs no anchor.
  */
 function anchoredPath(cwd, path) {
 	if (isAbsolute(path)) return path;
+	if (path.startsWith("~/")) return resolve(homedir(), path.slice(2));
 	return typeof cwd === "string" && cwd.length > 0 ? resolve(cwd, path) : null;
 }
 
