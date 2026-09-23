@@ -1,0 +1,17 @@
+diff --git a/apps/usd2oz-web/src/shell.test.ts b/apps/usd2oz-web/src/shell.test.ts
+index f2dd63f6..f55825c2 100644
+--- a/apps/usd2oz-web/src/shell.test.ts
++++ b/apps/usd2oz-web/src/shell.test.ts
+@@ -259,10 +259,11 @@ describe("the methodology page", () => {
+     expect(text).toContain("usd2oz.com/100/1979/2026");
+   });
+ 
+-  it("links back to the converter and carries the WB attribution", () => {
++  it("links back to the calculator and carries the WB attribution", () => {
+     const d = doc(page);
+     expect(d.querySelector('a[href="/"]')).not.toBeNull();
+     const text = d.body?.textContent ?? "";
++    expect(text).toContain("Back to calculator");
+     expect(text).toContain("World Bank");
+     expect(text).toContain("CC BY 4.0");
+   });

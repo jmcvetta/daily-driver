@@ -1,0 +1,134 @@
+diff --git a/tests/test_infra_github.py b/tests/test_infra_github.py
+index 148b9558..daf1ddc6 100644
+--- a/tests/test_infra_github.py
++++ b/tests/test_infra_github.py
+@@ -1737,6 +1737,109 @@ def test_infra_still_owns_the_ci_definition() -> None:
+     )
+ 
+ 
++def test_the_tofu_check_moved_to_its_own_job() -> None:
++    """Issue #452: OpenTofu was the one step of the old `infra` leg that
++    installed a toolchain, over the one input (infra/github/**) every other
++    step in that leg was silent about -- so a Makefile edit provisioned it
++    for no reader. `infra-tofu` owns the check now, on that input alone.
++
++    Both assertions on the steps matter: a check present in both jobs would
++    pass `test_ci_runs_the_tofu_check` above while running twice, and a check
++    present in neither would pass it too, since that test only asks whether
++    the string appears somewhere in the file.
++    """
++    jobs = _workflow()["jobs"]
++    assert "infra-tofu" in jobs, "test.yml no longer defines `infra-tofu`"
++    assert _filter_patterns()["infra-tofu"] == ["infra/github/**"], (
++        "`infra-tofu`'s filter must be infra/github/** alone, or a change "
++        "outside the Tofu stack provisions it again"
++    )
++
++    def _steps_run(job_id: str) -> str:
++        return "\n".join(step.get("run", "") for step in jobs[job_id]["steps"])
++
++    assert "make check-infra" in _steps_run("infra-tofu"), (
++        "`infra-tofu` does not run `make check-infra`"
++    )
++    assert "make check-infra" not in _steps_run("infra"), (
++        "`infra` still runs `make check-infra`; a Makefile-only pull request "
++        "would provision OpenTofu again"
++    )
++
++
++def test_the_session_hooks_check_moved_to_its_own_job() -> None:
++    """Issue #452: test_session_hooks.py's subject -- the SessionStart hook
++    under .claude/ -- was never under `infra`'s other inputs, so a hook edit
++    started OpenTofu and the release-config network call for no reason.
++
++    `session-hooks` must read the hook and its wiring, and must NOT read
++    `.github/**` or `infra/github/**`: a hook-only pull request would
++    otherwise also start the release-delta, kokoro-selector and
++    coverage-comment suites those patterns feed test_infra_github.py by way
++    of `infra`.
++    """
++    jobs = _workflow()["jobs"]
++    assert "session-hooks" in jobs, "test.yml no longer defines `session-hooks`"
++    patterns = set(_filter_patterns()["session-hooks"])
++    assert {".claude/hooks/**", ".claude/settings.json"} <= patterns, (
++        "`session-hooks` no longer reads the hook or its wiring"
++    )
++    assert not patterns & {".github/**", "infra/github/**"}, (
++        f"`session-hooks` reads infra plumbing it does not test: "
++        f"{sorted(patterns & {'.github/**', 'infra/github/**'})}. A hook-only "
++        "pull request would start the release-delta and selector suites too."
++    )
++
++    steps_run = "\n".join(
++        step.get("run", "") for step in jobs["session-hooks"]["steps"]
++    )
++    assert "test-python-session-hooks" in steps_run, (
++        "`session-hooks` does not run its own leaf target"
++    )
++
++
++def test_infra_exercises_the_session_hooks_recipe_on_makefile_changes() -> None:
++    """The Makefile-owning leg runs the narrow hook recipe without its filter."""
++    steps_run = "\n".join(
++        step.get("run", "") for step in _workflow()["jobs"]["infra"]["steps"]
++    )
++    assert "make test-python-session-hooks" in steps_run, (
++        "`infra` does not exercise test-python-session-hooks when Makefile "
++        "changes; its narrow job deliberately does not read that file"
++    )
++
++
++def test_check_infra_recipe_runs_without_a_real_tofu_binary(tmp_path: Path) -> None:
++    """The Makefile-owning leg exercises check-infra without provisioning Tofu."""
++    fake_bin = tmp_path / "bin"
++    fake_bin.mkdir()
++    log = tmp_path / "tofu.log"
++    tofu = fake_bin / "tofu"
++    tofu.write_text(
++        "#!/bin/sh\n"
++        "printf '%s\\n' \"$*\" >> \"$TOFU_LOG\"\n"
++    )
++    tofu.chmod(0o755)
++
++    make = shutil.which("make")
++    assert make, "CI needs make to exercise check-infra"
++    result = subprocess.run(
++        [make, "check-infra"],
++        cwd=REPO,
++        env={"PATH": str(fake_bin), "TOFU_LOG": str(log)},
++        text=True,
++        capture_output=True,
++        check=False,
++    )
++
++    assert result.returncode == 0, result.stderr
++    assert log.read_text().splitlines() == [
++        "fmt -check -recursive .",
++        "init -backend=false",
++        "validate",
++    ]
++
++
+ def test_release_please_runs_are_serialized() -> None:
+     """Two release runs must never overlap, and must queue rather than cancel.
+ 
+diff --git a/tests/test_kokoro_select_tests.py b/tests/test_kokoro_select_tests.py
+index c25adf83..6190702f 100644
+--- a/tests/test_kokoro_select_tests.py
++++ b/tests/test_kokoro_select_tests.py
+@@ -159,6 +159,15 @@ def test_a_single_test_file_selects_itself() -> None:
+     outputs = select(["kokoro/pipeline/tests/judge/test_judge.py"], ["pipeline"])
+     assert outputs["selection"] == "some"
+     assert selected_of(outputs) == {"pipeline/tests/judge/test_judge.py"}
++    # The script's own total is every test_*.py under kokoro/pipeline/tests/
++    # (kokoro-select-tests.py's `allowed_dirs` for packages=["pipeline"]), so
++    # count it the same way here rather than hardcoding a snapshot of it --
++    # a hardcoded count goes stale the next time a pipeline test file is
++    # added or removed, which is exactly what broke this assertion (#453
++    # added kokoro/pipeline/tests/judge/test_judge_text.py, 32 -> 33; #458's
++    # own fix for the same break just dropped the assertion).
++    total = len(files_under("pipeline/tests"))
++    assert outputs["note"] == f"1 of {total} test files"
+ 
+ 
+ # ---------------------------------------------------------------------------

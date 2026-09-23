@@ -1,0 +1,44 @@
+diff --git a/tests/test_infra_github.py b/tests/test_infra_github.py
+index daf1ddc6..48bfbdc8 100644
+--- a/tests/test_infra_github.py
++++ b/tests/test_infra_github.py
+@@ -45,6 +45,7 @@
+ import re
+ import shutil
+ import subprocess
++import tomllib
+ from collections.abc import Callable
+ from pathlib import Path
+ 
+@@ -73,6 +74,7 @@
+ RELEASE_DELTA_SCRIPT = REPO / ".github" / "scripts" / "release-delta.sh"
+ STACK = REPO / "infra" / "github"
+ MAIN_TF = STACK / "main.tf"
++KOKORO_PYPROJECT = REPO / "kokoro" / "pyproject.toml"
+ 
+ 
+ @pytest.fixture(scope="module")
+@@ -1255,6 +1257,23 @@ def test_ci_never_runs_the_v1_suite() -> None:
+     )
+ 
+ 
++def test_kokoro_venv_compiles_bytecode_on_sync() -> None:
++    """`setup-uv` caches uv's wheel store, not the venv, so every kokoro job
++    rebuilds the venv from scratch, and Prefect is compiled from source in
++    four processes per job -- the pytest controller at collection, the two
++    xdist workers, and the uvicorn subprocess each worker starts for
++    `prefect_test_harness` -- without this setting (issue #468). Compiling
++    once at sync time costs under 4s and saves roughly 12s off pytest
++    start-up and 4s off each server boot."""
++    config = tomllib.loads(KOKORO_PYPROJECT.read_text())
++    compile_bytecode = config.get("tool", {}).get("uv", {}).get("compile-bytecode")
++    assert compile_bytecode is True, (
++        "kokoro/pyproject.toml no longer sets tool.uv.compile-bytecode = true; "
++        "the venv CI rebuilds every run would go back to cold-importing "
++        "Prefect from source in four processes per job"
++    )
++
++
+ # A comment in test.yml or the Makefile that cites a test by name is how the
+ # funnel's reasoning is recorded: a filter entry left out of a leg is defended
+ # by naming the check that covers the gap instead. That citation is prose, so

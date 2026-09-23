@@ -18,7 +18,7 @@ SHELL := /bin/bash
 	check-story-fixtures check-infra evals-install evals-plan \
 	evals-variants evals-preflight evals-record evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
-	evals-run-omp-gpt-5-6-sol evals-run-codex mcp-usage
+	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-classes mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -393,6 +393,23 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.gpts-choice.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.kimi.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-deepseek-v4-pro.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-deepseek-v4.1-flash.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-5.3.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-5.3-flash.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-family.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6-sol.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6-sol-terra-task.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-family.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi-k3.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-mercury-2.5.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-mimo-v2.5-pro.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax-m3.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-qwen3.8-max-0902.yaml tasks/*/*.yaml
 
 # evals-variants: refuse to start when an arm's agent kind is not registered.
 # `coder-eval plan` PRINTS "Variant 'omp': resolution failed" and then exits 0,
@@ -441,7 +458,7 @@ evals-record:
 # come back as rows run in the wrong arm, silently, at full price.
 evals-run: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/with-without.yaml \
-		--exclude-tags omp-only,codex-only,skip:claude $(TASKS); status=$$?; \
+		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
@@ -456,25 +473,25 @@ evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-d
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
 evals-run-omp-glm-5-3: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-glm-5-3-flash: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3-flash.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3-flash.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-deepseek-v4-pro: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-deepseek-v4-pro.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-deepseek-v4-pro.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-gpt-5.6-sol.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp $(TASKS); status=$$?; \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-5.6-sol.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
@@ -489,8 +506,33 @@ evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 # reason. See docs/notes/0015-the-codex-arm.md.
 evals-run-codex: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/codex.yaml \
-		--exclude-tags claude-only,omp-only,skip:codex $(TASKS); status=$$?; \
+		--exclude-tags claude-only,omp-only,skip:codex,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/codex.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+# evals-run-classes: the model-class capability suite, built from real merged
+# pull requests (scripts/evals-cases-from-prs.py) and run on one Omp model at
+# a time -- MODEL= names the omp_configs/*.yml overlay stem, e.g.
+#   make evals-run-classes MODEL=glm-5.3
+# There is one experiment file per overlay (evals/experiments/classes-*.yaml),
+# not one Make target per model the way the ablation arm has: seventeen named
+# targets would carry no more information than the seventeen filenames already
+# do. `TASKS` is overridden here, not narrowed with the usual TASKS= override
+# -- the default `tasks/*/*.yaml` would also hand every other arm's rows to
+# this one, and `--exclude-tags` only screens out three of the four arms this
+# repository actually runs (`claude-only`, `omp-only`, `codex-only`); the
+# suite's own rows carry no arm tag of that shape to exclude BY, only
+# `model-classes` itself, which every other arm already excludes. Still
+# overridable by a caller who wants one case: `TASKS=tasks/model-classes/pagoda-338.yaml`.
+evals-run-classes: TASKS = tasks/model-classes/*.yaml
+evals-run-classes: evals-plan evals-preflight
+	@if [ -z "$(MODEL)" ]; then \
+		echo "evals-run-classes: set MODEL=<omp_configs overlay stem>, e.g. MODEL=glm-5.3" >&2; \
+		exit 1; \
+	fi
+	cd evals && $(CODER_EVAL) run -e experiments/classes-$(MODEL).yaml \
+		--exclude-tags claude-only,omp-only,codex-only,skip:model-classes $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/classes-$(MODEL).yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # mcp-usage: which GitHub MCP tools were actually called, rolled up to the

@@ -1,0 +1,574 @@
+diff --git a/tests/test_infra_github.py b/tests/test_infra_github.py
+index 48bfbdc8..5f623f7f 100644
+--- a/tests/test_infra_github.py
++++ b/tests/test_infra_github.py
+@@ -696,9 +696,9 @@ def _node_paths(release_packages: dict) -> list[str]:
+ def test_every_node_component_has_a_package_json(release_packages: dict) -> None:
+     """The node strategy reads a manifest the component may not have.
+ 
+-    node-workspace's buildAllPackages fetches `<path>/package.json` for every
+-    node component in the config, candidate or not, and parses it. A node
+-    component without one fails the whole release run rather than skipping.
++    The strategy fetches `<path>/package.json` for the component and parses
++    it, so a node component without one fails the release run rather than
++    skipping.
+     """
+     manifestless = [
+         path for path in _node_paths(release_packages)
+@@ -729,205 +729,54 @@ def test_every_component_with_a_package_json_is_node(release_packages: dict) ->
+ 
+ 
+ # There is deliberately no test that a node component's package.json version
+-# equals its manifest entry. Under `merge: true` (see
+-# test_every_release_travels_in_one_pull_request) the combined release pull
+-# request writes both sides in the same commit, so the only state where they
+-# disagree is the merge itself -- a window no test can observe and no branch
+-# carries. Such a test would therefore pass, and pass for a reason unrelated
+-# to what it claims to check: it would be asserting that release-please wrote
+-# two files at once, not that either number is right.
+-#
+-# It was the split pull requests that made the comparison impossible outright,
+-# which is why the test was never written: the manifest write for a dependent
+-# rode in its dependency's pull request while its package.json write rode in
+-# its own, so master legitimately carried one side ahead of the other between
+-# the two merges. That arrangement is gone (issues #166 and #183, the second
+-# being where the first's fix started taking effect) and the conclusion is
+-# not: the defect issue #121 filed for was a package.json nothing maintained,
+-# and `test_every_component_with_a_package_json_is_node` is what catches that.
+-# Once the component releases as `node`, release-please owns the value.
+-
+-
+-# The workspace dependency graph, which node-workspace reads as the release
+-# graph. `combineDeps` merges `dependencies`, `devDependencies` and
+-# `optionalDependencies` unconditionally -- only `peerDependencies` is behind a
+-# flag -- so a dev-only edge propagates releases exactly like a runtime one.
+-# Measured against release-please 17.11.2's own `buildGraph`, not read off the
+-# docs, and confirmed by viewer@v0.2.1 and v0.2.3, which are pure
+-# dependency-bump releases cut by agent-cli releases through a `workspace:^`
+-# range.
+-#
+-# So every edge below costs its dependent a release it did not earn. They are
+-# listed rather than derived because the point is that adding one is a
+-# decision: the compiler and the test suite are both silent about release
+-# churn, and the only reader who would otherwise notice is whoever is reading
+-# the combined release pull request.
+-WORKSPACE_EDGES = {
+-    # Real, and the reason the split is affordable: each is consumed as a
+-    # built `dist/`, so a core release genuinely changes what they compile
+-    # against and the cflow artifact it bundles into.
+-    ("agent-cli", "career-scan-core"),
+-    ("career-scan-cflow", "career-scan-core"),
+-    # The viewer's only edge, since #252 moved the corpus data layer into
+-    # `core`. It used to reach `agent-cli`, and every module it imported
+-    # across that edge was corpus format or contract -- so the viewer carried
+-    # a crawler (`got`, `pino`, `tough-cookie`, `stemmer`, `commander`) in its
+-    # install tree to read frontmatter. What makes this the structural fix
+-    # rather than a tidier list is that the reach no longer exists: the viewer
+-    # does not declare `agent-cli`, so an import of crawl or orchestrator code
+-    # from the read model is not something anyone can write.
+-    ("career-scan-viewer", "career-scan-core"),
+-    # Real, and no longer free: polite-pace became a release component with
+-    # #177, so node-workspace -- which builds its graph from the components in
+-    # release-please-config.json, filtering out edges to anything else -- now
+-    # walks this one. A polite-pace release cuts agent-cli.
+-    # Extracting the directory is what removes the edge; until then this is the
+-    # cost of versioning it here rather than nowhere. Since #252 it stops at
+-    # agent-cli and the cflow: the viewer depends on core alone.
+-    ("agent-cli", "polite-pace"),
+-    # Dev-only, for `cflow/src/stage-coverage.test.ts` alone -- the one test
+-    # needing the CLI's worklist rules and the cflow's prompt tables at once.
+-    # It reaches no artifact, and it does reach the release graph: an agent-cli
+-    # release cuts a cflow release whose bundled bytes are provably unchanged.
+-    # Kept here rather than in `agent-cli/` because inverting it is strictly
+-    # worse -- a cflow release would then drag agent-cli behind it, and the
+-    # polite-pace edge with it.
+-    ("career-scan-cflow", "agent-cli"),
+-}
+-
+-
+-def test_workspace_dependency_graph_is_the_declared_one() -> None:
+-    """A new cross-package dependency is a release-graph change, silently.
+-
+-    Nothing in a build, a typecheck or a test run reports that adding one line
+-    to a `package.json` signed the dependent up for every one of its
+-    dependency's future releases. This is the reader that does.
+-
+-    Read from `pnpm-workspace.yaml` rather than from the release config, which
+-    is the wider of the two sets: every edge here is a build-order and
+-    paths-filter obligation, and the subset between release components is
+-    additionally a release-cadence one. Reading the narrower set would let an
+-    edge to a non-component land unannotated and then acquire release
+-    consequences the day it becomes one -- which is what happened to
+-    `polite-pace` in #177, with the edge already written down.
+-    """
+-    members = yaml.safe_load((REPO / "pnpm-workspace.yaml").read_text())["packages"]
+-    manifests = {}
+-    for member in members:
+-        manifest = json.loads((REPO / member / "package.json").read_text())
+-        manifests[manifest["name"]] = manifest
+-
+-    edges = set()
+-    for name, manifest in manifests.items():
+-        # The three groups node-workspace combines unconditionally.
+-        for group in ("dependencies", "devDependencies", "optionalDependencies"):
+-            for dep in manifest.get(group, {}):
+-                if dep in manifests:
+-                    edges.add((name, dep))
+-
+-    assert edges == WORKSPACE_EDGES, (
+-        "the workspace dependency graph moved. Each edge propagates releases: "
+-        "adding one means the dependent is released whenever its dependency "
+-        "is, dev-only edges included. Update WORKSPACE_EDGES with the reason."
+-    )
+-
+-
+-def test_every_release_travels_in_one_pull_request() -> None:
+-    """One release pull request, which is a workaround rather than a want.
+-
+-    A pull request per component is the preference here, with a dependent's
+-    bump travelling in its own: `separate-pull-requests: true` and
+-    node-workspace's `merge: false`. That is what this repository wants and
+-    cannot currently have. Both keys are set against it, and only one of them
+-    is the workaround.
+-
+-      * `separate-pull-requests: false` **is** the workaround. It combines
+-        every candidate into one pull request, which is the thing giving up
+-        the preference, and it is the single key to flip back.
+-      * `merge: false` is the preference, stated. It has no observable effect
+-        while the key above is `false` -- `Manifest.buildPullRequests` appends
+-        a manifest-level `Merge` in that case and runs it after the plugins,
+-        so the candidates node-workspace leaves separate are combined anyway,
+-        and `mergeUpdates` carries every candidate's updates into the one
+-        pull request. It is set to what is wanted rather than to what
+-        compensates, so that restoring the preference is one key.
+-
+-    **Do not flip `separate-pull-requests` back on its own.** With it `true`
+-    and `merge: false`, node-workspace writes a dependent's manifest entry
+-    into its *dependency's* pull request and nothing recombines them -- issue
+-    #166, and the first defect in upstream release-please#2853. Both defects
+-    in that issue have to be fixed before the preference is safe, and the
+-    third problem below has to be fixed before `merge` means anything at all
+-    alongside `separate-pull-requests: true`.
+-
+-    #167 set `merge: true`, and that was never a preference: it was an
+-    attempted workaround for #166, and it did not work. `plugins/merge.js`
+-    `run()` decides what to merge by reading each candidate's *own* config --
+-
+-      if (candidate.config.separatePullRequests && !this.forceMerge)
+-
+-    -- and `mergeReleaserConfig` copies the top-level `separate-pull-requests`
+-    onto every path. So with that `true`, every real candidate went straight
+-    to `outOfScopeCandidates` and the only ones left to merge were the ones
+-    node-workspace synthesised for dependents. Two pull requests per release,
+-    every time, with the split falling between a dependency and its
+-    dependents -- the arrangement #167 set out to end. Upstream #2310 set out
+-    to stop a user-supplied `merge` being overridden, and it is: respected as
+-    a value, inert in effect. `WorkspacePlugin.run()` builds `Merge` with no
+-    options, so `forceMerge` takes its `false` default; passing `true` there
+-    looks like the whole fix. Not reported upstream yet -- see issue #190.
+-
+-    The label is what made that expensive, because it is silent. A merged
+-    candidate's labels are the union of its inputs' labels
+-    (`plugins/merge.js`), and `NodeWorkspace.newCandidate()` builds its pull
+-    request with `labels: []` -- so a merge containing *only* synthesised
+-    dependents produces `labels: []`, and
+-    `Manifest.createOrUpdatePullRequest` passes that straight to
+-    `createPullRequest`. Merging an unlabelled release PR writes every
+-    manifest bump and package.json version to master and cuts **no tag at
+-    all**: `findMergedReleasePullRequests` finds release pull requests by
+-    `hasAllLabels(this.labels, ...)` and nothing else. On 2026-09-05 that took
+-    the release boundary out from under `agent-cli`, `cflow` and `viewer`
+-    at once, and recovery was three tags pushed by hand.
+-
+-    Note the masking, which is why it survived a month and why the workaround
+-    covers it: when the merge includes at least one strategy-built candidate
+-    the union is non-empty and the label defect never shows. Under
+-    `separate-pull-requests: false` every candidate is in that merge.
+-
+-    The cost of the workaround is `resume`: `inScope()` accepts only
+-    `release-type: node`, so node-workspace never touches it, but the
+-    manifest-level Merge takes every candidate there is. A resume fix ships
+-    in the same pull request as whatever the node components have
+-    accumulated. That is the losing side of the preference, accepted
+-    deliberately and temporarily.
++# equals its manifest entry. Each component's release PR writes its own
++# package.json and its own manifest entry in the same commit, so the only
++# state where they disagree is the merge itself -- a window no test can
++# observe and no branch carries. Such a test would pass for a reason
++# unrelated to what it claims: it would assert that release-please wrote two
++# files at once, not that either number is right. The guard that does the
++# work is `test_every_component_with_a_package_json_is_node`, since the drift
++# #121 found was a `package.json` nothing maintained rather than one holding a
++# wrong number. Once the component releases as `node`, release-please owns
++# the value.
++
++
++def test_every_component_releases_in_its_own_pull_request() -> None:
++    """One release pull request per component, with no workspace plugin.
++
++    `separate-pull-requests: true` is the preference, restored. Each component
++    with pending changes gets its own release PR; merging it bumps only that
++    component's manifest entry and package.json and cuts only that component's
++    tag, so one component's release never advances another's version.
++
++    The split was held off for as long as node-workspace was present, because
++    the plugin synthesises a candidate per dependent and those synthetic
++    candidates are what triggered both upstream defects the combined PR worked
++    around (release-please#2853): a synthetic candidate carries no
++    `autorelease: pending` label, and an unmerged dependency's manifest bump
++    rides in its dependency's PR. Removing the plugin removes the synthetic
++    candidates, so the split is safe without waiting on an upstream fix.
++
++    The consequence, accepted deliberately: remaining node components no
++    longer receive automatic dependent releases. A `workspace:^` edge no
++    longer signs the dependent up for its dependency's release cadence.
+     """
+     config = json.loads(RELEASE_CONFIG.read_text())
+-    assert config.get("separate-pull-requests") is False, (
+-        "separate-pull-requests must be explicitly false. It is the one key "
+-        "holding the workaround: left true it is copied onto every path "
+-        "config, plugins/merge.js sends any candidate carrying it out of "
+-        "scope, and the release PR built from the synthesised dependents "
+-        "alone is created unlabelled. Release-please finds merged release "
+-        "PRs by label alone, so merging that one cuts no tags while writing "
+-        "every version bump to master."
+-    )
+-    plugins = {
+-        plugin["type"]: plugin
++    assert config.get("separate-pull-requests") is True, (
++        "separate-pull-requests must be true: one release PR per component, "
++        "so merging one component does not advance another's manifest entry "
++        "or package.json."
++    )
++    plugin_types = [
++        plugin["type"]
+         for plugin in config.get("plugins", [])
+         if isinstance(plugin, dict)
+-    }
+-    assert "node-workspace" in plugins, (
+-        "release-type node without node-workspace: a release of agent-cli "
+-        "would not release the viewer that depends on it."
+-    )
+-    assert plugins["node-workspace"].get("merge") is False, (
+-        "node-workspace merge must be explicitly false: a pull request per "
+-        "component, with a dependent's bump in its own, is what this repo "
+-        "wants. It is inert while separate-pull-requests is false, and it is "
+-        "set to the preference rather than to a compensation so that "
+-        "restoring the split is one key. #167 set it true as a workaround "
+-        "for #166 and it never took effect (see the docstring)."
++    ]
++    assert "node-workspace" not in plugin_types, (
++        "node-workspace must be gone. Its synthetic dependent candidates are "
++        "what made separate-pull-requests unsafe (release-please#2853), and "
++        "their removal is the policy change: node components no longer "
++        "release their dependents automatically."
+     )
+ 
+ 
+diff --git a/tests/test_release_lock.py b/tests/test_release_lock.py
+new file mode 100644
+index 00000000..bfb1126f
+--- /dev/null
++++ b/tests/test_release_lock.py
+@@ -0,0 +1,301 @@
++"""What .github/scripts/regenerate-release-lock.sh actually does, against
++repositories built here.
++
++With separate-pull-requests the action returns the release PRs as an array
++(`steps.release-please.outputs.prs`), and the script checks out each branch and
++regenerates `kokoro/uv.lock` where the branch moved a member's version. The
++workflow wiring is pinned in test_infra_github.py; this runs the real script
++over a real repository and reads the lock commits back out of git, so the
++behaviour the workflow depends on is something a test can lose.
++
++The script's own failure mode is a spurious commit: `uv lock` is a no-op on a
++branch whose member versions did not move, so committing without the diff check
++would write a lock commit onto every non-Python release branch. The fake `uv`
++below reproduces the real one's one observable effect -- it rewrites
++`kokoro/uv.lock` from the member versions -- so the diff check, not the fake,
++is what each test asserts.
++"""
++
++from __future__ import annotations
++
++import json
++import os
++import subprocess
++from pathlib import Path
++
++import pytest
++
++REPO = Path(__file__).resolve().parent.parent
++SCRIPT = REPO / ".github" / "scripts" / "regenerate-release-lock.sh"
++
++MEMBERS = ("core", "pipeline", "viewer")
++
++FAKE_UV = """#!/usr/bin/env bash
++# Fake uv for tests: `uv lock --project kokoro` regenerates kokoro/uv.lock from
++# the member versions, the one observable effect the real `uv lock` has for the
++# script's diff check. Arguments beyond `lock` are ignored.
++[ "$1" = "lock" ] || { echo "fake uv: unexpected args: $*" >&2; exit 1; }
++{
++  for member in core pipeline viewer; do
++    version="$(sed -n 's/^version = "\\([^"]*\\)"/\\1/p' "kokoro/$member/pyproject.toml")"
++    printf 'kokoro-%s = %s\\n' "$member" "$version"
++  done
++} > kokoro/uv.lock
++"""
++
++
++def _lockfile(versions: dict[str, str]) -> str:
++    """_lockfile renders kokoro/uv.lock the way the fake uv writes it."""
++    return "".join(f"kokoro-{m} = {versions[m]}\n" for m in MEMBERS)
++
++
++def _git_env(tmp: Path) -> dict[str, str]:
++    """_git_env isolates a git subprocess from the developer's own config."""
++    return {
++        **os.environ,
++        "HOME": str(tmp),
++        "GIT_CONFIG_GLOBAL": os.devnull,
++        "GIT_CONFIG_SYSTEM": os.devnull,
++    }
++
++
++class Fixture:
++    """A git repository with a bare `origin` remote and a kokoro workspace,
++    standing in for this repository just after release-please has force-pushed
++    its release branches."""
++
++    def __init__(self, root: Path, remote: Path, tmp: Path) -> None:
++        self.root = root
++        self.remote = remote
++        self.tmp = tmp
++        root.mkdir(parents=True, exist_ok=True)
++        self.git("init", "-q", "-b", "master")
++        self.git("config", "user.email", "fixture@example.invalid")
++        self.git("config", "user.name", "Fixture")
++
++        for member in MEMBERS:
++            self.write(
++                f"kokoro/{member}/pyproject.toml",
++                '[project]\nname = "kokoro-%s"\nversion = "0.1.0"\n' % member,
++            )
++        self.write("kokoro/uv.lock", _lockfile({m: "0.1.0" for m in MEMBERS}))
++        self.git("add", "-A")
++        self.git("commit", "-q", "-m", "seed")
++
++    def git(self, *args: str) -> str:
++        """git runs a git command in the fixture and returns its stdout."""
++        return subprocess.run(
++            ["git", *args],
++            cwd=self.root,
++            check=True,
++            capture_output=True,
++            text=True,
++            env=_git_env(self.tmp),
++        ).stdout.strip()
++
++    def write(self, relative: str, text: str) -> None:
++        """write puts text at a path in the fixture, creating parents."""
++        path = self.root / relative
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_text(text)
++
++    def bump(self, member: str, version: str) -> None:
++        """bump moves a member's version, leaving kokoro/uv.lock stale."""
++        path = self.root / "kokoro" / member / "pyproject.toml"
++        path.write_text(
++            path.read_text().replace('version = "0.1.0"', f'version = "{version}"')
++        )
++
++    def release_branch(self, name: str) -> None:
++        """release_branch commits the working tree onto a branch and returns to
++        master, leaving the branch's lockfile as release-please left it."""
++        self.git("checkout", "-q", "-b", name)
++        self.git("add", "-A")
++        self.git("commit", "-q", "-m", "release " + name)
++        self.git("checkout", "-q", "master")
++
++    def seed_origin(self) -> None:
++        """seed_origin creates the bare origin, pushes every local branch, then
++        narrows the fetch refspec to master alone — the state actions/checkout's
++        `fetch-depth: 1` single-branch clone leaves the workflow in.
++
++        `git remote`, `git fetch` and `git push` are blocked for Python-side
++        subprocesses by the repo's network guard, which cannot tell a local
++        bare repository from a live remote. The script under test performs
++        those operations itself, against a filesystem path rather than a
++        network; running the seeding through bash keeps the guard's Python-side
++        interception out of the way without reaching a live site.
++
++        After the push, the release branches are on origin but not tracked
++        locally, and the fetch refspec maps master alone — so the script's own
++        fetch must create the `origin/<branch>` tracking ref, which a bare
++        branch-name fetch does not once the refspec is narrowed.
++        """
++        subprocess.run(
++            [
++                "bash",
++                "-c",
++                "set -euo pipefail;"
++                ' git init -q --bare "$1";'
++                ' git remote add origin "$1";'
++                " git push -q origin --all",
++                "_",
++                str(self.remote),
++            ],
++            cwd=self.root,
++            check=True,
++            capture_output=True,
++            text=True,
++            env=_git_env(self.tmp),
++        )
++        self.git(
++            "config",
++            "remote.origin.fetch",
++            "+refs/heads/master:refs/remotes/origin/master",
++        )
++        for ref in self.git(
++            "for-each-ref", "--format=%(refname)", "refs/remotes/origin"
++        ).splitlines():
++            if ref != "refs/remotes/origin/master":
++                self.git("update-ref", "-d", ref)
++
++    def run(self, prs: list[dict], fake_uv_bin: Path) -> subprocess.CompletedProcess:
++        """run invokes the script with PRS and the fake uv on PATH."""
++        return subprocess.run(
++            ["bash", str(SCRIPT)],
++            cwd=self.root,
++            capture_output=True,
++            text=True,
++            env={
++                **_git_env(self.tmp),
++                "PATH": f"{fake_uv_bin}{os.pathsep}{os.environ.get('PATH', '')}",
++                "PRS": json.dumps(prs),
++            },
++        )
++
++    def branch_lock(self, branch: str) -> str:
++        """branch_lock returns kokoro/uv.lock as committed on a remote branch."""
++        return subprocess.run(
++            ["git", "-C", str(self.remote), "show", f"{branch}:kokoro/uv.lock"],
++            check=True,
++            capture_output=True,
++            text=True,
++            env=_git_env(self.tmp),
++        ).stdout
++
++    def branch_subjects(self, branch: str) -> list[str]:
++        """branch_subjects returns commit subjects on a remote branch since
++        master, oldest first."""
++        return subprocess.run(
++            [
++                "git",
++                "-C",
++                str(self.remote),
++                "log",
++                "--format=%s",
++                f"master..{branch}",
++            ],
++            check=True,
++            capture_output=True,
++            text=True,
++            env=_git_env(self.tmp),
++        ).stdout.splitlines()
++
++
++@pytest.fixture
++def fake_uv(tmp_path: Path) -> Path:
++    """fake_uv installs the fake uv on a bin dir and returns it."""
++    bindir = tmp_path / "bin"
++    bindir.mkdir()
++    (bindir / "uv").write_text(FAKE_UV)
++    (bindir / "uv").chmod(0o755)
++    return bindir
++
++
++@pytest.fixture
++def fixture(tmp_path: Path) -> Fixture:
++    """fixture builds the repository the tests run the script against."""
++    return Fixture(tmp_path / "repo", tmp_path / "remote", tmp_path)
++
++
++def test_each_python_branch_gets_its_own_lock_update(
++    fixture: Fixture, fake_uv: Path
++) -> None:
++    """A release of core and pipeline regenerates each branch's lock alone.
++
++    The core branch carries only core's bump; the pipeline branch only
++    pipeline's. A non-Python branch carries no lock commit at all.
++    """
++    fixture.bump("core", "0.2.0")
++    fixture.release_branch("release-please--branches--master--components--kokoro-core")
++    fixture.bump("pipeline", "0.3.0")
++    fixture.release_branch(
++        "release-please--branches--master--components--kokoro-pipeline"
++    )
++    fixture.write("agent-cli/package.json", '{"version": "0.2.0"}\n')
++    fixture.release_branch("release-please--branches--master--components--agent-cli")
++    fixture.seed_origin()
++
++    proc = fixture.run(
++        [
++            {"headBranchName": "release-please--branches--master--components--kokoro-core"},
++            {"headBranchName": "release-please--branches--master--components--kokoro-pipeline"},
++            {"headBranchName": "release-please--branches--master--components--agent-cli"},
++        ],
++        fake_uv,
++    )
++    assert proc.returncode == 0, proc.stderr
++
++    core = fixture.branch_lock(
++        "release-please--branches--master--components--kokoro-core"
++    )
++    assert core == _lockfile({"core": "0.2.0", "pipeline": "0.1.0", "viewer": "0.1.0"})
++
++    pipeline = fixture.branch_lock(
++        "release-please--branches--master--components--kokoro-pipeline"
++    )
++    assert pipeline == _lockfile(
++        {"core": "0.1.0", "pipeline": "0.3.0", "viewer": "0.1.0"}
++    )
++
++    agent = fixture.branch_subjects(
++        "release-please--branches--master--components--agent-cli"
++    )
++    assert agent == ["release release-please--branches--master--components--agent-cli"]
++
++
++def test_a_python_branch_whose_lock_is_current_gets_no_commit(
++    fixture: Fixture, fake_uv: Path
++) -> None:
++    """A branch whose member version did not move gets no lock commit.
++
++    This is the `always-update` case: release-please force-pushes a branch even
++    when nothing changed, and the script must not write a spurious commit.
++    """
++    fixture.write("kokoro/viewer/CHANGELOG.md", "## 0.1.0\n")
++    fixture.release_branch(
++        "release-please--branches--master--components--kokoro-viewer"
++    )
++    fixture.seed_origin()
++
++    proc = fixture.run(
++        [
++            {"headBranchName": "release-please--branches--master--components--kokoro-viewer"}
++        ],
++        fake_uv,
++    )
++    assert proc.returncode == 0, proc.stderr
++
++    viewer = fixture.branch_subjects(
++        "release-please--branches--master--components--kokoro-viewer"
++    )
++    assert viewer == ["release release-please--branches--master--components--kokoro-viewer"]
++
++
++def test_an_empty_prs_array_commits_nothing(
++    fixture: Fixture, fake_uv: Path
++) -> None:
++    """An empty PRs array is a no-op, not an error."""
++    fixture.seed_origin()
++    proc = fixture.run([], fake_uv)
++    assert proc.returncode == 0, proc.stderr
