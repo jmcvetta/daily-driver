@@ -396,20 +396,10 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.gpts-choice.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.kimi.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-deepseek-v4-pro.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-deepseek-v4.1-flash.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-5.3.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-5.3-flash.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-family.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6-sol.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6-sol-terra-task.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-family.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi-k3.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-mercury-2.5.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-mimo-v2.5-pro.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax-m3.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-qwen3.8-max-0902.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml
 
 # evals-variants: refuse to start when an arm's agent kind is not registered.
 # `coder-eval plan` PRINTS "Variant 'omp': resolution failed" and then exits 0,
@@ -513,11 +503,11 @@ evals-run-codex: evals-plan evals-preflight
 # evals-run-classes: the model-class capability suite, built from real merged
 # pull requests (scripts/evals-cases-from-prs.py) and run on one Omp model at
 # a time -- MODEL= names the omp_configs/*.yml overlay stem, e.g.
-#   make evals-run-classes MODEL=glm-5.3
+#   make evals-run-classes MODEL=glm
 # There is one experiment file per overlay (evals/experiments/classes-*.yaml),
-# not one Make target per model the way the ablation arm has: seventeen named
-# targets would carry no more information than the seventeen filenames already
-# do. `TASKS` is overridden here, not narrowed with the usual TASKS= override
+# not one Make target per model the way the ablation arm has: one target
+# selects the matching filename rather than maintaining a separate recipe.
+# `TASKS` is overridden here, not narrowed with the usual TASKS= override
 # -- the default `tasks/*/*.yaml` would also hand every other arm's rows to
 # this one, and `--exclude-tags` only screens out three of the four arms this
 # repository actually runs (`claude-only`, `omp-only`, `codex-only`); the
@@ -527,7 +517,7 @@ evals-run-codex: evals-plan evals-preflight
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \
-		echo "evals-run-classes: set MODEL=<omp_configs overlay stem>, e.g. MODEL=glm-5.3" >&2; \
+		echo "evals-run-classes: set MODEL=<omp_configs overlay stem>, e.g. MODEL=glm" >&2; \
 		exit 1; \
 	fi
 	cd evals && $(CODER_EVAL) run -e experiments/classes-$(MODEL).yaml \

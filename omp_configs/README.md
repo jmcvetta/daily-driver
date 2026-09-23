@@ -14,7 +14,7 @@ Start each configuration in a separate terminal to run several copies at once:
 
 ```sh
 omp --config ./cocktail.yml
-omp --config ./minimax-m3.yml
+omp --config ./minimax.yml
 ```
 
 The overlay applies only to that process. It overrides the roles it lists; unlisted roles continue to use the underlying Omp configuration. Later files win when `--config` is repeated.
@@ -29,22 +29,13 @@ PI_CONFIG_FILES=./cocktail.yml omp
 
 | File | Role configuration |
 | --- | --- |
-| `glm-5.3.yml` | GLM 5.3 as the default model. |
-| `glm-5.3-flash.yml` | GLM 5.3 Flash as the default model. |
-| `glm-family.yml` | GLM 5.3 Flash for default, small, vision, commit, and tiny work; GLM 5.3 for deep analysis, planning, and advice; GLM 5.3 Fast for task subagents. |
-| `deepseek-v4-pro.yml` | DeepSeek V4 Pro as the default model. |
-| `gpt-6-sol.yml` | GPT-6 Sol as the default model. |
-| `gpt-6-sol-terra-task.yml` | GPT-6 Sol as the default model and GPT-5.6 Terra for task subagents. |
-| `gpt-family.yml` | Sol for default work, deep analysis, and advice; Luna for small, commit, and tiny work; Terra for task subagents and vision; Astra for planning. |
+| `glm.yml` | GLM 5.3 Flash for default, small, vision, commit, and tiny work; GLM 5.3 for deep analysis, planning, and advice; GLM 5.3 Fast for task subagents. |
+| `gpt.yml` | Sol for default work, deep analysis, and advice; Luna for small, commit, and tiny work; Terra for task subagents and vision; Astra for planning. |
 | `cocktail.yml` | GLM 5.3 Flash by default, for task subagents, and for small, vision, and commit work; Kimi K3 for planning and deep work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
-| `cocktail.kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
+| `kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `cocktail.gpts-choice.yml` | The original GPT-generated cocktail: DeepSeek V4 Pro by default; Luna for small work; Sol for planning and deep work; GLM Flash for task subagents; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
-| `mercury-2.5.yml` | Mercury 2.5 as the default model for testing its diffusion-based agent behavior. |
-| `kimi-k3.yml` | Kimi K3 as the default model with high reasoning. |
-| `minimax-m3.yml` | MiniMax M3 as the default model with high reasoning. |
-| `qwen3.8-max-0902.yml` | Qwen 3.8 Max 0902 as the default model with high reasoning. |
-| `deepseek-v4.1-flash.yml` | DeepSeek V4.1 Flash as the default model with high reasoning. |
-| `mimo-v2.5-pro.yml` | MiMo V2.5 Pro as the default model with high reasoning. |
+| `cheaper.yml` | DeepSeek V4 Pro for default and deep work; GPT-6 Luna for task subagents; Kimi K3 for planning; GLM Flash for advice; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
+| `minimax.yml` | MiniMax M3 as the default model with high reasoning. |
 
 The `advisor` role in the cocktail overlays does not enable the advisor. Start Omp with `--advisor` when you want it:
 
