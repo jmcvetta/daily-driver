@@ -31,6 +31,7 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | --- | --- |
 | `glm.yml` | GLM 5.3 Flash for default, small, vision, commit, and tiny work; GLM 5.3 for deep analysis, planning, and advice; GLM 5.3 Fast for task subagents. |
 | `gpt.yml` | Sol for default work, deep analysis, and advice; Luna for small, commit, and tiny work; Terra for task subagents and vision; Astra for planning. |
+| `gpt.gateway.yml` | DeepSeek V4 Pro for default and deep work; GLM Flash for small and task work; Kimi K3 for planning; Qwen 3.8 Max for advice; MiniMax M3 for vision; Mercury 2.5 for commit and tiny work. |
 | `cocktail.yml` | GLM 5.3 Flash by default, for task subagents, and for small, vision, and commit work; Kimi K3 for planning and deep work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `cocktail.gpts-choice.yml` | The original GPT-generated cocktail: DeepSeek V4 Pro by default; Luna for small work; Sol for planning and deep work; GLM Flash for task subagents; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
