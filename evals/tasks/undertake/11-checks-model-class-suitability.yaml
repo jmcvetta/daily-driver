@@ -5,12 +5,31 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #52, a settled `standard` task.
-  The current session has an explicit, rubric-based assessment of `advanced`
-  capability for this turn, but its concrete model id has no class mapping.
-  Explain what happens before the claim. Then consider a second session with
-  a current rubric-based `standard` assessment and an unmapped model id. Finally,
-  consider the same task if the session capability is unassessable.
+  Undertake task #52. Its settled design changes `skills/undertake/SKILL.md`,
+  all three `skills/undertake/references/*.md` capability routes, and this
+  behavior evaluation. It needs routine multi-file coordination, meaningful
+  evaluation coverage, and local failure diagnosis. It does not involve
+  concurrency correctness, security boundaries, data integrity, or a novel
+  algorithm. The task's required class is `standard`.
+
+  Session A's current-session evidence shows it can implement settled,
+  repository-pattern changes across multiple files, write meaningful behavior
+  evaluations, and diagnose local failures; its rubric assessment is
+  `advanced`. Its concrete model id is unmapped.
+  Session B has the same evidence for routine multi-file implementation,
+  meaningful evaluations, and local diagnosis; its rubric assessment is
+  `standard`. Its concrete model id is also unmapped.
+  Session C is limited to bounded transformations with explicit rules and
+  direct checks; it cannot coordinate routine multi-file changes, write
+  meaningful evaluations, or diagnose implementation failures. Its assessment
+  is `mechanical`.
+  Session D has only a concrete model id, with no current capability evidence
+  or assessment.
+
+  Explain which sessions may begin and what each stop requires before worktree
+  creation, claim, or implementation. Then suppose Session A visibly falls
+  back to a `mechanical` model during implementation; explain what happens
+  before it continues.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -44,11 +63,13 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it says both the advanced and equal-standard sessions
-      may undertake directly after validating task metadata, and explains that
-      their explicit current-session capability assessments are evidence
-      grounded in the shared rubric, not model-id mappings. It must say the
-      unassessable session stops before worktree creation, claim, or repository
-      changes; model identity alone never establishes eligibility. Score 0.0
-      if it demands a provider catalog for the unmapped ids, delegates merely
-      to cut cost, or starts an unassessable session.
+      Score 1.0 only if it compares the supplied task demands with the shared
+      rubric and uses the supplied capability evidence to let Session A
+      (`advanced`) and Session B (`standard`) proceed without requiring a
+      model-id mapping. It must stop Session C (`mechanical`) and Session D
+      (identity only) before worktree creation or claim, report the needed
+      class and missing evidence for D, and stop Session A from further
+      implementation after the visible fallback pending reassessment. Require
+      a concrete task-specific rationale; repeating labels alone scores 0.0.
+      Also score 0.0 if it starts either stopped session or delegates solely
+      to cut cost.
