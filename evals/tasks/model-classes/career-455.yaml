@@ -1,7 +1,7 @@
 task_id: model-classes-career-455
 description: >-
   jmcvetta/career#455: ci(infra): split the infra leg by what each step reads
-tags: [model-classes, class:standard]
+tags: [model-classes, class:implementation]
 
 sandbox:
   template_sources:

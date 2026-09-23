@@ -60,7 +60,7 @@ The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. The `openai-codex` mo
 
 These overlays select concrete model roles. They do not prove that a role or
 model satisfies a task capability class. Task issues record `mechanical`,
-`standard`, or `advanced` through
+`implementation`, or `reasoning` through
 [`issue-body`'s shared guidance](../skills/issue-body/references/model-classes.md);
 dispatch inspects the effective agent configuration and actual route before
 selecting a compatible implementer. Keep concrete selectors in these YAML

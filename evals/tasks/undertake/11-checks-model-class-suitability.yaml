@@ -5,8 +5,8 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #52. Its valid Model class is `standard`; the current session
-  is assessed `advanced`. Explain what happens before the claim. Then consider
+  Undertake task #52. Its valid Model class is `implementation`; the current
+  session is assessed `reasoning`. Explain what happens before the claim. Then consider
   the same task if the current session were unassessable.
 
 agent:
@@ -41,8 +41,8 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it says the advanced session may undertake the standard
-      task directly after validating class metadata, without opening a cheaper
+      Score 1.0 only if it says the reasoning session may undertake the
+      implementation task directly after validating class metadata, without opening a cheaper
       implementer, and says an unassessable session reports a configuration
       mismatch before claim or repository changes. Score 0.0 if it delegates
       solely to cut cost or starts before the suitability check.

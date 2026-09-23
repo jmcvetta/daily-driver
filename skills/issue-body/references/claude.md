@@ -17,7 +17,7 @@ The required class
 Task bodies use the provider-neutral `Model class` section defined in
 [`model-classes.md`](model-classes.md). Before creating a session, `embark`
 resolves that class to a currently valid concrete identifier. It never passes
-`standard`, a configured alias, or a suffixed `configured_model` value as the
+`implementation`, a configured alias, or a suffixed `configured_model` value as the
 `model` argument.
 
 `mcp__Claude_Code_Remote__get_session`, with `session_id` omitted, reports the
