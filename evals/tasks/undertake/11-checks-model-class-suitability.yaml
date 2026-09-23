@@ -60,6 +60,14 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
+      Use the repository's current class rubric, not a guessed hierarchy:
+      `mechanical` is specified transformations with direct checks;
+      `implementation` includes routine multi-file coordination, meaningful
+      tests, and local failure diagnosis; `reasoning` adds sustained work on
+      interacting invariants. B's evidence therefore meets `implementation`
+      exactly. A reply that says B is below the required class and stops B
+      scores 0.0, even if its other decisions are correct.
+
       Score 1.0 only if the reply validates the effective `implementation`
       class from the body and confirming comment before assessing capability;
       relates that class to the task's multi-file coordination, evaluations,
