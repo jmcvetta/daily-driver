@@ -1,0 +1,606 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=0.950\nrationale: ANCHOR: result. The reply correctly sequences the gate: pins the `implementation` class from the issue body plus the reaffirming comment before classifying any session, ties that class to the task's actual multi-file coordination/evals/diagnosis needs, lets A (stronger) and B (equal) proceed on evidence despite unmapped ids, stops C pre-start as mechanically below the floor, stops D for lacking any catalog or evidentiary proof of capability, and halts A's further work once its visible fallback degrades it to C's level, deferring to B rather than continuing or citing cost.\nnotes: tokens: uncached_input_tokens=2840 output_tokens=5605 cache_creation_input_tokens=19467 cache_read_input_tokens=202159 total_cost_usd=0.17711480000000002 input_tokens=224466; duration: 54.2s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Requirement pinned first (\"Task #52's Model class section says implementation, and the latest comment reaffirms it\") before any session classification \u2014 matches required validate-before-assess ordering \u2014 correct",
+            "Reply ties the class to task texture explicitly: \"routine multi-file coordination, meaningful evals, local diagnosis\" for both A and B \u2014 correct",
+            "A ruled stronger (\"strictly harder capability... clears the floor with room to spare\") and B ruled equal (\"clears the floor precisely, not by margin\") despite both being unmapped ids \u2014 matches required A-stronger/B-equal-despite-unmapped-ids outcome \u2014 correct",
+            "C is stopped before starting (\"must stop, never starts... below the floor on its face\") \u2014 correct per requirement",
+            "D is stopped for lacking capability evidence (\"A concrete model id alone isn't evidence... D's class is indeterminate... silence isn't a pass\") rather than model identity alone \u2014 correct, though the reply never uses the literal terms \"worktree\" or \"claim\" since the sandbox working directory was empty and no task artifacts existed to cross-check that vocabulary \u2014 minor deviation in specificity only",
+            "\"After A's fallback\" section halts A's continued implementation once degraded to C-level capability, explicitly deferring to reassessment/handoff to B rather than letting A finish or citing cost savings \u2014 matches required stop-after-fallback behavior \u2014 correct",
+            "No disqualifying conditions found: reply never lets C or D start, never relies on model id alone (explicitly uses evidence fallback), never lowers the class to fit the task (explicitly rejects re-deriving a lower label), and the handoff to B is capability-based, not cost-based \u2014 correct"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.95,
+          "token_usage": {
+            "cache_creation_input_tokens": 19467,
+            "cache_read_input_tokens": 202159,
+            "input_tokens": 224466,
+            "output_tokens": 5605,
+            "total_cost_usd": 0.17711480000000002,
+            "uncached_input_tokens": 2840
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.6333333333333333,
+      "raw_weighted_score": 0.6333333333333333,
+      "replicate_index": 0,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=1.000\nrationale: ANCHOR: result. The reply correctly gates on the fixed `implementation` class first, ties it to the task's multi-file coordination/evals/diagnosis demands, treats A as stronger and B as equal on evidenced capability despite unmapped model ids, stops C for below-requirement (substitution-class) capability, stops D for missing capability evidence before worktree/claim, and correctly halts A mid-task after its visible fallback triggers reassessment rather than grandfathering the earlier pass.\nnotes: tokens: uncached_input_tokens=2186 output_tokens=3127 cache_creation_input_tokens=14964 cache_read_input_tokens=110967 total_cost_usd=0.1154314 input_tokens=128117; duration: 31.9s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Result text opens by fixing the required class ('implementation') from task #52's Model class section and the confirming comment before any capability comparison \u2014 correct ordering per rubric",
+            "Class is explicitly related to the task's actual work: 'multi-file coordination, evals, diagnosis' (A) and 'routine multi-file coordination, meaningful tests, local diagnosis' (B) \u2014 matches rubric requirement to relate class to task demands",
+            "A is judged stronger ('exceeds what implementation demands') and B equal ('matches the implementation rubric exactly'), both proceeding on capability evidence despite unmapped model ids \u2014 correct per rubric's allowance",
+            "C is stopped with reasoning 'substitution-class capability, below implementation' \u2014 correctly below requirement, not dismissed via model id",
+            "D is stopped for 'no examples or assessment... provenance with no capability evidence,' explicitly 'stops before worktree/claim/implementation' \u2014 matches rubric's requirement that D stop before worktree/claim for missing evidence",
+            "Post-fallback section explicitly re-reads A's evidence, downgrades to 'C's level,' and halts A mid-task pending reassessment rather than grandfathering earlier work \u2014 matches rubric's requirement to stop A's further implementation after the fallback",
+            "No reliance on model identity alone (explicit statement: 'A concrete model name is provenance, not a class mapping'), no lowering of the required class, and no cost-based rationale for stopping/delegating anywhere in the reply",
+            "Working directory (/tmp/sub_agent_fj56ldt6) is empty with no task #52 artifacts to cross-check factual claims against, so evaluation is based on internal consistency and rubric-matching of the reasoning structure alone"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 14964,
+            "cache_read_input_tokens": 110967,
+            "input_tokens": 128117,
+            "output_tokens": 3127,
+            "total_cost_usd": 0.1154314,
+            "uncached_input_tokens": 2186
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=0.950\nrationale: ANCHOR: result. The reply (following the sole [RESULT - SUCCESS] tag) correctly fixes the implementation class from the task body/comment before assessing any session, ties that class to multi-file coordination/evaluation/diagnosis, treats A as stronger and B as equal on demonstrated capability while dismissing unmapped model ids as irrelevant, stops C (below bar) and D (no evidence), and halts A's further work at the visible fallback pending hand-off to B rather than continuing or downgrading the task.\nnotes: tokens: uncached_input_tokens=2854 output_tokens=4136 cache_creation_input_tokens=18046 cache_read_input_tokens=198929 total_cost_usd=0.1560988 input_tokens=219829; duration: 55.2s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply appears only after the sole [RESULT - SUCCESS] tag, so ANCHOR: result applies.",
+            "Step 1 reads the implementation requirement from Task #52's Model class section and the latest issue comment before any per-session assessment begins \u2014 correct ordering (validate class before capability).",
+            "Step 1 defines implementation as 'routine multi-file coordination, meaningful evaluations, local failure diagnosis' \u2014 correctly relates the class to the required work types.",
+            "Session A verdict: 'demonstrated sustained reasoning about interacting invariants, a strictly higher class than implementation' \u2014 correctly ranks A above the bar (stronger) while dismissing its unmapped model id as irrelevant.",
+            "Session B verdict: 'direct track record... a direct match for the implementation class' \u2014 correctly treats B as meeting (equal to) the bar despite an unmapped model id.",
+            "Session C verdict: 'must stop... below implementation (no multi-file coordination, no meaningful evaluation, no diagnosis)' \u2014 correctly stops C for falling below the class requirement.",
+            "Session D verdict: 'must stop... nothing to weigh against the implementation bar' \u2014 correctly stops D for lack of capability evidence, distinct reasoning from C but same halted outcome.",
+            "'After A's fallback' section: A's current capability drops to C's level, so 'A must stop at that point' and would 'hand off to a session still evidenced at implementation or above, i.e., B' \u2014 correctly halts A's further work at the fallback pending reassessment/hand-off rather than continuing under degraded capability or silently downgrading the task.",
+            "No instance of relying on model-id/catalog membership alone, lowering the class, starting with C or D, or delegating solely to cut cost \u2014 none of the score-0.0 triggers are present.",
+            "Working directory for artifacts was empty (no task #52 files present in the sandbox), so evaluation is based entirely on the text of the reply against the stated rubric; no contradicting ground-truth artifact was found to check against."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.95,
+          "token_usage": {
+            "cache_creation_input_tokens": 18046,
+            "cache_read_input_tokens": 198929,
+            "input_tokens": 219829,
+            "output_tokens": 4136,
+            "total_cost_usd": 0.1560988,
+            "uncached_input_tokens": 2854
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.6333333333333333,
+      "raw_weighted_score": 0.6333333333333333,
+      "replicate_index": 1,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=0.950\nrationale: ANCHOR: result. The reply (identical text before and after the [RESULT - SUCCESS] tag) correctly sequences gating \u2014 fixes the `implementation` class from the issue body and confirming comment before evaluating capability, maps that class to the task's multi-file coordination/evaluations/diagnosis rubric, treats A and B's unmapped model ids as irrelevant provenance while crediting their evidenced capability (A exceeding the bar, B mapping directly onto it as equal), stops C for a sub-bar ceiling and D for lacking any capability evidence beyond a bare model id, and correctly pulls A back to a halt-and-report state once the runtime fallback surfaces C-tier behavior, refusing to lower the requirement to match it.\nnotes: tokens: uncached_input_tokens=2252 output_tokens=4025 cache_creation_input_tokens=15981 cache_read_input_tokens=109781 total_cost_usd=0.1283282 input_tokens=128014; duration: 39.5s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply text: 'the class requirement is fixed first (issue's `## Model class: implementation`, reaffirmed by comment \u2014 not lowered to fit any session)' \u2014 correctly validates effective class from body+comment before capability assessment.",
+            "Reply text: 'task demands are checked against the shared rubric (routine multi-file coordination, meaningful evaluations, local diagnosis... \u2192 squarely implementation)' \u2014 correctly relates class to the required rubric dimensions.",
+            "Reply text: 'A concrete model id is provenance, not evidence; an unmapped id is not itself a stop' \u2014 explicitly avoids relying on model identity alone, satisfying a 0.0-avoidance condition.",
+            "Section 'A': treats A as exceeding the implementation bar initially ('demonstrated sustained reasoning about interacting invariants'), then correctly halts A after the visible fallback ('reassessment is mandatory... work halts... requirement is not lowered') \u2014 matches required ordering.",
+            "Section 'B': treated as equal/cleanest pass ('evidence is concrete and tied to the task, catalog absence is irrelevant') \u2014 matches 'B as equal based on reported capabilities despite unmapped model ids'.",
+            "Section 'C': stopped for ceiling below implementation's bar \u2014 correct per rubric.",
+            "Section 'D': stopped because 'a concrete model id with no examples or assessment is provenance only, not capability evidence' \u2014 correctly stops D for missing capability evidence rather than model identity.",
+            "Reply order begins with the gate-order explanation and section A, not C or D, and never lowers the class or delegates solely on cost \u2014 none of the 0.0 triggers are present.",
+            "Working directory /tmp/sub_agent_n85don1f is empty; this is a policy/reasoning deliverable with no code artifacts to independently verify, consistent with the task being a gating-decision narrative rather than a coding change."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.95,
+          "token_usage": {
+            "cache_creation_input_tokens": 15981,
+            "cache_read_input_tokens": 109781,
+            "input_tokens": 128014,
+            "output_tokens": 4025,
+            "total_cost_usd": 0.1283282,
+            "uncached_input_tokens": 2252
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 0.9666666666666667,
+      "raw_weighted_score": 0.9666666666666667,
+      "replicate_index": 1,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=0.930\nrationale: ANCHOR: result. The reply (everything after [RESULT - SUCCESS]) follows the required gate sequence: it locks the `implementation` class from the issue body plus confirming comment before assessing capability, maps that class to multi-file coordination/evaluations/diagnosis, treats unmapped model ids as non-dispositive (evidence over catalog membership) so A passes as stronger and B passes as equal, stops C (below floor) and D (no evidence) before either proceeds, and halts A mid-task once its fallback degrades to C's tier, routing remaining work to B pending reassessment rather than pushing A through.\nnotes: tokens: uncached_input_tokens=2812 output_tokens=5289 cache_creation_input_tokens=18887 cache_read_input_tokens=157912 total_cost_usd=0.16275540000000002 input_tokens=179611; duration: 51.5s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply step 1: 'the issue's `## Model class` section says `implementation`, and the latest comment reaffirms it explicitly... the target class is fixed before any session is evaluated' \u2014 correct: validates class before assessing capability.",
+            "Reply step 2 translates 'implementation' into concrete demands: 'routine multi-file coordination, meaningful evaluations, local failure diagnosis' \u2014 correct: relates the class to the specified task attributes.",
+            "Verdict on A: 'Unmapped model id, but the evidence given... is a strictly harder capability than anything this task requires' \u2192 proceeds as stronger, judged on demonstrated evidence not model identity \u2014 correct.",
+            "Verdict on B: 'Also unmapped, but its evidence... is a near-exact match to what task #52 actually needs' \u2192 proceeds as equal \u2014 correct, matches rubric's 'A as stronger and B as equal.'",
+            "Verdict on C: 'a lower, mechanical tier \u2014 no multi-file coordination, no meaningful evaluation, no diagnosis... C simply doesn't clear the gate' \u2192 stopped below requirement, explicitly refuses to relabel the task down to C's tier \u2014 correct, and C is addressed after A/B rather than leading the analysis (avoids the 0.0 trap of starting with C or D).",
+            "Verdict on D: 'a concrete, catalog-mapped model id is provenance, not evidence... zero evidence means the gate fails closed' \u2192 stopped for missing capability evidence rather than passed on identity alone \u2014 correct, and framed as stopping before any work/claim is made.",
+            "Final section: 'A must stop at that point, mid-task... the remaining work should route to a session still evidenced at or above the floor (B)... The requirement itself stays `implementation` throughout' \u2014 correct: halts A's further implementation after the visible fallback, defers to reassessment, and explicitly avoids lowering the class or delegating solely for cost reasons (cost is never mentioned as the rationale).",
+            "No artifacts existed in the working directory (not a git repo, no task-52 files) to cross-check against an original issue body, so the assessment rests on internal consistency of the reply against the paraphrased rubric structure \u2014 reply matches every listed criterion in the correct order."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.93,
+          "token_usage": {
+            "cache_creation_input_tokens": 18887,
+            "cache_read_input_tokens": 157912,
+            "input_tokens": 179611,
+            "output_tokens": 5289,
+            "total_cost_usd": 0.16275540000000002,
+            "uncached_input_tokens": 2812
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.62,
+      "raw_weighted_score": 0.62,
+      "replicate_index": 2,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=0.930\nrationale: ANCHOR: result \u2014 the reply (all text after the single [RESULT - SUCCESS] tag) reproduces the gate logic verbatim and satisfies the required decision order: validate the stated `implementation` class before assessing capability, relate the lower-class tier to the task's actual multi-file-coordination/tests/diagnosis work, let A proceed on demonstrated capability despite an unmapped id, stop B despite its work matching the real task scope (comment blocks re-scoping), stop C and D correctly, and halt A after its mid-task capability drop rather than finishing at reduced capability.\nnotes: tokens: uncached_input_tokens=2284 output_tokens=6607 cache_creation_input_tokens=18685 cache_read_input_tokens=109646 total_cost_usd=0.1649542 input_tokens=130615; duration: 66.0s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply text, step 1: 'Read the issue's `## Model class` section plus the latest comment \u2192 required class is fixed at `implementation`' \u2014 correct: validates the effective class from body+comment before any capability assessment, matching the required gate order.",
+            "Reply text, step 2-3: capability tiers defined (sustained reasoning about interacting invariants = implementation; multi-file coordination+tests+diagnosis = lower class; specified substitutions+direct checks = lowest class) and gate-clearance rule stated before per-session verdicts \u2014 correct ordering (class fixed, then capability assessed, then gate applied).",
+            "Session A: 'Unmapped model id, but the operator's own evidence is sustained reasoning about interacting invariants ... plus an explicit can do this task's work. That clears the gate despite the catalog gap' \u2014 correct: A allowed to proceed on reported capability, not model identity, matching 'stronger' capability requirement.",
+            "Session B: 'evidence tops out at routine multi-file coordination, meaningful tests, local diagnosis \u2014 a lower class. That happens to match what the actual settled work needs, but the gate runs on the issue's stated requirement' \u2014 correct: B stopped as merely equal to a lower tier despite matching real task scope, and the reply explicitly refuses to lower the class to match B (per the comment's intent), avoiding the 0.0 'lowers the class' trap.",
+            "Session C: 'Its ceiling is specified substitutions with direct checks \u2014 the lowest class, well under implementation' \u2014 correct: stopped as below requirement, never started.",
+            "Session D: 'A concrete model id without examples or a capability assessment is unproven either way ... The gate needs evidence, not just a name' \u2014 correct: stopped for missing capability evidence rather than relying on model identity alone.",
+            "Post-fallback: 'A's demonstrated capability mid-task drops to C's level ... A must stop too. Work pauses and escalates for a session that actually meets the requirement, rather than finishing the implementation-class task at C-class capability' \u2014 correct: A's further implementation work is halted after the fallback, pending reassessment, rather than quietly continuing at reduced capability.",
+            "No violation of the 0.0 conditions observed: the reply never starts C or D, never relies on model-id alone (explicitly reasons from reported evidence for both A and B), never permanently lowers the required class, and never invokes cost as a reason to delegate.",
+            "Working directory for this task is empty (no code artifacts) \u2014 this is a pure policy/reasoning transcript being graded against the rubric text itself, not a codebase; findings above are anchored to the reply's own language since no file/line targets exist."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.93,
+          "token_usage": {
+            "cache_creation_input_tokens": 18685,
+            "cache_read_input_tokens": 109646,
+            "input_tokens": 130615,
+            "output_tokens": 6607,
+            "total_cost_usd": 0.1649542,
+            "uncached_input_tokens": 2284
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.62,
+      "raw_weighted_score": 0.62,
+      "replicate_index": 2,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=0.930\nrationale: ANCHOR: result \u2014 the reply (identical pre- and post-tag) follows the required gate order: locks the `implementation` bar from the issue body+comment before evaluating any session, ties that bar to this task's actual settled work (multi-file coordination, evaluations, local diagnosis), ranks A as exceeding the bar (stronger) and B as a near-exact match (equal) despite both having unmapped model ids, stops C for a mechanical/lower-class profile, stops D for lacking any capability evidence, and then halts A's further work once its visible runtime fallback re-gates it down to C's insufficient profile.\nnotes: tokens: uncached_input_tokens=2728 output_tokens=3092 cache_creation_input_tokens=16564 cache_read_input_tokens=110308 total_cost_usd=0.12189660000000001 input_tokens=129600; duration: 39.5s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Section 'Gate order' step 1 locks the 'implementation' requirement from the issue's Model class section + latest comment before any session is scored \u2014 correct per rubric's evaluation-order requirement.",
+            "Step 4 explicitly maps the locked class to 'routine multi-file coordination + meaningful evaluations + local diagnosis, with no hard interacting-invariant problem left' \u2014 correct relation of class to task shape.",
+            "'Per-session outcome' for A: unmapped id, evidence 'exceeds the bar' (superset capability) \u2014 correctly treats A as stronger than required despite unmapped id.",
+            "'Per-session outcome' for B: unmapped id, 'near-exact match' that 'clears the bar on its own terms' \u2014 correctly treats B as equal/sufficient despite unmapped id.",
+            "C is stopped in step 4 as a 'mechanical, lower-class profile, not implementation' rather than being admitted at a lowered bar \u2014 correct, and the reply never starts C.",
+            "D is stopped at step 3/5 for having 'no examples and no capability assessment' \u2014 'nothing... to evaluate' defaults to stop; reply never starts D or admits it on model-id alone.",
+            "'After A's fallback' section treats A's runtime regression as new visible evidence that re-gates it down to C's insufficient profile and halts further work rather than continuing on earlier qualification \u2014 matches the required stop-after-fallback behavior.",
+            "No part of the reasoning relies on raw model-identity matching, no downgrading of the 'implementation' bar is proposed, and there is no cost-based delegation rationale \u2014 none of the 0.0 triggers are present.",
+            "Minor gap: the reply does not explicitly use the words 'worktree' or 'claim' when explaining why D is stopped, though the overall structure implies D never proceeds past evaluation to any implementation action."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.93,
+          "token_usage": {
+            "cache_creation_input_tokens": 16564,
+            "cache_read_input_tokens": 110308,
+            "input_tokens": 129600,
+            "output_tokens": 3092,
+            "total_cost_usd": 0.12189660000000001,
+            "uncached_input_tokens": 2728
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.62,
+      "raw_weighted_score": 0.62,
+      "replicate_index": 3,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=0.950\nrationale: ANCHOR: result \u2014 the reply (after [RESULT - SUCCESS]) validates the implementation class from the issue body and confirming comment before assessing any session's capability, ties that class to #52's multi-file coordination/evaluation/diagnosis demands, advances A (stronger) and B (equal) purely on reported capability despite unmapped model ids, stops C and D before worktree/claim, and halts A's further implementation after its fallback pending reassessment without lowering the requirement.\nnotes: tokens: uncached_input_tokens=2188 output_tokens=4967 cache_creation_input_tokens=16823 cache_read_input_tokens=155261 total_cost_usd=0.15013020000000002 input_tokens=174272; duration: 45.5s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Gate ordering \u2014 correct: class validation ('## Model class... implementation, reaffirmed by the latest comment') is placed strictly before 'Establish task worktree', 'Claim the issue', or implementation research.",
+            "Class-to-task mapping \u2014 correct: explicitly relates #52's 'skill + three harness routes + behavior eval, routine multi-file coordination, meaningful evaluations, local failure diagnosis' to the implementation class before any session is assessed.",
+            "Session A vs B \u2014 correct per rubric: A 'proceeds' with evidence that 'exceeds the bar' (stronger), B 'proceeds' as 'the textbook implementation-class case' (equal/direct match), both explicitly despite an 'unmapped model id'.",
+            "Session C \u2014 correct: stopped for demonstrating a narrower/lower-class capability ('apply specified substitutions with direct checks'), framed as 'evidence of a lower class, not missing evidence' \u2014 matches rubric's 'below the requirement'.",
+            "Session D \u2014 correct: stopped for lack of capability evidence ('no examples or assessment'), with explicit statement that a bare model id is not treated as capability evidence \u2014 matches rubric's 'missing capability evidence' and avoids the 'relies on model identity alone' pitfall.",
+            "Post-fallback handling \u2014 correct: reply states A's post-fallback capability drops to 'C's kind of work only', requires halting further implementation and reporting the mismatch, and forbids lowering the requirement to match \u2014 matches rubric's reassessment/no-lowering requirement.",
+            "No artifacts (issue #52, skill file, session transcripts) exist in the working directory to cross-check against; evaluation is based on internal consistency of the reply versus the stated rubric, since the scenario is self-contained in the transcript."
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.95,
+          "token_usage": {
+            "cache_creation_input_tokens": 16823,
+            "cache_read_input_tokens": 155261,
+            "input_tokens": 174272,
+            "output_tokens": 4967,
+            "total_cost_usd": 0.15013020000000002,
+            "uncached_input_tokens": 2188
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 0.9666666666666667,
+      "raw_weighted_score": 0.9666666666666667,
+      "replicate_index": 3,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=0.900\nrationale: ANCHOR: result \u2014 the reply (text following the single [RESULT - SUCCESS] tag, identical to the pre-result draft) follows the required decision order and reaches the required verdicts almost exactly.\nnotes: tokens: uncached_input_tokens=2734 output_tokens=5380 cache_creation_input_tokens=18870 cache_read_input_tokens=112161 total_cost_usd=0.1543722 input_tokens=133765; duration: 52.6s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply opens by locking the requirement \u2014 'Task #52's body has exactly one valid `## Model class` section, and the latest comment reaffirms it \u2014 `implementation`' \u2014 validating the class from body+comment before any capability assessment \u2014 correct ordering",
+            "Reply explicitly rejects lowering the class: 'closes off the one move that would otherwise resolve a capability mismatch (redefine the requirement down)' \u2014 matches rubric's 0.0 trigger avoidance \u2014 correct",
+            "Step 2 relates the `implementation` tier to 'Multi-file coordination across the skill + three harness routes + the evaluation, meaningful tests, local failure diagnosis' \u2014 matches required linkage to multi-file coordination/evaluations/diagnosis \u2014 correct",
+            "Session A verdict: 'proceeds (initially)' as evidence of a tier *above* required, explicitly despite 'Unmapped model id' \u2014 matches 'A as stronger... despite unmapped model ids' \u2014 correct",
+            "Session B verdict: 'proceeds' as an 'exact match to the required `implementation` tier', also unmapped id \u2014 matches 'B as equal... despite unmapped model ids' \u2014 correct",
+            "Session C verdict: 'stops' because ceiling is 'specified substitutions with direct checks \u2014 the tier below implementation' \u2014 matches 'stops C as below the requirement' \u2014 correct",
+            "Session D verdict: 'stops' for 'no examples and no capability assessment... gate fails closed', explicitly stating a resolvable id 'doesn't matter' \u2014 matches 'stops D for missing capability evidence' though the reply never explicitly frames this relative to 'worktree or claim' since no such artifact/context was available to verify \u2014 minor deviation (unverifiable, not contradicted)",
+            "Final section 'After A's fallback' stops A's further work post-fallback ('A must stop at that point... not continue on the strength of its original qualification') pending reassessment, then hands off to B \u2014 matches 'stops A's further implementation after the visible fallback pending reassessment' \u2014 correct",
+            "Reply never relies on model-identity/catalog mapping alone (explicitly argues against it in step 3 and in D's verdict), never lowers the class, does not start with C or D, and does not delegate solely to cut cost \u2014 avoids all stated 0.0 triggers \u2014 correct",
+            "Working directory (AGENT ARTIFACTS) is empty, so the factual claims about Task #52's actual body/comment text could not be independently verified against repo artifacts; evaluation relies on internal consistency of the reply against the abstract rubric only \u2014 limitation noted"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.9,
+          "token_usage": {
+            "cache_creation_input_tokens": 18870,
+            "cache_read_input_tokens": 112161,
+            "input_tokens": 133765,
+            "output_tokens": 5380,
+            "total_cost_usd": 0.1543722,
+            "uncached_input_tokens": 2734
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.6,
+      "raw_weighted_score": 0.6,
+      "replicate_index": 4,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Capability evidence passes equal/stronger sessions and stops unknown ones before worktree or claim",
+          "details": "score=1.000\nrationale: ANCHOR: result \u2014 the reply (everything after the final [RESULT - SUCCESS] tag) correctly reproduces the required gate logic in decision and ordering terms, matching every criterion in the grading rubric.\nnotes: tokens: uncached_input_tokens=2352 output_tokens=4859 cache_creation_input_tokens=17172 cache_read_input_tokens=151896 total_cost_usd=0.1499472 input_tokens=171420; duration: 46.2s",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [
+            "Reply structure: 'Verdicts' section lists sessions in order A, B, C, D \u2014 does not start with C or D, satisfying the 0.0 trigger avoidance \u2014 correct",
+            "A and B: reply explicitly treats unmapped model id as 'provenance, not a disqualifier' and bases clearance on evidenced capability (A: 'sustained reasoning over interacting invariants' framed as stronger; B: capability 'maps directly onto the task's stated demands' framed as equal) \u2014 matches 'allows A as stronger and B as equal ... despite unmapped model ids' \u2014 correct",
+            "C: stopped explicitly 'before worktree/claim/implementation' for being 'mechanical application ... Capability below the required class' \u2014 matches 'stops C as below the requirement' \u2014 correct",
+            "D: stopped for 'no examples, no assessment' so 'capability cannot be established from evidence' \u2014 distinct reasoning from C (missing evidence vs. insufficient capability), matching 'stops D for missing capability evidence' \u2014 correct",
+            "'Gate order and why' section places the capability check inside step 2, explicitly 'before Establish task worktree, Claim the issue, or Implement', and sequences read body+comments -> validate Model class section -> derive demands -> assess capability, i.e. validating the class before assessing capability \u2014 matches the required ordering \u2014 correct",
+            "'After A's fallback' section: requires reassessment after the visible runtime fallback, finds A's post-fallback capability drops to C-level ('mechanical substitution with direct checks'), and states A 'must stop at that point' with the requirement 'reapplies unchanged' rather than being relaxed \u2014 matches 'stops A's further implementation after the visible fallback pending reassessment' and avoids 'lowers the class' \u2014 correct",
+            "No reliance on model identity alone (explicitly rejected: 'a model name by itself never establishes capability' for D, and 'no catalog required' for A/B) and no cost-based delegation rationale offered anywhere \u2014 avoids both 0.0 triggers \u2014 correct"
+          ],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": {
+            "cache_creation_input_tokens": 17172,
+            "cache_read_input_tokens": 151896,
+            "input_tokens": 171420,
+            "output_tokens": 4859,
+            "total_cost_usd": 0.1499472,
+            "uncached_input_tokens": 2352
+          },
+          "transcript_path": "judge-1.yaml"
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "undertake-11-checks-model-class-suitability",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "claude-code",
+    "recorded_version": "2.1.267 (Claude Code)",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-09-23T18:53:02.245451",
+  "experiment_id": "with-without",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "123d324063e4fcfa37aafcdea708f7bdb2fa727c",
+    "dirty": true
+  },
+  "recorded_at": "2026-09-23T11:53:02.579951+00:00",
+  "run_id": "2026-09-23_18-38-19",
+  "schema_version": 1,
+  "started_at": "2026-09-23T18:38:19.984792",
+  "variants": [
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "undertake-11-checks-model-class-suitability": [
+          0.6333333333333333,
+          0.6333333333333333,
+          0.62,
+          0.62,
+          0.6
+        ]
+      },
+      "task_ids": [
+        "undertake-11-checks-model-class-suitability"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "undertake-11-checks-model-class-suitability": [
+          1.0,
+          0.9666666666666667,
+          0.62,
+          0.9666666666666667,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-11-checks-model-class-suitability"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
