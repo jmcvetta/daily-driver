@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.40.0](https://github.com/jmcvetta/daily-driver/compare/v0.39.0...v0.40.0) (2026-09-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* **issue-body:** `standard` and `advanced` are no longer accepted model-class metadata. Revise old task issues before selection, mapping `standard` to `implementation` and `advanced` to `reasoning` without changing their capability requirements.
+
+### Features
+
+* **issue-body:** rename model capability classes ([#387](https://github.com/jmcvetta/daily-driver/issues/387)) ([d0176a6](https://github.com/jmcvetta/daily-driver/commit/d0176a66a8ce4547c12c158b0bc12ddcd450bfeb))
+
 ## [0.39.0](https://github.com/jmcvetta/daily-driver/compare/v0.38.0...v0.39.0) (2026-09-23)
 
 
