@@ -10,7 +10,7 @@ SHELL := /bin/bash
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
-	check-omp-cache-clean check-omp-review-cycle-route \
+	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
 	check-review-cycle-fix-delta-route \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
@@ -99,7 +99,7 @@ check-plugin-validity: check-plugin check-skills check-agents \
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
-	check-review-cycle-fix-delta-route check-task-worktree-fixture check-scripts
+	check-omp-pr-create-route check-review-cycle-fix-delta-route check-task-worktree-fixture check-scripts
 
 check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures \
 	check-eval-arms check-evals-preflight check-evals-provenance
@@ -227,6 +227,12 @@ check-omp-cache-clean:
 # essential `hub` and `bash` surface, and holds its cap and empty-result rules.
 check-omp-review-cycle-route:
 	python3 scripts/check-omp-review-cycle-route.py
+
+# The three Omp PR-creation references are executable guidance. This
+# credential-free check rejects the unavailable `github.pr_create` route and
+# requires the supported draft `gh pr create` arguments in each reference.
+check-omp-pr-create-route:
+	python3 scripts/check-omp-pr-create-route.py
 
 # Every harness's fix-delta route is executable guidance too. This
 # credential-free check rejects a blanket "unavailable on this harness" notice
