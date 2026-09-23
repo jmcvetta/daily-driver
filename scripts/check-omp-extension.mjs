@@ -41,6 +41,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
+import { MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS, installModelClassDefaults } from "../extensions/role-default-helper.mjs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -187,8 +188,8 @@ const {
 	default: dailyDriverExtension,
 } = module_;
 
-function makeSession() {
-	const { pi, rec, tools, timers, fire } = fakeApi();
+function makeSession(overrides = {}) {
+	const { pi, rec, tools, timers, fire } = fakeApi(overrides);
 	dailyDriverExtension(pi);
 	return { rec, tools, timers, fire, pi };
 }
@@ -306,6 +307,27 @@ function makeDetachedPrimaryFixture() {
 }
 
 const detachedPrimary = makeDetachedPrimaryFixture();
+
+// --- task-class defaults are installed at session start ---------------------
+const modelClassSettings = new Map();
+function fakeModelClassSettings(cwd) {
+	if (modelClassSettings.has(cwd)) return modelClassSettings.get(cwd).settings;
+	const state = { modelRoles: {}, modelTags: {}, mutations: [] };
+	state.settings = { getModelRole: role => state.modelRoles[role], overrideModelRoles: roles => { Object.assign(state.modelRoles, roles); state.mutations.push(["roles", roles]); }, get: path => { assert.equal(path, "modelTags"); return state.modelTags; }, override: (path, value) => { assert.equal(path, "modelTags"); Object.assign(state.modelTags, value); state.mutations.push(["tags", value]); } };
+	modelClassSettings.set(cwd, state);
+	return state.settings;
+}
+
+check("session_start adds class role defaults and tags once per settings instance", async () => {
+	const s = makeSession({ settingsManagerFactory: fakeModelClassSettings });
+	await s.fire("session_start", {}, { cwd: "/fixture" });
+	await s.fire("session_start", {}, { cwd: "/fixture" });
+	const state = modelClassSettings.get("/fixture");
+	assert.deepEqual(state.modelRoles, MODEL_CLASS_ROLE_DEFAULTS);
+	assert.deepEqual(state.modelTags, MODEL_CLASS_ROLE_TAGS);
+	assert.equal(state.mutations.filter(([kind]) => kind === "roles").length, 1);
+	assert.equal(state.mutations.filter(([kind]) => kind === "tags").length, 1);
+});
 
 // --- ask is blocked; another tool passes ------------------------------------
 check("ask tool is blocked with actionable reason", () => {

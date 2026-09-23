@@ -9,7 +9,7 @@
  * that Claude-compatible catalog, so there is deliberately no
  * `.omp-plugin/marketplace.json`).
  *
- * Three jobs:
+ * Four jobs:
  *
  * 1. Block Omp's `ask` tool, the way Claude Code denies `AskUserQuestion`.
  *    The model is told not to retry and to ask the question in chat instead,
@@ -25,11 +25,14 @@
  *    task identity and establishes or reuses its dedicated worktree; this
  *    guard makes forgetting it fail before the user's checkout is changed.
  *
- * 3. Provide session-title, scheduled-reminder, and session-info tools that
+ * 3. Provide runtime defaults for mechanical, implementation, and reasoning model
+ *    roles without overwriting operator assignments or writing configuration.
+ *
+ * 4. Provide session-title, scheduled-reminder, and session-info tools that
  *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,
  *    `daily_driver_schedule` / `daily_driver_cancel_schedule`, and
- *    `daily_driver_get_session`, are the Omp runtime-adapter surface that
- *    Wave 2 (harness-portable skills) consumes.
+ *    `daily_driver_get_session` is part of the runtime surface consumed by
+ *    harness-portable skills.
  *
  * This file has no third-party dependencies: it runs as a plain `.js` module
  * under Omp, with no build step and no package install between this repo and
@@ -41,6 +44,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, resolve } from "node:path";
+import { installModelClassDefaults } from "./role-default-helper.mjs";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -55,7 +59,7 @@ export const ASK_BLOCK_REASON =
 	"and why. The user answers in chat.\n\n" +
 	"Check first whether the question needs asking at all. The " +
 	"`judgement-call` skill's gate settles most of these — where the correct, " +
-	"standard way already picks the answer, make the call, say in one line " +
+	"implementation way already picks the answer, make the call, say in one line " +
 	"which way it went, and carry on. This adapter governs how a question that " +
 	"survives that gate is put, not whether it is worth putting.";
 
@@ -1865,6 +1869,17 @@ function newTriggerId() {
 /** The `daily-driver` Omp extension factory. */
 export default function dailyDriverExtension(pi) {
 	const z = pi.zod;
+
+	const initializedSettings = new WeakSet();
+	pi.on("session_start", async (_event, ctx) => {
+		if (typeof ctx?.cwd !== "string") return;
+		const settings = pi.settingsManagerFactory
+			? pi.settingsManagerFactory(ctx.cwd)
+			: (await import("@mariozechner/pi-coding-agent")).SettingsManager.create(ctx.cwd);
+		if (initializedSettings.has(settings)) return;
+		initializedSettings.add(settings);
+		installModelClassDefaults(settings);
+	});
 
 	// Per-session trigger bookkeeping: triggerId -> { ctx, handle }. Managed
 	// timers are cleared on session_shutdown by the runtime itself; this map

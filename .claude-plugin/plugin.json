@@ -12,5 +12,6 @@
     "pull-request",
     "workflow",
     "conventional-commits"
-  ]
+  ],
+  "agents": []
 }

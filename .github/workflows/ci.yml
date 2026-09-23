@@ -105,13 +105,17 @@ jobs:
       #     adapter's entry point and nothing else does; move the file, drop
       #     `"type": "module"`, or rename the package, and the extension
       #     silently does not load.
-      #   - `.claude-plugin/**` — the catalog `omp plugin install` reads. Omp
+      #   - `.claude-plugin/**` and `.omp-plugin/**` — the catalog and native
+      #     marker that decide install discovery and agent model dialect. Omp
       #     takes the Claude-compatible one as its documented fallback
       #     (docs/notes/0011), so the name, source and version there are what
       #     an install resolves against.
+      #   - `agents/**` — Omp task-role aliases used by `embark`.
       #   - `extensions/**` — the adapter itself. A module that throws on
       #     import costs one stderr line and the session runs on without it.
-      #   - `scripts/check-omp-plugin.py` — the check.
+      #   - `scripts/check-omp-plugin.py` — the Omp-owned discovery check.
+      #   - `scripts/check-omp-extension.mjs`, `extensions/role-default-helper.mjs`,
+      #     and `scripts/check-model-class-role-defaults.mjs` — runtime routing and its offline check.
       #   - `evals/coder-eval-omp/**` — the eval arm. Its `agent.py` holds the
       #     early-stop record handling whose defect silently zeroed every
       #     positive row of the first paid run (issue #206), and its reducer is
@@ -158,7 +162,9 @@ jobs:
             exit 0
           fi
           changed=$(git diff --name-only "$base" "$GITHUB_SHA" -- \
-            package.json .claude-plugin extensions scripts/check-omp-plugin.py \
+            package.json .claude-plugin .omp-plugin agents extensions \
+            scripts/check-omp-plugin.py scripts/check-omp-extension.mjs \
+            scripts/check-model-class-role-defaults.mjs extensions/role-default-helper.mjs \
             evals/coder-eval-omp scripts/check-omp-agent-settle.py Makefile)
           if [[ -n "$changed" ]]; then
             echo "files that can affect Omp changed:"
