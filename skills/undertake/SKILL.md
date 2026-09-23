@@ -225,6 +225,8 @@ After `Read the issue and its edges` rather than before it, because the edges
 decide whether there is anything to claim: a blocked issue stops there, and a
 claim on work that is not starting is a false record.
 
+**Before posting the claim, verify the session title where the harness exposes it.** Use the issue number and title with `session-title`'s shortening rules. If the title step was missed or the current title is wrong, set it now; do not post the claim first. Leave an already-correct title unchanged. If the harness has no available title surface, report that limitation and continue without inventing another route, as `Title the session` requires.
+
 Beyond the claim itself the comment always carries:
 
 - **The branch** established by `task-worktree`, **linked** as
