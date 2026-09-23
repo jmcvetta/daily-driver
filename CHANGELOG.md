@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.41.0](https://github.com/jmcvetta/daily-driver/compare/v0.40.1...v0.41.0) (2026-09-23)
+
+
+### Features
+
+* **agents:** add Omp model-class roles ([#388](https://github.com/jmcvetta/daily-driver/issues/388)) ([0652522](https://github.com/jmcvetta/daily-driver/commit/0652522a7e1f90baf4c99f0a1de9a11d08b9ee25))
+* show the active task worktree in session status ([#398](https://github.com/jmcvetta/daily-driver/issues/398)) ([6694fc2](https://github.com/jmcvetta/daily-driver/commit/6694fc230cb23637bc2f59155eb4fb3fb6de5024))
+
 ## [0.40.1](https://github.com/jmcvetta/daily-driver/compare/v0.40.0...v0.40.1) (2026-09-23)
 
 
