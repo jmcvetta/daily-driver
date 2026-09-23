@@ -506,11 +506,11 @@ evals-run-codex: evals-plan evals-preflight
 
 # evals-run-classes: the model-class capability suite, built from real merged
 # pull requests (scripts/evals-cases-from-prs.py) and run on one Omp model at
-# a time -- MODEL= names the omp_configs/*.yml overlay stem, e.g.
+# a time -- MODEL= names the eval experiment stem, e.g.
 #   make evals-run-classes MODEL=glm
-# There is one experiment file per overlay (evals/experiments/classes-*.yaml),
-# not one Make target per model the way the ablation arm has: one target
-# selects the matching filename rather than maintaining a separate recipe.
+# Each evals/experiments/classes-*.yaml file pins its own model, independent
+# of the personal omp_configs/ overlays. One Make target selects the matching
+# filename instead of maintaining one target per model.
 # `TASKS` is overridden here, not narrowed with the usual TASKS= override
 # -- the default `tasks/*/*.yaml` would also hand every other arm's rows to
 # this one, and `--exclude-tags` only screens out three of the four arms this
@@ -521,7 +521,7 @@ evals-run-codex: evals-plan evals-preflight
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \
-		echo "evals-run-classes: set MODEL=<omp_configs overlay stem>, e.g. MODEL=glm" >&2; \
+		echo "evals-run-classes: set MODEL=<classes experiment stem>, e.g. MODEL=glm" >&2; \
 		exit 1; \
 	fi
 	cd evals && $(CODER_EVAL) run -e experiments/classes-$(MODEL).yaml \

@@ -13,7 +13,7 @@ evals/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
 │   ├── omp-*.yaml                  one two-variant Omp experiment per model
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
-│   └── classes-*.yaml              one model-classes experiment per omp_configs/ overlay
+│   └── classes-*.yaml              model-classes experiments with their own model pins
 ├── tasks/
 │   ├── pr/              does `pr` fire when a PR is opened, and only then?
 │   ├── pr-title/        … when a title is written, and only then?
@@ -1029,10 +1029,9 @@ model *should* run in the `task` role generally, only that it cleared six
 specific cases; `make evals-run-classes` is a floor to check before promoting
 a model into that role, not the whole case for doing so.
 
-**Running it.** One experiment file per `omp_configs/*.yml` overlay
-(`evals/experiments/classes-<overlay>.yaml`), its `agent.model` read from that
-overlay's `task` role (falling back to `default` where the overlay names no
-separate one, the same fallback Omp itself applies):
+**Running it.** Each `evals/experiments/classes-<name>.yaml` file pins its own
+`defaults.agent.model`. Personal `omp_configs/` overlays do not define or
+validate these experiments:
 
 ```
 make evals-run-classes MODEL=glm
@@ -1066,9 +1065,9 @@ split, the class and elapsed reads, and `task_timeout` derivation.
 `scripts/check-eval-arms.py` treats `model-classes` as a fourth arm sharing
 the `omp` arm's agent kind — it is Omp under a different model, not a
 different harness — so `agent.type: omp` alone cannot say which arm a row
-belongs to; the `model-classes` tag is what does. The seven required experiment
-files are read from `omp_configs/` at check time rather than hand-copied into
-the script, so a missing or mismatched file fails before a paid run.
+belongs to; the `model-classes` tag is what does. The checker discovers
+`classes-*.yaml` experiments inside the eval suite and requires each to pin
+its model. Personal Omp configuration is not an input to this check.
 
 ## Two defaults, decided on purpose
 

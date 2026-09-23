@@ -12,7 +12,6 @@ runtime:
   - 'evals/**'
 eval:
   - 'evals/**'
-  - 'omp_configs/**'
 issue:
   - 'infra/**'
   - 'skills/**'

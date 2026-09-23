@@ -59,7 +59,7 @@ if (process.argv[2] === '--aggregate') {
     {name: 'config-only', paths: ['.github/workflows/ci.yml'], expected: jobs},
     {name: 'plugin component', paths: ['.claude-plugin/plugin.json'], expected: ['plugin', 'omp']},
     {name: 'runtime component', paths: ['hooks/check.py'], expected: ['runtime']},
-    {name: 'eval component', paths: ['omp_configs/personal.yml'], expected: ['eval']},
+    {name: 'eval component', paths: ['evals/experiments/classes-glm.yaml'], expected: ['runtime', 'eval', 'omp']},
     {name: 'issue component', paths: ['infra/github/labels.tf'], expected: ['issue']},
     {name: 'Omp component', paths: ['extensions/daily-driver.js'], expected: ['runtime', 'omp']},
     {name: 'mixed components', paths: ['agents/reviewer.md', 'infra/github/labels.tf'], expected: ['plugin', 'issue']},
@@ -67,8 +67,8 @@ if (process.argv[2] === '--aggregate') {
     {name: 'unknown path', paths: ['new-component/source.txt'], expected: jobs},
     {name: 'unknown root file', paths: ['new-root-file.txt'], expected: jobs},
     {name: 'deleted component file', paths: ['hooks/removed.py'], expected: ['runtime']},
-    {name: 'cross-component rename', paths: ['omp_configs/old.yml', 'skills/new-skill/SKILL.md'], expected: ['plugin', 'runtime', 'eval', 'issue', 'omp']},
-    {name: 'new model overlay', paths: ['omp_configs/new-model.yml'], expected: ['eval']},
+    {name: 'cross-component rename', paths: ['omp_configs/old.yml', 'skills/new-skill/SKILL.md'], expected: ['plugin', 'runtime', 'issue', 'omp']},
+    {name: 'personal overlay', paths: ['omp_configs/new-model.yml'], expected: []},
     {name: 'eval shell fixtures', paths: ['evals/fixtures/example/shared/lib.sh'], expected: ['runtime', 'eval', 'omp']},
   ]
   for (const fixture of fixtures) {
@@ -131,6 +131,9 @@ if (process.argv[2] === '--aggregate') {
     OMP_RESULT: 'skipped',
   }
   aggregateCase('intentional skips', valid, true)
+  aggregateCase('personal overlay skips every validation job', {
+    ...valid, FILTER_EVAL: 'false', EVAL_SELECTED: 'false', EVAL_RESULT: 'skipped',
+  }, true)
   aggregateCase('selected failure', {...valid, EVAL_RESULT: 'failure'}, false)
   aggregateCase('selected skip', {...valid, EVAL_RESULT: 'skipped'}, false)
   aggregateCase('selected cancellation', {...valid, EVAL_RESULT: 'cancelled'}, false)

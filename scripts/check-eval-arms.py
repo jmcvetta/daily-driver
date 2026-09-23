@@ -93,7 +93,6 @@ except ImportError as exc:  # pragma: no cover - `make check` installs it first
 ROOT = Path(__file__).resolve().parent.parent
 TASKS = ROOT / "evals" / "tasks"
 EXPERIMENTS = ROOT / "evals" / "experiments"
-OMP_CONFIGS = ROOT / "omp_configs"
 
 # Every arm, by its short name. This table is the routing: the tag that claims a
 # row for the arm, the `task_id` suffix that says so a second time, the
@@ -139,17 +138,9 @@ ARMS: dict[str, dict[str, object]] = {
         "experiment": "codex.yaml",
         "run_target": "evals-run-codex",
     },
-    # Shares the `omp` arm's agent kind -- it is Omp under a different model,
-    # not a different harness -- so it is the one arm a straight kind->arm map
-    # cannot hold; see `KIND_OWNERS`. It has no fork
-    # convention of its own (`id_suffix: None`, like `claude`): its rows are
-    # built from real merged pull requests by `scripts/evals-cases-from-prs.py`,
-    # not forked from a Claude original. `run_target` is one Make target
-    # parameterised by `MODEL=`, not one target per experiment file, so it is
-    # checked by `parameterized_pattern` rather than by `arm_run_targets`.
-    # `ablation` is False: this arm measures one model against the suite, not
-    # a plugin loaded against a bare control, so `check_experiments` skips the
-    # `bare`/`with-plugin` variant-shape assertion it applies to `omp`.
+    # Shares Omp's agent kind. Its experiment files own their model pins;
+    # personal Omp overlays are not inputs to this validation.
+    # One parameterized Make target selects the experiment by filename.
     "model-classes": {
         "tag": "model-classes",
         "id_suffix": None,
@@ -162,41 +153,19 @@ ARMS: dict[str, dict[str, object]] = {
 }
 
 
-def _model_classes_experiments() -> dict[str, str]:
-    """Map present model-class experiments to their overlay task model.
-
-    Personal overlays do not need an experiment. Experiments that exist remain
-    required to match a current overlay and its task/default model.
-    """
-    if not OMP_CONFIGS.is_dir():
-        raise CheckFailed(f"no {OMP_CONFIGS.relative_to(ROOT)} directory to read Omp overlays from")
-    experiments: dict[str, str] = {}
-    for path in sorted(OMP_CONFIGS.glob("*.yml")):
-        experiment = f"classes-{path.stem}.yaml"
-        if not (EXPERIMENTS / experiment).is_file():
-            continue
-        try:
-            document = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except (OSError, yaml.YAMLError) as exc:
-            raise CheckFailed(f"{path.relative_to(ROOT)} does not parse: {exc}") from exc
-        roles = (document or {}).get("modelRoles") if isinstance(document, dict) else None
-        model = (roles or {}).get("task") or (roles or {}).get("default")
-        if not isinstance(model, str) or not model:
-            raise CheckFailed(f"{path.relative_to(ROOT)}: no readable `task` or `default` model role")
-        experiments[experiment] = model
+def _model_classes_experiments() -> dict[str, None]:
+    """Discover model-class experiments from the eval suite itself."""
+    experiments = {path.name: None for path in EXPERIMENTS.glob("classes-*.yaml")}
+    if not experiments:
+        raise CheckFailed("no model-class experiments under evals/experiments")
     return experiments
 
 
 def arm_experiments(spec: dict[str, object]) -> dict[str, str | None]:
-    """The arm's experiment files, with an Omp model where one is pinned.
-
-    `model-classes` names its experiments as a callable (`_model_classes_experiments`)
-    rather than a literal dict, read fresh from `omp_configs/` on every call --
-    see the `ARMS` entry's comment for why a literal would drift.
-    """
+    """Name each arm's experiment files and any independently pinned model."""
     experiments = spec.get("experiments")
     if callable(experiments):
-        return {str(path): str(model) for path, model in experiments().items()}
+        return {str(path): model for path, model in experiments().items()}
     if isinstance(experiments, dict):
         return {str(path): str(model) for path, model in experiments.items()}
     return {str(spec["experiment"]): None}
@@ -493,6 +462,15 @@ def check_makefile_routing() -> None:
                 )
 
 
+def check_model_class_model(path: Path, document: dict) -> None:
+    """Require a usable model pin inside each model-class experiment."""
+    defaults = document.get("defaults")
+    agent = defaults.get("agent") if isinstance(defaults, dict) else None
+    model = agent.get("model") if isinstance(agent, dict) else None
+    if not isinstance(model, str) or not model.strip():
+        raise CheckFailed(f"{path.relative_to(ROOT)}: model-class experiment needs defaults.agent.model")
+
+
 def check_experiments() -> None:
     """Every experiment has its own arm kind, and Omp has both measured variants."""
     variant_kinds = _load_variant_kinds()
@@ -536,16 +514,14 @@ def check_experiments() -> None:
                     f"the {arm} arm's ({sorted(wanted)}); a registered-but-wrong kind resolves cleanly and "  # type: ignore[arg-type]
                     "then measures the wrong harness at full price"
                 )
+        if arm == "model-classes":
+            check_model_class_model(path, document)
         if model is not None:
             defaults = document.get("defaults") if isinstance(document, dict) else None
             agent = defaults.get("agent") if isinstance(defaults, dict) else None
             if not isinstance(agent, dict) or agent.get("model") != model:
                 raise CheckFailed(f"{path.relative_to(ROOT)}: expected Omp model {model!r}")
             if not ARMS[arm].get("ablation"):
-                # `model-classes` measures one model against the suite, not a
-                # plugin loaded against a bare control -- the `omp` arm's
-                # `bare`/`with-plugin` variant-shape requirement below is that
-                # ablation's, not every Omp-model experiment's.
                 continue
             variants_by_id = {
                 variant.get("variant_id"): variant
@@ -565,30 +541,31 @@ def check_experiments() -> None:
                 raise CheckFailed(f"{path.relative_to(ROOT)}: `with-plugin` must load the daily-driver plugin")
 
 def check_model_class_experiment_policy() -> None:
-    """Personal overlays need no experiment; existing mappings remain checked."""
+    """Model-class experiments require a model without personal overlays."""
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
-        overlays = root / "omp_configs"
         experiments = root / "evals" / "experiments"
-        overlays.mkdir()
         experiments.mkdir(parents=True)
-        overlay = overlays / "personal.yml"
-        overlay.write_text("modelRoles:\n  small: example/small\n", encoding="utf-8")
-        with patch(__name__ + ".ROOT", root), patch(
-            __name__ + ".OMP_CONFIGS", overlays
-        ), patch(__name__ + ".EXPERIMENTS", experiments):
-            if _model_classes_experiments():
-                raise CheckFailed("a partial personal overlay without a suite must stay optional")
-            (experiments / "classes-personal.yaml").touch()
+        with patch(__name__ + ".ROOT", root), patch(__name__ + ".EXPERIMENTS", experiments):
             try:
                 _model_classes_experiments()
             except CheckFailed:
                 pass
             else:
-                raise CheckFailed("a present experiment requires a task/default model")
-            overlay.write_text("modelRoles:\n  task: example/model\n", encoding="utf-8")
-            if _model_classes_experiments() != {"classes-personal.yaml": "example/model"}:
-                raise CheckFailed("a present model-class experiment must map to its overlay model")
+                raise CheckFailed("the model-class arm requires an experiment")
+            (experiments / "classes-personal.yaml").write_text(
+                "defaults:\n  agent:\n    model: example/model\n", encoding="utf-8"
+            )
+            if _model_classes_experiments() != {"classes-personal.yaml": None}:
+                raise CheckFailed("model-class experiments must be discovered without personal overlays")
+            experiment = experiments / "classes-personal.yaml"
+            try:
+                check_model_class_model(experiment, {})
+            except CheckFailed:
+                pass
+            else:
+                raise CheckFailed("model-class experiments require their own model pin")
+            check_model_class_model(experiment, yaml.safe_load(experiment.read_text(encoding="utf-8")))
 
 
 def check_the_checks() -> None:
