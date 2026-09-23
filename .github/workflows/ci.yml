@@ -5,10 +5,8 @@
 # pull-request title and project its release. Real CI jobs report into the
 # aggregate through `needs`, so adding one never means touching the Tofu.
 #
-# What the jobs assert is the Makefile's `check` target, invoked rather than
-# restated. A CI leg that spelled out the same command line would be one edit
-# away from spelling it out differently, and the laptop and the required check
-# would quietly stop testing the same thing.
+# The validation runner selects Makefile groups from the merge-base diff.
+# `check` remains the local all-groups target; CI does not restate its recipes.
 #
 # **No `paths:` filter here, and there must not be one.** A path-filtered
 # workflow does not report a skipped check, it reports nothing at all, and a
@@ -29,50 +27,62 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: Plugin checks
+  validate:
+    name: Scoped validation
     runs-on: ubuntu-latest
+    outputs:
+      plugin: ${{ steps.scope.outputs.run_plugin }}
+      runtime: ${{ steps.scope.outputs.run_runtime }}
+      eval: ${{ steps.scope.outputs.run_eval }}
+      issue: ${{ steps.scope.outputs.run_issue }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 24
 
-      # Unpinned, deliberately. The thing being validated is a Claude Code
-      # plugin, so the question CI is asking is whether the CLI people
-      # actually run will accept it — a pinned CLI answers a question about
-      # last month instead. The cost is real and accepted: a new `--strict`
-      # warning can turn a green repository red without a commit. That is the
-      # signal, not the noise.
-      #
-      # `validate` reads files and calls nothing, so no credentials are
-      # needed; measured with an empty environment and an empty HOME.
+      - name: Classify changed files
+        id: scope
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          MODE: ${{ github.event_name == 'pull_request' && 'merge-base' || 'direct' }}
+        run: python3 scripts/ci-scope.py "$BASE" "$GITHUB_SHA" "$MODE" >> "$GITHUB_OUTPUT"
+
+      - name: Assert scope and aggregation behavior
+        run: make check-ci-scope
+
       - name: Install the Claude Code CLI
+        if: steps.scope.outputs.run_plugin == 'true'
         run: npm install -g @anthropic-ai/claude-code@latest
 
-      # ShellCheck ships in the ubuntu-latest image; the guard is for the day
-      # it does not, and costs nothing on the day it does.
       - name: Ensure ShellCheck
+        if: steps.scope.outputs.run_plugin == 'true'
         run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
 
-      # uv is the Python package manager the script legs declare their
-      # dependencies with -- the root pyproject.toml's dev group, locked in
-      # uv.lock. `make check`'s Python legs run under `uv run --frozen`, so
-      # the manager itself must be on PATH; the environment they sync is
-      # credential-free, resolved from the lock against PyPI. Unpinned like
-      # the CLI installs above: a new uv changing resolution behavior is a
-      # fact about the tool people actually run, which is what CI is asking.
       - name: Install uv
+        if: steps.scope.outputs.run_eval == 'true'
         run: |
           set -euo pipefail
-          # pipefail is what turns a failed download into a failed step:
-          # without it curl's exit is swallowed by the pipe, sh installs
-          # nothing, the step is reported green, and the failure surfaces
-          # three legs later as "uv: command not found".
           curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - run: make check
+      - name: Validate plugin manifests and scripts
+        if: steps.scope.outputs.run_plugin == 'true'
+        run: make check-plugin-validity
+
+      - name: Validate runtime behavior and fixtures
+        if: steps.scope.outputs.run_runtime == 'true'
+        run: make check-runtime
+
+      - name: Validate eval tooling and fixtures
+        if: steps.scope.outputs.run_eval == 'true'
+        run: make check-eval-tooling
+
+      - name: Validate issue and infrastructure rules
+        if: steps.scope.outputs.run_issue == 'true'
+        run: make check-issue-infra
 
   # The Omp half of the plugin, asked of a real Omp rather than of a fake.
   #
@@ -227,19 +237,16 @@ jobs:
   # green on a failed check.
   ci-success:
     name: CI Success
-    needs: [check, omp]
+    needs: [validate, omp]
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
       - name: Verify every job succeeded
         env:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
           set -euo pipefail
           echo "upstream results: $RESULTS"
-          for result in $RESULTS; do
-            if [[ "$result" != "success" ]]; then
-              echo "::error::a required job did not succeed: $RESULTS" >&2
-              exit 1
-            fi
-          done
+          read -r -a job_results <<< "$RESULTS"
+          python3 scripts/ci-scope.py --aggregate "${job_results[@]}"

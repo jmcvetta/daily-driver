@@ -13,9 +13,10 @@ SHELL := /bin/bash
 	check-omp-cache-clean check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
-	check-task-worktree-fixture check-eval-arms check-step-names \
+	check-task-worktree-fixture check-eval-arms check-step-names check-ci-scope \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
-	check-story-fixtures check-infra evals-install evals-plan \
+	check-story-fixtures check-infra check-plugin-validity check-runtime \
+	check-eval-tooling check-issue-infra evals-install evals-plan \
 	evals-variants evals-preflight evals-record evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-classes mcp-usage
@@ -86,18 +87,24 @@ omp-update-daily-driver:
 	omp plugin upgrade daily-driver@daily-driver
 
 
-# check: everything CI asserts about this plugin. CI runs this target rather
-# than restating its legs, so a leg added here is a leg CI gains — and there
-# is no second command line to fall behind this one.
-check: check-plugin check-skills check-agents check-scripts check-manifests \
-	check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-guard-differential check-omp-cache-clean \
-	check-omp-review-cycle-route \
-	check-review-cycle-fix-delta-route check-omp-agent \
-	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
-	check-eval-arms check-step-names check-evals-preflight \
-	check-evals-provenance check-labels check-labels-fixtures \
-	check-story-fixtures
+# `check` remains the local all-groups convenience target. CI selects one or
+# more purpose-named groups from the merge-base diff.
+check: check-ci-scope check-plugin-validity check-runtime check-eval-tooling check-issue-infra
+
+check-plugin-validity: check-plugin check-skills check-agents check-scripts \
+	check-manifests check-manifest-fixtures check-step-names
+
+check-runtime: check-constitution check-ask-in-chat check-omp-extension \
+	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
+	check-review-cycle-fix-delta-route check-task-worktree-fixture
+
+check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures \
+	check-eval-arms check-evals-preflight check-evals-provenance
+
+
+check-ci-scope:
+	python3 scripts/check-ci-scope.py
+check-issue-infra: check-labels check-labels-fixtures check-story-fixtures
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named

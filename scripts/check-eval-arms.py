@@ -74,7 +74,9 @@ dev group and run under `uv run --frozen` (see the Makefile).
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 
 try:
@@ -161,14 +163,10 @@ ARMS: dict[str, dict[str, object]] = {
 
 
 def _model_classes_experiments() -> dict[str, str]:
-    """One `classes-<overlay>.yaml` per `omp_configs/*.yml`, mapped to the
-    overlay's `task` model role (falling back to `default`, the way an
-    overlay declaring no `task` role falls back for Omp itself -- see
-    `omp_configs/README.md`).
+    """Map present model-class experiments to their overlay task model.
 
-    Read from `omp_configs/` rather than duplicated as a literal: a literal
-    list drifts the moment an overlay's role changes or a new overlay is
-    added, silently, because nothing would name the missing experiment file.
+    Personal overlays do not need an experiment. Experiments that exist remain
+    required to match a current overlay and its task/default model.
     """
     if not OMP_CONFIGS.is_dir():
         raise CheckFailed(f"no {OMP_CONFIGS.relative_to(ROOT)} directory to read Omp overlays from")
@@ -182,9 +180,9 @@ def _model_classes_experiments() -> dict[str, str]:
         model = (roles or {}).get("task") or (roles or {}).get("default")
         if not isinstance(model, str) or not model:
             raise CheckFailed(f"{path.relative_to(ROOT)}: no readable `task` or `default` model role")
-        experiments[f"classes-{path.stem}.yaml"] = model
-    if not experiments:
-        raise CheckFailed(f"no *.yml overlays found under {OMP_CONFIGS.relative_to(ROOT)}")
+        experiment = f"classes-{path.stem}.yaml"
+        if (EXPERIMENTS / experiment).is_file():
+            experiments[experiment] = model
     return experiments
 
 
@@ -565,6 +563,27 @@ def check_experiments() -> None:
             if not isinstance(treated, dict) or treated.get("plugins") != [{"type": "local", "path": ".."}]:
                 raise CheckFailed(f"{path.relative_to(ROOT)}: `with-plugin` must load the daily-driver plugin")
 
+def check_model_class_experiment_policy() -> None:
+    """Personal overlays need no experiment; existing mappings remain checked."""
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        overlays = root / "omp_configs"
+        experiments = root / "evals" / "experiments"
+        overlays.mkdir()
+        experiments.mkdir(parents=True)
+        (overlays / "personal.yml").write_text(
+            "modelRoles:\n  task: example/model\n", encoding="utf-8"
+        )
+        with patch(__name__ + ".OMP_CONFIGS", overlays), patch(
+            __name__ + ".EXPERIMENTS", experiments
+        ):
+            if _model_classes_experiments():
+                raise CheckFailed("a personal overlay without a suite must stay optional")
+            (experiments / "classes-personal.yaml").touch()
+            if _model_classes_experiments() != {"classes-personal.yaml": "example/model"}:
+                raise CheckFailed("a present model-class experiment must map to its overlay model")
+
+
 def check_the_checks() -> None:
     """Prove the assertions above can fail, against synthetic rows.
 
@@ -572,6 +591,7 @@ def check_the_checks() -> None:
     the same class of defect as the drift it is here to catch. These rows never
     touch the filesystem, so the cost is nothing.
     """
+    check_model_class_experiment_policy()
     here = TASKS / "pr"
     cases: list[tuple[str, list[tuple[Path, dict]], object]] = [
         (

@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""Assert CI scope classification and required-check aggregation offline."""
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+from unittest.mock import patch
+
+SCRIPT = Path(__file__).with_name("ci-scope.py")
+spec = importlib.util.spec_from_file_location("ci_scope", SCRIPT)
+assert spec and spec.loader
+ci_scope = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(ci_scope)
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise AssertionError(message)
+
+
+require(ci_scope.classify(["omp_configs/personal.yml"]) == set(), "config-only changes must skip validation groups")
+require(ci_scope.classify([".claude-plugin/plugin.json"]) == {"plugin"}, "manifest changes must select plugin validation")
+require(ci_scope.classify(["skills/pr/SKILL.md"]) == {"plugin", "runtime"}, "skill changes must select manifest and route validation")
+require(ci_scope.classify(["evals/tasks/example.yaml"]) == {"eval"}, "eval changes must select eval validation")
+require(ci_scope.classify(["infra/github/labels.tf"]) == {"issue"}, "infrastructure changes must select issue validation")
+require(ci_scope.classify(["unknown/new-file.dat"]) == set(ci_scope.GROUPS), "unknown files must fail open")
+with patch.object(ci_scope, "changed_paths", side_effect=OSError("missing base")):
+    require(
+        ci_scope.scope_for("missing", "head") == set(ci_scope.GROUPS),
+        "unavailable diff base must fail open",
+    )
+with patch.object(ci_scope, "changed_paths", return_value=["evals/tasks/example.yaml"]) as diff:
+    require(ci_scope.scope_for("before", "head", False) == {"eval"}, "pushes must classify before/after changes")
+    diff.assert_called_once_with("before", "head", False)
+require(ci_scope.aggregate(["success", "success"]), "successful jobs must report green")
+require(not ci_scope.aggregate([]), "a missing upstream result must fail")
+require(ci_scope.aggregate(["success", "skipped"]), "intentional group skips must stay green")
+require(not ci_scope.aggregate(["failure", "success"]), "a failed applicable group must report red")
+print("check-ci-scope: classification and aggregation assertions passed")
