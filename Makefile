@@ -13,9 +13,10 @@ SHELL := /bin/bash
 	check-omp-cache-clean check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
-	check-task-worktree-fixture check-eval-arms check-step-names \
+	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
-	check-story-fixtures check-infra evals-install evals-plan \
+	check-story-fixtures check-infra check-plugin-validity check-runtime \
+	check-eval-tooling check-issue-infra evals-install evals-plan \
 	evals-variants evals-preflight evals-record evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-classes mcp-usage
@@ -86,18 +87,25 @@ omp-update-daily-driver:
 	omp plugin upgrade daily-driver@daily-driver
 
 
-# check: everything CI asserts about this plugin. CI runs this target rather
-# than restating its legs, so a leg added here is a leg CI gains — and there
-# is no second command line to fall behind this one.
-check: check-plugin check-skills check-agents check-scripts check-manifests \
-	check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-model-class-roles check-omp-guard-differential check-omp-cache-clean \
-	check-omp-review-cycle-route \
-	check-review-cycle-fix-delta-route check-omp-agent \
-	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
-	check-eval-arms check-step-names check-evals-preflight \
-	check-evals-provenance check-labels check-labels-fixtures \
-	check-story-fixtures
+# `check` remains the local all-groups convenience target. CI runs each
+# purpose-named group in a job selected by declarative component filters.
+check: check-ci-scope check-step-names check-plugin-validity check-runtime check-eval-tooling check-issue-infra
+
+check-ci-scope:
+	node scripts/check-ci-scope.mjs
+
+check-plugin-validity: check-plugin check-skills check-agents \
+	check-manifests check-manifest-fixtures
+
+check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
+	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
+	check-review-cycle-fix-delta-route check-task-worktree-fixture check-scripts
+
+check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures \
+	check-eval-arms check-evals-preflight check-evals-provenance
+
+
+check-issue-infra: check-labels check-labels-fixtures check-story-fixtures
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -228,13 +236,9 @@ check-omp-review-cycle-route:
 check-review-cycle-fix-delta-route:
 	python3 scripts/check-review-cycle-fix-delta-route.py
 
-# check-scripts: lint the shell a skill ships. `claude plugin validate` reads
-# manifests and never opens a `scripts/` file, so without this leg the plugin's
-# executable half is the only part of the repository nothing checks.
-#
-# Unlike check-infra, this *is* part of `check`: shellcheck is a single small
-# package present in the CI image, not a toolchain, so the laptop cost is one
-# `apt install` rather than a reason to split the target.
+# check-scripts: ShellCheck the shell under skills, scripts, and eval fixtures.
+# It belongs to check-runtime because eval-fixture scripts are runtime inputs;
+# skills and top-level scripts select that group as well.
 #
 # `-x` follows `source` directives so the eval fixtures' shared `lib.sh` is
 # actually read rather than warned about; `--source-path=SCRIPTDIR` is what
@@ -505,11 +509,11 @@ evals-run-codex: evals-plan evals-preflight
 
 # evals-run-classes: the model-class capability suite, built from real merged
 # pull requests (scripts/evals-cases-from-prs.py) and run on one Omp model at
-# a time -- MODEL= names the omp_configs/*.yml overlay stem, e.g.
+# a time -- MODEL= names the eval experiment stem, e.g.
 #   make evals-run-classes MODEL=glm
-# There is one experiment file per overlay (evals/experiments/classes-*.yaml),
-# not one Make target per model the way the ablation arm has: one target
-# selects the matching filename rather than maintaining a separate recipe.
+# Each evals/experiments/classes-*.yaml file pins its own model, independent
+# of the personal omp_configs/ overlays. One Make target selects the matching
+# filename instead of maintaining one target per model.
 # `TASKS` is overridden here, not narrowed with the usual TASKS= override
 # -- the default `tasks/*/*.yaml` would also hand every other arm's rows to
 # this one, and `--exclude-tags` only screens out three of the four arms this
@@ -520,7 +524,7 @@ evals-run-codex: evals-plan evals-preflight
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \
-		echo "evals-run-classes: set MODEL=<omp_configs overlay stem>, e.g. MODEL=glm" >&2; \
+		echo "evals-run-classes: set MODEL=<classes experiment stem>, e.g. MODEL=glm" >&2; \
 		exit 1; \
 	fi
 	cd evals && $(CODER_EVAL) run -e experiments/classes-$(MODEL).yaml \

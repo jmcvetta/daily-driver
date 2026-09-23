@@ -1,19 +1,7 @@
 # Continuous integration.
 #
-# `CI Success` is one of the required status checks on master (see
-# infra/github/branch_protection.tf). The other required checks validate the
-# pull-request title and project its release. Real CI jobs report into the
-# aggregate through `needs`, so adding one never means touching the Tofu.
-#
-# What the jobs assert is the Makefile's `check` target, invoked rather than
-# restated. A CI leg that spelled out the same command line would be one edit
-# away from spelling it out differently, and the laptop and the required check
-# would quietly stop testing the same thing.
-#
-# **No `paths:` filter here, and there must not be one.** A path-filtered
-# workflow does not report a skipped check, it reports nothing at all, and a
-# required check that never reports leaves the pull request pending forever.
-# infra.yml is filtered because it is not required.
+# `CI Success` is a required status on master. It always runs and checks both
+# shared change detection and every selected validation job.
 name: CI
 
 on:
@@ -29,223 +17,149 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: Plugin checks
+  changes:
+    name: Detect changed components
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      plugin: ${{ steps.filter.outputs.plugin }}
+      runtime: ${{ steps.filter.outputs.runtime }}
+      eval: ${{ steps.filter.outputs.eval }}
+      issue: ${{ steps.filter.outputs.issue }}
+      omp: ${{ steps.filter.outputs.omp }}
+      shared: ${{ steps.filter.outputs.shared }}
+      unknown: ${{ steps.filter.outputs.unknown }}
+    steps:
+      - uses: actions/checkout@v7
+        if: github.event_name == 'push'
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v7
+        if: github.event_name == 'pull_request'
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
+        id: filter
+        with:
+          filters: .github/ci-filters.yml
+          predicate-quantifier: some-with-excludes
+
+  repository-checks:
+    name: Repository-wide checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+      - run: npm ci
+      - name: Validate CI selection and result contract
+        run: make check-ci-scope
+      - name: Validate repository step references
+        run: make check-step-names
 
-      # Unpinned, deliberately. The thing being validated is a Claude Code
-      # plugin, so the question CI is asking is whether the CLI people
-      # actually run will accept it — a pinned CLI answers a question about
-      # last month instead. The cost is real and accepted: a new `--strict`
-      # warning can turn a green repository red without a commit. That is the
-      # signal, not the noise.
-      #
-      # `validate` reads files and calls nothing, so no credentials are
-      # needed; measured with an empty environment and an empty HOME.
+  plugin-validity:
+    name: Plugin validity
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.plugin == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
       - name: Install the Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code@latest
+      - name: Validate plugin content
+        run: make check-plugin-validity
 
-      # ShellCheck ships in the ubuntu-latest image; the guard is for the day
-      # it does not, and costs nothing on the day it does.
+  runtime:
+    name: Runtime behavior
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.runtime == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
       - name: Ensure ShellCheck
         run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
+      - name: Validate runtime behavior and fixtures
+        run: make check-runtime
 
-      # uv is the Python package manager the script legs declare their
-      # dependencies with -- the root pyproject.toml's dev group, locked in
-      # uv.lock. `make check`'s Python legs run under `uv run --frozen`, so
-      # the manager itself must be on PATH; the environment they sync is
-      # credential-free, resolved from the lock against PyPI. Unpinned like
-      # the CLI installs above: a new uv changing resolution behavior is a
-      # fact about the tool people actually run, which is what CI is asking.
+  eval-tooling:
+    name: Eval tooling
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.eval == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
       - name: Install uv
         run: |
           set -euo pipefail
-          # pipefail is what turns a failed download into a failed step:
-          # without it curl's exit is swallowed by the pipe, sh installs
-          # nothing, the step is reported green, and the failure surfaces
-          # three legs later as "uv: command not found".
           curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Validate eval tooling and fixtures
+        run: make check-eval-tooling
 
-      - run: make check
-
-  # The Omp half of the plugin, asked of a real Omp rather than of a fake.
-  #
-  # `check` proves the adapter's logic under Node with a faked ExtensionAPI
-  # (`check-omp-extension`). It never starts Omp, so it cannot see discovery: a
-  # plugin whose skills Omp does not find, or whose extension Omp never
-  # reaches, passes it green. `make check-omp-plugin` is that other half, and
-  # it needs a whole second harness installed to run.
-  #
-  # **A job here rather than a workflow of its own**, because a workflow is
-  # filtered with `paths:` and a filtered workflow reports *nothing* — so it
-  # could never feed `CI Success`, and breaking the Omp integration would not
-  # block a merge. This job always runs and always reports; the filter moves
-  # inside it, onto the steps, so the runner downloads Omp only when the diff
-  # could have broken it.
-  omp:
-    name: Omp integration
+  issue-infra:
+    name: Issue-rule consistency
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.issue == 'true'
     runs-on: ubuntu-latest
     steps:
-      # Full history: the step below diffs against the merge base, which a
-      # shallow clone does not have.
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
+      - name: Validate issue and infrastructure rules
+        run: make check-issue-infra
 
-      # The files that decide whether Omp loads this plugin, measured rather
-      # than guessed:
-      #
-      #   - `package.json` — Omp's own manifest. `omp.extensions` names the
-      #     adapter's entry point and nothing else does; move the file, drop
-      #     `"type": "module"`, or rename the package, and the extension
-      #     silently does not load.
-      #   - `.claude-plugin/**` and `.omp-plugin/**` — the catalog and native
-      #     marker that decide install discovery and agent model dialect. Omp
-      #     takes the Claude-compatible one as its documented fallback
-      #     (docs/notes/0011), so the name, source and version there are what
-      #     an install resolves against.
-      #   - `agents/**` — Omp task-role aliases used by `embark`.
-      #   - `extensions/**` — the adapter itself. A module that throws on
-      #     import costs one stderr line and the session runs on without it.
-      #   - `scripts/check-omp-plugin.py` — the Omp-owned discovery check.
-      #   - `scripts/check-omp-extension.mjs`, `extensions/role-default-helper.mjs`,
-      #     and `scripts/check-model-class-role-defaults.mjs` — runtime routing and its offline check.
-      #   - `evals/coder-eval-omp/**` — the eval arm. Its `agent.py` holds the
-      #     early-stop record handling whose defect silently zeroed every
-      #     positive row of the first paid run (issue #206), and its reducer is
-      #     the other half of that arm's scoring.
-      #   - `scripts/check-omp-agent-settle.py` — the arm's second check.
-      #
-      # `skills/**` is deliberately absent. An added or renamed skill is
-      # discovered by Omp exactly as by Claude Code, so a skill-only diff
-      # cannot break the integration. The tempting objection — that the check's
-      # headline assertion is *about* `skills/` — does not survive reading it:
-      # `expected_skill_commands()` builds the expected set from the same
-      # `skills/*/SKILL.md` glob Omp discovers by, so a layout neither harness
-      # walks (a grouping directory) is absent from both sides of the
-      # comparison and the check passes either way. Running it on skill diffs
-      # would assert nothing a skill diff can change.
-      #
-      # The Makefile used to be absent, on the grounds that it held the command
-      # line and not the integration. `check-omp-agent-settle` ended that: the
-      # `CODER_EVAL_VERSION` it pins is the version the adapter is driven
-      # against, so a bump there changes what the check tests while touching no
-      # file this filter would otherwise catch — and the check would be skipped
-      # over exactly the diff most likely to break it.
-      - name: Decide whether this diff can affect Omp
-        id: scope
-        env:
-          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-        run: |
-          set -euo pipefail
-          # No base to diff against — a new branch's first push, or a force
-          # push GitHub reports as all-zeros. Run it rather than guess.
-          if [[ -z "$BASE" || "$BASE" =~ ^0+$ ]]; then
-            echo 'no usable base commit; running the check'
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # `set -e` would abort the step here, not just this command, and
-          # a failed scope step fails the job and reddens the required
-          # `CI Success`. merge-base fails on a base commit the clone cannot
-          # reach — rewritten history on the base branch, a deleted ref — so
-          # that case runs the check rather than taking the job down.
-          if ! base=$(git merge-base "$BASE" "$GITHUB_SHA"); then
-            echo "no merge base with $BASE; running the check"
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          changed=$(git diff --name-only "$base" "$GITHUB_SHA" -- \
-            package.json .claude-plugin .omp-plugin agents extensions \
-            scripts/check-omp-plugin.py scripts/check-omp-extension.mjs \
-            scripts/check-model-class-role-defaults.mjs extensions/role-default-helper.mjs \
-            evals/coder-eval-omp scripts/check-omp-agent-settle.py Makefile)
-          if [[ -n "$changed" ]]; then
-            echo "files that can affect Omp changed:"
-            echo "$changed"
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'no file that can affect Omp changed; the check is not run'
-            echo 'run=false' >> "$GITHUB_OUTPUT"
-          fi
-
-      # The official binary installer. The binary carries its own runtime, so
-      # there is no Bun to install — see
-      # docs/notes/0011-two-harnesses-one-skill-tree.md for why that route.
-      #
-      # Unpinned, for the reason the Claude CLI install above is unpinned.
-      #
-      # `--retry-all-errors` is what makes `--retry` cover a connection reset:
-      # without it curl retries only the errors it considers transient, and a
-      # reset on the TLS handshake is not one of them. Measured — this step
-      # installed Omp on one run and answered `curl: (35) Recv failure` from
-      # the same URL two minutes later.
+  omp-integration:
+    name: Omp integration
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.omp == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
       - name: Install Omp
-        if: steps.scope.outputs.run == 'true'
         run: |
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      # uv builds the pinned environment `make check-omp-agent-settle` runs
-      # under (`uv run --with coder-eval==$(CODER_EVAL_VERSION) --with the
-      # adapter`), the same manager the `check` job's Python legs use. The
-      # omp job otherwise has no Python tooling at all, so this is its own
-      # install — unpinned like the Omp install above.
       - name: Install uv
-        if: steps.scope.outputs.run == 'true'
         run: |
           set -euo pipefail
           curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      # `GITHUB_PATH` takes effect on the next step, so this is a step of its
-      # own. It fails loudly where an installer put the binary somewhere else,
-      # rather than leaving the check below to fail for a reason that reads
-      # like a plugin fault.
       - name: Verify Omp is on PATH
-        if: steps.scope.outputs.run == 'true'
         run: omp --version
+      - name: Validate Omp integration
+        run: make check-omp-plugin check-omp-agent-settle
 
-      - name: make check-omp-plugin
-        if: steps.scope.outputs.run == 'true'
-        run: make check-omp-plugin
-
-      # The eval arm's early-stop invariant — the defect that silently zeroed
-      # the first paid run (issue #206) — has its own acceptance test,
-      # which needs the pinned `coder_eval` beside the adapter. `make
-      # check-omp-agent-settle` builds that environment with `uv run --with`
-      # (no install step, no cache to warm), and the fake binary it drives
-      # needs no network. Same scope gate as the plugin check above: the three
-      # paths added to the diff filter are the files that can break it.
-      - name: make check-omp-agent-settle
-        if: steps.scope.outputs.run == 'true'
-        run: make check-omp-agent-settle
-
-  # The aggregating job branch protection names. `if: always()` is
-  # load-bearing: without it a failure upstream *skips* this job, and GitHub
-  # counts a skipped required check as satisfied — the pull request would go
-  # green on a failed check.
   ci-success:
     name: CI Success
-    needs: [check, omp]
+    needs: [changes, repository-checks, plugin-validity, runtime, eval-tooling, issue-infra, omp-integration]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Verify every job succeeded
+      - uses: actions/checkout@v7
+      - name: Verify selected jobs succeeded
         env:
-          RESULTS: ${{ join(needs.*.result, ' ') }}
-        run: |
-          set -euo pipefail
-          echo "upstream results: $RESULTS"
-          for result in $RESULTS; do
-            if [[ "$result" != "success" ]]; then
-              echo "::error::a required job did not succeed: $RESULTS" >&2
-              exit 1
-            fi
-          done
+          DETECTION: ${{ needs.changes.result }}
+          REPOSITORY: ${{ needs.repository-checks.result }}
+          FILTER_PLUGIN: ${{ needs.changes.outputs.plugin }}
+          FILTER_RUNTIME: ${{ needs.changes.outputs.runtime }}
+          FILTER_EVAL: ${{ needs.changes.outputs.eval }}
+          FILTER_ISSUE: ${{ needs.changes.outputs.issue }}
+          FILTER_OMP: ${{ needs.changes.outputs.omp }}
+          FILTER_SHARED: ${{ needs.changes.outputs.shared }}
+          FILTER_UNKNOWN: ${{ needs.changes.outputs.unknown }}
+          PLUGIN_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.plugin == 'true' }}
+          PLUGIN_RESULT: ${{ needs.plugin-validity.result }}
+          RUNTIME_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.runtime == 'true' }}
+          RUNTIME_RESULT: ${{ needs.runtime.result }}
+          EVAL_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.eval == 'true' }}
+          EVAL_RESULT: ${{ needs.eval-tooling.result }}
+          ISSUE_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.issue == 'true' }}
+          ISSUE_RESULT: ${{ needs.issue-infra.result }}
+          OMP_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.omp == 'true' }}
+          OMP_RESULT: ${{ needs.omp-integration.result }}
+        run: node scripts/check-ci-scope.mjs --aggregate
