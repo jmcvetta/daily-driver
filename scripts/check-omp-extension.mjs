@@ -227,7 +227,8 @@ function makeWorktreeFixture() {
 	runGit(primary, "config", "alias.visual", "!git switch master");
 	runGit(primary, "config", "alias.loop", "hoop");
 	runGit(primary, "config", "alias.hoop", "loop");
-	runGit(primary, "worktree", "add", "-b", "feature/worktree-guard", task);
+	runGit(primary, "branch", "feature/worktree-guard");
+	runGit(primary, "worktree", "add", task, "feature/worktree-guard");
 	runGit(primary, "worktree", "add", "--detach", detached);
 	const primaryFileLink = resolve(task, "primary-file-link.txt");
 	symlinkSync(resolve(primary, "tracked.txt"), primaryFileLink);
@@ -399,6 +400,61 @@ checkGuard(
 	},
 	worktrees.primary,
 );
+
+// HOME is a fixture directory, not the user's home. The edit header has the
+// spelling Omp emits after read, while the tool cwd stays in the primary.
+function homeEdit(target) {
+	return {
+		input:
+			`*** Begin Patch\n[~/${target}#ABCD]\n` +
+			"PUT 1.=1:\n+safe\n*** End Patch\n",
+	};
+}
+
+for (const [name, blocked, target] of [
+	["an existing feature branch reattached in a worktree accepts a home-shortened edit", false, "task/tracked.txt"],
+	["a home-shortened edit into the primary remains blocked", true, "primary/tracked.txt"],
+	["a home-shortened edit into a detached worktree remains blocked", true, "detached/tracked.txt"],
+	["a home-shortened symlink into the primary remains blocked", true, "task/primary-file-link.txt"],
+	["a native edit with a doubled home slash still guards the primary", true, resolve(worktrees.primary, "tracked.txt")],
+]) {
+	check(name, () => {
+		const previousHome = process.env.HOME;
+		process.env.HOME = worktrees.root;
+		try {
+			const decision = guardDecision("edit", homeEdit(target), worktrees.primary);
+			if (blocked) {
+				assert.deepEqual(decision, { block: true, reason: WORKTREE_BLOCK_REASON });
+			} else {
+				assert.equal(decision, undefined);
+			}
+		} finally {
+			if (previousHome === undefined) delete process.env.HOME;
+			else process.env.HOME = previousHome;
+		}
+	});
+}
+
+// Omp's JavaScript write and bash resolvers keep doubled slashes after HOME.
+// The native edit resolver instead interprets the remainder as absolute.
+for (const [name, toolName, input] of [
+	["a doubled home slash cannot write to the primary", "write", { path: "~//primary/tracked.txt", content: "unsafe\n" }],
+	["a doubled home slash cannot select the primary as bash cwd", "bash", { command: "git switch feature/wrong-place", cwd: "~//primary" }],
+]) {
+	check(name, () => {
+		const previousHome = process.env.HOME;
+		process.env.HOME = worktrees.root;
+		try {
+			assert.deepEqual(guardDecision(toolName, input, worktrees.task), {
+				block: true,
+				reason: WORKTREE_BLOCK_REASON,
+			});
+		} finally {
+			if (previousHome === undefined) delete process.env.HOME;
+			else process.env.HOME = previousHome;
+		}
+	});
+}
 
 checkGuard(
 	"an attached-worktree symlink cannot redirect a write into the primary",

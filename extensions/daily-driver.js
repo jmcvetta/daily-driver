@@ -39,6 +39,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, resolve } from "node:path";
 
 /**
@@ -320,13 +321,13 @@ function stateForWorktree(records, currentRoot) {
 }
 
 /**
- * Anchor one tool-supplied path to the tool's working directory. Null where a
- * relative path arrives without a usable working directory: the guard cannot
- * tell which repository such a path names, and a guess would be worse than no
- * answer. An absolute path needs no anchor and is always usable.
+ * Anchor one tool-supplied path to the tool's working directory. Omp's
+ * JavaScript tools prefix `~/` with HOME before resolving the path; a relative
+ * path without a usable working directory remains unplaceable.
  */
 function anchoredPath(cwd, path) {
 	if (isAbsolute(path)) return path;
+	if (path.startsWith("~/")) return resolve(homedir() + path.slice(1));
 	return typeof cwd === "string" && cwd.length > 0 ? resolve(cwd, path) : null;
 }
 
@@ -341,10 +342,11 @@ function resolveAgainst(base, value) {
 }
 
 /**
- * Describe the worktree containing one local path. Null means the path is not
- * in a Git worktree, so this policy does not own it.
+ * Describe the worktree containing one local path. Native edit paths join
+ * the remainder after `~/` to HOME; an absolute remainder replaces HOME.
+ * Null means the path is not in a Git worktree.
  */
-function worktreeState(path, cwd) {
+function worktreeState(path, cwd, nativeEdit = false) {
 	if (
 		typeof path !== "string" ||
 		path.length === 0 ||
@@ -353,7 +355,10 @@ function worktreeState(path, cwd) {
 		return null;
 	}
 
-	const target = anchoredPath(cwd, path);
+	const target =
+		nativeEdit && path.startsWith("~/")
+			? resolve(homedir(), path.slice(2))
+			: anchoredPath(cwd, path);
 	// An unplaceable path is refused rather than allowed unchecked, the way an
 	// unanswerable Git query is.
 	if (target === null) {
@@ -1833,7 +1838,7 @@ function walkShellCommand(command, toolCwd) {
 function blocksTaskWorktree(event, cwd) {
 	if (rewritesPrimaryWorkingTree(event, cwd)) return true;
 	for (const path of mutationPaths(event, cwd)) {
-		const state = worktreeState(path, cwd);
+		const state = worktreeState(path, cwd, event.toolName === "edit");
 		if (
 			state &&
 			(state.root === state.primaryRoot || state.branch.length === 0)

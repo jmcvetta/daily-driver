@@ -95,7 +95,7 @@ without making an unstated product or architecture decision?**
 A repository-answerable question is answered now, by the author. An unresolved
 user decision means the task is not ready at any class. Unknown class tokens,
 multiple class sections, and a missing rationale are invalid metadata, not a
-default to `standard`.
+default to `implementation`.
 
 
 Updating a body
@@ -107,9 +107,11 @@ Unrelated text is not reflowed and existing issues are not swept.
 
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field. When selecting an old task for work, assess its body
-against the class rubric and migrate only that issue before dispatch. Do not
-infer a class from the old identifier. A valid new section is authoritative
-when both forms exist.
+against the class rubric and migrate only that issue before dispatch. Map the
+former `standard` class to `implementation` and `advanced` to `reasoning`, based
+on the grounded handoff; do not change its rationale or capability requirement,
+and do not infer a class from the old identifier. A valid new section is
+authoritative when both forms exist.
 
 
 The model class section
@@ -120,7 +122,7 @@ The section is immediately below `## Summary` and before `## Detail`:
 ```markdown
 ## Model class
 
-`standard`
+`implementation`
 
 The API contract and edge cases are fixed; implementation follows the existing
 adapter pattern.

@@ -25,7 +25,7 @@ success_criteria:
     expected_skill: epic
     skill_name: epic
   - type: llm_judge
-    description: Planning records a mechanical class and refuses to use advanced as an underspecification workaround
+    description: Planning records a mechanical class and refuses to use reasoning as an underspecification workaround
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -37,6 +37,6 @@ success_criteria:
 
       Score 1.0 only if it gives the documented rename `mechanical` with a
       short rationale, identifies the concurrent lease task as missing its
-      invariant instead of ready merely because it could be `advanced`, and
+      invariant instead of ready merely because it could be `reasoning`, and
       says the missing design must be settled before authoring. Score 0.0 if it
-      treats difficulty as automatically advanced or uses strength to bypass it.
+      treats difficulty as automatically reasoning or uses strength to bypass it.
