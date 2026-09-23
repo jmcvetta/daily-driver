@@ -5,37 +5,28 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #52. Its settled design changes `skills/undertake/SKILL.md`,
-  all three `skills/undertake/references/*.md` capability routes, and this
-  behavior evaluation. It needs routine multi-file coordination, meaningful
-  evaluation coverage, and local failure diagnosis. It does not involve
-  concurrency correctness, security boundaries, data integrity, or a novel
-  algorithm. The task's required class is `standard`.
-  The issue comments confirm that the settled requirement remains `standard`
-  and clarify that eligibility is about this session's capability, not its
-  concrete model id.
+  Undertake the supplied simulated task #52. Its valid task body has
+  `## Model class` set to `standard`; the latest issue comment confirms that
+  class remains required and says eligibility is based on this session, not
+  its model id. These supplied issue facts are complete; no live lookup is
+  needed.
 
-  Session A's current-session evidence shows it can implement settled,
-  repository-pattern changes across multiple files, write meaningful behavior
-  evaluations, and diagnose local failures; its rubric assessment is
-  `advanced`. Its concrete model id is unmapped.
-  Session B has the same evidence for routine multi-file implementation,
-  meaningful evaluations, and local diagnosis; its rubric assessment is
-  `standard`. Its concrete model id is also unmapped.
-  Session C is limited to bounded transformations with explicit rules and
-  direct checks; it cannot coordinate routine multi-file changes, write
-  meaningful evaluations, or diagnose implementation failures. Its assessment
-  is `mechanical`.
-  Session D has only a concrete model id, with no current capability evidence
-  or assessment.
+  The settled work updates `skills/undertake/SKILL.md`, its three harness
+  routes, and the behavior evaluation. It requires routine multi-file changes,
+  meaningful evaluations, and local failure diagnosis; no advanced invariant.
+  Session A can do that work and has a current rubric assessment of
+  `advanced`; its model id is unmapped. Session B can do that work and is
+  assessed `standard`; its model id is unmapped. Session C can only perform
+  bounded mechanical transformations and is assessed `mechanical`. Session D
+  has only a concrete model id, with no capability evidence or assessment.
 
-  Explain which sessions may begin and what each stop requires before worktree
-  creation, claim, or implementation. Then suppose Session A visibly falls
-  back to a `mechanical` model during implementation; explain what happens
-  before it continues.
+  Use `undertake` to decide only the capability gate; do not create a worktree,
+  claim, or implement. First state the effective required class from the body
+  and comment. Then give concise pass/stop decisions for A through D. Finally,
+  say what A must do if it visibly falls back to `mechanical` during work.
 
 agent:
-  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 
 run_limits:
@@ -66,13 +57,12 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it first accounts for the issue comments and validates
-      the effective `standard` requirement, then compares task demands with
-      the shared rubric and supplied capability evidence. It must let Session
-      A (`advanced`) and Session B (`standard`) proceed without a model-id
-      mapping; stop Session C (`mechanical`) and Session D (identity only)
-      before worktree creation or claim, report the needed class and missing
-      evidence for D, and stop Session A from further implementation after its
-      visible fallback pending reassessment. Require a concrete task-specific
-      rationale; repeating labels alone scores 0.0. Also score 0.0 if it starts
-      either stopped session or delegates solely to cut cost.
+      Score 1.0 only if it states that the effective class is `standard` based
+      on the supplied valid task metadata and confirming comment before the
+      capability decision; ties that class to the task's routine multi-file
+      work, evaluations, and failure diagnosis; allows A and B without a
+      model-id mapping; and stops C and D before worktree/claim, with D told
+      what evidence is missing. It must also stop A's further implementation
+      after the visible fallback pending reassessment. The rationale must use
+      the supplied task-specific evidence. Score 0.0 if it starts C or D,
+      relies on model identity alone, or delegates solely to cut cost.
