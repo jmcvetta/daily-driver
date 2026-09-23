@@ -1,19 +1,19 @@
 modelRoles:
   # Strong coding and tool use for the main session without Astra's premium cost.
-  default: openai-codex/gpt-5.6-sol:high
+  default: openai-codex/gpt-6-sol:high
   # Fast, economical help for small tasks.
-  smol: openai-codex/gpt-5.6-luna:medium
+  smol: openai-codex/gpt-6-luna:medium
   # Sol handles routine code review and deeper analysis without escalating to Astra.
-  slow: openai-codex/gpt-5.6-sol:high
+  slow: openai-codex/gpt-6-sol:high
   # Reserve the strongest model for architecture and task decomposition.
   plan: openai-codex/gpt-6-astra:high
   # Balanced delegated implementation at subagent fan-out scale.
   task: openai-codex/gpt-5.6-terra:high
   # Strong oversight of delegated work without repeated Astra calls.
-  advisor: openai-codex/gpt-5.6-sol:high
+  advisor: openai-codex/gpt-6-sol:high
   # Routine screenshot, diagram, and UI interpretation.
   vision: openai-codex/gpt-5.6-terra:medium
   # Bounded diff summaries and commit-message generation.
-  commit: openai-codex/gpt-5.6-luna:medium
+  commit: openai-codex/gpt-6-luna:medium
   # Lightweight background tasks such as titles and classification.
-  tiny: openai-codex/gpt-5.6-luna:low
+  tiny: openai-codex/gpt-6-luna:low
