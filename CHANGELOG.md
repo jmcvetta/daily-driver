@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.39.0](https://github.com/jmcvetta/daily-driver/compare/v0.38.0...v0.39.0) (2026-09-23)
+
+
+### Features
+
+* **constitution:** ask before filing component defects ([#366](https://github.com/jmcvetta/daily-driver/issues/366)) ([6b733ce](https://github.com/jmcvetta/daily-driver/commit/6b733ce8df15887b8d564a2da0e40b76593e4542))
+* **evals:** build model-class eval cases from merged pull requests ([#374](https://github.com/jmcvetta/daily-driver/issues/374)) ([d6beacd](https://github.com/jmcvetta/daily-driver/commit/d6beacdc194e7c7c3315489861851a0187f60385))
+
+
+### Bug Fixes
+
+* **undertake:** supervise drafts before readiness ([#348](https://github.com/jmcvetta/daily-driver/issues/348)) ([23c4283](https://github.com/jmcvetta/daily-driver/commit/23c42830bc94523cce4563e6c02e14c9e3079580))
+
 ## [0.38.0](https://github.com/jmcvetta/daily-driver/compare/v0.37.0...v0.38.0) (2026-09-22)
 
 
