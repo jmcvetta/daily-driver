@@ -1,15 +1,15 @@
-# The model-classes capability arm for the minimax-m3 Omp overlay.
+# The model-classes capability arm for the kimi Omp overlay.
 #
 # Measures whether this model, in the role it plays for delegated implementation
-# work (its `default` role, this overlay names no separate `task` role), clears the mechanical/standard cases the suite builds from
+# work (its `task` role), clears the mechanical/standard cases the suite builds from
 # real merged pull requests -- see `scripts/evals-cases-from-prs.py` and
 # `evals/tasks/model-classes/`. One variant: there is no plugin ablation here,
 # only the question "does this model finish this task and leave its own tests
-# passing". `make evals-run-classes MODEL=minimax-m3` runs it.
+# passing". `make evals-run-classes MODEL=kimi` runs it.
 
-experiment_id: classes-minimax-m3
+experiment_id: classes-kimi
 description: >-
-  Model-class capability on real merged-pull-request cases, vercel-ai-gateway/minimax/minimax-m3:high in the
+  Model-class capability on real merged-pull-request cases, vercel-ai-gateway/moonshotai/kimi-k3:low in the
   `task` role.
 
 defaults:
@@ -22,7 +22,7 @@ defaults:
 
   agent:
     type: omp
-    model: vercel-ai-gateway/minimax/minimax-m3:high
+    model: vercel-ai-gateway/moonshotai/kimi-k3:low
     permission_mode: acceptEdits
     allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
 
