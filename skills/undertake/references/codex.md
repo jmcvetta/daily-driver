@@ -38,8 +38,9 @@ rather than three — so read that skill's routes before believing an empty
 answer. So does `issue-labels`, whose `references/codex.md` says why
 `--add-label` needs no read-first and the Claude route does.
 
-For a `task`, validate the `Model class` section, then assess the current
-session against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
+For a `task`, read the issue body, edges, and comments; apply any supported
+corrections; validate the `Model class` section through `issue-body`; then
+assess the current session against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
 before its claim or repository change. Read the current model identity from
 the session's configured model and the harness's stated serving model where
 available, as described under `The session`. Assess task demands against

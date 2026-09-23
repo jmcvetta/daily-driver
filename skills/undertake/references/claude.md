@@ -32,8 +32,9 @@ issue carrying none of the standard's six is not an issue carrying none.
 `issue-labels`, whose `references/claude.md` states that trap where the label
 write lives.
 
-For a `task`, validate the `Model class` section, then assess the current
-session against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
+For a `task`, read the issue body, edges, and comments; apply any supported
+corrections; validate the `Model class` section through `issue-body`; then
+assess the current session against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
 before its claim or repository change. Read session identity from
 `mcp__Claude_Code_Remote__get_session` before the assessment; the fields are
 listed under `The session`. Assess task demands against evidenced current

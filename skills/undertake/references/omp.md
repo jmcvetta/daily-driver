@@ -31,8 +31,9 @@ makes further down this file.
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
 read-first and the Claude route does.
 
-For a `task`, validate the `Model class` section, then assess the current
-session against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
+For a `task`, read the issue body, edges, and comments; apply any supported
+corrections; validate the `Model class` section through `issue-body`; then
+assess the current session against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
 before its claim or repository change. Read the current model identity from
 `daily_driver_get_session` before the assessment; its model field and the
 serving-model statement supplied by the harness are described under `The

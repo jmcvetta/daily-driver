@@ -165,8 +165,10 @@ Where `Implement` reaches that conclusion, say so and stop: the answer goes
 on the issue, `epic` writes the issues where there are issues to write, and
 this sequence does not open a pull request with nothing in it.
 
-**A `task` also carries a required model class.** Validate its one
-`## Model class` section and rationale through `issue-body` before the claim.
+**A `task` also carries a required model class.** After reading the issue body,
+edges, and comments, apply any supported corrections and validate its one
+`## Model class` section and rationale through `issue-body` before assessing
+the current session or claiming the issue.
 For an old or invalid body, assess the grounded handoff, update only that issue
 to the current contract, and then assess the current implementation session
 against the class guidance. Assess the work's demands against the shared

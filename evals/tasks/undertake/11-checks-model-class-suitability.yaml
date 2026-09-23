@@ -11,6 +11,9 @@ initial_prompt: >-
   evaluation coverage, and local failure diagnosis. It does not involve
   concurrency correctness, security boundaries, data integrity, or a novel
   algorithm. The task's required class is `standard`.
+  The issue comments confirm that the settled requirement remains `standard`
+  and clarify that eligibility is about this session's capability, not its
+  concrete model id.
 
   Session A's current-session evidence shows it can implement settled,
   repository-pattern changes across multiple files, write meaningful behavior
@@ -63,13 +66,13 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it compares the supplied task demands with the shared
-      rubric and uses the supplied capability evidence to let Session A
-      (`advanced`) and Session B (`standard`) proceed without requiring a
-      model-id mapping. It must stop Session C (`mechanical`) and Session D
-      (identity only) before worktree creation or claim, report the needed
-      class and missing evidence for D, and stop Session A from further
-      implementation after the visible fallback pending reassessment. Require
-      a concrete task-specific rationale; repeating labels alone scores 0.0.
-      Also score 0.0 if it starts either stopped session or delegates solely
-      to cut cost.
+      Score 1.0 only if it first accounts for the issue comments and validates
+      the effective `standard` requirement, then compares task demands with
+      the shared rubric and supplied capability evidence. It must let Session
+      A (`advanced`) and Session B (`standard`) proceed without a model-id
+      mapping; stop Session C (`mechanical`) and Session D (identity only)
+      before worktree creation or claim, report the needed class and missing
+      evidence for D, and stop Session A from further implementation after its
+      visible fallback pending reassessment. Require a concrete task-specific
+      rationale; repeating labels alone scores 0.0. Also score 0.0 if it starts
+      either stopped session or delegates solely to cut cost.
