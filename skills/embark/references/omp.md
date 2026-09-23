@@ -51,18 +51,18 @@ The route an implementor runs
 
 The `task` surface selects an `agent`, not a per-item model argument. Select
 the implementor whose name matches the task's required class: `mechanical`,
-`standard`, or `advanced`. This per-class agent route replaces a single
+`implementation`, or `reasoning`. This per-class agent route replaces a single
 `modelRoles.task` lookup. Resolve that agent's effective selector in order:
 `task.agentModelOverrides[agentName]`, then its frontmatter `model` (for
-example, `@standard` resolves the `standard` role). A prewalk or retry fallback
+example, `@implementation` resolves the `implementation` role). A prewalk or retry fallback
 can change the model that executes, so inspect those settings too; the selected
 agent or its declared role alone does not prove the effective route.
 
 Assess the effective route before dispatch for demonstrated class suitability,
 required tools, context, modalities, availability, and credentials. The three
 plugin defaults are `mechanical: openai-codex/gpt-6-luna:high`,
-`standard: openai-codex/gpt-5.6-terra:high`, and
-`advanced: openai-codex/gpt-6-astra:high`; they require Omp's configured OpenAI
+`implementation: openai-codex/gpt-5.6-terra:high`, and
+`reasoning: openai-codex/gpt-6-astra:high`; they require Omp's configured OpenAI
 Codex credentials. The plugin applies each role at session start only when no
 effective assignment exists; global/project settings and CLI overlays present
 before startup take precedence, as do explicit assignments. The assignments are

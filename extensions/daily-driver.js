@@ -25,7 +25,7 @@
  *    task identity and establishes or reuses its dedicated worktree; this
  *    guard makes forgetting it fail before the user's checkout is changed.
  *
- * 3. Provide runtime defaults for mechanical, standard, and advanced model
+ * 3. Provide runtime defaults for mechanical, implementation, and reasoning model
  *    roles without overwriting operator assignments or writing configuration.
  *
  * 4. Provide session-title, scheduled-reminder, and session-info tools that
@@ -58,7 +58,7 @@ export const ASK_BLOCK_REASON =
 	"and why. The user answers in chat.\n\n" +
 	"Check first whether the question needs asking at all. The " +
 	"`judgement-call` skill's gate settles most of these — where the correct, " +
-	"standard way already picks the answer, make the call, say in one line " +
+	"implementation way already picks the answer, make the call, say in one line " +
 	"which way it went, and carry on. This adapter governs how a question that " +
 	"survives that gate is put, not whether it is worth putting.";
 

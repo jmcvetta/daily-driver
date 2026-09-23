@@ -222,6 +222,32 @@ def section_of(parsed: object, section: str) -> dict | None:
     return entries if isinstance(entries, dict) else None
 
 
+def plugin_version_errors() -> list[str]:
+    """Require Omp and Claude plugin manifests to share package identity."""
+    errors: list[str] = []
+    files = [
+        ROOT / "package.json",
+        ROOT / ".claude-plugin" / "plugin.json",
+        ROOT / ".claude-plugin" / "marketplace.json",
+        ROOT / ".omp-plugin" / "plugin.json",
+    ]
+    versions: list[tuple[Path, str | None]] = []
+    for path in files:
+        parsed = load_json(path, errors)
+        if not isinstance(parsed, dict):
+            continue
+        version = parsed.get("version")
+        if path.name == "marketplace.json":
+            plugins = parsed.get("plugins", [])
+            version = plugins[0].get("version") if plugins and isinstance(plugins[0], dict) else None
+        versions.append((path, version if isinstance(version, str) else None))
+    expected = next((version for path, version in versions if path.name == "package.json"), None)
+    for path, version in versions:
+        if version != expected:
+            errors.append(f"{path.relative_to(ROOT)}: version {version!r} disagrees with package.json {expected!r}")
+    return errors
+
+
 def stanza_errors() -> list[str]:
     """Every copy of the stanza, measured against the manifests."""
     errors: list[str] = []
@@ -574,7 +600,7 @@ def main() -> int:
             )
         if not fields.get("description"):
             errors.append(f"{where}: frontmatter description is empty")
-        expected_aliases = {"mechanical": "@mechanical", "standard": "@standard", "advanced": "@advanced"}
+        expected_aliases = {"mechanical": "@mechanical", "implementation": "@implementation", "reasoning": "@reasoning"}
         if name in expected_aliases and fields.get("model") != expected_aliases[name]:
             actual_model = fields.get("model")
             errors.append(
@@ -592,6 +618,7 @@ def main() -> int:
 
     errors.extend(reference_errors(skills))
     errors.extend(shared_guidance_errors(skills))
+    errors.extend(plugin_version_errors())
     errors.extend(stanza_errors())
 
     for error in errors:

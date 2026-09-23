@@ -137,7 +137,7 @@ never reach for the widget, and every session would pay for the rule.
 decision, and `judgement-call` is the skill it is ordered with: that gate
 decides *whether* to ask, the hook decides *how*.
 
-**The Omp installation also provides three task-class roles** — `mechanical`, `standard`, and `advanced` — and matching implementation agents. At session start the extension adds runtime-only selectors only for roles without an effective assignment and adds visible role tags without replacing operator metadata. The shipped selectors require configured OpenAI Codex credentials; no model is claimed as capability-measured until the class evaluations report it. Use `/model` → Roles for optional role assignments. Existing `omp_configs/` files remain process overlays; assignments present at startup take precedence, while YAML or overlay edits made after startup may need an Omp restart because runtime overrides shadow disk reloads.
+**The Omp installation also provides three task-class roles** — `mechanical`, `implementation`, and `reasoning` — and matching implementation agents. At session start the extension adds runtime-only selectors only for roles without an effective assignment and adds visible role tags without replacing operator metadata. The shipped selectors require configured OpenAI Codex credentials; no model is claimed as capability-measured until the class evaluations report it. Use `/model` → Roles for optional role assignments. Existing `omp_configs/` files remain process overlays; assignments present at startup take precedence, while YAML or overlay edits made after startup may need an Omp restart because runtime overrides shadow disk reloads.
 
 **Omp has no hook mechanism**, so `extensions/daily-driver.js` does those jobs
 there: it blocks the `ask` tool with the same wording and supplies the
@@ -376,7 +376,7 @@ over `agents/`, on the runs where the plugin ships any; `shellcheck` over every
 shell script; `scripts/check-manifests.py` for what `validate` lets through,
 such as a skill whose frontmatter `name` disagrees with its directory; `scripts/check-constitution.py`, which drives
 both hooks against synthetic event JSON and asserts the constitution comes back
-from each; `scripts/check-labels.py`, which asserts the issue-label standard
+from each; `scripts/check-labels.py`, which asserts the issue-labels standard
 says the same thing in `issue-labels` and in the OpenTofu that declares it;
 `scripts/check-eval-fixtures.sh`; `scripts/check-task-worktree-fixture.sh`,
 which exercises the linked and detached repositories used by that skill's

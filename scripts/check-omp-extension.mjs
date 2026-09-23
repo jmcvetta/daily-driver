@@ -308,11 +308,12 @@ function makeDetachedPrimaryFixture() {
 const detachedPrimary = makeDetachedPrimaryFixture();
 
 // --- task-class defaults are installed at session start ---------------------
-const modelClassSettings = [];
-function fakeModelClassSettings() {
+const modelClassSettings = new Map();
+function fakeModelClassSettings(cwd) {
+	if (modelClassSettings.has(cwd)) return modelClassSettings.get(cwd).settings;
 	const state = { modelRoles: {}, modelTags: {}, mutations: [] };
 	state.settings = { getModelRole: role => state.modelRoles[role], overrideModelRoles: roles => { Object.assign(state.modelRoles, roles); state.mutations.push(["roles", roles]); }, get: path => { assert.equal(path, "modelTags"); return state.modelTags; }, override: (path, value) => { assert.equal(path, "modelTags"); Object.assign(state.modelTags, value); state.mutations.push(["tags", value]); } };
-	modelClassSettings.push(state);
+	modelClassSettings.set(cwd, state);
 	return state.settings;
 }
 
@@ -320,8 +321,7 @@ check("session_start adds class role defaults and tags once per settings instanc
 	const s = makeSession({ settingsManagerFactory: fakeModelClassSettings });
 	await s.fire("session_start", {}, { cwd: "/fixture" });
 	await s.fire("session_start", {}, { cwd: "/fixture" });
-	const state = modelClassSettings.at(-1);
-	installModelClassDefaults(state.settings);
+	const state = modelClassSettings.get("/fixture");
 	assert.deepEqual(state.modelRoles, MODEL_CLASS_ROLE_DEFAULTS);
 	assert.deepEqual(state.modelTags, MODEL_CLASS_ROLE_TAGS);
 	assert.equal(state.mutations.filter(([kind]) => kind === "roles").length, 1);

@@ -20,9 +20,9 @@ Task bodies use the provider-neutral `Model class` section defined in
 [`model-classes.md`](model-classes.md). An Omp task issue does not carry a
 Claude identifier or an Omp agent/model selector. Before dispatch, `embark`
 selects the implementation agent named for the required class (`mechanical`,
-`standard`, or `advanced`) and checks its effective route. For that agent,
+`implementation`, or `reasoning`) and checks its effective route. For that agent,
 `task.agentModelOverrides[agentName]` takes precedence over its discovered
-frontmatter model, which can select a tagged role such as `@standard`. Resolve
+frontmatter model, which can select a tagged role such as `@implementation`. Resolve
 configured prewalk and retry fallbacks too; they must meet the same class,
 tools, context, modality, availability, and credential requirements. A model
 name, catalog entry, effort setting, or price does not prove class suitability

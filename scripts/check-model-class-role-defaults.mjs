@@ -33,19 +33,19 @@ assert.deepEqual(clean.tags, MODEL_CLASS_ROLE_TAGS);
 assert.deepEqual(clean.mutations.map(([kind]) => kind), ["roles", "tags"]);
 
 const operator = settingsFixture(
-  { standard: "operator/selected:high" },
-  { standard: { name: "Operator's standard", color: "cyan" }, custom: { name: "Custom" } },
+  { implementation: "operator/selected:high" },
+  { implementation: { name: "Operator's implementation", color: "cyan" }, custom: { name: "Custom" } },
 );
 installModelClassDefaults(operator);
-assert.equal(operator.roles.standard, "operator/selected:high");
+assert.equal(operator.roles.implementation, "operator/selected:high");
 assert.equal(operator.roles.mechanical, MODEL_CLASS_ROLE_DEFAULTS.mechanical);
-assert.deepEqual(operator.tags.standard, { name: "Operator's standard", color: "cyan" });
+assert.deepEqual(operator.tags.implementation, { name: "Operator's implementation", color: "cyan" });
 assert.deepEqual(operator.tags.mechanical, { name: "Mechanical" });
 assert.deepEqual(operator.tags.custom, { name: "Custom" });
 
-const cleared = settingsFixture({ standard: "" });
+const cleared = settingsFixture({ implementation: "" });
 installModelClassDefaults(cleared);
-assert.equal(cleared.roles.standard, MODEL_CLASS_ROLE_DEFAULTS.standard);
+assert.equal(cleared.roles.implementation, MODEL_CLASS_ROLE_DEFAULTS.implementation);
 
 console.log("check-model-class-role-defaults: runtime role defaults preserve existing role and tag metadata");
 
