@@ -49,21 +49,52 @@ it, and nothing else. The prompt boundary of `Open the sessions` holds.
 The route an implementor runs
 =============================
 
-The `task` surface selects an `agent`, not a model argument. Resolve the
-required class against `task.agentModelOverrides`, discovered agent frontmatter
-model selectors, then the parent/session fallback. Inspect `modelRoles`,
-`task.agentModelOverrides`, and the candidate model catalog before dispatch;
-catalog presence is not a successful inference request.
+The `task` surface selects an `agent`, not a per-item model argument. Select
+the implementor whose name matches the task's required class: `mechanical`,
+`standard`, or `advanced`. This per-class agent route replaces a single
+`modelRoles.task` lookup. Resolve that agent's effective selector in order:
+`task.agentModelOverrides[agentName]`, then its frontmatter `model` (for
+example, `@standard` resolves the `standard` role). A prewalk or retry fallback
+can change the model that executes, so inspect those settings too; the selected
+agent or its declared role alone does not prove the effective route.
 
-`sonic` is a mechanical-only candidate. The general-purpose `task` agent may
-satisfy any class only when its resolved concrete model does. Reviewers and
-scouts are not implementation routes. Do not alter a shared role during a
-concurrent wave to satisfy one task; report the configuration gap instead.
-Per-spawn effort exists only when `task.enableEffort` exposes it.
+Assess the effective route before dispatch for demonstrated class suitability,
+required tools, context, modalities, availability, and credentials. The three
+plugin defaults are `mechanical: openai-codex/gpt-6-luna:high`,
+`standard: openai-codex/gpt-5.6-terra:high`, and
+`advanced: openai-codex/gpt-6-astra:high`; they require Omp's configured OpenAI
+Codex credentials. The plugin applies each role at session start only when no
+effective assignment exists; global/project settings and CLI overlays present
+before startup take precedence, as do explicit assignments. The assignments are
+runtime-only, and plugin-owned tags keep the roles visible in Omp's `/model`
+Roles UI. Operators can change assignments there for subsequent dispatches.
+Clearing an assignment leaves a visible but unassigned role; report a gap
+rather than restoring a default during that session. A direct configuration-file
+change after startup may remain shadowed until Omp restarts because disk reload
+preserves runtime overrides. The plugin writes no Omp configuration files.
+Treat them as selectors, not proof of class capability:
+catalog presence, effort, and price do not establish suitability. No model
+class evaluation result is established here, so do not claim measured
+capability. Do not infer working credentials from catalog presence. Assess
+every configured fallback against the same requirements. In particular,
+Omp's parent-model authentication fallback does not satisfy the class unless
+independently shown eligible; if a runtime fallback changes the model, report
+the mismatch and reassess before further work.
 
-Each batch item sets only its selected `agent`; no per-item `model` argument
-exists. The muster roll records the required class, selected agent, and actual
-reported model separately.
+A stronger eligible model may handle lower-class work. If the route is missing
+or unsuitable before launch, stop only that task and report the configuration
+gap. If a runtime fallback makes an already launched route unsuitable, stop
+that task and report the observed model and gap; launch the rest of the wave.
+Do not lower the requested class, drop a required tool, or mutate shared roles
+to make a route appear eligible. Mixed-class batch items use their own
+class-named agents and resolve independently. `sonic` is a bundled agent, not
+a model role. Reviewers and scouts are not implementation routes.
+
+For each muster-roll row, keep the required class, selected agent, and actual
+reported model separate. Record `unreported` when the harness provides no
+execution identity; never substitute the agent name, role, or configured
+selector for an observed model. If Omp reports a different model or a fallback,
+record that observed model and reassess it before work continues.
 
 
 Asking for help

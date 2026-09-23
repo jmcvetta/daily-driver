@@ -9,7 +9,7 @@
  * that Claude-compatible catalog, so there is deliberately no
  * `.omp-plugin/marketplace.json`).
  *
- * Three jobs:
+ * Four jobs:
  *
  * 1. Block Omp's `ask` tool, the way Claude Code denies `AskUserQuestion`.
  *    The model is told not to retry and to ask the question in chat instead,
@@ -25,11 +25,14 @@
  *    task identity and establishes or reuses its dedicated worktree; this
  *    guard makes forgetting it fail before the user's checkout is changed.
  *
- * 3. Provide session-title, scheduled-reminder, and session-info tools that
+ * 3. Provide runtime defaults for mechanical, standard, and advanced model
+ *    roles without overwriting operator assignments or writing configuration.
+ *
+ * 4. Provide session-title, scheduled-reminder, and session-info tools that
  *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,
  *    `daily_driver_schedule` / `daily_driver_cancel_schedule`, and
- *    `daily_driver_get_session`, are the Omp runtime-adapter surface that
- *    Wave 2 (harness-portable skills) consumes.
+ *    `daily_driver_get_session` is part of the runtime surface consumed by
+ *    harness-portable skills.
  *
  * This file has no third-party dependencies: it runs as a plain `.js` module
  * under Omp, with no build step and no package install between this repo and
@@ -40,6 +43,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, resolve } from "node:path";
+import { installModelClassDefaults } from "./role-default-helper.mjs";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -1860,6 +1864,17 @@ function newTriggerId() {
 /** The `daily-driver` Omp extension factory. */
 export default function dailyDriverExtension(pi) {
 	const z = pi.zod;
+
+	const initializedSettings = new WeakSet();
+	pi.on("session_start", async (_event, ctx) => {
+		if (typeof ctx?.cwd !== "string") return;
+		const settings = pi.settingsManagerFactory
+			? pi.settingsManagerFactory(ctx.cwd)
+			: (await import("@mariozechner/pi-coding-agent")).SettingsManager.create(ctx.cwd);
+		if (initializedSettings.has(settings)) return;
+		initializedSettings.add(settings);
+		installModelClassDefaults(settings);
+	});
 
 	// Per-session trigger bookkeeping: triggerId -> { ctx, handle }. Managed
 	// timers are cleared on session_shutdown by the runtime itself; this map

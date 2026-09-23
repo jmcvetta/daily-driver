@@ -9,7 +9,7 @@ SHELL := /bin/bash
 
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-guard-differential check-omp-plugin \
+	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
@@ -91,7 +91,7 @@ omp-update-daily-driver:
 # is no second command line to fall behind this one.
 check: check-plugin check-skills check-agents check-scripts check-manifests \
 	check-manifest-fixtures check-constitution check-ask-in-chat \
-	check-omp-extension check-omp-guard-differential check-omp-cache-clean \
+	check-omp-extension check-model-class-roles check-omp-guard-differential check-omp-cache-clean \
 	check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route check-omp-agent \
 	check-codex-agent check-eval-fixtures check-task-worktree-fixture \
@@ -178,6 +178,9 @@ check-ask-in-chat:
 # Node ships with the harness; no package install is involved.
 check-omp-extension:
 	node scripts/check-omp-extension.mjs
+
+check-model-class-roles:
+	node scripts/check-model-class-role-defaults.mjs
 
 # check-omp-guard-differential: the worktree guard measured against bash rather
 # than against what somebody thought of. Each command shape is run for real in

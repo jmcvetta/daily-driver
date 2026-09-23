@@ -574,6 +574,12 @@ def main() -> int:
             )
         if not fields.get("description"):
             errors.append(f"{where}: frontmatter description is empty")
+        expected_aliases = {"mechanical": "@mechanical", "standard": "@standard", "advanced": "@advanced"}
+        if name in expected_aliases and fields.get("model") != expected_aliases[name]:
+            actual_model = fields.get("model")
+            errors.append(
+                f"{where}: Omp model alias is {actual_model!r}, expected {expected_aliases[name]!r}"
+            )
         if name:
             if name in claimed:
                 errors.append(
