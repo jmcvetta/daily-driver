@@ -416,6 +416,7 @@ for (const [name, blocked, target] of [
 	["a home-shortened edit into the primary remains blocked", true, "primary/tracked.txt"],
 	["a home-shortened edit into a detached worktree remains blocked", true, "detached/tracked.txt"],
 	["a home-shortened symlink into the primary remains blocked", true, "task/primary-file-link.txt"],
+	["a native edit with a doubled home slash still guards the primary", true, resolve(worktrees.primary, "tracked.txt")],
 ]) {
 	check(name, () => {
 		const previousHome = process.env.HOME;
@@ -427,6 +428,27 @@ for (const [name, blocked, target] of [
 			} else {
 				assert.equal(decision, undefined);
 			}
+		} finally {
+			if (previousHome === undefined) delete process.env.HOME;
+			else process.env.HOME = previousHome;
+		}
+	});
+}
+
+// Omp's JavaScript write and bash resolvers keep doubled slashes after HOME.
+// The native edit resolver instead interprets the remainder as absolute.
+for (const [name, toolName, input] of [
+	["a doubled home slash cannot write to the primary", "write", { path: "~//primary/tracked.txt", content: "unsafe\n" }],
+	["a doubled home slash cannot select the primary as bash cwd", "bash", { command: "git switch feature/wrong-place", cwd: "~//primary" }],
+]) {
+	check(name, () => {
+		const previousHome = process.env.HOME;
+		process.env.HOME = worktrees.root;
+		try {
+			assert.deepEqual(guardDecision(toolName, input, worktrees.task), {
+				block: true,
+				reason: WORKTREE_BLOCK_REASON,
+			});
 		} finally {
 			if (previousHome === undefined) delete process.env.HOME;
 			else process.env.HOME = previousHome;

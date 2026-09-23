@@ -321,14 +321,13 @@ function stateForWorktree(records, currentRoot) {
 }
 
 /**
- * Anchor one tool-supplied path to the tool's working directory. Omp resolves
- * `~/` against the user's home before using a file path; do the same before
- * classifying its worktree. A relative path without a usable working directory
- * remains unplaceable. An absolute path needs no anchor.
+ * Anchor one tool-supplied path to the tool's working directory. Omp's
+ * JavaScript tools prefix `~/` with HOME before resolving the path; a relative
+ * path without a usable working directory remains unplaceable.
  */
 function anchoredPath(cwd, path) {
 	if (isAbsolute(path)) return path;
-	if (path.startsWith("~/")) return resolve(homedir(), path.slice(2));
+	if (path.startsWith("~/")) return resolve(homedir() + path.slice(1));
 	return typeof cwd === "string" && cwd.length > 0 ? resolve(cwd, path) : null;
 }
 
@@ -343,10 +342,11 @@ function resolveAgainst(base, value) {
 }
 
 /**
- * Describe the worktree containing one local path. Null means the path is not
- * in a Git worktree, so this policy does not own it.
+ * Describe the worktree containing one local path. Native edit paths join
+ * the remainder after `~/` to HOME; an absolute remainder replaces HOME.
+ * Null means the path is not in a Git worktree.
  */
-function worktreeState(path, cwd) {
+function worktreeState(path, cwd, nativeEdit = false) {
 	if (
 		typeof path !== "string" ||
 		path.length === 0 ||
@@ -355,7 +355,10 @@ function worktreeState(path, cwd) {
 		return null;
 	}
 
-	const target = anchoredPath(cwd, path);
+	const target =
+		nativeEdit && path.startsWith("~/")
+			? resolve(homedir(), path.slice(2))
+			: anchoredPath(cwd, path);
 	// An unplaceable path is refused rather than allowed unchecked, the way an
 	// unanswerable Git query is.
 	if (target === null) {
@@ -1835,7 +1838,7 @@ function walkShellCommand(command, toolCwd) {
 function blocksTaskWorktree(event, cwd) {
 	if (rewritesPrimaryWorkingTree(event, cwd)) return true;
 	for (const path of mutationPaths(event, cwd)) {
-		const state = worktreeState(path, cwd);
+		const state = worktreeState(path, cwd, event.toolName === "edit");
 		if (
 			state &&
 			(state.root === state.primaryRoot || state.branch.length === 0)
