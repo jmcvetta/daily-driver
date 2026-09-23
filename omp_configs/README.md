@@ -33,8 +33,8 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | `glm-5.3-flash.yml` | GLM 5.3 Flash as the default model. |
 | `glm-family.yml` | GLM 5.3 Flash for default, small, vision, commit, and tiny work; GLM 5.3 for deep analysis, planning, and advice; GLM 5.3 Fast for task subagents. |
 | `deepseek-v4-pro.yml` | DeepSeek V4 Pro as the default model. |
-| `gpt-5.6-sol.yml` | GPT-5.6 Sol as the default model. |
-| `gpt-5.6-sol-terra-task.yml` | GPT-5.6 Sol as the default model and GPT-5.6 Terra for task subagents. |
+| `gpt-6-sol.yml` | GPT-6 Sol as the default model. |
+| `gpt-6-sol-terra-task.yml` | GPT-6 Sol as the default model and GPT-5.6 Terra for task subagents. |
 | `gpt-family.yml` | Sol for default work, deep analysis, and advice; Luna for small, commit, and tiny work; Terra for task subagents and vision; Astra for planning. |
 | `cocktail.yml` | GLM 5.3 Flash by default, for task subagents, and for small, vision, and commit work; Kimi K3 for planning and deep work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `cocktail.kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |

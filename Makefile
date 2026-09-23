@@ -402,8 +402,8 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-5.3.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-5.3-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm-family.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-5.6-sol.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-5.6-sol-terra-task.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6-sol.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6-sol-terra-task.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-family.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi-k3.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-mercury-2.5.yaml tasks/*/*.yaml
