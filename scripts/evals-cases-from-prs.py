@@ -31,7 +31,12 @@ USAGE
     a class before it can be selected:
 
         python3 scripts/evals-cases-from-prs.py --select \\
-            --class-override jmcvetta/career#511=standard
+            --class-override jmcvetta/career#511=implementation
+
+    Historical issue metadata uses `standard` and `advanced`; explicitly map
+    those to `implementation` and `reasoning` with `--class-override` when
+    mining old pull requests. Overrides accept only buildable `mechanical` or
+    `implementation`; old names are not canonical input.
 
 Needs `GITHUB_TOKEN` or `GH_TOKEN` for the REST API, `git`, and whatever the
 resolved test command needs (`uv`, `pnpm`) already on PATH. No third-party
@@ -73,11 +78,10 @@ DEFAULT_CANDIDATES_FILE = FIXTURES_DIR / "candidates.json"
 
 API_ROOT = "https://api.github.com"
 
-# Classes this suite ever builds a case for. `advanced` is out of scope by
-# design -- see the module docstring's sibling note in the issue this ships
-# for: the class is decided by the production table and public benchmarks,
+# Classes this suite ever builds a case for. `reasoning` is out of scope by
+# design -- the class is decided by the production table and public benchmarks,
 # not by a fixture small enough to grade in two minutes.
-BUILDABLE_CLASSES = ("mechanical", "standard")
+BUILDABLE_CLASSES = ("mechanical", "implementation")
 
 
 class BuildError(Exception):
@@ -193,7 +197,7 @@ def qualifying_reason(
 
 
 _MODEL_CLASS_RE = re.compile(
-    r"^##\s*Model class\s*$\s*`?(mechanical|standard|advanced)`?",
+    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|reasoning)`?(?![\w-])",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -256,7 +260,7 @@ def parse_class_override(raw: str) -> tuple[str, str]:
     if not sep or token.lower() not in BUILDABLE_CLASSES:
         raise BuildError(
             f"--class-override {raw!r} must be 'owner/repo#N=mechanical' or "
-            "'owner/repo#N=standard'"
+            "'owner/repo#N=implementation'"
         )
     return slug, token.lower()
 
@@ -915,7 +919,7 @@ def main(argv: list[str]) -> int:
         action="append",
         default=[],
         metavar="owner/repo#N=token",
-        help="classify an `unlabelled` candidate (repeatable)",
+        help="classify an `unlabelled` candidate as mechanical or implementation (repeatable)",
     )
     parser.add_argument("--select", action="store_true", help="build fixtures + task YAMLs from candidates.json")
     parser.add_argument("--per-class", type=int, default=3, help="cases to select per buildable class")
@@ -1071,10 +1075,29 @@ def _test_qualifying_reason() -> None:
 
 
 def _test_read_model_class() -> None:
-    assert read_model_class("## Summary\n\n## Model class\n\n`standard`\n\n## Detail") == "standard"
-    assert read_model_class("## Model class\nmechanical\n") == "mechanical"
+    for token in ("mechanical", "implementation", "reasoning"):
+        assert read_model_class(f"## Model class\n`{token}`\n") == token
+    for token in ("standard", "advanced", "implementation-suffix", "reasoning_suffix"):
+        assert read_model_class(f"## Model class\n`{token}`\n") == "unlabelled"
+    assert read_model_class("## Model class\nmechanical-extra\n") == "unlabelled"
     assert read_model_class("no such section here") == "unlabelled"
     assert read_model_class(None) == "unlabelled"
+
+    assert parse_class_override("jmcvetta/career#511=mechanical") == (
+        "jmcvetta/career#511",
+        "mechanical",
+    )
+    assert parse_class_override("jmcvetta/career#511=implementation") == (
+        "jmcvetta/career#511",
+        "implementation",
+    )
+    for token in ("reasoning", "standard", "advanced", "implementation-extra"):
+        try:
+            parse_class_override(f"jmcvetta/career#511={token}")
+        except BuildError:
+            pass
+        else:
+            raise AssertionError(f"accepted invalid buildable class override: {token}")
 
 
 def _test_read_elapsed_minutes() -> None:
