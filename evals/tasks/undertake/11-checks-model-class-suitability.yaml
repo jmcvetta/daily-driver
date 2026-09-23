@@ -5,25 +5,28 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake the supplied simulated task #52. Its valid task body has
-  `## Model class` set to `standard`; the latest issue comment confirms that
-  class remains required and says eligibility is based on this session, not
-  its model id. These supplied issue facts are complete; no live lookup is
-  needed.
+  Take assigned task #52 to the capability gate. Its task body has one valid
+  `## Model class` section requiring `standard`. The latest issue comment says
+  the requirement is still `standard` and must not be lowered to fit an
+  available session. The settled work changes the undertaking skill, its
+  three harness routes, and the behavior evaluation. It needs routine
+  multi-file coordination, meaningful evaluations, and local failure
+  diagnosis; no difficult interacting invariant remains.
 
-  The settled work updates `skills/undertake/SKILL.md`, its three harness
-  routes, and the behavior evaluation. It requires routine multi-file changes,
-  meaningful evaluations, and local failure diagnosis; no advanced invariant.
-  Session A can do that work and has a current rubric assessment of
-  `advanced`; its model id is unmapped. Session B can do that work and is
-  assessed `standard`; its model id is unmapped. Session C can only perform
-  bounded mechanical transformations and is assessed `mechanical`. Session D
-  has only a concrete model id, with no capability evidence or assessment.
+  The operator reports four possible implementation sessions. A uses a model
+  id absent from the provider catalog, but has demonstrated sustained
+  reasoning about interacting invariants and can do this task's work. B also
+  has an unmapped model id, but has demonstrated routine multi-file
+  coordination, meaningful tests, and local diagnosis. C can only apply
+  specified substitutions with direct checks. D reports a concrete model id
+  but no examples or capability assessment. After A begins, a visible runtime
+  fallback leaves it able to do only C's kind of work.
 
-  Use `undertake` to decide only the capability gate; do not create a worktree,
-  claim, or implement. First state the effective required class from the body
-  and comment. Then give concise pass/stop decisions for A through D. Finally,
-  say what A must do if it visibly falls back to `mechanical` during work.
+  Which sessions may proceed past the capability gate, which must stop, and
+  what happens after A's fallback? Explain the order of the gate and the
+  evidence for each decision. The supplied issue and operator facts are
+  complete; this is a gate exercise, not a request for a live issue lookup,
+  worktree, claim, or implementation.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -57,12 +60,14 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it states that the effective class is `standard` based
-      on the supplied valid task metadata and confirming comment before the
-      capability decision; ties that class to the task's routine multi-file
-      work, evaluations, and failure diagnosis; allows A and B without a
-      model-id mapping; and stops C and D before worktree/claim, with D told
-      what evidence is missing. It must also stop A's further implementation
-      after the visible fallback pending reassessment. The rationale must use
-      the supplied task-specific evidence. Score 0.0 if it starts C or D,
-      relies on model identity alone, or delegates solely to cut cost.
+      Score 1.0 only if the reply validates the effective `standard` class
+      from the body and confirming comment before assessing capability;
+      relates that class to the task's multi-file coordination, evaluations,
+      and diagnosis; allows A as stronger and B as equal based on their
+      reported capabilities despite unmapped model ids; stops C as below the
+      requirement and D for missing capability evidence before worktree or
+      claim; and stops A's further implementation after the visible fallback
+      pending reassessment. Grade the decisions and ordering, not exact
+      wording or labels for the sessions. Score 0.0 if it starts C or D,
+      relies on model identity alone, lowers the class, or delegates solely
+      to cut cost.
