@@ -1,6 +1,6 @@
 # Evals
 
-Seventeen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
+Eighteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
 than by `claude plugin eval`. The reasoning for the harness is
 [`docs/notes/0002-eval-harness.md`](../docs/notes/0002-eval-harness.md);
 the short version is that the built-in cannot be run on this account, is

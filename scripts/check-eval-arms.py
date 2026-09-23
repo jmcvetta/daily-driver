@@ -115,6 +115,7 @@ ARMS: dict[str, dict[str, object]] = {
         "tag": "omp-only",
         "id_suffix": "-omp",
         "kinds": ("omp",),
+        "ablation": True,
         "experiments": {
             "omp-glm-5.3.yaml": "vercel-ai-gateway/zai/glm-5.3",
             "omp-glm-5.3-flash.yaml": "vercel-ai-gateway/zai/glm-5.3-flash",
