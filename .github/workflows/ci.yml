@@ -53,6 +53,9 @@ jobs:
       - name: Assert scope and aggregation behavior
         run: make check-ci-scope
 
+      - name: Validate repository step references
+        run: make check-step-names
+
       - name: Install the Claude Code CLI
         if: steps.scope.outputs.run_plugin == 'true'
         run: npm install -g @anthropic-ai/claude-code@latest

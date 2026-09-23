@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
 GROUPS = ("plugin", "runtime", "eval", "issue")
 OVERLAYS = "omp_configs/"
 
@@ -17,7 +19,6 @@ ISSUE_PREFIXES = ("infra/github/",)
 ISSUE_SKILL_PREFIXES = ("skills/issue-labels/", "skills/issue-deps/")
 PLUGIN_SCRIPTS = {
     "scripts/check-manifests.py", "scripts/check-manifest-fixtures.py",
-    "scripts/check-step-names.py",
 }
 RUNTIME_SCRIPTS = {
     "scripts/check-constitution.py", "scripts/check-ask-in-chat.py",
@@ -47,13 +48,19 @@ def classify(paths: list[str]) -> set[str]:
         if path in SHARED:
             return set(GROUPS)
         if path.startswith(OVERLAYS):
-            # Personal Omp overlays are not required to have model-class suites.
-            continue
+            if path == "omp_configs/README.md":
+                continue
+            if path.endswith(".yml"):
+                experiment = ROOT / "evals" / "experiments" / f"classes-{Path(path).stem}.yaml"
+                if experiment.is_file():
+                    affected.add("eval")
+                continue
+            return set(GROUPS)
         matched = False
         if path.startswith(PLUGIN_PREFIXES) or path in PLUGIN_SCRIPTS:
             affected.add("plugin")
             matched = True
-        if path.startswith(RUNTIME_PREFIXES) or path.startswith("skills/") or path in RUNTIME_SCRIPTS:
+        if path.startswith(RUNTIME_PREFIXES) or path.startswith(("skills/", "evals/")) or path in RUNTIME_SCRIPTS:
             affected.add("runtime")
             matched = True
         if path.startswith(EVAL_PREFIXES) or path in EVAL_SCRIPTS:

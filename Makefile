@@ -89,10 +89,10 @@ omp-update-daily-driver:
 
 # `check` remains the local all-groups convenience target. CI selects one or
 # more purpose-named groups from the merge-base diff.
-check: check-ci-scope check-plugin-validity check-runtime check-eval-tooling check-issue-infra
+check: check-ci-scope check-step-names check-plugin-validity check-runtime check-eval-tooling check-issue-infra
 
 check-plugin-validity: check-plugin check-skills check-agents check-scripts \
-	check-manifests check-manifest-fixtures check-step-names
+	check-manifests check-manifest-fixtures
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension \
 	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
