@@ -16,6 +16,8 @@ issue:
   - 'infra/**'
   - 'skills/**'
 omp:
+  - '.omp-plugin/**'
+  - 'agents/**'
   - '.claude-plugin/**'
   - 'extensions/**'
   - 'skills/**'
@@ -40,6 +42,7 @@ unknown:
   - '!skills/**'
   - '!agents/**'
   - '!.claude-plugin/**'
+  - '!.omp-plugin/**'
   - '!hooks/**'
   - '!extensions/**'
   - '!rules/**'
