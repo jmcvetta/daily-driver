@@ -29,14 +29,11 @@ last. In a detached worktree already dedicated to the task, use `git switch
 <task-branch> <remote>/<base>`. A branch held by another worktree is a
 collision to inspect, not one to force.
 
-After verifying the task path and branch, register it with
-`daily_driver_register_task_worktree` using its absolute path. This also applies
-when reusing a worktree already dedicated to the task. The tool accepts only
-an existing, registered, attached, non-primary worktree in the session's
-repository; its structured result returns the canonical path and branch.
-Registration sets the `Task worktree` status and persists in the active
-session branch. It reports the task root but does not relocate Omp or change
-the working directory used by tools.
+After verifying the task path and branch, use that path as the root for every
+later task operation. Omp does not relocate the live session when the agent
+creates a worktree, and no extension tool registers or displays a separate
+task-root status. Do not invoke `/wt`: it creates another worktree and may
+carry primary-checkout changes into it.
 
 Set `cwd` to the task worktree on every later `bash` call. Pass absolute
 task-worktree paths to `read`, `write`, `edit`, `glob`, and `grep`. Give the

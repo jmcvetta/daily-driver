@@ -141,13 +141,12 @@ decides *whether* to ask, the hook decides *how*.
 
 **Omp has no hook mechanism**, so `extensions/daily-driver.js` does those jobs
 there: it blocks the `ask` tool with the same wording and supplies the
-session-title, reminder, session-info, and task-worktree tools
+session-title, reminder, and session-info tools
 (`daily_driver_set_session_title`, `daily_driver_schedule`,
-`daily_driver_cancel_schedule`, `daily_driver_get_session`,
-`daily_driver_register_task_worktree`) that Omp's `ExtensionAPI` makes natural.
-The registered task worktree appears in the session status as `Task worktree`
-with its canonical path and branch. This reports the active task root; it does
-not relocate Omp or change tool working directories.
+`daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
+`ExtensionAPI` makes natural. Omp does not relocate a running session when
+the agent creates a task worktree. The `task-worktree` skill roots each later
+task operation there without a separate task-root status.
 
 The extension also closes the failure that weaker models exposed in
 `task-worktree`: direct `write` and `edit` calls in the primary checkout or a
