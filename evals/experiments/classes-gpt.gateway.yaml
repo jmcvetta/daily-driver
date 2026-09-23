@@ -9,7 +9,7 @@
 
 experiment_id: classes-gpt.gateway
 description: >-
-  Model-class capability on real merged-pull-request cases, vercel-ai-gateway/zai/glm-5.3-flash:high in the
+  Model-class capability on real merged-pull-request cases, vercel-ai-gateway/openai/gpt-5.6-terra:high in the
   `task` role.
 
 defaults:
@@ -22,7 +22,7 @@ defaults:
 
   agent:
     type: omp
-    model: vercel-ai-gateway/zai/glm-5.3-flash:high
+    model: vercel-ai-gateway/openai/gpt-5.6-terra:high
     permission_mode: acceptEdits
     allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
 
