@@ -5,13 +5,13 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake assigned task #52, stopping at its capability gate. Its task body has one valid
-  `## Model class` section requiring `standard`. The latest issue comment says
-  the requirement is still `standard` and must not be lowered to fit an
-  available session. The settled work changes the undertaking skill, its
-  three harness routes, and the behavior evaluation. It needs routine
-  multi-file coordination, meaningful evaluations, and local failure
-  diagnosis; no difficult interacting invariant remains.
+  Undertake assigned task #52, stopping at its capability gate. Its task body
+  has one valid `## Model class` section requiring `implementation`. The latest
+  issue comment says the requirement is still `implementation` and must not be
+  lowered to fit an available session. The settled work changes the
+  undertaking skill, its three harness routes, and the behavior evaluation.
+  It needs routine multi-file coordination, meaningful evaluations, and local
+  failure diagnosis; no difficult interacting invariant remains.
 
   The operator reports four possible implementation sessions. A uses a model
   id absent from the provider catalog, but has demonstrated sustained
@@ -60,8 +60,8 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if the reply validates the effective `standard` class
-      from the body and confirming comment before assessing capability;
+      Score 1.0 only if the reply validates the effective `implementation`
+      class from the body and confirming comment before assessing capability;
       relates that class to the task's multi-file coordination, evaluations,
       and diagnosis; allows A as stronger and B as equal based on their
       reported capabilities despite unmapped model ids; stops C as below the

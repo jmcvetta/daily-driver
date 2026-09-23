@@ -214,7 +214,7 @@ Landing: orchestrator
 
 | Task | Implementor | Required class | Selected route | Actual model |
 | ---- | ----------- | -------------- | -------------- | ------------ |
-| #144 — Validate against the schema. | session `session_01AbC` | `standard` | `route-standard` | `model-standard` |
+| #144 — Validate against the schema. | session `session_01AbC` | `implementation` | `route-standard` | `model-standard` |
 | #147 — Document the format. | subagent `agent://abc` | `mechanical` | `sonic` | `unreported` |
 | #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — | — |
 ```

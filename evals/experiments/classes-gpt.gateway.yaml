@@ -1,15 +1,15 @@
-# The model-classes capability arm for the cheaper Omp overlay.
+# The model-classes capability arm for the gpt.gateway Omp overlay.
 #
 # Measures whether this model, in the role it plays for delegated implementation
 # work (its `task` role), clears the mechanical/implementation cases the suite builds from
 # real merged pull requests -- see `scripts/evals-cases-from-prs.py` and
 # `evals/tasks/model-classes/`. One variant: there is no plugin ablation here,
 # only the question "does this model finish this task and leave its own tests
-# passing". `make evals-run-classes MODEL=cheaper` runs it.
+# passing". `make evals-run-classes MODEL=gpt.gateway` runs it.
 
-experiment_id: classes-cheaper
+experiment_id: classes-gpt.gateway
 description: >-
-  Model-class capability on real merged-pull-request cases, openai-codex/gpt-6-luna:high in the
+  Model-class capability on real merged-pull-request cases, vercel-ai-gateway/openai/gpt-5.6-terra:high in the
   `task` role.
 
 defaults:
@@ -22,7 +22,7 @@ defaults:
 
   agent:
     type: omp
-    model: openai-codex/gpt-6-luna:high
+    model: vercel-ai-gateway/openai/gpt-5.6-terra:high
     permission_mode: acceptEdits
     allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
 

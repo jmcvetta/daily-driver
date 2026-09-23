@@ -1,0 +1,10 @@
+modelRoles:
+  default: vercel-ai-gateway/openai/gpt-6-sol:high
+  smol: vercel-ai-gateway/openai/gpt-6-luna:medium
+  slow: vercel-ai-gateway/openai/gpt-6-sol:high
+  plan: vercel-ai-gateway/openai/gpt-6-astra:high
+  task: vercel-ai-gateway/openai/gpt-5.6-terra:high
+  advisor: vercel-ai-gateway/openai/gpt-6-sol:high
+  vision: vercel-ai-gateway/openai/gpt-5.6-terra:medium
+  commit: vercel-ai-gateway/openai/gpt-6-luna:medium
+  tiny: vercel-ai-gateway/openai/gpt-6-luna:low
