@@ -1,0 +1,51 @@
+# Component boundaries are deliberately broad. Changes outside these roots
+# select every validation job through `unknown`.
+plugin:
+  - 'skills/**'
+  - 'agents/**'
+  - '.claude-plugin/**'
+runtime:
+  - 'hooks/**'
+  - 'extensions/**'
+  - 'rules/**'
+  - 'skills/**'
+  - 'evals/**'
+eval:
+  - 'evals/**'
+  - 'omp_configs/**'
+issue:
+  - 'infra/**'
+  - 'skills/**'
+omp:
+  - '.claude-plugin/**'
+  - 'extensions/**'
+  - 'skills/**'
+  - 'evals/**'
+shared:
+  - 'scripts/**'
+  - '.github/**'
+  - 'Makefile'
+  - 'pyproject.toml'
+  - 'uv.lock'
+  - '**/package.json'
+  - '**/package-lock.json'
+  - '**/yarn.lock'
+  - '**/pnpm-lock.yaml'
+  - '**/Cargo.toml'
+  - '**/Cargo.lock'
+  - '**/go.mod'
+  - '**/go.sum'
+  - '*'
+unknown:
+  - '**'
+  - '!skills/**'
+  - '!agents/**'
+  - '!.claude-plugin/**'
+  - '!hooks/**'
+  - '!extensions/**'
+  - '!rules/**'
+  - '!evals/**'
+  - '!omp_configs/**'
+  - '!infra/**'
+  - '!scripts/**'
+  - '!.github/**'

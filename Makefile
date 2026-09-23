@@ -13,7 +13,7 @@ SHELL := /bin/bash
 	check-omp-cache-clean check-omp-review-cycle-route \
 	check-review-cycle-fix-delta-route \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
-	check-task-worktree-fixture check-eval-arms check-step-names check-ci-scope \
+	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra evals-install evals-plan \
@@ -87,9 +87,12 @@ omp-update-daily-driver:
 	omp plugin upgrade daily-driver@daily-driver
 
 
-# `check` remains the local all-groups convenience target. CI selects one or
-# more purpose-named groups from the merge-base diff.
+# `check` remains the local all-groups convenience target. CI runs each
+# purpose-named group in a job selected by declarative component filters.
 check: check-ci-scope check-step-names check-plugin-validity check-runtime check-eval-tooling check-issue-infra
+
+check-ci-scope:
+	node scripts/check-ci-scope.mjs
 
 check-plugin-validity: check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures
@@ -102,8 +105,6 @@ check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures \
 	check-eval-arms check-evals-preflight check-evals-provenance
 
 
-check-ci-scope:
-	python3 scripts/check-ci-scope.py
 check-issue-infra: check-labels check-labels-fixtures check-story-fixtures
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the

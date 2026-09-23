@@ -7,5 +7,9 @@
     "extensions": [
       "./extensions/daily-driver.js"
     ]
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0",
+    "picomatch": "^2.3.1"
   }
 }
