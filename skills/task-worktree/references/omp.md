@@ -29,7 +29,7 @@ last. In a detached worktree already dedicated to the task, use `git switch
 <task-branch> <remote>/<base>`. A branch held by another worktree is a
 collision to inspect, not one to force.
 
-After step 6 verifies the task worktree, register it with
+After verifying the task path and branch, register it with
 `daily_driver_register_task_worktree` using its absolute path. This also applies
 when reusing a worktree already dedicated to the task. The tool accepts only
 an existing, registered, attached, non-primary worktree in the session's
