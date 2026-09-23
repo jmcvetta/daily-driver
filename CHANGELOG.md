@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.40.1](https://github.com/jmcvetta/daily-driver/compare/v0.40.0...v0.40.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **omp:** resolve home-shortened edit paths in worktree guard ([#393](https://github.com/jmcvetta/daily-driver/issues/393)) ([39b9168](https://github.com/jmcvetta/daily-driver/commit/39b9168bb1fe3eb67d874faebce55071c8d75cc8))
+* **undertake:** title Omp sessions before claim ([#386](https://github.com/jmcvetta/daily-driver/issues/386)) ([8ac3b61](https://github.com/jmcvetta/daily-driver/commit/8ac3b61b01a4013cda90484c7605ac006e528e44))
+
 ## [0.40.0](https://github.com/jmcvetta/daily-driver/compare/v0.39.0...v0.40.0) (2026-09-23)
 
 
