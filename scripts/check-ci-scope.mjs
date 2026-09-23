@@ -38,6 +38,7 @@ if (process.argv[2] === '--aggregate') {
   const workflowText = readFileSync(resolve(root, '.github/workflows/ci.yml'), 'utf8')
   const workflow = yaml.load(workflowText)
   const filters = yaml.load(readFileSync(resolve(root, '.github/ci-filters.yml'), 'utf8'))
+  const makefile = readFileSync(resolve(root, 'Makefile'), 'utf8')
 
   function filterMatches(patterns, paths) {
     const include = patterns.filter(pattern => !pattern.startsWith('!'))
@@ -68,12 +69,23 @@ if (process.argv[2] === '--aggregate') {
     {name: 'deleted component file', paths: ['hooks/removed.py'], expected: ['runtime']},
     {name: 'cross-component rename', paths: ['omp_configs/old.yml', 'skills/new-skill/SKILL.md'], expected: ['plugin', 'runtime', 'eval', 'issue', 'omp']},
     {name: 'new model overlay', paths: ['omp_configs/new-model.yml'], expected: ['eval']},
+    {name: 'eval shell fixtures', paths: ['evals/fixtures/example/shared/lib.sh'], expected: ['runtime', 'eval', 'omp']},
   ]
   for (const fixture of fixtures) {
     const actual = selected(fixture.paths)
     const got = Object.keys(actual).filter(job => actual[job])
     assert.deepEqual(got, fixture.expected, fixture.name)
   }
+  const makefileLines = makefile.split('\n')
+  function targetDefinition(name) {
+    let index = makefileLines.findIndex(line => line.startsWith(`${name}:`))
+    assert.notEqual(index, -1, `${name} exists`)
+    let definition = makefileLines[index]
+    while (definition.trimEnd().endsWith('\\')) definition += ` ${makefileLines[++index]}`
+    return definition
+  }
+  assert.match(targetDefinition('check-runtime'), /\bcheck-scripts\b/)
+  assert.doesNotMatch(targetDefinition('check-plugin-validity'), /\bcheck-scripts\b/)
   assert.equal(workflow.jobs.changes.permissions['pull-requests'], 'read')
   assert.equal(workflow.jobs['ci-success'].if, 'always()')
   assert.equal(workflow.jobs['ci-success'].name, 'CI Success')
