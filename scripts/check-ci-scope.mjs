@@ -9,10 +9,16 @@ const jobs = ['plugin', 'runtime', 'eval', 'issue', 'omp']
 
 function verifyAggregate(env) {
   if (env.DETECTION !== 'success' || env.REPOSITORY !== 'success') return false
+  const filterNames = [...jobs.map(name => name.toUpperCase()), 'SHARED', 'UNKNOWN']
+  for (const name of filterNames) {
+    if (!['true', 'false'].includes(env[`FILTER_${name}`])) return false
+  }
   for (const name of jobs) {
     const selectedValue = env[`${name.toUpperCase()}_SELECTED`]
     const result = env[`${name.toUpperCase()}_RESULT`]
-    if (!['true', 'false'].includes(selectedValue)) return false
+    const expected = env.FILTER_SHARED === 'true' || env.FILTER_UNKNOWN === 'true' ||
+      env[`FILTER_${name.toUpperCase()}`] === 'true'
+    if (selectedValue !== String(expected)) return false
     if (selectedValue === 'true' && result !== 'success') return false
     if (selectedValue === 'false' && result !== 'skipped') return false
   }
@@ -75,6 +81,11 @@ if (process.argv[2] === '--aggregate') {
     'changes', 'repository-checks', 'plugin-validity', 'runtime',
     'eval-tooling', 'issue-infra', 'omp-integration',
   ])
+  const aggregateEnv = workflow.jobs['ci-success'].steps.find(step =>
+    step.name === 'Verify selected jobs succeeded').env
+  for (const filter of [...jobs, 'shared', 'unknown']) {
+    assert.ok(Object.hasOwn(aggregateEnv, `FILTER_${filter.toUpperCase()}`), `aggregate reads ${filter} output`)
+  }
   assert.match(workflowText, /dorny\/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d/)
   assert.match(workflowText, /predicate-quantifier: some-with-excludes/)
 
@@ -86,22 +97,36 @@ if (process.argv[2] === '--aggregate') {
     })
     assert.equal(result.status === 0, expected, `aggregate case ${name}: ${result.stderr}`)
   }
-  const valid = {DETECTION: 'success', REPOSITORY: 'success'}
-  for (const job of jobs) {
-    valid[`${job.toUpperCase()}_SELECTED`] = job === 'eval' ? 'true' : 'false'
-    valid[`${job.toUpperCase()}_RESULT`] = job === 'eval' ? 'success' : 'skipped'
+  const valid = {
+    DETECTION: 'success',
+    REPOSITORY: 'success',
+    FILTER_PLUGIN: 'false',
+    FILTER_RUNTIME: 'false',
+    FILTER_EVAL: 'true',
+    FILTER_ISSUE: 'false',
+    FILTER_OMP: 'false',
+    FILTER_SHARED: 'false',
+    FILTER_UNKNOWN: 'false',
+    PLUGIN_SELECTED: 'false',
+    PLUGIN_RESULT: 'skipped',
+    RUNTIME_SELECTED: 'false',
+    RUNTIME_RESULT: 'skipped',
+    EVAL_SELECTED: 'true',
+    EVAL_RESULT: 'success',
+    ISSUE_SELECTED: 'false',
+    ISSUE_RESULT: 'skipped',
+    OMP_SELECTED: 'false',
+    OMP_RESULT: 'skipped',
   }
   aggregateCase('intentional skips', valid, true)
-  for (const [name, selectedValue, resultValue] of [
-    ['selected failure', 'true', 'failure'],
-    ['selected skip', 'true', 'skipped'],
-    ['selected cancellation', 'true', 'cancelled'],
-    ['unselected run', 'false', 'success'],
-  ]) {
-    aggregateCase(name, {...valid, PLUGIN_SELECTED: selectedValue, PLUGIN_RESULT: resultValue}, false)
-  }
+  aggregateCase('selected failure', {...valid, EVAL_RESULT: 'failure'}, false)
+  aggregateCase('selected skip', {...valid, EVAL_RESULT: 'skipped'}, false)
+  aggregateCase('selected cancellation', {...valid, EVAL_RESULT: 'cancelled'}, false)
+  aggregateCase('unselected run', {...valid, PLUGIN_RESULT: 'success'}, false)
   aggregateCase('detection failure', {...valid, DETECTION: 'failure'}, false)
   aggregateCase('unconditional failure', {...valid, REPOSITORY: 'failure'}, false)
-  aggregateCase('missing selection output', {...valid, EVAL_SELECTED: ''}, false)
+  aggregateCase('missing selector output', {...valid, FILTER_EVAL: ''}, false)
+  aggregateCase('invalid selector output', {...valid, FILTER_EVAL: 'maybe'}, false)
+  aggregateCase('selection disagreement', {...valid, EVAL_SELECTED: 'false'}, false)
   console.log('check-ci-scope: paths-filter fixtures and CI Success contract passed')
 }

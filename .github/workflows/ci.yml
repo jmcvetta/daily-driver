@@ -145,6 +145,13 @@ jobs:
         env:
           DETECTION: ${{ needs.changes.result }}
           REPOSITORY: ${{ needs.repository-checks.result }}
+          FILTER_PLUGIN: ${{ needs.changes.outputs.plugin }}
+          FILTER_RUNTIME: ${{ needs.changes.outputs.runtime }}
+          FILTER_EVAL: ${{ needs.changes.outputs.eval }}
+          FILTER_ISSUE: ${{ needs.changes.outputs.issue }}
+          FILTER_OMP: ${{ needs.changes.outputs.omp }}
+          FILTER_SHARED: ${{ needs.changes.outputs.shared }}
+          FILTER_UNKNOWN: ${{ needs.changes.outputs.unknown }}
           PLUGIN_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.plugin == 'true' }}
           PLUGIN_RESULT: ${{ needs.plugin-validity.result }}
           RUNTIME_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.runtime == 'true' }}
