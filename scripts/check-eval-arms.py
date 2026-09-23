@@ -172,6 +172,9 @@ def _model_classes_experiments() -> dict[str, str]:
         raise CheckFailed(f"no {OMP_CONFIGS.relative_to(ROOT)} directory to read Omp overlays from")
     experiments: dict[str, str] = {}
     for path in sorted(OMP_CONFIGS.glob("*.yml")):
+        experiment = f"classes-{path.stem}.yaml"
+        if not (EXPERIMENTS / experiment).is_file():
+            continue
         try:
             document = yaml.safe_load(path.read_text(encoding="utf-8"))
         except (OSError, yaml.YAMLError) as exc:
@@ -180,9 +183,7 @@ def _model_classes_experiments() -> dict[str, str]:
         model = (roles or {}).get("task") or (roles or {}).get("default")
         if not isinstance(model, str) or not model:
             raise CheckFailed(f"{path.relative_to(ROOT)}: no readable `task` or `default` model role")
-        experiment = f"classes-{path.stem}.yaml"
-        if (EXPERIMENTS / experiment).is_file():
-            experiments[experiment] = model
+        experiments[experiment] = model
     return experiments
 
 
@@ -571,15 +572,21 @@ def check_model_class_experiment_policy() -> None:
         experiments = root / "evals" / "experiments"
         overlays.mkdir()
         experiments.mkdir(parents=True)
-        (overlays / "personal.yml").write_text(
-            "modelRoles:\n  task: example/model\n", encoding="utf-8"
-        )
-        with patch(__name__ + ".OMP_CONFIGS", overlays), patch(
-            __name__ + ".EXPERIMENTS", experiments
-        ):
+        overlay = overlays / "personal.yml"
+        overlay.write_text("modelRoles:\n  small: example/small\n", encoding="utf-8")
+        with patch(__name__ + ".ROOT", root), patch(
+            __name__ + ".OMP_CONFIGS", overlays
+        ), patch(__name__ + ".EXPERIMENTS", experiments):
             if _model_classes_experiments():
-                raise CheckFailed("a personal overlay without a suite must stay optional")
+                raise CheckFailed("a partial personal overlay without a suite must stay optional")
             (experiments / "classes-personal.yaml").touch()
+            try:
+                _model_classes_experiments()
+            except CheckFailed:
+                pass
+            else:
+                raise CheckFailed("a present experiment requires a task/default model")
+            overlay.write_text("modelRoles:\n  task: example/model\n", encoding="utf-8")
             if _model_classes_experiments() != {"classes-personal.yaml": "example/model"}:
                 raise CheckFailed("a present model-class experiment must map to its overlay model")
 
