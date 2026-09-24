@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.42.0](https://github.com/jmcvetta/daily-driver/compare/v0.41.0...v0.42.0) (2026-09-24)
+
+
+### Features
+
+* **omp:** remove unwanted task worktree status ([#403](https://github.com/jmcvetta/daily-driver/issues/403)) ([2b6f991](https://github.com/jmcvetta/daily-driver/commit/2b6f9919fab165dbf9b09dca9ae02ec25491b37c))
+
+
+### Bug Fixes
+
+* **pr:** enable Omp pull request creation ([#399](https://github.com/jmcvetta/daily-driver/issues/399)) ([5e46cb6](https://github.com/jmcvetta/daily-driver/commit/5e46cb6ea667fd1b2dfe3cf9d702d6ad94300b45))
+
 ## [0.41.0](https://github.com/jmcvetta/daily-driver/compare/v0.40.1...v0.41.0) (2026-09-23)
 
 
