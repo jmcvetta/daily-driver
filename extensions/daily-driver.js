@@ -152,37 +152,6 @@ class UnanchoredPathError extends Error {
  */
 export const REMINDER_CUSTOM_TYPE = "daily-driver.reminder";
 
-/** Session entry that persists the explicitly registered task worktree. */
-const TASK_WORKTREE_CUSTOM_TYPE = "daily-driver.task-worktree";
-
-/** Status key for the active session's task worktree. */
-const TASK_WORKTREE_STATUS_KEY = "daily-driver-task-worktree";
-
-/** Resolve an existing, attached, non-primary worktree in the session repo. */
-function registeredTaskWorktree(path, cwd) {
-	if (typeof path !== "string" || path.length === 0) return null;
-	const target = anchoredPath(cwd, path);
-	if (target === null) return null;
-	const canonicalPath = resolvedPath(target);
-	if (!canonicalPath) return null;
-	const session = worktreeState(".", cwd);
-	const task = worktreeState(canonicalPath, cwd);
-	if (
-		!session ||
-		!task ||
-		task.root !== canonicalPath ||
-		task.primaryRoot === task.root ||
-		task.primaryRoot !== session.primaryRoot ||
-		task.branch.length === 0
-	) {
-		return null;
-	}
-	return {
-		path: task.root,
-		branch: task.branch.replace(/^refs\/heads\//u, ""),
-	};
-}
-
 /**
  * Git's own "there is no working tree here" answers, as they reach stderr:
  * the path is in no repository at all, or it is in one that has no working
@@ -1912,46 +1881,6 @@ export default function dailyDriverExtension(pi) {
 		installModelClassDefaults(settings);
 	});
 
-	function renderTaskWorktree(ctx) {
-		const branch = ctx?.sessionManager?.getBranch?.() ?? [];
-		let registration;
-		let hasRegistration = false;
-		for (const entry of branch) {
-			if (
-				entry.type === "custom" &&
-				entry.customType === TASK_WORKTREE_CUSTOM_TYPE
-			) {
-				registration = entry.data;
-				hasRegistration = true;
-			}
-		}
-		if (!hasRegistration) {
-			ctx?.ui?.setStatus?.(TASK_WORKTREE_STATUS_KEY, "");
-			return;
-		}
-		let task = null;
-		try {
-			task = registeredTaskWorktree(registration?.path, ctx?.cwd);
-		} catch {
-			// Git could not revalidate the stored path. Never publish stale state.
-		}
-		ctx?.ui?.setStatus?.(
-			TASK_WORKTREE_STATUS_KEY,
-			task
-				? `Task worktree: ${task.path} (${task.branch})`
-				: "Task worktree: unavailable",
-		);
-	}
-
-	for (const event of [
-		"session_start",
-		"session_switch",
-		"session_branch",
-		"session_tree",
-	]) {
-		pi.on(event, (_payload, ctx) => renderTaskWorktree(ctx));
-	}
-
 	// Per-session trigger bookkeeping: triggerId -> { ctx, handle }. Managed
 	// timers are cleared on session_shutdown by the runtime itself; this map
 	// only exists to honour cancel_schedule, forget fired triggers, and be
@@ -2055,59 +1984,6 @@ export default function dailyDriverExtension(pi) {
 					},
 				],
 				details: info,
-			};
-		},
-	});
-
-	pi.registerTool({
-		name: "daily_driver_register_task_worktree",
-		label: "Register task worktree",
-		description:
-			"Register the verified active task worktree for this session. The " +
-			"path must be an attached, non-primary worktree in this repository.",
-		parameters: z.object({
-			path: z.string().describe("The task worktree path"),
-		}),
-		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => {
-			let task;
-			try {
-				task = registeredTaskWorktree(params.path, ctx.cwd);
-			} catch (err) {
-				return {
-					content: [{ type: "text", text: `Could not verify task worktree: ${err.message}` }],
-					details: { registered: false, path: params.path },
-					isError: true,
-				};
-			}
-			if (!task) {
-				return {
-					content: [{
-						type: "text",
-						text: "Path must be an existing attached, non-primary worktree in this session's repository.",
-					}],
-					details: { registered: false, path: params.path },
-					isError: true,
-				};
-			}
-			let previous;
-			for (const entry of ctx.sessionManager.getBranch()) {
-				if (
-					entry.type === "custom" &&
-					entry.customType === TASK_WORKTREE_CUSTOM_TYPE
-				) {
-					previous = entry.data;
-				}
-			}
-			if (previous?.path !== task.path || previous?.branch !== task.branch) {
-				await pi.appendEntry(TASK_WORKTREE_CUSTOM_TYPE, task);
-			}
-			ctx.ui?.setStatus?.(
-				TASK_WORKTREE_STATUS_KEY,
-				`Task worktree: ${task.path} (${task.branch})`,
-			);
-			return {
-				content: [{ type: "text", text: `Registered ${task.path} on ${task.branch}` }],
-				details: { registered: true, ...task },
 			};
 		},
 	});
