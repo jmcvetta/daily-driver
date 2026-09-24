@@ -32,11 +32,11 @@ issue carrying none of the standard's six is not an issue carrying none.
 `issue-labels`, whose `references/claude.md` states that trap where the label
 write lives.
 
-For a `task`, read the `Model class` section and assess the current session
-against [`issue-body`'s guidance](../../issue-body/references/model-classes.md)
-before its claim or repository change. A suitable stronger session implements
-directly. An unsuitable or unassessable session reports the mismatch; it does
-not delegate merely to change cost.
+For a `task`, read the `Model class` section, validated and repaired through
+[`issue-body`'s guidance](../../issue-body/references/model-classes.md) where
+its body is old or invalid, before the claim. That guidance is dispatch's —
+`embark` selects a route against it before assigning work — and nothing here
+compares the class to this session's own capability.
 
 
 The implementor

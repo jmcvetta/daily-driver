@@ -129,7 +129,9 @@ adapter pattern.
 ```
 
 `embark` resolves the required class to an eligible concrete route. It never
-uses the issue body as concrete-model provenance. `undertake` checks the
-current implementation session against the selected class before it claims or
-changes repository files. Claim comments, readiness reports, and execution
-records retain the concrete model the harness actually reports.
+uses the issue body as concrete-model provenance. `undertake` validates the
+section and repairs an old or invalid body before it claims, but does not
+gate a standalone undertaking on mapping its own session against the selected
+class — that suitability check stays at dispatch, with `embark`. Claim
+comments, readiness reports, and execution records retain the concrete model
+the harness actually reports.
