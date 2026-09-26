@@ -53,8 +53,8 @@ by the same call that opened it, and where a PR Steward watches the pull
 request instead, the call still succeeds — dropping this session's
 subscription is the point, and the steward is unaffected.
 
-**There is no persistent CI watcher on this harness** — the hub process
-route is Omp's — and a `send_later` trigger is the only wake the watch
+**There is no persistent CI watcher on this harness** — Omp uses a supervised
+named Bash service — and a `send_later` trigger is the only wake the watch
 arms. The route table above is the whole watch inventory.
 
 

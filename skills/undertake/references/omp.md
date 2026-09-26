@@ -144,56 +144,51 @@ where it answers. A version no surface in the session reports is `n/a`,
 never a guessed one.
 
 
-The watch is a detached hub process
+The watch is a detached Omp service
 ===================================
 
-**The merge is mechanical, so the watch that runs it can be too.** Hub
-supplies the durability `Keep it current` needs: a process started with
-`persist: true` survives the last Omp client exiting, and `detached: true`
-goes further — it also survives broker shutdown and every Omp exit. Terminal
-completion is owner-scoped and remains pending until the owning session
-resumes in the same project and reconnects to Hub. Hub still does not launch
-or resume the agent — the ready gate, a red check, the milestone, and the
-conflict stop stay with the session — but the merge needs none of those
-turns: it is `gh pr update-branch <number>`, its floor is one rollup read,
-and a conflict fails the call and changes nothing.
+**The merge is mechanical, so the watch that runs it can be too.** Omp's
+named Bash service owns the process lifecycle. Start the plugin's
+`scripts/pr-keep-current.sh` with `bash` service mode, `name`
+`keep-current-<number>`, its script path and pull-request number as the
+command, and `cwd` set to a checkout of this repository. Service mode rejects
+`async` and `timeout`; do not supply either field. Read `proc://<name>` before
+starting so a resumed session does not restart an existing loop.
 
-At `Ready for review`, start the loop once with `hub start`: `name`
-`keep-current-<number>`, `application` the script's path, `args` the
-pull-request number, `cwd` a checkout of this repository — the task worktree
-or the primary worktree, wherever `gh` resolves it — and `detached: true`.
-The script ships beside this skill tree, at `pr-keep-current.sh` under the
-plugin's `scripts/`. Every two minutes it reads the pull request's state,
-merge status, and check rollup; skips the tick while a run on the head is in
-flight; merges the base branch in when the branch is behind; and logs each
-move, readable with `hub logs`.
+After the service reports ready, request `detached` through
+`write proc://<name>/mode` with content `detached`, then confirm
+`read proc://<name>` reports `detached=true`. Detached mode lets the process
+survive broker shutdown and Omp exits. If the mode write fails or the status
+does not confirm it, stop the service with `write proc://<name>/kill` and
+report the exact failure; do not claim the watch is durable.
+
+The script runs every two minutes. It reads the pull request's state, merge
+status, and check rollup; skips the tick while a run on the head is in flight;
+merges the base branch in when the branch is behind; and logs each move to
+`proc://<name>`. Read that status and output with `read proc://<name>`.
 
 Its exits are `Keep it current`'s three, and nothing narrower. It exits 0
 when the pull request is merged or closed. It exits 3 on a conflict — the
 call fails and changes nothing, and the stop is left for the session's
-catch-up look below, whose `DIRTY` row restarts the loop with `hub start`
-once the conflict is resolved and pushed. When the user says to stop, the session
-stops the process with `hub stop`, `name` `keep-current-<number>`. Thirty
-consecutive failed reads exit 2: a watch polling a repository it cannot read
-is noise, not a watch.
+catch-up look below, whose `DIRTY` row restarts the loop once the conflict is
+resolved and pushed. When the user says to stop, use
+`write proc://<name>/kill`. Thirty consecutive failed reads exit 2: a watch
+polling a repository it cannot read is noise, not a watch.
 
-**`daily_driver_schedule` is no longer this cadence's vehicle.** The managed
-timer is unref'd and cleared on `session_shutdown`, so a cadence it carried
-lived only as long as the session — the failure that left ready pull requests
-behind their bases indefinitely. The CI-wait borrow it forced goes with it:
-the loop's floor already refuses to merge under a run in flight, so a CI wait
-and the loop coexist without a slot to negotiate. The durable route for the
-bounded CI watcher itself stays `review-cycle`'s
-[`omp.md`](../../review-cycle/references/omp.md).
+**`daily_driver_schedule` is not this cadence's vehicle.** The managed timer
+is unref'd and cleared on `session_shutdown`, so a cadence it carried lived
+only as long as the session — the failure that left ready pull requests
+behind their bases indefinitely. The CI wait uses `review-cycle`'s bounded,
+persistent named service, not a shell wait.
 
 The catch-up look
 -----------------
 
 **The first read of every turn that lands back on an open undertaking pull
-request is the base-currency read.** The detached loop merges without a
+request is the base-currency read.** The detached service merges without a
 session, but it does not judge: red CI, a review wall, a conflict, and the
-milestone still need the owner session. The turn reconnects to Hub, consumes
-any pending CI-watcher completion, then runs:
+milestone still need an agent turn. Read the service state and logs with
+`read proc://keep-current-<number>`, then run:
 
     gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
 
@@ -209,8 +204,8 @@ read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s two endpoint reads remain the CI verdict.
 Pending or unregistered checks use its persistent bounded watcher. Failed
 checks return to `Fix, answer, resolve, push`; unavailable logs are a named
-evidence blocker, not green. A durable Hub process preserves its completion
-but cannot resume the owner: where no owner turn is running, report unfinished
+evidence blocker, not green. A durable Omp service preserves its process, but
+does not resume the owner: where no owner turn is running, report unfinished
 work and the owner-resume requirement rather than claiming autonomous review.
 
 The detached `keep-current-<number>` merge loop still starts at ready and

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)
+
 ## [0.42.0](https://github.com/jmcvetta/daily-driver/compare/v0.41.0...v0.42.0) (2026-09-24)
 
 
