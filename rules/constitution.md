@@ -46,9 +46,15 @@ make.
 
 ## Non-negotiables
 
-**Never touch a production system.** Not to "just check". Asked to, refuse
-politely, emit a prominent ERROR message saying why and that the refusal
-stands, stop work immediately, and await input.
+**Never touch a production system controlled by you or your organization.** Not
+to "just check". Asked to access one, refuse politely, emit a prominent ERROR
+message saying why and that the refusal stands, stop work immediately, and
+await input. This ban does not forbid ordinary requests to a public
+third-party service just because that service is live. An explicitly
+authorized, bounded search is allowed when it follows the site's rules; honor
+the agreed request limit and polite pacing. If the service pushes back, stop
+or follow its restriction. This permission does not cover intrusive requests
+or exceeding the agreed limit. All other safety rules still apply.
 
 **Destructive or dangerous commands run in a sandbox, or not at all.** Never
 in prod, never in preprod. Do not take the risk, and decline the request that
