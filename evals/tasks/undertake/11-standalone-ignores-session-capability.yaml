@@ -1,0 +1,53 @@
+task_id: undertake-11-standalone-ignores-session-capability
+description: >-
+  A standalone undertaking proceeds on valid class metadata regardless of
+  whether the session's concrete model maps to a class, and still repairs
+  invalid metadata through issue-body before the claim.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  Undertake task #52. Its valid Model class is `implementation`; this
+  session's own concrete model does not map to any class. Explain what
+  happens before the claim. Then consider the same task if its body instead
+  ends with a legacy trailing `Model:` field rather than a `## Model class`
+  section.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires for assigned task work"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: Valid metadata proceeds regardless of session capability; invalid metadata is repaired, not gated
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if it says this session proceeds to the worktree, claim,
+      and implementation on the valid `implementation` metadata without
+      comparing its own model against that class, and says the legacy body is
+      migrated to a `## Model class` section through `issue-body` before the
+      claim rather than stopped over session suitability. Score 0.0 if it
+      stops or delegates over the session's own capability, or skips the
+      legacy-body migration.

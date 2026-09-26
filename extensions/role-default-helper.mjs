@@ -13,14 +13,14 @@ export const MODEL_CLASS_ROLE_TAGS = Object.freeze({
 });
 
 /** Install only absent class selectors and role tags on one Omp settings instance. */
-export function installModelClassDefaults(settings) {
+export function installModelClassDefaults(settings, modelTagsSetting) {
 	const missingRoles = {};
 	for (const [role, selector] of Object.entries(MODEL_CLASS_ROLE_DEFAULTS)) {
 		if (!settings.getModelRole(role)) missingRoles[role] = selector;
 	}
 	if (Object.keys(missingRoles).length > 0) settings.overrideModelRoles(missingRoles);
 
-	const existingTags = settings.get("modelTags");
+	const existingTags = modelTagsSetting.get(settings);
 	const modelTags = { ...existingTags };
 	let addedTag = false;
 	for (const [role, tag] of Object.entries(MODEL_CLASS_ROLE_TAGS)) {
@@ -29,5 +29,5 @@ export function installModelClassDefaults(settings) {
 			addedTag = true;
 		}
 	}
-	if (addedTag) settings.override("modelTags", modelTags);
+	if (addedTag) modelTagsSetting.override(settings, modelTags);
 }

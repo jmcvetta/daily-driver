@@ -194,9 +194,9 @@ const {
 	default: dailyDriverExtension,
 } = module_;
 
-function makeSession(overrides = {}) {
+function makeSession(overrides = {}, dependencies = {}) {
 	const { pi, rec, tools, timers, fire } = fakeApi(overrides);
-	dailyDriverExtension(pi);
+	dailyDriverExtension(pi, dependencies);
 	return { rec, tools, timers, fire, pi };
 }
 
@@ -322,20 +322,46 @@ const modelClassSettings = new Map();
 function fakeModelClassSettings(cwd) {
 	if (modelClassSettings.has(cwd)) return modelClassSettings.get(cwd).settings;
 	const state = { modelRoles: {}, modelTags: {}, mutations: [] };
-	state.settings = { getModelRole: role => state.modelRoles[role], overrideModelRoles: roles => { Object.assign(state.modelRoles, roles); state.mutations.push(["roles", roles]); }, get: path => { assert.equal(path, "modelTags"); return state.modelTags; }, override: (path, value) => { assert.equal(path, "modelTags"); Object.assign(state.modelTags, value); state.mutations.push(["tags", value]); } };
+	state.settings = {
+		getModelRole: (role) => state.modelRoles[role],
+		overrideModelRoles: (roles) => {
+			Object.assign(state.modelRoles, roles);
+			state.mutations.push(["roles", roles]);
+		},
+	};
 	modelClassSettings.set(cwd, state);
 	return state.settings;
 }
+const fakeModelTagsSetting = {
+	get(settings) {
+		const state = [...modelClassSettings.values()].find((candidate) => candidate.settings === settings);
+		assert.ok(state, "model-tag handle receives the settings instance");
+		return state.modelTags;
+	},
+	override(settings, tags) {
+		const state = [...modelClassSettings.values()].find((candidate) => candidate.settings === settings);
+		assert.ok(state, "model-tag handle receives the settings instance");
+		Object.assign(state.modelTags, tags);
+		state.mutations.push(["tags", tags]);
+	},
+};
 
-check("session_start adds class role defaults and tags once per settings instance", async () => {
-	const s = makeSession({ settingsManagerFactory: fakeModelClassSettings });
-	await s.fire("session_start", {}, { cwd: "/fixture" });
+check("session_start uses Omp's model-tag handle and does not restore a cleared role", async () => {
+	const s = makeSession(
+		{ settingsManagerFactory: fakeModelClassSettings },
+		{ modelTagsSetting: fakeModelTagsSetting },
+	);
 	await s.fire("session_start", {}, { cwd: "/fixture" });
 	const state = modelClassSettings.get("/fixture");
+	assert.equal(state.settings.get, undefined, "Omp Settings does not expose generic get");
 	assert.deepEqual(state.modelRoles, MODEL_CLASS_ROLE_DEFAULTS);
 	assert.deepEqual(state.modelTags, MODEL_CLASS_ROLE_TAGS);
 	assert.equal(state.mutations.filter(([kind]) => kind === "roles").length, 1);
 	assert.equal(state.mutations.filter(([kind]) => kind === "tags").length, 1);
+
+	state.modelRoles.implementation = "";
+	await s.fire("session_start", {}, { cwd: "/fixture" });
+	assert.equal(state.modelRoles.implementation, "", "same settings instance is not initialized twice");
 });
 
 // --- ask is blocked; another tool passes ------------------------------------
@@ -2515,167 +2541,29 @@ check("get_session tolerates an unnamed session and no model", async () => {
 	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null });
 });
 
-// --- task worktree registration --------------------------------------------
-const TASK_WORKTREE_TYPE = "daily-driver.task-worktree";
-const TASK_WORKTREE_STATUS = "daily-driver-task-worktree";
-
-function taskWorktreeContext(cwd, entries = [], hasUI = true) {
-	const statuses = new Map();
-	return {
-		cwd,
-		hasUI,
-		ui: hasUI
-			? { setStatus: (key, text) => statuses.set(key, text) }
-			: {},
-		sessionManager: { getBranch: () => entries },
-		statuses,
-		entries,
+// --- legacy task worktree entries do not restore a separate status ----------
+check("legacy worktree entries do not change cwd or create a task status", async () => {
+	const s = makeSession(
+		{ settingsManagerFactory: fakeModelClassSettings },
+		{ modelTagsSetting: fakeModelTagsSetting },
+	);
+	const statuses = [];
+	const ctx = {
+		cwd: worktrees.primary,
+		ui: { setStatus: (...args) => statuses.push(args) },
+		sessionManager: {
+			getBranch: () => [{
+				type: "custom",
+				customType: "daily-driver.task-worktree",
+				data: { path: worktrees.task, branch: "feature/worktree-guard" },
+			}],
+		},
 	};
-}
-
-check("registration canonicalizes and persists an attached task worktree", async () => {
-	const s = makeSession();
-	const ctx = taskWorktreeContext(worktrees.primary);
-	const register = s.tools.get("daily_driver_register_task_worktree");
-	assert.ok(register, "registration tool is available");
-	const result = await register.execute(
-		"task-worktree-1",
-		{ path: worktrees.taskLink },
-		undefined,
-		undefined,
-		ctx,
-	);
-	assert.deepEqual(result.details, {
-		registered: true,
-		path: worktrees.task,
-		branch: "feature/worktree-guard",
-	});
-	assert.deepEqual(s.rec.entries, [{
-		type: "custom",
-		customType: TASK_WORKTREE_TYPE,
-		data: { path: worktrees.task, branch: "feature/worktree-guard" },
-	}]);
-	assert.equal(
-		ctx.statuses.get(TASK_WORKTREE_STATUS),
-		`Task worktree: ${worktrees.task} (feature/worktree-guard)`,
-	);
-	ctx.entries.push(s.rec.entries[0]);
-	await register.execute(
-		"task-worktree-repeat",
-		{ path: worktrees.task },
-		undefined,
-		undefined,
-		ctx,
-	);
-	assert.equal(s.rec.entries.length, 1, "re-registering the same worktree adds no entry");
-});
-
-check("invalid registration leaves the prior task indicator unchanged", async () => {
-	const s = makeSession();
-	const ctx = taskWorktreeContext(worktrees.primary);
-	const register = s.tools.get("daily_driver_register_task_worktree");
-	const good = await register.execute("good", { path: worktrees.task }, undefined, undefined, ctx);
-	const previousStatus = ctx.statuses.get(TASK_WORKTREE_STATUS);
-	const previousEntries = [...s.rec.entries];
-	for (const path of [worktrees.primary, worktrees.detached, worktrees.outside]) {
-		const rejected = await register.execute("bad", { path }, undefined, undefined, ctx);
-		assert.equal(rejected.isError, true, `${path} must be rejected`);
-	}
-	assert.deepEqual(s.rec.entries, previousEntries);
-	assert.equal(ctx.statuses.get(TASK_WORKTREE_STATUS), previousStatus);
-	assert.equal(good.details.registered, true);
-});
-
-check("registration replacement is explicit and works without a UI", async () => {
-	const s = makeSession();
-	const ctx = taskWorktreeContext(worktrees.primary, [], false);
-	const register = s.tools.get("daily_driver_register_task_worktree");
-	for (const path of [worktrees.task, worktrees.secondTask]) {
-		const result = await register.execute("replace", { path }, undefined, undefined, ctx);
-
-		assert.equal(result.details.registered, true);
-	}
-	assert.equal(s.rec.entries.length, 2);
-	assert.deepEqual(s.rec.entries.at(-1).data, {
-		path: worktrees.secondTask,
-		branch: "feature/second-task",
-	});
-	assert.equal(s.rec.entries[0].data.path, worktrees.task);
-});
-
-check("a second explicit registration updates the visible indicator", async () => {
-	const s = makeSession();
-	const ctx = taskWorktreeContext(worktrees.primary);
-	const register = s.tools.get("daily_driver_register_task_worktree");
-	await register.execute("first", { path: worktrees.task }, undefined, undefined, ctx);
-	ctx.entries.push(s.rec.entries[0]);
-	await register.execute("second", { path: worktrees.secondTask }, undefined, undefined, ctx);
-	assert.equal(
-		ctx.statuses.get(TASK_WORKTREE_STATUS),
-		`Task worktree: ${worktrees.secondTask} (feature/second-task)`,
-	);
-});
-
-check("branch and tree changes restore or clear their own registration", async () => {
-	const s = makeSession();
-	const entry = {
-		type: "custom",
-		customType: TASK_WORKTREE_TYPE,
-		data: { path: worktrees.task, branch: "feature/worktree-guard" },
-	};
-	const branch = taskWorktreeContext(worktrees.primary, [entry]);
-	await s.fire("session_branch", {}, branch);
-	assert.equal(
-		branch.statuses.get(TASK_WORKTREE_STATUS),
-		`Task worktree: ${worktrees.task} (feature/worktree-guard)`,
-	);
-	const tree = taskWorktreeContext(worktrees.primary, []);
-	await s.fire("session_tree", {}, tree);
-	assert.equal(tree.statuses.get(TASK_WORKTREE_STATUS), "");
-});
-
-check("session startup restores only a valid task worktree registration", async () => {
-	const s = makeSession({ settingsManagerFactory: fakeModelClassSettings });
-	const valid = {
-		type: "custom",
-		customType: TASK_WORKTREE_TYPE,
-		data: { path: worktrees.task, branch: "stale-branch-is-not-trusted" },
-	};
-	const ctx = taskWorktreeContext(worktrees.primary, [valid]);
 	await s.fire("session_start", {}, ctx);
-	assert.equal(
-		ctx.statuses.get(TASK_WORKTREE_STATUS),
-		`Task worktree: ${worktrees.task} (feature/worktree-guard)`,
-	);
-	const detached = taskWorktreeContext(worktrees.primary, [{
-		...valid,
-		data: { path: worktrees.detached, branch: "refs/heads/old" },
-	}]);
-	await s.fire("session_start", {}, detached);
-	assert.equal(detached.statuses.get(TASK_WORKTREE_STATUS), "Task worktree: unavailable");
-});
-
-check("session changes clear another session's task worktree status", async () => {
-	const s = makeSession();
-	const otherSession = taskWorktreeContext(worktrees.primary, []);
-	await s.fire("session_switch", {}, otherSession);
-	assert.equal(otherSession.statuses.get(TASK_WORKTREE_STATUS), "");
-});
-
-check("ordinary primary-checkout reads do not change the explicit indicator", async () => {
-	const s = makeSession();
-	const entries = [];
-	const ctx = taskWorktreeContext(worktrees.primary, entries);
-	await s.tools.get("daily_driver_register_task_worktree").execute(
-		"explicit",
-		{ path: worktrees.task },
-		undefined,
-		undefined,
-		ctx,
-	);
-	const status = ctx.statuses.get(TASK_WORKTREE_STATUS);
-	readFileSync(resolve(worktrees.primary, "tracked.txt"), "utf8");
-	assert.equal(ctx.statuses.get(TASK_WORKTREE_STATUS), status);
+	assert.equal(ctx.cwd, worktrees.primary);
+	assert.deepEqual(statuses, []);
+	assert.deepEqual(s.rec.entries, []);
+	assert.equal(s.tools.has("daily_driver_register_task_worktree"), false);
 });
 
 // --- schedule emits exactly once --------------------------------------------
