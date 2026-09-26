@@ -63,18 +63,13 @@ export const ASK_BLOCK_REASON =
 	"which way it went, and carry on. This adapter governs how a question that " +
 	"survives that gate is put, not whether it is worth putting.";
 
-/** What an unsafe repository mutation is told to do instead. */
+/** What a Git command that rewrites a protected worktree is told. */
 export const WORKTREE_BLOCK_REASON =
-	"Direct `write` and `edit` calls are blocked in the primary checkout and " +
-	"in detached worktrees, and so is every Git command that rewrites the " +
-	"primary " +
-	"checkout's working tree \u2014 `checkout`, `switch`, `reset --hard`, " +
-	"`restore`, `stash`, `merge`, `rebase`, `pull`, `apply`, `am`, " +
-	"`cherry-pick`, `revert` and `clean` among them. Do not retry the " +
-	"mutation there. Invoke the `task-worktree` skill, establish the task's " +
-	"feature branch in its dedicated worktree (attaching this worktree in " +
-	"place when it is already dedicated), and repeat the operation with its " +
-	"path rooted there.";
+	"Git commands that rewrite the primary checkout's working tree are " +
+	"blocked, including commands that reach it through Git's repository " +
+	"selectors. Do not retry the command there. Invoke the `task-worktree` " +
+	"skill, establish or attach the task's feature branch in its dedicated " +
+	"worktree, and repeat the command there.";
 
 /** What a mutation whose repository could not be located is told. */
 export const UNANCHORED_PATH_BLOCK_REASON =
@@ -474,10 +469,8 @@ function textualEditPaths(input) {
 }
 
 /**
- * Local file paths a mutating tool call is about to change. `write` and `edit`
- * are read the same way on purpose: a payload spelling its target `file_path`
- * rather than `path` names the same file whichever tool carries it, so one
- * weaker branch would be a way around the other.
+ * File targets a mutating tool call may change. The caller retains whether a
+ * target came from the tool cwd because no explicit path could be parsed.
  */
 function mutationTargets(event, cwd) {
 	if (event.toolName !== "write" && event.toolName !== "edit") return [];
@@ -1352,8 +1345,8 @@ const ATTACH_OVERWRITES = new Set([
 ]);
 
 /**
- * True where this invocation is the in-place attach `WORKTREE_BLOCK_REASON`
- * prescribes, which is the only thing a detached primary is exempt for.
+ * True where this invocation attaches a branch in place, the sole mutation
+ * the worktree guard permits inside a detached primary checkout.
  *
  * The test is on the form, not on the subcommand: `git checkout -- a.txt` and
  * `git switch --discard-changes master` are a `checkout` and a `switch` that
@@ -1595,9 +1588,9 @@ function rewritesWorkingTree(invocation) {
  * True where a working-tree rewrite would change a guarded primary checkout.
  * An attached primary is always guarded. A detached primary is exempt in one
  * case only: a command that attaches a branch, operating from inside it.
- * `WORKTREE_BLOCK_REASON` prescribes attaching such a worktree in place, so
- * denying that attach would leave the model nothing to do. Reaching a detached
- * primary from another worktree is not that attach, and neither is a `git
+ * The worktree guard permits attaching a branch in place, so denying that
+ * attach would leave the model no safe way out. Reaching a detached primary
+ * from another worktree is not that attach, and neither is a `git
  * reset --hard`, a `git checkout -- a.txt` or a `git switch
  * --discard-changes` run inside one: the exemption is for the attach, so
  * `attachesBranch` decides it on the invocation's form rather than on its
