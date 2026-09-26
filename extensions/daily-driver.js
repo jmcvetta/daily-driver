@@ -1867,7 +1867,7 @@ function newTriggerId() {
 }
 
 /** The `daily-driver` Omp extension factory. */
-export default function dailyDriverExtension(pi) {
+export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	const z = pi.zod;
 
 	const initializedSettings = new WeakSet();
@@ -1878,7 +1878,8 @@ export default function dailyDriverExtension(pi) {
 			: (await import("@mariozechner/pi-coding-agent")).SettingsManager.create(ctx.cwd);
 		if (initializedSettings.has(settings)) return;
 		initializedSettings.add(settings);
-		installModelClassDefaults(settings);
+		const tags = modelTagsSetting ?? (await import("@oh-my-pi/pi-coding-agent/config/model-settings")).cfgModelTags;
+		installModelClassDefaults(settings, tags);
 	});
 
 	// Per-session trigger bookkeeping: triggerId -> { ctx, handle }. Managed
