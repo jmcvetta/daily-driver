@@ -375,7 +375,8 @@ function worktreeState(path, cwd, nativeEdit = false) {
 	const root = gitOutput(anchor, "rev-parse", "--show-toplevel");
 	if (!root) return null;
 	const listing = gitOutput(root, "worktree", "list", "--porcelain", "-z");
-	return stateForWorktree(worktreeRecords(listing), root);
+	const state = stateForWorktree(worktreeRecords(listing), root);
+	return state ? { ...state, target: resolvedPath(target) ?? target } : null;
 }
 
 /** Describe the worktree whose HEAD is selected by an explicit Git directory. */
@@ -478,7 +479,7 @@ function textualEditPaths(input) {
  * rather than `path` names the same file whichever tool carries it, so one
  * weaker branch would be a way around the other.
  */
-function mutationPaths(event, cwd) {
+function mutationTargets(event, cwd) {
 	if (event.toolName !== "write" && event.toolName !== "edit") return [];
 
 	const paths = [];
@@ -504,8 +505,12 @@ function mutationPaths(event, cwd) {
 	// missing, the mutation cannot be placed in any repository, so it is
 	// refused rather than allowed unchecked — the same answer an unplaceable
 	// relative path gets.
-	if (paths.length > 0) return [...new Set(paths)];
-	if (typeof cwd === "string" && cwd.length > 0) return [cwd];
+	if (paths.length > 0) {
+		return [...new Set(paths)].map((path) => ({ path, cwdFallback: false }));
+	}
+	if (typeof cwd === "string" && cwd.length > 0) {
+		return [{ path: cwd, cwdFallback: true }];
+	}
 	throw new UnanchoredPathError(
 		`a ${event.toolName} names no path, and there is no working directory`,
 	);
@@ -1838,19 +1843,63 @@ function walkShellCommand(command, toolCwd) {
 	return false;
 }
 
-/** True when a mutation would bypass the task worktree boundary. */
-function blocksTaskWorktree(event, cwd) {
-	if (rewritesPrimaryWorkingTree(event, cwd)) return true;
-	for (const path of mutationPaths(event, cwd)) {
+/** Return the first disallowed file target or the generic shell violation. */
+function taskWorktreeViolation(event, cwd) {
+	if (rewritesPrimaryWorkingTree(event, cwd)) return { kind: "bash" };
+	for (const { path, cwdFallback } of mutationTargets(event, cwd)) {
 		const state = worktreeState(path, cwd, event.toolName === "edit");
 		if (
 			state &&
 			(state.root === state.primaryRoot || state.branch.length === 0)
 		) {
-			return true;
+			return { kind: "file", path, cwd, cwdFallback, state };
 		}
 	}
-	return false;
+	return null;
+}
+
+/** Explain the classified file target without changing the guard decision. */
+function fileMutationBlockReason(event, violation) {
+	const { path, cwd, cwdFallback, state } = violation;
+	const primary = state.root === state.primaryRoot;
+	const worktreeKind = primary ? "primary checkout" : "detached worktree";
+	const branch = state.branch
+		? `attached (${state.branch})`
+		: "detached (no branch attached)";
+	const source = cwdFallback
+		? `Target source: no file target was parsed; used tool cwd fallback (${path}).`
+		: `Supplied target: ${path}`;
+	const cwdLine =
+		typeof cwd === "string" && cwd.length > 0
+			? `Tool cwd: ${cwd}`
+			: "Tool cwd: not provided";
+	const recovery = primary
+		? "Use the verified task-worktree path in every write target or edit patch header and move destination. A previous bash cwd change does not change the file tool's cwd."
+		: "Attach the task branch to this worktree before editing. If this is not the intended task worktree, use the verified task-worktree path in every write target or edit patch header and move destination.";
+	const detached =
+		state.branch.length === 0
+			? "This worktree has no branch attached; attach the task branch here before editing."
+			: "";
+	return [
+		`Blocked ${event.toolName}: the target is in the ${worktreeKind}.`,
+		source,
+		`${cwdLine}.`,
+		`Resolved target: ${state.target}`,
+		`Containing worktree: ${state.root}`,
+		`Primary worktree: ${state.primaryRoot}`,
+		`Branch state: ${branch}.`,
+		detached,
+		recovery,
+	]
+		.filter(Boolean)
+		.join("\n");
+}
+
+/** Return a file diagnostic or the established generic Git-command reason. */
+function taskWorktreeBlockReason(event, violation) {
+	return violation.kind === "file"
+		? fileMutationBlockReason(event, violation)
+		: WORKTREE_BLOCK_REASON;
 }
 
 /**
@@ -1915,8 +1964,12 @@ export default function dailyDriverExtension(pi) {
 			return { block: true, reason: ASK_BLOCK_REASON };
 		}
 		try {
-			if (blocksTaskWorktree(event, ctx?.cwd)) {
-				return { block: true, reason: WORKTREE_BLOCK_REASON };
+			const violation = taskWorktreeViolation(event, ctx?.cwd);
+			if (violation) {
+				return {
+					block: true,
+					reason: taskWorktreeBlockReason(event, violation),
+				};
 			}
 		} catch (err) {
 			if (err instanceof UnanchoredPathError) {

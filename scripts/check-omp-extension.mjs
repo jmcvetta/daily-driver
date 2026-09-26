@@ -371,24 +371,73 @@ function guardDecision(toolName, input, cwd) {
 	);
 }
 
-function checkGuard(name, blocked, toolName, input, cwd, reason) {
+function checkGuard(name, blocked, toolName, input, cwd) {
 	check(name, () => {
 		const decision = guardDecision(toolName, input, cwd);
 		if (blocked) {
-			assert.deepEqual(decision, {
-				block: true,
-				reason: reason ?? WORKTREE_BLOCK_REASON,
-			});
+			assert.equal(decision?.block, true);
+			assert.equal(typeof decision.reason, "string");
 		} else {
 			assert.equal(decision, undefined);
 		}
 	});
 }
 
-check("worktree denial directs the model through task-worktree", () => {
-	assert.match(WORKTREE_BLOCK_REASON, /do not retry/i);
-	assert.match(WORKTREE_BLOCK_REASON, /`task-worktree`/);
-	assert.match(WORKTREE_BLOCK_REASON, /attaching this worktree in place/i);
+check("relative edit from primary cwd reports the classified target and branch", () => {
+	const decision = guardDecision(
+		"edit",
+		{
+			input:
+				"*** Begin Patch\n[tracked.txt#ABCD]\n" +
+				"PUT 1.=1:\n+unsafe\n*** End Patch\n",
+		},
+		worktrees.primary,
+	);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, /Blocked edit: the target is in the primary checkout/u);
+	assert.match(decision.reason, /Supplied target: tracked\.txt/u);
+	assert.match(decision.reason, new RegExp(`Tool cwd: ${worktrees.primary}`));
+	assert.match(decision.reason, new RegExp(`Resolved target: ${resolve(worktrees.primary, "tracked.txt")}`));
+	assert.match(decision.reason, new RegExp(`Containing worktree: ${worktrees.primary}`));
+	assert.match(decision.reason, /Branch state: attached \(refs\/heads\/master\)/u);
+	assert.doesNotMatch(decision.reason, /detached worktree/u);
+});
+
+check("multi-file edit reports the first disallowed target, not an allowed target", () => {
+	const allowed = resolve(worktrees.task, "tracked.txt");
+	const blocked = resolve(worktrees.primary, "tracked.txt");
+	const decision = guardDecision(
+		"edit",
+		{
+			input:
+				`*** Begin Patch\n[${allowed}#ABCD]\nPUT 1.=1:\n+safe\n` +
+				`[${blocked}#ABCD]\nPUT 1.=1:\n+unsafe\n*** End Patch\n`,
+		},
+		worktrees.task,
+	);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, new RegExp(`Supplied target: ${blocked}`));
+	assert.match(decision.reason, new RegExp(`Resolved target: ${blocked}`));
+});
+
+check("unparsed edit target identifies cwd fallback without inventing a file", () => {
+	const decision = guardDecision("edit", { input: "unrecognized edit payload" }, worktrees.primary);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, /no file target was parsed; used tool cwd fallback/u);
+	assert.match(decision.reason, new RegExp(`Resolved target: ${worktrees.primary}`));
+	assert.doesNotMatch(decision.reason, /Supplied target:/u);
+});
+
+check("detached primary rejection distinguishes primary root from branch state", () => {
+	const decision = guardDecision(
+		"write",
+		{ path: "tracked.txt", content: "unsafe\n" },
+		detachedPrimary.primary,
+	);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, /primary checkout/u);
+	assert.match(decision.reason, /Branch state: detached \(no branch attached\)/u);
+	assert.doesNotMatch(decision.reason, /detached worktree/u);
 });
 
 // --- repository boundary ---------------------------------------------------
@@ -455,7 +504,8 @@ for (const [name, blocked, target] of [
 		try {
 			const decision = guardDecision("edit", homeEdit(target), worktrees.primary);
 			if (blocked) {
-				assert.deepEqual(decision, { block: true, reason: WORKTREE_BLOCK_REASON });
+				assert.equal(decision?.block, true);
+				assert.match(decision.reason, /Containing worktree:/u);
 			} else {
 				assert.equal(decision, undefined);
 			}
@@ -476,10 +526,14 @@ for (const [name, toolName, input] of [
 		const previousHome = process.env.HOME;
 		process.env.HOME = worktrees.root;
 		try {
-			assert.deepEqual(guardDecision(toolName, input, worktrees.task), {
-				block: true,
-				reason: WORKTREE_BLOCK_REASON,
-			});
+			const decision = guardDecision(toolName, input, worktrees.task);
+			assert.equal(decision?.block, true);
+			if (toolName === "bash") {
+				assert.equal(decision.reason, WORKTREE_BLOCK_REASON);
+			} else {
+				assert.match(decision.reason, /primary checkout/u);
+				assert.match(decision.reason, /Resolved target:/u);
+			}
 		} finally {
 			if (previousHome === undefined) delete process.env.HOME;
 			else process.env.HOME = previousHome;
@@ -495,6 +549,56 @@ checkGuard(
 	worktrees.task,
 );
 
+check("detached worktree rejection names its root and missing branch", () => {
+	const decision = guardDecision(
+		"write",
+		{ path: "tracked.txt", content: "unsafe\n" },
+		worktrees.detached,
+	);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, /detached worktree/u);
+	assert.match(decision.reason, new RegExp(`Containing worktree: ${worktrees.detached}`));
+	assert.match(decision.reason, /Branch state: detached \(no branch attached\)/u);
+});
+
+check("symlinked primary target reports its canonical target", () => {
+	const decision = guardDecision(
+		"write",
+		{ path: worktrees.primaryFileLink, content: "unsafe\n" },
+		worktrees.task,
+	);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, new RegExp(`Supplied target: ${worktrees.primaryFileLink}`));
+	assert.match(decision.reason, new RegExp(`Resolved target: ${resolve(worktrees.primary, "tracked.txt")}`));
+});
+
+check("move destination into primary is the reported offending target", () => {
+	const destination = resolve(worktrees.primary, "moved.txt");
+	const decision = guardDecision(
+		"edit",
+		{
+			input:
+				`*** Begin Patch\n[${resolve(worktrees.task, "tracked.txt")}#ABCD]\n` +
+				`MV ${destination}\n*** End Patch\n`,
+		},
+		worktrees.task,
+	);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, new RegExp(`Supplied target: ${destination}`));
+	assert.match(decision.reason, new RegExp(`Resolved target: ${destination}`));
+});
+
+check("absolute primary target from task cwd is explicitly identified", () => {
+	const target = resolve(worktrees.primary, "tracked.txt");
+	const decision = guardDecision(
+		"edit",
+		{ input: `*** Begin Patch\n[${target}#ABCD]\nPUT 1.=1:\n+unsafe\n*** End Patch\n` },
+		worktrees.task,
+	);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, new RegExp(`Supplied target: ${target}`));
+	assert.match(decision.reason, new RegExp(`Tool cwd: ${worktrees.task}`));
+});
 checkGuard(
 	"a write in a detached worktree is blocked",
 	true,
