@@ -2543,7 +2543,10 @@ check("get_session tolerates an unnamed session and no model", async () => {
 
 // --- legacy task worktree entries do not restore a separate status ----------
 check("legacy worktree entries do not change cwd or create a task status", async () => {
-	const s = makeSession({ settingsManagerFactory: fakeModelClassSettings });
+	const s = makeSession(
+		{ settingsManagerFactory: fakeModelClassSettings },
+		{ modelTagsSetting: fakeModelTagsSetting },
+	);
 	const statuses = [];
 	const ctx = {
 		cwd: worktrees.primary,
