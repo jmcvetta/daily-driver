@@ -166,13 +166,13 @@ on the issue, `epic` writes the issues where there are issues to write, and
 this sequence does not open a pull request with nothing in it.
 
 **A `task` also carries a required model class.** Validate its one
-`## Model class` section and rationale through `issue-body` before the claim.
-For an old or invalid body, assess the grounded handoff, update only that issue
-to the current contract, and then assess the current implementation session
-against the class guidance. A suitable stronger session implements directly;
-an unsuitable or unassessable session reports the configuration mismatch before
-any repository change. Concrete `Model:` lines in claim provenance remain
-actual-model records, not task metadata.
+`## Model class` section and rationale through `issue-body` before the claim,
+repairing an old or invalid body to the current contract where the handoff is
+otherwise grounded. The class states the capability a dispatcher such as
+`embark` selects a route for; it is not a gate this sequence applies to
+itself, and a standalone undertaking does not stop over a mapping between its
+own model identity and the task's class. Concrete `Model:` lines in claim
+provenance remain actual-model records, not task metadata.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
