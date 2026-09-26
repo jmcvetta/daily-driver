@@ -139,14 +139,15 @@ it is also the failure this mechanism was written for: a job named *"Wait ~3
 minutes for CI"* that sits until it times out and never brings the session back
 to the loop.
 
-**And no shell wait at all where the session is unattended**, regardless of
-which command-line clients are installed. The two shapes fail differently and
-both fail: a blocking watch in the foreground is bounded by the Bash tool's
-own timeout, and refused outright on a surface that blocks `sleep`; a
-backgrounded one is not bounded by anything and cannot wake the session, which
-is the report this mechanism answers.
-[`0006`](../../docs/notes/0006-waiting-for-ci.md) is the decision, and carries
-what was rejected with it.
+**No unmanaged shell wait where the session is unattended**, regardless of
+which command-line clients are installed. A foreground watch is bounded by
+the Bash tool's own timeout, and a backgrounded shell job is not supervised
+as a process the session can inspect and stop. Use the harness's supervised
+process service when its reference documents one; a service is not an
+unmanaged shell job. `sleep` remains forbidden as a substitute for observing
+CI.
+[`0006`](../../docs/notes/0006-waiting-for-ci.md) records the original
+decision; this rule clarifies the supervised-service boundary.
 
 **A surface that can neither block nor wake itself cannot wait.** Read the
 checks once, and where they have not all reported, say so and stop. A wait a

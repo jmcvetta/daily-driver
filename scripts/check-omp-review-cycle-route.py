@@ -1,98 +1,32 @@
 #!/usr/bin/env python3
-"""Check Omp's documented durable watcher contract.
-
-`github` is optional and disabled by default. The route therefore uses the
-essential `hub` process supervisor and `bash` for explicit GitHub API reads.
-This credential-free check holds the persistent watcher lifecycle, bounded
-cleanup, owner-scoped completion replay, and the boundary between process
-durability and agent resumption. It also holds `undertake`'s detached
-`keep-current` loop route, which note 0022 moved the `Keep it current` merge
-into.
-"""
+"""Check Omp's supervised CI route and exercise GNU timeout offline."""
 
 from __future__ import annotations
 
+import json
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REVIEW_REFERENCE = ROOT / "skills" / "review-cycle" / "references" / "omp.md"
 UNDERTAKE_REFERENCE = ROOT / "skills" / "undertake" / "references" / "omp.md"
 EMBARK_REFERENCE = ROOT / "skills" / "embark" / "references" / "omp.md"
+STAND_DOWN_REFERENCE = ROOT / "skills" / "stand-down" / "references" / "omp.md"
 SKILL = ROOT / "skills" / "review-cycle" / "SKILL.md"
-SUPPORTED_TOOLS = frozenset({"bash", "hub"})
-TOOL_FOR_COMMAND = {"gh": "bash", "hub": "hub"}
-REQUIRED_CALLS = (
-    "hub start",
-    "hub wait",
-    "hub stop",
-    "hub describe",
-    "gh pr checks --watch",
-    "/commits/{sha}/check-runs",
-    "/commits/{sha}/status",
+REFERENCES = (
+    REVIEW_REFERENCE,
+    UNDERTAKE_REFERENCE,
+    EMBARK_REFERENCE,
+    STAND_DOWN_REFERENCE,
 )
-REQUIRED_REVIEW_RULES = (
-    "timeout: 900",
-    "registration stop",
-    "No `sleep`",
-    "set `persist: true`",
-    "`detached: true` goes further",
-    "Do not use it here",
+OBSOLETE_HUB_COMMAND = re.compile(
+    r"\bhub\s+(?:start|wait|stop|describe|logs|jobs|cancel)\b", re.IGNORECASE
 )
-REQUIRED_UNDERTAKE_RULES = (
-    "`pr-keep-current.sh`",
-    "`hub start`",
-    "`hub stop`",
-    "`keep-current-<number>`",
-    "Thirty consecutive",
-)
-COMMON_DURABILITY_RULES = (
-    "`daily_driver_schedule`",
-    "`persist: true`",
-    "`detached: true`",
-    "owner-scoped",
-    "pending",
-    "owning session",
-    "reconnect",
-)
-NO_AUTONOMY_RULES = {
-    REVIEW_REFERENCE: "does not launch or resume an Omp session",
-    UNDERTAKE_REFERENCE: "does not launch or resume the agent",
-    EMBARK_REFERENCE: "cannot reopen or resume a terminated orchestrator",
-}
-FORBIDDEN_CLAIMS = (
-    "There is no durable wake",
-    "missing durable wake",
-    "no durable timer",
-)
-
-
-def documented_wait_tools(text: str) -> frozenset[str]:
-    """Map command spans in the wait table to their Omp tool names."""
-    section = text.partition("The wait\n========")[2].partition("Process durability is not session resumption")[0]
-    table = "\n".join(line for line in section.splitlines() if line.startswith("|"))
-    commands = re.findall(r"`([^`]+)`", table)
-    if not commands:
-        fail("route has no wait call table")
-    return frozenset(
-        TOOL_FOR_COMMAND.get(command.split(maxsplit=1)[0], command.split(maxsplit=1)[0])
-        for command in commands
-    )
-
-
-def normalized(text: str) -> str:
-    """Collapse prose whitespace so checks do not depend on line wrapping."""
-    return " ".join(text.split())
-
-
-def require_rules(path: Path, text: str, rules: tuple[str, ...]) -> None:
-    """Require each durable watcher rule in one Omp route."""
-    prose = normalized(text)
-    missing = [rule for rule in rules if normalized(rule) not in prose]
-    if missing:
-        relative = path.relative_to(ROOT)
-        fail(f"{relative} omits required rules: {', '.join(missing)}")
 
 
 def fail(message: str) -> None:
@@ -101,41 +35,135 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def main() -> None:
-    """Reject unsupported tools, weak watcher lifecycle, and false autonomy."""
-    references = {
-        path: path.read_text(encoding="utf-8")
-        for path in (REVIEW_REFERENCE, UNDERTAKE_REFERENCE, EMBARK_REFERENCE)
-    }
-    review_text = references[REVIEW_REFERENCE]
+def bounded_service_call(text: str) -> dict[str, str]:
+    """Read the JSON named-service example from the review route."""
+    examples = re.findall(r"```text\s*\n(\{.*?\})\n```", text, re.DOTALL)
+    for example in examples:
+        try:
+            call = json.loads(example)
+        except json.JSONDecodeError:
+            continue
+        if "gh pr checks --watch" in call.get("command", ""):
+            return call
+    fail("review-cycle has no executable named-service call example")
+
+
+def check_documented_routes() -> None:
+    """Reject stale calls and verify documented process controls and fields."""
+    contents = {path: path.read_text(encoding="utf-8") for path in REFERENCES}
+    for path, text in contents.items():
+        if OBSOLETE_HUB_COMMAND.search(text):
+            fail(f"{path.relative_to(ROOT)} requires the obsolete hub tool")
+
+    review_text = contents[REVIEW_REFERENCE]
+    call = bounded_service_call(review_text)
+    if set(call) != {"command", "name", "cwd"}:
+        fail("named-service example contains missing or unsupported fields")
+    command = call["command"].split()
+    expected_prefix = [
+        "timeout",
+        "--signal=TERM",
+        "--kill-after=5s",
+        "900s",
+        "gh",
+        "pr",
+        "checks",
+        "--watch",
+    ]
+    if "Agent Hub TUI" not in review_text or "omp://agent-hub.md" not in review_text:
+        fail("review route does not distinguish Agent Hub from process control")
+    if "mode write fails, inspect the service once" not in review_text:
+        fail("review route does not inspect a rejected lifecycle change")
+    if "stop it with" not in review_text or "persist=true" not in review_text:
+        fail("review route does not stop a service whose persistence is unconfirmed")
+    if "Do not assume a separate owner-scoped" not in review_text:
+        fail("review route invents a completion replay guarantee")
+    if command[: len(expected_prefix)] != expected_prefix:
+        fail("service command does not use the bounded CI watch invocation")
+    if call["name"] != "ci-<pr>-<short-sha>":
+        fail("named service identity does not bind to the PR head")
+    if call["cwd"] != "<task-worktree>":
+        fail("named service does not run from the task worktree")
+    if "GNU coreutils `timeout`" not in review_text:
+        fail("review route does not state the deadline utility prerequisite")
+    if "mode write fails" not in review_text or "stop the service" not in review_text:
+        fail("review route does not clean up a rejected persistence request")
+    if "write proc://<name>/mode" not in review_text or "persist=true" not in review_text:
+        fail("review route does not verify persistent service mode")
+    if "write proc://<name>/kill" not in review_text:
+        fail("review route does not stop a failed or expired watcher")
+    if "write proc://<name>/kill" not in contents[STAND_DOWN_REFERENCE]:
+        fail("stand-down cannot stop the named CI service")
+    if "write proc://<job-id>/kill" not in contents[EMBARK_REFERENCE]:
+        fail("embark cannot cancel a task job by its returned job ID")
+    if "read proc://<job-id>" not in contents[EMBARK_REFERENCE]:
+        fail("embark cannot inspect a task job by its returned job ID")
+    if "wait` with no arguments" not in contents[EMBARK_REFERENCE]:
+        fail("embark does not use the current no-argument wait tool")
+    if "wait` tool has no arguments" not in review_text:
+        fail("review route does not document the current wait tool")
     if "partial watch that cannot observe registration" not in SKILL.read_text(encoding="utf-8"):
         fail("shared review-cycle rule omits the partial-watch exception")
-    documented_tools = documented_wait_tools(review_text)
-    unsupported = documented_tools - SUPPORTED_TOOLS
-    if unsupported:
-        fail(f"route names unsupported Omp tools: {', '.join(sorted(unsupported))}")
-    if "github.run_watch" in review_text:
-        fail("route names optional github.run_watch")
+    if "No unmanaged shell wait" not in SKILL.read_text(encoding="utf-8"):
+        fail("shared review-cycle rule does not distinguish supervised services")
 
-    missing_calls = [call for call in REQUIRED_CALLS if call not in review_text]
-    if missing_calls:
-        fail(f"route omits required calls: {', '.join(missing_calls)}")
-    require_rules(REVIEW_REFERENCE, review_text, REQUIRED_REVIEW_RULES)
 
-    for path, text in references.items():
-        require_rules(path, text, COMMON_DURABILITY_RULES)
-        require_rules(path, text, (NO_AUTONOMY_RULES[path],))
-        stale = [claim for claim in FORBIDDEN_CLAIMS if claim in normalized(text)]
-        if stale:
-            relative = path.relative_to(ROOT)
-            fail(f"{relative} retains false durability claims: {', '.join(stale)}")
-    require_rules(
-        UNDERTAKE_REFERENCE, references[UNDERTAKE_REFERENCE], REQUIRED_UNDERTAKE_RULES
+def run_timeout(timeout: str, command: list[str]) -> subprocess.CompletedProcess[str]:
+    """Run one local fixture under the same GNU timeout utility as the route."""
+    executable = shutil.which("timeout")
+    if executable is None:
+        fail("GNU coreutils timeout is required to exercise the documented route")
+    return subprocess.run(
+        [executable, "--signal=TERM", "--kill-after=0.1s", timeout, *command],
+        check=False,
+        capture_output=True,
+        text=True,
     )
 
+
+def check_deadline_and_cleanup() -> None:
+    """Exercise normal exit, timeout, forced termination, and tree cleanup."""
+    success = run_timeout("2s", [sys.executable, "-c", "raise SystemExit(0)"])
+    if success.returncode != 0:
+        fail("timeout changed a successful child exit")
+
+    failure = run_timeout("2s", [sys.executable, "-c", "raise SystemExit(7)"])
+    if failure.returncode != 7:
+        fail("timeout changed a failed child exit")
+
+    with tempfile.TemporaryDirectory(prefix="ci-watch-check-") as directory:
+        marker = Path(directory) / "descendant-survived"
+        descendant = (
+            "import pathlib, time; time.sleep(0.4); "
+            f"pathlib.Path({str(marker)!r}).write_text('alive')"
+        )
+        parent = (
+            "import signal, subprocess, sys, time; "
+            "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+            f"subprocess.Popen([sys.executable, '-c', {descendant!r}]); "
+            "time.sleep(30)"
+        )
+        expired = run_timeout(
+            "0.1s", [sys.executable, "-c", parent]
+        )
+        if expired.returncode != 124:
+            fail("timeout did not return 124 when the CI wait expired")
+        time.sleep(0.5)
+        if marker.exists():
+            fail("deadline left a descendant process running")
+
+    invalid = run_timeout("not-a-duration", [sys.executable, "-c", "pass"])
+    if invalid.returncode != 125:
+        fail("timeout accepted an invalid deadline")
+
+
+def main() -> None:
+    """Run the Omp route checks without GitHub credentials or network access."""
+    check_documented_routes()
+    check_deadline_and_cleanup()
     print(
-        "check-omp-review-cycle-route: Omp routes preserve durable bounded "
-        "watchers without claiming autonomous session work"
+        "check-omp-review-cycle-route: named Omp CI service is bounded, "
+        "inspectable, and cleans up its process group"
     )
 
 

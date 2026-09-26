@@ -68,45 +68,61 @@ does not inherit the notice. A failed write is reported, never claimed.
 The wait
 ========
 
-**A durable, supervised `gh pr checks --watch`.** `github` is optional and
-disabled by default on Omp, so it is never this route. The essential `hub`
-tool owns a `gh` process directly. The process survives its owning session,
-and its terminal completion remains recoverable:
+**A bounded, supervised `gh pr checks --watch`.** `github` is optional and
+disabled by default on Omp, so use a named Bash service. Omp distinguishes the
+Agent Hub TUI ([`agent-hub.md`](omp://agent-hub.md)) from model-facing
+process control ([`bash`](omp://tools/bash.md),
+[`write`](omp://tools/write.md), and [`wait`](omp://tools/wait.md)). Start
+the service once with `bash` in service mode; do not pass `async` or `timeout`,
+which that mode rejects:
+
+```text
+{
+  "command": "timeout --signal=TERM --kill-after=5s 900s gh pr checks --watch <pr> --repo <owner>/<repo>",
+  "name": "ci-<pr>-<short-sha>",
+  "cwd": "<task-worktree>"
+}
+```
+
+The service command uses GNU coreutils `timeout`. It owns the fifteen-minute
+deadline, sends `TERM` at the cap, then sends `KILL` after five seconds if the
+watcher has not exited. Exit `124` means the cap expired; it is not a green
+result. On timeout, read both endpoints once and report every unreported check.
+If `timeout` is not installed, stop before starting an unbounded watch and
+report the missing deadline utility.
+
+After the service reports ready, inspect `read proc://<name>`. If it has
+already exited, read both CI endpoints immediately; do not request persistence
+or restart it. Otherwise request persistence with `write proc://<name>/mode`
+and content `persist`, then inspect `read proc://<name>`. Persistence is
+required because the owning session may end during the wait. If the mode write
+fails, inspect the service once: if it is still running, stop it with
+`write proc://<name>/kill`; report the exact failure either way. Also stop it
+if status does not confirm `persist=true`. Do not leave a session-scoped
+watcher running and call it durable. Do not use `detached`: the bounded
+watcher needs to survive Omp clients, not broker shutdown.
+
+Before a start, inspect `read proc://<name>` and reuse an existing watcher.
+Starting a service with a live name restarts it and resets its deadline. A
+resumed session must not restart it. `read proc://<name>` reports its status
+and logs. The `wait` tool has no arguments; use it only when there is no other
+work. It returns on a caller-owned service completion or an interrupt, and
+has a single thirty-minute safety cap. The watch itself enforces the stricter
+fifteen-minute cap. Completion delivery and persisted service state do not
+reopen or resume a terminated Omp session; after resuming, inspect the service
+and continue from the observed state. Do not assume a separate owner-scoped
+completion replay.
 
 | Half | Call |
 | ---- | ---- |
-| The PR check rollup | `hub start` runs `gh pr checks --watch <pr> --repo <owner>/<repo>` with persistent lifecycle; `hub wait` on that name for exit with timeout: 900 |
+| The PR check rollup | Named `bash` service above; inspect with `read proc://<name>`, stop with `write proc://<name>/kill` |
 | The check runs | `gh api /repos/{owner}/{repo}/commits/{sha}/check-runs` |
 | The commit statuses | `gh api /repos/{owner}/{repo}/commits/{sha}/status` |
 
-Name the process `ci-<pr>-<short-sha>` and set `persist: true`. Persistence is
-the strongest safe lifecycle this bounded watcher needs: it keeps the broker
-and process alive after the last Omp client exits. `detached: true` goes
-further and lets a process survive broker shutdown and every Omp exit. Do not
-use it here. A detached check watcher can escape the broker that enforces this
-workflow's cleanup, while persistence already preserves the watch and its
-completion.
-
-Hub assigns the process to the calling session. Terminal completion
-notifications are owner-scoped. If the owning session is not running when the
-watch exits, Hub keeps the notification pending. Resume that same session in
-the same project and reconnect to Hub; Hub then replays the pending
-completion. Another session can inspect the project-scoped process by name,
-but it does not receive the owner's completion.
-
 The watcher is the wake; the two endpoint reads are the verdict. Read the
-check runs and statuses after a live `hub wait` returns or a resumed session
-receives the replayed completion. `reported` is their union, not the output of
+check runs and statuses after `wait` returns or a resumed session finds the
+service exited. `reported` is their union, not the output of
 `gh pr checks` alone.
-
-**The cap belongs to the workflow.** Start its fifteen-minute deadline from
-the process's `startedAt`. In a live session, `hub wait` uses the remaining
-time, never more than timeout: 900. On timeout, call `hub stop` on the same
-name, read both endpoints once, and report every unreported check. After a
-resume, call `hub describe` on the same name and recover its `startedAt`. Stop
-it immediately when the deadline has passed; otherwise wait only for the
-remaining time. A watcher exit with a failed check still leads to the two
-reads: red is reported, not a reason to review without the status half.
 
 **An empty pair is a registration stop.** `gh pr checks --watch` returns when
 the PR rollup is empty; a process that has already exited cannot observe a
@@ -117,9 +133,9 @@ the word *waiting*. This is the partial watch exception `SKILL.md` names. A
 repository known not to post commit statuses has no status half, but that fact
 must be known rather than inferred from this first read.
 
-No `sleep`, subscription, timer, or unmanaged Bash job belongs here. This is
-an Omp-supervised process with an explicit stop at the same fifteen-minute
-cap, not a Bash command whose timeout ends the session's control of it.
+No `sleep`, subscription, timer, or unmanaged Bash job belongs here. The
+named service is supervised by Omp, and `ci_watch.py` stops its process group
+at the workflow's fifteen-minute cap.
 
 Process durability is not session resumption
 --------------------------------------------
@@ -127,39 +143,37 @@ Process durability is not session resumption
 **`daily_driver_schedule` is an in-process managed timer.** Managed timers are
 unref'd and cleared on `session_shutdown`, so a reminder dies with the
 session. Use one only for a follow-up inside the current session. It cannot
-replace the persistent Hub watcher. Its pair is `daily_driver_cancel_schedule`:
+replace the named CI service. Its pair is `daily_driver_cancel_schedule`:
 a wait that must not have a follow-up fire into the review borrows the slot
 by cancelling the armed follow-up, and the owner re-arms with
 `daily_driver_schedule` after the wait.
-An armed reminder does not lapse, it
-fires: left pending, it injects *read the checks again* as a follow-up in the
-middle of the review, restarting a wait on a run that finished. On this
-harness `undertake`'s `Keep it current` watch is the detached
-`keep-current-<number>` loop, not a timer, so the wait here borrows nothing
-from it — the loop's floor is what keeps a merge from restarting a run in
-flight.
+An armed reminder does not lapse, it fires: left pending, it injects *read
+the checks again* as a follow-up in the middle of the review, restarting a
+wait on a run that finished. On this harness `undertake`'s `Keep it current`
+watch is the detached `keep-current-<number>` service, not a timer, so the
+wait here borrows nothing from it — the loop's floor is what keeps a merge
+from restarting a run in flight.
 
-A durable Hub process also does not launch or resume an Omp session. It can
-finish while the owner is absent and preserve its completion for replay, but
-the endpoint reads and the review still need an agent turn after the owning
-session reconnects. This is process durability with recoverable completion,
-not autonomous review.
+A persistent Omp service can outlive the session, but it does not launch or
+resume one. Its status and logs remain the recovery record. The endpoint reads
+and review still need an agent turn. A resumed session inspects the same
+service name and bases its next action on its current state.
 
-**The replayed completion is a check answer, not a currency answer.** The base
-branch moves while the owning session is away, and the CI watcher does not
-watch it. After a resumed owner consumes its completion, the base-currency
-read comes first — `undertake`'s
-[`omp.md`](../../undertake/references/omp.md) names the read and the answers —
-and a `BEHIND` answer goes to `Keep it current` before the round continues. A
-green run on a head the base has since moved past is not current work.
+**The completed watch answers CI, not branch currency.** The base branch may
+move while the session is away, and the CI watcher does not watch it. After a
+resumed owner inspects the service, the base-currency read comes first —
+`undertake`'s [`omp.md`](../../undertake/references/omp.md) names the read and
+the answers — and a `BEHIND` answer goes to `Keep it current` before the round
+continues. A green run on a head the base has since moved past is not current
+work.
 
 The never-empty wake slot —
 [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) — binds
 Omp's managed timer for the session's life, exactly as it binds Claude's: one
 timer in the slot, cancelled before a wait borrows it, re-armed after. What
 it does not do is outlive the session — the timer dies at `session_shutdown`.
-The persistent Hub watcher holds process work across that boundary; a resumed
-owner consumes its completion and continues the workflow.
+The named CI service holds process work across that boundary; it does not
+resume its owner.
 
 
 Review history, publication, and threads

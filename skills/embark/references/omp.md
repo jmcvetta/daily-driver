@@ -8,10 +8,9 @@ this one, on a surface measured less.
 **Omp has no session-opening client, so the web route has no calls here.** The
 wave goes out through the harness-local subagent fallback `SKILL.md`'s
 `Open the sessions` states, and the tables below are that fallback resolved to
-Omp's surfaces. The absence of the client — and of the durable cross-session
-wake, measured in `undertake`'s
-[`omp.md`](../../undertake/references/omp.md) — is why the fallback exists,
-not a reason to stop.
+Omp's surfaces. The absence of a session-opening client means the agent-driven
+wave needs an owner turn; it does not mean supervised processes cannot survive
+a client exit. The fallback exists for session work, not process supervision.
 
 Reading the epic is ordinary issue work and needs nothing this file adds:
 `epic`'s own [`omp.md`](../../epic/references/omp.md) has the issue reads, and
@@ -114,8 +113,9 @@ The watch
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Watch the wave` | Read the wave's live subagent state | the dispatch handles — `hub jobs` over them, `hub wait` to block on one |
-| `Watch the wave` | Preserve a pull request CI watch | `review-cycle`'s persistent `hub start` route |
+| `Watch the wave` | Read subagent job state | The job IDs returned by `task`: `read proc://<job-id>` for status and `write proc://<job-id>/kill` to cancel |
+| `Watch the wave` | Receive subagent results | `wait` with no arguments when blocked; results also auto-deliver |
+| `Watch the wave` | Preserve a pull request CI watch | `review-cycle`'s persistent named Bash service |
 | `Watch the wave` | Find the pull request for a task issue | `issue://<number>` — `closed_by_pull_requests` |
 | `Watch the wave` | Read a pull request's state and checks | `pr://<number>` |
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
@@ -137,36 +137,34 @@ pushes after the read. `Close the epic` posts its evidence comment before
 or landing is by hand.
 
 **A live subagent's result or failure arrives as a wake of its own.** The
-orchestrator ends its turn holding the dispatch handles, and each implementor
-that finishes wakes it. The GitHub state remains the durable record: a task
-issue's pull request, checks, and review threads say whether work is moving or
-stuck, and the epic graph says whether a task is home.
+orchestrator ends its turn holding the job IDs returned by `task`, and each
+implementor that finishes wakes it. Inspect a job without consuming delivery
+with `read proc://<job-id>`; cancel it with `write proc://<job-id>/kill`. Use
+`wait` with no arguments only when blocked. The GitHub state remains the
+durable record: a task issue's pull request, checks, and review threads say
+whether work is moving or stuck, and the epic graph says whether a task is
+home.
 
-CI waiting uses `review-cycle`'s durable Hub process. `persist: true` keeps its
-broker and watcher alive after the last Omp client exits. `detached: true`
-would also survive broker shutdown and every Omp exit, but the bounded CI
-watch does not use it. Hub keeps terminal completion owner-scoped and pending
-while the orchestrator is absent. Resume the owning session in the same
-project and reconnect to Hub to receive that completion, then read the pull
-request state before acting. A different session can inspect the
-project-scoped process by name but does not receive the owner's replay.
+CI waiting uses `review-cycle`'s persistent named Bash service. Start the
+service once, request `persist` through `write proc://<name>/mode`, and
+confirm it with `read proc://<name>`. Do not pass `async` or `timeout` to
+named-service mode. If persistence fails, stop the service and report the
+failure; do not claim that CI remains watched.
 
-This durability does not turn the process into an agent. Hub cannot reopen or
-resume a terminated orchestrator, interpret the completed watch, mark the wave
-`done`, or launch the next wave. `daily_driver_schedule` also cannot supply
-that autonomy: it is a managed timer cleared on session shutdown. If the
-orchestrator terminates, process-only watches survive, but agent-driven wave
-work resumes only when the owning session resumes or a later `embark`
-invocation reads the graph and pull requests.
+This durability does not turn the process into an agent. A persistent service
+can continue its bounded CI command after the client exits, but it cannot
+reopen or resume a terminated orchestrator, interpret the result, mark the
+wave `done`, or launch the next wave. A later `embark` invocation must read the
+graph and pull requests before continuing agent work.
 
 While the orchestrator lives, the backstop is the timer pair:
 `daily_driver_schedule` arms it ten minutes out, and
-`daily_driver_cancel_schedule` cancels it at the wave's close, when `Close the
-epic` ends the check-ins and drops whatever watches ran under them — the
-pull-request subscriptions on a surface that has them, the persistent Hub CI
-watchers on this one. The one-slot rule `SKILL.md` states holds: one timer,
-kept by the trigger id the call returned, filled again before the turn ends
-while a wave is at sea.
+`daily_driver_cancel_schedule` cancels it at the wave's close. The timer is
+cleared on session shutdown. It supervises the live orchestrator only; the
+persistent named CI service is stopped separately with
+`write proc://<name>/kill`. The one-slot rule `SKILL.md` states still holds:
+one timer, kept by the trigger id the call returned, filled again before the
+turn ends while a wave is at sea.
 
 
 
