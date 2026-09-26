@@ -194,9 +194,9 @@ const {
 	default: dailyDriverExtension,
 } = module_;
 
-function makeSession(overrides = {}) {
+function makeSession(overrides = {}, dependencies = {}) {
 	const { pi, rec, tools, timers, fire } = fakeApi(overrides);
-	dailyDriverExtension(pi);
+	dailyDriverExtension(pi, dependencies);
 	return { rec, tools, timers, fire, pi };
 }
 
@@ -334,20 +334,46 @@ const modelClassSettings = new Map();
 function fakeModelClassSettings(cwd) {
 	if (modelClassSettings.has(cwd)) return modelClassSettings.get(cwd).settings;
 	const state = { modelRoles: {}, modelTags: {}, mutations: [] };
-	state.settings = { getModelRole: role => state.modelRoles[role], overrideModelRoles: roles => { Object.assign(state.modelRoles, roles); state.mutations.push(["roles", roles]); }, get: path => { assert.equal(path, "modelTags"); return state.modelTags; }, override: (path, value) => { assert.equal(path, "modelTags"); Object.assign(state.modelTags, value); state.mutations.push(["tags", value]); } };
+	state.settings = {
+		getModelRole: (role) => state.modelRoles[role],
+		overrideModelRoles: (roles) => {
+			Object.assign(state.modelRoles, roles);
+			state.mutations.push(["roles", roles]);
+		},
+	};
 	modelClassSettings.set(cwd, state);
 	return state.settings;
 }
+const fakeModelTagsSetting = {
+	get(settings) {
+		const state = [...modelClassSettings.values()].find((candidate) => candidate.settings === settings);
+		assert.ok(state, "model-tag handle receives the settings instance");
+		return state.modelTags;
+	},
+	override(settings, tags) {
+		const state = [...modelClassSettings.values()].find((candidate) => candidate.settings === settings);
+		assert.ok(state, "model-tag handle receives the settings instance");
+		Object.assign(state.modelTags, tags);
+		state.mutations.push(["tags", tags]);
+	},
+};
 
-check("session_start adds class role defaults and tags once per settings instance", async () => {
-	const s = makeSession({ settingsManagerFactory: fakeModelClassSettings });
-	await s.fire("session_start", {}, { cwd: "/fixture" });
+check("session_start uses Omp's model-tag handle and does not restore a cleared role", async () => {
+	const s = makeSession(
+		{ settingsManagerFactory: fakeModelClassSettings },
+		{ modelTagsSetting: fakeModelTagsSetting },
+	);
 	await s.fire("session_start", {}, { cwd: "/fixture" });
 	const state = modelClassSettings.get("/fixture");
+	assert.equal(state.settings.get, undefined, "Omp Settings does not expose generic get");
 	assert.deepEqual(state.modelRoles, MODEL_CLASS_ROLE_DEFAULTS);
 	assert.deepEqual(state.modelTags, MODEL_CLASS_ROLE_TAGS);
 	assert.equal(state.mutations.filter(([kind]) => kind === "roles").length, 1);
 	assert.equal(state.mutations.filter(([kind]) => kind === "tags").length, 1);
+
+	state.modelRoles.implementation = "";
+	await s.fire("session_start", {}, { cwd: "/fixture" });
+	assert.equal(state.modelRoles.implementation, "", "same settings instance is not initialized twice");
 });
 
 // --- ask is blocked; another tool passes ------------------------------------
@@ -2647,7 +2673,10 @@ check("get_session tolerates an unnamed session and no model", async () => {
 
 // --- legacy task worktree entries do not restore a separate status ----------
 check("legacy worktree entries do not change cwd or create a task status", async () => {
-	const s = makeSession({ settingsManagerFactory: fakeModelClassSettings });
+	const s = makeSession(
+		{ settingsManagerFactory: fakeModelClassSettings },
+		{ modelTagsSetting: fakeModelTagsSetting },
+	);
 	const statuses = [];
 	const ctx = {
 		cwd: worktrees.primary,

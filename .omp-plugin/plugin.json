@@ -1,6 +1,6 @@
 {
   "name": "daily-driver",
-  "version": "0.42.0",
+  "version": "0.43.1",
   "description": "Daily-driver skills for Claude Code, Omp and Codex: the PR workflow, and whatever else earns its place.",
   "repository": "https://github.com/jmcvetta/daily-driver"
 }

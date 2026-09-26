@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.43.1](https://github.com/jmcvetta/daily-driver/compare/v0.43.0...v0.43.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **omp:** pass model-tag setting handle ([#409](https://github.com/jmcvetta/daily-driver/issues/409)) ([ce49ec4](https://github.com/jmcvetta/daily-driver/commit/ce49ec48060e7de841502558fc61e992ba436ed9))
+
+## [0.43.0](https://github.com/jmcvetta/daily-driver/compare/v0.42.0...v0.43.0) (2026-09-24)
+
+
+### Features
+
+* **undertake:** remove capability gate from standalone tasks ([#405](https://github.com/jmcvetta/daily-driver/issues/405)) ([5aefcc5](https://github.com/jmcvetta/daily-driver/commit/5aefcc56cd3e262c180fbab7af422ec2b14263c6))
+
 ## [0.42.0](https://github.com/jmcvetta/daily-driver/compare/v0.41.0...v0.42.0) (2026-09-24)
 
 
