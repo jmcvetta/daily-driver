@@ -43,7 +43,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, isAbsolute, resolve } from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { installModelClassDefaults } from "./role-default-helper.mjs";
 
 /**
@@ -302,6 +302,23 @@ function resolvedPath(path) {
 	}
 }
 
+/** Resolve a target through existing symlinked parents when it does not exist. */
+function resolvedTargetPath(path) {
+	const canonical = resolvedPath(path);
+	if (canonical !== null) return canonical;
+	let ancestor = dirname(path);
+	while (!existsSync(ancestor)) {
+		const parent = dirname(ancestor);
+		if (parent === ancestor) return path;
+		ancestor = parent;
+	}
+	try {
+		return resolve(realpathSync(ancestor), relative(ancestor, path));
+	} catch {
+		return path;
+	}
+}
+
 /**
  * Build guard state for one root from an ordered worktree listing. A stale
  * record — a worktree deleted but not pruned — is skipped rather than fatal,
@@ -371,7 +388,7 @@ function worktreeState(path, cwd, nativeEdit = false) {
 	if (!root) return null;
 	const listing = gitOutput(root, "worktree", "list", "--porcelain", "-z");
 	const state = stateForWorktree(worktreeRecords(listing), root);
-	return state ? { ...state, target: resolvedPath(target) ?? target } : null;
+	return state ? { ...state, target: resolvedTargetPath(target) } : null;
 }
 
 /** Describe the worktree whose HEAD is selected by an explicit Git directory. */

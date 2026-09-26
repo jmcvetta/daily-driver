@@ -242,11 +242,23 @@ function makeWorktreeFixture() {
 	runGit(primary, "worktree", "add", "--detach", detached);
 	const primaryFileLink = resolve(task, "primary-file-link.txt");
 	symlinkSync(resolve(primary, "tracked.txt"), primaryFileLink);
+	const primaryDirectoryLink = resolve(task, "primary-directory-link");
+	symlinkSync(primary, primaryDirectoryLink, "dir");
 	// A symlinked route to the task worktree: a symlinked worktrees root, a
 	// symlinked home, `/tmp` on macOS. A `cd` through one really does arrive.
 	const taskLink = resolve(root, "task-link");
 	symlinkSync(task, taskLink);
-	return { root, primary, task, secondTask, taskLink, detached, outside, primaryFileLink };
+	return {
+		root,
+		primary,
+		task,
+		secondTask,
+		taskLink,
+		detached,
+		outside,
+		primaryFileLink,
+		primaryDirectoryLink,
+	};
 }
 
 const worktrees = makeWorktreeFixture();
@@ -572,6 +584,20 @@ check("symlinked primary target reports its canonical target", () => {
 	assert.match(decision.reason, new RegExp(`Resolved target: ${resolve(worktrees.primary, "tracked.txt")}`));
 });
 
+
+check("new target through symlinked parent reports canonical primary path", () => {
+	const target = resolve(worktrees.primaryDirectoryLink, "new-file.txt");
+	const canonicalTarget = resolve(worktrees.primary, "new-file.txt");
+	const decision = guardDecision(
+		"write",
+		{ path: target, content: "unsafe\n" },
+		worktrees.task,
+	);
+	assert.equal(decision.block, true);
+	assert.match(decision.reason, new RegExp(`Supplied target: ${target}`));
+	assert.match(decision.reason, new RegExp(`Resolved target: ${canonicalTarget}`));
+	assert.match(decision.reason, new RegExp(`Containing worktree: ${worktrees.primary}`));
+});
 check("move destination into primary is the reported offending target", () => {
 	const destination = resolve(worktrees.primary, "moved.txt");
 	const decision = guardDecision(
