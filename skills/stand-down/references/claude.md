@@ -22,7 +22,7 @@ The fleet
 | `Read the fleet` | Read a task's pull-request state | `mcp__github__pull_request_read` |
 | `Secure the work` | Load the messaging tools, once per session | `ToolSearch`, `select:ListAgents,SendMessage` |
 | `Secure the work` | Stop a session's current turn | `mcp__Claude_Code_Remote__interrupt_session` |
-| `Secure the work` | Name the session as an address | `ListAgents` |
+| `Secure the work` | Name the session as an address | the muster roll's `Implementor` cell, or `ListAgents` to re-resolve a name the roll lacks or a send failed to reach |
 | `Secure the work` | Send the wrap-up | `SendMessage`, to that name |
 | `Secure the work` | Read whether the turn has ended | `mcp__Claude_Code_Remote__get_session`, `status_bucket` |
 | `Write the handoff` | Comment on a task issue or the epic | `mcp__github__add_issue_comment` |
@@ -35,12 +35,17 @@ uses**, named in that skill's [`claude.md`](../../embark/references/claude.md).
 `ListAgents` and `SendMessage` are deferred tools, not in the tool list
 until `ToolSearch` loads them; call it once, before the first send this
 step makes, and both are then callable for the rest of the batch.
-`ListAgents` lists this account's cloud sessions, matched against the fleet
-member, and `SendMessage`'s `to` takes the name that row prints — never the
-`session_01AbC…` identifier the muster roll records, which does not resolve
-as an address. A member the listing does not name cannot be reached at all;
-it is not sent a wrap-up, and it is named as a residual at `Secure the work`
-rather than retried.
+**Read the name off the muster roll first** — `Post the muster roll` writes
+the resolved `ListAgents` name into the roll's `Implementor` cell beside the
+session id, and `Read the fleet` has already read that roll, so the ordinary
+case costs no `ListAgents` call at all. Call `ListAgents` only to re-resolve
+a name an older roll does not carry, or after `SendMessage` fails to reach
+the recorded name — the usual sign that the session under it has already
+stopped. `SendMessage`'s `to` takes that name, never the `session_01AbC…`
+identifier the muster roll also records, which does not resolve as an
+address. A member no roll entry and no `ListAgents` listing can name cannot
+be reached at all; it is not sent a wrap-up, and it is named as a residual
+at `Secure the work` rather than retried.
 
 **The wrap-up message** tells the session, in words: commit everything in
 progress to the task branch, push it, and end the turn without starting
@@ -53,9 +58,18 @@ batch of wrap-up messages is sent**, not three minutes per session. Poll
 `get_session`'s `status_bucket` for each addressed session — `working` means
 the turn has not ended — until every one has left `working` or the deadline
 passes, whichever comes first; this is the one wait `SKILL.md`'s speed
-constraint carves out; nothing else in this skill polls. A session the
-deadline outlasts, and a session `ListAgents` never named, are both recorded
-as a residual for that implementor at this step, and are archived anyway at
+constraint carves out; nothing else in this skill polls.
+
+**Leaving `working` is not itself securing.** A bucket that shows the turn
+ended in error is a session whose wrap-up may never have reached its commit
+or its push — a push fails on a stale credential or a rejected
+non-fast-forward exactly as readily inside the deadline as outside it. Only
+a bucket showing the turn ended without error counts as the session having
+had its chance; an error bucket is recorded as a residual the same as a
+missed deadline, never read as `Secured: yes` on the strength of having left
+`working` alone. A session the deadline outlasts, a session `ListAgents`
+never named, and a session whose turn ended in error are all recorded as a
+residual for that implementor at this step, and are archived anyway at
 `Stop the fleet` — securing the work is attempted once, not guaranteed.
 
 **`Stop the fleet` archives without reading status again.** The interrupt and
@@ -99,8 +113,10 @@ and the claim comment `undertake` posted names the branch a replacement
 reuses.
 
 **Loss is possible only where the wrap-up did not land in time** — the
-session missed the three-minute deadline, or `ListAgents` never named it to
-begin with. There, whatever that session held and never pushed is gone at
+session missed the three-minute deadline, `ListAgents` never named it to
+begin with, or its turn ended in error before the commit or the push
+completed. There, whatever that session held and never pushed is gone at
 the archive, exactly as before this route existed. `Secure the work` records
-it as a residual the moment the deadline or the listing fails, so the banner
-and the handoff both say so before the archive happens, rather than after.
+it as a residual the moment the deadline, the listing, or the turn's own
+outcome fails, so the banner and the handoff both say so before the archive
+happens, rather than after.

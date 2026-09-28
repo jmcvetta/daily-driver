@@ -10,10 +10,16 @@ harness-local subagents** — one per task, dispatched as one concurrent
 [`omp.md`](../../embark/references/omp.md) records. There is nothing to
 interrupt and nothing to archive: a subagent is cancelled by its dispatch
 handle, and the cancellation is immediate and unconfirmed. **What secures
-the work is this session, not the subagent**: once cancelled, the subagent's
-worktree is safe to touch, and this session commits and pushes it directly —
-the recovery a replacement picks up is that pushed branch, which is why the
-handoff names the worktree too.
+the work is this session, not the subagent**: once cancelled, this session
+commits and pushes the worktree directly, on the same best-effort footing as
+the cancel itself. An unconfirmed cancel does not guarantee the subagent has
+stopped writing, so a collision — a concurrent git process holding
+`.git/index.lock`, a file mid-write — is possible in the narrow window
+between the two. A git failure from that collision is a residual like any
+other failed stage, commit, or push, caught by the same check below; it is
+not retried, and it is never read as a silent success. The recovery a
+replacement picks up is whatever did reach origin, which is why the handoff
+names the worktree too.
 
 
 The fleet
