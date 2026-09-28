@@ -101,23 +101,28 @@ cancel-then-commit per harness-local subagent — and nothing here waits on
 more than the one deadline below.
 
 **Web sessions (Claude Code).** Interrupt the session, then address it the
-way `embark`'s `Recover a session` addresses a correction — `ListAgents` for
-its name, `SendMessage` to that name — with the wrap-up: commit everything in
-progress to the task branch, push it, and end the turn without starting
-anything else. Then wait, on one shared deadline for the whole fleet, until
-every session's turn has ended or the deadline passes; the reference file
-names the read and the deadline. A session the deadline outlasts, or that
-`ListAgents` does not name at all, is archived anyway at `Stop the fleet` and
-reported as a residual in the banner, by name — securing its work was
-attempted, not guaranteed.
+way `embark`'s `Recover a session` addresses a correction — the muster
+roll's already-resolved name where `Read the fleet` carries one, otherwise
+`ListAgents` — with the wrap-up, sent by `SendMessage` to that name: commit
+everything in progress to the task branch, push it, and end the turn without
+starting anything else. Then wait, on one shared deadline for the whole
+fleet, until every session's turn has ended or the deadline passes; the
+reference file names the read and the deadline. Leaving that wait is not
+itself securing: a session the deadline outlasts, a session no name can
+reach at all, and a session whose turn ends in error before its push
+completes are all archived anyway at `Stop the fleet` and reported as a
+residual in the banner, by name — securing its work was attempted, not
+guaranteed.
 
 **Harness-local subagents (Omp, Codex).** Cancel the subagent first, by its
-dispatch handle, exactly as `Stop the fleet` always has — the cancellation is
-immediate and unconfirmed, and it is what makes committing the worktree safe
-to do while nothing is still writing to it. Then this session itself, not
-the subagent, commits the work in progress in that worktree and pushes its
-branch. No wait is needed: the commit and push are this session's own calls,
-not another implementor's turn to finish.
+dispatch handle, exactly as `Stop the fleet` always has, then this session
+itself — not the subagent — commits the work in progress in that worktree
+and pushes its branch, on the same best-effort footing as the cancel: an
+unconfirmed cancel does not guarantee the subagent has stopped writing, so a
+collision is possible in the narrow window between the two, and a git
+failure from it is a residual like any other. No wait is needed: the commit
+and push are this session's own calls, not another implementor's turn to
+finish.
 
 **The work-in-progress commit**, on every harness: it lands on the task's
 existing feature branch, never a new one. Its message marks it plainly as
@@ -279,9 +284,10 @@ residuals remain:
 ```
 
 Residuals are listed, one line each, never silent: an implementor whose work
-could not be secured — the wrap-up deadline passed, `ListAgents` never named
-it, or a worktree would not commit or push — an implementor that could not
-be stopped, a comment that failed to post, or a watch that could not be
+could not be secured — the wrap-up deadline passed, no name could reach it,
+its turn ended in error before the push completed, or a worktree would not
+commit or push — an implementor that could not be stopped, a comment that
+failed to post, or a watch that could not be
 cancelled. **A handoff that failed to post never blocks the stops**
 — a lost record is better than a fleet left running — and the banner says
 the record gap by name. The session ends after the banner: nothing is
