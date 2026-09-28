@@ -77,7 +77,14 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
 
 The class is implementation metadata, not authoring, review, judging, effort,
 or concrete-model provenance. A task body has no trailing `Model:` or
-`Effort:` line. This shape is `task`'s alone; an `epic` body is untouched.
+`Effort:` line — that is class metadata's own shape, immediately below
+`## Summary`, and is a different thing from `provenance`'s block, which sits
+below a `---` rule at the very end of the body and this rule does not touch.
+This shape is `task`'s alone; an `epic` body is untouched.
+
+**The write that lands this body also carries `provenance`'s block**, per
+that skill's placement and field rules — a different thing from either
+metadata field above, and unaffected by the migration rule below.
 
 
 **Relationships are edges, not prose.** What the task waits on is
@@ -106,7 +113,9 @@ still hold stay; the affected specification changes; and readiness runs again.
 Unrelated text is not reflowed and existing issues are not swept.
 
 A deliberately revised task emits the new section and removes its trailing
-task `Model:` field. When selecting an old task for work, assess its body
+task `Model:` field — the legacy class-metadata field below `## Summary`, never
+a `provenance` block below the closing `---` rule, which this migration
+leaves alone. When selecting an old task for work, assess its body
 against the class rubric and migrate only that issue before dispatch. Map the
 former `standard` class to `implementation` and `advanced` to `reasoning`, based
 on the grounded handoff; do not change its rationale or capability requirement,

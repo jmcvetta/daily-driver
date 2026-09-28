@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.44.0](https://github.com/jmcvetta/daily-driver/compare/v0.43.1...v0.44.0) (2026-09-28)
+
+
+### Features
+
+* **embark:** gate landing on the review-cycle completion notice ([#417](https://github.com/jmcvetta/daily-driver/issues/417)) ([15a1286](https://github.com/jmcvetta/daily-driver/commit/15a12863423f6a1d203d385e024029aa67352f30))
+* **provenance:** add model, harness and session record to every write ([#418](https://github.com/jmcvetta/daily-driver/issues/418)) ([145082a](https://github.com/jmcvetta/daily-driver/commit/145082ad385663611d85c28e3c8fe175d91787aa))
+
+
+### Bug Fixes
+
+* **constitution:** scope production ban to operator-controlled systems ([#400](https://github.com/jmcvetta/daily-driver/issues/400)) ([3ce937f](https://github.com/jmcvetta/daily-driver/commit/3ce937fc0dc99fb1ee1bbff00b3a8b5e4b881b5b))
+* **omp:** explain blocked file targets ([#412](https://github.com/jmcvetta/daily-driver/issues/412)) ([5346fb6](https://github.com/jmcvetta/daily-driver/commit/5346fb6f67a00ff6d2bb2f917d6a43a34969e5fe))
+
 ## [0.43.1](https://github.com/jmcvetta/daily-driver/compare/v0.43.0...v0.43.1) (2026-09-26)
 
 

@@ -29,7 +29,8 @@ leaves behind.
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
 restate**. The task branch and execution root live in `task-worktree`, the
 title convention in `pr-title`, the pull request itself in `pr`, the review
-round in `review-cycle`, what is worth asking the user in `judgement-call`,
+round in `review-cycle`, the model, harness and session record every write
+carries in `provenance`, what is worth asking the user in `judgement-call`,
 and the engineering standard in the constitution. Where a step below names a
 rule one of those owns, it names it as a pointer and cites the owner — a rule
 that acquires a second home here is one whose copy goes stale, and a citation
@@ -239,22 +240,13 @@ Beyond the claim itself the comment always carries:
   The link can return 404 until the first push; write it anyway, because the
   alternative is a branch name the reader must turn into a URL by hand.
 
-- **The model that served the turn**, as one line — `Model: <model id>` —
-  and nothing else about it: no note about where the value came from, no
-  diagnostic about the surfaces that do not supply it. Read the id from the
-  harness's session call where it has one, and from the harness's own
-  statement of the serving model where it does not. Where the model the
-  session was *set* to run disagrees with the one that served, name that too:
-  the gap between the two is the half of the record worth having. Never a
-  name recalled instead of read — a provenance record that guesses is worse
-  than one that says nothing. The reference file names the fields that answer
-  both.
-- **The session**, as `session: <id>` where the id is reachable by any means
-  the harness offers, and `session: n/a` where it is not. The identifier is
-  what the reader needs; where the harness provides a session link, the
-  reference file gives its form. A missing id is recorded as `n/a`, never
-  narrated: a claim that explains why it has no session publishes a diagnostic
-  instead of a record.
+- **`provenance`'s block**, immediately after the branch: the model that
+  served the turn, the harness and its version, and the session identifier or
+  `n/a`. That skill owns the block's shape and the rules for reading each
+  field — never a name recalled instead of read, and where the model the
+  session was *set* to run disagrees with the one that served, both are
+  named. The `Model:` and lowercase `session:` line shapes are what the claim
+  lookup below and `The milestone` match on, so they are never varied here.
 - **A brief poem, in the claiming agent's own style, placed last** — after
   the branch, the model and the session, so that a reader looking for the
   branch or the model finds them in a fixed place and is never made to read
@@ -719,14 +711,10 @@ What the report carries
   total duration. An undertaking with no recoverable start reports the timing
   as unavailable rather than inventing one.
 
-- **The provenance, under `Claim the issue`'s rules.** The model that served
-  the work, exactly as reported — never a recalled revision — the agent
-  harness by name and the version of it that a surface in the session can
-  actually read, and the session identifier, linked where the harness offers
-  a link. A value no surface reports is `n/a`. One session did the work, so
-  one model and one session are named; where a resume moved the work to
-  another session, both are named in the order they ran, and attribution
-  nobody reported is not reconstructed.
+- **`provenance`'s block, under `Claim the issue`'s rules for it.** One
+  session did the work, so one model and one session are named; where a
+  resume moved the work to another session, both are named in the order they
+  ran, and attribution nobody reported is not reconstructed.
 
 - **The head it binds to.** The pull request's head SHA and the milestone
   timestamp. The comment is a statement about that head: a later head —

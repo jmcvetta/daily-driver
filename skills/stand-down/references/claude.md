@@ -20,6 +20,7 @@ The fleet
 | `Read the fleet` | Read the epic's muster rolls | `mcp__github__issue_read`, `method: get_comments` |
 | `Read the fleet` | Read a task issue's claim and handoffs | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Read the fleet` | Read a task's pull-request state | `mcp__github__pull_request_read` |
+| `Secure the work` | Load the messaging tools, once per session | `ToolSearch`, `select:ListAgents,SendMessage` |
 | `Secure the work` | Stop a session's current turn | `mcp__Claude_Code_Remote__interrupt_session` |
 | `Secure the work` | Name the session as an address | `ListAgents` |
 | `Secure the work` | Send the wrap-up | `SendMessage`, to that name |
@@ -29,8 +30,11 @@ The fleet
 | `Cancel the watches` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger`, by the `trigger_id` the wake slot holds |
 | `Cancel the watches` | Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
 
-**Addressing a session is the same two-call route `embark`'s `Recover a
-session` uses**, named in that skill's [`claude.md`](../../embark/references/claude.md):
+**Addressing a session is the same route `embark`'s `Recover a session`
+uses**, named in that skill's [`claude.md`](../../embark/references/claude.md).
+`ListAgents` and `SendMessage` are deferred tools, not in the tool list
+until `ToolSearch` loads them; call it once, before the first send this
+step makes, and both are then callable for the rest of the batch.
 `ListAgents` lists this account's cloud sessions, matched against the fleet
 member, and `SendMessage`'s `to` takes the name that row prints — never the
 `session_01AbC…` identifier the muster roll records, which does not resolve

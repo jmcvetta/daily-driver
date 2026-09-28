@@ -248,7 +248,9 @@ a record.
 **Record the reviewed SHA, review identifier, findings, and dispositions on the
 pull request.** That record defines the scope, links the summary and threads,
 and gives a resumed session the evidence it needs to enforce the bound. The
-harness route names the durable format.
+harness route names the durable format. Where the record is posted as its own
+comment rather than folded into the submitted review, it carries
+`provenance`'s block.
 
 
 2 — Fix, answer, resolve, push
@@ -283,8 +285,10 @@ The reply
 Verdict-first, concise, technical. A reader skimming twenty threads should
 never have to parse a paragraph to learn whether the finding was implemented or
 rejected. No thanks, no apologies, no restating the finding back at the
-reviewer, and no poetry — verse attaches to the pull request body, never to a
-finding somebody has to act on.
+reviewer, and no poetry — verse attaches to the writes that name it, never to a
+finding somebody has to act on. `provenance`'s block follows the same rule: it
+attaches to the submitted review and the completion notice below, never to an
+individual finding reply.
 
 A rejection carries its reason and stops. *"Rejected — `n` is bounded by the
 caller's `len(items)` check at `loader.go:88`"* is a complete reply; softening
@@ -391,8 +395,8 @@ Review-cycle completion notice
 **Post a separate top-level PR conversation comment only when a non-standalone
 round is complete.** Keep the normal submitted `COMMENT` review and every
 `Review verification` record unchanged. The notice starts with
-`## Review cycle complete! 🎉`, states that the round completed, and names
-the completed head SHA.
+`## Review cycle complete! 🎉`, states that the round completed, names the
+completed head SHA, and ends with `provenance`'s block.
 
 Completion requires green CI for that head, every finding's required
 disposition and resolved thread, and a clean required independent verification

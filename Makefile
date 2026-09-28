@@ -11,7 +11,7 @@ SHELL := /bin/bash
 	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
-	check-review-cycle-fix-delta-route \
+	check-review-cycle-fix-delta-route check-provenance check-verse \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
 	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
@@ -99,7 +99,8 @@ check-plugin-validity: check-plugin check-skills check-agents \
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
-	check-omp-pr-create-route check-review-cycle-fix-delta-route check-task-worktree-fixture check-scripts
+	check-omp-pr-create-route check-review-cycle-fix-delta-route check-provenance check-verse \
+	check-task-worktree-fixture check-scripts
 
 check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures \
 	check-eval-arms check-evals-preflight check-evals-provenance
@@ -241,6 +242,23 @@ check-omp-pr-create-route:
 # pointers `undertake` keeps to them. See the script's docstring.
 check-review-cycle-fix-delta-route:
 	python3 scripts/check-review-cycle-fix-delta-route.py
+
+# check-provenance: the trailing Model:/Harness:/session: block every GitHub
+# write and commit is supposed to carry, checked against fixture text rather
+# than a live write -- a well-formed block parses, a block missing a line or
+# carrying a template placeholder does not, the claim-comment shape still
+# satisfies the Model:/session: lookup undertake describes, and every skill
+# provenance names as a citer actually names it. Credential-free, like the
+# other script legs. See the script's docstring.
+check-provenance:
+	python3 scripts/check-provenance.py
+
+# check-verse: every skill that puts verse on a write names its form and links
+# HAIKU.md, and the comment fixtures that carry verse after the provenance
+# block still parse, with every verse line in italics. See the script's
+# docstring.
+check-verse:
+	python3 scripts/check-verse.py
 
 # check-scripts: ShellCheck the shell under skills, scripts, and eval fixtures.
 # It belongs to check-runtime because eval-fixture scripts are runtime inputs;

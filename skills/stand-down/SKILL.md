@@ -28,9 +28,10 @@ It is an orchestrator, in the same shape as `embark`: **it invokes, it does
 not restate**. What the fleet is, how it was dispatched, and how a
 replacement is opened are `embark`'s; the muster-roll format and the
 latest-entry-wins read are `embark`'s; the epic's body states are `epic`'s;
-the graph reads are `issue-deps`'. What this skill owns is the ending: the
-wrap-up that secures the work, the handoff record, the stop and archive, the
-watch cancellations, and the banner.
+the graph reads are `issue-deps`'; the model, harness and session record
+every write carries is `provenance`'s. What this skill owns is the ending:
+the wrap-up that secures the work, the handoff record, the stop and archive,
+the watch cancellations, and the banner.
 
 **Speed is the design constraint, amended by one wait.** The user asked to
 stop, not to orchestrate a stop. The steps below run in parallel batches,
@@ -162,6 +163,10 @@ what it left, not what a cloud workspace held. Where it did not, "Secured:
 no" says so, and nothing beyond the last push survived.
 ```
 
+This comment ends with `provenance`'s block, and the stand-down comment below
+carries it just before its envoi. Both blocks name this stand-down session
+rather than any retired implementor's.
+
 **One stand-down comment on the epic**, shaped like a muster roll with its
 rows marked retired. What the retired rows buy is honesty in the epic's
 latest record: a resumed `embark` reads that the named implementors no
@@ -191,6 +196,13 @@ the muster rolls and this comment, watches the tasks still open, and
 recovers each quiet task by reopening on the branch its claim or pull
 request names.
 ```
+
+**The stand-down comment ends with an envoi**: a brief farewell stanza for
+the watch, after `provenance`'s block, each line italicised as
+[`HAIKU.md`](../../HAIKU.md) shows. It is last so the rows and the resume
+line are found first. The handoff comments on the task issues carry none:
+each hands work to whoever reclaims it, and verse never attaches to a write
+somebody has to act on.
 
 The landing mode is copied unchanged from the latest record into this
 superseding comment. A resumed `embark` therefore reads the same opt-out or
