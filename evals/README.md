@@ -51,6 +51,12 @@ Every measured figure must cite a committed record under
 [`provenance/`](provenance/). A figure without that citation is an
 **unrecorded** anecdote: its run artifacts are no longer available for audit.
 
+Every record also carries a `cases` list, one row per task per repeat.
+`scripts/evals-render-routes.py` reads every committed record's `cases` and
+writes the `Measured routes` table in
+[`model-classes.md`](../skills/issue-body/references/model-classes.md) from
+them -- a model and settings pair with no case row is listed `unmeasured`.
+
 ## Running them
 
 ```sh
@@ -58,6 +64,7 @@ make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
 make evals-run        # the whole suite on Claude Code, both variants. Real money.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
+make evals-render-routes  # rewrite the Measured routes table from committed provenance
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
