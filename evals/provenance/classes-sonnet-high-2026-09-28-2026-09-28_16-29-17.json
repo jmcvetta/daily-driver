@@ -1,0 +1,865 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py\nExit code: 1 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-462_ewy4sooy\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 81 items\n\n../tests/test_infra_github.py .........................s....F........... [ 51%]\n.......................................                                  [100%]\n\n=================================== FAILURES ===================================\n__________________ test_projected_releases_skips_release_prs ___________________\n\n    def test_projected_releases_skips_release_prs() -> None:\n        \"\"\"The projection job is guarded against release-please's own branches.\n    \n        Pinned on the prefix from the data file rather than a literal, so the\n        branch name release-please builds is spelled once here rather than in\n        both the guard and this assertion.\n        \"\"\"\n        workflow = yaml.safe_load(PROJECTED_RELEASES.read_text())\n>       condition = workflow[\"jobs\"][\"projection\"].get(\"if\", \"\")\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       KeyError: 'projection'\n\n../tests/test_infra_github.py:545: KeyError\n============================= slowest 30 durations =============================\n0.09s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.09s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.09s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.08s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.08s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.08s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-core]\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.07s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.07s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-agent-cli]\n0.05s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.05s call     tests/test_infra_github.py::test_ci_never_runs_the_v1_suite\n0.05s call     tests/test_infra_github.py::test_the_kokoro_job_selects_affected_tests\n0.05s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.04s call     tests/test_infra_github.py::test_every_leg_is_gated_on_the_change_filter\n0.04s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.04s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.04s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-polite-pace]\n0.04s call     tests/test_infra_github.py::test_every_change_filter_feeds_a_job\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-cflow]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.04s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.04s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.04s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n0.04s call     tests/test_infra_githu\n\u2026 (400 more chars truncated)\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-462_ewy4sooy/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 27ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py ../tests/test_release_lock.py\nExit code: 1 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-500_9l9lyrrx\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 88 items\n\n../tests/test_infra_github.py .........................s............F... [ 47%]\n................F..........................                              [ 96%]\n../tests/test_release_lock.py FFF                                        [100%]\n\n=================================== FAILURES ===================================\n____________ test_every_component_releases_in_its_own_pull_request _____________\n\n    def test_every_component_releases_in_its_own_pull_request() -> None:\n        \"\"\"One release pull request per component, with no workspace plugin.\n    \n        `separate-pull-requests: true` is the preference, restored. Each component\n        with pending changes gets its own release PR; merging it bumps only that\n        component's manifest entry and package.json and cuts only that component's\n        tag, so one component's release never advances another's version.\n    \n        The split was held off for as long as node-workspace was present, because\n        the plugin synthesises a candidate per dependent and those synthetic\n        candidates are what triggered both upstream defects the combined PR worked\n        around (release-please#2853): a synthetic candidate carries no\n        `autorelease: pending` label, and an unmerged dependency's manifest bump\n        rides in its dependency's PR. Removing the plugin removes the synthetic\n        candidates, so the split is safe without waiting on an upstream fix.\n    \n        The consequence, accepted deliberately: remaining node components no\n        longer receive automatic dependent releases. A `workspace:^` edge no\n        longer signs the dependent up for its dependency's release cadence.\n        \"\"\"\n        config = json.loads(RELEASE_CONFIG.read_text())\n        assert config.get(\"separate-pull-requests\") is True, (\n            \"separate-pull-requests must be true: one release PR per component, \"\n            \"so merging one component does not advance another's manifest entry \"\n            \"or package.json.\"\n        )\n        plugin_types = [\n            plugin[\"type\"]\n            for plugin in config.get(\"plugins\", [])\n            if isinstance(plugin, dict)\n        ]\n>       assert \"node-workspace\" not in plugin_types, (\n            \"node-workspace must be gone. Its synthetic dependent candidates are \"\n            \"what made separate-pull-requests unsafe (release-please#2853), and \"\n            \"their removal is the policy change: node components no longer \"\n            \"release their dependents automatically.\"\n        )\nE       AssertionError: node-workspace must be gone. Its synthetic dependent candidates are what made separate-pull-requests unsafe (release-please#2853), and their removal is the policy change: node components no longer release their dependents automatically.\nE       assert 'node-workspace' not in ['node-workspace']\n\n../tests/test_infra_github.py:775: AssertionError\n__ test_every_test_cited_by_the_ci_config_exists[.github/workflows/test.yml] ___\n\npath = '.github/workflows/test.yml'\n\n    @pytest.mark.parametrize(\"path\", CITING_FILES)\n    def test_every_test_cited_by_the_ci_config_exists(path: str) -> None:\n        \"\"\"A test named in test.yml or the Makefile is one that exists.\n    \n        These citations carry weight rather than colour: several filter entries\n        are deliberately narrower than the files that can affect the leg, and the\n        comment beside them names the check that covers the difference. A citation\n        outliving its test is a gap documented as closed.\n        \"\"\"\n        defined = _defined_test_names()\n        text = (REPO / path).read_text()\n        missing = sorted({name for name in CITED_TEST.findall(text)} - defined)\n>       assert\n\u2026 (8824 more chars truncated)\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-500_9l9lyrrx/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 25ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-500",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-469_yux8_7bt\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 86 items\n\n../tests/test_infra_github.py .........................s................ [ 48%]\n............................................                             [100%]\n\n============================= slowest 30 durations =============================\n0.10s call     tests/test_infra_github.py::test_the_session_hooks_check_moved_to_its_own_job\n0.10s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.10s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.09s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.09s call     tests/test_infra_github.py::test_the_tofu_check_moved_to_its_own_job\n0.09s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.09s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.09s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.06s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.06s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.05s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.05s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.05s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.05s call     tests/test_infra_github.py::test_the_kokoro_job_selects_affected_tests\n0.05s call     tests/test_infra_github.py::test_infra_exercises_the_session_hooks_recipe_on_makefile_changes\n0.05s call     tests/test_infra_github.py::test_every_leg_is_gated_on_the_change_filter\n0.05s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.05s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.05s call     tests/test_infra_github.py::test_ci_runs_are_cancelled_when_superseded\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-polite-pace]\n0.04s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n0.04s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-core]\n0.04s call     tests/test_infra_github.py::test_every_change_filter_feeds_a_job\n0.04s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-agent-cli]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n======================== 85 passed, 1 skipped in 2.45s =========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-469_yux8_7bt/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 24ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts\nExit code: 0 (expected: 0)\nStdout:\nLockfile is up to date, resolution step is skipped\nDone in 1s using pnpm v10.33.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-career-370_04o2xt44/core\n\n\n Test Files  1 passed (1)\n      Tests  23 passed (23)\n   Start at  16:38:38\n   Duration  476ms (transform 153ms, setup 0ms, import 211ms, tests 66ms, environment 0ms)\n\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py ../tests/test_kokoro_select_tests.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-455_4z0nz8je\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 94 items\n\n../tests/test_infra_github.py .........................s................ [ 44%]\n...........................................                              [ 90%]\n../tests/test_kokoro_select_tests.py .........                           [100%]\n\n============================= slowest 30 durations =============================\n0.19s call     tests/test_kokoro_select_tests.py::test_core_src_file_forces_the_judge_stages_ceiling_and_keeps_snobs_own_reach\n0.14s call     tests/test_kokoro_select_tests.py::test_viewer_src_file_selects_its_dependents_and_no_pipeline_test\n0.11s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.10s call     tests/test_kokoro_select_tests.py::test_pipeline_src_file_forces_all_three_ceilings\n0.10s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.10s call     tests/test_infra_github.py::test_the_tofu_check_moved_to_its_own_job\n0.09s call     tests/test_infra_github.py::test_the_session_hooks_check_moved_to_its_own_job\n0.09s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.09s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.09s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.08s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.08s call     tests/test_kokoro_select_tests.py::test_a_single_test_file_selects_itself\n0.07s call     tests/test_kokoro_select_tests.py::test_a_fixture_file_selects_all\n0.07s call     tests/test_kokoro_select_tests.py::test_a_package_init_file_selects_all\n0.07s call     tests/test_kokoro_select_tests.py::test_the_pipeline_conftest_selects_all\n0.06s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.06s call     tests/test_kokoro_select_tests.py::test_a_path_that_does_not_exist_selects_all\n0.06s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.05s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.05s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.05s call     tests/test_infra_github.py::test_the_aggregate_is_not_guarded_off_release_prs\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.05s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.05s call     tests/test_infra_github.py::test_ci_runs_are_cancelled_when_superseded\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-agent-cli]\n0.05s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n0.05s call     tests/test_infra_github.py::test_infra_exercises_the_session_hooks_recipe_on_makefile_changes\n======================== 93 passed, 1 skipped in 3.30s =========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-455_4z0nz8je/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 27ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-455",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter @pagoda/usd2oz-web... && pnpm --filter @pagoda/usd2oz-web exec vitest run src/shell.test.ts\nExit code: 1 (expected: 0)\nStdout:\nScope: 3 of 6 workspace projects\n\u2713 Lockfile passes supply-chain policies (verified 1h ago)\nLockfile is up to date, resolution step is skipped\nProgress: resolved 1, reused 0, downloaded 0, added 0\n.                                        | +627 ++++++++++++++++++++++++++++++++\nPackages are hard linked from the content-addressable store to the virtual store.\n  Content-addressable store is at: /root/.local/share/pnpm/store/v11\n  Virtual store is at:             node_modules/.pnpm\nProgress: resolved 627, reused 626, downloaded 0, added 627, done\n.../.pnpm/nx@23.1.1/node_modules/nx postinstall$ node -e \"try{require('./dist/bin/post-install')}catch(e){}\"\n.../.pnpm/nx@23.1.1/node_modules/nx postinstall: Done\nDone in 9.9s using pnpm v11.24.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-pagoda-338_7833yf83/apps/usd2oz-web\n\n \u276f src/shell.test.ts (27 tests | 1 failed) 5420ms\n     \u00d7 links back to the calculator and carries the WB attribution 11ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 26 passed (27)\n   Start at  16:40:50\n   Duration  6.01s (transform 71ms, setup 0ms, import 95ms, tests 5.42s, environment 308ms)\n\nundefined\n/tmp/coder_eval_model-classes-pagoda-338_7833yf83/apps/usd2oz-web:\n[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run src/shell.test.ts\n\nStderr:\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkElement.#loadStyleSheet (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:370:31)\n    at HTMLLinkElement.[connectedToDocument] (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:213:41)\n    at HTMLLinkElement.[connectedToNode] (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:794:53)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:413:45)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/element/Element.js:1072:62)\n    at HTMLParser.parseEndOfStartTag (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:488:65)\n    at HTMLParser.parse (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:213:34)\n    at DOMParser.parseFromString (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/dom-parser/DOMParser.js:27:68)\n    at doc (/tmp/coder_eval_model-classes-pagoda-338_7833yf83/apps/usd2oz-web/src/shell.test.ts:54:26)\n    at /tmp/coder_eval_model-classes-pagoda-338_7833yf83/apps/usd2oz-web/src/shell.test.ts:98:17\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkElement.#loadStyleSheet (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:370:31)\n    at HTMLLinkElement.[connectedToDocument] (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:213:41)\n    at HTMLLinkElement.[connectedToNode] (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:794:53)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:413:45)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/element/Element.js:1072:62)\n    at HTMLParser.parseEndOfStartTag (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:488:65)\n    at HTMLParser.parse (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:213:34)\n    at DOMParser.parseFromString (file:///tmp/coder_eval_model-classes-pagoda-338_7833yf83/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/dom-parser/DOMParser.js:27:68)\n    at doc (/tmp/coder_eval_model-classes-pagoda-338_7833yf83/apps/usd2oz-web/src/shell.test.ts:54:26)\n    at /tmp/coder_eval_model-classes-pagoda-338_7833yf83/apps/usd2oz-web/src/shell.test.ts:109:17\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkEl\n\u2026 (27162 more chars truncated)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 0,
+      "task_id": "model-classes-pagoda-338",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-462_0p7mhhaa\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 81 items\n\n../tests/test_infra_github.py .........................s................ [ 51%]\n.......................................                                  [100%]\n\n============================= slowest 30 durations =============================\n0.14s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.13s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.10s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.09s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.09s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.08s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.06s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.06s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.06s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.05s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.05s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.05s call     tests/test_infra_github.py::test_ci_never_runs_the_v1_suite\n0.05s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.05s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.05s call     tests/test_infra_github.py::test_the_aggregate_is_not_guarded_off_release_prs\n0.05s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n0.05s call     tests/test_infra_github.py::test_every_leg_is_gated_on_the_change_filter\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-agent-cli]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-cflow]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-core]\n0.04s call     tests/test_infra_github.py::test_every_change_filter_feeds_a_job\n0.04s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-polite-pace]\n0.04s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n======================== 80 passed, 1 skipped in 2.39s =========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-462_0p7mhhaa/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 25ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py ../tests/test_release_lock.py\nExit code: 1 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-500_e9cmlugl\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 88 items\n\n../tests/test_infra_github.py .........................s............F... [ 47%]\n................F..........................                              [ 96%]\n../tests/test_release_lock.py FFF                                        [100%]\n\n=================================== FAILURES ===================================\n____________ test_every_component_releases_in_its_own_pull_request _____________\n\n    def test_every_component_releases_in_its_own_pull_request() -> None:\n        \"\"\"One release pull request per component, with no workspace plugin.\n    \n        `separate-pull-requests: true` is the preference, restored. Each component\n        with pending changes gets its own release PR; merging it bumps only that\n        component's manifest entry and package.json and cuts only that component's\n        tag, so one component's release never advances another's version.\n    \n        The split was held off for as long as node-workspace was present, because\n        the plugin synthesises a candidate per dependent and those synthetic\n        candidates are what triggered both upstream defects the combined PR worked\n        around (release-please#2853): a synthetic candidate carries no\n        `autorelease: pending` label, and an unmerged dependency's manifest bump\n        rides in its dependency's PR. Removing the plugin removes the synthetic\n        candidates, so the split is safe without waiting on an upstream fix.\n    \n        The consequence, accepted deliberately: remaining node components no\n        longer receive automatic dependent releases. A `workspace:^` edge no\n        longer signs the dependent up for its dependency's release cadence.\n        \"\"\"\n        config = json.loads(RELEASE_CONFIG.read_text())\n>       assert config.get(\"separate-pull-requests\") is True, (\n            \"separate-pull-requests must be true: one release PR per component, \"\n            \"so merging one component does not advance another's manifest entry \"\n            \"or package.json.\"\n        )\nE       AssertionError: separate-pull-requests must be true: one release PR per component, so merging one component does not advance another's manifest entry or package.json.\nE       assert False is True\nE        +  where False = <built-in method get of dict object at 0x7f1f3532e700>('separate-pull-requests')\nE        +    where <built-in method get of dict object at 0x7f1f3532e700> = {'$schema': 'https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json', 'bump-minor-pre-major': True, 'separate-pull-requests': False, 'always-update': True, ...}.get\n\n../tests/test_infra_github.py:765: AssertionError\n__ test_every_test_cited_by_the_ci_config_exists[.github/workflows/test.yml] ___\n\npath = '.github/workflows/test.yml'\n\n    @pytest.mark.parametrize(\"path\", CITING_FILES)\n    def test_every_test_cited_by_the_ci_config_exists(path: str) -> None:\n        \"\"\"A test named in test.yml or the Makefile is one that exists.\n    \n        These citations carry weight rather than colour: several filter entries\n        are deliberately narrower than the files that can affect the leg, and the\n        comment beside them names the check that covers the difference. A citation\n        outliving its test is a gap documented as closed.\n        \"\"\"\n        defined = _defined_test_names()\n        text = (REPO / path).read_text()\n        missing = sorted({name for name in CITED_TEST.findall(text)} - defined)\n>       assert not missing, (\n            f\"{path} names tests that do not exist: {missing}. Either the \"\n            \"citation is stale and the reasoning beside it no longer holds, or \"\n            \"the test was renamed and the comment should follow it.\"\n        )\n\u2026 (8592 more chars truncated)\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-500_e9cmlugl/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 26ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-500",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-469_x0iw7hkf\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 86 items\n\n../tests/test_infra_github.py .........................s................ [ 48%]\n............................................                             [100%]\n\n============================= slowest 30 durations =============================\n0.15s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.15s call     tests/test_infra_github.py::test_the_tofu_check_moved_to_its_own_job\n0.13s call     tests/test_infra_github.py::test_the_session_hooks_check_moved_to_its_own_job\n0.12s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.11s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.09s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.09s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.08s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.07s call     tests/test_infra_github.py::test_infra_exercises_the_session_hooks_recipe_on_makefile_changes\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.06s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.06s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.06s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.06s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.05s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.05s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n0.05s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.05s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.04s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.04s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.04s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.04s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-polite-pace]\n0.04s call     tests/test_infra_github.py::test_the_kokoro_job_selects_affected_tests\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.04s call     tests/test_infra_github.py::test_the_aggregate_is_not_guarded_off_release_prs\n======================== 85 passed, 1 skipped in 2.70s =========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-469_x0iw7hkf/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 34ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts\nExit code: 0 (expected: 0)\nStdout:\nLockfile is up to date, resolution step is skipped\nDone in 1s using pnpm v10.33.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-career-370_lw5wx0y9/core\n\n\n Test Files  1 passed (1)\n      Tests  23 passed (23)\n   Start at  16:48:45\n   Duration  465ms (transform 148ms, setup 0ms, import 209ms, tests 74ms, environment 0ms)\n\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py ../tests/test_kokoro_select_tests.py\nExit code: 1 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-455_dfn0cfvl\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 94 items\n\n../tests/test_infra_github.py .........................s................ [ 44%]\n.......................F.......FFF.........                              [ 90%]\n../tests/test_kokoro_select_tests.py .........                           [100%]\n\n=================================== FAILURES ===================================\n_____________________ test_every_change_filter_feeds_a_job _____________________\n\n    def test_every_change_filter_feeds_a_job() -> None:\n        \"\"\"Every output of `detect-changes` is read by some job, and every read\n        names an output that exists.\n    \n        Most outputs gate a job's `if:`. `kokoro-files` is the one exception: the\n        `kokoro` job reads it inside a step, to classify the change set into\n        which packages it affects, rather than to decide whether the job runs at\n        all -- so this scans a job's `if:` together with its `steps`, not `if:`\n        alone. A filter nothing reads is dead weight that looks load-bearing; a\n        read of a missing output is the empty string, which never equals 'true'\n        and matches no classification case either, so the leg or the\n        classification silently goes stale.\"\"\"\n        jobs = _workflow()[\"jobs\"]\n        declared = set(jobs[\"detect-changes\"][\"outputs\"])\n        referenced = {\n            match\n            for job in jobs.values()\n            for match in re.findall(\n                r\"needs\\.detect-changes\\.outputs\\.([A-Za-z0-9_-]+)\",\n                str(job.get(\"if\", \"\")) + str(job.get(\"steps\", \"\")),\n            )\n        }\n>       assert not declared - referenced, f\"filters no job gates on: {sorted(declared - referenced)}\"\nE       AssertionError: filters no job gates on: ['infra-tofu', 'session-hooks']\nE       assert not ({'agent-cli', 'boundary', 'cflow', 'core', 'corpus', 'infra', ...} - {'agent-cli', 'boundary', 'cflow', 'core', 'corpus', 'infra', ...})\n\n../tests/test_infra_github.py:1444: AssertionError\n___________________ test_the_tofu_check_moved_to_its_own_job ___________________\n\n    def test_the_tofu_check_moved_to_its_own_job() -> None:\n        \"\"\"Issue #452: OpenTofu was the one step of the old `infra` leg that\n        installed a toolchain, over the one input (infra/github/**) every other\n        step in that leg was silent about -- so a Makefile edit provisioned it\n        for no reader. `infra-tofu` owns the check now, on that input alone.\n    \n        Both assertions on the steps matter: a check present in both jobs would\n        pass `test_ci_runs_the_tofu_check` above while running twice, and a check\n        present in neither would pass it too, since that test only asks whether\n        the string appears somewhere in the file.\n        \"\"\"\n        jobs = _workflow()[\"jobs\"]\n>       assert \"infra-tofu\" in jobs, \"test.yml no longer defines `infra-tofu`\"\nE       AssertionError: test.yml no longer defines `infra-tofu`\nE       assert 'infra-tofu' in {'detect-changes': {'runs-on': 'ubuntu-latest', 'outputs': {'core': '${{ steps.filter.outputs.core }}', 'agent-cli': '...lockfile'}, {'run': 'make typecheck-cflow'}, {'run': 'make test-typescript-cflow VITEST_COVER=--coverage'}, ...]}, ...}\n\n../tests/test_infra_github.py:1752: AssertionError\n______________ test_the_session_hooks_check_moved_to_its_own_job _______________\n\n    def test_the_session_hooks_check_moved_to_its_own_job() -> None:\n        \"\"\"Issue #452: test_session_hooks.py's subject -- the SessionStart hook\n        under .claude/ -- was never under `infra`'s other inputs, so a hook edit\n        started OpenTofu and the release-config network call for no reason.\n    \n        `session-hooks` must read the hook and its wiring, and must NOT read\n        `.github/**` or `inf\n\u2026 (5236 more chars truncated)\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-455_dfn0cfvl/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 28ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-455",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter @pagoda/usd2oz-web... && pnpm --filter @pagoda/usd2oz-web exec vitest run src/shell.test.ts\nExit code: 1 (expected: 0)\nStdout:\nScope: 3 of 6 workspace projects\n\u2713 Lockfile passes supply-chain policies (verified 1h ago)\nLockfile is up to date, resolution step is skipped\nProgress: resolved 1, reused 0, downloaded 0, added 0\n.                                        | +627 ++++++++++++++++++++++++++++++++\nPackages are hard linked from the content-addressable store to the virtual store.\n  Content-addressable store is at: /root/.local/share/pnpm/store/v11\n  Virtual store is at:             node_modules/.pnpm\nProgress: resolved 627, reused 626, downloaded 0, added 627, done\n.../.pnpm/nx@23.1.1/node_modules/nx postinstall$ node -e \"try{require('./dist/bin/post-install')}catch(e){}\"\n.../.pnpm/nx@23.1.1/node_modules/nx postinstall: Done\nDone in 10.2s using pnpm v11.24.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-pagoda-338_787zz0dw/apps/usd2oz-web\n\n \u276f src/shell.test.ts (27 tests | 1 failed) 5422ms\n     \u00d7 links back to the calculator and carries the WB attribution 12ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 26 passed (27)\n   Start at  16:54:22\n   Duration  5.91s (transform 56ms, setup 0ms, import 76ms, tests 5.42s, environment 241ms)\n\nundefined\n/tmp/coder_eval_model-classes-pagoda-338_787zz0dw/apps/usd2oz-web:\n[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run src/shell.test.ts\n\nStderr:\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkElement.#loadStyleSheet (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:370:31)\n    at HTMLLinkElement.[connectedToDocument] (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:213:41)\n    at HTMLLinkElement.[connectedToNode] (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:794:53)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:413:45)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/element/Element.js:1072:62)\n    at HTMLParser.parseEndOfStartTag (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:488:65)\n    at HTMLParser.parse (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:213:34)\n    at DOMParser.parseFromString (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/dom-parser/DOMParser.js:27:68)\n    at doc (/tmp/coder_eval_model-classes-pagoda-338_787zz0dw/apps/usd2oz-web/src/shell.test.ts:54:26)\n    at /tmp/coder_eval_model-classes-pagoda-338_787zz0dw/apps/usd2oz-web/src/shell.test.ts:98:17\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkElement.#loadStyleSheet (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:370:31)\n    at HTMLLinkElement.[connectedToDocument] (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:213:41)\n    at HTMLLinkElement.[connectedToNode] (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:794:53)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:413:45)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/element/Element.js:1072:62)\n    at HTMLParser.parseEndOfStartTag (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:488:65)\n    at HTMLParser.parse (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:213:34)\n    at DOMParser.parseFromString (file:///tmp/coder_eval_model-classes-pagoda-338_787zz0dw/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/dom-parser/DOMParser.js:27:68)\n    at doc (/tmp/coder_eval_model-classes-pagoda-338_787zz0dw/apps/usd2oz-web/src/shell.test.ts:54:26)\n    at /tmp/coder_eval_model-classes-pagoda-338_787zz0dw/apps/usd2oz-web/src/shell.test.ts:109:17\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkEl\n\u2026 (27162 more chars truncated)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 1,
+      "task_id": "model-classes-pagoda-338",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-462__18g5h4g\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 81 items\n\n../tests/test_infra_github.py .........................s................ [ 51%]\n.......................................                                  [100%]\n\n============================= slowest 30 durations =============================\n0.09s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.08s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.08s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.08s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.08s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.08s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.07s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.07s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.07s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.06s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.06s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.04s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n0.04s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.04s call     tests/test_infra_github.py::test_the_kokoro_job_selects_affected_tests\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-polite-pace]\n0.04s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n0.04s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-cflow]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.04s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.04s call     tests/test_infra_github.py::test_ci_never_runs_the_v1_suite\n0.04s call     tests/test_infra_github.py::test_ci_runs_are_cancelled_when_superseded\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-agent-cli]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.04s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.04s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n======================== 80 passed, 1 skipped in 2.15s =========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-462__18g5h4g/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 25ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py ../tests/test_release_lock.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-500_2a4ssymh\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 88 items\n\n../tests/test_infra_github.py .........................s................ [ 47%]\n...........................................                              [ 96%]\n../tests/test_release_lock.py ...                                        [100%]\n\n============================= slowest 30 durations =============================\n0.30s call     tests/test_release_lock.py::test_each_python_branch_gets_its_own_lock_update\n0.13s call     tests/test_release_lock.py::test_a_python_branch_whose_lock_is_current_gets_no_commit\n0.12s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.11s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.11s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.10s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.10s call     tests/test_infra_github.py::test_the_tofu_check_moved_to_its_own_job\n0.09s call     tests/test_infra_github.py::test_the_session_hooks_check_moved_to_its_own_job\n0.09s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.09s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.08s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.07s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.07s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.07s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.06s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.06s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.06s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.05s call     tests/test_infra_github.py::test_the_aggregate_is_not_guarded_off_release_prs\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.05s call     tests/test_infra_github.py::test_every_leg_is_gated_on_the_change_filter\n0.05s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.05s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-core]\n0.05s call     tests/test_release_lock.py::test_an_empty_prs_array_commits_nothing\n0.05s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.05s call     tests/test_infra_github.py::test_every_change_filter_feeds_a_job\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n======================== 87 passed, 1 skipped in 3.24s =========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-500_2a4ssymh/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "model-classes-career-500",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py\nExit code: 1 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-469_ef4w86mz\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 86 items\n\n../tests/test_infra_github.py .........................s................ [ 48%]\n................F...........................                             [100%]\n\n=================================== FAILURES ===================================\n__________________ test_kokoro_venv_compiles_bytecode_on_sync __________________\n\n    def test_kokoro_venv_compiles_bytecode_on_sync() -> None:\n        \"\"\"`setup-uv` caches uv's wheel store, not the venv, so every kokoro job\n        rebuilds the venv from scratch, and Prefect is compiled from source in\n        four processes per job -- the pytest controller at collection, the two\n        xdist workers, and the uvicorn subprocess each worker starts for\n        `prefect_test_harness` -- without this setting (issue #468). Compiling\n        once at sync time costs under 4s and saves roughly 12s off pytest\n        start-up and 4s off each server boot.\"\"\"\n        config = tomllib.loads(KOKORO_PYPROJECT.read_text())\n        compile_bytecode = config.get(\"tool\", {}).get(\"uv\", {}).get(\"compile-bytecode\")\n>       assert compile_bytecode is True, (\n            \"kokoro/pyproject.toml no longer sets tool.uv.compile-bytecode = true; \"\n            \"the venv CI rebuilds every run would go back to cold-importing \"\n            \"Prefect from source in four processes per job\"\n        )\nE       AssertionError: kokoro/pyproject.toml no longer sets tool.uv.compile-bytecode = true; the venv CI rebuilds every run would go back to cold-importing Prefect from source in four processes per job\nE       assert None is True\n\n../tests/test_infra_github.py:1270: AssertionError\n============================= slowest 30 durations =============================\n0.10s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.10s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.09s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.09s call     tests/test_infra_github.py::test_the_session_hooks_check_moved_to_its_own_job\n0.09s call     tests/test_infra_github.py::test_the_tofu_check_moved_to_its_own_job\n0.08s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.08s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.08s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.07s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.07s call     tests/test_infra_github.py::test_the_kokoro_job_selects_affected_tests\n0.07s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.07s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.06s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n0.05s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.05s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.05s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.05s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.04s ca\n\u2026 (1108 more chars truncated)\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-469_ef4w86mz/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 25ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 2,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts\nExit code: 0 (expected: 0)\nStdout:\nLockfile is up to date, resolution step is skipped\nDone in 1.1s using pnpm v10.33.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-career-370_0a1rhd_5/core\n\n\n Test Files  1 passed (1)\n      Tests  23 passed (23)\n   Start at  17:00:30\n   Duration  515ms (transform 157ms, setup 0ms, import 222ms, tests 84ms, environment 0ms)\n\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py ../tests/test_kokoro_select_tests.py\nExit code: 1 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.12, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-455_4ly0i6wi\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 94 items\n\n../tests/test_infra_github.py .........................s................ [ 44%]\n...............................FFF.........                              [ 90%]\n../tests/test_kokoro_select_tests.py .........                           [100%]\n\n=================================== FAILURES ===================================\n___________________ test_the_tofu_check_moved_to_its_own_job ___________________\n\n    def test_the_tofu_check_moved_to_its_own_job() -> None:\n        \"\"\"Issue #452: OpenTofu was the one step of the old `infra` leg that\n        installed a toolchain, over the one input (infra/github/**) every other\n        step in that leg was silent about -- so a Makefile edit provisioned it\n        for no reader. `infra-tofu` owns the check now, on that input alone.\n    \n        Both assertions on the steps matter: a check present in both jobs would\n        pass `test_ci_runs_the_tofu_check` above while running twice, and a check\n        present in neither would pass it too, since that test only asks whether\n        the string appears somewhere in the file.\n        \"\"\"\n        jobs = _workflow()[\"jobs\"]\n>       assert \"infra-tofu\" in jobs, \"test.yml no longer defines `infra-tofu`\"\nE       AssertionError: test.yml no longer defines `infra-tofu`\nE       assert 'infra-tofu' in {'detect-changes': {'runs-on': 'ubuntu-latest', 'outputs': {'core': '${{ steps.filter.outputs.core }}', 'agent-cli': '...lockfile'}, {'run': 'make typecheck-cflow'}, {'run': 'make test-typescript-cflow VITEST_COVER=--coverage'}, ...]}, ...}\n\n../tests/test_infra_github.py:1752: AssertionError\n______________ test_the_session_hooks_check_moved_to_its_own_job _______________\n\n    def test_the_session_hooks_check_moved_to_its_own_job() -> None:\n        \"\"\"Issue #452: test_session_hooks.py's subject -- the SessionStart hook\n        under .claude/ -- was never under `infra`'s other inputs, so a hook edit\n        started OpenTofu and the release-config network call for no reason.\n    \n        `session-hooks` must read the hook and its wiring, and must NOT read\n        `.github/**` or `infra/github/**`: a hook-only pull request would\n        otherwise also start the release-delta, kokoro-selector and\n        coverage-comment suites those patterns feed test_infra_github.py by way\n        of `infra`.\n        \"\"\"\n        jobs = _workflow()[\"jobs\"]\n>       assert \"session-hooks\" in jobs, \"test.yml no longer defines `session-hooks`\"\nE       AssertionError: test.yml no longer defines `session-hooks`\nE       assert 'session-hooks' in {'detect-changes': {'runs-on': 'ubuntu-latest', 'outputs': {'core': '${{ steps.filter.outputs.core }}', 'agent-cli': '...lockfile'}, {'run': 'make typecheck-cflow'}, {'run': 'make test-typescript-cflow VITEST_COVER=--coverage'}, ...]}, ...}\n\n../tests/test_infra_github.py:1782: AssertionError\n______ test_infra_exercises_the_session_hooks_recipe_on_makefile_changes _______\n\n    def test_infra_exercises_the_session_hooks_recipe_on_makefile_changes() -> None:\n        \"\"\"The Makefile-owning leg runs the narrow hook recipe without its filter.\"\"\"\n        steps_run = \"\\n\".join(\n            step.get(\"run\", \"\") for step in _workflow()[\"jobs\"][\"infra\"][\"steps\"]\n        )\n>       assert \"make test-python-session-hooks\" in steps_run, (\n            \"`infra` does not exercise test-python-session-hooks when Makefile \"\n            \"changes; its narrow job deliberately does not read that file\"\n        )\nE       AssertionError: `infra` does not exercise test-python-session-hooks when Makefile changes; its narrow job deliberately does not read that file\nE       assert 'make test-python-session-hooks' in '\\n\\nmake check-release-config\\necho \"version=$(cat infra/github/.ope\n\u2026 (3525 more chars truncated)\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-455_4ly0i6wi/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.12 interpreter at: /usr/bin/python3.13\nCreating virtual environment at: .venv\nInstalled 36 packages in 28ms\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 2,
+      "task_id": "model-classes-career-455",
+      "variant_id": "default"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter @pagoda/usd2oz-web... && pnpm --filter @pagoda/usd2oz-web exec vitest run src/shell.test.ts\nExit code: 1 (expected: 0)\nStdout:\nScope: 3 of 6 workspace projects\n\u2713 Lockfile passes supply-chain policies (verified 1h ago)\nLockfile is up to date, resolution step is skipped\nDone in 4.4s using pnpm v11.24.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/apps/usd2oz-web\n\n \u276f src/shell.test.ts (27 tests | 1 failed) 4869ms\n     \u00d7 links back to the calculator and carries the WB attribution 12ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 26 passed (27)\n   Start at  17:07:29\n   Duration  5.38s (transform 61ms, setup 0ms, import 79ms, tests 4.87s, environment 254ms)\n\nundefined\n/tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/apps/usd2oz-web:\n[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run src/shell.test.ts\n\nStderr:\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkElement.#loadStyleSheet (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:370:31)\n    at HTMLLinkElement.[connectedToDocument] (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:213:41)\n    at HTMLLinkElement.[connectedToNode] (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:794:53)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:413:45)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/element/Element.js:1072:62)\n    at HTMLParser.parseEndOfStartTag (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:488:65)\n    at HTMLParser.parse (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:213:34)\n    at DOMParser.parseFromString (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/dom-parser/DOMParser.js:27:68)\n    at doc (/tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/apps/usd2oz-web/src/shell.test.ts:54:26)\n    at /tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/apps/usd2oz-web/src/shell.test.ts:98:17\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkElement.#loadStyleSheet (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:370:31)\n    at HTMLLinkElement.[connectedToDocument] (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/html-link-element/HTMLLinkElement.js:213:41)\n    at HTMLLinkElement.[connectedToNode] (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:794:53)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/node/Node.js:413:45)\n    at HTMLHeadElement.[appendChild] (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/nodes/element/Element.js:1072:62)\n    at HTMLParser.parseEndOfStartTag (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:488:65)\n    at HTMLParser.parse (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/html-parser/HTMLParser.js:213:34)\n    at DOMParser.parseFromString (file:///tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/node_modules/.pnpm/happy-dom@20.11.10/node_modules/happy-dom/lib/dom-parser/DOMParser.js:27:68)\n    at doc (/tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/apps/usd2oz-web/src/shell.test.ts:54:26)\n    at /tmp/coder_eval_model-classes-pagoda-338_kx5nl4qb/apps/usd2oz-web/src/shell.test.ts:109:17\nDOMException [NotSupportedError]: Failed to load external stylesheet \"http://localhost:3000/assets/index.iidTVcIi.css\". CSS file loading is disabled.\n    at HTMLLinkEl\n\u2026 (27162 more chars truncated)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 2,
+      "task_id": "model-classes-pagoda-338",
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "claude-code",
+    "recorded_version": "2.1.283 (Claude Code)",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-09-28T17:07:35.262776",
+  "experiment_id": "classes-sonnet-high",
+  "host": {
+    "hostname": "vm",
+    "kind": "cloud",
+    "platform": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+    "session_id": "ef1b5244-b113-58de-9cd4-d0bd31e221f2"
+  },
+  "plugin_revision": {
+    "commit": "128c8858fb38a63d005a58029e1e7cea227bac50",
+    "dirty": false
+  },
+  "recorded_at": "2026-09-28T17:07:40.630237+00:00",
+  "run_id": "2026-09-28_16-29-17",
+  "schema_version": 1,
+  "started_at": "2026-09-28T16:29:17.402675",
+  "variants": [
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "model-classes-career-370": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "model-classes-career-455": [
+          1.0,
+          0.4,
+          0.4
+        ],
+        "model-classes-career-462": [
+          0.4,
+          1.0,
+          1.0
+        ],
+        "model-classes-career-469": [
+          1.0,
+          1.0,
+          0.4
+        ],
+        "model-classes-career-500": [
+          0.4,
+          0.4,
+          1.0
+        ],
+        "model-classes-pagoda-338": [
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-462",
+        "model-classes-career-500",
+        "model-classes-career-469",
+        "model-classes-career-370",
+        "model-classes-career-455",
+        "model-classes-pagoda-338"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}
