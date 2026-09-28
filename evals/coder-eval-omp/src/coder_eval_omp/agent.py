@@ -76,6 +76,7 @@ from coder_eval.streaming.events import (
     TurnStartEvent,
 )
 
+from .pricing import UNREPORTED, cost_usd
 from .rpc import (
     AgentFinished,
     ExtensionFailed,
@@ -149,16 +150,16 @@ class OmpAgentConfig(BaseAgentConfig):
     refuses to start a session with no model available at all.
     """
 
-    require_token_telemetry: bool = False
+    require_token_telemetry: bool = True
     """Fail a turn that captured no token counts.
 
-    Off, unlike `coder_eval`'s OpenCode agent, and the reason is honesty:
-    Omp's `docs/rpc.md` places per-turn accounting in "telemetry fields on
-    `agent_end`" without naming them, so this agent reads every plausible
-    spelling and records which one answered. Until a live run says which it is,
-    a missing count is a gap in this adapter rather than proof of a broken
-    turn. Turn it on once `usage_keys_seen` in a run's `environment_info` names
-    the real fields.
+    On, unlike the earlier honesty-driven default: `rpc.extract_usage` reads
+    `usage` off each assistant message's `message_end` frame, a field the
+    Omp wire protocol requires on every `AssistantMessage` (see `rpc.py`'s
+    module docstring), not an opt-in `agent_end.telemetry` object that might
+    never arrive. A turn that produced an assistant reply and still carries no
+    usage is the RPC vocabulary having moved, which is exactly what this flag
+    exists to catch loudly instead of silently reporting a zero.
     """
 
     extra_args: list[str] = []
@@ -403,11 +404,12 @@ class OmpAgent(Agent[OmpAgentConfig]):
                         tokens=None,
                     )
                 )
+            cost = cost_usd(self.config.model, reducer.usage) if self.config.model else UNREPORTED
             emit(
                 AgentEndEvent(
                     task_id=self.task_id,
                     status=status,
-                    usage=TokenUsage(**reducer.usage),
+                    usage=TokenUsage(**reducer.usage, total_cost_usd=cost if isinstance(cost, float) else None),
                     iteration=self._iteration,
                     user_input=user_input,
                     agent_output=reducer.agent_output(is_error=crashed),
@@ -569,7 +571,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 self._crash(
                     finalize,
                     collector,
-                    "omp reported no token counts on agent_end; the telemetry field names have moved",
+                    "omp reported no usage on any assistant message this turn; "
+                    "the AssistantMessage usage field has moved",
                 )
 
             status = AgentEndStatus.MAX_TURNS_EXHAUSTED if max_turns_exhausted else AgentEndStatus.COMPLETED

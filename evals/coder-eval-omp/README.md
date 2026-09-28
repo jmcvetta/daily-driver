@@ -9,8 +9,10 @@ skill.
 ```
 coder-eval-omp/
 ├── pyproject.toml                 the `coder_eval.plugins` entry point
+├── prices.json                    hand-maintained USD/Mtok rates — see `Cost`
 └── src/coder_eval_omp/
     ├── rpc.py                     the frame reduction — pure, and tested
+    ├── pricing.py                 prices.json lookup — pure, and tested
     ├── agent.py                   the process, the events, and what loaded
     └── plugin.py                  register(registry)
 ```
@@ -62,14 +64,23 @@ puts the startup answer in each run's `environment_info`:
 | `omp_linked_plugins` | the roots `omp plugin link` installed |
 | `omp_extension_errors` | every `extension_error` frame — the constitution rides on the extension |
 
-The two protocol questions use a later capture. Omp's `docs/rpc.md` shows
-`toolName` on `tool_execution_start` without showing the arguments, and places
-token accounting in "telemetry fields on `agent_end`" without naming them.
-After each completed turn, the adapter atomically writes the sorted observed
-key union to `omp-protocol-observations.json` in the task sandbox:
+The two protocol questions Omp's `docs/rpc.md` leaves open — the argument keys
+on `tool_execution_start`, and where token counts live — are settled from the
+shipped `@oh-my-pi/{pi-coding-agent,pi-agent-core,pi-ai}@18.4.2` TypeScript
+source rather than a live capture: no `omp` binary or session reaches CI or
+this development environment, and the source is exhaustive where one sampled
+frame would only be a guess at what always holds. `rpc.py`'s module docstring
+carries the citations. In short: tool calls carry `toolCallId`/`toolName`/
+`args`, and token usage is a required `usage` field on every assistant
+message's `message_end` frame (`input`/`output`/`cacheRead`/`cacheWrite`), not
+on `agent_end` — Omp's RPC mode never opts into the `agent_end.telemetry`
+summary that would carry it there. After each completed turn, the adapter
+atomically writes the sorted observed key union to
+`omp-protocol-observations.json` in the task sandbox, as a live-run check
+against that source rather than a source of truth itself:
 
 ```json
-{"omp_argument_keys_seen":["args"],"omp_usage_keys_seen":["inputTokens","outputTokens"]}
+{"omp_argument_keys_seen":["args"],"omp_usage_keys_seen":["input","output","cacheRead","cacheWrite"]}
 ```
 
 `omp-glm-5.3.yaml` reads that file through its experiment-default `post_run`
@@ -80,11 +91,26 @@ that object before the first turn. `get_sdk_options` is not a workaround:
 `resolve_agent_settings` prefers it over `agent_config` and would blank the
 report's Agent Settings.
 
+## Cost
+
+`pricing.py` prices a run from `prices.json`, a hand-maintained table of USD
+per million input/output tokens keyed by model identifier — the same spelling
+`omp_configs/*.yml` and an experiment's `agent.model` use
+(`vercel-ai-gateway/zai/glm-5.3`, not a bare model name). Nothing fetches a
+price at run time: the table is a dated snapshot, sourced from
+`@oh-my-pi/pi-catalog@18.4.2`'s bundled model catalog, of the models the
+current `evals/experiments/omp-*.yaml` files actually run. A model with no row
+prices `total_cost_usd` as `None` (`coder_eval`'s own "unreported", not
+`0.0`) — adding a new Omp model to an experiment means adding its row here
+too. `pricing.py` is pure, like `rpc.py`, so `scripts/check-omp-agent.py`
+drives it in `make check` without a `coder_eval` install.
+
 ## What is tested, and what is not
 
-`rpc.py` imports nothing — not `coder_eval`, not `omp` — and
-`scripts/check-omp-agent.py` drives it against recorded frames in `make check`.
-That is where the three things above live, and it is why they live there.
+`rpc.py` and `pricing.py` import nothing — not `coder_eval`, not `omp` — and
+`scripts/check-omp-agent.py` drives both against recorded frames and a test
+price table in `make check`. That is where the three things above, and the
+token-usage and cost math, all live, and it is why they live there.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the

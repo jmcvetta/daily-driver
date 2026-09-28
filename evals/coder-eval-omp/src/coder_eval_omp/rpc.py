@@ -30,11 +30,26 @@ An Omp arm that did the same would score every judged row 0.0 in both arms.
 `render_agent_output` emits the tagged shape instead, so one rubric reads the
 same on both harnesses.
 
-The protocol itself is Omp's `docs/rpc.md`. Where that document does not say
-(the arguments on `tool_execution_start`, the token accounting on `agent_end`)
-this module reads every spelling the payload might use and *records which one
-it found*, in `argument_keys_seen` and `usage_keys_seen`. The first live run
-therefore answers the question rather than guessing at it.
+**Token usage.** Not on `agent_end`. Omp's `agent_end` carries a `telemetry`
+summary only when the session was built with an `AgentTelemetryConfig`
+(`@oh-my-pi/pi-agent-core` `agent-loop.ts`, `buildAgentEndEvent`: no config,
+no `telemetry` key at all), and no RPC command sets one — `--mode rpc` never
+opts in, so a real session's `agent_end` never carries usage. The counts
+instead sit on every assistant `AgentMessage`, as a required `usage: Usage`
+field (`@oh-my-pi/pi-ai` `types.ts`) forwarded verbatim on that message's
+`message_end` frame (`rpc-session-events.ts`, `RpcSessionEventForwarder`).
+`extract_usage` reads it there, once per assistant message, and the reducer
+sums the run. Settled from the shipped `@oh-my-pi/{pi-coding-agent,
+pi-agent-core, pi-ai}@18.4.2` TypeScript source (the authoritative type,
+`docs/rpc.md` is silent on where usage lives) rather than a live capture: no
+`omp` binary or session reaches this environment, and the source is
+exhaustive where one sampled frame would only be a guess at what always
+holds.
+
+**Tool call keys.** Settled the same way. `tool_execution_start` and
+`tool_execution_update` carry `toolCallId`, `toolName` and `args`
+(`AgentEvent` in `pi-agent-core/types.ts`) — not the wider guesses
+`ARGUMENT_KEYS`/`TOOL_NAME_KEYS`/`CALL_ID_KEYS` used to carry.
 """
 
 from __future__ import annotations
@@ -89,32 +104,28 @@ ARG_RENAME: dict[str, dict[str, str]] = {
     # `command_executed`'s shell-aware extraction reads.
 }
 
-# Where a tool call's input arguments might sit on a `tool_execution_*` frame.
-# Omp's `docs/rpc.md` shows `toolName` on that frame and does not show the
-# arguments; the authoritative types are in the TypeScript source. Every
-# plausible spelling is read, and the one that answered is recorded, so a live
-# run settles this instead of a guess doing it.
-ARGUMENT_KEYS = ("arguments", "input", "args", "params", "parameters", "toolInput")
+# Where a tool call's input arguments sit on a `tool_execution_*` frame.
+# `AgentEvent` in `@oh-my-pi/pi-agent-core`'s `types.ts` (18.4.2) names this
+# `args`, verbatim, on both `tool_execution_start` and `tool_execution_update`.
+ARGUMENT_KEYS = ("args",)
 
-# Where a tool call's own name might sit, same reasoning.
-TOOL_NAME_KEYS = ("toolName", "tool", "name")
+# Where a tool call's own name sits, same source.
+TOOL_NAME_KEYS = ("toolName",)
 
-# Where a tool call's correlation id might sit.
-CALL_ID_KEYS = ("toolCallId", "callId", "toolCallID", "id")
+# Where a tool call's correlation id sits, same source.
+CALL_ID_KEYS = ("toolCallId",)
 
-# Token counts, by the spellings a payload might use, mapped to the buckets
-# `coder_eval`'s `TokenUsage` keeps. `docs/rpc.md` places per-turn accounting in
-# "telemetry fields on `agent_end`" without naming them, so this reads both the
-# camelCase and snake_case forms of each.
-USAGE_KEYS: dict[str, tuple[str, ...]] = {
-    "uncached_input_tokens": ("inputTokens", "input_tokens", "promptTokens", "prompt_tokens"),
-    "output_tokens": ("outputTokens", "output_tokens", "completionTokens", "completion_tokens"),
-    "cache_read_input_tokens": ("cacheReadTokens", "cache_read_tokens", "cachedTokens", "cached_tokens"),
-    "cache_creation_input_tokens": ("cacheWriteTokens", "cache_write_tokens"),
+# Token counts, mapped from the `Usage` interface (`@oh-my-pi/pi-catalog`'s
+# `types.ts`, 18.4.2) that every `AssistantMessage.usage` carries, to the
+# buckets `coder_eval`'s `TokenUsage` keeps. `cacheRead`/`cacheWrite` are
+# required fields on `Usage` (0 when unused, never absent), so a bucket
+# missing from a real assistant message is drift, not an unused feature.
+USAGE_KEYS: dict[str, str] = {
+    "uncached_input_tokens": "input",
+    "output_tokens": "output",
+    "cache_read_input_tokens": "cacheRead",
+    "cache_creation_input_tokens": "cacheWrite",
 }
-
-# Sub-objects a usage payload might be nested under on `agent_end`.
-USAGE_CONTAINERS = ("usage", "telemetry", "tokens", "stats", "tokenUsage")
 
 # The frame types this module knows what to do with. A turn that recognized
 # NONE of them captured no telemetry, and the agent crashes it rather than
@@ -261,33 +272,26 @@ def extract_arguments(payload: dict[str, Any]) -> tuple[dict[str, Any], str | No
     return {}, None
 
 
-def extract_usage(payload: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
-    """Token counts from an `agent_end` payload, and the keys they came from.
+def extract_usage(message: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
+    """Token counts from one assistant `AgentMessage`'s `usage`, and the keys found.
 
-    Reads the payload itself and every container in `USAGE_CONTAINERS`, so a
-    count nested under `telemetry` is found as readily as one at the top level.
-    An empty result means the frame carried no counts — the caller decides
-    whether that fails the turn.
+    `message` is the `message` field of a `message_end` frame. An empty result
+    means the message carried no readable `usage` object — a message with no
+    `usage` at all, or one whose object was missing a bucket — and the caller
+    decides whether that fails the turn.
     """
     found: dict[str, int] = {}
     seen: list[str] = []
-    sources = [payload]
-    for container in USAGE_CONTAINERS:
-        value = payload.get(container)
-        if isinstance(value, dict):
-            sources.append(value)
+    usage = message.get("usage")
+    if not isinstance(usage, dict):
+        return found, seen
 
-    for source in sources:
-        for bucket, spellings in USAGE_KEYS.items():
-            if bucket in found:
-                continue
-            for spelling in spellings:
-                value = source.get(spelling)
-                if isinstance(value, bool) or not isinstance(value, (int, float)):
-                    continue
-                found[bucket] = int(value)
-                seen.append(spelling)
-                break
+    for bucket, spelling in USAGE_KEYS.items():
+        value = usage.get(spelling)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        found[bucket] = int(value)
+        seen.append(spelling)
     return found, seen
 
 
@@ -400,9 +404,22 @@ class TurnReducer:
         message on `message_end`. Both are keyed by message id, and a completed
         message REPLACES the deltas collected for that id — otherwise the reply
         is counted twice and every length rubric reads double.
+
+        `message_end` is also where usage is read: an assistant `AgentMessage`
+        carries a required `usage` object there (see the module docstring), and
+        the reducer sums it into the run's total. `message_update` carries a
+        streaming snapshot whose `usage` is not yet final, so it is skipped —
+        summing both would double every count.
         """
+        message = frame.get("message")
+        if frame.get("type") == "message_end" and isinstance(message, dict) and message.get("role") == "assistant":
+            found, seen = extract_usage(message)
+            self.usage_keys_seen.update(seen)
+            for bucket, count in found.items():
+                self.usage[bucket] = self.usage.get(bucket, 0) + count
+
         message_id = str(frame.get("messageId") or frame.get("messageID") or frame.get("id") or "message")
-        complete = _text_of(frame.get("message"))
+        complete = _text_of(message)
         if complete:
             already = "".join(self._message_texts.get(message_id, []))
             self._message_texts[message_id] = [complete]
@@ -484,13 +501,16 @@ class TurnReducer:
         ]
 
     def _on_agent_end(self, frame: dict[str, Any]) -> list[Action]:
-        usage, seen = extract_usage(frame)
-        self.usage_keys_seen.update(seen)
-        if usage:
-            self.usage = usage
+        """Settle the turn. Usage is not read here — see `_on_message`.
+
+        Omp's `agent_end` carries a `telemetry` summary only when the session
+        opted into `AgentTelemetryConfig`, which no RPC command does; the run's
+        usage is instead the sum already accumulated from each assistant
+        message's `message_end`.
+        """
         terminal = frame.get("isTerminal") is not False
         self.terminal_end_seen = self.terminal_end_seen or terminal
-        return [AgentFinished(terminal=terminal, usage=usage)]
+        return [AgentFinished(terminal=terminal, usage=dict(self.usage))]
 
     def _on_extension_error(self, frame: dict[str, Any]) -> list[Action]:
         failure = ExtensionFailed(

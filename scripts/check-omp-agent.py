@@ -54,7 +54,8 @@ PACKAGE_SRC = ROOT / "evals" / "coder-eval-omp" / "src"
 
 sys.path.insert(0, str(PACKAGE_SRC))
 
-from coder_eval_omp.rpc import (  # noqa: E402  (the path insert must come first)
+from coder_eval_omp import pricing  # noqa: E402  (the path insert must come first)
+from coder_eval_omp.rpc import (  # noqa: E402
     AgentFinished,
     ToolFinished,
     ToolStarted,
@@ -64,6 +65,27 @@ from coder_eval_omp.rpc import (  # noqa: E402  (the path insert must come first
     render_agent_output,
     skill_name_from_url,
 )
+
+# A `message_end` frame shaped like a real Omp RPC session's assistant
+# message. Reconstructed from the shipped `@oh-my-pi/{pi-ai,pi-agent-core,
+# pi-coding-agent}@18.4.2` TypeScript source (see `rpc.py`'s module
+# docstring) rather than sampled from a live run: no `omp` binary or session
+# reaches CI or this repository's own development environment. Every field
+# below is required by that source or copied from it, not guessed; only the
+# reply text is a placeholder.
+ASSISTANT_MESSAGE_END_FRAME = {
+    "type": "message_end",
+    "messageId": "msg-1",
+    "message": {
+        "role": "assistant",
+        "content": [{"type": "text", "text": "done"}],
+        "api": "anthropic-messages",
+        "provider": "vercel-ai-gateway",
+        "model": "zai/glm-5.3",
+        "usage": {"input": 812, "output": 143, "cacheRead": 0, "cacheWrite": 0, "totalTokens": 955},
+        "stopReason": "stop",
+    },
+}
 
 
 class CheckFailed(Exception):
@@ -129,7 +151,7 @@ def check_tool_lifecycle() -> None:
     actions = feed(
         reducer,
         {"type": "tool_execution_start", "toolCallId": "c1", "toolName": "bash"},
-        {"type": "tool_execution_update", "toolCallId": "c1", "arguments": {"command": "make check"}},
+        {"type": "tool_execution_update", "toolCallId": "c1", "args": {"command": "make check"}},
         {"type": "tool_execution_end", "toolCallId": "c1", "result": "ok"},
     )
     starts = [a for a in actions if isinstance(a, ToolStarted)]
@@ -140,14 +162,14 @@ def check_tool_lifecycle() -> None:
         f"arguments arriving on the update frame must reach the telemetry, got {starts[0].parameters}",
     )
     check(ends[0].status == "ok", "a result with no error is ok")
-    check("arguments" in reducer.argument_keys_seen, "the argument key that answered is recorded")
+    check("args" in reducer.argument_keys_seen, "the argument key that answered is recorded")
 
     reducer = TurnReducer()
     ends = [
         a
         for a in feed(
             reducer,
-            {"type": "tool_execution_start", "toolCallId": "c2", "toolName": "bash", "input": {"command": "false"}},
+            {"type": "tool_execution_start", "toolCallId": "c2", "toolName": "bash", "args": {"command": "false"}},
             {"type": "tool_execution_end", "toolCallId": "c2", "error": "exit 1"},
         )
         if isinstance(a, ToolFinished)
@@ -172,7 +194,7 @@ def check_skill_engagement_end_to_end() -> None:
             "type": "tool_execution_start",
             "toolCallId": "s1",
             "toolName": "read",
-            "arguments": {"url": "skill://undertake"},
+            "args": {"url": "skill://undertake"},
         },
     )
     starts = [a for a in actions if isinstance(a, ToolStarted)]
@@ -198,19 +220,92 @@ def check_turn_settlement() -> None:
 
 
 def check_usage() -> None:
-    """Token counts are found wherever the payload keeps them."""
-    usage, seen = extract_usage({"type": "agent_end", "usage": {"inputTokens": 10, "outputTokens": 4}})
+    """Token counts come from an assistant message's `usage`, read at `message_end`."""
+    usage, seen = extract_usage(ASSISTANT_MESSAGE_END_FRAME["message"])
     check(
-        usage == {"uncached_input_tokens": 10, "output_tokens": 4},
-        f"counts under `usage` must map to coder_eval's buckets, got {usage}",
+        usage
+        == {
+            "uncached_input_tokens": 812,
+            "output_tokens": 143,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+        },
+        f"`input`/`output`/`cacheRead`/`cacheWrite` must map to coder_eval's buckets, got {usage}",
     )
-    check(sorted(seen) == ["inputTokens", "outputTokens"], f"the spellings that answered are recorded, got {seen}")
+    check(
+        sorted(seen) == ["cacheRead", "cacheWrite", "input", "output"],
+        f"the fields read are recorded, got {seen}",
+    )
 
-    usage, _ = extract_usage({"type": "agent_end", "telemetry": {"input_tokens": 3, "output_tokens": 1}})
-    check(usage.get("uncached_input_tokens") == 3, "counts nested under `telemetry` are found too")
+    # The field missing entirely, and the whole object missing: both report
+    # nothing found rather than zeros. `require_token_telemetry` turns this
+    # into a crash in `agent.py`, which -- like the rest of that module --
+    # needs a `coder_eval` install and an `omp` binary this script has
+    # neither of, so the crash itself is outside what `make check` can drive;
+    # this is the empty result that check exists to fail loudly on.
+    usage, seen = extract_usage({"role": "assistant", "content": []})
+    check(usage == {} and seen == [], "an assistant message with no `usage` object reports none, not zeros")
 
-    usage, seen = extract_usage({"type": "agent_end"})
-    check(usage == {} and seen == [], "a frame with no counts reports none rather than zeros")
+    usage, seen = extract_usage({"role": "assistant", "usage": {"input": 5}})
+    check(
+        usage == {"uncached_input_tokens": 5} and seen == ["input"],
+        f"a `usage` object missing a bucket reports only what it has, got {usage} {seen}",
+    )
+
+    # The reducer: usage accumulates from `message_end` only. A
+    # `message_update`'s `message` is a streaming snapshot whose `usage` is
+    # not yet final, so counting it too would double every total.
+    reducer = TurnReducer()
+    feed(
+        reducer,
+        {
+            "type": "message_update",
+            "messageId": "m1",
+            "message": {"role": "assistant", "usage": {"input": 999, "output": 999, "cacheRead": 0, "cacheWrite": 0}},
+        },
+        ASSISTANT_MESSAGE_END_FRAME,
+    )
+    check(
+        reducer.usage
+        == {
+            "uncached_input_tokens": 812,
+            "output_tokens": 143,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+        },
+        f"only the `message_end` usage must be counted, got {reducer.usage}",
+    )
+
+    actions = feed(reducer, {"type": "agent_end", "messages": []})
+    ends = [a for a in actions if isinstance(a, AgentFinished)]
+    check(
+        ends and ends[0].usage == reducer.usage,
+        "agent_end must report the usage accumulated across the run, not read its own (absent) usage",
+    )
+
+
+def check_pricing() -> None:
+    """`cost_usd` bills a known model, refuses to guess at an unknown one, and zero tokens cost zero."""
+    prices = {"test/known": pricing.Price(input_usd_per_million=2.0, output_usd_per_million=10.0, recorded="2026-01-01")}
+
+    cost = pricing.cost_usd("test/known", {"uncached_input_tokens": 1_000_000, "output_tokens": 500_000}, prices)
+    check(cost == 2.0 + 5.0, f"cost must bill uncached input and output at their per-million rate, got {cost}")
+
+    cost = pricing.cost_usd("test/unknown", {"uncached_input_tokens": 100, "output_tokens": 50}, prices)
+    check(
+        cost == pricing.UNREPORTED,
+        f"a model with no price row must report {pricing.UNREPORTED!r}, not a guess, got {cost}",
+    )
+
+    cost = pricing.cost_usd("test/known", {"uncached_input_tokens": 0, "output_tokens": 0}, prices)
+    check(cost == 0.0, f"zero tokens on a priced model must cost 0.0, not {pricing.UNREPORTED!r}, got {cost}")
+
+    committed = pricing.load_prices()
+    check(committed, "the committed prices.json must not be empty")
+    for model, price in committed.items():
+        check(price.input_usd_per_million > 0, f"{model}: input rate must be a positive USD/Mtok rate, got {price}")
+        check(price.output_usd_per_million > 0, f"{model}: output rate must be a positive USD/Mtok rate, got {price}")
+        check(price.recorded, f"{model}: `recorded` date must not be empty")
 
 
 def check_agent_output() -> None:
