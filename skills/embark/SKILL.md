@@ -235,8 +235,14 @@ resolved once, here, so `Watch the wave` and `Recover a session` can address it
 straight off the roll. Do not describe an actual model that the harness did
 not report.
 
-The comment ends with `provenance`'s block, naming this orchestrating
-session — never a task session's, which names its own at its own claim.
+The comment carries `provenance`'s block after the table, naming this
+orchestrating session — never a task session's, which names its own at its
+own claim.
+
+**A sailing couplet follows the block, last.** Two rhymed lines as the wave
+puts to sea, each italicised as [`HAIKU.md`](../../HAIKU.md) shows. It comes
+after the table and the block, so a reader who wants the rows never reads past
+verse to reach them — the order `undertake`'s claim comment keeps.
 
 **The wave headings carry state, and nothing else moves it.** `epic` writes
 that state into the epic's `Sequencing` at decomposition time and never
@@ -482,7 +488,14 @@ post one comment listing the pull requests that landed, then close the epic
 with `state_reason: completed`. When a claim is delivered by none of them,
 post one comment that names the missing claim and leave the epic open. That
 report-and-wait path is the only outcome here that asks a person for
-anything. Either comment ends with `provenance`'s block.
+anything. Either comment carries `provenance`'s block; the missing-claim
+comment ends with it.
+
+**The delivered comment carries a homecoming verse, last** — a short
+stanza in the manner of a sea shanty, after the block, each line italicised
+as [`HAIKU.md`](../../HAIKU.md) shows. The missing-claim comment carries
+none: it asks a person to act, and verse never attaches to a write somebody
+has to act on.
 
 When the roll says `Landing: by hand`, report that the epic is ready and leave
 it open. In every outcome, cancel the backstop and drop every pull-request
