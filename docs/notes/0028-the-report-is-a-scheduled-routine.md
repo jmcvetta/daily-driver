@@ -33,15 +33,18 @@ the orchestrator and throwaway sessions as implementors. Every session was in
    `persistent_session_id` naming the orchestrator and `run_once_at` two
    minutes out. It fired a minute after its time, `last_run` read
    `SUCCEEDED`, and its text reached the orchestrator intact, as a queued
-   notification. The orchestrator's own `send_later` backstop arrived the same
-   way.
+   notification. The orchestrator was idle, and the notification started a
+   turn. The orchestrator's own `send_later` backstop arrived the same way.
 4. **An archived target keeps the fire.** A Routine bound to an archived
    session also fired without error, and the session stayed archived. When it
    was unarchived its status read working at once. Whether the fire caused
    that was not measured.
 5. **The brief matters.** The first implementor, handed the route in its
    prompt, stopped and asked its user whether the prompt was an injection. The
-   two briefed through `append_system_prompt` reported without asking.
+   two briefed through `append_system_prompt` reported without asking. Both
+   of those briefs also called the route one the user set up. `embark`'s brief
+   drops that claim, because no agent can state the user's consent for them.
+   Whether the brief without it still avoids the question is not measured.
 
 `send_later` was not tried from an implementor: its contract fires into the
 calling session only, so it cannot reach the orchestrator.

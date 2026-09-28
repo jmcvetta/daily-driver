@@ -352,6 +352,9 @@ whenever it is empty. A wake that finds the timer still in flight arms nothing.
 **An implementor's report is not this slot.** It arrives on a timer the
 implementor armed, so it neither fills the slot nor empties it, and this
 session has no report timer to cancel at `Close the epic` or at `stand-down`.
+A report can still be in flight when the watch ends, because it fires a minute
+or more after it is sent. One that arrives after the epic closed or the watch
+stood down is read and dropped: the state it reports is already on GitHub.
 
 **The backstop prompt carries the posture, because the wake will not.** The
 prompt written for the next check-in is read on arrival, while this file is

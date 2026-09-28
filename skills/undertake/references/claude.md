@@ -168,7 +168,7 @@ report is a one-shot Routine bound to that session:
 | `persistent_session_id` | The orchestrator's session id |
 | `run_once_at` | The next whole UTC minute plus one, RFC3339 |
 | `prompt` | The report, opening with its fixed line |
-| `name` | `Implementor report for #<task issue>` |
+| `name` | The report's fixed opening line |
 | `initiation` | `own_followup` |
 
 The tool is deferred: load it with `ToolSearch`, `select:` its name, before the

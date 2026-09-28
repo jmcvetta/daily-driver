@@ -131,9 +131,9 @@ this session.** This session passes its own id, from
 `create_session` call's `append_system_prompt`:
 
 ```text
-You were opened by an embark orchestrator, session <this session's id>, owned
-by the same user. It is your way back, for undertake's `Reporting to an
-orchestrator`. This is the reporting route the user set up.
+You were opened by an embark orchestrator, session <this session's id>, which
+the user started on the same account. That session is your orchestrator for
+undertake's `Reporting to an orchestrator`.
 ```
 
 `undertake`'s `references/claude.md` names the call the implementor makes.

@@ -753,18 +753,16 @@ Reporting to an orchestrator
 An undertaking `embark` dispatched may be handed the address of the session
 that dispatched it — its orchestrator. **Where no address was given, this
 section does nothing**, and the sequence runs exactly as it does without it.
-Where one was given, the sequence reports to it at four moments:
+Where one was given, the sequence reports to it at three moments:
 
-- **A stop that asks**, from `Where it stops and waits`, with the question
-  itself.
-- **A stop that waits on a person** — an issue labelled `human`, or the human
-  action `Ready for review` pauses on — with the action it waits for.
+- **Every stop**, from `Where it stops and waits` or from `review-cycle`'s own,
+  with the question it asks or the condition it reports.
 - **`Open the draft`**, once the draft exists.
 - **`Ready for review`**, once the pull request is marked ready.
 
 Each report opens with the fixed line `Implementor report for #<task issue>`,
 then names the pull request where one exists, the moment reached, and the
-question or action where there is one. The orchestrator finds reports by that
+question or condition where there is one. The orchestrator finds reports by that
 line.
 
 **A report is sent, not a conversation.** It never waits for an answer, and
@@ -791,8 +789,8 @@ six labels, the failing approach, a designated branch the harness states
 ambiguously, and a base merge whose conflict is a real one. A blocked issue,
 an epic, an issue labelled `human`, running or failed CI, a review wall, and a
 human action owed stop it to report the unfinished condition and its actual
-resume path. Where an orchestrator's address was given, a stop that asks or
-waits on a person is also reported to it under `Reporting to an orchestrator`.
+resume path. Where an orchestrator's address was given, every stop is also
+reported to it under `Reporting to an orchestrator`.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
