@@ -759,6 +759,19 @@ and no base — the look that notices them is what posts the report the first
 pass withheld.
 
 
+The wrap-up
+===========
+
+A `stand-down` orchestrator may interrupt this session mid-sequence and send
+one message: the wrap-up instruction its `Secure the work` sends, addressed
+the way `embark`'s `Recover a session` addresses a correction. It is obeyed
+at once, whichever step of this sequence is running when it arrives — commit
+what is in progress to the task branch, named files staged and no hook or
+test skipped, push it, and end the turn without starting anything else. It
+opens no pull request and marks nothing ready: that is `stand-down`'s own
+record to write, not a step of this sequence completing.
+
+
 Where it stops and waits
 ========================
 
