@@ -18,7 +18,9 @@ initial_prompt: >-
   Epic #200 is at sea, and its latest muster roll says `Landing: orchestrator`.
   Task #201 has pull request #301. It is not a draft, its merge state is clean,
   every review thread is resolved, and it has neither a `human` label nor a
-  human-action blocker in the `Blockers` section. Check on the wave.
+  human-action blocker in the `Blockers` section. Its latest conversation
+  comment starts with `## Review cycle complete! 🎉` and names the current
+  head SHA. Check on the wave.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -59,7 +61,7 @@ success_criteria:
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
       The rule: the latest muster roll gives landing to the orchestrator, and
-      all four ordered reads hold. It therefore squash-merges pull request
+      all five ordered reads hold. It therefore squash-merges pull request
       #301 in this turn. It does not ask permission, post a summary first,
       wait for a person, or enable GitHub auto-merge. Saying the merge tool is
       unavailable in the environment, and stating that this is what would

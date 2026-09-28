@@ -365,7 +365,17 @@ pull request.
    can give; record that once on the epic in the task's muster-roll entry.
 3. **No review thread is unresolved.** Use the thread read named by
    `review-cycle`'s reference for the active harness.
-4. **No human action is owed.** The pull request carries neither the `human`
+4. **The implementor marked the review cycle complete for this head.** Read
+   the pull request's conversation comments, take the latest one that starts
+   with `## Review cycle complete! 🎉`, and take the SHA it names. The read
+   holds when that SHA is the recorded head. It also holds when the head moved
+   past that SHA only through merge commits — walk the head's first parents
+   back to the named SHA — because a clean base merge earns no new round under
+   `review-cycle`'s `Does it go again?`, and so no new notice. It does not
+   hold when no notice exists or a non-merge commit follows the named SHA:
+   threads resolved after the first round do not say the implementor's fix
+   push, its CI, or its `Verify the fix delta` pass is done.
+5. **No human action is owed.** The pull request carries neither the `human`
    label nor `pr-body`'s human-action blocker.
 
 A failed read produces one line in the task's muster-roll record and no merge.
@@ -375,11 +385,11 @@ The merge is conditional on the recorded head SHA. If the head moves after
 the read, the merge call fails closed and the next wake repeats the whole gate.
 
 
-When all four reads hold and the roll says `Landing: by hand`, report the
+When all five reads hold and the roll says `Landing: by hand`, report the
 merge-ready pull request once and return without merging. That is the whole
 opt-out.
 
-When all four reads hold and the roll says `Landing: orchestrator`, squash
+When all five reads hold and the roll says `Landing: orchestrator`, squash
 merge the recorded head in the same turn. The repository is squash-only and
 uses the pull request title as the squash subject, which is load-bearing for
 release-please. No summary comes first, no permission is sought, and no turn
