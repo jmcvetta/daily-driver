@@ -482,6 +482,27 @@ def filter_diff_to_paths(diff_text: str, paths: set[str]) -> str:
     return "".join(kept)
 
 
+def paths_present_at_base(tests_patch: str) -> list[str]:
+    """The new-side paths of `tests_patch` that existed at the base SHA: every
+    block except the ones git marks `new file mode`. A test file the pull
+    request creates is not one the agent can delete, so it never belongs in
+    `base-test-files.txt`.
+    """
+    present: list[str] = []
+    path: str | None = None
+    for line in tests_patch.splitlines():
+        header = _DIFF_HEADER_RE.match(line)
+        if header:
+            if path is not None and path not in present:
+                present.append(path)
+            path = header.group(2)
+        elif path is not None and line.startswith("new file mode"):
+            path = None
+    if path is not None and path not in present:
+        present.append(path)
+    return present
+
+
 # ---------------------------------------------------------------------------
 # Candidate records and the candidates.json store.
 # ---------------------------------------------------------------------------
@@ -703,7 +724,8 @@ def write_case_fixture(
     base_skip_counts: list[str],
 ) -> None:
     """The fixture directory for one selected case: `case.sh`, `tests.patch`,
-    `base-test-files.txt`, and `base-skip-counts.txt` (from `base_skip_counts`
+    `base-test-files.txt` (the patch's paths the base SHA already had), and
+    `base-skip-counts.txt` (from `base_skip_counts`
     -- `verify_answer_key`'s reading of the base SHA it already cloned, taken
     before it applied `tests.patch` to that checkout).
     """
@@ -712,7 +734,7 @@ def write_case_fixture(
 
     (case_dir / "tests.patch").write_text(tests_patch, encoding="utf-8")
 
-    base_test_files = "\n".join(record["test_files"]) + "\n"
+    base_test_files = "\n".join(paths_present_at_base(tests_patch)) + "\n"
     (case_dir / "base-test-files.txt").write_text(base_test_files, encoding="utf-8")
     (case_dir / "base-skip-counts.txt").write_text("\n".join(base_skip_counts) + "\n", encoding="utf-8")
 
@@ -982,6 +1004,7 @@ def _run_self_tests() -> None:
     _test_read_elapsed_minutes()
     _test_derive_task_timeout()
     _test_filter_diff_to_paths()
+    _test_paths_present_at_base()
     _test_count_skip_markers()
     _test_resolve_test_command()
 
@@ -1177,6 +1200,29 @@ def _test_filter_diff_to_paths() -> None:
     assert "src/foo.py" not in filtered
     assert "tests/test_foo.py" in filtered
     assert "+def test_y" in filtered
+
+
+def _test_paths_present_at_base() -> None:
+    patch = (
+        "diff --git a/tests/test_old.py b/tests/test_old.py\n"
+        "index 111..222 100644\n"
+        "--- a/tests/test_old.py\n"
+        "+++ b/tests/test_old.py\n"
+        "@@ -1 +1 @@\n"
+        "-a\n"
+        "+b\n"
+        "diff --git a/tests/test_new.py b/tests/test_new.py\n"
+        "new file mode 100644\n"
+        "index 000..333\n"
+        "--- /dev/null\n"
+        "+++ b/tests/test_new.py\n"
+        "@@ -0,0 +1 @@\n"
+        "+new file mode is text here, not a header\n"
+        "diff --git a/tests/test_last.py b/tests/test_last.py\n"
+        "index 444..555 100644\n"
+    )
+    assert paths_present_at_base(patch) == ["tests/test_old.py", "tests/test_last.py"]
+    assert paths_present_at_base("") == []
 
 
 def _test_count_skip_markers() -> None:
