@@ -8,7 +8,7 @@ SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
-	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
+	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
 	check-review-cycle-fix-delta-route check-provenance \
@@ -95,7 +95,7 @@ check-ci-scope:
 	node scripts/check-ci-scope.mjs
 
 check-plugin-validity: check-plugin check-skills check-agents \
-	check-manifests check-manifest-fixtures
+	check-manifests check-manifest-fixtures check-release-paths
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
@@ -149,6 +149,14 @@ check-agents:
 # nothing else catches it. See the docstring in the script.
 check-manifests:
 	python3 scripts/check-manifests.py
+
+# check-release-paths: every tracked top-level directory is either shipped or
+# named in release-please's `exclude-paths`, and every excluded entry is a real
+# top-level directory. The list is a denylist, so this is what makes a new
+# directory's release status a decision rather than a default. See the
+# docstring in the script.
+check-release-paths:
+	python3 scripts/check-release-paths.py
 
 # check-manifest-fixtures: the acceptance test for the route half of
 # check-manifests -- folded-description rejection, body rejection with its

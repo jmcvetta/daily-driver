@@ -7,6 +7,16 @@
       "release-type": "simple",
       "initial-version": "0.1.0",
       "include-component-in-tag": false,
+      "exclude-paths": [
+        ".claude",
+        ".github",
+        "attic",
+        "docs",
+        "evals",
+        "infra",
+        "omp_configs",
+        "scripts"
+      ],
       "extra-files": [
         {
           "type": "json",
