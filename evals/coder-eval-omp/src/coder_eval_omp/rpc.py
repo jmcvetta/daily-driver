@@ -30,21 +30,26 @@ An Omp arm that did the same would score every judged row 0.0 in both arms.
 `render_agent_output` emits the tagged shape instead, so one rubric reads the
 same on both harnesses.
 
-**Token usage.** Not on `agent_end`. Omp's `agent_end` carries a `telemetry`
-summary only when the session was built with an `AgentTelemetryConfig`
+**Token usage.** Not on `agent_end.telemetry`. That summary exists only when
+the session was built with an `AgentTelemetryConfig`
 (`@oh-my-pi/pi-agent-core` `agent-loop.ts`, `buildAgentEndEvent`: no config,
 no `telemetry` key at all), and no RPC command sets one — `--mode rpc` never
-opts in, so a real session's `agent_end` never carries usage. The counts
-instead sit on every assistant `AgentMessage`, as a required `usage: Usage`
-field (`@oh-my-pi/pi-ai` `types.ts`) forwarded verbatim on that message's
-`message_end` frame (`rpc-session-events.ts`, `RpcSessionEventForwarder`).
-`extract_usage` reads it there, once per assistant message, and the reducer
-sums the run. Settled from the shipped `@oh-my-pi/{pi-coding-agent,
-pi-agent-core, pi-ai}@18.4.2` TypeScript source (the authoritative type,
-`docs/rpc.md` is silent on where usage lives) rather than a live capture: no
-`omp` binary or session reaches this environment, and the source is
-exhaustive where one sampled frame would only be a guess at what always
-holds.
+opts in, so a real session's `agent_end` never carries it. The counts instead
+sit on every assistant `AgentMessage`, as a required `usage: Usage` field
+(`@oh-my-pi/pi-ai` `types.ts`). Most arrive on that message's own
+`message_end` frame (`rpc-session-events.ts`, `RpcSessionEventForwarder`
+forwards the message verbatim); a message an aborted or early-stopped turn
+never finished individually streaming instead surfaces in `agent_end`'s own
+`messages` array, which `RpcFrameEncoder`'s `compactTerminalFrame`
+(`rpc-frame.ts`) trims to exactly the messages not already sent that way — so
+a message appears in one place or the other, never both.
+`TurnReducer._accumulate_usage` reads a message's `usage` the same way from
+either site, once per assistant message, and sums the run. Settled from the
+shipped `@oh-my-pi/{pi-coding-agent, pi-agent-core, pi-ai}@18.4.2` TypeScript
+source (the authoritative type, `docs/rpc.md` is silent on where usage
+lives) rather than a live capture: no `omp` binary or session reaches this
+environment, and the source is exhaustive where one sampled frame would only
+be a guess at what always holds.
 
 **Tool call keys.** Settled the same way. `tool_execution_start` and
 `tool_execution_update` carry `toolCallId`, `toolName` and `args`
@@ -409,14 +414,12 @@ class TurnReducer:
         carries a required `usage` object there (see the module docstring), and
         the reducer sums it into the run's total. `message_update` carries a
         streaming snapshot whose `usage` is not yet final, so it is skipped —
-        summing both would double every count.
+        summing both would double every count. `_on_agent_end` reads usage the
+        same way, for a message that never got its own `message_end`.
         """
         message = frame.get("message")
-        if frame.get("type") == "message_end" and isinstance(message, dict) and message.get("role") == "assistant":
-            found, seen = extract_usage(message)
-            self.usage_keys_seen.update(seen)
-            for bucket, count in found.items():
-                self.usage[bucket] = self.usage.get(bucket, 0) + count
+        if frame.get("type") == "message_end" and isinstance(message, dict):
+            self._accumulate_usage(message)
 
         message_id = str(frame.get("messageId") or frame.get("messageID") or frame.get("id") or "message")
         complete = _text_of(message)
@@ -501,13 +504,23 @@ class TurnReducer:
         ]
 
     def _on_agent_end(self, frame: dict[str, Any]) -> list[Action]:
-        """Settle the turn. Usage is not read here — see `_on_message`.
+        """Settle the turn, and read usage from any message settling here too.
 
         Omp's `agent_end` carries a `telemetry` summary only when the session
-        opted into `AgentTelemetryConfig`, which no RPC command does; the run's
-        usage is instead the sum already accumulated from each assistant
-        message's `message_end`.
+        opted into `AgentTelemetryConfig`, which no RPC command does, so that
+        is never where usage comes from. `agent_end.messages` is a real field
+        regardless: `RpcFrameEncoder.encodeFrames`' `compactTerminalFrame`
+        (`rpc-frame.ts`, 18.4.2) slices it down to the messages that were NOT
+        already sent as their own `message_start`/`message_update`/
+        `message_end` sequence — normally empty, but not for a message an
+        aborted or early-stopped turn never individually streamed. Each one
+        gets the same `_accumulate_usage` `_on_message` uses; a message the
+        wire already streamed does not reappear here, so this cannot double
+        what `_on_message` already counted.
         """
+        for message in frame.get("messages") or []:
+            if isinstance(message, dict):
+                self._accumulate_usage(message)
         terminal = frame.get("isTerminal") is not False
         self.terminal_end_seen = self.terminal_end_seen or terminal
         return [AgentFinished(terminal=terminal, usage=dict(self.usage))]
@@ -541,6 +554,20 @@ class TurnReducer:
         return render_agent_output(self.assistant_texts, is_error=is_error)
 
     # --- internals ---------------------------------------------------------
+
+    def _accumulate_usage(self, message: dict[str, Any]) -> None:
+        """Add one assistant message's `usage` into the run's running total.
+
+        A no-op for a non-assistant message (a user or tool-result message
+        carries no `usage`). Shared by `_on_message` (`message_end`) and
+        `_on_agent_end` (a message that settled without one).
+        """
+        if message.get("role") != "assistant":
+            return
+        found, seen = extract_usage(message)
+        self.usage_keys_seen.update(seen)
+        for bucket, count in found.items():
+            self.usage[bucket] = self.usage.get(bucket, 0) + count
 
     def _resync_texts(self) -> None:
         self.assistant_texts = ["".join(parts) for parts in self._message_texts.values()]

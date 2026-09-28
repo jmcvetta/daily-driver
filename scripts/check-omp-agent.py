@@ -283,6 +283,41 @@ def check_usage() -> None:
         "agent_end must report the usage accumulated across the run, not read its own (absent) usage",
     )
 
+    # A message an aborted turn never individually streamed surfaces instead
+    # in `agent_end`'s own `messages` array (`RpcFrameEncoder.
+    # compactTerminalFrame`, `rpc-frame.ts`, 18.4.2, trims it to exactly the
+    # not-yet-streamed tail) -- the shape `check-omp-agent-settle.py`'s fake
+    # `omp` scenario has exercised since before this file existed.
+    reducer = TurnReducer()
+    actions = feed(
+        reducer,
+        {
+            "type": "agent_end",
+            "isTerminal": True,
+            "messages": [
+                {"role": "assistant", "usage": {"input": 22586, "output": 47, "cacheRead": 10, "cacheWrite": 0}},
+            ],
+        },
+    )
+    ends = [a for a in actions if isinstance(a, AgentFinished)]
+    check(
+        ends
+        and ends[0].usage
+        == {
+            "uncached_input_tokens": 22586,
+            "output_tokens": 47,
+            "cache_read_input_tokens": 10,
+            "cache_creation_input_tokens": 0,
+        },
+        f"a message settling only in `agent_end.messages` must still be counted, got {ends[0].usage if ends else None}",
+    )
+
+    # A user or tool-result message in that same array carries no `usage` and
+    # must not raise or contribute zeros that mask a genuinely missing count.
+    reducer = TurnReducer()
+    feed(reducer, {"type": "agent_end", "messages": [{"role": "user", "content": []}]})
+    check(reducer.usage == {}, f"a non-assistant message in `agent_end.messages` must be ignored, got {reducer.usage}")
+
 
 def check_pricing() -> None:
     """`cost_usd` bills a known model, refuses to guess at an unknown one, and zero tokens cost zero."""
