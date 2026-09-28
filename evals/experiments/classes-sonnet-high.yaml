@@ -1,4 +1,4 @@
-# The model-classes capability arm for Claude Sonnet 5 at `high` effort, on Claude Code.
+# The model-classes capability arm for Claude Sonnet 5.5 at `high` effort, on Claude Code.
 #
 # Measures whether this model, in the role it plays for delegated implementation
 # work (its `task` role), clears the mechanical/implementation cases the suite builds from
@@ -12,6 +12,9 @@
 # replaces. Its pair is `classes-opus-low.yaml`. Read pass rate and cost per
 # completed task together.
 #
+# Sonnet 5.5 recalibrated the effort levels from Sonnet 5, so a `high` run here
+# is not comparable with a Sonnet 5 `high` run.
+#
 # It runs on `claude-code`, the harness the route table is for. The session is
 # the bare one `with-without.yaml` measures against: no plugin, and project
 # settings only, so the user's own settings -- an advisor, an enabled plugin --
@@ -19,7 +22,7 @@
 
 experiment_id: classes-sonnet-high
 description: >-
-  Model-class capability on real merged-pull-request cases, claude-sonnet-5 at `high` effort
+  Model-class capability on real merged-pull-request cases, claude-sonnet-5-5 at `high` effort
   on Claude Code in the `task` role.
 
 defaults:
@@ -32,7 +35,7 @@ defaults:
 
   agent:
     type: claude-code
-    model: claude-sonnet-5
+    model: claude-sonnet-5-5
     permission_mode: acceptEdits
     allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
     plugins: []
