@@ -145,6 +145,13 @@ recovers each quiet task by reopening on the branch its claim or pull
 request names.
 ```
 
+**The stand-down comment ends with an envoi**: a brief farewell stanza for
+the watch, after `provenance`'s block, each line italicised as
+[`HAIKU.md`](../../HAIKU.md) shows. It is last so the rows and the resume
+line are found first. The handoff comments on the task issues carry none:
+each hands work to whoever reclaims it, and verse never attaches to a write
+somebody has to act on.
+
 The landing mode is copied unchanged from the latest record into this
 superseding comment. A resumed `embark` therefore reads the same opt-out or
 default after every earlier muster roll has been superseded.

@@ -79,6 +79,14 @@ is why nothing here restates it.
 never states in prose what an edge records; that rule is `issue-deps`'s, cited
 here rather than restated.
 
+**The close, when it is not planned.** An issue closed with `state_reason:
+not_planned` gets one comment with the state change: a line saying why the
+work will not be done, `provenance`'s block, and last a short elegy for it —
+two to four lines, each italicised as [`HAIKU.md`](../../HAIKU.md) shows.
+The reason comes first so a reader never reads past verse to learn it. A
+close as `completed` or `duplicate` carries no elegy: the work was done, or
+lives on elsewhere.
+
 
 Non-goals
 =========

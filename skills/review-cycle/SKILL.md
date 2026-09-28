@@ -285,7 +285,7 @@ The reply
 Verdict-first, concise, technical. A reader skimming twenty threads should
 never have to parse a paragraph to learn whether the finding was implemented or
 rejected. No thanks, no apologies, no restating the finding back at the
-reviewer, and no poetry — verse attaches to the pull request body, never to a
+reviewer, and no poetry — verse attaches to the writes that name it, never to a
 finding somebody has to act on. `provenance`'s block follows the same rule: it
 attaches to the submitted review and the completion notice below, never to an
 individual finding reply.
