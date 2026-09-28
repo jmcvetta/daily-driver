@@ -1,0 +1,39 @@
+# The model-classes capability arm for Claude Opus 5.5 at `low` effort.
+#
+# Measures whether this model, in the role it plays for delegated implementation
+# work (its `task` role), clears the mechanical/implementation cases the suite builds from
+# real merged pull requests -- see `scripts/evals-cases-from-prs.py` and
+# `evals/tasks/model-classes/`. One variant: there is no plugin ablation here,
+# only the question "does this model finish this task and leave its own tests
+# passing". `make evals-run-classes MODEL=opus-low` runs it.
+#
+# One of three files that price the Claude route table for `embark`'s
+# workflow dispatch (issue #435): this one is the `implementation` candidate
+# the table proposes below its `medium` default. Its pair is
+# `classes-sonnet-high.yaml`; read pass rate and cost per completed task
+# together, from the provenance record's token counts. The `:low` suffix is
+# Omp's effort syntax as the other `classes-*.yaml` files use it; it is
+# unverified on the `anthropic/` provider.
+
+experiment_id: classes-opus-low
+description: >-
+  Model-class capability on real merged-pull-request cases, anthropic/claude-opus-5-5:low in the
+  `task` role.
+
+defaults:
+  repeats: 3
+
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+
+  agent:
+    type: omp
+    model: anthropic/claude-opus-5-5:low
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+variants:
+  - variant_id: default
+    description: This model against the model-classes suite.
