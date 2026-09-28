@@ -747,6 +747,38 @@ and no base — the look that notices them is what posts the report the first
 pass withheld.
 
 
+Reporting to an orchestrator
+============================
+
+An undertaking `embark` dispatched may be handed the address of the session
+that dispatched it — its orchestrator. **Where no address was given, this
+section does nothing**, and the sequence runs exactly as it does without it.
+Where one was given, the sequence reports to it at three moments:
+
+- **Every stop**, from `Where it stops and waits` or from `review-cycle`'s own,
+  with the question it asks or the condition it reports.
+- **`Open the draft`**, once the draft exists.
+- **`Ready for review`**, once the pull request is marked ready.
+
+Each report opens with the fixed line `Implementor report for #<task issue>`,
+then names the pull request where one exists, the moment reached, and the
+question or condition where there is one. The orchestrator finds reports by that
+line.
+
+**A report is sent, not a conversation.** It never waits for an answer, and
+the stop it reports still stops. An answer arrives, if it comes, as a message
+from the orchestrator, and the sequence reads it as it reads any other.
+**A report never replaces the record**: the question still goes on the pull
+request or the issue where `Where it stops and waits` puts it, because the
+record outlives both sessions and the report does not.
+
+**A failed report is reported, not retried in a loop.** Say once, in the
+session, that the report did not go, and carry on with the sequence. The
+orchestrator's GitHub watch still sees the pull request.
+
+The reference file for the harness in use names the route.
+
+
 Where it stops and waits
 ========================
 
@@ -757,7 +789,8 @@ six labels, the failing approach, a designated branch the harness states
 ambiguously, and a base merge whose conflict is a real one. A blocked issue,
 an epic, an issue labelled `human`, running or failed CI, a review wall, and a
 human action owed stop it to report the unfinished condition and its actual
-resume path.
+resume path. Where an orchestrator's address was given, every stop is also
+reported to it under `Reporting to an orchestrator`.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
