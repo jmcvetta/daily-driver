@@ -1016,7 +1016,11 @@ the merge SHA before it was shipped. A case's `initial_prompt` names the issue
 the pull request closed; its three `run_command` criteria check, in order,
 that no test file present at the base SHA was deleted, that no skip/xfail
 marker was added to one, and that the pull request's own tests pass once
-`tests.patch` is applied. `evals/fixtures/model-classes/candidates.json`
+`tests.patch` is applied. `shared/apply-tests.sh` applies it: it first puts
+each path the patch names back to the base SHA, because an agent that adds a
+test beside its change has edited the very hunk the patch rewrites, and a
+plain `git apply` would score that correct change 0. The agent's own tests in
+other files stay. `evals/fixtures/model-classes/candidates.json`
 records every qualifying pull request the builder saw, selected or not, so a
 later run can widen the suite without re-walking history.
 
