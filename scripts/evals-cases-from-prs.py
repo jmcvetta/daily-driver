@@ -739,7 +739,6 @@ pre_run:
     timeout: 120
 
 agent:
-  type: omp
   allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
 
 run_limits:

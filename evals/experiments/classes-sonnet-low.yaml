@@ -1,4 +1,4 @@
-# The model-classes capability arm for Claude Sonnet 5 at `low` effort.
+# The model-classes capability arm for Claude Sonnet 5 at `low` effort, on Claude Code.
 #
 # Measures whether this model, in the role it plays for delegated implementation
 # work (its `task` role), clears the mechanical/implementation cases the suite builds from
@@ -7,18 +7,21 @@
 # only the question "does this model finish this task and leave its own tests
 # passing". `make evals-run-classes MODEL=sonnet-low` runs it.
 #
-# One of three files that price the Claude route table for `embark`'s
-# workflow dispatch (issue #435): this one is the `mechanical` route the table
-# names. The three `mechanical` cases are the floor it must clear; its
+# One of three files that price the Claude route table for `embark`'s workflow
+# dispatch (issue #435): this one is the `mechanical` route the table names.
+# The three `mechanical` cases are the floor it must clear; its
 # `implementation` cases say how far above that floor it reaches. Read pass
-# rate and cost per completed task together, from the provenance record's
-# token counts. The `:low` suffix is Omp's effort syntax as the other
-# `classes-*.yaml` files use it; it is unverified on the `anthropic/` provider.
+# rate and cost per completed task together.
+#
+# It runs on `claude-code`, the harness the route table is for. The session is
+# the bare one `with-without.yaml` measures against: no plugin, and project
+# settings only, so the user's own settings -- an advisor, an enabled plugin --
+# never reach the model under test.
 
 experiment_id: classes-sonnet-low
 description: >-
-  Model-class capability on real merged-pull-request cases, anthropic/claude-sonnet-5:low in the
-  `task` role.
+  Model-class capability on real merged-pull-request cases, claude-sonnet-5 at `low` effort
+  on Claude Code in the `task` role.
 
 defaults:
   repeats: 3
@@ -29,10 +32,14 @@ defaults:
     turn_timeout: 600
 
   agent:
-    type: omp
-    model: anthropic/claude-sonnet-5:low
+    type: claude-code
+    model: claude-sonnet-5
     permission_mode: acceptEdits
     allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+    plugins: []
+    setting_sources: [project]
+    sdk_options:
+      effort: low
 
 variants:
   - variant_id: default

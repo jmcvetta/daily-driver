@@ -440,6 +440,9 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-opus-low.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-high.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-low.yaml tasks/*/*.yaml
 
 # evals-variants: refuse to start when an arm's agent kind is not registered.
 # `coder-eval plan` PRINTS "Variant 'omp': resolution failed" and then exits 0,

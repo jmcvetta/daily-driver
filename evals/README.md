@@ -1030,13 +1030,22 @@ specific cases; `make evals-run-classes` is a floor to check before promoting
 a model into that role, not the whole case for doing so.
 
 **Running it.** Each `evals/experiments/classes-<name>.yaml` file pins its own
-`defaults.agent.model`. Personal `omp_configs/` overlays do not define or
-validate these experiments:
+`defaults.agent.model` and its own `defaults.agent.type`: the rows pin no
+kind, so one suite measures a model on Omp or on Claude Code. Personal
+`omp_configs/` overlays do not define or validate these experiments:
 
 ```
 make evals-run-classes MODEL=glm
 make evals-run-classes MODEL=cocktail
+make evals-run-classes MODEL=opus-low
 ```
+
+The Claude Code files (`classes-opus-low`, `classes-sonnet-high`,
+`classes-sonnet-low`) set effort through `sdk_options.effort`, which the
+Agent SDK passes as `claude --effort`. They run the bare session
+`with-without.yaml` measures against — `plugins: []` and
+`setting_sources: [project]` — so an advisor or a plugin in the operator's own
+user settings never reaches the model under test.
 
 `defaults.repeats` is 3 in every file, so a full run is 6 cases times 3
 repeats: 18 replicates per model, each a real `git apply` plus the
@@ -1062,10 +1071,10 @@ self-tests (run offline, every invocation, against inline JSON-shaped GitHub
 API fixtures) are the acceptance test for the qualifying filter, the test-file
 split, the class and elapsed reads, and `task_timeout` derivation.
 
-`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm sharing
-the `omp` arm's agent kind — it is Omp under a different model, not a
-different harness — so `agent.type: omp` alone cannot say which arm a row
-belongs to; the `model-classes` tag is what does. The checker discovers
+`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm that
+owns both the `omp` and `claude-code` kinds — it measures a model, not a
+harness — so the agent kind alone cannot say which arm a row belongs to; the
+`model-classes` tag is what does. The checker discovers
 `classes-*.yaml` experiments inside the eval suite and requires each to pin
 its model. Personal Omp configuration is not an input to this check.
 
