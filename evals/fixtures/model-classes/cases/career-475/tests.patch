@@ -1,0 +1,107 @@
+diff --git a/tests/test_git_sync.py b/tests/test_git_sync.py
+index 8cb233fa..dd0f38d4 100644
+--- a/tests/test_git_sync.py
++++ b/tests/test_git_sync.py
+@@ -30,7 +30,7 @@ def _run(
+     )
+ 
+ 
+-def _sandbox(tmp_path: Path) -> tuple[Path, Path]:
++def _sandbox(tmp_path: Path) -> tuple[Path, Path, Path]:
+     """Create a repository with a gone-upstream branch in a linked worktree."""
+     remote = tmp_path / "remote.git"
+     primary = tmp_path / "primary"
+@@ -85,7 +85,7 @@ def _sandbox(tmp_path: Path) -> tuple[Path, Path]:
+     _run(primary, "git", "worktree", "add", str(linked), STALE_BRANCH)
+     _run(remote, "git", "update-ref", "-d", f"refs/heads/{STALE_BRANCH}")
+ 
+-    return primary, linked
++    return primary, linked, remote
+ 
+ 
+ def _add_gone_direct_branch(primary: Path) -> None:
+@@ -108,6 +108,14 @@ def _add_gone_direct_branch(primary: Path) -> None:
+     )
+ 
+ 
++def _merge_stale_branch_without_upstream(primary: Path, remote: Path) -> None:
++    """Merge the stale branch while leaving it without tracking metadata."""
++    _run(primary, "git", "merge", "--ff-only", STALE_BRANCH)
++    master_sha = _run(primary, "git", "rev-parse", "master").stdout.strip()
++    _run(remote, "git", "update-ref", "refs/heads/master", master_sha)
++    _run(primary, "git", "branch", "--unset-upstream", STALE_BRANCH)
++
++
+ def _branch_exists(primary: Path, branch: str = STALE_BRANCH) -> bool:
+     """Report whether the sandbox still has the named local branch."""
+     result = _run(
+@@ -123,7 +131,7 @@ def _branch_exists(primary: Path, branch: str = STALE_BRANCH) -> bool:
+ 
+ def test_git_sync_removes_clean_stale_worktree_and_branch(tmp_path: Path) -> None:
+     """A clean linked worktree must not prevent gone-branch cleanup."""
+-    primary, linked = _sandbox(tmp_path)
++    primary, linked, _ = _sandbox(tmp_path)
+ 
+     result = _run(primary, "make", "git_sync")
+ 
+@@ -135,15 +143,41 @@ def test_git_sync_removes_clean_stale_worktree_and_branch(tmp_path: Path) -> Non
+     assert not _branch_exists(primary)
+ 
+ 
++def test_git_sync_removes_merged_worktree_without_upstream(tmp_path: Path) -> None:
++    """A merged linked branch must not need tracking metadata for cleanup."""
++    primary, linked, remote = _sandbox(tmp_path)
++    _merge_stale_branch_without_upstream(primary, remote)
++
++    result = _run(primary, "make", "git_sync")
++
++    assert f"removed stale worktree: {linked}" in result.stdout
++    assert not linked.exists()
++    assert not _branch_exists(primary)
++
++
++def test_git_sync_keeps_merged_worktree_with_remote_branch(tmp_path: Path) -> None:
++    """A same-named remote branch must keep an untracked linked branch live."""
++    primary, linked, remote = _sandbox(tmp_path)
++    _merge_stale_branch_without_upstream(primary, remote)
++    stale_sha = _run(primary, "git", "rev-parse", STALE_BRANCH).stdout.strip()
++    _run(remote, "git", "update-ref", f"refs/heads/{STALE_BRANCH}", stale_sha)
++
++    result = _run(primary, "make", "git_sync")
++
++    assert "removed stale worktree:" not in result.stdout
++    assert linked.exists()
++    assert _branch_exists(primary)
++
++
+ def test_git_sync_keeps_dirty_stale_worktree_and_branch(tmp_path: Path) -> None:
+     """Untracked work must make cleanup warn without deleting anything."""
+-    primary, linked = _sandbox(tmp_path)
++    primary, linked, _ = _sandbox(tmp_path)
+     (linked / "untracked.txt").write_text("keep me\n", encoding="utf-8")
+ 
+     result = _run(primary, "make", "git_sync")
+ 
+     assert (
+-        f"WARN: worktree for gone-upstream branch {STALE_BRANCH} "
++        f"WARN: worktree for stale branch {STALE_BRANCH} "
+         f"could not be removed; kept: {linked}"
+     ) in result.stderr
+     assert linked.exists()
+@@ -157,14 +191,14 @@ def test_git_sync_continues_after_dirty_worktree_to_direct_branch(
+     tmp_path: Path,
+ ) -> None:
+     """A refused worktree must not prevent later direct branch cleanup."""
+-    primary, linked = _sandbox(tmp_path)
++    primary, linked, _ = _sandbox(tmp_path)
+     _add_gone_direct_branch(primary)
+     (linked / "untracked.txt").write_text("keep me\n", encoding="utf-8")
+ 
+     result = _run(primary, "make", "git_sync")
+ 
+     assert (
+-        f"WARN: worktree for gone-upstream branch {STALE_BRANCH} "
++        f"WARN: worktree for stale branch {STALE_BRANCH} "
+         f"could not be removed; kept: {linked}"
+     ) in result.stderr
+     assert linked.exists()
