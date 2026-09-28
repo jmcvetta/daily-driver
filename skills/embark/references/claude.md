@@ -117,6 +117,8 @@ The watch
 | `Watch the wave` | Archive a finished session | `mcp__Claude_Code_Remote__archive_session` |
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `mcp__github__pull_request_read`, method `get` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
+| `Land the pull request` | Read the review-cycle completion notice | `mcp__github__pull_request_read`, method `get_comments`, every page — `user.login` |
+| `Land the pull request` | Read the commits after the notice's SHA | `mcp__github__get_commit`, from `head.sha` back along first parents — `parents` |
 | `Land the pull request` | Squash merge the gated head | `mcp__github__merge_pull_request`, `merge_method: squash`, `expectedHeadSha: <head.sha>` |
 | `Close the epic` | Comment with the landed pull requests or missing claim | `mcp__github__add_issue_comment` |
 | `Close the epic` | Close as completed | `mcp__github__issue_write`, `method: update`, `state: closed`, `state_reason: completed` |
@@ -132,6 +134,14 @@ to. The same `get` call supplies the labels and body for the human-action read.
 The complete thread read is the one `review-cycle`'s `Review history,
 publication, and threads` names; a partial review-comments page does not
 answer the gate.
+
+The completion read is the conversation-comment read `review-cycle`'s
+`Review-cycle completion notice` names, read to the last page: the latest
+comment starting with `## Review cycle complete! 🎉` whose author is the
+author of the task issue's claim comment, and the SHA it names. Where that SHA is not
+`head.sha`, walk `get_commit` from `head.sha` along each first parent until the
+named SHA; every commit on the way must carry two `parents`. A single-parent
+commit, or a walk that never reaches the SHA, fails the read.
 
 The merge call is made only after those reads hold. `expectedHeadSha` makes it
 fail closed if the task session pushes after the read. `merge_method: squash`
