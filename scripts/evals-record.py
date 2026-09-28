@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import platform
+import re
 import shutil
 import socket
 import subprocess
@@ -136,6 +137,67 @@ def run_task_ids(run: dict[str, Any], variant_id: str) -> list[str]:
             seen.add(task_id)
     return task_ids
 
+
+_CLASS_TAG_RE = re.compile(r"^class:(mechanical|implementation|reasoning)$")
+
+# Mirrors coder_eval's FinalStatus.category -- this script never imports
+# coder_eval, so the mapping is kept here rather than read from the enum.
+_STATUS_OUTCOME = {
+    "SUCCESS": "succeeded",
+    "FAILURE": "failed",
+    "ERROR": "error",
+    "BUILD_FAILED": "error",
+    "TIMEOUT": "failed",
+    "MAX_TURNS_EXHAUSTED": "failed",
+    "TOKEN_BUDGET_EXCEEDED": "failed",
+    "COST_BUDGET_EXCEEDED": "failed",
+}
+
+
+def row_class(row: dict[str, Any]) -> str | None:
+    """The `class:<token>` tag on a task result row, or None where it carries none."""
+    for tag in row.get("tags") or []:
+        match = _CLASS_TAG_RE.match(str(tag))
+        if match:
+            return match.group(1)
+    return None
+
+
+def row_outcome(status: str) -> str:
+    """The reporting category for a raw final status, or `unreported` for one
+    this script does not recognise."""
+    return _STATUS_OUTCOME.get(status, "unreported")
+
+
+def run_cases(run: dict[str, Any], experiment_id: str, requested: dict[str, str], client_name: str) -> list[dict[str, Any]]:
+    """One row per task result in `run`: model, settings, class, outcome,
+    elapsed seconds, tokens and cost -- `evals-render-routes.py`'s input for
+    the measured-routes table.
+    """
+    cases = []
+    for row in run.get("task_results", []):
+        variant_id = row.get("variant_id")
+        model_served = "unreported" if client_name == "omp" else (row.get("model_used") or "unreported")
+        tokens = row.get("total_tokens")
+        cost = row.get("total_cost_usd")
+        cases.append(
+            {
+                "task_id": row.get("task_id", "unknown"),
+                "variant_id": variant_id,
+                "replicate_index": row.get("replicate_index", 0),
+                "class": row_class(row),
+                "model_requested": requested.get(variant_id, "unknown"),
+                "model_served": model_served,
+                "settings": experiment_id,
+                "outcome": row_outcome(row.get("status", "")),
+                "elapsed_seconds": row.get("duration", 0.0),
+                "tokens": tokens if isinstance(tokens, int) else "unreported",
+                "cost": cost if isinstance(cost, (int, float)) else "unreported",
+            }
+        )
+    return cases
+
+
 def run_attempts(run_dir: Path, run: dict[str, Any]) -> list[dict[str, Any]]:
     """Read criterion and early-stop evidence from every preserved task artifact."""
     attempts = []
@@ -202,7 +264,7 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
         historical_client_version = "unknown"
     session_present = "CLAUDE_CODE_SESSION_ID" in os.environ
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "run_id": run["run_id"],
         "experiment_id": experiment["experiment_id"],
         "started_at": run["start_time"],
@@ -226,13 +288,15 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
         },
         "variants": variants,
         "attempts": run_attempts(run_dir, run),
+        "cases": run_cases(run, experiment["experiment_id"], requested, client_name),
     }
 
 def validate_record(record: dict[str, Any]) -> list[str]:
     """Return validation errors for one provenance record."""
     errors = sorted(REQUIRED_RECORD_FIELDS - record.keys())
-    if record.get("schema_version") != 1:
-        errors.append("schema_version must be 1")
+    version = record.get("schema_version")
+    if version not in (1, 2):
+        errors.append("schema_version must be 1 or 2")
     for field in ("run_id", "experiment_id", "started_at", "completed_at"):
         if not isinstance(record.get(field), str) or not record[field]:
             errors.append(f"{field} must be a non-empty string")
@@ -291,6 +355,30 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 errors.append(f"{prefix}.measured_score must be numeric or null")
             if not isinstance(raw_weighted_score, (int, float)):
                 errors.append(f"{prefix}.raw_weighted_score must be numeric")
+    if version == 2:
+        if not isinstance(record.get("cases"), list) or not record["cases"]:
+            errors.append("cases must be non-empty for schema_version 2")
+        else:
+            for index, case in enumerate(record["cases"]):
+                prefix = f"cases[{index}]"
+                if not isinstance(case, dict):
+                    errors.append(f"{prefix} must be an object")
+                    continue
+                for field in ("task_id", "variant_id", "model_requested", "model_served", "settings", "outcome"):
+                    if not isinstance(case.get(field), str) or not case[field]:
+                        errors.append(f"{prefix}.{field} must be a non-empty string")
+                if case.get("class") is not None and not isinstance(case.get("class"), str):
+                    errors.append(f"{prefix}.class must be a string or null")
+                if not isinstance(case.get("replicate_index"), int):
+                    errors.append(f"{prefix}.replicate_index must be an integer")
+                if not isinstance(case.get("elapsed_seconds"), (int, float)):
+                    errors.append(f"{prefix}.elapsed_seconds must be numeric")
+                tokens = case.get("tokens")
+                if tokens != "unreported" and not isinstance(tokens, int):
+                    errors.append(f"{prefix}.tokens must be an integer or 'unreported'")
+                cost = case.get("cost")
+                if cost != "unreported" and not isinstance(cost, (int, float)):
+                    errors.append(f"{prefix}.cost must be numeric or 'unreported'")
     return errors
 
 
