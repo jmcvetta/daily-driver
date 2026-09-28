@@ -1,0 +1,21 @@
+{
+  "additions": 81,
+  "changed_files": 7,
+  "check_reruns": 3,
+  "claim_model": "claude-sonnet-5",
+  "claimed_at": null,
+  "deletions": 74,
+  "elapsed_minutes": null,
+  "findings_count": 0,
+  "harness": null,
+  "issue": 404,
+  "merged_at": "2026-09-24T07:24:59Z",
+  "model": "claude-sonnet-5",
+  "model_class": "implementation",
+  "model_mismatch": false,
+  "pull_request": 405,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 0,
+  "session": "[session_01Q5Ddo8EpCyFXPuSrSqWgSe](https://claude.ai/code/session_01Q5Ddo8EpCyFXPuSrSqWgSe)"
+}

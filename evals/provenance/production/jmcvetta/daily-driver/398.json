@@ -1,0 +1,21 @@
+{
+  "additions": 337,
+  "changed_files": 4,
+  "check_reruns": 1,
+  "claim_model": "gpt-6-luna",
+  "claimed_at": null,
+  "deletions": 27,
+  "elapsed_minutes": null,
+  "findings_count": 0,
+  "harness": null,
+  "issue": 397,
+  "merged_at": "2026-09-23T14:08:17Z",
+  "model": "unreported",
+  "model_class": "implementation",
+  "model_mismatch": true,
+  "pull_request": 398,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 0,
+  "session": null
+}

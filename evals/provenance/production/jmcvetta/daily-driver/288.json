@@ -1,0 +1,21 @@
+{
+  "additions": 120,
+  "changed_files": 9,
+  "check_reruns": 3,
+  "claim_model": "claude-opus-5",
+  "claimed_at": null,
+  "deletions": 55,
+  "elapsed_minutes": null,
+  "findings_count": 0,
+  "harness": null,
+  "issue": 287,
+  "merged_at": "2026-09-17T13:02:43Z",
+  "model": "unreported",
+  "model_class": "unlabelled",
+  "model_mismatch": true,
+  "pull_request": 288,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 0,
+  "session": null
+}

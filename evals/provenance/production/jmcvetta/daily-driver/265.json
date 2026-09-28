@@ -1,0 +1,21 @@
+{
+  "additions": 272,
+  "changed_files": 5,
+  "check_reruns": 1,
+  "claim_model": "vercel-ai-gateway/zai/glm-5.3-flash \u2014 the session tool reports `zai/glm-5.3-flash` without the gateway prefix",
+  "claimed_at": null,
+  "deletions": 1,
+  "elapsed_minutes": null,
+  "findings_count": 1,
+  "harness": null,
+  "issue": 263,
+  "merged_at": "2026-09-16T10:53:50Z",
+  "model": "unreported",
+  "model_class": "unlabelled",
+  "model_mismatch": true,
+  "pull_request": 265,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 1,
+  "session": null
+}
