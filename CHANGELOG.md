@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.45.0](https://github.com/jmcvetta/daily-driver/compare/v0.44.0...v0.45.0) (2026-09-28)
+
+
+### Features
+
+* add verse to the epic, fleet and not-planned writes ([#431](https://github.com/jmcvetta/daily-driver/issues/431)) ([d36f20c](https://github.com/jmcvetta/daily-driver/commit/d36f20c67ab6eb5d076a0664bbb8dc761ac478c5))
+* give embark implementors a way back to the orchestrator ([#434](https://github.com/jmcvetta/daily-driver/issues/434)) ([bba7d85](https://github.com/jmcvetta/daily-driver/commit/bba7d85e04ac094c0bb5c73e05bd14ca8c9ecb6b))
+* **stand-down:** secure implementor work before stopping the fleet  ([#420](https://github.com/jmcvetta/daily-driver/issues/420)) ([e03e946](https://github.com/jmcvetta/daily-driver/commit/e03e9462fa879bbbce580f75c62d49c987ece42c))
+
+
+### Bug Fixes
+
+* **embark:** load and use SendMessage to reach implementors ([#427](https://github.com/jmcvetta/daily-driver/issues/427)) ([01cb750](https://github.com/jmcvetta/daily-driver/commit/01cb7501fc8f898ebfa30e4cddaf110a60533cb5))
+
 ## [0.44.0](https://github.com/jmcvetta/daily-driver/compare/v0.43.1...v0.44.0) (2026-09-28)
 
 
