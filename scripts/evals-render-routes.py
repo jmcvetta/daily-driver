@@ -24,6 +24,11 @@ import re
 from pathlib import Path
 from typing import Any
 
+try:
+    import yaml
+except ImportError:  # pragma: no cover - the repository's uv environment has PyYAML.
+    yaml = None
+
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_PROVENANCE_DIR = ROOT / "evals" / "provenance"
 DEFAULT_EXPERIMENTS_DIR = ROOT / "evals" / "experiments"
@@ -35,7 +40,9 @@ END_MARKER = "<!-- measured-routes-end -->"
 
 # Highest first: the class earned is reported as the highest one a route
 # clears, per model-classes.md's "Class earned" rule. `reasoning` is absent --
-# evals-cases-from-prs.py builds no case for it, so no row can ever carry it.
+# evals-cases-from-prs.py builds no case for it today, and model_class_cases
+# drops a case tagged with any class outside this tuple rather than let it
+# reach `class_status`, which has no rule for scoring one.
 BUILDABLE_CLASSES = ("implementation", "mechanical")
 
 # "passed on at least two of three repeats" -- a fraction so any repeat count
@@ -66,21 +73,44 @@ def overlay_settings(experiments_dir: Path, overlay: str) -> str:
     """
     experiment_path = experiments_dir / f"classes-{overlay}.yaml"
     if experiment_path.is_file():
-        match = _EXPERIMENT_ID_RE.search(experiment_path.read_text())
-        if match:
-            return match.group(1)
+        text = experiment_path.read_text()
+        if yaml is not None:
+            document = yaml.safe_load(text) or {}
+            experiment_id = document.get("experiment_id") if isinstance(document, dict) else None
+            if isinstance(experiment_id, str) and experiment_id:
+                return experiment_id
+        else:
+            match = _EXPERIMENT_ID_RE.search(text)
+            if match:
+                return match.group(1)
     return f"classes-{overlay}"
 
 
 def model_class_cases(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Every case row carrying a class, tagged with its record's run_id and date."""
+    """Every case row tagged with a buildable class, carrying its record's
+    run_id, full completed_at (for ordering) and date (for display).
+
+    A case tagged with a class outside `BUILDABLE_CLASSES` (`reasoning`, or
+    any future token) is dropped rather than kept: nothing computes a status
+    for it, and keeping it would mark its route measured -- excluding it from
+    the overlay `unmeasured` fallback -- while every column still read
+    `unreported`, which is a more misleading state than reporting no case at
+    all.
+    """
     cases = []
     for record in records:
-        date = str(record.get("completed_at", ""))[:10]
+        completed_at = str(record.get("completed_at", ""))
         for case in record.get("cases", []):
-            if case.get("class") is None:
+            if case.get("class") not in BUILDABLE_CLASSES:
                 continue
-            cases.append({**case, "run_id": record.get("run_id", "unknown"), "date": date})
+            cases.append(
+                {
+                    **case,
+                    "run_id": record.get("run_id", "unknown"),
+                    "completed_at": completed_at,
+                    "date": completed_at[:10],
+                }
+            )
     return cases
 
 
@@ -101,7 +131,7 @@ def class_status(cases: list[dict[str, Any]], klass: str) -> dict[str, Any] | No
     covering = [case for case in cases if case["class"] == klass]
     if not covering:
         return None
-    latest_run = max(covering, key=lambda case: case["date"])["run_id"]
+    latest_run = max(covering, key=lambda case: case["completed_at"])["run_id"]
     latest = [case for case in covering if case["run_id"] == latest_run]
     by_task: dict[str, list[dict[str, Any]]] = {}
     for case in latest:

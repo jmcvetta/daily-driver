@@ -152,8 +152,66 @@ def check_renderer() -> None:
             )
         )
 
-        for overlay in ("model-x", "model-y", "unmeasured-overlay"):
+        # model-z: two runs complete on the same calendar day: the earlier
+        # passes every mechanical repeat, the later fails every one. Only the
+        # true latest (by full timestamp, not the truncated date) may win.
+        (provenance_dir / "run-tie-early.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "run-tie-early",
+                    "completed_at": "2026-05-01T08:00:00Z",
+                    "cases": [
+                        _case_row(
+                            "t4", "mechanical", "succeeded", index,
+                            model_requested="model-z-pinned", settings="classes-model-z",
+                        )
+                        for index in range(3)
+                    ],
+                }
+            )
+        )
+        (provenance_dir / "run-tie-late.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "run-tie-late",
+                    "completed_at": "2026-05-01T20:00:00Z",
+                    "cases": [
+                        _case_row(
+                            "t4", "mechanical", "failed", index,
+                            model_requested="model-z-pinned", settings="classes-model-z",
+                        )
+                        for index in range(3)
+                    ],
+                }
+            )
+        )
+
+        # model-r: the only case for this route is tagged `reasoning`, a class
+        # this renderer never scores. It must not create a measured-but-empty
+        # row, and its overlay must still read `unmeasured`.
+        (provenance_dir / "run-reasoning.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "run-reasoning",
+                    "completed_at": "2026-06-01T00:00:00Z",
+                    "cases": [
+                        _case_row(
+                            "t5", "reasoning", "succeeded", 0,
+                            model_requested="model-r-pinned", settings="classes-model-r",
+                        )
+                    ],
+                }
+            )
+        )
+
+        for overlay in ("model-x", "model-y", "model-z", "model-r", "unmeasured-overlay"):
             (omp_configs_dir / f"{overlay}.yml").write_text("modelRoles: {}\n")
+
+        # model-x's own experiment file quotes its experiment_id -- a shape a
+        # hand-written regex over the raw YAML text would mis-parse (keeping
+        # the quote characters), silently missing the route it already has a
+        # measured case for.
+        (experiments_dir / "classes-model-x.yaml").write_text('experiment_id: "classes-model-x"\n')
 
         target.write_text(
             "# Model classes\n\n"
@@ -168,6 +226,22 @@ def check_renderer() -> None:
         require("2026-01-01" in rendered, "a stale row's own date was not rendered")
         require("| model-y-pinned | classes-model-y | none | 0/3 | unreported |" in rendered, "an all-fail route was not reported as earning no class")
         require("| unmeasured-overlay | classes-unmeasured-overlay | unmeasured |" in rendered, "an overlay with no case row was not listed unmeasured")
+        require(
+            "| model-z-pinned | classes-model-z | none | 0/3 |" in rendered,
+            "same-day runs were not ranked by full timestamp -- the earlier, passing run won",
+        )
+        require(
+            "model-z-pinned" in rendered and "3/3" not in rendered.split("model-z-pinned")[1].split("\n")[0],
+            "the earlier same-day run's 3/3 leaked into the model-z row",
+        )
+        require(
+            "| model-r | classes-model-r | unmeasured |" in rendered,
+            "an overlay whose only case is tagged `reasoning` was not listed unmeasured",
+        )
+        require(
+            "model-x | classes" not in rendered,
+            "a quoted experiment_id was mis-parsed, spuriously listing model-x's overlay as unmeasured too",
+        )
         require(rendered.count(renderer.START_MARKER) == 1 and rendered.count(renderer.END_MARKER) == 1, "the markers were duplicated or lost")
 
 
