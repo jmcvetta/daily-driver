@@ -34,7 +34,7 @@ The sessions
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the sessions` | Open one per task | `mcp__Claude_Code_Remote__create_session` |
-| `Post the muster roll` | Load the messaging tools, once per wave | `ToolSearch`, `select:ListAgents,SendMessage` |
+| `Post the muster roll` | Load the messaging tools, once per session | `ToolSearch`, `select:ListAgents,SendMessage` |
 | `Post the muster roll` | Resolve each new session's address | `ListAgents` |
 | `Watch the wave` | Read a task session's status | `mcp__Claude_Code_Remote__get_session` |
 | `Watch the wave` | Send a visible answer or a nudge | `SendMessage`, to the roll's name |
@@ -71,8 +71,9 @@ Addressing a session
 
 **`ListAgents` and `SendMessage` are deferred tools.** Neither is in the tool
 list until `ToolSearch` loads it. Call `ToolSearch` with
-`select:ListAgents,SendMessage` once, before the first send of a wave, and
-both are callable for the rest of the session. A tool list checked before that
+`select:ListAgents,SendMessage` once per session, before the first send this
+session makes, and both are then callable for the rest of it — a later wave
+in the same session makes no second call. A tool list checked before that
 call and found to carry neither is not evidence that messaging is
 unavailable — it is evidence that this load step has not run yet.
 

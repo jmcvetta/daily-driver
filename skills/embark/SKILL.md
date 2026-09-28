@@ -283,6 +283,11 @@ So on every wake:
 
 - **Subscribe to each task's pull request** as it appears, once. Events then
   start a turn on their own.
+- **Read each still-running task's pull request and task issue for a visible
+  question**, and where one sits there, send the answer to the name the
+  muster roll records. This is the messaging use this step's opening names;
+  `Recover a session` is still where a question that cannot be read this way
+  is handled.
 - **Send every task pull request through `Land the pull request`.** That step
   reads the gate and returns here, whether it merges or waits.
 - **Read the epic's graph.** A task issue closes when the pull request that
