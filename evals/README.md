@@ -1008,10 +1008,10 @@ carries no plugin and no ablation, one variant per case, because the question
 is whether a given model, run in the `task` role real dispatch would put it
 in, finishes ordinary delegated work and leaves its own tests passing.
 
-**What it measures.** Six cases, drawn from `jmcvetta/career` and
-`apps/usd2oz-web` in `Green-Pagoda/pagoda`: three `mechanical`, three
-`implementation`, the smallest qualifying candidate of each `class:` tag by
-changed lines, each verified once at build time to fail on the base SHA and pass on
+**What it measures.** Three cases today, all from `jmcvetta/career`: two
+`mechanical` and one `implementation`, the smallest qualifying candidates of
+each `class:` tag by changed lines whose answer key the issue decides, each
+verified once at build time to fail on the base SHA and pass on
 the merge SHA before it was shipped. A case's `initial_prompt` is the title
 and body of the issue the pull request closed, and names neither number; its
 three `run_command` criteria check, in order,
@@ -1052,7 +1052,7 @@ the production table and public benchmarks, not by a fixture small enough to
 grade in two minutes (see `skills/issue-body/references/model-classes.md`).
 No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
 is the `omp` arm's, over a different question. And nothing here proves a
-model *should* run in the `task` role generally, only that it cleared six
+model *should* run in the `task` role generally, only that it cleared a few
 specific cases; `make evals-run-classes` is a floor to check before promoting
 a model into that role, not the whole case for doing so.
 
@@ -1074,8 +1074,8 @@ Agent SDK passes as `claude --effort`. They run the bare session
 `setting_sources: [project]` — so an advisor or a plugin in the operator's own
 user settings never reaches the model under test.
 
-`defaults.repeats` is 3 in every file, so a full run is 6 cases times 3
-repeats: 18 replicates per model, each a real `git apply` plus the
+`defaults.repeats` is 3 in every file, so a full run is 3 replicates per
+case per model, each a real `git apply` plus the
 repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
@@ -1098,7 +1098,7 @@ or wording the issue leaves open fails a model that did exactly what was asked;
 fixture.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
-`implementation`) before it can be selected; the six shipped cases include three,
+`implementation`) before it can be selected; one shipped case carries one,
 reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
