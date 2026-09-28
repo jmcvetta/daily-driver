@@ -1096,6 +1096,17 @@ against its `tests.patch` before shipping it. A key that asserts a name, path
 or wording the issue leaves open fails a model that did exactly what was asked;
 `--exclude owner/repo#N=reason` takes such a case out for good and deletes its
 fixture.
+
+Where only a few assertions overreach, trim the key instead. **A key may be
+trimmed only by removing assertions the issue does not decide, never by
+adding one.** Apply the full key to a checkout of the base SHA, delete the
+assertions or tests the issue leaves open, and diff against the base SHA
+(`git add -N` any new file first); the result replaces the case's
+`tests.patch`. `--trim-key owner/repo#N=reason` records the trim and its
+reason on the candidate, and a trimmed case refuses a rebuild from the pull
+request's diff. `--verify-case owner/repo#N` then runs the build-time check
+on the committed key: it must fail on the base SHA and pass on the merge SHA,
+both applied through `shared/apply-tests.sh`, and the manifests must match it.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
 `implementation`) before it can be selected; one shipped case carries one,

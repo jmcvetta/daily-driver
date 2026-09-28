@@ -1,8 +1,8 @@
 diff --git a/tests/test_infra_github.py b/tests/test_infra_github.py
-index fd8f06bf..417bf6f0 100644
+index fd8f06b..370f4be 100644
 --- a/tests/test_infra_github.py
 +++ b/tests/test_infra_github.py
-@@ -451,6 +451,114 @@ def test_every_package_has_a_manifest_version(
+@@ -451,6 +451,86 @@ def test_every_package_has_a_manifest_version(
      assert sorted(release_packages) == sorted(release_manifest)
  
  
@@ -84,34 +84,6 @@ index fd8f06bf..417bf6f0 100644
 +        f"package.json version != manifest version for {drifted} "
 +        "(package.json, manifest). The manifest is the correct side."
 +    )
-+
-+
-+def test_node_workspace_is_configured_and_does_not_merge() -> None:
-+    """node-workspace defaults to one combined pull request for node packages.
-+
-+    The plugin does the propagation this repo wants -- releasing career-scan
-+    releases the viewer that depends on it -- but its `merge` option defaults
-+    to true, and the plugins run before the `separate-pull-requests` branch in
-+    Manifest.buildPullRequests. Left at the default it would re-couple
-+    agent-cli and viewer into a single tag-cutting merge, which is the
-+    arrangement `separate-pull-requests` exists to prevent, silently and
-+    without touching that key.
-+    """
-+    config = json.loads(RELEASE_CONFIG.read_text())
-+    plugins = {
-+        plugin["type"]: plugin
-+        for plugin in config.get("plugins", [])
-+        if isinstance(plugin, dict)
-+    }
-+    assert "node-workspace" in plugins, (
-+        "release-type node without node-workspace: a release of career-scan "
-+        "would not release the viewer that depends on it."
-+    )
-+    if config.get("separate-pull-requests"):
-+        assert plugins["node-workspace"].get("merge") is False, (
-+            "separate-pull-requests is on, so node-workspace needs an "
-+            "explicit merge: false; its default is to combine them."
-+        )
 +
 +
  # ---------------------------------------------------------------------------
