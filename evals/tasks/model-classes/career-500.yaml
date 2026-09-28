@@ -8,12 +8,14 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/model-classes/shared
       mount_point: .fixture
-    - type: template_dir
-      path: ../../fixtures/model-classes/cases/career-500
-      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/career-500
 
 pre_run:
-  - command: bash .fixture/case.sh
+  - command: bash .fixture/clone-base.sh jmcvetta/career eb8b0196ebbf91ea9aa7eae509d42756c14dd4e2
     timeout: 120
 
 agent:
@@ -24,8 +26,7 @@ run_limits:
   task_timeout: 780
   turn_timeout: 660
 
-initial_prompt: >-
-  This is jmcvetta/career, checked out at its state before pull request #500. Implement the change described by issue #483 (title: 'ci: restore one release PR per component').
+initial_prompt: "This is jmcvetta/career, checked out at a past commit. Implement the change the issue below describes. Work from this checkout and the issue text alone: do not fetch from jmcvetta/career, and do not look it up on GitHub.\n\n# Remove node-workspace and restore separate component release PRs\n\nRestore one release PR per component without the `node-workspace` plugin.\n\n*Branches stand apart*\n*Each tag marks its own release*\n*No shared knot remains*\n\n## Summary\n\nRemove release-please's `node-workspace` plugin and set `separate-pull-requests` to true. The combined PR is a workaround for that plugin's defects, not the preferred release model. Land this change before and separately from the Python artifact migration; it does not require Node retirement.\n\nRemaining Node components will no longer receive automatic dependent releases. Keep their direct releases and existing component tags intact. This is an intentional policy change, not a request to build replacement dependency propagation.\n\n## Model class\n\n`standard`\n\nThe behavior and failure cases are fixed. Implementation uses existing release configuration, workflow, and regression-test patterns.\n\n## Detail\n\n### Grounded map\n\n- `release-please-config.json` currently sets `separate-pull-requests: false` and configures `node-workspace` with `merge: false`.\n- `.github/workflows/release-please.yml` reads only `steps.release-please.outputs.pr` and regenerates `kokoro/uv.lock` on that one branch. The action also exposes a `prs` array; verify the pinned action's exact contract and process every relevant returned PR.\n- `docs/release-mechanics.md`, section \"One release PR: the upstream defects\", explains the label and cross-PR manifest defects being bypassed by removing the plugin.\n- `tests/test_infra_github.py` currently asserts the workaround/plugin configuration and the release workflow's lock handling.\n- `.github/scripts/release-delta.sh`, `tests/test_release_delta.py`, and `.github/workflows/test.yml` define release-delta selection and the required check behavior.\n- `CLAUDE.md`'s Releases section and `README.md` describe the standing release PR. Update current guidance; retain historical accounts as history.\n- Official output reference: https://github.com/googleapis/release-please-action#outputs .\n\n### Change and invariants\n\n1. Remove the plugin and enable separate release PRs together. Preserve component paths, names, versions, tags, release types, and direct release behavior.\n2. Replace single-PR lock handling with handling of the returned release PR collection. Each branch is checked out independently. Regenerate the Python workspace lock where necessary, and commit/push only an actual lock change. No PR, one PR, multiple PRs, and a non-Python PR must all be safe.\n3. Preserve release-bot authentication, serialized release runs, release labels, manifest/tag boundary checks, and release-delta CI selection. One component's branch must not inherit another branch's uncommitted changes or manifest bumps.\n4. Handle the existing standing combined PR explicitly during rollout. Never leave a stale combined PR eligible to merge alongside its replacement component PRs. Do not delete existing tags/releases or opportunistically repair unrelated release-boundary incidents.\n5. Keep CI scoped to the effective release delta. More release PRs must not mean every PR runs every component's checks.\n\n### Acceptance and verification\n\n- Independent component candidates produce separate release PRs; the plugin is absent and direct Node/Python/resume release identities are unchanged.\n- A fixture with multiple returned PRs proves each relevant Python branch receives its own correct lock update. Empty/no-change/non-Python cases do not create spurious commits. Failures are reported rather than concealed.\n- Merging a component release does not advance an unrelated component's manifest version or lose the labels needed to cut its tag.\n- Update existing coverage for the changed contract. Use offline fixtures for branch iteration and action-output handling, not live GitHub calls from tests. Do not replace obsolete implementation-text assertions with new ones where a behavioral check is possible.\n- Preserve required project gates and use the necessary PR's CI results for verification. Do not manually dispatch extra CI or benchmark workflows. Record the selected components and observed cost impact from those runs.\n\n### Non-goals\n\nNo Python artifact build/publication/install migration, Node removal, new dependent-release implementation, dependency upgrade, or removal of the release-boundary guard. Keep this one reviewable PR.\n"
 
 success_criteria:
   - type: run_command

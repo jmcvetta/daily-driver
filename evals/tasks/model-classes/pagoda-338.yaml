@@ -8,12 +8,14 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/model-classes/shared
       mount_point: .fixture
-    - type: template_dir
-      path: ../../fixtures/model-classes/cases/pagoda-338
-      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/pagoda-338
 
 pre_run:
-  - command: bash .fixture/case.sh
+  - command: bash .fixture/clone-base.sh Green-Pagoda/pagoda 7eb6d254230e28036ed4a4f57adbd1eff67a0c3c
     timeout: 120
 
 agent:
@@ -24,8 +26,7 @@ run_limits:
   task_timeout: 780
   turn_timeout: 660
 
-initial_prompt: >-
-  This is Green-Pagoda/pagoda, checked out at its state before pull request #338. Implement the change described by issue #337 (title: 'fix(usd2oz-web): say "calculator" in the methodology back link').
+initial_prompt: "This is Green-Pagoda/pagoda, checked out at a past commit. Implement the change the issue below describes. Work from this checkout and the issue text alone: do not fetch from Green-Pagoda/pagoda, and do not look it up on GitHub.\n\n# Methodology page footer link should say \"back to calculator\"\n\nThe footer link at the bottom of the usd2oz methodology page reads \"← Back to the converter\". It should read \"back to calculator\" instead.\n\n`apps/usd2oz-web/src/pages/methodology.astro:125`\n\n**Definition of done:** the methodology page footer link text says \"Back to the calculator\".\n"
 
 success_criteria:
   - type: run_command

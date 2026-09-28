@@ -12,10 +12,14 @@
 # `.fixture/base-sha`, or removed where the base had no such file, and the
 # patch then applies as it did at build time. The agent's own tests in other
 # files stay, and the criterion keeps meaning "the pull request's tests pass".
+#
+# The answer key lives in the task's `reference:` directory, which coder_eval
+# stages outside the sandbox and names in `REFERENCE_DIR` for criteria only;
+# the agent never sees the path.
 
 set -euo pipefail
 
-patch=".fixture/tests.patch"
+patch="${REFERENCE_DIR:?REFERENCE_DIR is unset: run as a criterion of a task with a reference}/tests.patch"
 base="$(<.fixture/base-sha)"
 
 while IFS= read -r path; do

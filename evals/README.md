@@ -38,8 +38,8 @@ evals/
 │   │   ├── shared/       builds the git repository every case starts from
 │   │   └── cases/<name>/ one `case.sh`, mounted alone beside `shared/`
 │   └── model-classes/
-│       ├── shared/       clones the source repo's base SHA; the two grading checks
-│       ├── cases/<repo>-<pr>/  `case.sh` + `tests.patch`, one per selected PR
+│       ├── shared/       clones the source repo's base SHA; the grader and its two checks
+│       ├── cases/<repo>-<pr>/  the answer key, one per selected PR: a `reference:`, never mounted
 │       └── candidates.json     every qualifying PR the builder saw, selected or not
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
@@ -1012,8 +1012,9 @@ in, finishes ordinary delegated work and leaves its own tests passing.
 `apps/usd2oz-web` in `Green-Pagoda/pagoda`: three `mechanical`, three
 `implementation`, the smallest qualifying candidate of each `class:` tag by
 changed lines, each verified once at build time to fail on the base SHA and pass on
-the merge SHA before it was shipped. A case's `initial_prompt` names the issue
-the pull request closed; its three `run_command` criteria check, in order,
+the merge SHA before it was shipped. A case's `initial_prompt` is the title
+and body of the issue the pull request closed, and names neither number; its
+three `run_command` criteria check, in order,
 that no test file present at the base SHA was deleted, that no skip/xfail
 marker was added to one, and that the pull request's own tests pass once
 `tests.patch` is applied. `shared/apply-tests.sh` applies it: it first puts
@@ -1023,6 +1024,20 @@ plain `git apply` would score that correct change 0. The agent's own tests in
 other files stay. `evals/fixtures/model-classes/candidates.json`
 records every qualifying pull request the builder saw, selected or not, so a
 later run can widen the suite without re-walking history.
+
+**Keeping the answer out of reach.** The merged change is the answer, and the
+agent runs on the same host as the grader, so the suite closes each road to it:
+
+- `tests.patch` and the two manifests sit in the case's `reference:`
+  directory. coder_eval stages that outside the sandbox and names it in
+  `REFERENCE_DIR` for criteria only, so a broad `grep` of the checkout cannot
+  surface it. Under the `tempdir` driver the agent is the same user as the
+  harness, so this hides the key rather than locking it.
+- `shared/lib.sh` removes the clone's `origin` once it has fetched the base
+  SHA, so `git fetch origin <default-branch>` or `refs/pull/<n>/head` has
+  nowhere to go.
+- The prompt carries the issue text and tells the agent not to consult the
+  source repository on GitHub; with no number to look up, it has no reason to.
 
 **What it does not measure.** No `reasoning` case: that class is decided by
 the production table and public benchmarks, not by a fixture small enough to
@@ -1056,8 +1071,8 @@ repeats: 18 replicates per model, each a real `git apply` plus the
 repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
-process, so a token exported before `coder-eval run` is what `case.sh` clones
-with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
+process, so a token exported before `coder-eval run` is what
+`shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
 or use the `smoke`-tagged case per class (the smallest of each) to check a new
 overlay cheaply before spending a full run on it.
 
@@ -1065,7 +1080,9 @@ overlay cheaply before spending a full run on it.
 [--path-prefix DIR]` scans a source's merged pull requests and appends
 qualifying ones to `candidates.json`; `--select` then runs the build-time
 answer-key check on the smallest candidates of each class and emits fixtures
-and task YAMLs for the ones that pass, up to `--per-class` each (default 3).
+and task YAMLs for the ones that pass, up to `--per-class` each (default 3);
+`--rewrite-tasks` regenerates the selected cases' YAMLs from
+`candidates.json` after a template change.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
 `implementation`) before it can be selected; the six shipped cases include three,

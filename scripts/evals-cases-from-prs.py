@@ -6,9 +6,11 @@ is a fixture nobody has to author: the base SHA is the "before", the merge SHA
 is the "after", and the PR's own diff to its test files is the answer key. This
 script walks a repository's merged pull requests, keeps the ones that qualify
 (see `qualifying_reason`), and for the ones selected into the suite emits a
-fixture directory under `evals/fixtures/model-classes/cases/<repo>-<pr>/` (a
-`case.sh` that shallow-clones the base SHA, and a `tests.patch` restricted to
-the PR's test files) plus a task YAML under `evals/tasks/model-classes/`.
+reference directory under `evals/fixtures/model-classes/cases/<repo>-<pr>/`
+(a `tests.patch` restricted to the PR's test files, and the two manifests the
+deletion and skip checks read) plus a task YAML under
+`evals/tasks/model-classes/`. The task's prompt carries the closed issue's
+title and body, so the agent has no reason to look the work up on GitHub.
 Every qualifying pull request the builder saw, selected or not, is recorded in
 `evals/fixtures/model-classes/candidates.json`.
 
@@ -26,6 +28,12 @@ USAGE
     YAMLs for the ones that pass it, up to `--per-class` each:
 
         python3 scripts/evals-cases-from-prs.py --select
+
+    Rewrite every selected case's task YAML from `candidates.json` -- after a
+    change to the template or the prompt -- without re-running the build-time
+    check:
+
+        python3 scripts/evals-cases-from-prs.py --rewrite-tasks
 
     An `unlabelled` candidate (no `Model class` on the issue it closed) needs
     a class before it can be selected:
@@ -579,6 +587,8 @@ def scan_repository(
             issue = get_issue(owner, repo, closed_issue, token) if closed_issue else None
             comments = get_issue_comments(owner, repo, number, token)
             record["closed_issue"] = closed_issue
+            record["issue_title"] = issue.get("title") if issue else None
+            record["issue_body"] = issue.get("body") if issue else None
             record["class"] = read_model_class(issue.get("body") if issue else None)
             record["class_source"] = "issue" if record["class"] != "unlabelled" else "unlabelled"
             record["elapsed_minutes"] = read_elapsed_minutes(comments)
@@ -673,20 +683,24 @@ def verify_answer_key(
         shallow_clone(repo_slug, record["base_sha"], token, base_path)
         skip_counts = count_skip_markers(base_path, record["test_files"])
 
-        # The same grader a run uses, laid out the way a run lays it out, so
-        # the answer key is validated by the code that will apply it.
+        # The same grader a run uses, laid out the way a run lays it out --
+        # scaffolding under `.fixture`, the answer key in a reference
+        # directory outside the checkout -- so the answer key is validated by
+        # the code that will apply it.
         fixture = base_path / ".fixture"
         fixture.mkdir()
-        (fixture / "tests.patch").write_text(tests_patch, encoding="utf-8")
         (fixture / "base-sha").write_text(record["base_sha"] + "\n", encoding="utf-8")
         shutil.copy(_GRADER, fixture / "apply-tests.sh")
-        apply = subprocess.run(
-            ["bash", ".fixture/apply-tests.sh"],
-            cwd=base_path,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
+        with tempfile.TemporaryDirectory(prefix="model-classes-reference-") as reference_dir:
+            (Path(reference_dir) / "tests.patch").write_text(tests_patch, encoding="utf-8")
+            apply = subprocess.run(
+                ["bash", ".fixture/apply-tests.sh"],
+                cwd=base_path,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env={**os.environ, "REFERENCE_DIR": reference_dir},
+            )
         if apply.returncode != 0:
             return False, f"tests.patch does not apply to the base SHA: {apply.stderr[:300]}", 0.0, skip_counts
         try:
@@ -718,16 +732,15 @@ def verify_answer_key(
 
 def write_case_fixture(
     case_name: str,
-    repo_slug: str,
-    record: dict[str, Any],
     tests_patch: str,
     base_skip_counts: list[str],
 ) -> None:
-    """The fixture directory for one selected case: `case.sh`, `tests.patch`,
+    """The reference directory for one selected case: `tests.patch`,
     `base-test-files.txt` (the patch's paths the base SHA already had), and
     `base-skip-counts.txt` (from `base_skip_counts`
     -- `verify_answer_key`'s reading of the base SHA it already cloned, taken
-    before it applied `tests.patch` to that checkout).
+    before it applied `tests.patch` to that checkout). The task mounts none of
+    it into the sandbox: coder_eval stages it outside, for criteria only.
     """
     case_dir = CASES_DIR / case_name
     case_dir.mkdir(parents=True, exist_ok=True)
@@ -737,16 +750,6 @@ def write_case_fixture(
     base_test_files = "\n".join(paths_present_at_base(tests_patch)) + "\n"
     (case_dir / "base-test-files.txt").write_text(base_test_files, encoding="utf-8")
     (case_dir / "base-skip-counts.txt").write_text("\n".join(base_skip_counts) + "\n", encoding="utf-8")
-
-    case_sh = f"""#!/usr/bin/env bash
-# Clones {repo_slug}#{record['number']} at its base SHA. See `../../shared/lib.sh`.
-# shellcheck source=../../shared/lib.sh
-source "$(dirname "$0")/lib.sh"
-fixture_clone_base "{repo_slug}" "{record['base_sha']}"
-"""
-    case_path = case_dir / "case.sh"
-    case_path.write_text(case_sh, encoding="utf-8")
-    case_path.chmod(0o755)
 
 
 _TASK_TEMPLATE = """\
@@ -760,12 +763,14 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/model-classes/shared
       mount_point: .fixture
-    - type: template_dir
-      path: ../../fixtures/model-classes/cases/{case_name}
-      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/{case_name}
 
 pre_run:
-  - command: bash .fixture/case.sh
+  - command: bash .fixture/clone-base.sh {repo_slug} {base_sha}
     timeout: 120
 
 agent:
@@ -776,8 +781,7 @@ run_limits:
   task_timeout: {task_timeout}
   turn_timeout: {turn_timeout}
 
-initial_prompt: >-
-  {initial_prompt}
+initial_prompt: {initial_prompt}
 
 success_criteria:
   - type: run_command
@@ -805,24 +809,51 @@ def _yaml_escape_block(text: str) -> str:
     return text.replace("\n", "\n  ")
 
 
+def yaml_quoted(text: str) -> str:
+    """`text` as a YAML double-quoted scalar.
+
+    A JSON string is a valid YAML double-quoted scalar, escapes and all, so
+    an issue body's newlines, quotes, backticks and leading `#`s survive
+    verbatim -- which no hand-folded block scalar guarantees.
+    """
+    return json.dumps(text, ensure_ascii=False)
+
+
+def task_prompt(repo_slug: str, record: dict[str, Any]) -> str:
+    """The agent's instructions: the closed issue's own title and body.
+
+    Neither the pull request's number nor the issue's is given. Either one is
+    a lookup key for the merged change, and the issue text is the whole
+    specification, so the agent has nothing to fetch.
+    """
+    title = record.get("issue_title")
+    body = (record.get("issue_body") or "").strip()
+    if not title:
+        raise BuildError(f"{repo_slug}#{record['number']}: no issue title recorded; rescan the repository")
+    return (
+        f"This is {repo_slug}, checked out at a past commit. Implement the change "
+        "the issue below describes. Work from this checkout and the issue text "
+        f"alone: do not fetch from {repo_slug}, and do not look it up on GitHub.\n\n"
+        f"# {title}\n\n{body}\n"
+    )
+
+
 def write_task_yaml(case_name: str, repo_slug: str, record: dict[str, Any], test_command: str, smoke: bool) -> None:
+    """Write the task YAML for one selected case from its candidate record."""
     task_timeout = record["task_timeout"]
     turn_timeout = max(180, task_timeout - 120)
     grading_command = f"bash .fixture/apply-tests.sh && {test_command}"
     description = f"{repo_slug}#{record['number']}: {record['title']}"
-    initial_prompt = (
-        f"This is {repo_slug}, checked out at its state before pull request "
-        f"#{record['number']}. Implement the change described by issue "
-        f"#{record['closed_issue']} (title: {record['title']!r})."
-    )
     content = _TASK_TEMPLATE.format(
         case_name=case_name,
         description=_yaml_escape_block(description),
         class_tag=f"class:{record['class']}",
         smoke_tag=", smoke" if smoke else "",
+        repo_slug=repo_slug,
+        base_sha=record["base_sha"],
         task_timeout=task_timeout,
         turn_timeout=turn_timeout,
-        initial_prompt=_yaml_escape_block(initial_prompt),
+        initial_prompt=yaml_quoted(task_prompt(repo_slug, record)),
         grading_command=grading_command,
         grading_timeout=max(60, task_timeout - 60),
     )
@@ -891,7 +922,8 @@ def try_build_one(candidate_id: str, record: dict[str, Any], token: str, smoke: 
         return False
 
     case_name = case_name_for(candidate_id)
-    write_case_fixture(case_name, repo_slug, record, tests_patch, skip_counts)
+    ensure_issue_text(record, token)
+    write_case_fixture(case_name, tests_patch, skip_counts)
     write_task_yaml(case_name, repo_slug, record, test_command, smoke=smoke)
 
     record["selected"] = True
@@ -930,6 +962,37 @@ def build_selected(
             )
 
 
+def ensure_issue_text(record: dict[str, Any], token: str) -> None:
+    """Read the closed issue's title and body into `record` where a scan from
+    before the prompt carried them left it without.
+    """
+    if record.get("issue_title"):
+        return
+    owner, _, repo = record["repo"].partition("/")
+    issue = get_issue(owner, repo, record["closed_issue"], token)
+    if issue is None:
+        raise BuildError(f"{record['repo']}#{record['number']}: issue #{record['closed_issue']} could not be read")
+    record["issue_title"] = issue.get("title")
+    record["issue_body"] = issue.get("body")
+
+
+def rewrite_selected_tasks(candidates: dict[str, dict[str, Any]], token: str) -> None:
+    """Rewrite the task YAML of every selected case from its record, reading
+    the closed issue's text first where the record predates keeping it.
+
+    `smoke` goes to the first selected case of each class in pool order, the
+    same case `build_selected` gave it to.
+    """
+    for klass in BUILDABLE_CLASSES:
+        selected = [cid for cid in candidate_pool(candidates, klass) if candidates[cid].get("selected")]
+        for index, candidate_id in enumerate(selected):
+            record = candidates[candidate_id]
+            repo_slug = record["repo"]
+            ensure_issue_text(record, token)
+            write_task_yaml(case_name_for(candidate_id), repo_slug, record, record["test_command"], smoke=index == 0)
+            print(f"rewrote evals/tasks/model-classes/{case_name_for(candidate_id)}.yaml", file=sys.stderr)
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -952,10 +1015,15 @@ def main(argv: list[str]) -> int:
     )
     parser.add_argument("--select", action="store_true", help="build fixtures + task YAMLs from candidates.json")
     parser.add_argument("--per-class", type=int, default=3, help="cases to select per buildable class")
+    parser.add_argument(
+        "--rewrite-tasks",
+        action="store_true",
+        help="rewrite every selected case's task YAML from candidates.json",
+    )
     args = parser.parse_args(argv)
 
-    if not args.repo and not args.select:
-        parser.error("a repo is required unless --select is given")
+    if not args.repo and not args.select and not args.rewrite_tasks:
+        parser.error("a repo is required unless --select or --rewrite-tasks is given")
 
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
     if not token:
@@ -985,6 +1053,10 @@ def main(argv: list[str]) -> int:
         build_selected(candidates, args.per_class, token)
         save_candidates(args.candidates_file, candidates)
 
+    if args.rewrite_tasks:
+        rewrite_selected_tasks(candidates, token)
+        save_candidates(args.candidates_file, candidates)
+
     return 0
 
 
@@ -1007,6 +1079,8 @@ def _run_self_tests() -> None:
     _test_paths_present_at_base()
     _test_count_skip_markers()
     _test_resolve_test_command()
+    _test_task_prompt()
+    _test_yaml_quoted()
 
 
 def _test_is_test_path() -> None:
@@ -1285,6 +1359,43 @@ def _test_resolve_test_command() -> None:
 
     unknown_repo = resolve_test_command("someone/else", ["tests/test_x.py"], None)
     assert unknown_repo is None
+
+
+def _test_task_prompt() -> None:
+    record = {
+        "number": 338,
+        "closed_issue": 337,
+        "title": 'fix(usd2oz-web): say "calculator"',
+        "issue_title": "Methodology page footer link should say \"back to calculator\"",
+        "issue_body": "The footer link reads \"Back to the converter\".\n\n**Definition of done:** it says so.\n",
+    }
+    prompt = task_prompt("Green-Pagoda/pagoda", record)
+    assert "# Methodology page footer link" in prompt, prompt
+    assert "**Definition of done:** it says so." in prompt, prompt
+    # Either number is a lookup key for the merged change.
+    assert "338" not in prompt and "337" not in prompt, prompt
+    assert "do not fetch from Green-Pagoda/pagoda" in prompt, prompt
+    # The pull request's title is not the specification; the issue's is.
+    assert 'say "calculator"' not in prompt, prompt
+    try:
+        task_prompt("Green-Pagoda/pagoda", {**record, "issue_title": None})
+    except BuildError:
+        pass
+    else:
+        raise AssertionError("task_prompt accepted a record with no issue title")
+
+
+def _test_yaml_quoted() -> None:
+    text = 'A "quoted" line\n\n# not a comment\n  - not a list: `x`\n\\ and \u2190 arrow\n'
+    quoted = yaml_quoted(text)
+    assert "\n" not in quoted, quoted
+    assert quoted.startswith('"') and quoted.endswith('"'), quoted
+    assert json.loads(quoted) == text
+    try:
+        import yaml  # noqa: PLC0415 - the dev venv has it; the builder itself never needs it
+    except ImportError:
+        return
+    assert yaml.safe_load(f"initial_prompt: {quoted}\n") == {"initial_prompt": text}
 
 
 if __name__ == "__main__":

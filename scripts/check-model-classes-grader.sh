@@ -18,6 +18,14 @@
 #   committed      the agent committed its work, so HEAD is not the base
 #   clean          the agent touched no test file at all
 #
+# A last case runs the grader with no `REFERENCE_DIR` and requires it to fail:
+# a grader that found no answer key and exited 0 would pass every replicate.
+#
+# One more case checks the clone, not the grader: `clone-base.sh` must remove
+# the `origin` remote once it has fetched, or `git fetch origin <branch>`
+# hands the agent the merged change. A `git` shim on PATH records the calls,
+# so the case needs no network.
+#
 # Usage: scripts/check-model-classes-grader.sh
 
 set -euo pipefail
@@ -31,9 +39,10 @@ fail() {
 }
 
 # Build a repository at its base commit, derive `tests.patch` from a merge
-# state, and leave the working tree at the base with `.fixture/` in place.
+# state into the reference directory `$2`, and leave the working tree at the
+# base with `.fixture/` in place -- the layout a run gives the grader.
 setup() {
-	local dir="$1"
+	local dir="$1" reference="$2"
 	git init -q "${dir}"
 	cd "${dir}"
 	git config user.email "check@example.invalid"
@@ -50,7 +59,7 @@ setup() {
 	printf 'it("says calculator", () => {\n  expect(label).toBe("calculator");\n});\n' >src/page.test.ts
 	printf 'it("is new", () => {});\n' >src/extra.test.ts
 	git add -N src/extra.test.ts
-	git diff >.fixture/tests.patch
+	git diff >"${reference}/tests.patch"
 	git checkout -q -- src/page.test.ts
 	rm -f src/extra.test.ts
 	git reset -q
@@ -64,19 +73,38 @@ assert_answer_key_applied() {
 }
 
 run_case() {
-	local name="$1" agent="$2" dir
+	local name="$1" agent="$2" dir reference
 	dir="$(mktemp -d)"
+	reference="$(mktemp -d)"
 	(
-		setup "${dir}"
+		setup "${dir}" "${reference}"
 		"${agent}"
-		bash "${GRADER}" >/dev/null 2>&1 || fail "${name}: the grader did not apply tests.patch"
+		REFERENCE_DIR="${reference}" bash "${GRADER}" >/dev/null 2>&1 ||
+			fail "${name}: the grader did not apply tests.patch"
 		assert_answer_key_applied "${name}"
 		if [[ "${name}" != clean ]]; then
 			grep -q '"calculator"' src/page.ts || fail "${name}: the agent's implementation change was lost"
 		fi
 	)
-	rm -rf "${dir}"
+	rm -rf "${dir}" "${reference}"
 	echo "  ok  ${name}"
+}
+
+# Without `REFERENCE_DIR` there is no answer key, and the grader must say so
+# by failing rather than grade the agent's tree as it stands.
+no_reference() {
+	local dir reference
+	dir="$(mktemp -d)"
+	reference="$(mktemp -d)"
+	(
+		setup "${dir}" "${reference}"
+		agent_same_hunk
+		if env -u REFERENCE_DIR bash "${GRADER}" >/dev/null 2>&1; then
+			fail "no-reference: the grader passed with no answer key"
+		fi
+	)
+	rm -rf "${dir}" "${reference}"
+	echo "  ok  no-reference"
 }
 
 agent_same_hunk() {
@@ -102,5 +130,32 @@ agent_clean() {
 run_case same-hunk agent_same_hunk
 run_case new-file agent_new_file
 run_case committed agent_committed
+# The clone, run against a `git` shim that logs each call and does nothing.
+clone_drops_origin() {
+	local dir shim log
+	dir="$(mktemp -d)"
+	shim="$(mktemp -d)"
+	log="${shim}/calls"
+	cat >"${shim}/git" <<-SHIM
+		#!/usr/bin/env bash
+		printf '%s\n' "\$*" >>"${log}"
+		[[ "\$1" == init ]] && mkdir -p .git/info
+		exit 0
+	SHIM
+	chmod +x "${shim}/git"
+	mkdir -p "${dir}/.fixture"
+	cp "${REPO_ROOT}/evals/fixtures/model-classes/shared/"{lib.sh,clone-base.sh} "${dir}/.fixture/"
+	(cd "${dir}" && PATH="${shim}:${PATH}" GITHUB_TOKEN=check-token bash .fixture/clone-base.sh owner/repo 0123abc) ||
+		fail "clone-drops-origin: clone-base.sh exited non-zero"
+	grep -qx 'remote remove origin' "${log}" || fail "clone-drops-origin: origin was never removed"
+	[[ "$(grep -n 'remote remove origin' "${log}" | cut -d: -f1)" -gt "$(grep -n '^fetch ' "${log}" | cut -d: -f1)" ]] ||
+		fail "clone-drops-origin: origin was removed before the fetch"
+	grep -qx '0123abc' "${dir}/.fixture/base-sha" || fail "clone-drops-origin: base-sha was not recorded"
+	rm -rf "${dir}" "${shim}"
+	echo "  ok  clone-drops-origin"
+}
+
 run_case clean agent_clean
-echo "check-model-classes-grader: 4 case(s) pass"
+no_reference
+clone_drops_origin
+echo "check-model-classes-grader: 6 case(s) pass"
