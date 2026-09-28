@@ -54,8 +54,9 @@ Every measured figure must cite a committed record under
 Every record also carries a `cases` list, one row per task per repeat.
 `scripts/evals-render-routes.py` reads every committed record's `cases` and
 writes the `Measured routes` table in
-[`model-classes.md`](../skills/issue-body/references/model-classes.md) from
-them -- a model and settings pair with no case row is listed `unmeasured`.
+[`omp.md`](../skills/issue-body/references/omp.md) -- the harness-specific
+reference, since every route it names is a concrete Omp model or overlay --
+from them; a model and settings pair with no case row is listed `unmeasured`.
 
 ## Running them
 

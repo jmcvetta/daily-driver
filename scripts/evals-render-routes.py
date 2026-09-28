@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Render the `Measured routes` table in `model-classes.md` from committed provenance.
+"""Render the `Measured routes` table in `omp.md` from committed provenance.
 
 Reads every record under `evals/provenance/` -- never a run directory, so an
 uncommitted run does not exist to this script -- and writes a markdown table
 between the `<!-- measured-routes-start -->` / `<!-- measured-routes-end -->`
-markers in `skills/issue-body/references/model-classes.md`. See that file's
-"Measured routes" section for what the table means, and
-`evals/README.md`'s "The model-classes suite" for what a case measures.
+markers in `skills/issue-body/references/omp.md`. It lives in the
+harness-specific reference, not in the provider-neutral `model-classes.md`,
+because every route it names is a concrete Omp model or overlay -- see
+`scripts/check-manifests.py`'s `model_identity_errors`. See `omp.md`'s
+"Measured routes" section for what the table means, and `evals/README.md`'s
+"The model-classes suite" for what a case measures.
 
 USAGE
 
@@ -25,7 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_PROVENANCE_DIR = ROOT / "evals" / "provenance"
 DEFAULT_EXPERIMENTS_DIR = ROOT / "evals" / "experiments"
 DEFAULT_OMP_CONFIGS_DIR = ROOT / "omp_configs"
-DEFAULT_TARGET = ROOT / "skills" / "issue-body" / "references" / "model-classes.md"
+DEFAULT_TARGET = ROOT / "skills" / "issue-body" / "references" / "omp.md"
 
 START_MARKER = "<!-- measured-routes-start -->"
 END_MARKER = "<!-- measured-routes-end -->"
