@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 #
 # Fails when a test file present at the base SHA is missing from the tree the
-# agent leaves behind. `.fixture/base-test-files.txt` is one repo-relative
+# agent leaves behind. `base-test-files.txt` is one repo-relative
 # path per line, written by `scripts/evals-cases-from-prs.py` from the same
 # diff that produced `tests.patch`. Run as a `run_command` success criterion,
 # against the sandbox root, before `tests.patch` is applied -- deletion is a
 # question about the agent's own tree, not about the grading patch.
+#
+# The answer key lives in the task's `reference:` directory, which coder_eval
+# stages outside the sandbox and names in `REFERENCE_DIR` for criteria only;
+# the agent never sees the path.
 
 set -euo pipefail
 
-manifest=".fixture/base-test-files.txt"
+manifest="${REFERENCE_DIR:?REFERENCE_DIR is unset: run as a criterion of a task with a reference}/base-test-files.txt"
 if [[ ! -r "${manifest}" ]]; then
 	echo "no manifest at ${manifest}" >&2
 	exit 1

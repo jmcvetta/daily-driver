@@ -12,7 +12,7 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
 	check-review-cycle-fix-delta-route check-provenance check-verse \
-	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
+	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
@@ -102,7 +102,7 @@ check-runtime: check-constitution check-ask-in-chat check-omp-extension check-mo
 	check-omp-pr-create-route check-review-cycle-fix-delta-route check-provenance check-verse \
 	check-task-worktree-fixture check-scripts
 
-check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures \
+check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-eval-arms check-evals-preflight check-evals-provenance
 
 
@@ -339,6 +339,13 @@ check-eval-arms:
 check-eval-fixtures:
 	scripts/check-eval-fixtures.sh
 
+# check-model-classes-grader: the model-classes grader applies the answer key
+# over an agent's tree -- same-hunk edits, a test file both created, committed
+# work -- instead of scoring a correct change 0. Needs git and bash only. See
+# the script's header.
+check-model-classes-grader:
+	scripts/check-model-classes-grader.sh
+
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.
 # The model-driven rows remain outside CI; their test instrument does not.
@@ -440,6 +447,9 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-opus-low.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-high.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-low.yaml tasks/*/*.yaml
 
 # evals-variants: refuse to start when an arm's agent kind is not registered.
 # `coder-eval plan` PRINTS "Variant 'omp': resolution failed" and then exits 0,
@@ -553,7 +563,7 @@ evals-run-codex: evals-plan evals-preflight
 # repository actually runs (`claude-only`, `omp-only`, `codex-only`); the
 # suite's own rows carry no arm tag of that shape to exclude BY, only
 # `model-classes` itself, which every other arm already excludes. Still
-# overridable by a caller who wants one case: `TASKS=tasks/model-classes/pagoda-338.yaml`.
+# overridable by a caller who wants one case: `TASKS=tasks/model-classes/career-462.yaml`.
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \
