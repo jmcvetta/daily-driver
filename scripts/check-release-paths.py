@@ -28,6 +28,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # What a session loading the plugin, or a user bootstrapping a repository
 # from `template/`, receives. A change under one of these releases a version.
+# `scripts/` is mostly check legs, but `scripts/pr-keep-current.sh` is the
+# Omp keep-current loop an installed plugin runs, and release-please cannot
+# exclude a directory in part.
 SHIPPED = frozenset(
     {
         ".claude-plugin",
@@ -36,6 +39,7 @@ SHIPPED = frozenset(
         "extensions",
         "hooks",
         "rules",
+        "scripts",
         "skills",
         "template",
     }
@@ -52,6 +56,8 @@ def problems(dirs: set[str], shipped: frozenset[str], excluded: list[str]) -> li
     """problems lists each way the tracked directories, the shipped set and
     `exclude-paths` disagree. An empty list means they agree."""
     found = []
+    for path in sorted({path for path in excluded if excluded.count(path) > 1}):
+        found.append(f"{path}: listed more than once in exclude-paths")
     for path in sorted(set(excluded) & shipped):
         found.append(f"{path}: both shipped and in exclude-paths")
     for path in sorted(set(excluded) - dirs):
@@ -74,6 +80,7 @@ def self_test() -> None:
             ["Makefile: in exclude-paths but not a tracked top-level directory"],
         ),
         ("shipped and excluded", ["evals", "skills"], ["skills: both shipped and in exclude-paths"]),
+        ("duplicate entry", ["evals", "evals"], ["evals: listed more than once in exclude-paths"]),
     ]
     for name, excluded, expected in cases:
         actual = problems(dirs, shipped, excluded)
@@ -82,12 +89,16 @@ def self_test() -> None:
 
 
 def main() -> int:
+    """main checks the tracked tree against `release-please-config.json` and
+    returns the process exit status."""
     self_test()
     config = json.loads((ROOT / "release-please-config.json").read_text())
     excluded = config["packages"]["."].get("exclude-paths", [])
+    # `-z` keeps paths unquoted: without it `core.quotePath` escapes a
+    # non-ASCII directory name, which then matches no exclude-paths entry.
     tracked = subprocess.run(
-        ["git", "ls-files"], cwd=ROOT, check=True, capture_output=True, text=True
-    ).stdout.splitlines()
+        ["git", "ls-files", "-z"], cwd=ROOT, check=True, capture_output=True, text=True
+    ).stdout.split("\0")
     found = problems(top_level_dirs(tracked), SHIPPED, excluded)
     for problem in found:
         print(f"check-release-paths: {problem}", file=sys.stderr)
