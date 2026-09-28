@@ -108,6 +108,24 @@ def main() -> int:
     )
     check("readiness: unavailable report still parses its provenance pair", unavailable["model"] == "claude-opus-5-5")
 
+    # PR #405's own First-readiness report: "start:"/"ready:"/"elapsed:" and
+    # a lowercase "head:" line, pre-dating both `provenance`'s block and the
+    # "from claim (...) to first merge readiness (...)" sentence.
+    old_report = read_fixture("model-telemetry-readiness-old.txt")
+    old_readiness = mt.parse_readiness_report(old_report)
+    check(
+        "readiness: old start:/ready: shape still yields elapsed minutes",
+        old_readiness["elapsed_minutes"] is not None and abs(old_readiness["elapsed_minutes"] - 13.07) < 0.1,
+    )
+    check(
+        "readiness: old shape's lowercase head: line still parses",
+        old_readiness["head_sha"] == "02105c85f47d7de4ecc83d34992472856b16d196",
+    )
+    check(
+        "readiness: old shape's harness: line, past the session: line, still parses",
+        old_readiness["harness"] == "Claude Code",
+    )
+
     check(
         "find_readiness_report: matches on the leading marker",
         mt.find_readiness_report([{"body": good_report}]) is not None,
@@ -124,6 +142,14 @@ def main() -> int:
         "claim-versus-report mismatch is a field, not silently resolved",
         claim_model != report_model,
     )
+    check("is_model_mismatch: two different reported models is a mismatch", mt.is_model_mismatch("a", "b") is True)
+    check("is_model_mismatch: the same model both places is not a mismatch", mt.is_model_mismatch("a", "a") is False)
+    check(
+        "is_model_mismatch: a claim with no readiness report is not a mismatch "
+        "-- 'unreported' is a display placeholder, not the report's model",
+        mt.is_model_mismatch("a", None) is False,
+    )
+    check("is_model_mismatch: no claim at all is not a mismatch", mt.is_model_mismatch(None, "b") is False)
 
     # -- review verification --------------------------------------------------
     review = read_fixture("model-telemetry-review-verification.txt")

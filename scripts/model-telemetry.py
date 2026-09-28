@@ -92,6 +92,11 @@ _PROVENANCE_RE = re.compile(
     r"^Model: ?(?P<model>\S.*)$\n(?:^Harness: ?(?P<harness>\S.*)$\n)?^session: ?(?P<session>\S.*)$",
     re.MULTILINE,
 )
+# A standalone fallback for `harness:` lines that fall outside the `Model:`/
+# `Harness:`/`session:` sequence above -- the oldest readiness-report shape
+# (PR #405's own, pre-dating even the pre-`provenance`-skill claim shape)
+# writes `Model:`, then `session:`, then a trailing lowercase `harness:` line.
+_HARNESS_LINE_RE = re.compile(r"^harness: ?(?P<harness>\S.*)$", re.MULTILINE | re.IGNORECASE)
 
 
 def parse_provenance_block(body: str) -> dict[str, str | None] | None:
@@ -102,9 +107,13 @@ def parse_provenance_block(body: str) -> dict[str, str | None] | None:
     if not match:
         return None
     fields = match.groupdict()
+    harness = fields["harness"].strip() if fields["harness"] else None
+    if harness is None:
+        stray = _HARNESS_LINE_RE.search(body)
+        harness = stray.group("harness").strip() if stray else None
     return {
         "model": fields["model"].strip(),
-        "harness": fields["harness"].strip() if fields["harness"] else None,
+        "harness": harness,
         "session": fields["session"].strip(),
     }
 
@@ -127,10 +136,18 @@ def find_claim_comment(comments: list[dict[str, Any]]) -> dict[str, Any] | None:
 
 
 _READINESS_MARKER = "First-readiness report"
+# Current shape: "Elapsed: ..., from claim (T1) to first merge readiness (T2)."
 _READINESS_TIMES_RE = re.compile(
     r"from claim \((?P<claimed>[^)]+)\) to first merge readiness \((?P<ready>[^)]+)\)"
 )
-_HEAD_RE = re.compile(r"^Head: (?P<sha>[0-9a-f]{7,40})$", re.MULTILINE)
+# Pre-`provenance`-skill shape: separate "start: T1" / "ready: T2" lines
+# (PR #405's own First-readiness report reads this way).
+_START_READY_RE = re.compile(
+    r"^start: ?(?P<claimed>\S.*)$\n^ready: ?(?P<ready>\S.*)$",
+    re.MULTILINE | re.IGNORECASE,
+)
+# Case-insensitive: the current shape writes "Head:", the older one "head:".
+_HEAD_RE = re.compile(r"^head: ?(?P<sha>[0-9a-f]{7,40})$", re.MULTILINE | re.IGNORECASE)
 
 
 def _parse_iso(text: str) -> datetime | None:
@@ -161,7 +178,7 @@ def parse_readiness_report(body: str) -> dict[str, Any]:
     elapsed_minutes: float | None = None
     claimed_at: str | None = None
     ready_at: str | None = None
-    times = _READINESS_TIMES_RE.search(body)
+    times = _READINESS_TIMES_RE.search(body) or _START_READY_RE.search(body)
     if times:
         claimed_dt = _parse_iso(times.group("claimed"))
         ready_dt = _parse_iso(times.group("ready"))
@@ -268,6 +285,15 @@ def closed_issue_number(pr_body: str | None) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def is_model_mismatch(claim_model: str | None, report_model: str | None) -> bool:
+    """Whether the claim comment and the readiness report name two different,
+    actually-reported models. A pull request with a claim but no readiness
+    report has nothing for the claim to disagree with -- `report_model` is
+    None there, never the `"unreported"` placeholder `build_record` displays.
+    """
+    return bool(claim_model and report_model and claim_model != report_model)
+
+
 # ---------------------------------------------------------------------------
 # GitHub REST client -- urllib only, the same shape as
 # `scripts/evals-cases-from-prs.py`'s.
@@ -368,7 +394,8 @@ def build_record(
     head_sha = str((pr.get("head") or {}).get("sha") or "")
     check_runs = get_check_runs(owner, repo, head_sha, token) if head_sha else []
 
-    model = readiness["model"] if readiness and readiness["model"] else "unreported"
+    report_model = readiness["model"] if readiness else None
+    model = report_model or "unreported"
     claim_model = claim_provenance["model"] if claim_provenance else None
 
     return {
@@ -377,7 +404,7 @@ def build_record(
         "pull_request": number,
         "model": model,
         "claim_model": claim_model,
-        "model_mismatch": bool(claim_model and claim_model != model),
+        "model_mismatch": is_model_mismatch(claim_model, report_model),
         "harness": readiness["harness"] if readiness else None,
         "session": readiness["session"] if readiness else None,
         "claimed_at": readiness["claimed_at"] if readiness else None,
