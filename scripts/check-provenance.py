@@ -45,9 +45,13 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 # The block `skills/provenance/SKILL.md` defines. `search`, not `match`, so it
 # is found wherever it falls in a longer comment -- the claim comment's branch
-# link comes before it and its haiku after.
+# link comes before it and its haiku after. The space after each colon is
+# optional in the pattern (`.*`, not `.+`) so a field left blank -- `session:`
+# with nothing after it -- still matches, with an empty capture the `not
+# value.strip()` check below rejects explicitly, rather than the whole block
+# silently failing to match for an unrelated reason.
 BLOCK_RE = re.compile(
-    r"^---\nModel: (?P<model>.+)\nHarness: (?P<harness>.+)\nsession: (?P<session>.+)$",
+    r"^---\nModel: ?(?P<model>.*)\nHarness: ?(?P<harness>.*)\nsession: ?(?P<session>.*)$",
     re.MULTILINE,
 )
 
