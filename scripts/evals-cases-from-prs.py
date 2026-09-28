@@ -873,10 +873,30 @@ def candidate_pool(candidates: dict[str, dict[str, Any]], klass: str) -> list[st
     pool = [
         (candidate_id, record)
         for candidate_id, record in candidates.items()
-        if record.get("qualifies") and record.get("class") == klass
+        if record.get("qualifies") and record.get("class") == klass and not record.get("excluded")
     ]
     pool.sort(key=lambda item: (item[1].get("additions") or 0) + (item[1].get("deletions") or 0))
     return [candidate_id for candidate_id, _ in pool]
+
+
+def exclude_candidate(candidates: dict[str, dict[str, Any]], candidate_id: str, reason: str) -> None:
+    """Take `candidate_id` out of the suite for good, recording `reason`, and
+    delete the fixture and task YAML it was built into.
+
+    For a case the build-time check cannot catch: one whose answer key passes
+    on the merge SHA but asserts what its issue leaves open or contradicts, so
+    a model that does exactly what the issue asks still fails it.
+    """
+    if candidate_id not in candidates:
+        raise BuildError(f"--exclude names {candidate_id!r}, which is not a known candidate")
+    if not reason.strip():
+        raise BuildError(f"--exclude {candidate_id} needs a reason after '='")
+    record = candidates[candidate_id]
+    record["excluded"] = reason.strip()
+    record["selected"] = False
+    case_name = case_name_for(candidate_id)
+    shutil.rmtree(CASES_DIR / case_name, ignore_errors=True)
+    (TASKS_DIR / f"{case_name}.yaml").unlink(missing_ok=True)
 
 
 def case_name_for(candidate_id: str) -> str:
@@ -1016,14 +1036,21 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--select", action="store_true", help="build fixtures + task YAMLs from candidates.json")
     parser.add_argument("--per-class", type=int, default=3, help="cases to select per buildable class")
     parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="owner/repo#N=reason",
+        help="take a candidate out of the suite for good, and delete its fixture (repeatable)",
+    )
+    parser.add_argument(
         "--rewrite-tasks",
         action="store_true",
         help="rewrite every selected case's task YAML from candidates.json",
     )
     args = parser.parse_args(argv)
 
-    if not args.repo and not args.select and not args.rewrite_tasks:
-        parser.error("a repo is required unless --select or --rewrite-tasks is given")
+    if not args.repo and not args.select and not args.rewrite_tasks and not args.exclude:
+        parser.error("a repo is required unless --select, --rewrite-tasks or --exclude is given")
 
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
     if not token:
@@ -1046,6 +1073,10 @@ def main(argv: list[str]) -> int:
             raise BuildError(f"--class-override names {slug!r}, which is not a known candidate")
         candidates[slug]["class"] = token_class
         candidates[slug]["class_source"] = "override"
+
+    for raw in args.exclude:
+        slug, _, reason = raw.partition("=")
+        exclude_candidate(candidates, slug, reason)
 
     save_candidates(args.candidates_file, candidates)
 
@@ -1080,6 +1111,7 @@ def _run_self_tests() -> None:
     _test_count_skip_markers()
     _test_resolve_test_command()
     _test_task_prompt()
+    _test_candidate_pool()
     _test_yaml_quoted()
 
 
@@ -1396,6 +1428,25 @@ def _test_yaml_quoted() -> None:
     except ImportError:
         return
     assert yaml.safe_load(f"initial_prompt: {quoted}\n") == {"initial_prompt": text}
+
+
+
+def _test_candidate_pool() -> None:
+    candidates = {
+        "o/r#3": {"qualifies": True, "class": "mechanical", "additions": 30, "deletions": 0},
+        "o/r#1": {"qualifies": True, "class": "mechanical", "additions": 5, "deletions": 5},
+        "o/r#2": {"qualifies": True, "class": "mechanical", "additions": 1, "deletions": 0, "excluded": "key asserts an open name"},
+        "o/r#4": {"qualifies": False, "class": "mechanical", "additions": 1, "deletions": 0},
+        "o/r#5": {"qualifies": True, "class": "implementation", "additions": 1, "deletions": 0},
+    }
+    # Smallest first; an excluded candidate never returns, however small.
+    assert candidate_pool(candidates, "mechanical") == ["o/r#1", "o/r#3"], candidate_pool(candidates, "mechanical")
+    try:
+        exclude_candidate(candidates, "o/r#1", "  ")
+    except BuildError:
+        pass
+    else:
+        raise AssertionError("exclude_candidate accepted an empty reason")
 
 
 if __name__ == "__main__":

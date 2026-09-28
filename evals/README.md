@@ -1090,7 +1090,12 @@ qualifying ones to `candidates.json`; `--select` then runs the build-time
 answer-key check on the smallest candidates of each class and emits fixtures
 and task YAMLs for the ones that pass, up to `--per-class` each (default 3);
 `--rewrite-tasks` regenerates the selected cases' YAMLs from
-`candidates.json` after a template change.
+`candidates.json` after a template change. The build-time check cannot tell whether the
+answer key asserts only what the issue decides, so read each new case's issue
+against its `tests.patch` before shipping it. A key that asserts a name, path
+or wording the issue leaves open fails a model that did exactly what was asked;
+`--exclude owner/repo#N=reason` takes such a case out for good and deletes its
+fixture.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
 `implementation`) before it can be selected; the six shipped cases include three,

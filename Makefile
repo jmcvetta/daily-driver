@@ -563,7 +563,7 @@ evals-run-codex: evals-plan evals-preflight
 # repository actually runs (`claude-only`, `omp-only`, `codex-only`); the
 # suite's own rows carry no arm tag of that shape to exclude BY, only
 # `model-classes` itself, which every other arm already excludes. Still
-# overridable by a caller who wants one case: `TASKS=tasks/model-classes/pagoda-338.yaml`.
+# overridable by a caller who wants one case: `TASKS=tasks/model-classes/career-462.yaml`.
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \
