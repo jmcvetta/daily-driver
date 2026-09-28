@@ -34,9 +34,12 @@ The sessions
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the sessions` | Open one per task | `mcp__Claude_Code_Remote__create_session` |
+| `Post the muster roll` | Load the messaging tools, once per wave | `ToolSearch`, `select:ListAgents,SendMessage` |
+| `Post the muster roll` | Resolve each new session's address | `ListAgents` |
 | `Watch the wave` | Read a task session's status | `mcp__Claude_Code_Remote__get_session` |
+| `Watch the wave` | Send a visible answer or a nudge | `SendMessage`, to the roll's name |
 | `Recover a session` | Stop the current turn | `mcp__Claude_Code_Remote__interrupt_session` |
-| `Recover a session` | Name the session as an address | `ListAgents` |
+| `Recover a session` | Re-resolve a name the roll lacks, or one a send failed to reach | `ListAgents` |
 | `Recover a session` | Send a correction | `SendMessage`, to that name |
 | `Recover a session` | Retire one | `mcp__Claude_Code_Remote__archive_session` |
 
@@ -66,19 +69,29 @@ a grant that was not made.
 Addressing a session
 --------------------
 
+**`ListAgents` and `SendMessage` are deferred tools.** Neither is in the tool
+list until `ToolSearch` loads it. Call `ToolSearch` with
+`select:ListAgents,SendMessage` once, before the first send of a wave, and
+both are callable for the rest of the session. A tool list checked before that
+call and found to carry neither is not evidence that messaging is
+unavailable — it is evidence that this load step has not run yet.
+
 **`SendMessage` is addressed by name, never by a session id.** Its `to` takes
 the name a row of `ListAgents` prints — that name is the address, and there is
 no other syntax for one. The `session_01AbC…` identifier `create_session`
-returns, and that the muster roll records, is not one: passing it fails to
-resolve, and `SKILL.md`'s *messaging is one way* means nothing reads back that
-it did.
+returns is not one: passing it fails to resolve.
 
-So a correction is two calls, in order. `ListAgents` lists this account's cloud
-sessions among its rows; match the fleet member there and send to the name it
-printed, appending the row's ` [ref]` only where an error asks for it. **A
-member the listing does not name cannot be reached** — a session that has
-already stopped is the usual reason — and that is the reopen path in
-`Recover a session` rather than a retry.
+`Post the muster roll` resolves that name once, as each session opens, and
+writes it into the roll beside the session id — the `Implementor` cell carries
+both. A later wake reads the name straight off the roll; that is the ordinary
+route, and it costs no call. Call `ListAgents` again only to re-resolve a name
+the roll does not carry — an older roll, or one posted before this step
+existed — or after a send to the recorded name fails to reach it, which is
+usually the sign that the session under it has already stopped. Match the
+fleet member there and send to the name it printed, appending the row's
+` [ref]` only where an error asks for it. **A member the listing does not name
+cannot be reached at all**, and that is the reopen path in `Recover a session`
+rather than a retry.
 
 The required class
 ------------------
