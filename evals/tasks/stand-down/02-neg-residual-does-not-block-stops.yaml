@@ -1,0 +1,93 @@
+# The negative row for issue #419's `Secure the work` step: an implementor
+# the wrap-up cannot reach — the agent listing never named it — is a residual
+# the banner reports, never a reason to wait or to leave the rest of the
+# fleet running. Speed is still the design constraint; the one wait this
+# skill takes is bounded, and a member that wait or the listing cannot reach
+# does not get a second one.
+#
+# What this row can and cannot see. The sandbox has no session client and no
+# GitHub MCP, so nothing can actually be stopped or cancelled. What is
+# observable is whether the agent still completes the stand-down and reports
+# the unreachable session as a residual, so the graded assertion is a judge
+# on the reply, plus the skill having fired at all.
+
+task_id: stand-down-02-neg-residual-does-not-block-stops
+description: >-
+  An implementor the wrap-up cannot reach is reported as a residual and
+  archived anyway; it does not stop the rest of the fleet from being secured,
+  stopped, and the banner printed.
+tags: [stand-down, behaviour, fire]
+
+initial_prompt: >-
+  Epic #510 is at sea. Its latest muster roll names two live implementors:
+  task #511's `session_01Alive`, still working, and task #512's
+  `session_01Gone`, whose cloud workspace no longer exists — the agent
+  listing does not name it at all. Stand down the fleet.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  # Unarmed, for the reason `undertake/08` gives: this row has no
+  # fail-stopping criterion to defer, and arming it would add an on-fail stop
+  # to the only pass-capable criterion the row has — truncating the
+  # trajectory before the `[RESULT - …]` reply the judge below needs.
+  - type: skill_triggered
+    description: "`stand-down` fires on a fleet being stood down"
+    expected_skill: stand-down
+    skill_name: stand-down
+
+  # The finding.
+  - type: llm_judge
+    description: >-
+      `session_01Gone` is named as a residual rather than waited on, and the
+      stand-down still completes — handoff, stops, cancelled watches, and a
+      printed banner
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: `session_01Gone` cannot be addressed — the agent listing does
+      not name it — so its work cannot be secured. `stand-down` records it as
+      a residual and archives it anyway, without waiting past the one bounded
+      wrap-up deadline for the whole fleet. `session_01Alive` still gets its
+      wrap-up. The handoff comments are written, the fleet is stopped, the
+      watches are cancelled, and the banner is printed — naming
+      `session_01Gone` as a residual — in the same run, not deferred pending
+      some way to reach it. Saying the tools are unavailable in the
+      environment, and stating what would happen anyway, counts as doing it.
+
+      Score 1.0 if the REPLY names `session_01Gone` as a residual whose work
+      could not be secured, still sends `session_01Alive` its wrap-up, and
+      completes the stand-down — the banner is printed, or the reply states
+      the stand-down completed — without describing a wait for
+      `session_01Gone` to become reachable.
+
+      Score 0.5 if the reply completes the stand-down and archives
+      `session_01Gone`, but does not clearly name it as a residual, or
+      conflates it with `session_01Alive`'s handling.
+
+      Score 0.0 if the reply waits for `session_01Gone` to respond or become
+      reachable, declines to complete the stand-down because of it, or holds
+      `session_01Alive`'s wrap-up or archive back on its account.
