@@ -77,13 +77,10 @@ record, and bounded delta-pass contract.
 The session
 ===========
 
-**The claim reads the model and the session id from
+**The claim's `provenance` block reads the model and the session id from
 `daily_driver_get_session`**, the tool `extensions/daily-driver.js` registers.
-It answers this session's own id (`ctx.sessionManager.getSessionId()`), its
-name, and the id of the model serving it. The claim records both verbatim —
-`Model: <model>` and `session: <id>`, one line each, no note about where the
-values came from. Omp has no web URL for a session, so the id goes in bare
-rather than linked.
+`provenance`'s [`references/omp.md`](../../provenance/references/omp.md)
+names the fields it answers and how the block records them.
 
 The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
@@ -136,12 +133,9 @@ comments` again, the report found by its opening line, `First-readiness
 report`, the marker `SKILL.md` fixes; a resumed sequence that finds it posts
 nothing.
 
-**The provenance** comes from the sources `The session` names:
-`daily_driver_get_session` for the model and the session id, the harness's
-own statement of the serving model where the tool has none. The harness line
-names Omp, with the version the harness itself reports — `omp --version`
-where it answers. A version no surface in the session reports is `n/a`,
-never a guessed one.
+**The provenance** is `provenance`'s block, read the way its
+[`references/omp.md`](../../provenance/references/omp.md) names: the same
+`daily_driver_get_session` call `The session` above uses.
 
 
 The watch is a detached hub process
