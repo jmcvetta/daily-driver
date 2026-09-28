@@ -83,10 +83,11 @@ genuinely fails is what keeps the pull request draft.
 The session
 ===========
 
-**Codex exposes no session id, so the claim records `session: n/a`** — the
-marker `SKILL.md` prescribes, not a diagnostic about the missing surface. The
-`Model:` line repeats what the harness states is serving the turn — the
-session's configured model — rather than a recalled name.
+**Codex exposes no session id, so the claim's `provenance` block records
+`session: n/a`** — the marker `SKILL.md` prescribes, not a diagnostic about
+the missing surface. `provenance`'s
+[`references/codex.md`](../../provenance/references/codex.md) names how the
+`Model:` line is read.
 
 The branch comes from the task worktree's Git state:
 `git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
@@ -139,12 +140,9 @@ comments` again, the report found by its opening line, `First-readiness
 report`, the marker `SKILL.md` fixes; a resumed sequence that finds it posts
 nothing.
 
-**The provenance** follows `The session`: the model line repeats what the
-harness states is serving the turn, and the session line is `n/a` — the
-marker the claim already carries, not a diagnostic. The harness line names
-Codex, with the version the harness itself reports — `codex --version`, where
-it answers. A version no surface in the session reports is `n/a`, never a
-guessed one.
+**The provenance** is `provenance`'s block, read the way its
+[`references/codex.md`](../../provenance/references/codex.md) names: it
+follows `The session` above.
 
 
 There is no durable wake

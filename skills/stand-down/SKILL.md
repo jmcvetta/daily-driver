@@ -26,7 +26,8 @@ It is an orchestrator, in the same shape as `embark`: **it invokes, it does
 not restate**. What the fleet is, how it was dispatched, and how a
 replacement is opened are `embark`'s; the muster-roll format and the
 latest-entry-wins read are `embark`'s; the epic's body states are `epic`'s;
-the graph reads are `issue-deps`'. What this skill owns is the ending: the
+the graph reads are `issue-deps`'; the model, harness and session record
+every write carries is `provenance`'s. What this skill owns is the ending: the
 handoff record, the stop and archive, the watch cancellations, and the
 banner.
 
@@ -110,6 +111,9 @@ Unpushed work in a retired session's cloud workspace dies at the archive —
 check the branch before assuming anything was lost. A local worktree
 survives the retirement and carries whatever was never pushed.
 ```
+
+Both this comment and the stand-down comment below end with `provenance`'s
+block, naming this stand-down session rather than any retired implementor's.
 
 **One stand-down comment on the epic**, shaped like a muster roll with its
 rows marked retired. What the retired rows buy is honesty in the epic's

@@ -87,17 +87,14 @@ The session
 
 `mcp__Claude_Code_Remote__get_session`, with `session_id` omitted, describes
 the caller. `task-worktree` consumes the designated branch when the call
-supplies exactly one for this repository. `Claim the issue` then confirms the
-task worktree is on that branch and reads the model and session from the same
-call.
+supplies exactly one for this repository; `provenance`'s
+[`references/claude.md`](../../provenance/references/claude.md) names the
+same call's model and session fields for `Claim the issue`'s block.
 
 | What | Field |
 | ---- | ----- |
 | The designated branch | `session_context.outcomes[].git_repository.git_info.branches` |
 | The repository it is pushed to | `session_context.outcomes[].git_repository.git_info.repo` |
-| The model that served the turn | `external_metadata.last_served_model` |
-| The model the session is set to | `session_context.model`, `configured_model` |
-| The session id | the call's own `id`, for `https://claude.ai/code/session_…` |
 
 Both branch fields are arrays. Read the outcome whose `git_info.repo` names the
 repository this work will be pushed to. Exactly one branch is a designation;
@@ -107,10 +104,10 @@ worktree must agree before the claim is posted.
 `external_metadata.current_branches` is a different field and answers a
 different question: what is checked out, not what the harness designated.
 
-Where this call is absent, `Claim the issue` still records `session: n/a` and
-reads the model from the harness environment. Read the branch from the task
-worktree's Git state, and its repository from the remote `task-worktree`
-resolved.
+Where this call is absent, read the branch from the task worktree's Git
+state, and its repository from the remote `task-worktree` resolved.
+`provenance`'s reference says what the claim's block records when the call
+itself is absent.
 
 
 The milestone
@@ -154,12 +151,9 @@ call only writes, so read first: `mcp__github__pull_request_read`, method
 report`, the marker `SKILL.md` fixes, and a resumed sequence that finds it
 posts nothing.
 
-**The provenance** comes from `mcp__Claude_Code_Remote__get_session`, the
-same call `The session` names: `external_metadata.last_served_model` for the
-model, the call's own `id` for the session link. The harness line names
-Claude Code, with the version the harness itself reports — `claude
---version`, where a shell is available. A version no surface in the session
-reports is `n/a`, never a guessed one.
+**The provenance** is `provenance`'s block, read the way its
+[`references/claude.md`](../../provenance/references/claude.md) names: the
+same `mcp__Claude_Code_Remote__get_session` call `The session` above uses.
 
 
 The cadence

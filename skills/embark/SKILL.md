@@ -25,8 +25,10 @@ hand.
 It is an orchestrator, in the same shape as `epic` and `undertake`: **it
 invokes, it does not restate**. The decomposition is `epic`'s, taking one task
 issue to a pull request is `undertake`'s, the graph reads are `issue-deps`',
-the name a session carries is `session-title`'s, and the engineering standard
-is the constitution's. Where a step below names a rule one of those owns, it
+the name a session carries is `session-title`'s, the model, harness and
+session record every write carries is `provenance`'s, and the engineering
+standard is the constitution's. Where a step below names a rule one of those
+owns, it
 names it as a pointer and cites the owner — a rule that acquires a second home
 is one whose copy goes stale.
 
@@ -229,6 +231,9 @@ The roll distinguishes required class, selected route, and actual model. A
 `human` task gets a row and no implementor. A fallback roll names the subagent
 and shared advisor; a web-session row links. Do not describe an actual model
 that the harness did not report.
+
+The comment ends with `provenance`'s block, naming this orchestrating
+session — never a task session's, which names its own at its own claim.
 
 **The wave headings carry state, and nothing else moves it.** `epic` writes
 that state into the epic's `Sequencing` at decomposition time and never
@@ -454,7 +459,7 @@ post one comment listing the pull requests that landed, then close the epic
 with `state_reason: completed`. When a claim is delivered by none of them,
 post one comment that names the missing claim and leave the epic open. That
 report-and-wait path is the only outcome here that asks a person for
-anything.
+anything. Either comment ends with `provenance`'s block.
 
 When the roll says `Landing: by hand`, report that the epic is ready and leave
 it open. In every outcome, cancel the backstop and drop every pull-request

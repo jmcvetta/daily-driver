@@ -257,6 +257,11 @@ Three sections, and no fourth. `Summary` and `Justification` are written at
 `Open the issues`; `Sequencing` waits for `Fill in the epic`, because it is
 made of issue numbers that do not exist until the tasks are open.
 
+Below the three, at every write of the body, `provenance`'s block — the
+model, harness and session that wrote it — placed and read the way that
+skill defines. It is not a fourth section: it carries no heading, and the
+rule above is about `##` sections, not about it.
+
 Summary
 -------
 
