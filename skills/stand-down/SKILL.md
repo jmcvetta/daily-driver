@@ -112,8 +112,9 @@ check the branch before assuming anything was lost. A local worktree
 survives the retirement and carries whatever was never pushed.
 ```
 
-Both this comment and the stand-down comment below end with `provenance`'s
-block, naming this stand-down session rather than any retired implementor's.
+This comment ends with `provenance`'s block, and the stand-down comment below
+carries it just before its envoi. Both blocks name this stand-down session
+rather than any retired implementor's.
 
 **One stand-down comment on the epic**, shaped like a muster roll with its
 rows marked retired. What the retired rows buy is honesty in the epic's

@@ -235,8 +235,9 @@ resolved once, here, so `Watch the wave` and `Recover a session` can address it
 straight off the roll. Do not describe an actual model that the harness did
 not report.
 
-The comment ends with `provenance`'s block, naming this orchestrating
-session — never a task session's, which names its own at its own claim.
+The comment carries `provenance`'s block after the table, naming this
+orchestrating session — never a task session's, which names its own at its
+own claim.
 
 **A sailing couplet follows the block, last.** Two rhymed lines as the wave
 puts to sea, each italicised as [`HAIKU.md`](../../HAIKU.md) shows. It comes
@@ -487,7 +488,8 @@ post one comment listing the pull requests that landed, then close the epic
 with `state_reason: completed`. When a claim is delivered by none of them,
 post one comment that names the missing claim and leave the epic open. That
 report-and-wait path is the only outcome here that asks a person for
-anything. Either comment ends with `provenance`'s block.
+anything. Either comment carries `provenance`'s block; the missing-claim
+comment ends with it.
 
 **The delivered comment carries a homecoming verse, last** — a short
 stanza in the manner of a sea shanty, after the block, each line italicised
