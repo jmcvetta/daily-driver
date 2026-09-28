@@ -42,6 +42,6 @@ success_criteria:
 
   - type: run_command
     description: The pull request's own tests pass after applying tests.patch
-    command: git apply --whitespace=nowarn .fixture/tests.patch && pnpm install --frozen-lockfile --filter @pagoda/usd2oz-web... && pnpm --filter @pagoda/usd2oz-web exec vitest run src/shell.test.ts
+    command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter @pagoda/usd2oz-web... && pnpm --filter @pagoda/usd2oz-web exec vitest run src/shell.test.ts
     timeout: 720
     weight: 3

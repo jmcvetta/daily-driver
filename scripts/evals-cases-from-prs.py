@@ -61,6 +61,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -74,6 +75,8 @@ ROOT = Path(__file__).resolve().parent.parent
 FIXTURES_DIR = ROOT / "evals" / "fixtures" / "model-classes"
 CASES_DIR = FIXTURES_DIR / "cases"
 TASKS_DIR = ROOT / "evals" / "tasks" / "model-classes"
+# The grader every case runs, and the one the build-time answer-key check runs.
+_GRADER = FIXTURES_DIR / "shared" / "apply-tests.sh"
 DEFAULT_CANDIDATES_FILE = FIXTURES_DIR / "candidates.json"
 
 API_ROOT = "https://api.github.com"
@@ -649,10 +652,15 @@ def verify_answer_key(
         shallow_clone(repo_slug, record["base_sha"], token, base_path)
         skip_counts = count_skip_markers(base_path, record["test_files"])
 
-        patch_file = base_path / ".model-classes-tests.patch"
-        patch_file.write_text(tests_patch, encoding="utf-8")
+        # The same grader a run uses, laid out the way a run lays it out, so
+        # the answer key is validated by the code that will apply it.
+        fixture = base_path / ".fixture"
+        fixture.mkdir()
+        (fixture / "tests.patch").write_text(tests_patch, encoding="utf-8")
+        (fixture / "base-sha").write_text(record["base_sha"] + "\n", encoding="utf-8")
+        shutil.copy(_GRADER, fixture / "apply-tests.sh")
         apply = subprocess.run(
-            ["git", "apply", "--whitespace=nowarn", str(patch_file)],
+            ["bash", ".fixture/apply-tests.sh"],
             cwd=base_path,
             capture_output=True,
             text=True,
@@ -778,7 +786,7 @@ def _yaml_escape_block(text: str) -> str:
 def write_task_yaml(case_name: str, repo_slug: str, record: dict[str, Any], test_command: str, smoke: bool) -> None:
     task_timeout = record["task_timeout"]
     turn_timeout = max(180, task_timeout - 120)
-    grading_command = f"git apply --whitespace=nowarn .fixture/tests.patch && {test_command}"
+    grading_command = f"bash .fixture/apply-tests.sh && {test_command}"
     description = f"{repo_slug}#{record['number']}: {record['title']}"
     initial_prompt = (
         f"This is {repo_slug}, checked out at its state before pull request "

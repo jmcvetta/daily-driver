@@ -12,7 +12,7 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
 	check-review-cycle-fix-delta-route check-provenance check-verse \
-	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
+	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
@@ -102,7 +102,7 @@ check-runtime: check-constitution check-ask-in-chat check-omp-extension check-mo
 	check-omp-pr-create-route check-review-cycle-fix-delta-route check-provenance check-verse \
 	check-task-worktree-fixture check-scripts
 
-check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures \
+check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-eval-arms check-evals-preflight check-evals-provenance
 
 
@@ -338,6 +338,13 @@ check-eval-arms:
 # case or scores a model.
 check-eval-fixtures:
 	scripts/check-eval-fixtures.sh
+
+# check-model-classes-grader: the model-classes grader applies the answer key
+# over an agent's tree -- same-hunk edits, a test file both created, committed
+# work -- instead of scoring a correct change 0. Needs git and bash only. See
+# the script's header.
+check-model-classes-grader:
+	scripts/check-model-classes-grader.sh
 
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.

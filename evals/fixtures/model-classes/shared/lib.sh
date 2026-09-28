@@ -39,4 +39,8 @@ fixture_clone_base() {
 	git remote add origin "https://x-access-token:${token}@github.com/${slug}.git"
 	git fetch -q --depth 1 origin "${sha}"
 	git checkout -q FETCH_HEAD
+	# `apply-tests.sh` restores the answer key's paths from this commit. It is
+	# recorded here, not read back from HEAD or the shallow root later, because
+	# an agent that commits or fetches moves both.
+	printf '%s\n' "${sha}" >"${FIXTURE_DIR}/base-sha"
 }
