@@ -120,7 +120,7 @@ The watch
 | `Watch the wave` | Read a pull request's state and checks | `pr://<number>` |
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/omp.md` thread read |
-| `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` |
+| `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
 | `Land the pull request` | Read the commits after the notice's SHA | `git rev-list --first-parent --no-merges <sha>..<headRefOid>` after `git fetch` of the head |
 | `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
 | `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
@@ -133,11 +133,13 @@ human-action read in the same call. The complete thread graph is the paginated
 GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
 
 The completion read is the conversation-comment read `review-cycle`'s
-`Review-cycle completion notice` names: the latest comment starting with
-`## Review cycle complete! 🎉`, and the SHA it names. Where that SHA is not
-`headRefOid`, the `rev-list` must print nothing, and the named SHA must be an
-ancestor of the head (`git merge-base --is-ancestor <sha> <headRefOid>`). Any
-printed commit, or a SHA that is not an ancestor, fails the read.
+`Review-cycle completion notice` names, read to the last page: the latest
+comment starting with `## Review cycle complete! 🎉` whose author is the
+author of the task issue's claim comment, and the SHA it names. Where that SHA is not
+`headRefOid`, the named SHA must be on the head's first-parent chain
+(`git rev-list --first-parent <headRefOid> | grep -qx <sha>`), and the
+`rev-list` must print nothing. A SHA off that chain, or any printed commit,
+fails the read.
 
 The merge is one conditional `gh pr merge` call after the gate holds.
 `--match-head-commit <headRefOid>` makes it fail closed if the task session

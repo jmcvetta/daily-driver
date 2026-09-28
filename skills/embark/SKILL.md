@@ -366,8 +366,10 @@ pull request.
 3. **No review thread is unresolved.** Use the thread read named by
    `review-cycle`'s reference for the active harness.
 4. **The implementor marked the review cycle complete for this head.** Read
-   the pull request's conversation comments, take the latest one that starts
-   with `## Review cycle complete! 🎉`, and take the SHA it names. The read
+   the pull request's conversation comments to the last page, take the latest
+   one that starts with `## Review cycle complete! 🎉` and is written by the
+   account that posted the task issue's `undertake` claim, and take the SHA it
+   names. A notice from any other author does not count. The read
    holds when that SHA is the recorded head. It also holds when the head moved
    past that SHA only through merge commits — walk the head's first parents
    back to the named SHA — because a clean base merge earns no new round under
