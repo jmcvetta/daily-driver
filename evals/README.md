@@ -1039,6 +1039,14 @@ agent runs on the same host as the grader, so the suite closes each road to it:
 - The prompt carries the issue text and tells the agent not to consult the
   source repository on GitHub; with no number to look up, it has no reason to.
 
+Hiding is not locking, so `scripts/evals-record.py` also checks every
+replicate's tool calls, and what they printed, for the answer key's paths, any
+`git` network command, a `gh` command or URL on the source repository, and a
+pull ref. A replicate that reached any of them is recorded with that evidence
+under `answer_key_contact` and a measured score of 0. It is scored as a
+failure, not dropped: a model that goes looking when stuck has failed the
+case.
+
 **What it does not measure.** No `reasoning` case: that class is decided by
 the production table and public benchmarks, not by a fixture small enough to
 grade in two minutes (see `skills/issue-body/references/model-classes.md`).
