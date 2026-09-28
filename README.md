@@ -150,19 +150,24 @@ task operation there without a separate task-root status.
 
 The extension also closes the failure that weaker models exposed in
 `task-worktree`: direct `write` and `edit` calls in the primary checkout or a
-detached worktree are denied before they change state, as is every Git command
-that rewrites the primary checkout's working tree —
-`checkout`, `switch`, `reset --hard`, `restore`, `stash`, `merge`, `rebase`,
-`pull`, `apply`, `am`, `cherry-pick`, `revert`, `clean`, `rm`, `mv`, `bisect`,
-`sparse-checkout` and `submodule`. The test is whether the command rewrites
-tracked files, not whether it moves HEAD, so harmless forms stay available:
-`git reset --soft`, `git restore --staged`, `git stash list`, `git apply
---check` and `git clean --dry-run` all pass. Attached feature-worktree
-mutations, worktree creation, branch attachment in a detached worktree — the
-primary included, where that is the only way out, and for the attach itself
-rather than every form of `checkout` and `switch` — non-Git paths, and
-synthetic devices remain available. The denial sends the model through the
-skill to establish the task worktree.
+detached worktree are denied before they change state. A file rejection names
+the supplied and resolved target, tool cwd, containing worktree, primary
+worktree, and branch state; use that context to correct the file-tool path.
+Omp resolves file-tool paths against its session cwd, so a relative edit
+header still targets the session root after a bash `cd`. Use the verified
+absolute task-worktree path in each write target, edit header, and move
+destination. Git commands that rewrite the primary checkout's working tree
+are also denied — `checkout`, `switch`, `reset --hard`, `restore`, `stash`,
+`merge`, `rebase`, `pull`, `apply`, `am`, `cherry-pick`, `revert`, `clean`,
+`rm`, `mv`, `bisect`, `sparse-checkout` and `submodule`. The test is whether
+the command rewrites tracked files, not whether it moves HEAD, so harmless
+forms stay available: `git reset --soft`, `git restore --staged`, `git stash
+list`, `git apply --check` and `git clean --dry-run` all pass. Attached
+feature-worktree mutations, worktree creation, branch attachment in a
+detached worktree — the primary included, where that is the only way out, and
+for the attach itself rather than every form of `checkout` and `switch` —
+non-Git paths, and synthetic devices remain available. Git-command denials
+retain their generic recovery guidance.
 
 **The shell recognizer refuses what it cannot read.** It either enumerates
 every command a `bash` call will run, or says it could not, and a call it

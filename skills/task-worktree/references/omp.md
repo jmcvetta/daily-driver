@@ -35,6 +35,17 @@ creates a worktree, and no extension tool registers or displays a separate
 task-root status. Do not invoke `/wt`: it creates another worktree and may
 carry primary-checkout changes into it.
 
+**File tools do not inherit a bash cwd change.** Omp resolves each `write`
+target and each path in an `edit` payload against the session's own cwd. A
+relative hashline header such as `[extensions/file.mjs#ABCD]` therefore still
+targets the session root, even after a previous bash call changed directory.
+Use the absolute task-worktree path in every file-tool target, including
+hashline headers and move destinations; preserve the full path and snapshot
+tag returned by `read`. The extension reports the supplied target, resolved
+path, containing worktree, primary worktree, and branch state when it blocks a
+file mutation. Follow that classification; never retry a rejected mutation
+with the same relative path.
+
 Set `cwd` to the task worktree on every later `bash` call. Pass absolute
 task-worktree paths to `read`, `write`, `edit`, `glob`, and `grep`. Give the
 same absolute path to a `task` handling a delegated slice. Verify with
