@@ -29,7 +29,8 @@ leaves behind.
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
 restate**. The task branch and execution root live in `task-worktree`, the
 title convention in `pr-title`, the pull request itself in `pr`, the review
-round in `review-cycle`, what is worth asking the user in `judgement-call`,
+round in `review-cycle`, the model, harness and session record every write
+carries in `provenance`, what is worth asking the user in `judgement-call`,
 and the engineering standard in the constitution. Where a step below names a
 rule one of those owns, it names it as a pointer and cites the owner — a rule
 that acquires a second home here is one whose copy goes stale, and a citation
@@ -239,22 +240,13 @@ Beyond the claim itself the comment always carries:
   The link can return 404 until the first push; write it anyway, because the
   alternative is a branch name the reader must turn into a URL by hand.
 
-- **The model that served the turn**, as one line — `Model: <model id>` —
-  and nothing else about it: no note about where the value came from, no
-  diagnostic about the surfaces that do not supply it. Read the id from the
-  harness's session call where it has one, and from the harness's own
-  statement of the serving model where it does not. Where the model the
-  session was *set* to run disagrees with the one that served, name that too:
-  the gap between the two is the half of the record worth having. Never a
-  name recalled instead of read — a provenance record that guesses is worse
-  than one that says nothing. The reference file names the fields that answer
-  both.
-- **The session**, as `session: <id>` where the id is reachable by any means
-  the harness offers, and `session: n/a` where it is not. The identifier is
-  what the reader needs; where the harness provides a session link, the
-  reference file gives its form. A missing id is recorded as `n/a`, never
-  narrated: a claim that explains why it has no session publishes a diagnostic
-  instead of a record.
+- **`provenance`'s block**, immediately after the branch: the model that
+  served the turn, the harness and its version, and the session identifier or
+  `n/a`. That skill owns the block's shape and the rules for reading each
+  field — never a name recalled instead of read, and where the model the
+  session was *set* to run disagrees with the one that served, both are
+  named. The `Model:` and lowercase `session:` line shapes are what the claim
+  lookup below and `The milestone` match on, so they are never varied here.
 - **A brief poem, in the claiming agent's own style, placed last** — after
   the branch, the model and the session, so that a reader looking for the
   branch or the model finds them in a fixed place and is never made to read
@@ -719,14 +711,10 @@ What the report carries
   total duration. An undertaking with no recoverable start reports the timing
   as unavailable rather than inventing one.
 
-- **The provenance, under `Claim the issue`'s rules.** The model that served
-  the work, exactly as reported — never a recalled revision — the agent
-  harness by name and the version of it that a surface in the session can
-  actually read, and the session identifier, linked where the harness offers
-  a link. A value no surface reports is `n/a`. One session did the work, so
-  one model and one session are named; where a resume moved the work to
-  another session, both are named in the order they ran, and attribution
-  nobody reported is not reconstructed.
+- **`provenance`'s block, under `Claim the issue`'s rules for it.** One
+  session did the work, so one model and one session are named; where a
+  resume moved the work to another session, both are named in the order they
+  ran, and attribution nobody reported is not reconstructed.
 
 - **The head it binds to.** The pull request's head SHA and the milestone
   timestamp. The comment is a statement about that head: a later head —
@@ -759,6 +747,51 @@ and no base — the look that notices them is what posts the report the first
 pass withheld.
 
 
+The wrap-up
+===========
+
+A `stand-down` orchestrator may interrupt this session mid-sequence and send
+one message: the wrap-up instruction its `Secure the work` sends, addressed
+the way `embark`'s `Recover a session` addresses a correction. It is obeyed
+at once, whichever step of this sequence is running when it arrives — commit
+what is in progress to the task branch, named files staged and no hook or
+test skipped, push it, and end the turn without starting anything else. It
+opens no pull request and marks nothing ready: that is `stand-down`'s own
+record to write, not a step of this sequence completing.
+
+
+Reporting to an orchestrator
+============================
+
+An undertaking `embark` dispatched may be handed the address of the session
+that dispatched it — its orchestrator. **Where no address was given, this
+section does nothing**, and the sequence runs exactly as it does without it.
+Where one was given, the sequence reports to it at three moments:
+
+- **Every stop**, from `Where it stops and waits` or from `review-cycle`'s own,
+  with the question it asks or the condition it reports.
+- **`Open the draft`**, once the draft exists.
+- **`Ready for review`**, once the pull request is marked ready.
+
+Each report opens with the fixed line `Implementor report for #<task issue>`,
+then names the pull request where one exists, the moment reached, and the
+question or condition where there is one. The orchestrator finds reports by that
+line.
+
+**A report is sent, not a conversation.** It never waits for an answer, and
+the stop it reports still stops. An answer arrives, if it comes, as a message
+from the orchestrator, and the sequence reads it as it reads any other.
+**A report never replaces the record**: the question still goes on the pull
+request or the issue where `Where it stops and waits` puts it, because the
+record outlives both sessions and the report does not.
+
+**A failed report is reported, not retried in a loop.** Say once, in the
+session, that the report did not go, and carry on with the sequence. The
+orchestrator's GitHub watch still sees the pull request.
+
+The reference file for the harness in use names the route.
+
+
 Where it stops and waits
 ========================
 
@@ -769,7 +802,8 @@ six labels, the failing approach, a designated branch the harness states
 ambiguously, and a base merge whose conflict is a real one. A blocked issue,
 an epic, an issue labelled `human`, running or failed CI, a review wall, and a
 human action owed stop it to report the unfinished condition and its actual
-resume path.
+resume path. Where an orchestrator's address was given, every stop is also
+reported to it under `Reporting to an orchestrator`.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing

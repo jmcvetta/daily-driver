@@ -1,0 +1,9 @@
+Closing as not planned: the upstream API this relied on was withdrawn.
+
+---
+Model: model-x-1
+Harness: Claude Code 2.1.283
+session: https://claude.ai/code/session_01ABC
+
+*A road drawn on the map,*
+*never walked; the grass grows back.*

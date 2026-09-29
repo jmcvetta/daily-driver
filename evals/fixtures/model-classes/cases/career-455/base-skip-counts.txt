@@ -1,2 +1,0 @@
-3	tests/test_infra_github.py
-0	tests/test_kokoro_select_tests.py
