@@ -1,0 +1,21 @@
+{
+  "additions": 462,
+  "changed_files": 7,
+  "check_reruns": 1,
+  "claim_model": "claude-sonnet-5",
+  "claimed_at": null,
+  "deletions": 98,
+  "elapsed_minutes": null,
+  "findings_count": 0,
+  "harness": null,
+  "issue": 419,
+  "merged_at": "2026-09-28T15:10:21Z",
+  "model": "unreported",
+  "model_class": "implementation",
+  "model_mismatch": false,
+  "pull_request": 420,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 0,
+  "session": null
+}
