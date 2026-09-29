@@ -28,3 +28,8 @@ Record the requested class separately from the selected route and actual model.
 Use `unreported` when the harness does not report actual execution identity;
 report visible runtime fallback mismatches and reassess before continuing.
 
+This file stays provider-neutral by rule, so the generated measured-routes
+table that cites real routes by name lives in the harness-specific reference
+that resolves them -- currently [`omp.md`](omp.md)'s "Measured routes"
+section.
+
