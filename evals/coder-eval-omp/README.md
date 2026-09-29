@@ -71,8 +71,9 @@ usage. It came from a minimal live Omp 18.4.3 RPC session on 2026-09-29; prompt
 and reply content are redacted. Its assistant message sits in `messages` and
 carries `usage.input`, `usage.output`, `usage.cacheRead`, and
 `usage.cacheWrite`. The same assistant message appears first on `message_end`,
-so `rpc.py` accepts both delivery paths and de-duplicates their `responseId`
-before recording the token totals and price.
+so `rpc.py` accepts both delivery paths and de-duplicates the recorded
+`timestamp` when the message has no `responseId`, before recording the token
+totals and price.
 
 Tool-call argument keys remain unsettled. The reducer keeps its compatible
 spellings and records the one a run sees; this capture made no tool call.

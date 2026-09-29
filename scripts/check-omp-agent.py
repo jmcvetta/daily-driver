@@ -230,7 +230,6 @@ def check_usage() -> None:
         for message in CAPTURED_AGENT_END_FRAME["messages"]
         if message.get("role") == "assistant"
     )
-    assistant = {**assistant, "responseId": "captured-response"}
     reducer = TurnReducer()
     actions = feed(
         reducer,

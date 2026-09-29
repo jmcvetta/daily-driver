@@ -34,9 +34,10 @@ same on both harnesses.
 `evals/coder-eval-omp/fixtures/agent_end_usage.json`, shows the terminal
 `agent_end.messages` array holding the assistant message and its required
 `usage` field. The same assistant message also arrives on `message_end`, so
-`TurnReducer._accumulate_usage` de-duplicates its `responseId` before summing
-the captured `input`/`output`/`cacheRead`/`cacheWrite` counts. A missing
-required bucket is protocol drift, not a zero.
+`TurnReducer._accumulate_usage` de-duplicates its `responseId`, or the
+captured message's `timestamp` when `responseId` is absent, before summing the
+captured `input`/`output`/`cacheRead`/`cacheWrite` counts. A missing required
+bucket is protocol drift, not a zero.
 
 **Tool call keys.** Omp's `docs/rpc.md` shows `toolName` on a
 `tool_execution_start` frame and does not settle its arguments or correlation
@@ -344,7 +345,7 @@ class TurnReducer:
         self._message_texts: dict[str, list[str]] = {}
         self._open_turn_ids: list[str] = []
         self._sequence = 0
-        self._usage_response_ids: set[str] = set()
+        self._usage_message_ids: set[str | int] = set()
         self.started_at = time.monotonic()
 
     # --- feeding -----------------------------------------------------------
@@ -406,8 +407,9 @@ class TurnReducer:
 
         `message_end` is also where usage is read: an assistant `AgentMessage`
         carries the complete `usage` object there. The terminal frame repeats
-        that message, so `_accumulate_usage` de-duplicates by `responseId`.
-        `message_update` carries a streaming snapshot and is skipped.
+        that message, so `_accumulate_usage` de-duplicates its `responseId` or
+        `timestamp`. `message_update` carries a streaming snapshot and is
+        skipped.
         """
         message = frame.get("message")
         if frame.get("type") == "message_end" and isinstance(message, dict):
@@ -500,8 +502,8 @@ class TurnReducer:
 
         The recorded live frame repeats the completed assistant message here
         after its `message_end` frame. `_accumulate_usage` recognizes the same
-        `responseId`, so both frame paths remain supported without double
-        charging a case.
+        `responseId`, or its `timestamp` when no response id is present, so
+        both frame paths remain supported without double charging a case.
         """
         for message in frame.get("messages") or []:
             if isinstance(message, dict):
@@ -544,11 +546,18 @@ class TurnReducer:
         """Add one assistant message's usage once into the run's total."""
         if message.get("role") != "assistant":
             return
-        response_id = message.get("responseId")
-        if isinstance(response_id, str) and response_id:
-            if response_id in self._usage_response_ids:
+        message_id = message.get("responseId")
+        if not isinstance(message_id, str) or not message_id:
+            timestamp = message.get("timestamp")
+            message_id = (
+                timestamp
+                if isinstance(timestamp, (str, int)) and not isinstance(timestamp, bool)
+                else None
+            )
+        if message_id is not None:
+            if message_id in self._usage_message_ids:
                 return
-            self._usage_response_ids.add(response_id)
+            self._usage_message_ids.add(message_id)
         found, seen = extract_usage(message)
         self.usage_keys_seen.update(seen)
         for bucket, count in found.items():
