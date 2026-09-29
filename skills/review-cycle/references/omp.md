@@ -86,9 +86,9 @@ which that mode rejects:
 
 The service command uses GNU coreutils `timeout`. It owns the fifteen-minute
 deadline, sends `TERM` at the cap, then sends `KILL` after five seconds if the
-watcher has not exited. Exit `124` means the deadline expired before escalation;
-`137` means the kill-after escalation ran. Neither is a green result. On either
-exit, read both endpoints once and report every unreported check.
+watcher has not exited. Exit `124` means the deadline expired; `137` means
+the command or `timeout` received `SIGKILL`. Neither is a green result. On
+either exit, read both endpoints once and report every unreported check.
 If `timeout` is not installed, stop before starting an unbounded watch and
 report the missing deadline utility.
 

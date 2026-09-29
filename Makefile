@@ -234,9 +234,9 @@ check-omp-cache-clean:
 
 # The Omp review-cycle reference is executable guidance. This credential-free
 # check validates its named-service call against the current service schema,
-# rejects stale standalone `hub` calls across all Omp watcher routes, and runs
-# GNU `timeout` against local child processes, including descendant cleanup.
-# It needs no GitHub credentials or network.
+# rejects stale standalone `hub` calls across all Omp watcher routes, and
+# exercises GNU `timeout` outcomes with local child processes. It needs no
+# GitHub credentials or network.
 check-omp-review-cycle-route:
 	python3 scripts/check-omp-review-cycle-route.py
 
