@@ -153,13 +153,10 @@ class OmpAgentConfig(BaseAgentConfig):
     require_token_telemetry: bool = True
     """Fail a turn that captured no token counts.
 
-    On, unlike the earlier honesty-driven default: `rpc.extract_usage` reads
-    `usage` off each assistant message's `message_end` frame, a field the
-    Omp wire protocol requires on every `AssistantMessage` (see `rpc.py`'s
-    module docstring), not an opt-in `agent_end.telemetry` object that might
-    never arrive. A turn that produced an assistant reply and still carries no
-    usage is the RPC vocabulary having moved, which is exactly what this flag
-    exists to catch loudly instead of silently reporting a zero.
+    The redacted Omp 18.4.3 capture shows a complete `usage` object on the
+    assistant message repeated by both `message_end` and `agent_end`. A turn
+    that produced an assistant reply without that usage has drifted from the
+    captured protocol, so it fails instead of reporting zero tokens.
     """
 
     extra_args: list[str] = []

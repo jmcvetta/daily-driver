@@ -8,6 +8,8 @@ skill.
 
 ```
 coder-eval-omp/
+├── fixtures/
+│   └── agent_end_usage.json       redacted live Omp 18.4.3 frame
 ├── pyproject.toml                 the `coder_eval.plugins` entry point
 ├── prices.json                    hand-maintained USD/Mtok rates — see `Cost`
 └── src/coder_eval_omp/
@@ -64,24 +66,18 @@ puts the startup answer in each run's `environment_info`:
 | `omp_linked_plugins` | the roots `omp plugin link` installed |
 | `omp_extension_errors` | every `extension_error` frame — the constitution rides on the extension |
 
-The two protocol questions Omp's `docs/rpc.md` leaves open — the argument keys
-on `tool_execution_start`, and where token counts live — are settled from the
-shipped `@oh-my-pi/{pi-coding-agent,pi-agent-core,pi-ai}@18.4.2` TypeScript
-source rather than a live capture: no `omp` binary or session reaches CI or
-this development environment, and the source is exhaustive where one sampled
-frame would only be a guess at what always holds. `rpc.py`'s module docstring
-carries the citations. In short: tool calls carry `toolCallId`/`toolName`/
-`args`, and token usage is a required `usage` field on every assistant
-message's `message_end` frame (`input`/`output`/`cacheRead`/`cacheWrite`), not
-on `agent_end` — Omp's RPC mode never opts into the `agent_end.telemetry`
-summary that would carry it there. After each completed turn, the adapter
-atomically writes the sorted observed key union to
-`omp-protocol-observations.json` in the task sandbox, as a live-run check
-against that source rather than a source of truth itself:
+The captured `agent_end` frame in `fixtures/agent_end_usage.json` settles token
+usage. It came from a minimal live Omp 18.4.3 RPC session on 2026-09-29; prompt
+and reply content are redacted. Its assistant message sits in `messages` and
+carries `usage.input`, `usage.output`, `usage.cacheRead`, and
+`usage.cacheWrite`. The same assistant message appears first on `message_end`,
+so `rpc.py` accepts both delivery paths and de-duplicates their `responseId`
+before recording the token totals and price.
 
-```json
-{"omp_argument_keys_seen":["args"],"omp_usage_keys_seen":["input","output","cacheRead","cacheWrite"]}
-```
+Tool-call argument keys remain unsettled. The reducer keeps its compatible
+spellings and records the one a run sees; this capture made no tool call.
+After each completed turn, the adapter atomically writes the observed key
+union to `omp-protocol-observations.json` in the task sandbox.
 
 `omp-glm-5.3.yaml` reads that file through its experiment-default `post_run`
 command. Its stdout is each task's durable `post_run_results` evidence. A task
