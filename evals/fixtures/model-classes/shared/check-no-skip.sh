@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Fails when a test file carries more skip/xfail markers than it did at the
-# base SHA. `.fixture/base-skip-counts.txt` is `<count><TAB><path>` per base
+# base SHA. `base-skip-counts.txt` is `<count><TAB><path>` per base
 # test file, written by `scripts/evals-cases-from-prs.py`. The pattern covers
 # pytest's decorator and call forms and the common JS/TS `.skip(`/`it.skip`/
 # `describe.skip` idioms; a marker style outside that list is not counted, in
@@ -9,10 +9,14 @@
 # `run_command` success criterion, against the sandbox root, before
 # `tests.patch` is applied -- a marker the agent added is a fact about its
 # own tree, not about the grading patch.
+#
+# The answer key lives in the task's `reference:` directory, which coder_eval
+# stages outside the sandbox and names in `REFERENCE_DIR` for criteria only;
+# the agent never sees the path.
 
 set -euo pipefail
 
-manifest=".fixture/base-skip-counts.txt"
+manifest="${REFERENCE_DIR:?REFERENCE_DIR is unset: run as a criterion of a task with a reference}/base-skip-counts.txt"
 if [[ ! -r "${manifest}" ]]; then
 	echo "no manifest at ${manifest}" >&2
 	exit 1

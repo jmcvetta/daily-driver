@@ -8,16 +8,17 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/model-classes/shared
       mount_point: .fixture
-    - type: template_dir
-      path: ../../fixtures/model-classes/cases/career-370
-      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/career-370
 
 pre_run:
-  - command: bash .fixture/case.sh
+  - command: bash .fixture/clone-base.sh jmcvetta/career 2b5fb338ecebdb1a2acd3514f86afcfd63504fb8
     timeout: 120
 
 agent:
-  type: omp
   allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
 
 run_limits:
@@ -25,8 +26,7 @@ run_limits:
   task_timeout: 780
   turn_timeout: 660
 
-initial_prompt: >-
-  This is jmcvetta/career, checked out at its state before pull request #370. Implement the change described by issue #368 (title: "fix(core): ignore kokoro's json sidecars in findIntro").
+initial_prompt: "This is jmcvetta/career, checked out at a past commit. Implement the change the issue below describes. Work from this checkout and the issue text alone: do not fetch from jmcvetta/career, and do not look it up on GitHub.\n\n# Shared corpus/intros/ directory: core's findIntro() throws on kokoro's .json sidecars\n\nkokoro's `.json` intro files break core's markdown intro reader for postings with a multi-role ad.\n\n*Two stores share one folder,*\n*A prefix match finds json,*\n*The reader throws hard.*\n\n## Summary\n\n`corpus/intros/` holds both v2's markdown intros and kokoro's `.json` intro sidecars. When both exist for the same posting id, core's `findIntro()` throws instead of returning `undefined`.\n\n## Detail\n\n`core/src/intros/store.ts` `findIntro()` scans `corpus/intros/` for any filename starting with `<id>-` or equal to `<id>.md`. For each match it calls `splitFrontmatter`, and treats a parse failure as `unreadable`. If no readable candidate carries a matching frontmatter `id`, and at least one match was unreadable, it throws.\n\nPosting `hn-49156689` is a live v2 posting (`corpus/postings/hn-49156689.md`). PR #367 added five kokoro intro files that all match the prefix `hn-49156689-`:\n\n```\ncorpus/intros/hn-49156689--applied-ai-engineer.json\ncorpus/intros/hn-49156689--backend-engineer.json\ncorpus/intros/hn-49156689--data-engineer.json\ncorpus/intros/hn-49156689--frontend-engineer.json\ncorpus/intros/hn-49156689--full-stack-software-engineer.json\n```\n\nEach is JSON, not markdown with a `---` frontmatter fence, so `splitFrontmatter` fails on all five with \"file does not begin with a --- frontmatter fence\". No `.md` candidate exists for `hn-49156689` itself, so `findIntro` raises:\n\n```\ncorpus/intros: no intro for hn-49156689, and hn-49156689--applied-ai-engineer.json (...) could not be read\n```\n\n`readIntro`, `introFilename`, and `writeIntro` all route through `findIntro`, so the v2 worklist and the v2 intro-writer skip rule hard-fail on this posting id.\n\nkokoro's own store anticipated the shared directory in one direction: `kokoro/pipeline/src/kokoro_pipeline/...` `store.py` globs `*.json` and so already ignores markdown files. Nothing on the core/v2 side does the mirror-image thing: `findIntro` has no way to recognize a `.json` file as \"not mine\" before trying to parse it as frontmatter'd markdown.\n\nFiled per issue #302's rule that a defect found during the kokoro trial is its own issue, not a fix folded into the write-up. See `docs/plans/kokoro/first-run.md` for where this was found.\n\nModel: claude-sonnet-5\n"
 
 success_criteria:
   - type: run_command
@@ -43,6 +43,6 @@ success_criteria:
 
   - type: run_command
     description: The pull request's own tests pass after applying tests.patch
-    command: git apply --whitespace=nowarn .fixture/tests.patch && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts
+    command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts
     timeout: 720
     weight: 3

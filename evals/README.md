@@ -38,8 +38,8 @@ evals/
 │   │   ├── shared/       builds the git repository every case starts from
 │   │   └── cases/<name>/ one `case.sh`, mounted alone beside `shared/`
 │   └── model-classes/
-│       ├── shared/       clones the source repo's base SHA; the two grading checks
-│       ├── cases/<repo>-<pr>/  `case.sh` + `tests.patch`, one per selected PR
+│       ├── shared/       clones the source repo's base SHA; the grader and its two checks
+│       ├── cases/<repo>-<pr>/  the answer key, one per selected PR: a `reference:`, never mounted
 │       └── candidates.json     every qualifying PR the builder saw, selected or not
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
@@ -1008,43 +1008,79 @@ carries no plugin and no ablation, one variant per case, because the question
 is whether a given model, run in the `task` role real dispatch would put it
 in, finishes ordinary delegated work and leaves its own tests passing.
 
-**What it measures.** Six cases, drawn from `jmcvetta/career` and
-`apps/usd2oz-web` in `Green-Pagoda/pagoda`: three `mechanical`, three
-`implementation`, the smallest qualifying candidate of each `class:` tag by
-changed lines, each verified once at build time to fail on the base SHA and pass on
-the merge SHA before it was shipped. A case's `initial_prompt` names the issue
-the pull request closed; its three `run_command` criteria check, in order,
+**What it measures.** Three cases today, all from `jmcvetta/career`: two
+`mechanical` and one `implementation`, the smallest qualifying candidates of
+each `class:` tag by changed lines whose answer key the issue decides, each
+verified once at build time to fail on the base SHA and pass on
+the merge SHA before it was shipped. A case's `initial_prompt` is the title
+and body of the issue the pull request closed, and names neither number; its
+three `run_command` criteria check, in order,
 that no test file present at the base SHA was deleted, that no skip/xfail
 marker was added to one, and that the pull request's own tests pass once
-`tests.patch` is applied. `evals/fixtures/model-classes/candidates.json`
+`tests.patch` is applied. `shared/apply-tests.sh` applies it: it first puts
+each path the patch names back to the base SHA, because an agent that adds a
+test beside its change has edited the very hunk the patch rewrites, and a
+plain `git apply` would score that correct change 0. The agent's own tests in
+other files stay. `evals/fixtures/model-classes/candidates.json`
 records every qualifying pull request the builder saw, selected or not, so a
 later run can widen the suite without re-walking history.
+
+**Keeping the answer out of reach.** The merged change is the answer, and the
+agent runs on the same host as the grader, so the suite closes each road to it:
+
+- `tests.patch` and the two manifests sit in the case's `reference:`
+  directory. coder_eval stages that outside the sandbox and names it in
+  `REFERENCE_DIR` for criteria only, so a broad `grep` of the checkout cannot
+  surface it. Under the `tempdir` driver the agent is the same user as the
+  harness, so this hides the key rather than locking it.
+- `shared/lib.sh` removes the clone's `origin` once it has fetched the base
+  SHA, so `git fetch origin <default-branch>` or `refs/pull/<n>/head` has
+  nowhere to go.
+- The prompt carries the issue text and tells the agent not to consult the
+  source repository on GitHub; with no number to look up, it has no reason to.
+
+Hiding is not locking, so `scripts/evals-record.py` also checks every
+replicate's tool calls, and what they printed, for the answer key's paths, any
+`git` network command, a `gh` command or URL on the source repository, and a
+pull ref. A replicate that reached any of them is recorded with that evidence
+under `answer_key_contact` and a measured score of 0. It is scored as a
+failure, not dropped: a model that goes looking when stuck has failed the
+case.
 
 **What it does not measure.** No `reasoning` case: that class is decided by
 the production table and public benchmarks, not by a fixture small enough to
 grade in two minutes (see `skills/issue-body/references/model-classes.md`).
 No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
 is the `omp` arm's, over a different question. And nothing here proves a
-model *should* run in the `task` role generally, only that it cleared six
+model *should* run in the `task` role generally, only that it cleared a few
 specific cases; `make evals-run-classes` is a floor to check before promoting
 a model into that role, not the whole case for doing so.
 
 **Running it.** Each `evals/experiments/classes-<name>.yaml` file pins its own
-`defaults.agent.model`. Personal `omp_configs/` overlays do not define or
-validate these experiments:
+`defaults.agent.model` and its own `defaults.agent.type`: the rows pin no
+kind, so one suite measures a model on Omp or on Claude Code. Personal
+`omp_configs/` overlays do not define or validate these experiments:
 
 ```
 make evals-run-classes MODEL=glm
 make evals-run-classes MODEL=cocktail
+make evals-run-classes MODEL=opus-low
 ```
 
-`defaults.repeats` is 3 in every file, so a full run is 6 cases times 3
-repeats: 18 replicates per model, each a real `git apply` plus the
+The Claude Code files (`classes-opus-low`, `classes-sonnet-high`,
+`classes-sonnet-low`) set effort through `sdk_options.effort`, which the
+Agent SDK passes as `claude --effort`. They run the bare session
+`with-without.yaml` measures against — `plugins: []` and
+`setting_sources: [project]` — so an advisor or a plugin in the operator's own
+user settings never reaches the model under test.
+
+`defaults.repeats` is 3 in every file, so a full run is 3 replicates per
+case per model, each a real `git apply` plus the
 repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
-process, so a token exported before `coder-eval run` is what `case.sh` clones
-with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
+process, so a token exported before `coder-eval run` is what
+`shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
 or use the `smoke`-tagged case per class (the smallest of each) to check a new
 overlay cheaply before spending a full run on it.
 
@@ -1052,20 +1088,27 @@ overlay cheaply before spending a full run on it.
 [--path-prefix DIR]` scans a source's merged pull requests and appends
 qualifying ones to `candidates.json`; `--select` then runs the build-time
 answer-key check on the smallest candidates of each class and emits fixtures
-and task YAMLs for the ones that pass, up to `--per-class` each (default 3).
+and task YAMLs for the ones that pass, up to `--per-class` each (default 3);
+`--rewrite-tasks` regenerates the selected cases' YAMLs from
+`candidates.json` after a template change. The build-time check cannot tell whether the
+answer key asserts only what the issue decides, so read each new case's issue
+against its `tests.patch` before shipping it. A key that asserts a name, path
+or wording the issue leaves open fails a model that did exactly what was asked;
+`--exclude owner/repo#N=reason` takes such a case out for good and deletes its
+fixture.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
-`implementation`) before it can be selected; the six shipped cases include three,
+`implementation`) before it can be selected; one shipped case carries one,
 reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
 API fixtures) are the acceptance test for the qualifying filter, the test-file
 split, the class and elapsed reads, and `task_timeout` derivation.
 
-`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm sharing
-the `omp` arm's agent kind — it is Omp under a different model, not a
-different harness — so `agent.type: omp` alone cannot say which arm a row
-belongs to; the `model-classes` tag is what does. The checker discovers
+`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm that
+owns both the `omp` and `claude-code` kinds — it measures a model, not a
+harness — so the agent kind alone cannot say which arm a row belongs to; the
+`model-classes` tag is what does. The checker discovers
 `classes-*.yaml` experiments inside the eval suite and requires each to pin
 its model. Personal Omp configuration is not an input to this check.
 
