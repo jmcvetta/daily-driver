@@ -18,7 +18,7 @@ SHELL := /bin/bash
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
 	evals-install evals-plan \
-	evals-variants evals-preflight evals-record evals-run evals-run-omp \
+	evals-variants evals-preflight evals-record evals-render-routes evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-classes mcp-usage
 
@@ -496,6 +496,11 @@ evals-record:
 	test -n "$(EXPERIMENT)"
 	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
 		--experiment "$(EXPERIMENT)" --output evals/provenance
+
+# evals-render-routes: rewrite the `Measured routes` table in model-classes.md
+# from every committed record under evals/provenance/. Reads no run directory.
+evals-render-routes:
+	uv run --frozen python3 scripts/evals-render-routes.py
 
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and
