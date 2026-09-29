@@ -8,7 +8,8 @@ Sources: jmcvetta/daily-driver.
 
 | Model | PRs | Median elapsed | Median review passes | Findings/PR | Rerun rate |
 | --- | --- | --- | --- | --- | --- |
-| claude-sonnet-5 | 3 | 32 min | 0 | 0.3 | 100% |
+| claude-opus-5-5 | 1 | n/a | 1 | 1.0 | 100% |
+| claude-sonnet-5 | 3 | 22 min | 0 | 0.3 | 100% |
 | gpt-5.6-luna | 1 | n/a | 0 | 0.0 | 100% |
 | gpt-6-luna | 3 | n/a | 0 | 0.3 | 100% |
-| unreported | 65 | n/a | 0 | 0.6 | 92% |
+| unreported | 70 | n/a | 0 | 0.6 | 93% |

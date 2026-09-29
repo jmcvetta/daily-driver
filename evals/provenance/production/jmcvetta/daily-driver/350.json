@@ -12,7 +12,7 @@
   "merged_at": "2026-09-22T10:57:01Z",
   "model": "unreported",
   "model_class": "unlabelled",
-  "model_mismatch": true,
+  "model_mismatch": false,
   "pull_request": 350,
   "ready_at": null,
   "repo": "jmcvetta/daily-driver",
