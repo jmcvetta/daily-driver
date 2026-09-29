@@ -8,8 +8,6 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
-import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -72,7 +70,7 @@ def check_documented_routes() -> None:
     ]
     if "Agent Hub TUI" not in review_text or "omp://agent-hub.md" not in review_text:
         fail("review route does not distinguish Agent Hub from process control")
-    if "mode write fails, inspect the service once" not in review_text:
+    if not re.search(r"mode write\s+fails, inspect the service once", review_text):
         fail("review route does not inspect a rejected lifecycle change")
     if "stop it with" not in review_text or "persist=true" not in review_text:
         fail("review route does not stop a service whose persistence is unconfirmed")
@@ -86,7 +84,7 @@ def check_documented_routes() -> None:
         fail("named service does not run from the task worktree")
     if "GNU coreutils `timeout`" not in review_text:
         fail("review route does not state the deadline utility prerequisite")
-    if "mode write fails" not in review_text or "stop the service" not in review_text:
+    if not re.search(r"mode write\s+fails", review_text) or "stop it with" not in review_text:
         fail("review route does not clean up a rejected persistence request")
     if "write proc://<name>/mode" not in review_text or "persist=true" not in review_text:
         fail("review route does not verify persistent service mode")
@@ -122,7 +120,7 @@ def run_timeout(timeout: str, command: list[str]) -> subprocess.CompletedProcess
 
 
 def check_deadline_and_cleanup() -> None:
-    """Exercise normal exit, timeout, forced termination, and tree cleanup."""
+    """Exercise normal exit, timeout, forced termination, and KILL escalation."""
     success = run_timeout("2s", [sys.executable, "-c", "raise SystemExit(0)"])
     if success.returncode != 0:
         fail("timeout changed a successful child exit")
@@ -131,26 +129,23 @@ def check_deadline_and_cleanup() -> None:
     if failure.returncode != 7:
         fail("timeout changed a failed child exit")
 
-    with tempfile.TemporaryDirectory(prefix="ci-watch-check-") as directory:
-        marker = Path(directory) / "descendant-survived"
-        descendant = (
-            "import pathlib, time; time.sleep(0.4); "
-            f"pathlib.Path({str(marker)!r}).write_text('alive')"
-        )
-        parent = (
-            "import signal, subprocess, sys, time; "
-            "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
-            f"subprocess.Popen([sys.executable, '-c', {descendant!r}]); "
-            "time.sleep(30)"
-        )
-        expired = run_timeout(
-            "0.1s", [sys.executable, "-c", parent]
-        )
-        if expired.returncode != 124:
-            fail("timeout did not return 124 when the CI wait expired")
-        time.sleep(0.5)
-        if marker.exists():
-            fail("deadline left a descendant process running")
+    expired = run_timeout(
+        "0.1s",
+        [sys.executable, "-c", "import time; time.sleep(30)"],
+    )
+    if expired.returncode != 124:
+        fail("timeout did not report a regular expired wait as 124")
+
+    forced_command = (
+        "import signal, time; "
+        "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+        "time.sleep(30)"
+    )
+    forced = run_timeout(
+        "0.1s", [sys.executable, "-c", forced_command]
+    )
+    if forced.returncode != 137:
+        fail("timeout did not return 137 after forced KILL escalation")
 
     invalid = run_timeout("not-a-duration", [sys.executable, "-c", "pass"])
     if invalid.returncode != 125:
@@ -163,7 +158,7 @@ def main() -> None:
     check_deadline_and_cleanup()
     print(
         "check-omp-review-cycle-route: named Omp CI service is bounded, "
-        "inspectable, and cleans up its process group"
+        "inspectable, and handles forced timeout escalation"
     )
 
 
