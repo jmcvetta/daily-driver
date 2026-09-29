@@ -8,11 +8,11 @@ SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
-	check-manifests check-manifest-fixtures check-constitution check-ask-in-chat \
+	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
-	check-review-cycle-fix-delta-route check-provenance \
-	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures \
+	check-review-cycle-fix-delta-route check-provenance check-verse \
+	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
@@ -89,7 +89,7 @@ omp-update-daily-driver:
 
 # `check` remains the local all-groups convenience target. CI runs each
 # purpose-named group in a job selected by declarative component filters.
-check: check-ci-scope check-step-names check-plugin-validity check-runtime check-eval-tooling check-issue-infra
+check: check-ci-scope check-step-names check-release-paths check-plugin-validity check-runtime check-eval-tooling check-issue-infra
 
 check-ci-scope:
 	node scripts/check-ci-scope.mjs
@@ -99,10 +99,10 @@ check-plugin-validity: check-plugin check-skills check-agents \
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
-	check-omp-pr-create-route check-review-cycle-fix-delta-route check-provenance \
+	check-omp-pr-create-route check-review-cycle-fix-delta-route check-provenance check-verse \
 	check-task-worktree-fixture check-scripts
 
-check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures \
+check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-eval-arms check-evals-preflight check-evals-provenance
 
 
@@ -149,6 +149,15 @@ check-agents:
 # nothing else catches it. See the docstring in the script.
 check-manifests:
 	python3 scripts/check-manifests.py
+
+# check-release-paths: every tracked top-level directory is either shipped or
+# named in release-please's `exclude-paths`, and every excluded entry is a real
+# top-level directory. The list is a denylist, so this is what makes a new
+# directory's release status a decision rather than a default. See the
+# docstring in the script. It runs in CI's always-on repository-wide job, since
+# deleting a top-level directory selects no path-filtered job.
+check-release-paths:
+	python3 scripts/check-release-paths.py
 
 # check-manifest-fixtures: the acceptance test for the route half of
 # check-manifests -- folded-description rejection, body rejection with its
@@ -253,6 +262,13 @@ check-review-cycle-fix-delta-route:
 check-provenance:
 	python3 scripts/check-provenance.py
 
+# check-verse: every skill that puts verse on a write names its form and links
+# HAIKU.md, and the comment fixtures that carry verse after the provenance
+# block still parse, with every verse line in italics. See the script's
+# docstring.
+check-verse:
+	python3 scripts/check-verse.py
+
 # check-scripts: ShellCheck the shell under skills, scripts, and eval fixtures.
 # It belongs to check-runtime because eval-fixture scripts are runtime inputs;
 # skills and top-level scripts select that group as well.
@@ -322,6 +338,13 @@ check-eval-arms:
 # case or scores a model.
 check-eval-fixtures:
 	scripts/check-eval-fixtures.sh
+
+# check-model-classes-grader: the model-classes grader applies the answer key
+# over an agent's tree -- same-hunk edits, a test file both created, committed
+# work -- instead of scoring a correct change 0. Needs git and bash only. See
+# the script's header.
+check-model-classes-grader:
+	scripts/check-model-classes-grader.sh
 
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.
@@ -424,6 +447,9 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-opus-low.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-high.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-low.yaml tasks/*/*.yaml
 
 # evals-variants: refuse to start when an arm's agent kind is not registered.
 # `coder-eval plan` PRINTS "Variant 'omp': resolution failed" and then exits 0,
@@ -542,7 +568,7 @@ evals-run-codex: evals-plan evals-preflight
 # repository actually runs (`claude-only`, `omp-only`, `codex-only`); the
 # suite's own rows carry no arm tag of that shape to exclude BY, only
 # `model-classes` itself, which every other arm already excludes. Still
-# overridable by a caller who wants one case: `TASKS=tasks/model-classes/pagoda-338.yaml`.
+# overridable by a caller who wants one case: `TASKS=tasks/model-classes/career-462.yaml`.
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \

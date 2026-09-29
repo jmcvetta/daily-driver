@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from pathlib import Path
 from typing import Any
 
@@ -49,7 +48,6 @@ BUILDABLE_CLASSES = ("implementation", "mechanical")
 # is judged the same way.
 REPEAT_PASS_FRACTION = 2 / 3
 
-_EXPERIMENT_ID_RE = re.compile(r"^experiment_id:\s*(\S+)", re.MULTILINE)
 
 
 def load_records(provenance_dir: Path) -> list[dict[str, Any]]:
@@ -73,16 +71,12 @@ def overlay_settings(experiments_dir: Path, overlay: str) -> str:
     """
     experiment_path = experiments_dir / f"classes-{overlay}.yaml"
     if experiment_path.is_file():
-        text = experiment_path.read_text()
-        if yaml is not None:
-            document = yaml.safe_load(text) or {}
-            experiment_id = document.get("experiment_id") if isinstance(document, dict) else None
-            if isinstance(experiment_id, str) and experiment_id:
-                return experiment_id
-        else:
-            match = _EXPERIMENT_ID_RE.search(text)
-            if match:
-                return match.group(1)
+        if yaml is None:
+            raise RuntimeError("PyYAML is required to read experiment files")
+        document = yaml.safe_load(experiment_path.read_text()) or {}
+        experiment_id = document.get("experiment_id") if isinstance(document, dict) else None
+        if isinstance(experiment_id, str) and experiment_id:
+            return experiment_id
     return f"classes-{overlay}"
 
 

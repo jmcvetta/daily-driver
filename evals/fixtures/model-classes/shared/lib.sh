@@ -2,10 +2,8 @@
 #
 # Clones a source repository's base commit into the sandbox root, shallow, so
 # nothing after it is visible to the agent under test. Sourced, never
-# executed. A case script is
-#     source "$(dirname "$0")/lib.sh"
-#     fixture_clone_base owner/repo <base-sha>
-# See `evals/README.md` for what depends on this shape.
+# executed; `clone-base.sh` is the entry point a task's `pre_run` calls. See
+# `evals/README.md` for what depends on this shape.
 
 set -euo pipefail
 
@@ -39,4 +37,13 @@ fixture_clone_base() {
 	git remote add origin "https://x-access-token:${token}@github.com/${slug}.git"
 	git fetch -q --depth 1 origin "${sha}"
 	git checkout -q FETCH_HEAD
+	# The remote carries a token and names the repository whose later history
+	# holds the answer: `git fetch origin <default-branch>` or
+	# `refs/pull/<n>/head` would hand the agent the merged change. Nothing after
+	# this point needs the network, so the remote goes.
+	git remote remove origin
+	# `apply-tests.sh` restores the answer key's paths from this commit. It is
+	# recorded here, not read back from HEAD or the shallow root later, because
+	# an agent that commits or fetches moves both.
+	printf '%s\n' "${sha}" >"${FIXTURE_DIR}/base-sha"
 }

@@ -57,6 +57,8 @@ jobs:
         run: make check-ci-scope
       - name: Validate repository step references
         run: make check-step-names
+      - name: Validate release path classification
+        run: make check-release-paths
 
   plugin-validity:
     name: Plugin validity

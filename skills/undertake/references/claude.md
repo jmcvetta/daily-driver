@@ -156,6 +156,36 @@ posts nothing.
 same `mcp__Claude_Code_Remote__get_session` call `The session` above uses.
 
 
+The orchestrator
+================
+
+`SKILL.md`'s `Reporting to an orchestrator` applies where the system prompt
+names an orchestrator session id — `embark`'s dispatch puts it there. The
+report is a one-shot Routine bound to that session:
+
+| Field of `mcp__Claude_Code_Remote__create_trigger` | Value |
+| ---- | ----- |
+| `persistent_session_id` | The orchestrator's session id |
+| `run_once_at` | The next whole UTC minute plus one, RFC3339 |
+| `prompt` | The report, opening with its fixed line |
+| `name` | The report's fixed opening line |
+| `initiation` | `own_followup` |
+
+The tool is deferred: load it with `ToolSearch`, `select:` its name, before the
+first report. The Routine disables itself once it fires, so there is nothing
+to delete.
+
+**Not `fire_trigger`, and not `send_later`.** A manual `fire_trigger` on a
+Routine bound to the orchestrator returns success and delivers nothing.
+`send_later` fires into the calling session only, so it reaches the
+implementor, not the orchestrator.
+[`0028`](../../../docs/notes/0028-the-report-is-a-scheduled-routine.md) has
+the measurements.
+
+**This Routine is not the cadence's slot.** It is bound to another session,
+so `The cadence` below neither reuses it nor counts it.
+
+
 The cadence
 ===========
 

@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 RECORDER = ROOT / "scripts" / "evals-record.py"
@@ -259,9 +260,152 @@ def validate_committed_records() -> None:
         require(result.returncode == 0, f"{record}: {result.stdout}{result.stderr}")
 
 
+def load_recorder() -> Any:
+    """Import the recorder module, whose file name is not an identifier."""
+    spec = importlib.util.spec_from_file_location("evals_record", RECORDER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def classes_artifact(*commands: dict[str, Any], description: str = "jmcvetta/career#469: perf: a change") -> dict[str, Any]:
+    """A model-classes task artifact whose one iteration ran `commands`."""
+    return {
+        "task_id": "model-classes-career-469",
+        "task_description": description,
+        "iterations": [{"commands": list(commands)}],
+    }
+
+
+def bash(command: str, result: str = "") -> dict[str, Any]:
+    """One recorded Bash call."""
+    return {"tool_name": "Bash", "parameters": {"command": command}, "result_summary": result}
+
+
+def check_answer_key_contact() -> None:
+    """Every road to the answer is flagged, and ordinary work is not."""
+    recorder = load_recorder()
+    root = Path("/srv/daily-driver")
+    clean = [
+        bash("git status && git diff --stat"),
+        bash('git commit -qam "fetch the pull refs lazily"'),
+        bash("git -C kokoro log --oneline -5"),
+        bash("gh issue view 2853 --repo googleapis/release-please"),
+        bash("gh api repos/googleapis/release-please/issues/2853"),
+        bash("curl -s https://api.github.com/repos/googleapis/release-please/issues/2853"),
+        bash("cat .fixture/apply-tests.sh", 'patch="${REFERENCE_DIR:?}/tests.patch"'),
+        bash("grep -rn compile-bytecode .", "./kokoro/pyproject.toml:12:compile-bytecode = true"),
+        {"tool_name": "WebFetch", "parameters": {"url": "https://github.com/googleapis/release-please/issues/2853"}},
+        {"tool_name": "Edit", "parameters": {"file_path": "README.md", "new_string": "see github.com/jmcvetta/career-scan"}},
+    ]
+    for command in clean:
+        evidence = recorder.answer_key_contact(classes_artifact(command), root)
+        require(evidence == [], f"ordinary work was flagged: {command} -> {evidence}")
+
+    reaching = {
+        "names the old in-sandbox key": bash("cat .fixture/tests.patch"),
+        "prints the key from a broad grep": bash("grep -rn bytecode .", "./.fixture/tests.patch:34:+    compile"),
+        "names the staged reference": bash("ls /tmp/coder_eval_reference_ab12/reference"),
+        "reads this repository's fixtures": bash("find / -name tests.patch", "/srv/daily-driver/evals/x"),
+        "fetches the default branch": bash("git fetch origin master"),
+        "fetches with a global option first": bash("git -C . fetch https://github.com/jmcvetta/career"),
+        "adds a remote": bash("git remote add upstream https://example.invalid/x.git"),
+        "reads a pull ref": bash("git log refs/pull/469/head"),
+        "views a pull request": bash("gh pr view 469"),
+        "views the issue on the checkout's repo": bash("gh issue view 468"),
+        "views the issue with the source named": bash("gh issue view 468 -R jmcvetta/career"),
+        "calls the API on the source": bash("gh api repos/jmcvetta/career/pulls/469"),
+        "searches GitHub": bash('gh search prs "compile bytecode"'),
+        "curls the source": bash("curl -s https://api.github.com/repos/jmcvetta/career/pulls/469"),
+        "downloads the diff": bash("curl -sS https://patch-diff.githubusercontent.com/raw/jmcvetta/career/pull/469.diff"),
+        "fetches the source page": {"tool_name": "WebFetch", "parameters": {"url": "https://github.com/jmcvetta/career/pull/469"}},
+    }
+    for name, command in reaching.items():
+        evidence = recorder.answer_key_contact(classes_artifact(command), root)
+        require(len(evidence) == 1, f"{name} was not flagged: {command}")
+
+    try:
+        recorder.answer_key_contact(classes_artifact(bash("ls"), description="no source here"), root)
+    except ValueError:
+        pass
+    else:
+        raise Failed("a model-classes artifact with no source repository was scanned as clean")
+
+
+def check_contaminated_replicate(temp: Path) -> None:
+    """A replicate that reached the answer is recorded, and scored 0."""
+    run_dir = temp / "runs" / "2026-09-28_10-00-00"
+    run_dir.mkdir(parents=True)
+    experiment = temp / "classes.yaml"
+    experiment.write_text("experiment_id: classes\ndefaults:\n  agent:\n    model: m\nvariants:\n  - variant_id: default\n")
+    task_id = "model-classes-career-469"
+    (run_dir / "run.json").write_text(
+        json.dumps(
+            {
+                "run_id": "2026-09-28_10-00-00",
+                "start_time": "2026-09-28T10:00:00+00:00",
+                "end_time": "2026-09-28T10:02:00+00:00",
+                "task_results": [
+                    {
+                        "task_id": task_id,
+                        "variant_id": "default",
+                        "replicate_index": index,
+                        "weighted_score": 1.0,
+                        "agent_config": {"type": "claude-code", "model": "m"},
+                    }
+                    for index in (0, 1)
+                ],
+            }
+        )
+    )
+    for index, command in enumerate((bash("git diff"), bash("git fetch origin master"))):
+        artifact_dir = run_dir / "default" / task_id / f"{index:02d}"
+        artifact_dir.mkdir(parents=True)
+        artifact = classes_artifact(command)
+        artifact.update({"weighted_score": 1.0, "success_criteria_results": [], "early_stop": None})
+        (artifact_dir / "task.json").write_text(json.dumps(artifact))
+    (run_dir / "experiment.json").write_text(
+        json.dumps(
+            {
+                "experiment_id": "classes",
+                "variant_ids": ["default"],
+                "per_replicate_scores": {"default": {task_id: [1.0, 1.0]}},
+            }
+        )
+    )
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_SESSION_ID"}
+    record_path = run_recorder(run_dir, experiment, temp / "classes-out", env)
+    record = json.loads(record_path.read_text())
+    clean, reached = record["attempts"]
+    require(clean["answer_key_contact"] == [] and clean["measured_score"] == 1.0, "a clean replicate lost its score")
+    require(reached["answer_key_contact"], "the git fetch replicate carries no evidence")
+    require(reached["measured_score"] == 0.0, "a replicate that reached the answer kept its score")
+    require(reached["raw_weighted_score"] == 1.0, "the raw score was not kept beside the measured one")
+    require(
+        record["variants"][0]["per_replicate_scores"][task_id] == [1.0, 0.0],
+        "per_replicate_scores still count the replicate that reached the answer",
+    )
+    reached["measured_score"] = 1.0
+    record_path.write_text(json.dumps(record))
+    result = subprocess.run(
+        [sys.executable, str(RECORDER), str(record_path), "--experiment", str(experiment), "--validate"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    require(
+        result.returncode != 0 and "answer_key_contact" in result.stdout,
+        "a record scoring a contaminated replicate above 0 was accepted",
+    )
+
+
 def main() -> int:
-    """Run laptop, cloud, invalid-record, and committed-record cases."""
+    """Run laptop, cloud, invalid-record, committed-record and answer-key cases."""
     validate_committed_records()
+    check_answer_key_contact()
+    with tempfile.TemporaryDirectory() as directory:
+        check_contaminated_replicate(Path(directory))
     with tempfile.TemporaryDirectory() as directory:
         temp = Path(directory)
         run_dir = temp / "runs" / "2026-09-21_10-00-00"

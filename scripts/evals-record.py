@@ -8,6 +8,7 @@ import json
 import os
 import platform
 import re
+import shlex
 import shutil
 import socket
 import subprocess
@@ -198,8 +199,134 @@ def run_cases(run: dict[str, Any], experiment_id: str, requested: dict[str, str]
     return cases
 
 
-def run_attempts(run_dir: Path, run: dict[str, Any]) -> list[dict[str, Any]]:
-    """Read criterion and early-stop evidence from every preserved task artifact."""
+# A model-classes row's description is "owner/repo#N: title", written by
+# `scripts/evals-cases-from-prs.py`; it names the repository whose later
+# history holds the answer.
+_MODEL_CLASSES_SOURCE = re.compile(r"^\s*([\w.-]+/[\w.-]+)#\d+:")
+
+# Where the answer key, or a copy of it, can be read on the host that ran the
+# replicate: the fixture's old in-sandbox layout, coder_eval's staged
+# reference, and this repository's own fixtures.
+_ANSWER_KEY_MARKERS = (
+    ".fixture/tests.patch",
+    ".fixture/base-test-files",
+    ".fixture/base-skip-counts",
+    "coder_eval_reference_",
+    "evals/fixtures/model-classes",
+)
+
+_GIT_NETWORK = {"fetch", "pull", "clone", "ls-remote"}
+_GH_REPO_COMMANDS = {"pr", "issue", "repo", "browse", "run", "release", "workflow"}
+
+
+def _shell_words(command: str) -> list[str]:
+    """Split a shell command into words and operators, or on whitespace where
+    the command does not parse (an unclosed quote in a heredoc, say)."""
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    try:
+        return list(lexer)
+    except ValueError:
+        return command.split()
+
+
+def _repo_flag(words: list[str]) -> str | None:
+    """The repository a `gh` command names with `-R`/`--repo`, if any."""
+    for index, word in enumerate(words):
+        if word.startswith("--repo="):
+            return word.split("=", 1)[1]
+        if word in ("-R", "--repo") and index + 1 < len(words):
+            return words[index + 1]
+    return None
+
+
+def _command_contacts(command: str, source: str) -> list[str]:
+    """Why a shell command reaches the source repository's history, if it does.
+
+    Every `git` network command counts, because the sandbox's clone has no
+    remote and nothing the task needs is fetched. A `gh` command counts unless
+    it names another repository: without `-R` it means the checkout's own.
+    """
+    reasons = []
+    words = _shell_words(command)
+    for index, word in enumerate(words):
+        if word.rsplit("/", 1)[-1] not in ("git", "gh"):
+            continue
+        rest = words[index + 1 :]
+        # Skip global options -- `git -C dir`, `git -c key=value`.
+        while rest and rest[0].startswith("-"):
+            rest = rest[2:] if rest[0] in ("-C", "-c", "-R", "--repo") else rest[1:]
+        if not rest:
+            continue
+        subcommand = rest[0]
+        if word.endswith("git"):
+            if subcommand in _GIT_NETWORK:
+                reasons.append(f"git {subcommand}")
+            elif subcommand == "remote" and len(rest) > 1 and rest[1] in ("add", "set-url"):
+                reasons.append(f"git remote {rest[1]}")
+        elif subcommand == "search":
+            reasons.append("gh search")
+        elif subcommand == "api":
+            named = [w for w in rest[1:] if "repos/" in w]
+            if not named or any(source.lower() in w.lower() for w in named):
+                reasons.append("gh api")
+        elif subcommand in _GH_REPO_COMMANDS:
+            other = _repo_flag(rest)
+            if other is None or other.lower() == source.lower():
+                reasons.append(f"gh {subcommand}")
+    if "refs/pull/" in command:
+        reasons.append("refs/pull/")
+    return reasons
+
+
+def answer_key_contact(artifact: dict[str, Any], root: Path) -> list[str]:
+    """Every tool call in a model-classes replicate that reached the answer.
+
+    The answer is the merged change: its tests in the case's reference
+    directory, and the source repository's history on GitHub. A call reaches
+    it by naming the key's path, by printing it (a broad grep once surfaced
+    `.fixture/tests.patch` without asking for it), or by contacting the source
+    repository -- any git network command, a `gh` command on that repository,
+    or a URL under it. Returns one line of evidence per offending call; an
+    empty list is a clean replicate.
+    """
+    description = artifact.get("task_description") or ""
+    match = _MODEL_CLASSES_SOURCE.match(description)
+    if match is None:
+        raise ValueError(f"{artifact.get('task_id')}: no source repository in description {description!r}")
+    source = match.group(1)
+    source_url = re.compile(
+        r"(?:github\.com[/:]|githubusercontent\.com/(?:raw/)?|api\.github\.com/repos/)" + re.escape(source) + r"(?![\w.-])",
+        re.IGNORECASE,
+    )
+    markers = (*_ANSWER_KEY_MARKERS, str(root))
+
+    evidence = []
+    for iteration in artifact.get("iterations") or []:
+        for command in iteration.get("commands") or []:
+            tool = command.get("tool_name", "?")
+            parameters = json.dumps(command.get("parameters") or {})
+            result = command.get("result_summary") or ""
+            reasons = [f"names {m}" for m in markers if m in parameters]
+            reasons += [f"printed {m}" for m in markers if m in result and m not in parameters]
+            if source_url.search(parameters):
+                reasons.append(f"URL under {source}")
+            shell = (command.get("parameters") or {}).get("command")
+            if tool == "Bash" and isinstance(shell, str):
+                reasons += _command_contacts(shell, source)
+            if reasons:
+                evidence.append(f"{tool}: {', '.join(dict.fromkeys(reasons))}: {parameters[:160]}")
+    return evidence
+
+
+def run_attempts(run_dir: Path, run: dict[str, Any], root: Path) -> list[dict[str, Any]]:
+    """Read criterion and early-stop evidence from every preserved task artifact.
+
+    A model-classes replicate that reached the answer key is recorded with its
+    evidence under `answer_key_contact` and a measured score of 0: a copied
+    answer is a failure to do the work, and leaving it out instead would hide
+    exactly the replicates where a model went looking because it was stuck.
+    """
     attempts = []
     for result in run.get("task_results", []):
         variant_id = result["variant_id"]
@@ -209,19 +336,34 @@ def run_attempts(run_dir: Path, run: dict[str, Any]) -> list[dict[str, Any]]:
         if not artifact_path.is_file():
             raise ValueError(f"missing task artifact: {artifact_path}")
         artifact = json.loads(artifact_path.read_text())
-        attempts.append(
-            {
-                "variant_id": variant_id,
-                "task_id": task_id,
-                "replicate_index": replicate,
-                "final_status": result.get("status", "unknown"),
-                "measured_score": result.get("weighted_score", 0.0),
-                "raw_weighted_score": artifact.get("weighted_score", result.get("weighted_score", 0.0)),
-                "criteria": artifact["success_criteria_results"],
-                "early_stop": artifact.get("early_stop"),
-            }
-        )
+        attempt = {
+            "variant_id": variant_id,
+            "task_id": task_id,
+            "replicate_index": replicate,
+            "final_status": result.get("status", "unknown"),
+            "measured_score": result.get("weighted_score", 0.0),
+            "raw_weighted_score": artifact.get("weighted_score", result.get("weighted_score", 0.0)),
+            "criteria": artifact["success_criteria_results"],
+            "early_stop": artifact.get("early_stop"),
+        }
+        if task_id.startswith("model-classes-"):
+            attempt["answer_key_contact"] = answer_key_contact(artifact, root)
+            if attempt["answer_key_contact"]:
+                attempt["measured_score"] = 0.0
+        attempts.append(attempt)
     return attempts
+
+
+def contaminated_scores(scores: dict[str, list[Any]], attempts: list[dict[str, Any]], variant_id: str) -> dict[str, list[Any]]:
+    """`scores` with every replicate that reached the answer key set to 0."""
+    measured = {task_id: list(values) for task_id, values in scores.items()}
+    for attempt in attempts:
+        if attempt["variant_id"] != variant_id or not attempt.get("answer_key_contact"):
+            continue
+        values = measured.get(attempt["task_id"])
+        if values is not None and attempt["replicate_index"] < len(values):
+            values[attempt["replicate_index"]] = 0.0
+    return measured
 
 
 def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, Any]:
@@ -239,6 +381,7 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
         "type",
         "unknown",
     )
+    attempts = run_attempts(run_dir, run, root)
     variants = []
     for variant_id in experiment["variant_ids"]:
         observed_requested_models = run_requested_models(run, variant_id)
@@ -250,7 +393,9 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
                 "model_requested": requested.get(variant_id, "unknown"),
                 "model_served": run_model(run, variant_id, client_name),
                 "task_ids": run_task_ids(run, variant_id),
-                "per_replicate_scores": experiment["per_replicate_scores"].get(variant_id, {}),
+                "per_replicate_scores": contaminated_scores(
+                    experiment["per_replicate_scores"].get(variant_id, {}), attempts, variant_id
+                ),
             }
         )
 
@@ -287,7 +432,7 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
             "platform": platform.platform(),
         },
         "variants": variants,
-        "attempts": run_attempts(run_dir, run),
+        "attempts": attempts,
         "cases": run_cases(run, experiment["experiment_id"], requested, client_name),
     }
 
@@ -355,6 +500,12 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 errors.append(f"{prefix}.measured_score must be numeric or null")
             if not isinstance(raw_weighted_score, (int, float)):
                 errors.append(f"{prefix}.raw_weighted_score must be numeric")
+            contact = attempt.get("answer_key_contact")
+            if contact is not None:
+                if not isinstance(contact, list) or not all(isinstance(line, str) for line in contact):
+                    errors.append(f"{prefix}.answer_key_contact must be a list of strings")
+                elif contact and measured_score != 0.0:
+                    errors.append(f"{prefix}.measured_score must be 0 when answer_key_contact is non-empty")
     if version == 2:
         if not isinstance(record.get("cases"), list) or not record["cases"]:
             errors.append("cases must be non-empty for schema_version 2")

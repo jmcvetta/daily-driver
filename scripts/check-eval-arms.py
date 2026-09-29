@@ -138,13 +138,15 @@ ARMS: dict[str, dict[str, object]] = {
         "experiment": "codex.yaml",
         "run_target": "evals-run-codex",
     },
-    # Shares Omp's agent kind. Its experiment files own their model pins;
-    # personal Omp overlays are not inputs to this validation.
-    # One parameterized Make target selects the experiment by filename.
+    # Measures models, not a harness, so it runs on Omp or on Claude Code:
+    # each experiment file names its own kind and owns its model pin, and its
+    # rows pin no kind. Personal Omp overlays are not inputs to this
+    # validation. One parameterized Make target selects the experiment by
+    # filename.
     "model-classes": {
         "tag": "model-classes",
         "id_suffix": None,
-        "kinds": ("omp",),
+        "kinds": ("omp", "claude-code"),
         "ablation": False,
         "experiments": lambda: _model_classes_experiments(),
         "parameterized_target": "evals-run-classes",
@@ -180,9 +182,10 @@ def arm_run_targets(spec: dict[str, object]) -> dict[str, str]:
 
 ARM_TAGS = {str(arm["tag"]): name for name, arm in ARMS.items()}
 
-# Kind -> every arm that owns it. Almost always one arm, but `omp` and
-# `model-classes` both pin `agent.type: omp` -- it is Omp under a different
-# model, not a different harness -- so a kind can have more than one owner.
+# Kind -> every arm that owns it. Almost always one arm, but `model-classes`
+# runs on the `omp` and `claude-code` kinds the `omp` and `claude` arms also
+# own -- it measures a model, not a harness -- so a kind can have more than one
+# owner.
 # `KIND_ARMS[kind]` (singular) does not exist for that reason: the pinned-kind
 # check below asks "is this row's arm among the kind's owners", never "which
 # one arm owns this kind".
