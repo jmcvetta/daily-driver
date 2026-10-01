@@ -58,6 +58,18 @@ writes the `Measured routes` table in
 reference, since every route it names is a concrete Omp model or overlay --
 from them; a model and settings pair with no case row is listed `unmeasured`.
 
+[`RESULTS.md`](RESULTS.md) lists every committed record on one page: pass
+rate, price and wall time per run. `make evals-render-results` writes it, and
+`make check` fails when it is stale.
+
+From schema version 3, every case row carries a numeric `cost` in USD and an
+`elapsed_seconds` above zero. The price is the harness's own where it reports
+one (`cost_source: reported`), as Claude Code does. Omp and Codex report token
+counts only, so the recorder prices those tokens from
+[`prices.yaml`](prices.yaml) (`cost_source: computed`). A model with no entry
+there fails the recording, naming the model: add its published rates, then
+record again. Records at versions 1 and 2 stay as they are.
+
 ## Running them
 
 ```sh
@@ -66,6 +78,7 @@ make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
 make evals-run        # the whole suite on Claude Code, both variants. Real money.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 make evals-render-routes  # rewrite the Measured routes table from committed provenance
+make evals-render-results # rewrite RESULTS.md from committed provenance
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half

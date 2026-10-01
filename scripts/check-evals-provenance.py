@@ -15,6 +15,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 RECORDER = ROOT / "scripts" / "evals-record.py"
 RENDERER = ROOT / "scripts" / "evals-render-routes.py"
+RESULTS_RENDERER = ROOT / "scripts" / "evals-render-results.py"
 
 
 class Failed(Exception):
@@ -37,16 +38,21 @@ def require(condition: bool, message: str) -> None:
         raise Failed(message)
 
 
-def run_recorder(run_dir: Path, experiment: Path, output: Path, env: dict[str, str]) -> Path:
+def recorder_result(
+    run_dir: Path, experiment: Path, output: Path, env: dict[str, str], prices: Path | None = None
+) -> subprocess.CompletedProcess[str]:
+    """Run the recorder, against the committed price table unless `prices` names another."""
+    command = [sys.executable, str(RECORDER), str(run_dir), "--experiment", str(experiment), "--output", str(output)]
+    if prices is not None:
+        command += ["--prices", str(prices)]
+    return subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, check=False)
+
+
+def run_recorder(
+    run_dir: Path, experiment: Path, output: Path, env: dict[str, str], prices: Path | None = None
+) -> Path:
     """Run the recorder and return its generated record path."""
-    result = subprocess.run(
-        [sys.executable, str(RECORDER), str(run_dir), "--experiment", str(experiment), "--output", str(output)],
-        cwd=ROOT,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = recorder_result(run_dir, experiment, output, env, prices)
     require(result.returncode == 0, result.stderr or result.stdout)
     record = Path(result.stdout.strip())
     require(record.is_file(), "recorder did not write a record")
@@ -246,6 +252,191 @@ def check_renderer() -> None:
         require(rendered.count(renderer.START_MARKER) == 1 and rendered.count(renderer.END_MARKER) == 1, "the markers were duplicated or lost")
 
 
+# A price table for `requested-model`, the default the synthetic experiment
+# requests. `treated-model` has no entry here, so a run on it cannot be priced.
+PARTIAL_PRICE_TABLE = """\
+models:
+  requested-model:
+    input: 0.000001
+    output: 0.000002
+    cache_read: 0.0000001
+    cache_write: 0.000003
+    source: https://example.invalid/prices
+    read_on: 2026-10-01
+"""
+
+# The same table with `treated-model` priced too.
+PRICE_TABLE = PARTIAL_PRICE_TABLE + """\
+  treated-model:
+    input: 0.000002
+    output: 0.000004
+    cache_read: 0.0000002
+    cache_write: 0.000006
+    source: https://example.invalid/prices
+    read_on: 2026-10-01
+"""
+
+
+def validate(record: dict[str, Any], path: Path) -> subprocess.CompletedProcess[str]:
+    """Write `record` to `path` and run the recorder's validator on it."""
+    path.write_text(json.dumps(record))
+    return subprocess.run(
+        [sys.executable, str(RECORDER), str(path), "--experiment", str(path), "--validate"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def check_version_3_rules(record: dict[str, Any], temp: Path) -> None:
+    """Every version-3 case rule rejects a record that breaks it."""
+    require(validate(record, temp / "v3.json").returncode == 0, "a valid version-3 record was rejected")
+    breaks = {
+        "a missing cost": ("cost", None),
+        "a non-numeric cost": ("cost", "0.05"),
+        "an 'unreported' cost": ("cost", "unreported"),
+        "a boolean cost": ("cost", True),
+        "a negative cost": ("cost", -0.01),
+        "a missing cost source": ("cost_source", None),
+        "an unknown cost source": ("cost_source", "guessed"),
+        "a zero elapsed time": ("elapsed_seconds", 0),
+        "a negative elapsed time": ("elapsed_seconds", -1.0),
+        "a missing elapsed time": ("elapsed_seconds", None),
+    }
+    for name, (field, value) in breaks.items():
+        broken = json.loads(json.dumps(record))
+        if value is None:
+            del broken["cases"][0][field]
+        else:
+            broken["cases"][0][field] = value
+        result = validate(broken, temp / "v3-broken.json")
+        require(result.returncode != 0 and field in result.stdout, f"a version-3 record with {name} was accepted")
+    version_2 = json.loads(json.dumps(record))
+    version_2["schema_version"] = 2
+    version_2["cases"][0]["cost"] = "unreported"
+    require(
+        validate(version_2, temp / "v2.json").returncode == 0,
+        "a version-2 record with an unreported cost is no longer valid history",
+    )
+
+
+def check_unpriceable(run: dict[str, Any], run_dir: Path, experiment: Path, temp: Path, env: dict[str, str]) -> None:
+    """A token-only row the table cannot price, or with no tokens, fails to record."""
+    unpriced = json.loads(json.dumps(run))
+    unpriced_path = run_dir / "run.json"
+    prices = temp / "partial-prices.yaml"
+    prices.write_text(PARTIAL_PRICE_TABLE)
+    original = unpriced_path.read_text()
+    try:
+        # `treated-model`, requested by the with-plugin variant, has no entry.
+        unpriced_path.write_text(json.dumps(unpriced))
+        result = recorder_result(run_dir, experiment, temp / "unpriced", env, prices)
+        require(
+            result.returncode != 0 and "treated-model" in result.stderr and "price table" in result.stderr,
+            "a token-only row whose model has no price-table entry was recorded",
+        )
+        require(not (temp / "unpriced").exists(), "a record was written for a run that could not be priced")
+        thinking = temp / "thinking.yaml"
+        thinking.write_text(experiment.read_text().replace("treated-model", "requested-model:high"))
+        for row in unpriced["task_results"]:
+            row["agent_config"]["model"] = "requested-model:high" if row["variant_id"] == "with-plugin" else row["agent_config"]["model"]
+        unpriced_path.write_text(json.dumps(unpriced))
+        result = recorder_result(run_dir, thinking, temp / "thinking", env, prices)
+        require(result.returncode == 0, f"a :<level> suffix was not stripped for the price lookup: {result.stderr}")
+        for row in unpriced["task_results"]:
+            for field in ("input_tokens", "output_tokens"):
+                row.pop(field, None)
+        unpriced_path.write_text(json.dumps(unpriced))
+        result = recorder_result(run_dir, thinking, temp / "tokenless", env, prices)
+        require(
+            result.returncode != 0 and "neither a price nor token counts" in result.stderr and "requested-model" in result.stderr,
+            "a harness reporting neither a price nor tokens was recorded",
+        )
+        require("replicate 0 (SUCCESS)" in result.stderr, "an unpriceable row's error did not name its replicate and status")
+        for row in unpriced["task_results"]:
+            row["input_tokens"], row["output_tokens"] = 10, 10
+        for duration in (0.0, None):
+            unpriced["task_results"][2]["duration"] = duration
+            if duration is None:
+                del unpriced["task_results"][2]["duration"]
+            unpriced_path.write_text(json.dumps(unpriced))
+            result = recorder_result(run_dir, thinking, temp / "no-duration", env, prices)
+            require(
+                result.returncode != 0 and "no positive wall time" in result.stderr and "one/with-plugin replicate 0" in result.stderr,
+                f"a replicate with duration {duration!r} did not fail naming it",
+            )
+    finally:
+        unpriced_path.write_text(original)
+
+
+def load_results_renderer() -> Any:
+    """Import `evals-render-results.py` under a valid module name."""
+    spec = importlib.util.spec_from_file_location("evals_render_results", RESULTS_RENDERER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def check_results_renderer() -> None:
+    """The results page prices only what was priced, and `--check` catches a stale page."""
+    renderer = load_results_renderer()
+
+    def record(run_id: str, version: int, client: str, costs: list[Any], statuses: list[str], served: str = "m") -> dict[str, Any]:
+        return {
+            "schema_version": version,
+            "run_id": run_id,
+            "experiment_id": f"exp-{run_id}",
+            "started_at": f"2026-09-0{run_id[-1]}T10:00:00",
+            "completed_at": f"2026-09-0{run_id[-1]}T11:02:03",
+            "client": {"name": client},
+            "variants": [{"model_requested": "req", "model_served": served}],
+            "attempts": [
+                {"final_status": status, "answer_key_contact": ["reached"] if index == 9 else []}
+                for index, status in enumerate(statuses)
+            ],
+            "cases": [{"cost": cost} for cost in costs] if version > 1 else None,
+        }
+
+    with tempfile.TemporaryDirectory() as directory:
+        temp = Path(directory)
+        provenance = temp / "provenance"
+        provenance.mkdir()
+        records = {
+            "run1": record("run1", 1, "claude-code", [], ["SUCCESS", "FAILURE"]),
+            "run2": record("run2", 2, "omp", [0.5, 0.5], ["SUCCESS", "SUCCESS"], served="unknown"),
+            "run3": record("run3", 3, "omp", [1.0, 2.0, 0.5], ["SUCCESS", "SUCCESS", "FAILURE"]),
+            "run4": record("run4", 3, "codex", [0.25], ["FAILURE"]),
+            "run5": record("run5", 2, "claude-code", [1.0, "unreported"], ["SUCCESS", "SUCCESS"]),
+        }
+        for name, value in records.items():
+            (provenance / f"{name}.json").write_text(json.dumps(value))
+        page = renderer.render_page(renderer.load_records(provenance))
+        rows = [line for line in page.splitlines() if line.startswith("| 2026-")]
+        require(len(rows) == len(records), "the results page did not carry one row per record")
+        require(
+            "| 2026-09-01 | exp-run1 | claude-code | m | 2 | 1/2 | not recorded | not recorded | 1h 02m 03s |" in rows,
+            "a record with no price was not shown `not recorded`",
+        )
+        require(
+            "| 2026-09-02 | exp-run2 | omp | req (requested) | 2 | 2/2 | not recorded | not recorded | 1h 02m 03s |" in rows,
+            "a version-2 non-Claude price -- the judge's alone -- was shown, or the requested model was not marked",
+        )
+        require("| 3 | 2/3 | $3.50 | $1.75 |" in rows[2], "a version-3 price or its per-completed-task figure was wrong")
+        require("| 1 | 0/1 | $0.25 | no task completed |" in rows[3], "a run with no pass divided by zero")
+        require("| not recorded | not recorded |" in rows[4], "a partly priced record was shown as a whole price")
+        require("$0.00" not in page, "a missing price was rendered as $0")
+
+        target = temp / "RESULTS.md"
+        target.write_text(page)
+        script = [sys.executable, str(RESULTS_RENDERER), "--provenance-dir", str(provenance), "--target", str(target), "--check"]
+        fresh = subprocess.run(script, capture_output=True, text=True, check=False)
+        require(fresh.returncode == 0, f"a fresh page was reported stale: {fresh.stderr}")
+        (provenance / "run6.json").write_text(json.dumps(record("run6", 3, "omp", [1.0], ["SUCCESS"])))
+        stale = subprocess.run(script, capture_output=True, text=True, check=False)
+        require(stale.returncode != 0 and "stale" in stale.stderr, "a page missing a committed record's row passed --check")
+
+
 def validate_committed_records() -> None:
     """Validate every committed provenance record in the repository."""
     records_dir = ROOT / "evals" / "provenance"
@@ -352,6 +543,9 @@ def check_contaminated_replicate(temp: Path) -> None:
                         "replicate_index": index,
                         "weighted_score": 1.0,
                         "agent_config": {"type": "claude-code", "model": "m"},
+                        "duration": 30.0,
+                        "agent_cost_usd": 0.1,
+                        "total_cost_usd": 0.1,
                     }
                     for index in (0, 1)
                 ],
@@ -433,6 +627,9 @@ def main() -> int:
                             "tags": ["model-classes", "class:mechanical"],
                             "duration": 12.5,
                             "total_tokens": 1000,
+                            "input_tokens": 600,
+                            "output_tokens": 400,
+                            "agent_cost_usd": 0.04,
                             "total_cost_usd": 0.05,
                         },
                         {
@@ -445,6 +642,13 @@ def main() -> int:
                             "status": "FAILURE",
                             "tags": ["model-classes", "class:mechanical"],
                             "duration": 9.0,
+                            "input_tokens": 100,
+                            "output_tokens": 10,
+                            "cache_read_input_tokens": 1000,
+                            "cache_creation_input_tokens": 50,
+                            "agent_cost_usd": None,
+                            "judge_cost_usd": 0.5,
+                            "total_cost_usd": 0.5,
                         },
                         {
                             "task_id": "one",
@@ -457,6 +661,10 @@ def main() -> int:
                             "status": "SUCCESS",
                             "tags": [],
                             "duration": 5.0,
+                            "input_tokens": 100,
+                            "output_tokens": 100,
+                            "agent_cost_usd": 0.02,
+                            "total_cost_usd": 0.02,
                         },
                     ],
                 }
@@ -487,9 +695,11 @@ def main() -> int:
                 }
             )
         )
+        prices = temp / "prices.yaml"
+        prices.write_text(PRICE_TABLE)
         base_env = os.environ.copy()
         base_env.pop("CLAUDE_CODE_SESSION_ID", None)
-        laptop = json.loads(run_recorder(run_dir, experiment, temp / "laptop", base_env).read_text())
+        laptop = json.loads(run_recorder(run_dir, experiment, temp / "laptop", base_env, prices).read_text())
         require(laptop["host"]["kind"] == "laptop", "laptop run was not recorded as laptop")
         require(laptop["variants"][0]["model_served"] == "unknown", "missing served model was fabricated")
         require(laptop["variants"][1]["model_requested"] == "treated-model", "variant request was not recorded")
@@ -497,14 +707,18 @@ def main() -> int:
         require(laptop["client"]["name"] == "claude-code", "client type was not read from agent_config")
         require(len(laptop["attempts"]) == 3, "attempt-level evidence was not recorded")
         require(laptop["attempts"][0]["criteria"][0]["criterion_type"] == "synthetic", "criterion evidence was not recorded")
-        require(laptop["schema_version"] == 2, "schema_version was not bumped to 2")
+        require(laptop["schema_version"] == 3, "schema_version was not bumped to 3")
         require(len(laptop["cases"]) == 3, "case rows were not recorded one per task result")
         passed, failed = laptop["cases"][0], laptop["cases"][1]
         require(passed["class"] == "mechanical", "class tag was not read from the row's tags")
         require(passed["outcome"] == "succeeded", "a SUCCESS status did not categorise as succeeded")
         require(failed["outcome"] == "failed", "a FAILURE status did not categorise as failed")
         require(passed["tokens"] == 1000 and passed["cost"] == 0.05, "reported tokens/cost were not recorded")
-        require(failed["tokens"] == "unreported" and failed["cost"] == "unreported", "missing tokens/cost were not marked unreported")
+        require(passed["cost_source"] == "reported", "a harness-reported price was not marked reported")
+        # 100 x 1e-6 + 10 x 2e-6 + 1000 x 1e-7 + 50 x 3e-6, plus the 0.5 judge.
+        require(abs(failed["cost"] - 0.50037) < 1e-9, f"a token-only row was mispriced: {failed['cost']}")
+        require(failed["cost_source"] == "computed", "a table-priced row was not marked computed")
+        require(failed["tokens"] == "unreported", "missing total tokens were not marked unreported")
         require(passed["model_served"] == "unreported", "case model_served used a different sentinel than 'unreported'")
         require(passed["model_requested"] == "requested-model", "case model_requested was not read from the experiment")
         require(passed["settings"] == "synthetic", "case settings did not carry the experiment_id")
@@ -514,8 +728,18 @@ def main() -> int:
         for row in run["task_results"]:
             row["agent_config"]["type"] = "omp"
             row["model_used"] = "requested-model"
+            row["agent_cost_usd"] = None
         (run_dir / "run.json").write_text(json.dumps(run))
-        omp = json.loads(run_recorder(run_dir, experiment, temp / "omp", base_env).read_text())
+        omp = json.loads(run_recorder(run_dir, experiment, temp / "omp", base_env, prices).read_text())
+        require(
+            all(case["cost_source"] == "computed" for case in omp["cases"]),
+            "a token-only harness's judge-only total was recorded as its reported price",
+        )
+        require(
+            abs(omp["cases"][0]["cost"] - 0.0014) < 1e-9,
+            "a token-only row was priced from total_cost_usd instead of its tokens",
+        )
+        check_unpriceable(run, run_dir, experiment, temp, base_env)
         require(omp["variants"][0]["model_served"] == "unknown", "Omp request was recorded as served")
         require(
             all(case["model_served"] == "unreported" for case in omp["cases"]),
@@ -566,7 +790,7 @@ def main() -> int:
         run["task_results"][1]["agent_config"]["model"] = "requested-model"
         (run_dir / "run.json").write_text(json.dumps(run))
         cloud_env = {**base_env, "CLAUDE_CODE_SESSION_ID": "session-123"}
-        cloud = json.loads(run_recorder(run_dir, experiment, temp / "cloud", cloud_env).read_text())
+        cloud = json.loads(run_recorder(run_dir, experiment, temp / "cloud", cloud_env, prices).read_text())
         require(cloud["host"]["kind"] == "cloud", "web session was not recorded as cloud")
         require(cloud["host"]["session_id"] == "session-123", "session id was not recorded")
         missing = dict(cloud)
@@ -637,7 +861,9 @@ def main() -> int:
             result.returncode != 0 and "model_requested" in result.stdout,
             "a case row missing model_requested was accepted",
         )
+        check_version_3_rules(laptop, temp)
     check_renderer()
+    check_results_renderer()
     return 0
 
 
