@@ -1016,10 +1016,10 @@ carries no plugin and no ablation, one variant per case, because the question
 is whether a given model, run in the `task` role real dispatch would put it
 in, finishes ordinary delegated work and leaves its own tests passing.
 
-**What it measures.** Three cases today, all from `jmcvetta/career`: two
-`mechanical` and one `implementation`, the smallest qualifying candidates of
-each `class:` tag by changed lines whose answer key the issue decides, each
-verified once at build time to fail on the base SHA and pass on
+**What it measures.** Six cases today, all from `jmcvetta/career`: three
+`mechanical` and three `implementation`, small qualifying candidates whose
+answer key asserts only what the issue decides (two of them by a recorded
+trim, below), each verified at build time to fail on the base SHA and pass on
 the merge SHA before it was shipped. A case's `initial_prompt` is the title
 and body of the issue the pull request closed, and names neither number; its
 three `run_command` criteria check, in order,
@@ -1105,19 +1105,22 @@ or wording the issue leaves open fails a model that did exactly what was asked;
 `--exclude owner/repo#N=reason` takes such a case out for good and deletes its
 fixture.
 
-Where only a few assertions overreach, trim the key instead. **A key may be
-trimmed only by removing assertions the issue does not decide, never by
-adding one.** Apply the full key to a checkout of the base SHA, delete the
+Where only a few assertions overreach, trim the key instead. **A trim
+removes requirements the source issue does not decide, and nothing else.** An
+exact-output assertion may be replaced by a weaker behavioural one that keeps
+the diagnostic or safety contract the issue requires. A trim never adds a
+product requirement, never removes a required behaviour, and is never tuned
+to a model's output. Apply the full key to a checkout of the base SHA, delete the
 assertions or tests the issue leaves open, and diff against the base SHA
 (`git add -N` any new file first); the result replaces the case's
-`tests.patch`. `--trim-key owner/repo#N=reason` records the trim and its
-reason on the candidate, and a trimmed case refuses a rebuild from the pull
+`tests.patch`. `--trim-key owner/repo#N=reason` records each replacement and
+its source-contract rationale on the candidate, and a trimmed case refuses a rebuild from the pull
 request's diff. `--verify-case owner/repo#N` then runs the build-time check
 on the committed key: it must fail on the base SHA and pass on the merge SHA,
 both applied through `shared/apply-tests.sh`, and the manifests must match it.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
-`implementation`) before it can be selected; one shipped case carries one,
+`implementation`) before it can be selected; four shipped cases carry one,
 reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
