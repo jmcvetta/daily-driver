@@ -62,6 +62,8 @@ The pull request
 | `The gate` | Read CI on the head | `mcp__github__pull_request_read`, **both** `get_check_runs` and `get_status` |
 | `The gate` | Read the review threads | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments` and `get_comments` — `review-cycle`'s reference owns them |
 | `The gate` | Read the review record | `mcp__github__pull_request_read`, method `get_comments` — the round's own `Review` and `Review verification` comments |
+| `The gate` | Read the completion notice | `mcp__github__pull_request_read`, method `get_comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
+| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `mcp__github__add_issue_comment` |
 | `The gate` | Read the Blockers section | `mcp__github__pull_request_read`, method `get` — `body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
@@ -213,8 +215,10 @@ states the whole check-in, self-contained, in this order:
    assessment. A changed head invalidates earlier CI and readiness evidence.
    Pending or unregistered checks use `review-cycle`'s bounded wait; failed
    checks return to `Fix, answer, resolve, push`, and missing logs remain an
-   evidence blocker. Continue the remaining review or ready-gate work when CI
-   permits it. A capped wait, review wall, or human action reports unfinished
+   evidence blocker. When CI on the current head is green and the gate's
+   notice read finds no completion notice, post the notice before continuing
+   the ready-gate work. Continue the remaining review or ready-gate work when
+   CI permits it. A capped wait, review wall, or human action reports unfinished
    work and its resume path; it never becomes completion.
 
 The slot it occupies is the same slot `review-cycle`'s wait borrows and hands

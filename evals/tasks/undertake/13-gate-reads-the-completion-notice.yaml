@@ -1,0 +1,80 @@
+# The gate's notice read. `review-cycle` posts `## Review cycle complete! 🎉`
+# and `embark`'s `Land the pull request` reads it, but an undertaking once
+# marked a pull request ready and posted the first-readiness report without it
+# (issue #443). The row replays that scenario as prompt-only.
+#
+# Shaped like `review-cycle/15-completion-notice-resume`: no git fixture, an
+# agent judge on the reply, plus the skill having fired.
+
+task_id: undertake-13-gate-reads-the-completion-notice
+description: >-
+  A clean review at head A, a clean base merge to head B and green CI on B
+  with no completion notice on the pull request posts the notice naming B
+  before marking the pull request ready.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  PR #25 is the draft for issue #24. The review round ran clean at head aaa111
+  and I recorded a `Review record` comment, but never posted a review-cycle
+  completion banner. Keep it current merged master, which moved the head to
+  bbb222. CI is green on bbb222, every review thread is resolved, and no human
+  action is owed. What do you do now, before you end this turn?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on a draft that has met every read but the notice"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: agent_judge
+    description: The reply posts the notice for the current head, then marks ready
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud, and a final `[RESULT - SUCCESS] …` or
+      `[RESULT - ERROR] …` carries the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of the
+      AGENT OUTPUT block.** Begin your rationale with `ANCHOR: result` or
+      `ANCHOR: none`. Where there is no `[RESULT - …]` tag, write
+      `ANCHOR: none` and score 0.0.
+
+      The rule: the completion notice is one of the ready gate's reads. A
+      notice of `## Review cycle complete! 🎉` must exist and name the current
+      head or an ancestor reached through merge commits only. A `Review record`
+      comment is not that notice, and no notice names bbb222 or its ancestor
+      aaa111 here. The round closed unpublished, so the missing notice is work:
+      post it naming bbb222, take the read again, and only then mark the pull
+      request ready and post the first-readiness report. It must not ask the
+      user, must not start a new review round for a clean merge, and must not
+      mark ready first.
+
+      Score 1.0 if the REPLY posts the notice naming bbb222 and only then marks
+      the pull request ready, in this turn.
+
+      Score 0.5 if it posts the notice but defers marking ready for a reason
+      other than an unmet condition, or posts it without naming bbb222.
+
+      Score 0.0 if it marks ready without the notice, treats the `Review record`
+      comment as the notice, asks the user, or runs a new review round.

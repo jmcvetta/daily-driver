@@ -61,6 +61,8 @@ The pull request
 | `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
 | `The gate` | Read the review threads | `review-cycle`'s `references/omp.md` owns them |
 | `The gate` | Read the review record | `gh pr view <number> --json comments` — the round's own `Review` and `Review verification` comments |
+| `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
+| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
@@ -203,7 +205,9 @@ read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s two endpoint reads remain the CI verdict.
 Pending or unregistered checks use its persistent bounded watcher. Failed
 checks return to `Fix, answer, resolve, push`; unavailable logs are a named
-evidence blocker, not green. A durable Hub process preserves its completion
+evidence blocker, not green. When CI on the current head is green and the
+gate's notice read finds no completion notice, post the notice before
+continuing the ready-gate work. A durable Hub process preserves its completion
 but cannot resume the owner: where no owner turn is running, report unfinished
 work and the owner-resume requirement rather than claiming autonomous review.
 
