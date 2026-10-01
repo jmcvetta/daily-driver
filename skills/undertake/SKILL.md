@@ -624,7 +624,7 @@ sequence stops, and the reason is stated in one line.
    owed — a clean review produces no verification record, so waiting for one
    waits forever.
 5. **The completion notice covers the current head.** Read the pull request's
-   conversation comments to the last page. The read holds when a comment
+   conversation comments to the last page and take the latest comment that
    starts with `## Review cycle complete! 🎉`, is written by the account that
    posted the claim, and names the current head SHA or an ancestor of it
    reached by walking the head's first parents through merge commits only.
