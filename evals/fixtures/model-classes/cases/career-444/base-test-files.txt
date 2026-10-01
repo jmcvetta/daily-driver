@@ -1,0 +1,3 @@
+kokoro/pipeline/tests/test_llm_agents.py
+kokoro/pipeline/tests/test_manifest.py
+kokoro/pipeline/tests/test_stages_registry.py

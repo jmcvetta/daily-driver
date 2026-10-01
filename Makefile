@@ -13,7 +13,7 @@ SHELL := /bin/bash
 	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
 	check-review-cycle-fix-delta-route check-provenance check-verse \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
+	check-model-classes-builder check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
@@ -104,7 +104,8 @@ check-runtime: check-constitution check-ask-in-chat check-omp-extension check-mo
 	check-task-worktree-fixture check-scripts
 
 check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-eval-arms check-evals-preflight check-evals-provenance check-model-telemetry
+	check-model-classes-builder check-eval-arms check-evals-preflight check-evals-provenance \
+	check-model-telemetry
 
 
 check-issue-infra: check-labels check-labels-fixtures check-story-fixtures
@@ -346,6 +347,11 @@ check-eval-fixtures:
 # the script's header.
 check-model-classes-grader:
 	scripts/check-model-classes-grader.sh
+
+# check-model-classes-builder: the case builder's offline self-tests, which
+# every invocation runs first -- here with no token and no network.
+check-model-classes-builder:
+	python3 scripts/evals-cases-from-prs.py --self-test
 
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.

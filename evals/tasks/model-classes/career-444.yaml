@@ -1,0 +1,48 @@
+task_id: model-classes-career-444
+description: >-
+  jmcvetta/career#444: refactor(kokoro): move stage name tuples into a leaf module
+tags: [model-classes, class:mechanical]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/model-classes/shared
+      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/career-444
+
+pre_run:
+  - command: bash .fixture/clone-base.sh jmcvetta/career 5bc7cc200238e5f948646ead2bc25f0e2f9b3a2c
+    timeout: 120
+
+agent:
+  allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+run_limits:
+  max_turns: 30
+  task_timeout: 780
+  turn_timeout: 660
+
+initial_prompt: "This is jmcvetta/career, checked out at a past commit. Implement the change the issue below describes. Work from this checkout and the issue text alone: do not fetch from jmcvetta/career, and do not look it up on GitHub.\n\n# Move the stage name tuples out of the stage registry into a leaf module\n\n`STAGE_NAMES` and `LLM_STAGES` move to a new leaf module `kokoro_pipeline/stages/names.py`, so `config.py`, `report.py` and `manifest.py` depend on the names alone and a registry edit no longer implicates everything that reads settings.\n\n*Config asks one thing,*\n*the list of names, and is bound*\n*to the whole table.*\n\n## Summary\n\n`kokoro_pipeline/config.py` imports `LLM_STAGES` from `kokoro_pipeline/stages/__init__.py` to validate the `[models]` table, and 24 source and test files depend on `config`. So any edit to the stage registry, whether a `reads` column, a docstring or a new spec field, statically implicates every one of them, plus `report.py` and `manifest.py`, which import `STAGE_NAMES` the same way. Probed with snob (#436), an edit to `stages/__init__.py` selects 19 of the 44 test files. The three consumers need only the two name tuples. This task gives them a module that holds only those.\n\n## Detail\n\n### The change\n\n- New `kokoro_pipeline/stages/names.py`, importing nothing from the package: `STAGE_NAMES: tuple[str, ...]` as a literal tuple in registry order, and `LLM_STAGES: tuple[str, ...]` as a literal tuple, each with the doc comment the registry carries for it today (`LLM_STAGES` is every stage `llm.agents.agent_for` can build an `Agent` for; `discard-obvious-misses` is the one stage below the agent boundary).\n- `stages/__init__.py` imports both from `names` and drops its own derivations of them. `STAGE_REGISTRY`, `STAGE_BY_NAME` and `StageSpec` stay where they are.\n- `config.py`, `report.py` and `manifest.py` import from `kokoro_pipeline.stages.names`. `flow.py` and `dossier.py` keep importing the registry; they read `StageSpec` rows.\n- Tests that use only the names follow the same rule: `test_manifest.py` (`STAGE_NAMES`) and `test_llm_agents.py` (`LLM_STAGES`). `test_dossier.py` also reads `STAGE_BY_NAME`, so it keeps the registry import.\n\n### The invariant, and its test\n\nThe registry is the source of truth for what a stage is; `names.py` is a transcription of one column, and a transcription needs a reader. `kokoro/pipeline/tests/test_stages_registry.py` already asserts the registry against the TypeScript sources it is transcribed from; add two assertions there in the same style: `names.STAGE_NAMES == tuple(spec.name for spec in STAGE_REGISTRY)`, and `names.LLM_STAGES == tuple(spec.name for spec in STAGE_REGISTRY if spec.cost != \"mechanical\")`. A stage added to the registry and not to `names.py` fails there.\n\n### What this does and does not change\n\nPython still executes `stages/__init__.py` when anything imports `stages.names`, so at runtime nothing is decoupled; the registry imports only `dataclasses` and `typing`, so that costs nothing. What changes is the static import graph a selector reads, which is the point.\n\n### Verification\n\n- `make test-python-kokoro` green, CI green.\n- On the pull request, record the `snob_lib.get_tests` count for an edit to `stages/__init__.py` before and after (procedure in #436). Before: 19 files.\n\n### Non-goals\n\n- Not changing any stage's spec, name or order.\n- Not moving `StageSpec`, `STAGE_REGISTRY` or `STAGE_BY_NAME`.\n\nModel: claude-sonnet-5\n"
+
+success_criteria:
+  - type: run_command
+    description: No test file present at the base SHA was deleted
+    command: bash .fixture/check-no-deleted.sh
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: No skip or xfail marker was added to a test file
+    command: bash .fixture/check-no-skip.sh
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: The pull request's own tests pass after applying tests.patch
+    command: bash .fixture/apply-tests.sh && cd kokoro && uv run pytest pipeline/tests/test_llm_agents.py pipeline/tests/test_manifest.py pipeline/tests/test_stages_registry.py
+    timeout: 720
+    weight: 3
