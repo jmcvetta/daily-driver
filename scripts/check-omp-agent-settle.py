@@ -26,6 +26,14 @@ THE INVARIANT
     call with its parameters, and the real `SkillTriggeredChecker` must score
     that record 1.0 -- the watcher's pass and the final score cannot disagree.
 
+THE ROLES PIN
+
+    An arm's `model_roles` must reach the throwaway home's `config.yml` as
+    Omp's `modelRoles`, beside the skill-commands setting, and an arm without
+    them must get no `modelRoles` at all. Unpinned, Omp's helper roles and
+    subagents run on whatever the provider catalog offers, a model the arm
+    does not measure. Found while preparing the first GPT 6 Luna run.
+
 NEEDS
 
     The pinned `coder_eval` (for the agent base class), and nothing else. No
@@ -212,8 +220,32 @@ async def run_scenario() -> None:
     )
 
 
+def check_model_roles() -> None:
+    """`model_roles` lands in the throwaway home's config.yml, and only then."""
+    import yaml
+
+    from coder_eval_omp.agent import OmpAgent, OmpAgentConfig
+
+    roles = {"smol": "vercel-ai-gateway/openai/gpt-6-luna", "task": "vercel-ai-gateway/openai/gpt-6-luna"}
+    for given, expected in ((roles, roles), ({}, None)):
+        home = Path(tempfile.mkdtemp(prefix="omp-roles-check-"))
+        agent = OmpAgent(OmpAgentConfig(type="omp", model_roles=given), task_id="roles-check")
+        agent._prepare_home(home)
+        written = yaml.safe_load((home / ".omp" / "agent" / "config.yml").read_text())
+        check(
+            written.get("skills") == {"enableSkillCommands": True},
+            f"config.yml must keep skill commands on, got {written}",
+        )
+        check(
+            written.get("modelRoles") == expected,
+            f"model_roles {given} must write modelRoles {expected}, got {written.get('modelRoles')}",
+        )
+    print("check-omp-agent-settle: model_roles reaches the throwaway home's config.yml, and only when set")
+
+
 def main() -> None:
     asyncio.run(run_scenario())
+    check_model_roles()
 
 
 if __name__ == "__main__":

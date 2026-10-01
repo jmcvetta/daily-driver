@@ -126,6 +126,15 @@ PROTOCOL_EVIDENCE_FILENAME = "omp-protocol-observations.json"
 
 
 
+def omp_config_text(model_roles: dict[str, str]) -> str:
+    """The throwaway home's `config.yml`: skill commands on, and `model_roles`
+    as `modelRoles` when any are given. JSON flow style is valid YAML, so no
+    YAML writer is needed."""
+    if not model_roles:
+        return _OMP_CONFIG
+    return _OMP_CONFIG + f"modelRoles: {json.dumps(model_roles, sort_keys=True)}\n"
+
+
 class OmpAgentConfig(BaseAgentConfig):
     """Configuration for the `omp` agent kind.
 
@@ -163,6 +172,15 @@ class OmpAgentConfig(BaseAgentConfig):
 
     extra_args: list[str] = []
     """Arguments appended to the `omp --mode rpc` command line, verbatim."""
+
+    model_roles: dict[str, str] = {}
+    """Omp `modelRoles` for the throwaway home, role name to `provider/modelId`.
+
+    `model` sets only the session's own model. Omp's other roles -- `smol`,
+    `task`, `commit`, `tiny` and the rest -- otherwise fall to whatever the
+    provider catalog offers, so helper calls and subagents run on a model the
+    arm does not measure. An arm pins them here.
+    """
 
 
 class OmpAgent(Agent[OmpAgentConfig]):
@@ -629,7 +647,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     real,
                 )
 
-        (agent_dir / "config.yml").write_text(_OMP_CONFIG, encoding="utf-8")
+        (agent_dir / "config.yml").write_text(omp_config_text(self.config.model_roles), encoding="utf-8")
 
     async def _link_plugins(self, binary: str, home: Path) -> None:
         """Install every `plugins:` root into the throwaway home.
