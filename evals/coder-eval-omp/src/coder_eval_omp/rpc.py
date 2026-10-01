@@ -116,6 +116,16 @@ USAGE_KEYS: dict[str, tuple[str, ...]] = {
 # Sub-objects a usage payload might be nested under on `agent_end`.
 USAGE_CONTAINERS = ("usage", "telemetry", "tokens", "stats", "tokenUsage")
 
+# Omp's own accounting: `agent_end` carries `messages`, the turn's new messages,
+# and each assistant message carries `usage` in pi-ai's spelling. Checked
+# against Omp 18.4.9, whose frames carry no other counts.
+MESSAGE_USAGE_KEYS: dict[str, str] = {
+    "uncached_input_tokens": "input",
+    "output_tokens": "output",
+    "cache_read_input_tokens": "cacheRead",
+    "cache_creation_input_tokens": "cacheWrite",
+}
+
 # The frame types this module knows what to do with. A turn that recognized
 # NONE of them captured no telemetry, and the agent crashes it rather than
 # reporting a clean empty success — `coder_eval`'s OpenCode agent learned that
@@ -288,6 +298,30 @@ def extract_usage(payload: dict[str, Any]) -> tuple[dict[str, int], list[str]]:
                 found[bucket] = int(value)
                 seen.append(spelling)
                 break
+    if not found:
+        found, seen = _message_usage(payload.get("messages"))
+    return found, seen
+
+
+def _message_usage(messages: Any) -> tuple[dict[str, int], list[str]]:
+    """Token counts summed over the assistant messages' `usage`, and the keys
+    found, each named as `messages[].usage.<key>`."""
+    found: dict[str, int] = {}
+    seen: list[str] = []
+    for message in messages if isinstance(messages, list) else []:
+        if not isinstance(message, dict) or message.get("role") != "assistant":
+            continue
+        usage = message.get("usage")
+        if not isinstance(usage, dict):
+            continue
+        for bucket, key in MESSAGE_USAGE_KEYS.items():
+            value = usage.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                continue
+            found[bucket] = found.get(bucket, 0) + int(value)
+            name = f"messages[].usage.{key}"
+            if name not in seen:
+                seen.append(name)
     return found, seen
 
 
