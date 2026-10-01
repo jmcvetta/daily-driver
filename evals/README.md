@@ -850,8 +850,8 @@ make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
 Each experiment pins one provider/model ID, and the Omp home the agent borrows
-must configure it. The GPT 6 rows are not yet confirmed against that catalog:
-check them with `omp models find` before the first paid run.
+must configure it. The GPT 6 rows use the Vercel AI Gateway routes
+`omp_configs/gpt.gateway.yml` names, which need `AI_GATEWAY_API_KEY`.
 
 | Experiment | Model |
 | --- | --- |
@@ -859,8 +859,8 @@ check them with `omp models find` before the first paid run.
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
-| `omp-gpt-6-sol.yaml` | `openai-codex/gpt-6-sol` |
-| `omp-gpt-6-luna.yaml` | `openai-codex/gpt-6-luna` |
+| `omp-gpt-6-sol.yaml` | `vercel-ai-gateway/openai/gpt-6-sol` |
+| `omp-gpt-6-luna.yaml` | `vercel-ai-gateway/openai/gpt-6-luna` |
 
 It needs `omp` on PATH and a model configured in the caller's own
 `~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway

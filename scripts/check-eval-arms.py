@@ -122,8 +122,8 @@ ARMS: dict[str, dict[str, object]] = {
             "omp-glm-5.3-flash.yaml": "vercel-ai-gateway/zai/glm-5.3-flash",
             "omp-deepseek-v4-pro.yaml": "vercel-ai-gateway/deepseek/deepseek-v4-pro",
             "omp-gpt-5.6-sol.yaml": "openai-codex/gpt-5.6-sol",
-            "omp-gpt-6-sol.yaml": "openai-codex/gpt-6-sol",
-            "omp-gpt-6-luna.yaml": "openai-codex/gpt-6-luna",
+            "omp-gpt-6-sol.yaml": "vercel-ai-gateway/openai/gpt-6-sol",
+            "omp-gpt-6-luna.yaml": "vercel-ai-gateway/openai/gpt-6-luna",
         },
         "run_targets": {
             "evals-run-omp-glm-5-3": "omp-glm-5.3.yaml",
