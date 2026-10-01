@@ -436,10 +436,16 @@ check-infra:
 # `coder-eval-codex` declares `coder-eval[codex]`, so the Codex SDK arrives with
 # it. The pin above stays extras-free on purpose: the extra belongs to the one
 # arm that needs it, not to the two that do not.
+#
+# Both local agents keep one version, so uv would reuse its cached build and an
+# edit to either would never reach the harness. `--reinstall-package` rebuilds
+# them from the working tree every time.
 evals-install:
 	uv tool install --python 3.13 coder-eval==$(CODER_EVAL_VERSION) \
 		--with ./evals/coder-eval-omp \
-		--with ./evals/coder-eval-codex
+		--with ./evals/coder-eval-codex \
+		--reinstall-package coder-eval-omp \
+		--reinstall-package coder-eval-codex
 
 # evals-plan: validate every eval case without calling a model. Free, and it
 # catches the config errors that otherwise cost a paid run to discover -- so
