@@ -36,6 +36,13 @@ REQUIRED_RECORD_FIELDS = {
     "attempts",
 }
 
+# The per-token rates every `evals/prices.yaml` entry gives, in USD.
+PRICE_RATE_FIELDS = ("input", "output", "cache_read", "cache_write")
+
+# The schema version `build_record` writes. Version 3 makes a numeric price
+# and a positive per-replicate wall time required on every case row.
+SCHEMA_VERSION = 3
+
 
 def command_version(command: str) -> str:
     """Return a client version, or ``unknown`` when the client is unavailable."""
@@ -170,30 +177,131 @@ def row_outcome(status: str) -> str:
     return _STATUS_OUTCOME.get(status, "unreported")
 
 
-def run_cases(run: dict[str, Any], experiment_id: str, requested: dict[str, str], client_name: str) -> list[dict[str, Any]]:
+def load_prices(path: Path) -> dict[str, dict[str, Any]]:
+    """Read the committed price table, keyed by model id.
+
+    Every entry must give numeric per-token `input`, `output`, `cache_read` and
+    `cache_write` rates in USD, the `source` URL they were read from, and the
+    date they were read on (`read_on`). A malformed entry is an error, never a
+    zero: a price computed from a missing rate is a guessed price.
+    """
+    if yaml is None:
+        raise RuntimeError("PyYAML is required to read the price table")
+    document = yaml.safe_load(path.read_text()) or {}
+    models = document.get("models") if isinstance(document, dict) else None
+    if models is None:
+        models = {}
+    if not isinstance(models, dict):
+        raise ValueError(f"{path}: models must be a mapping of model id to rates")
+    for model, entry in models.items():
+        if not isinstance(entry, dict):
+            raise ValueError(f"{path}: {model} must be a mapping")
+        for field in PRICE_RATE_FIELDS:
+            value = entry.get(field)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+                raise ValueError(f"{path}: {model}.{field} must be a non-negative number (USD per token)")
+        for field in ("source", "read_on"):
+            if not str(entry.get(field) or "").strip():
+                raise ValueError(f"{path}: {model}.{field} must be non-empty")
+    return models
+
+
+def price_key(model: str) -> str:
+    """The price-table key for a requested model: the id without a trailing
+    `:<level>` thinking suffix, which changes the tokens spent, not the rate."""
+    return model.rsplit(":", 1)[0] if ":" in model.rsplit("/", 1)[-1] else model
+
+
+def _number(value: Any) -> bool:
+    """Whether `value` is a real number rather than a bool or a sentinel."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def row_label(row: dict[str, Any]) -> str:
+    """Name one task result for an error: task, variant, replicate and status,
+    plus the harness's own error message where it recorded one."""
+    label = (
+        f"{row.get('task_id', 'unknown')}/{row.get('variant_id', 'unknown')} "
+        f"replicate {row.get('replicate_index', 0)} ({row.get('status', 'no status')})"
+    )
+    error = row.get("error_message")
+    return f"{label}, error: {error}" if error else label
+
+
+def case_price(row: dict[str, Any], model: str, prices: dict[str, dict[str, Any]]) -> tuple[float, str]:
+    """The USD price of one task result, and whether it was `reported` or `computed`.
+
+    The harness's own figure wins where the subject agent was priced: the row's
+    `total_cost_usd` is then the whole bill, judge included. A row whose agent
+    spend is unpriced -- a token-only harness -- prices the agent's tokens from
+    `prices` and adds whatever judge and simulator spend was reported. Its
+    `total_cost_usd` is not used, because there it holds the judge alone.
+    Raises ValueError, naming the model, where there is neither a reported
+    price nor tokens and a price-table entry to compute one from.
+    """
+    task = row_label(row)
+    if _number(row.get("agent_cost_usd")):
+        total = row.get("total_cost_usd")
+        return (float(total) if _number(total) else float(row["agent_cost_usd"])), "reported"
+    if not _number(row.get("input_tokens")) or not _number(row.get("output_tokens")):
+        raise ValueError(
+            f"{task}: the harness reported neither a price nor token counts for model {model}. "
+            "A replicate that crashed before reporting usage has no price to record; "
+            "a price-table entry cannot supply one"
+        )
+    key = price_key(model)
+    rates = prices.get(key)
+    if rates is None:
+        raise ValueError(f"{task}: no entry for model {key} in the price table; add its rates rather than guess")
+    tokens = {
+        "input": row["input_tokens"],
+        "output": row["output_tokens"],
+        "cache_read": row.get("cache_read_input_tokens") or 0,
+        "cache_write": row.get("cache_creation_input_tokens") or 0,
+    }
+    agent = sum(tokens[field] * rates[field] for field in PRICE_RATE_FIELDS)
+    overhead = sum(row[field] for field in ("judge_cost_usd", "simulator_cost_usd") if _number(row.get(field)))
+    return agent + overhead, "computed"
+
+
+def run_cases(
+    run: dict[str, Any],
+    experiment_id: str,
+    requested: dict[str, str],
+    client_name: str,
+    prices: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
     """One row per task result in `run`: model, settings, class, outcome,
-    elapsed seconds, tokens and cost -- `evals-render-routes.py`'s input for
-    the measured-routes table.
+    elapsed seconds, tokens, price and the price's source --
+    `evals-render-routes.py`'s and `evals-render-results.py`'s input.
     """
     cases = []
     for row in run.get("task_results", []):
         variant_id = row.get("variant_id")
         model_served = "unreported" if client_name == "omp" else (row.get("model_used") or "unreported")
         tokens = row.get("total_tokens")
-        cost = row.get("total_cost_usd")
+        model_requested = requested.get(variant_id, "unknown")
+        cost, cost_source = case_price(row, model_requested, prices)
+        elapsed = row.get("duration")
+        if not _number(elapsed) or elapsed <= 0:
+            raise ValueError(
+                f"{row_label(row)}: no positive wall time (duration {elapsed!r}); "
+                "schema version 3 records only replicates that ran"
+            )
         cases.append(
             {
                 "task_id": row.get("task_id", "unknown"),
                 "variant_id": variant_id,
                 "replicate_index": row.get("replicate_index", 0),
                 "class": row_class(row),
-                "model_requested": requested.get(variant_id, "unknown"),
+                "model_requested": model_requested,
                 "model_served": model_served,
                 "settings": experiment_id,
                 "outcome": row_outcome(row.get("status", "")),
-                "elapsed_seconds": row.get("duration", 0.0),
+                "elapsed_seconds": elapsed,
                 "tokens": tokens if isinstance(tokens, int) else "unreported",
-                "cost": cost if isinstance(cost, (int, float)) else "unreported",
+                "cost": cost,
+                "cost_source": cost_source,
             }
         )
     return cases
@@ -366,8 +474,9 @@ def contaminated_scores(scores: dict[str, list[Any]], attempts: list[dict[str, A
     return measured
 
 
-def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, Any]:
-    """Build a committed provenance record from a coder_eval run directory."""
+def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Build a committed provenance record from a coder_eval run directory,
+    pricing token-only rows from `prices`."""
     run = json.loads((run_dir / "run.json").read_text())
     experiment = json.loads((run_dir / "experiment.json").read_text())
     configured_experiment = experiment_config(experiment_path)
@@ -409,7 +518,7 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
         historical_client_version = "unknown"
     session_present = "CLAUDE_CODE_SESSION_ID" in os.environ
     return {
-        "schema_version": 2,
+        "schema_version": SCHEMA_VERSION,
         "run_id": run["run_id"],
         "experiment_id": experiment["experiment_id"],
         "started_at": run["start_time"],
@@ -433,15 +542,15 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path) -> dict[str, 
         },
         "variants": variants,
         "attempts": attempts,
-        "cases": run_cases(run, experiment["experiment_id"], requested, client_name),
+        "cases": run_cases(run, experiment["experiment_id"], requested, client_name, prices),
     }
 
 def validate_record(record: dict[str, Any]) -> list[str]:
     """Return validation errors for one provenance record."""
     errors = sorted(REQUIRED_RECORD_FIELDS - record.keys())
     version = record.get("schema_version")
-    if version not in (1, 2):
-        errors.append("schema_version must be 1 or 2")
+    if version not in (1, 2, 3):
+        errors.append("schema_version must be 1, 2 or 3")
     for field in ("run_id", "experiment_id", "started_at", "completed_at"):
         if not isinstance(record.get(field), str) or not record[field]:
             errors.append(f"{field} must be a non-empty string")
@@ -506,9 +615,9 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                     errors.append(f"{prefix}.answer_key_contact must be a list of strings")
                 elif contact and measured_score != 0.0:
                     errors.append(f"{prefix}.measured_score must be 0 when answer_key_contact is non-empty")
-    if version == 2:
+    if version in (2, 3):
         if not isinstance(record.get("cases"), list) or not record["cases"]:
-            errors.append("cases must be non-empty for schema_version 2")
+            errors.append(f"cases must be non-empty for schema_version {version}")
         else:
             for index, case in enumerate(record["cases"]):
                 prefix = f"cases[{index}]"
@@ -522,13 +631,21 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                     errors.append(f"{prefix}.class must be a string or null")
                 if not isinstance(case.get("replicate_index"), int):
                     errors.append(f"{prefix}.replicate_index must be an integer")
-                if not isinstance(case.get("elapsed_seconds"), (int, float)):
+                if not _number(case.get("elapsed_seconds")):
                     errors.append(f"{prefix}.elapsed_seconds must be numeric")
                 tokens = case.get("tokens")
                 if tokens != "unreported" and not isinstance(tokens, int):
                     errors.append(f"{prefix}.tokens must be an integer or 'unreported'")
                 cost = case.get("cost")
-                if cost != "unreported" and not isinstance(cost, (int, float)):
+                if version == 3:
+                    if not _number(cost) or cost < 0:
+                        errors.append(f"{prefix}.cost must be a non-negative number for schema_version 3")
+                    if case.get("cost_source") not in ("reported", "computed"):
+                        errors.append(f"{prefix}.cost_source must be 'reported' or 'computed'")
+                    elapsed = case.get("elapsed_seconds")
+                    if _number(elapsed) and elapsed <= 0:
+                        errors.append(f"{prefix}.elapsed_seconds must be greater than 0 for schema_version 3")
+                elif cost != "unreported" and not isinstance(cost, (int, float)):
                     errors.append(f"{prefix}.cost must be numeric or 'unreported'")
     return errors
 
@@ -539,6 +656,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("run", type=Path, help="coder_eval run directory")
     parser.add_argument("--experiment", type=Path, required=True, help="experiment YAML")
     parser.add_argument("--output", type=Path, default=Path("evals/provenance"))
+    parser.add_argument("--prices", type=Path, default=Path(__file__).resolve().parent.parent / "evals" / "prices.yaml", help="price table for token-only harnesses")
     parser.add_argument("--validate", action="store_true")
     return parser.parse_args()
 
@@ -554,7 +672,10 @@ def main() -> int:
             return 1
         return 0
     root = Path(__file__).resolve().parent.parent
-    record = build_record(args.run, args.experiment, root)
+    try:
+        record = build_record(args.run, args.experiment, root, load_prices(args.prices))
+    except ValueError as error:
+        raise SystemExit(f"cannot record {args.run} (price table {args.prices}): {error}")
     errors = validate_record(record)
     if errors:
         raise SystemExit("invalid generated record:\n" + "\n".join(errors))

@@ -1,0 +1,23 @@
+# Per-token prices, in USD, for harnesses that report token counts but no
+# price -- Omp and Codex. `scripts/evals-record.py` computes a replicate's
+# price from these rates and the token counts its run row carries. Claude
+# Code reports its own price, so its models need no entry here.
+#
+# Keyed by the requested model id, without a trailing `:<level>` thinking
+# suffix. Each entry gives four rates -- uncached `input`, `output`,
+# `cache_read` and `cache_write` (USD per token, not per million) -- the
+# `source` URL the rates were read from, and the date they were read on
+# (`read_on`, YYYY-MM-DD).
+#
+# A run whose model has no entry fails to record, naming the model. Add the
+# entry from the provider's published price list; never estimate one.
+#
+#   vercel-ai-gateway/zai/glm-5.3:
+#     input: <USD per uncached input token>
+#     output: <USD per output token>
+#     cache_read: <USD per cached input token read>
+#     cache_write: <USD per input token written to cache>
+#     source: <URL of the published price list>
+#     read_on: <YYYY-MM-DD>
+
+models: {}
