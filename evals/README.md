@@ -864,7 +864,42 @@ must configure it. The GPT 6 rows use the Vercel AI Gateway routes
 
 It needs `omp` on PATH and a model configured in the caller's own
 `~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
-Omp home and writes nothing back into it.
+Omp home and writes nothing back into it. It does not borrow `config.yml`: the
+throwaway home gets its own, so an experiment pins Omp's helper roles with
+`model_roles` beside `model`. Unpinned, Omp's subagents and helper calls run on
+whatever the provider catalog offers.
+
+### Running an Omp arm
+
+```sh
+make evals-install                       # rebuilds the local agents every time
+export AI_GATEWAY_API_KEY=…              # Omp's name for the Vercel AI Gateway key
+omp models find gpt-6-luna               # the arm's route must resolve
+TASKS="$(cd evals && ls tasks/undertake/*.yaml | grep -v 08-wake-slot-is-refilled | tr '\n' ' ')"
+setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" > luna.log 2>&1 &
+```
+
+- **The judge runs on the subscription.** Every Omp-arm judge is an
+  `agent_judge`, a Claude Code sub-agent that inherits the shell's own Claude
+  login ([`0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)).
+  Leave `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` alone: pointed at a
+  gateway, they bill every judge call there.
+- **Leave `llm_judge` rows out of `TASKS`.** `evals-preflight` reads every file
+  in `TASKS`, tags or not, and refuses a row with an enabled `llm_judge` when no
+  API key is set. In `undertake` that row is `08-wake-slot-is-refilled`, which
+  is `claude-only` and never runs on Omp anyway.
+- **Run it detached.** Replicates run one at a time, a few minutes each, so a
+  suite takes hours. An interrupted run continues from its run directory:
+
+  ```sh
+  cd evals && TELEMETRY_ENABLED=false coder-eval run -e experiments/omp-gpt-6-luna.yaml \
+    --run-dir runs/<run_id> --resume \
+    --exclude-tags claude-only,codex-only,skip:omp,model-classes $TASKS
+  cd .. && make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml
+  ```
+
+- **`make -n` does not dry-run a run target.** Its recipe line calls
+  `$(MAKE)`, so make executes it. `make evals-plan` is the free check.
 
 **`agent: {type: omp}` is not a built-in kind.** It comes from
 `coder-eval-omp/`, a `coder_eval` plugin in this repository, installed beside
