@@ -28,6 +28,18 @@ defaults:
     # suffix. Checked with `omp models find` against the Vercel AI Gateway
     # catalog borrowed into the throwaway Omp home.
     model: vercel-ai-gateway/openai/gpt-6-luna
+    # Every Omp role on the measured model, so helper calls and subagents do
+    # not fall to whatever the gateway catalog offers.
+    model_roles:
+      default: vercel-ai-gateway/openai/gpt-6-luna
+      smol: vercel-ai-gateway/openai/gpt-6-luna
+      slow: vercel-ai-gateway/openai/gpt-6-luna
+      plan: vercel-ai-gateway/openai/gpt-6-luna
+      task: vercel-ai-gateway/openai/gpt-6-luna
+      advisor: vercel-ai-gateway/openai/gpt-6-luna
+      vision: vercel-ai-gateway/openai/gpt-6-luna
+      commit: vercel-ai-gateway/openai/gpt-6-luna
+      tiny: vercel-ai-gateway/openai/gpt-6-luna
     permission_mode: acceptEdits
     # Recorded, not enforced: Omp RPC has no per-session tool allowlist.
     allowed_tools: [Skill]
