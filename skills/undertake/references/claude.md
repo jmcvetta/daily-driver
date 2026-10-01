@@ -213,8 +213,10 @@ states the whole check-in, self-contained, in this order:
    assessment. A changed head invalidates earlier CI and readiness evidence.
    Pending or unregistered checks use `review-cycle`'s bounded wait; failed
    checks return to `Fix, answer, resolve, push`, and missing logs remain an
-   evidence blocker. Continue the remaining review or ready-gate work when CI
-   permits it. A capped wait, review wall, or human action reports unfinished
+   evidence blocker. When CI on the current head is green and the gate's
+   notice read finds no completion notice, post the notice before continuing
+   the ready-gate work. Continue the remaining review or ready-gate work when
+   CI permits it. A capped wait, review wall, or human action reports unfinished
    work and its resume path; it never becomes completion.
 
 The slot it occupies is the same slot `review-cycle`'s wait borrows and hands

@@ -203,7 +203,9 @@ read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s two endpoint reads remain the CI verdict.
 Pending or unregistered checks use its persistent bounded watcher. Failed
 checks return to `Fix, answer, resolve, push`; unavailable logs are a named
-evidence blocker, not green. A durable Hub process preserves its completion
+evidence blocker, not green. When CI on the current head is green and the
+gate's notice read finds no completion notice, post the notice before
+continuing the ready-gate work. A durable Hub process preserves its completion
 but cannot resume the owner: where no owner turn is running, report unfinished
 work and the owner-resume requirement rather than claiming autonomous review.
 

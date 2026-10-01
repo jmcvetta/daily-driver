@@ -171,6 +171,8 @@ the head, read `gh pr view <number> --json statusCheckRollup` and the check and
 status endpoints `review-cycle` owns. Earlier green evidence does not survive
 a head change. Pending or unregistered checks follow its bounded limits; failed
 checks return to `Fix, answer, resolve, push`, and unavailable logs are an
-explicit evidence blocker. State the unfinished condition and owner-resume
+explicit evidence blocker. When CI on the current head is green and the gate's
+notice read finds no completion notice, post the notice before continuing the
+ready-gate work. State the unfinished condition and owner-resume
 requirement; never call a clean branch, an already-up-to-date response, or a
 draft completion.

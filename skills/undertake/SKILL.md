@@ -374,7 +374,9 @@ owns the content comparison and rejected-finding evidence rule.
 
 The harness pull-request client takes it out of draft only after `The gate`
 below holds. It does not review; `review-cycle` supplies the full review and
-independent verification that the gate consumes.
+independent verification that the gate consumes. The completion notice is one
+of the gate's reads, so a round that closed without posting it is not yet
+ready.
 
 Marking a draft ready is a natural moment to reach for a review, and the
 branch was already reviewed at `Review the head` — whether that review is
@@ -533,6 +535,14 @@ the pull request's three-dot diff, which after a clean merge is byte-identical
 to what `Review the head` already reviewed. A base branch that moves daily
 would otherwise buy a review a day for a diff nobody changed.
 
+**A clean merge earns no new notice either.** A completion notice that names
+the pre-merge head still covers the merged head, by the first-parent walk
+through merge commits that `The gate` reads. Where no notice exists at all, the
+round at `Review the head` closed unpublished: post the notice naming the
+current head once CI is green on it. Red CI after the merge goes to `Fix,
+answer, resolve, push` as above, and the push that fixes it is a new head that
+the round covers in the normal way.
+
 **A conflict resolution does.** Resolving a conflict rewrites the branch's own
 files, which is `Changing what the code does` in that same classification.
 One round over it, and `review-cycle` decides anything further.
@@ -559,7 +569,7 @@ Ready is a gate, not a step
 ---------------------------
 
 "After fixing, set the PR to ready" reads as unconditional. It is not. It is
-also not a judgement: **the gate is a read**. Six conditions decide it, five
+also not a judgement: **the gate is a read**. Seven conditions decide it, six
 reads answer them, and every read is a call the reference file for the harness
 in use names. A gate that has to be weighed is a gate that gets taken to the
 user, and the user is not the one who can answer it.
@@ -598,8 +608,8 @@ sequence stops, and the reason is stated in one line.
    treating an unreported check as either answer. The mechanism has one
    home, and it is not this one.
 3. **Every review thread**, from any reviewer and not only from the round at
-   `Review the head`. This read answers two conditions, which is why five
-   reads close over six: no thread is unanswered or unresolved, and every
+   `Review the head`. This read answers two conditions, which is why six
+   reads close over seven: no thread is unanswered or unresolved, and every
    finding that round raised is fixed, or rejected with a reason on its
    thread, or deferred with the user's agreement. An open thread is work at
    `Fix, answer, resolve, push`, never a reason to stay draft.
@@ -613,7 +623,18 @@ sequence stops, and the reason is stated in one line.
    leaves nothing to verify**, and this condition is satisfied with no pass
    owed — a clean review produces no verification record, so waiting for one
    waits forever.
-5. **The pull request waits on no human action.** The `Blockers` section's human-action
+5. **The completion notice covers the current head.** Read the pull request's
+   conversation comments to the last page. The read holds when a comment
+   starts with `## Review cycle complete! 🎉`, is written by the account that
+   posted the claim, and names the current head SHA or an ancestor of it
+   reached by walking the head's first parents through merge commits only.
+   This is the test `embark`'s `Land the pull request` applies in its fourth
+   read, cited here rather than restated. **A missing notice is work, not a
+   stop.** When the earlier reads hold and this one does not, the round
+   closed unpublished: post the notice for the current head through
+   `review-cycle`'s notice route, then take this read again. The gate never
+   marks ready on a notice it has not read.
+6. **The pull request waits on no human action.** The `Blockers` section's human-action
    bullet marks a pull request whose Tofu changes must be applied, and the
    updated state committed, before it merges — a bar only a person clears,
    and unlike a pending check nothing will ever report it. `Ready for review`
