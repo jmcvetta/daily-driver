@@ -828,8 +828,10 @@ pull-request lookup finds nothing and the skill assembles the diff from git.
 
 ## The Omp arm
 
-The same suites and plugin run four configured subjects across three model
-families. GLM 5.3 Flash is the tier probe beside full GLM, not a fourth family.
+The same suites and plugin run five configured subjects across three model
+families. GLM 5.3 Flash is the tier probe beside full GLM, and GPT 6 Luna is the
+small GPT the `omp_configs/` overlays give small, commit and tiny work to.
+Neither is a family of its own.
 Each model has one experiment file and the two variants every criterion must
 score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
 delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
@@ -841,6 +843,7 @@ make evals-run-omp-glm-5-3                    # GLM 5.3 only
 make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
 make evals-run-omp-deepseek-v4-pro            # DeepSeek v4 Pro only
 make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol only
+make evals-run-omp-gpt-6-luna                 # GPT 6 Luna only
 make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
@@ -852,6 +855,7 @@ The Omp home the agent borrows configures each of these provider/model IDs:
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
+| `omp-gpt-6-luna.yaml` | `openai-codex/gpt-6-luna` |
 
 It needs `omp` on PATH and a model configured in the caller's own
 `~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
