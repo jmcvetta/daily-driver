@@ -16,8 +16,9 @@ SHELL := /bin/bash
 	check-model-classes-builder check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
-	check-eval-tooling check-issue-infra evals-install evals-plan \
-	evals-variants evals-preflight evals-record evals-run evals-run-omp \
+	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
+	evals-install evals-plan \
+	evals-variants evals-preflight evals-record evals-render-routes evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-classes mcp-usage
 
@@ -103,7 +104,8 @@ check-runtime: check-constitution check-ask-in-chat check-omp-extension check-mo
 	check-task-worktree-fixture check-scripts
 
 check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-eval-arms check-evals-preflight check-evals-provenance
+	check-model-classes-builder check-eval-arms check-evals-preflight check-evals-provenance \
+	check-model-telemetry
 
 
 check-issue-infra: check-labels check-labels-fixtures check-story-fixtures
@@ -381,6 +383,14 @@ check-evals-preflight:
 check-evals-provenance:
 	uv run --frozen python3 scripts/check-evals-provenance.py
 
+# check-model-telemetry: `scripts/model-telemetry.py`'s claim, readiness and
+# review-verification comment parsers, checked against fixture text -- no
+# credentials, no network. `model-telemetry.py` itself imports nothing beyond
+# the standard library, so unlike its `uv run --frozen` neighbours above it
+# runs under plain `python3`. See the script's docstring.
+check-model-telemetry:
+	python3 scripts/check-model-telemetry.py
+
 # check-labels: the issue-label standard is written twice -- the table in
 # `issue-labels` and the resources in infra/github/labels.tf -- and this leg
 # asserts the two say the same thing. Part of `check` because it needs nothing
@@ -493,6 +503,11 @@ evals-record:
 	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
 		--experiment "$(EXPERIMENT)" --output evals/provenance
 
+# evals-render-routes: rewrite the `Measured routes` table in model-classes.md
+# from every committed record under evals/provenance/. Reads no run directory.
+evals-render-routes:
+	uv run --frozen python3 scripts/evals-render-routes.py
+
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and
 # `make check-eval-arms` is what keeps the three sets in step.
@@ -586,3 +601,17 @@ evals-run-classes: evals-plan evals-preflight
 # part of `check`. See docs/github-mcp.md for what the answer is for.
 mcp-usage:
 	python3 scripts/github-mcp-usage.py
+
+# model-telemetry: mine `undertake`'s claim/readiness comments and
+# `review-cycle`'s `Review verification` comments for one repository's
+# production rework, and re-render evals/provenance/production/README.md
+# over every repository's records on disk. Needs GITHUB_TOKEN or GH_TOKEN,
+# so like mcp-usage it is laptop-only and deliberately not part of `check`.
+#   make model-telemetry REPO=owner/repo
+#   make model-telemetry REPO=owner/repo REFRESH=1
+model-telemetry:
+	@if [ -z "$(REPO)" ]; then \
+		echo "model-telemetry: set REPO=owner/repo, e.g. REPO=jmcvetta/daily-driver" >&2; \
+		exit 1; \
+	fi
+	python3 scripts/model-telemetry.py $(REPO) $(if $(REFRESH),--refresh,) $(if $(SINCE),--since $(SINCE),)
