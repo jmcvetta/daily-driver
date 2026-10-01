@@ -625,9 +625,10 @@ sequence stops, and the reason is stated in one line.
    waits forever.
 5. **The completion notice covers the current head.** Read the pull request's
    conversation comments to the last page and take the latest comment that
-   starts with `## Review cycle complete! 🎉`, is written by the account that
-   posted the claim, and names the current head SHA or an ancestor of it
-   reached by walking the head's first parents through merge commits only.
+   starts with `## Review cycle complete! 🎉` and is written by the account
+   that posted the claim. The read holds when the SHA it names is the current
+   head, or an ancestor of it reached by walking the head's first parents
+   through merge commits only.
    This is the test `embark`'s `Land the pull request` applies in its fourth
    read, cited here rather than restated. **A missing notice is work, not a
    stop.** When the earlier reads hold and this one does not, the round
