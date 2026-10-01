@@ -217,6 +217,17 @@ def _number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def row_label(row: dict[str, Any]) -> str:
+    """Name one task result for an error: task, variant, replicate and status,
+    plus the harness's own error message where it recorded one."""
+    label = (
+        f"{row.get('task_id', 'unknown')}/{row.get('variant_id', 'unknown')} "
+        f"replicate {row.get('replicate_index', 0)} ({row.get('status', 'no status')})"
+    )
+    error = row.get("error_message")
+    return f"{label}, error: {error}" if error else label
+
+
 def case_price(row: dict[str, Any], model: str, prices: dict[str, dict[str, Any]]) -> tuple[float, str]:
     """The USD price of one task result, and whether it was `reported` or `computed`.
 
@@ -228,12 +239,16 @@ def case_price(row: dict[str, Any], model: str, prices: dict[str, dict[str, Any]
     Raises ValueError, naming the model, where there is neither a reported
     price nor tokens and a price-table entry to compute one from.
     """
-    task = f"{row.get('task_id', 'unknown')}/{row.get('variant_id', 'unknown')}"
+    task = row_label(row)
     if _number(row.get("agent_cost_usd")):
         total = row.get("total_cost_usd")
         return (float(total) if _number(total) else float(row["agent_cost_usd"])), "reported"
     if not _number(row.get("input_tokens")) or not _number(row.get("output_tokens")):
-        raise ValueError(f"{task}: the harness reported neither a price nor token counts for model {model}")
+        raise ValueError(
+            f"{task}: the harness reported neither a price nor token counts for model {model}. "
+            "A replicate that crashed before reporting usage has no price to record; "
+            "a price-table entry cannot supply one"
+        )
     key = price_key(model)
     rates = prices.get(key)
     if rates is None:
@@ -267,6 +282,12 @@ def run_cases(
         tokens = row.get("total_tokens")
         model_requested = requested.get(variant_id, "unknown")
         cost, cost_source = case_price(row, model_requested, prices)
+        elapsed = row.get("duration")
+        if not _number(elapsed) or elapsed <= 0:
+            raise ValueError(
+                f"{row_label(row)}: no positive wall time (duration {elapsed!r}); "
+                "schema version 3 records only replicates that ran"
+            )
         cases.append(
             {
                 "task_id": row.get("task_id", "unknown"),
@@ -277,7 +298,7 @@ def run_cases(
                 "model_served": model_served,
                 "settings": experiment_id,
                 "outcome": row_outcome(row.get("status", "")),
-                "elapsed_seconds": row.get("duration", 0.0),
+                "elapsed_seconds": elapsed,
                 "tokens": tokens if isinstance(tokens, int) else "unreported",
                 "cost": cost,
                 "cost_source": cost_source,

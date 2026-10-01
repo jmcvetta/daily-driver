@@ -353,6 +353,19 @@ def check_unpriceable(run: dict[str, Any], run_dir: Path, experiment: Path, temp
             result.returncode != 0 and "neither a price nor token counts" in result.stderr and "requested-model" in result.stderr,
             "a harness reporting neither a price nor tokens was recorded",
         )
+        require("replicate 0 (SUCCESS)" in result.stderr, "an unpriceable row's error did not name its replicate and status")
+        for row in unpriced["task_results"]:
+            row["input_tokens"], row["output_tokens"] = 10, 10
+        for duration in (0.0, None):
+            unpriced["task_results"][2]["duration"] = duration
+            if duration is None:
+                del unpriced["task_results"][2]["duration"]
+            unpriced_path.write_text(json.dumps(unpriced))
+            result = recorder_result(run_dir, thinking, temp / "no-duration", env, prices)
+            require(
+                result.returncode != 0 and "no positive wall time" in result.stderr and "one/with-plugin replicate 0" in result.stderr,
+                f"a replicate with duration {duration!r} did not fail naming it",
+            )
     finally:
         unpriced_path.write_text(original)
 
