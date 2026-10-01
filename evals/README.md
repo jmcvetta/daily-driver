@@ -830,9 +830,9 @@ pull-request lookup finds nothing and the skill assembles the diff from git.
 
 The same suites and plugin run six configured subjects across three model
 families. GLM 5.3 Flash is the tier probe beside full GLM. GPT 6 Sol and GPT 6
-Luna are the GPTs the `omp_configs/` overlays route to today: Sol takes default
-and slow work, and Luna takes small, commit and tiny work. None of these is a
-family of its own.
+Luna are two of the GPTs `omp_configs/gpt.yml` routes to: Sol takes default,
+slow and advisor work, and Luna takes small, task, vision, commit and tiny work.
+None of these is a family of its own.
 Each model has one experiment file and the two variants every criterion must
 score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
 delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
@@ -849,7 +849,9 @@ make evals-run-omp-gpt-6-luna                 # GPT 6 Luna only
 make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
-The Omp home the agent borrows configures each of these provider/model IDs:
+Each experiment pins one provider/model ID, and the Omp home the agent borrows
+must configure it. The GPT 6 rows are not yet confirmed against that catalog:
+check them with `omp models find` before the first paid run.
 
 | Experiment | Model |
 | --- | --- |
