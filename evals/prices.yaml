@@ -20,4 +20,19 @@
 #     source: <URL of the published price list>
 #     read_on: <YYYY-MM-DD>
 
-models: {}
+models:
+  # Base-tier rates, for prompts under 272,001 tokens.
+  vercel-ai-gateway/openai/gpt-6-luna:
+    input: 0.0000001
+    output: 0.0000005
+    cache_read: 0.00000001
+    cache_write: 0.000000125
+    source: https://ai-gateway.vercel.sh/v1/models
+    read_on: 2026-10-01
+  vercel-ai-gateway/openai/gpt-6-sol:
+    input: 0.000002
+    output: 0.00001
+    cache_read: 0.0000002
+    cache_write: 0.0000025
+    source: https://ai-gateway.vercel.sh/v1/models
+    read_on: 2026-10-01
