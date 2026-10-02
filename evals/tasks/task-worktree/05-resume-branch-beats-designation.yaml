@@ -1,0 +1,57 @@
+task_id: task-worktree-05-resume-branch-beats-designation
+description: >-
+  An existing task branch the invoking workflow supplies outranks the harness's
+  designated branch. The worktree attaches the remote branch; it never recreates
+  it from the base.
+tags: [task-worktree, fire, behaviour]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/task-worktree/shared
+      mount_point: .fixture
+
+pre_run:
+  - command: bash .fixture/setup.sh resume
+    timeout: 60
+
+initial_prompt: >-
+  Resume issue #52. Its draft pull request already carries the branch
+  issue-52-strict-parser on the `upstream` remote, and this session's harness
+  designated a different branch, claude/fresh-52, for it. Continue on the
+  existing branch in a sibling task worktree, then add a line containing
+  exactly `STRICT_MODE = True` to src/parser.py. Run `bash .fixture/verify.sh
+  resume` from the task worktree when finished.
+
+agent:
+  allowed_tools: [Read, Write, Edit, Grep, Glob, Skill, Bash]
+  disallowed_tools: [NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 25
+  turn_timeout: 600
+  task_timeout: 780
+
+success_criteria:
+  - type: skill_triggered
+    description: "`task-worktree` fires for a task resumed on an existing branch"
+    expected_skill: task-worktree
+    skill_name: task-worktree
+
+  - type: command_executed
+    description: The existing branch is attached without recreating it from the base
+    tool_name: Bash
+    command_pattern: 'git worktree add(?!.* -b issue-52-strict-parser upstream/master)[^\n]*issue-52-strict-parser'
+    min_count: 1
+
+  - type: command_executed
+    description: The fixture verifier runs from the task root
+    tool_name: Bash
+    command_pattern: 'bash \.fixture/verify\.sh resume'
+    min_count: 1
+
+  - type: file_matches_regex
+    description: The resume branch carries the earlier session's commit and the task root passed every invariant
+    path: .fixture/verification.txt
+    pattern: '(?m)^mode=resume\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=.*\nverified=yes$'
+    weight: 2

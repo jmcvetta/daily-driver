@@ -23,6 +23,13 @@ then the only configured remote. More than one unexplained remote is a stop,
 not permission to assume `origin`. Keep the full remote-tracking name returned
 for `<remote>/HEAD` as the start point.
 
+An existing task branch the invoking workflow supplies comes before any
+designated branch. Fetch it from the remote (`git fetch <remote> <task-branch>`),
+then run `git worktree add <sibling-path> <task-branch>` without `-b`; where
+no local branch of that name exists, `git worktree add --track -b <task-branch>
+<sibling-path> <remote>/<task-branch>` attaches it from the remote. Never
+recreate it from `<remote>/<base>`.
+
 If the task branch already exists and is free, omit `-b` and put that branch
 last. In a detached worktree already dedicated to the task, use `git switch
 <task-branch>` when the branch exists and is free; otherwise use `git switch -c

@@ -1,0 +1,56 @@
+task_id: undertake-14-resume-adopts-branch-and-pr
+description: >-
+  An issue that already has an open draft pull request and a stand-down handoff
+  naming its branch is a resume: the session adopts that branch and pull
+  request over its own designated branch, posts one claim naming the adopted
+  branch, and opens no second pull request.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  Undertake task #52. It already has an open draft pull request #60 on branch
+  issue-52-strict-parser and a stand-down handoff comment with a `Branch:
+  issue-52-strict-parser` line, written by an earlier session. This session's
+  harness designated a different, empty branch, claude/fresh-52. Explain which
+  branch the worktree attaches, what the claim comment names, and what happens
+  at `Open the draft`.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires for assigned task work"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The existing branch and PR are adopted, not replaced
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if it says the worktree attaches the existing branch
+      `issue-52-strict-parser` (fetched, not recreated from base) rather than
+      the designated `claude/fresh-52`; that the handoff makes the prior claim
+      a resume rather than a collision, so this session still posts its own
+      claim naming the adopted branch; and that `Open the draft` finds and
+      updates pull request #60 with no second pull request opened. Score 0.0
+      if it uses the designated branch, treats the prior claim as a collision
+      stop, or opens a second pull request.

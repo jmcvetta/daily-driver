@@ -85,7 +85,9 @@ The session
 names the fields it answers and how the block records them.
 
 The branch comes from the task worktree's Git state:
-`git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
+`git branch --show-current` runs in that worktree. On a resume that is the
+adopted branch, which `Read the issue and its edges` took from the issue's
+record; fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for the branch
 link comes from the remote `task-worktree` resolved, never from an assumed
 `origin`.
 
