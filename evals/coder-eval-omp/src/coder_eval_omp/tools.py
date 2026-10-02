@@ -15,6 +15,11 @@ What `--tools` does and does not restrict, measured on Omp 18.4.10:
 - With `read` on, Omp adds a `write` tool that dispatches `xd://` devices and
   rejects every other path. It writes no file.
 - `read` still opens URLs and Omp's `pr://` and `issue://` GitHub schemes.
+
+A few Omp tools have no Claude Code counterpart but are what the Omp arm's
+skill routes call, `wait` among them. A row names those by Omp's own name,
+from `OMP_ONLY_TOOLS`. Inventing a Claude-style `Wait` instead would give the
+row a name that exists under that spelling on neither harness.
 """
 
 from __future__ import annotations
@@ -41,6 +46,11 @@ OMP_TOOL_FOR: dict[str, str | None] = {
     "NotebookEdit": None,
     "WebFetch": None,
 }
+
+#: Omp-only tools a row may allow or disallow by Omp's own name. Never part of
+#: the default grant. `wait` blocks until a named `bash` service completes, which
+#: is how `skills/review-cycle/references/omp.md` waits on CI.
+OMP_ONLY_TOOLS: tuple[str, ...] = ("wait",)
 
 # The Claude Code tools a row gets when it names no `allowed_tools`: every
 # tool with an Omp twin. Omp-only built-ins (`github`, `eval`, `debug`, `lsp`,
@@ -73,6 +83,11 @@ class ToolSelection:
         return (f"--tools={','.join(self.tools)}",)
 
 
+def _omp_tool(name: str) -> str | None:
+    """The Omp tool a known row tool name stands for: itself if Omp-only."""
+    return name if name in OMP_ONLY_TOOLS else OMP_TOOL_FOR[name]
+
+
 def select_tools(allowed: Sequence[str] | None, disallowed: Sequence[str] | None) -> ToolSelection:
     """Map a row's `allowed_tools` and `disallowed_tools` to Omp's tool set.
 
@@ -82,18 +97,24 @@ def select_tools(allowed: Sequence[str] | None, disallowed: Sequence[str] | None
     One exception: an allowed `Skill` keeps `read` on, because `read` is how
     Omp engages a skill. `read_for_skill` reports when that happens.
 
+    A name in `OMP_ONLY_TOOLS` is granted or denied as itself.
+
     Raises `UnenforceableToolList` for an allowed tool with no Omp counterpart,
-    and for any name not in `OMP_TOOL_FOR`, so that a typo cannot leave a tool
-    on that the row meant to remove.
+    and for any name in neither `OMP_TOOL_FOR` nor `OMP_ONLY_TOOLS`, so that a
+    typo cannot leave a tool on that the row meant to remove.
     """
-    unknown = [name for name in (*(allowed or ()), *(disallowed or ())) if name not in OMP_TOOL_FOR]
+    unknown = [
+        name
+        for name in (*(allowed or ()), *(disallowed or ()))
+        if name not in OMP_TOOL_FOR and name not in OMP_ONLY_TOOLS
+    ]
     if unknown:
         raise UnenforceableToolList(
             f"omp: tool name(s) {', '.join(map(repr, unknown))} have no entry in the Omp tool map, "
             "so the row's tool list cannot be enforced"
         )
     if allowed is not None:
-        unmapped = [name for name in allowed if OMP_TOOL_FOR[name] is None]
+        unmapped = [name for name in allowed if name not in OMP_ONLY_TOOLS and OMP_TOOL_FOR[name] is None]
         if unmapped:
             raise UnenforceableToolList(
                 f"omp: allowed tool(s) {', '.join(map(repr, unmapped))} have no Omp counterpart, "
@@ -103,11 +124,11 @@ def select_tools(allowed: Sequence[str] | None, disallowed: Sequence[str] | None
     denied = set(disallowed or ())
     granted = [name for name in (_CLAUDE_CODE_DEFAULTS if allowed is None else allowed) if name not in denied]
     # A denied `Skill` takes nothing away: `read` belongs to `Read` as well.
-    denied_omp = {OMP_TOOL_FOR[name] for name in denied if name != "Skill"}
+    denied_omp = {_omp_tool(name) for name in denied if name != "Skill"}
 
     tools: list[str] = []
     for name in granted:
-        tool = OMP_TOOL_FOR[name]
+        tool = _omp_tool(name)
         if tool is None or (name != "Skill" and tool in denied_omp):
             continue
         if tool not in tools:
