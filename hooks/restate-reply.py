@@ -21,7 +21,10 @@ Contract, for the Claude Code `Stop` event:
 - A reply is over budget when it has more than `BUDGET` lines. A line is a line
   as written; a bullet is one line; blank lines are not counted; a fenced code
   block is one line however long it is.
-- Stdin that is not a JSON object exits 2 with nothing on stdout.
+- Stdin that is not a JSON object, or an unexpected argument, exits 1 with
+  nothing on stdout. Not 2: on a `Stop` event exit 2 blocks the stop and feeds
+  stderr to the model, so a bad payload would cost a spurious extra turn
+  instead of surfacing as a hook error.
 
 Wired to `Stop` only. A subagent's final message is its report to the parent,
 and the parent's reply is what the user reads, so `SubagentStop` is not wired.
@@ -90,18 +93,18 @@ def decide(event: dict) -> dict:
 def main(argv: list[str]) -> int:
     if len(argv) != 1:
         print(f"usage: {argv[0].rsplit('/', 1)[-1]}", file=sys.stderr)
-        return 2
+        return 1
     try:
         event = json.loads(sys.stdin.read())
     except json.JSONDecodeError as error:
         print(f"restate-reply: unparseable event JSON: {error}", file=sys.stderr)
-        return 2
+        return 1
     if not isinstance(event, dict):
         print(
             f"restate-reply: event JSON is {type(event).__name__}, not an object",
             file=sys.stderr,
         )
-        return 2
+        return 1
     json.dump(decide(event), sys.stdout)
     sys.stdout.write("\n")
     return 0

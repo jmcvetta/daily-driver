@@ -92,17 +92,17 @@ class RestateReply(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout), {})
 
     def test_malformed_stdin_fails_loudly(self) -> None:
-        """Without it garbage on stdin exits 0 with an empty answer, and a
-        harness change that breaks the hook is never noticed."""
+        """Without it garbage on stdin exits 0 with an empty answer, or exits 2,
+        which on a Stop event blocks the stop and sends a spurious extra turn."""
         for stdin in ("", "not json", "[]", "null", '"hi"'):
             with self.subTest(stdin=stdin):
                 result = run(stdin)
-                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(result.returncode, 1)
                 self.assertEqual(result.stdout.strip(), "")
 
     def test_bad_argv_fails(self) -> None:
         """Without it a typo in hooks.json passes silently."""
-        self.assertNotEqual(run("{}", "extra").returncode, 0)
+        self.assertEqual(run("{}", "extra").returncode, 1)
 
     def test_script_is_executable(self) -> None:
         """Without it the hook command fails to launch and nothing is restated."""
