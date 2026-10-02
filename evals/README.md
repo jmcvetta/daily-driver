@@ -89,8 +89,10 @@ the session's environment to make the CLI use it. The gateway serves the
 non-Anthropic models the Omp arms pin (`vercel-ai-gateway/...`), and nothing
 else.
 
-**There is no metered Anthropic key, and none is acquired.** So no
-`ANTHROPIC_API_KEY`, no Bedrock, and no new `llm_judge` criterion: `llm_judge`
+**Never run an Anthropic model through the API.** Not the Anthropic API, not
+Bedrock, not any other metered endpoint, not even for one test call. There is
+no metered Anthropic key, and none is acquired. So no `ANTHROPIC_API_KEY`, no
+`AWS_BEARER_TOKEN_BEDROCK`, and no new `llm_judge` criterion: `llm_judge`
 calls the API directly and cannot run here. Write judges as `agent_judge`, with
 `allowed_tools: []`, `permission_mode: default` and the `disallowed_tools`
 list that `scripts/check-agent-judges.py` enforces. `allowed_tools: []` alone
