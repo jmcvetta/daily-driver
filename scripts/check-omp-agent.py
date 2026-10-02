@@ -30,6 +30,9 @@ WHAT IT ASSERTS
     A row's `allowed_tools` and `disallowed_tools` become the `--tools` flag
     that enforces them, `Skill` keeps `read` on, and a list the arm cannot
     enforce raises rather than running with every tool on.
+    The start command loads the eval guard with `-e`, the child environment
+    tells the guard the row's grant, and the throwaway `config.yml` turns
+    fetch off. Each is half of the sandbox boundary, and each fails open.
 
 WHAT IT DOES NOT ASSERT
 
@@ -68,6 +71,7 @@ from coder_eval_omp.rpc import (  # noqa: E402  (the path insert must come first
     render_agent_output,
     skill_name_from_url,
 )
+from coder_eval_omp.launch import OMP_CONFIG, TOOLS_ENV, child_env, guard_path, rpc_argv  # noqa: E402
 from coder_eval_omp.tools import UnenforceableToolList, select_tools  # noqa: E402
 
 
@@ -369,12 +373,53 @@ def check_unmapped_allowed_tool_fails_closed() -> None:
     select_tools(["Read"], ["NotebookEdit", "WebFetch"])  # a twinless name in a deny list is harmless
 
 
+def check_start_argv_loads_the_guard() -> None:
+    """`omp --mode rpc` starts with `-e <eval_guard.js>`, in both arms.
+
+    Without it, a read-only row's `read pr://...` reaches GitHub with the
+    ambient token, and nothing reports it.
+    """
+    selection = select_tools(["Read"], None)
+    argv = rpc_argv("omp", selection, ["--extra"])
+    check(argv[:3] == ["omp", "--mode", "rpc"], f"the argv must start omp in rpc mode, got {argv}")
+    check("-e" in argv, f"the argv must load an extension with -e, got {argv}")
+    guard = argv[argv.index("-e") + 1]
+    check(guard == str(guard_path()), f"-e must name the eval guard, got {guard}")
+    check(Path(guard).is_file(), f"the eval guard must ship inside the package, got {guard}")
+    check(argv[-2:] == ["--tools=read", "--extra"], f"the tool flag must precede extra_args, got {argv}")
+
+
+def check_child_env_carries_the_grant() -> None:
+    """The child environment names the row's Omp tools for the guard.
+
+    Without it the guard cannot tell a granted `write` from Omp's device-only
+    one, and refuses every write, so a row that grants `Write` cannot write.
+    """
+    selection = select_tools(["Read", "Write"], None)
+    env = child_env({"PATH": "/usr/bin", TOOLS_ENV: "stale"}, Path("/tmp/h"), ["/mock"], selection)
+    check(env.get(TOOLS_ENV) == "read,write", f"{TOOLS_ENV} must be the row's grant, got {env.get(TOOLS_ENV)!r}")
+    check(env["HOME"] == "/tmp/h", f"HOME must be the throwaway home, got {env['HOME']}")
+    check(env["PATH"].startswith("/mock"), f"the mock PATH prepend must come first, got {env['PATH']}")
+    empty = child_env({}, Path("/tmp/h"), [], select_tools([], None))
+    check(empty.get(TOOLS_ENV) == "", f"an empty grant is set and empty, not unset, got {empty.get(TOOLS_ENV)!r}")
+
+
+def check_config_turns_fetch_off() -> None:
+    """The throwaway `config.yml` carries `fetch.enabled: false`.
+
+    Without it `read` opens `www.example.com` with no scheme, which the guard's
+    `scheme://` match cannot see.
+    """
+    check("fetch:\n  enabled: false\n" in OMP_CONFIG, f"config.yml must turn fetch off, got {OMP_CONFIG!r}")
+    check("enableSkillCommands: true" in OMP_CONFIG, f"config.yml must keep skill commands on, got {OMP_CONFIG!r}")
+
+
 def main() -> None:
     for name, checker in sorted(globals().items()):
         if name.startswith("check_") and callable(checker):
             checker()
     print("check-omp-agent: the Omp frame reduction maps skills, tools, text and usage as the criteria expect, "
-          "and each row's tool lists become the flag that enforces them")
+          "each row's tool lists become the flag that enforces them, and the start carries the eval guard")
 
 
 if __name__ == "__main__":

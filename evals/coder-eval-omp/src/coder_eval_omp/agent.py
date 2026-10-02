@@ -86,6 +86,7 @@ from .rpc import (
     TurnReducer,
     TurnStarted,
 )
+from .launch import OMP_CONFIG, child_env, rpc_argv
 from .tools import ToolSelection, UnenforceableToolList, select_tools
 
 
@@ -117,11 +118,6 @@ _RESULT_STATUS: dict[ToolEndStatus, str] = {
     ToolEndStatus.UNRESOLVED: "unknown",
 }
 
-# Written into the throwaway Omp home. Skill commands are off by default, and
-# with them off `get_available_commands` reports the builtins alone — so the
-# run could not record which skills it loaded, which is what tells a red arm
-# from an arm whose plugin never arrived.
-_OMP_CONFIG = "skills:\n  enableSkillCommands: true\n"
 #: File in each task sandbox that persists post-turn Omp protocol observations.
 PROTOCOL_EVIDENCE_FILENAME = "omp-protocol-observations.json"
 
@@ -240,9 +236,6 @@ class OmpAgent(Agent[OmpAgentConfig]):
         except UnenforceableToolList as error:
             # Not retryable: the same row fails the same way every attempt.
             raise AgentConfigError(str(error)) from error
-        if self._tools.webfetch_via_read:
-            # Omp has no fetch tool to remove: `read` opens URLs itself.
-            logger.warning("omp: the row denies WebFetch, but `read` is on and still opens URLs on this arm.")
         if self._tools.read_for_skill:
             # The one place a row's list is not met exactly. Omp engages a
             # skill by reading `skill://<name>`, so `Skill` needs `read`.
@@ -642,7 +635,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     real,
                 )
 
-        (agent_dir / "config.yml").write_text(_OMP_CONFIG, encoding="utf-8")
+        (agent_dir / "config.yml").write_text(OMP_CONFIG, encoding="utf-8")
 
     async def _link_plugins(self, binary: str, home: Path) -> None:
         """Install every `plugins:` root into the throwaway home.
@@ -702,12 +695,11 @@ class OmpAgent(Agent[OmpAgentConfig]):
     async def _spawn(self, binary: str, home: Path) -> None:
         """Start `omp --mode rpc` and wait for its `ready` frame.
 
-        The tool flag comes before `extra_args`, so an experiment can widen it
-        only by writing its own `--tools` there, where a reader sees it. Omp
-        exits on a tool name it does not know, which fails the task in
+        `launch.rpc_argv` builds the command line, the eval guard included.
+        Omp exits on a tool name it does not know, which fails the task in
         `_await_frame` with Omp's own error.
         """
-        argv = [binary, "--mode", "rpc", *self._tools.argv, *self.config.extra_args]
+        argv = rpc_argv(binary, self._tools, self.config.extra_args)
         self._process = await asyncio.create_subprocess_exec(
             *argv,
             stdin=asyncio.subprocess.PIPE,
@@ -762,19 +754,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
     # --- rpc plumbing ------------------------------------------------------
 
     def _child_env(self, home: Path) -> dict[str, str]:
-        """The child's environment: the caller's, pointed at the throwaway home.
-
-        The PATH prepend is `Agent.start`'s mock-shadowing contract — the
-        sandbox's mock CLI directories must resolve before the real binaries, or
-        a task grading a mocked CLI silently exercises the real one.
-        """
-        env = dict(os.environ)
-        if self._env_path_prepend:
-            env["PATH"] = os.pathsep.join([*self._env_path_prepend, env.get("PATH", "")])
-        env["HOME"] = str(home)
-        for name in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
-            env[name] = str(home / name.lower())
-        return env
+        """The child's environment: the caller's, as `launch.child_env` builds it."""
+        return child_env(os.environ, home, self._env_path_prepend, self._tools)
 
     def _next_request_id(self) -> str:
         self._request_id += 1

@@ -15,6 +15,9 @@ What `--tools` does and does not restrict, measured on Omp 18.4.10:
 - With `read` on, Omp adds a `write` tool that dispatches `xd://` devices and
   rejects every other path. It writes no file.
 - `read` still opens URLs and Omp's `pr://` and `issue://` GitHub schemes.
+
+`launch.py` and `eval_guard.js` close the last two; the first stays open on
+purpose. `docs/notes/0013-the-omp-arm.md` records why.
 """
 
 from __future__ import annotations
@@ -63,7 +66,11 @@ class ToolSelection:
     """`read` is on only because the row allows `Skill`, not `Read`."""
 
     webfetch_via_read: bool
-    """The row denies `WebFetch`, but `read` is on and still opens URLs."""
+    """The row denies `WebFetch` while `read` is on.
+
+    `read` opens URLs unless `fetch.enabled` is off, which `launch.OMP_CONFIG`
+    sets for every row, so this no longer marks an open path.
+    """
 
     @property
     def argv(self) -> tuple[str, ...]:
