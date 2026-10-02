@@ -94,6 +94,11 @@ and identically. The
 subagent, with every file-reading tool closed, for a phrase only the injected
 constitution could have told it.
 
+**Enforcement**: the budget is stated in the file and, on Claude Code, enforced
+by the `restate-reply.py` `Stop` hook, which asks once for a restatement of an
+over-budget reply. Omp and Codex have no such hook yet. `hooks/hooks.json` and
+the hook's docstring are the only statements of its contract.
+
 **Whether it landed**: arriving and being obeyed are different questions, and
 the `constitution-reply-is-concise` eval asks the second. It puts a one-line
 answer under every pressure to write ten and counts the lines that come back.
@@ -119,8 +124,9 @@ reason: prose can be read and not followed.
 | ---- | ----- | ------------ |
 | `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers `rules/constitution.md` to the session and to every subagent. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Denies the multiple-choice widget, and tells Claude to ask the question in the chat reply instead. |
+| `restate-reply.py` | `Stop` | On Claude Code, asks once for a concise restatement of a reply over the four-line budget. The draft and the restatement are both visible; the hook rewrites nothing. |
 
-**Codex runs the same two scripts.** Its hook wire contract is Claude Code's —
+**Codex runs the first two scripts.** Its hook wire contract is Claude Code's —
 same stdin, same `hookSpecificOutput` — so `hooks/hooks.json` carries one extra
 matcher and one extra event rather than a second copy of anything. The widget
 is `request_user_input` there and `AskUserQuestion` does not exist; delegation

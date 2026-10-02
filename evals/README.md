@@ -11,6 +11,7 @@ the `claude` binary, so there is no version to hold back.
 evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
+│   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
 │   ├── omp-*.yaml                  one two-variant Omp experiment per model
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
@@ -565,6 +566,35 @@ self-answer, which is the common failure. What the anchors still leave to the
 reader: a lost replicate scores 0.0 like any other, so it drags the mean until
 someone drops it by hand, and the check itself is a judgement by the grading
 model rather than a field. Read the dialogs before trusting a mean.
+
+### `base-vs-candidate`: does the `Stop` hook change behaviour
+
+`with-without.yaml` compares the plugin with no plugin, so its control carries
+no constitution and it cannot isolate `hooks/restate-reply.py`. The comparison
+experiment loads the plugin in both arms and varies only the revision: `base`
+is `master` (constitution delivered, no `Stop` hook), `candidate` is this
+checkout (constitution and hook). That answers a question the ablation cannot:
+does the hook change a reply once the constitution is already there?
+
+The base arm needs a second checkout the experiment cannot create:
+`git worktree add ../daily-driver-base <base-revision>`. Run it with
+`make evals-run-comparison TASKS=...`, narrowed to the four rows below, five
+repeats, per-replicate results kept. Record the base and candidate revisions
+with the run.
+
+| Row | Role |
+| --- | ---- |
+| `constitution/answer-selects-from-findings.yaml` | finding; take a fresh `base` number, not the recorded 0.40 |
+| `constitution/completion-report-is-lean.yaml` | finding |
+| `constitution/reply-is-concise.yaml` | control, at 1.000 in every arm so far; a drop in `candidate` is a defect |
+| `constitution/explanation-request-answered.yaml` | control; a requested explanation must still arrive |
+
+**Reach before compliance.** Establish that the `Stop` hook fires inside this
+harness at all: a `candidate` transcript for an over-budget reply must show the
+continuation. If it does not, the comparison is void; report that and stop.
+Report replicates marked `ANCHOR: no-question` or `ANCHOR: tainted-question`
+separately. The Codex arm stays out: every constitution row carries
+`skip:codex`, because `coder-eval-codex` installs no hooks.
 
 ### `completion-report-is-lean`, the row that grades a report
 
