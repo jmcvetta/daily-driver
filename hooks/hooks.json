@@ -12,6 +12,18 @@
         ]
       }
     ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/restate-reply.py",
+            "timeout": 10,
+            "statusMessage": "Asking for a concise restatement"
+          }
+        ]
+      }
+    ],
     "SubagentStart": [
       {
         "hooks": [

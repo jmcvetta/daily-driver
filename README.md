@@ -120,6 +120,7 @@ reason: prose can be read and not followed.
 | ---- | ----- | ------------ |
 | `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers `rules/constitution.md` to the session and to every subagent. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Denies the multiple-choice widget, and tells Claude to ask the question in the chat reply instead. |
+| `restate-reply.py` | `Stop` | Asks once for a concise restatement of every final reply, opened by a fixed separator line. The draft and the restatement are both visible; the hook rewrites nothing. Measured on Claude Code only; Codex reads the same file, untested. |
 
 **Codex runs the same two scripts.** Its hook wire contract is Claude Code's —
 same stdin, same `hookSpecificOutput` — so `hooks/hooks.json` carries one extra

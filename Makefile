@@ -8,7 +8,7 @@ SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
-	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
+	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat check-restate-reply \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
 	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
@@ -101,7 +101,7 @@ check-ci-scope:
 check-plugin-validity: check-plugin check-skills check-agents \
 	check-manifests check-manifest-fixtures
 
-check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
+check-runtime: check-constitution check-ask-in-chat check-restate-reply check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean \
 	check-task-worktree-fixture check-scripts
 
@@ -192,6 +192,11 @@ check-constitution:
 # rather than believed by a session. See the script's docstring.
 check-ask-in-chat:
 	python3 scripts/check-ask-in-chat.py
+
+# The acceptance test for the `Stop` hook that asks for a concise restatement of
+# every final reply: the real script, synthetic event JSON, no model.
+check-restate-reply:
+	python3 scripts/check-restate-reply.py
 
 # The acceptance test for the Omp runtime adapter: import extensions/
 # daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
