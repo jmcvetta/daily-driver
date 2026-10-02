@@ -27,7 +27,8 @@ defaults:
     # Verified against the provider catalog borrowed into the throwaway Omp home.
     model: openai-codex/gpt-5.6-sol
     permission_mode: acceptEdits
-    # Recorded, not enforced: Omp RPC has no per-session tool allowlist.
+    # Enforced as `omp --tools=read`: `Skill` needs `read`, which is how Omp
+    # engages a skill. A row that restates this field replaces it.
     allowed_tools: [Skill]
 
 variants:

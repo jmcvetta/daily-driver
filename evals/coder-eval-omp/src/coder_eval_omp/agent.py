@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Literal, NoReturn
 
 from coder_eval.agent import Agent
-from coder_eval.errors import AgentCrashError, TurnTimeoutError
+from coder_eval.errors import AgentConfigError, AgentCrashError, TurnTimeoutError
 from coder_eval.models import (
     AgentState,
     ApiRoute,
@@ -86,6 +86,7 @@ from .rpc import (
     TurnReducer,
     TurnStarted,
 )
+from .tools import ToolSelection, UnenforceableToolList, select_tools
 
 
 logger = logging.getLogger(__name__)
@@ -206,6 +207,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._extension_errors: list[str] = []
         self._argument_keys_seen: set[str] = set()
         self._usage_keys_seen: set[str] = set()
+        self._tools = ToolSelection(tools=(), read_for_skill=False, webfetch_via_read=False)
         self._state = AgentState.WORKING
 
     # --- lifecycle ---------------------------------------------------------
@@ -231,18 +233,28 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 "Install Omp with `curl -fsSL https://omp.sh/install | sh`."
             )
 
-        unenforced = [
-            field
-            for field in ("allowed_tools", "disallowed_tools", "system_prompt", "system_prompt_file")
-            if getattr(self.config, field, None)
-        ]
+        # Before anything is built: a list this arm cannot enforce fails the
+        # task here, rather than after a run with every tool on.
+        try:
+            self._tools = select_tools(self.config.allowed_tools, self.config.disallowed_tools)
+        except UnenforceableToolList as error:
+            # Not retryable: the same row fails the same way every attempt.
+            raise AgentConfigError(str(error)) from error
+        if self._tools.webfetch_via_read:
+            # Omp has no fetch tool to remove: `read` opens URLs itself.
+            logger.warning("omp: the row denies WebFetch, but `read` is on and still opens URLs on this arm.")
+        if self._tools.read_for_skill:
+            # The one place a row's list is not met exactly. Omp engages a
+            # skill by reading `skill://<name>`, so `Skill` needs `read`.
+            logger.warning(
+                "omp: `read` is on for Skill although the row does not allow Read; "
+                "a Read of skills/<name>/SKILL.md can still happen on this arm."
+            )
+
+        unenforced = [field for field in ("system_prompt", "system_prompt_file") if getattr(self.config, field, None)]
         if unenforced:
-            # Said out loud once per task rather than left to be discovered from
-            # a report. `disallowed_tools` is what the trigger rows use to keep
-            # a denied `Read` of `skills/<name>/SKILL.md` from scoring as an
-            # engagement, and this arm cannot enforce it: Omp's RPC mode takes
-            # no per-session tool allowlist. A no-fire row is therefore weaker
-            # here than on Claude Code, and `evals/README.md` says so.
+            # Said out loud once per task rather than left to be discovered
+            # from a report: Omp's RPC mode takes no system-prompt argument.
             logger.warning(
                 "omp: %s set but NOT enforced — Omp's RPC mode has no equivalent knob, so the run is "
                 "unconstrained by them; do not read them as a boundary.",
@@ -320,6 +332,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             "omp_linked_plugins": list(self._linked_plugins),
             "omp_skills_loaded": list(self._loaded_skills),
             "omp_extension_errors": list(self._extension_errors),
+            "omp_tools": list(self._tools.tools),
         }
         if self._session_id:
             info["omp_session_id"] = self._session_id
@@ -687,8 +700,14 @@ class OmpAgent(Agent[OmpAgentConfig]):
             raise RuntimeError("omp: plugins were declared but none installed; the arm would run untreated")
 
     async def _spawn(self, binary: str, home: Path) -> None:
-        """Start `omp --mode rpc` and wait for its `ready` frame."""
-        argv = [binary, "--mode", "rpc", *self.config.extra_args]
+        """Start `omp --mode rpc` and wait for its `ready` frame.
+
+        The tool flag comes before `extra_args`, so an experiment can widen it
+        only by writing its own `--tools` there, where a reader sees it. Omp
+        exits on a tool name it does not know, which fails the task in
+        `_await_frame` with Omp's own error.
+        """
+        argv = [binary, "--mode", "rpc", *self._tools.argv, *self.config.extra_args]
         self._process = await asyncio.create_subprocess_exec(
             *argv,
             stdin=asyncio.subprocess.PIPE,
