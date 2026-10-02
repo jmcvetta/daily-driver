@@ -69,10 +69,11 @@ broken, because you have no reason to believe it works. Say so plainly rather
 than softening it. The rule covers application code: the code that does the
 work the project exists to do. It does not cover tests, which need no tests of
 their own. It does not cover infrastructure declared in OpenTofu or its kind,
-which its own `validate` and `plan` already check. Where production
+which its own offline `validate` already checks. Where production
 infrastructure does need a test, write the test with infrastructure tooling,
 never as an ad hoc script. A test outside the rule's scope earns nothing and
-bills every CI run. A manual spot-check is not a test: a test asserts, fails
+bills every CI run, but do not delete an existing test on that ground alone.
+A manual spot-check is not a test: a test asserts, fails
 loudly, and is committed. It ships in the same commit as the code it covers
 and runs offline against fixtures, never against a live third-party service.
 The worst bugs are silent — a filter that wrongly drops records raises no
