@@ -894,9 +894,14 @@ because they drive Claude's settings and dispatch hook.
 runs `scripts/evals-variants.py` first, so every variant in every model file
 must resolve before a paid run begins.
 
-**Two Omp limitations remain.** `allowed_tools` and `disallowed_tools` are not
-enforced in Omp RPC mode, and token accounting is best-effort. The adapter
-records the evidence it has in each run's `environment_info`.
+**The Omp arm enforces the tool lists through `omp --tools`, with one
+exception.** An allowed `Skill` keeps `read` on, because Omp engages a skill by
+reading `skill://<name>`. A trigger row that denies `Read` therefore still has
+`read` on this arm. A list the arm cannot express, such as an allowed tool with
+no Omp twin, fails the task. `docs/notes/0013-the-omp-arm.md` records what
+`--tools` does not restrict. Omp records made before issue #459 ran with every
+tool on. Token accounting is best-effort. The adapter records the evidence it
+has in each run's `environment_info`.
 
 ## The Codex arm
 
