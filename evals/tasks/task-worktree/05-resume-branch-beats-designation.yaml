@@ -41,7 +41,7 @@ success_criteria:
   - type: command_executed
     description: The existing branch is attached without recreating it from the base
     tool_name: Bash
-    command_pattern: 'git worktree add(?!.* -b issue-52-strict-parser upstream/master)[^\n]*issue-52-strict-parser'
+    command_pattern: 'git worktree add(?![^\n]*upstream/master)[^\n]*issue-52-strict-parser'
     min_count: 1
 
   - type: command_executed

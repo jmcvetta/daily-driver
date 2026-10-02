@@ -210,7 +210,9 @@ source that names one:
    set to close it, or a pull request whose body references the issue. Its
    head branch.
 2. The `Branch:` line of a `stand-down` handoff comment.
-3. The branch in the latest claim comment.
+3. The branch in the latest claim comment — a resume branch only where the
+   user handed the issue over to continue it. Without that, a claim from
+   another session is `Claim the issue`'s collision, not a resume.
 
 One branch found is the **resume branch**, and the pull request it carries, if
 any, is the one to adopt. More than one distinct branch is a stop: report them
