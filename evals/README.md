@@ -541,10 +541,9 @@ the parent never sees, which is a change to the hook, not to the case.
 
 Reach is settled; whether an injected rule *lands* is not, and `reply-is-concise`
 is the first case here that asks. It picks the `Before you reply` rule because
-compliance with it is countable — every other rule in the constitution needs a
-judgment about engineering, and this one needs a line count. That makes it the
-cheapest instrument in the repository for the general question, and a cheap
-instrument is the one that gets built.
+a session obeys or breaks it in plain sight. That makes it the cheapest
+instrument in the repository for the general question, and a cheap instrument
+is the one that gets built.
 
 The case asks why a documented-inclusive slice drops its last item. The honest
 answer is one line, and everything about the situation pushes the other way: a
@@ -552,13 +551,17 @@ bug invites a diagnosis, a fix, a test and a summary. `Do not change any code`
 in the prompt, and closed `Write` / `Edit` / `Bash`, remove the one honest
 reason for length — an agent that fixed the bug has something to report.
 
-Both graders are `llm_judge`, because the reply is the only artifact the case
+Both graders are `agent_judge`, because the reply is the only artifact the case
 produces and nothing in `coder_eval` matches the final message deterministically
-(see "How the graders ported"). The length grader is given a rubric that counts
-rather than one that forms an opinion, and it reports the count in its
-rationale so a verdict can be audited. Beneath it sits a correctness grader at
-weight 1: a length grader alone pays for silence, and short and wrong is not
-what the rule asks for.
+(see "How the graders ported"). The brevity grader, at weight 2, judges
+unnecessary content: the reply carries the cause and nothing else — no fix
+offer, no test proposal, no tour of the code, no recap. It does not count
+lines, because the constitution's audience rule carries no number to count
+against. Beneath it sits a correctness grader at weight 1: a brevity grader
+alone pays for silence, and short and wrong is not what the rule asks for.
+Each rubric carries a calibration pair — verbose-but-correct fails brevity,
+short-but-incomplete fails correctness — so neither grader compensates for the
+other.
 
 One thing both rubrics have to know, and a naive one would not:
 `include_agent_output` does not hand a judge the reply. It hands over
@@ -585,10 +588,12 @@ turn had no reply. Both rubrics write `ANCHOR: none` and score 0.0 there,
 failing the case identically in both arms. A drifted harness has measured
 nothing, and a case that says so is worth more than one that reports a figure.
 
-Its weakness is the threshold. Four lines is the constitution's number, and the
-rubric inherits it — so the case measures compliance with the budget as written
-and says nothing about whether the budget is set at the right place. Moving the
-number means moving it in both files, together.
+Its weakness is the judgment. A line count was crude but reproducible; a
+judgment on unnecessary content is faithful to the rule but is a model's call.
+Read `per_replicate_scores`: a disagreement between replicates is a finding
+about the rubric, not noise to average away. Neither the constitution nor the
+rubric carries a line number any more, so there is no threshold to keep in
+step between them.
 
 ### `answer-selects-from-findings`, the row that is not at ceiling
 

@@ -24,7 +24,7 @@ nineteen skills:
 | `pr` | Opens the pull request for the current branch, or brings an open one up to date: branch guard, existing-PR check, draft state. Delegates the title and the body. |
 | `pr-title` | The title: concise, and Conventional Commits, which is what release-please reads to decide the next version. |
 | `conventional-commits-type` | Picks the type — `fix`, `feat`, `refactor` and the rest — from what the change *does*, never from what the diff looks like. |
-| `pr-body` | The body: a one-line summary, a salutation in verse, optional `Blockers` and `Issues` sections, an executive summary, and engineering detail. |
+| `pr-body` | The body: a one-line summary, a salutation in verse, optional `Blockers` and `Issues` sections, an executive summary, and the detail a reviewer needs, each fact said once. |
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
 | `issue-labels` | Six mutually exclusive issue kinds — `epic`, `task`, `bug`, `proposal`, `research`, `human` — decide readiness. `story` marks a confirmed direct child of an epic without changing its kind. |
 | `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
@@ -72,7 +72,7 @@ every subagent. Nine sections:
 | Section | What it settles |
 | ------- | --------------- |
 | Voice | Simplified Technical English for prose written in your own voice. |
-| Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
+| Before you reply | Concision by audience: text a person reads is edited concise before it is sent, keeping every essential fact; text an agent reads keeps every fact it needs. The shape: the answer first, no preamble, no recap. |
 | Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; repository-changing tasks isolated before research; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
 | When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
@@ -96,9 +96,10 @@ constitution could have told it.
 
 **Whether it landed**: arriving and being obeyed are different questions, and
 the `constitution-reply-is-concise` eval asks the second. It puts a one-line
-answer under every pressure to write ten and counts the lines that come back.
-`Before you reply` is the rule it measures because that rule's compliance is
-countable; the rest of the file needs a judgment about engineering instead.
+answer under every pressure to write ten and grades the reply for content the
+question never asked for. `Before you reply` is the rule it measures because a
+session obeys or breaks it in plain sight; the rest of the file needs a
+judgment about engineering instead.
 
 **How it arrives**: a plugin cannot ship a `CLAUDE.md`, so three injection
 points deliver the file — `SessionStart` for the session, and `PreToolUse` on
