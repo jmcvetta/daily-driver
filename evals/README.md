@@ -100,8 +100,9 @@ list that `scripts/check-agent-judges.py` enforces. `allowed_tools: []` alone
 hides nothing: a judge without the list reads the sandbox, times out, and
 scores 0.0 with no verdict.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
-is the decision. `make evals-preflight` stops a run that still carries an
-`llm_judge` row. Port the row; do not look for a key.
+is the decision. `make check` refuses an `llm_judge` row, and `make
+evals-preflight` stops a run that carries one anyway. Port the row; do not look
+for a key.
 
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself

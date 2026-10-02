@@ -24,11 +24,19 @@ success_criteria:
     description: "`epic` fires for multi-issue planning"
     expected_skill: epic
     skill_name: epic
-  - type: llm_judge
+  - type: agent_judge
     description: Planning records a mechanical class and refuses to use reasoning as an underspecification workaround
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
     prompt: |
       FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
       reply starts after the last `[RESULT - …]` tag and runs to the end.

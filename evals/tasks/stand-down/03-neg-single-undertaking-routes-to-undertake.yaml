@@ -32,12 +32,20 @@ success_criteria:
     # A misfire has already lost the row, so there is nothing left to pay for.
     stop_early: {}
 
-  - type: llm_judge
+  - type: agent_judge
     description: >-
       The reply follows undertake's stop route and runs no fleet stand-down
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 
