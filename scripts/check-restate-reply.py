@@ -66,6 +66,14 @@ class RestateReply(unittest.TestCase):
         for dropped in ("preamble", "recap", "narration", "offers"):
             self.assertIn(dropped, reason)
 
+    def test_reason_demands_the_answer_not_maximum_compression(self) -> None:
+        """Without it the reason asks for the shortest text again, and the model
+        answers "Nothing new to report" where the question needed a fact (#485)."""
+        reason = answer("Done.")["reason"]
+        self.assertNotIn("as concisely as you can", reason)
+        self.assertIn("answers the user's last message", reason)
+        self.assertIn("specific answer", reason)
+
     def test_reason_has_no_exemption(self) -> None:
         """Without it an exemption returns and the model calls every reply
         such a case and declines to restate (#458)."""

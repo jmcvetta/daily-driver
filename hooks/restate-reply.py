@@ -56,13 +56,19 @@ SEPARATOR = "──── Restated ────"
 # What the model is asked to do. It names the artifact, because a bare
 # "restate concisely" made the agent describe its reply instead of giving it.
 # It names no case in which the draft may stand: measured on #458, a stated
-# exemption let the model decline every restatement.
+# exemption let the model decline every restatement. It does not ask for the
+# shortest possible text: measured on #485, "as concisely as you can" made the
+# model answer "Nothing new to report" where the question needed a fact, so the
+# reason demands the specific answer and names what to cut instead.
 REASON = (
     "Restate the reply you just wrote — the one the user is about to read — "
-    "as concisely as you can, and send only that restatement. Open it with "
-    f"this line, exactly as written, on a line of its own: {SEPARATOR}\n\n"
-    "Keep every fact, uncertainty, risk and required action. Drop preamble, "
-    "recap, narration, offers and detail the user did not ask for."
+    "so that it answers the user's last message directly, and send only that "
+    "restatement. Open it with this line, exactly as written, on a line of "
+    f"its own: {SEPARATOR}\n\n"
+    "State the specific answer itself — the facts, names and numbers the user "
+    "needs — never a pointer to an earlier reply. Keep every fact, "
+    "uncertainty, risk and required action the answer needs. Cut preamble, recap, narration, offers and detail the user "
+    "did not ask for."
 )
 
 
