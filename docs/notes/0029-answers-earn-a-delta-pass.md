@@ -2,8 +2,9 @@
 
 **Status:** decided, 2026-10-02.
 **Resolves:** [#224](https://github.com/jmcvetta/daily-driver/issues/224).
-**Confirms:** [`0018`](0018-a-briefed-subagent-is-a-reviewer.md) and
-[`0021`](0021-the-gate-is-a-read.md). Amends neither.
+**Amends:** nothing. It builds on
+[`0018`](0018-a-briefed-subagent-is-a-reviewer.md) and
+[`0021`](0021-the-gate-is-a-read.md), and changes neither.
 
 **Observed.** #224 doubted `review-cycle`'s rule that a commit answering a
 review finding never earns another review. On PR #223 the round closed with
@@ -24,7 +25,7 @@ The rule #224 doubts was in force for one week.
 
 | Date | Change | Where |
 | ---- | ------ | ----- |
-| 2026-09-08 | `Does it go again?` classifies each post-review commit as *Answering*, *Changing what the code does*, or *Neither*. Only the second class earns a round. | PR #72 |
+| 2026-09-07 | `Does it go again?` classifies each post-review commit as *Answering*, *Changing what the code does*, or *Neither*. Only the second class earns a round. | PR #72 |
 | 2026-09-15 07:39Z | #224 opened, citing PR #223's closing note. | #224 |
 | 2026-09-15 07:43Z | #225 opened as a `task`: replace the exemption for answering commits with one independent pass over the fix delta. It names #224 as its research. | #225 |
 | 2026-09-15 08:12Z | PR #226 merged. It removed the three-way classification and added the stage `Verify the fix delta`. | PR #226 |
@@ -53,13 +54,15 @@ three-dot content at the reviewed SHA with its content at the current SHA,
 so a commit's label, provenance or message decides nothing. Rewritten
 history changes nothing either: a missing ancestor is never evidence of no
 change. One call stays with the author: a delta that is pure formatting
-needs no pass. That residue is accepted here. A skipped formatting batch is
-folded into the next pass, because the delta runs from the reviewed SHA
-rather than from the last pass. Only a formatting-only final batch reaches
+needs no pass. That residue is accepted here. The brief carries the reviewed
+SHA and the current SHA, and on the Claude Code route the reviewer compares
+the pull request's content between those two. `review-cycle` describes a
+later pass as targeted at the correction delta, so the two SHAs in the brief
+are what fix the range it reads. A formatting-only batch pushed last reaches
 the gate unread, and a rule that dispatched a reader for a whitespace reflow
 would spend a dispatch per round to read nothing.
 
-**It re-opens the loop.** Four bounds hold it closed. The brief forbids a
+**It re-opens the loop.** Five bounds hold it closed. The brief forbids a
 full pull-request audit and the solicitation of style work. A rejected
 finding stays closed unless new evidence defeats the recorded rejection, so
 a repeat does not consume a pass. The loop ends on the first clean pass.
@@ -79,15 +82,18 @@ The shape that shipped is the ordinary one.
 - **GitHub** branch protection can "dismiss stale pull request approvals
   when commits are pushed that affect the diff in the pull request". The
   author may resolve their own threads, which is why that setting exists.
-- **Google's reviewer guide** allows LGTM with unresolved comments when the
-  reviewer "is confident that the developer will appropriately address" them
-  and the comments are minor. That is trust between two people. An
+- **Google's reviewer guide** allows LGTM with unresolved comments when "at
+  least one of the following applies": the reviewer "is confident that the
+  developer will appropriately address" them, the comments do not have to
+  be addressed, or they are minor. That is trust between two people. An
   unattended round has no second person to trust, so it takes Gerrit's
   shape rather than Google's.
-- **Agent review tools** converge on the same delta: CodeRabbit's
-  incremental review reads "only the new changes" since its last full
-  review, and Copilot code review reports findings "Resolved since last
-  review" after it checks its own earlier findings.
+- **Agent review tools** converge on the same delta. CodeRabbit's docs for
+  its `@coderabbitai review` command describe an incremental review of the
+  changes since its last full review, and GitHub's changelog of 2026-09-18
+  for Copilot code review describes findings grouped by whether they were
+  resolved since the last review. Neither text was read at source for this
+  note; both are recorded from the vendors' published summaries.
 
 ## Decided
 
