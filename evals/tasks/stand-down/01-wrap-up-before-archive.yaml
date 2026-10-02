@@ -41,13 +41,21 @@ success_criteria:
     skill_name: stand-down
 
   # The finding.
-  - type: llm_judge
+  - type: agent_judge
     description: >-
       The wrap-up (interrupt, then a commit-and-push instruction) reaches
       `session_01WrapUp` before it is archived
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 
