@@ -434,7 +434,16 @@ class TurnReducer:
         message on `message_end`. Both are keyed by message id, and a completed
         message REPLACES the deltas collected for that id — otherwise the reply
         is counted twice and every length rubric reads double.
+
+        Only assistant messages count. User prompts and tool results arrive on
+        the same frames, and a tool result can hold a whole `SKILL.md`; rendered
+        as reply text, they push the `[RESULT - ...]` anchor past the judge's
+        truncation. A frame with no role is an assistant delta.
         """
+        message = frame.get("message")
+        role = message.get("role") if isinstance(message, dict) else None
+        if role is not None and role != "assistant":
+            return []
         message_id = str(frame.get("messageId") or frame.get("messageID") or frame.get("id") or "message")
         complete = _text_of(frame.get("message"))
         if complete:
