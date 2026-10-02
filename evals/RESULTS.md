@@ -33,3 +33,4 @@ One row per committed record, oldest first.
 | 2026-10-01 | classes-sonnet-high | claude-code | claude-sonnet-5-5 | 18 | 18/18 | $5.96 | $0.33 | 18m 01s |
 | 2026-10-01 | classes-opus-low | claude-code | claude-opus-5-5 | 18 | 18/18 | $9.28 | $0.52 | 17m 16s |
 | 2026-10-02 | base-vs-candidate | claude-code | claude-sonnet-5 | 30 | 28/30 | $6.00 | $0.21 | 2m 14s |
+| 2026-10-02 | with-without | claude-code | claude-sonnet-5 | 10 | 0/10 | $3.42 | no task completed | 12m 10s |

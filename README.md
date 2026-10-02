@@ -95,9 +95,9 @@ subagent, with every file-reading tool closed, for a phrase only the injected
 constitution could have told it.
 
 **Whether it landed**: arriving and being obeyed are different questions, and
-the `constitution-reply-is-concise` eval asks the second. It puts a one-line
-answer under every pressure to write ten and grades the reply for content the
-question never asked for. `Before you reply` is the rule it measures because a
+the `constitution-short-question-after-tool-heavy-work` eval asks the second.
+It asks one short question after long tool-heavy work and grades the reply for
+content the question never asked for. `Before you reply` is the rule it measures because a
 session obeys or breaks it in plain sight; the rest of the file needs a
 judgment about engineering instead.
 
