@@ -413,7 +413,10 @@ failure and do not claim success.
 
 This notice reports the review cycle, not merge readiness. It never approves,
 merges, changes draft state, or replaces `undertake`'s first-readiness report.
-A standalone review ends at `Review the head` and never posts it. The
+A standalone review ends at `Review the head` and never posts it.
+`undertake`'s `The gate` and `embark`'s `Land the pull request` read this
+notice, which is why a completed round that starts no new review posts it
+before the round returns to its caller, the clean full review included. The
 harness reference names the read and publication route.
 
 

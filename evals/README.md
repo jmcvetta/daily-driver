@@ -58,6 +58,18 @@ writes the `Measured routes` table in
 reference, since every route it names is a concrete Omp model or overlay --
 from them; a model and settings pair with no case row is listed `unmeasured`.
 
+[`RESULTS.md`](RESULTS.md) lists every committed record on one page: pass
+rate, price and wall time per run. `make evals-render-results` writes it, and
+`make check` fails when it is stale.
+
+From schema version 3, every case row carries a numeric `cost` in USD and an
+`elapsed_seconds` above zero. The price is the harness's own where it reports
+one (`cost_source: reported`), as Claude Code does. Omp and Codex report token
+counts only, so the recorder prices those tokens from
+[`prices.yaml`](prices.yaml) (`cost_source: computed`). A model with no entry
+there fails the recording, naming the model: add its published rates, then
+record again. Records at versions 1 and 2 stay as they are.
+
 ## Running them
 
 ```sh
@@ -66,6 +78,7 @@ make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
 make evals-run        # the whole suite on Claude Code, both variants. Real money.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 make evals-render-routes  # rewrite the Measured routes table from committed provenance
+make evals-render-results # rewrite RESULTS.md from committed provenance
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
@@ -1016,10 +1029,10 @@ carries no plugin and no ablation, one variant per case, because the question
 is whether a given model, run in the `task` role real dispatch would put it
 in, finishes ordinary delegated work and leaves its own tests passing.
 
-**What it measures.** Three cases today, all from `jmcvetta/career`: two
-`mechanical` and one `implementation`, the smallest qualifying candidates of
-each `class:` tag by changed lines whose answer key the issue decides, each
-verified once at build time to fail on the base SHA and pass on
+**What it measures.** Six cases today, all from `jmcvetta/career`: three
+`mechanical` and three `implementation`, small qualifying candidates whose
+answer key asserts only what the issue decides (two of them by a recorded
+trim, below), each verified at build time to fail on the base SHA and pass on
 the merge SHA before it was shipped. A case's `initial_prompt` is the title
 and body of the issue the pull request closed, and names neither number; its
 three `run_command` criteria check, in order,
@@ -1104,9 +1117,23 @@ against its `tests.patch` before shipping it. A key that asserts a name, path
 or wording the issue leaves open fails a model that did exactly what was asked;
 `--exclude owner/repo#N=reason` takes such a case out for good and deletes its
 fixture.
+
+Where only a few assertions overreach, trim the key instead. **A trim
+removes requirements the source issue does not decide, and nothing else.** An
+exact-output assertion may be replaced by a weaker behavioural one that keeps
+the diagnostic or safety contract the issue requires. A trim never adds a
+product requirement, never removes a required behaviour, and is never tuned
+to a model's output. Apply the full key to a checkout of the base SHA, delete the
+assertions or tests the issue leaves open, and diff against the base SHA
+(`git add -N` any new file first); the result replaces the case's
+`tests.patch`. `--trim-key owner/repo#N=reason` records each replacement and
+its source-contract rationale on the candidate, and a trimmed case refuses a rebuild from the pull
+request's diff. `--verify-case owner/repo#N` then runs the build-time check
+on the committed key: it must fail on the base SHA and pass on the merge SHA,
+both applied through `shared/apply-tests.sh`, and the manifests must match it.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
-`implementation`) before it can be selected; one shipped case carries one,
+`implementation`) before it can be selected; four shipped cases carry one,
 reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub

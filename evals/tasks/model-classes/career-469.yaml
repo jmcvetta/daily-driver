@@ -1,7 +1,7 @@
 task_id: model-classes-career-469
 description: >-
   jmcvetta/career#469: perf(kokoro): compile bytecode at uv sync to stop cold-importing Prefect
-tags: [model-classes, class:implementation, smoke]
+tags: [model-classes, class:implementation]
 
 sandbox:
   template_sources:

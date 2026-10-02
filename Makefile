@@ -13,12 +13,12 @@ SHELL := /bin/bash
 	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
 	check-review-cycle-fix-delta-route check-provenance check-verse \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
-	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
+	check-model-classes-builder check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
+	check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
 	evals-install evals-plan \
-	evals-variants evals-preflight evals-record evals-render-routes evals-run evals-run-omp \
+	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-classes mcp-usage
 
@@ -104,7 +104,8 @@ check-runtime: check-constitution check-ask-in-chat check-omp-extension check-mo
 	check-task-worktree-fixture check-scripts
 
 check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-eval-arms check-evals-preflight check-evals-provenance check-model-telemetry
+	check-model-classes-builder check-eval-arms check-evals-preflight check-evals-provenance \
+	check-evals-results check-model-telemetry
 
 
 check-issue-infra: check-labels check-labels-fixtures check-story-fixtures
@@ -349,6 +350,11 @@ check-eval-fixtures:
 check-model-classes-grader:
 	scripts/check-model-classes-grader.sh
 
+# check-model-classes-builder: the case builder's offline self-tests, which
+# every invocation runs first -- here with no token and no network.
+check-model-classes-builder:
+	python3 scripts/evals-cases-from-prs.py --self-test
+
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.
 # The model-driven rows remain outside CI; their test instrument does not.
@@ -378,6 +384,12 @@ check-evals-preflight:
 # against synthetic run artifacts. It never starts a model or reads a paid run.
 check-evals-provenance:
 	uv run --frozen python3 scripts/check-evals-provenance.py
+
+# check-evals-results: `evals/RESULTS.md` matches a fresh render of every
+# committed record, so a record cannot land without its row. Standard library
+# only, so plain `python3`.
+check-evals-results:
+	python3 scripts/evals-render-results.py --check
 
 # check-model-telemetry: `scripts/model-telemetry.py`'s claim, readiness and
 # review-verification comment parsers, checked against fixture text -- no
@@ -503,6 +515,11 @@ evals-record:
 # from every committed record under evals/provenance/. Reads no run directory.
 evals-render-routes:
 	uv run --frozen python3 scripts/evals-render-routes.py
+
+# evals-render-results: rewrite `evals/RESULTS.md`, one row per committed
+# record under evals/provenance/. Reads no run directory.
+evals-render-results:
+	python3 scripts/evals-render-results.py
 
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and

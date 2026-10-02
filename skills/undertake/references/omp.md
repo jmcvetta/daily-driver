@@ -61,6 +61,8 @@ The pull request
 | `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
 | `The gate` | Read the review threads | `review-cycle`'s `references/omp.md` owns them |
 | `The gate` | Read the review record | `gh pr view <number> --json comments` — the round's own `Review` and `Review verification` comments |
+| `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
+| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
@@ -198,10 +200,28 @@ read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s two endpoint reads remain the CI verdict.
 Pending or unregistered checks use its persistent bounded watcher. Failed
 checks return to `Fix, answer, resolve, push`; unavailable logs are a named
-evidence blocker, not green. A durable Omp service preserves its process, but
-does not resume the owner: where no owner turn is running, report unfinished
+evidence blocker, not green. When CI on the current head is green and the
+gate's notice read finds no completion notice, post the notice before
+continuing the ready-gate work. A durable Omp service preserves its process,
+but does not resume the owner: where no owner turn is running, report unfinished
 work and the owner-resume requirement rather than claiming autonomous review.
 
 The detached `keep-current-<number>` merge loop still starts at ready and
 remains mechanical. It is not pre-ready CI supervision and never marks a
 draft ready.
+
+
+The stop
+========
+
+`SKILL.md`'s `The stop` names each operation in words; these are the calls.
+
+| Operation | Call |
+| --------- | ---- |
+| Read the issue's comments, for the claim and any equivalent handoff | `gh issue view <number> --json comments` |
+| End the merge watch | `write proc://keep-current-<number>/kill`, the service name it was started under |
+| Post the handoff | `gh issue comment <number> --body-file <path>` |
+
+`--body-file` for the reason `Claim the issue`'s row gives. A CI watcher this
+session holds is stopped by its `review-cycle` route. The pushed head is `git
+ls-remote origin <branch>`.
