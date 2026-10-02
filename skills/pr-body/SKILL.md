@@ -8,7 +8,7 @@ description: >-
   initiative that writes or revises a pull request's body while opening or
   updating one. Supplies the required
   structure: one-line summary, salutation in verse, optional blockers and
-  issue-reference sections, executive summary, and engineering detail. A pull
+  issue-reference sections, executive summary, and reviewer-relevant detail. A pull
   request whose diff changes the Tofu stack also carries a human-action blocker
   and the `human` label, below. Not for the PR title —
   that is `pr-title`.
@@ -43,8 +43,10 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   concise high level executive summary of the PR.  If you understand the
   importance of the PR for the larger software development or business
   perspectives, include that positioning.
-- **Details**: After the summaries, include as much engineering detail as seems
-  fitting.
+- **Details**: After the summaries, the engineering detail a reviewer needs —
+  how the change was made, how it was verified, and the material risk or
+  uncertainty — said once. What the opening line and `Summary` already say is
+  not repeated here.
 - **Unopinionated**: This is a short description of the branch, NOT a code
   review. Do NOT do opine on code quality or security.
 - **Provenance**: Last, below all of the above, `provenance`'s block — the
@@ -52,6 +54,10 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   that skill defines. A rewrite of a body someone else wrote adds a second
   block beneath the first rather than replacing it, per `provenance`'s own
   rule.
+
+**The body is human-facing, and the constitution's audience rule governs
+it.** Keep every essential fact — the change, the reason, the verification
+evidence, the material risk — and say each one once. Length is not detail.
 
 **The call that sets the body is per harness, and it lives beside this
 file.** [`references/claude.md`](references/claude.md) is the route for
