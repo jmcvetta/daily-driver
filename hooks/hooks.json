@@ -47,6 +47,18 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/restate-reply.py",
+            "timeout": 10,
+            "statusMessage": "Checking the reply against the line budget"
+          }
+        ]
+      }
     ]
   }
 }
