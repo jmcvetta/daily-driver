@@ -178,3 +178,19 @@ notice read finds no completion notice, post the notice before continuing the
 ready-gate work. State the unfinished condition and owner-resume
 requirement; never call a clean branch, an already-up-to-date response, or a
 draft completion.
+
+
+The stop
+========
+
+`SKILL.md`'s `The stop` names each operation in words; these are the calls.
+There is no wake, process or subscription on this harness, so `End the watch`
+has nothing to cancel: say so in the handoff's `Outstanding` line only where
+a stop leaves unfinished work.
+
+| Operation | Call |
+| --------- | ---- |
+| Read the issue's comments, for the claim and any equivalent handoff | `gh issue view <number> --json comments` |
+| Post the handoff | `gh issue comment <number> --body-file <path>` |
+
+The pushed head is `git ls-remote origin <branch>`.

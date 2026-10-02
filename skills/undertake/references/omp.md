@@ -214,3 +214,19 @@ work and the owner-resume requirement rather than claiming autonomous review.
 The detached `keep-current-<number>` merge loop still starts at ready and
 remains mechanical. It is not pre-ready CI supervision and never marks a
 draft ready.
+
+
+The stop
+========
+
+`SKILL.md`'s `The stop` names each operation in words; these are the calls.
+
+| Operation | Call |
+| --------- | ---- |
+| Read the issue's comments, for the claim and any equivalent handoff | `gh issue view <number> --json comments` |
+| End the merge watch | `hub stop`, `name` `keep-current-<number>`, where it was started |
+| Post the handoff | `gh issue comment <number> --body-file <path>` |
+
+`--body-file` for the reason `Claim the issue`'s row gives. A CI watcher this
+session holds is stopped by its `review-cycle` route. The pushed head is `git
+ls-remote origin <branch>`.

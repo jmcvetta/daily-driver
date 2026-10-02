@@ -225,3 +225,19 @@ The slot it occupies is the same slot `review-cycle`'s wait borrows and hands
 back. That ownership starts before ready, including red results and capped
 waits. A pending cadence wake is reused unless a CI wait borrowed it; on
 `End the wait`, cancel that borrowed wake and arm exactly one replacement.
+
+
+The stop
+========
+
+`SKILL.md`'s `The stop` names each operation in words; these are the calls.
+
+| Operation | Call |
+| --------- | ---- |
+| Read the issue's comments, for the claim and any equivalent handoff | `mcp__github__issue_read`, method `get_comments` |
+| Cancel the `Keep it current` wake slot timer | `mcp__Claude_Code_Remote__delete_trigger`, by the `trigger_id` the slot holds |
+| Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
+| Post the handoff | `mcp__github__add_issue_comment` |
+
+The pushed head is `git rev-parse HEAD` after a push that succeeded, and the
+last head `git ls-remote origin <branch>` reports where it did not.

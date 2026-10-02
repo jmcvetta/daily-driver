@@ -781,6 +781,61 @@ test skipped, push it, and end the turn without starting anything else. It
 opens no pull request and marks nothing ready: that is `stand-down`'s own
 record to write, not a step of this sequence completing.
 
+**It writes no handoff.** `stand-down`'s `Write the handoff` writes the one
+task-issue comment, so a handoff here would make two. `The stop` below is not
+this section: it governs a stop the user gives this session directly.
+
+
+The stop
+========
+
+The user tells this undertaking to stop, stand down or wrap up. It applies at
+any point after `Claim the issue`, whether or not a draft pull request exists.
+A claim says the work started and never says where it ended, so a stop that
+leaves only the claim leaves the next session to guess. **A stop that arrives
+as `stand-down`'s wrap-up message is `The wrap-up`'s, not this section's.**
+
+In order:
+
+1. **Secure the work.** The rules are `stand-down`'s `Secure the work`: commit
+   work in progress to the existing task branch, stage named files, skip no
+   hook and no test, and push. A branch with nothing new is pushed as it is.
+2. **End the watch.** Cancel the `Keep it current` wake slot timer, any CI
+   watcher this session holds, and every pull-request subscription. The
+   reference file for the harness in use names the calls.
+3. **Write the handoff.** One comment on the task issue:
+
+   ```markdown
+   ## Handoff — undertaking stopped <UTC timestamp>
+
+   This session stopped at the user's instruction. The work is yours to reclaim.
+
+   - Branch: `<branch>` — <link>. Pushed head: `<sha>`.
+   - Pull request: <#N and state (draft / ready), or "none open">.
+   - Reached: <the last step of the sequence completed>.
+   - Outstanding: <what is blocked, failing, or unverified — failed checks,
+     open review threads, a human action owed — or "nothing known">.
+   - Resume: <the concrete next action, e.g. "run `/undertake #N`; it resumes
+     on the branch above">.
+   ```
+
+   It ends with `provenance`'s block and carries no verse: somebody acts on
+   it, the reason `stand-down`'s task handoffs carry none. A push that fails
+   is stated here: `Pushed head:` names the last head that reached origin,
+   `Outstanding:` names the failure, and the handoff is still written.
+4. **Stop.** The undertaking does not mark the pull request ready, does not
+   close the issue, and does not call the work complete.
+
+**Idempotent.** Read the issue's comments before posting. A `## Handoff —`
+comment posted after the latest claim comment that names the same pushed head
+is an equivalent handoff: post nothing. One that names an older head is not
+equivalent, so post a new one. This is `stand-down`'s `Idempotent re-entry`.
+
+**An embark-dispatched implementor the user stops directly** runs `The stop`
+and also sends the stop to its orchestrator under `Reporting to an
+orchestrator`. `stand-down` counts that handoff as present where it names the
+current pushed head.
+
 
 Reporting to an orchestrator
 ============================
