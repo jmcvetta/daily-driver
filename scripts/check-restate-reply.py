@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""The acceptance test for the `Stop` hook that asks for a concise restatement.
+"""The acceptance test for the `Stop` hook that judges a reply for unrequested content.
 
-The real script is run as the harness runs it — synthetic event JSON on stdin —
-and the answer is asserted on. No model is needed, so it belongs in `make
-check` and in a CI that holds no credentials. Whether the restatement then
-shortens anything is the eval comparison's question, not this file's.
+The hook is an agent-type hook in `hooks/hooks.json`: a small model reads the
+user's last message from the transcript, compares the final reply with it,
+and blocks the stop with a list of the sentences the message did not ask for.
+The model call cannot run offline, so this file checks the wiring and the
+contract the prompt states. Whether the restatement then removes anything is
+the eval comparison's question, not this file's.
+
+Why an agent hook and not a prompt hook: a prompt hook sees only the hook
+input, and the `Stop` input carries the reply but not the user's message. An
+agent hook can read `transcript_path`, which does.
 
 No third-party imports.
 """
@@ -12,123 +18,78 @@ No third-party imports.
 from __future__ import annotations
 
 import json
-import os
-import re
-import subprocess
 import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 HOOKS_JSON = ROOT / "hooks" / "hooks.json"
-SCRIPT = ROOT / "hooks" / "restate-reply.py"
 SEPARATOR = "──── Restated ────"
 
 
-def run(stdin: str, *args: str) -> subprocess.CompletedProcess[str]:
-    """Run the hook as the harness does: argv, stdin, no plugin-root variable."""
-    return subprocess.run(
-        [str(SCRIPT), *args],
-        input=stdin,
-        capture_output=True,
-        text=True,
-        cwd=ROOT,
-        env={k: v for k, v in os.environ.items() if k != "CLAUDE_PLUGIN_ROOT"},
-    )
+def stop_handlers() -> list[dict]:
+    """Every handler wired to the `Stop` event."""
+    config = json.loads(HOOKS_JSON.read_text(encoding="utf-8"))["hooks"]
+    return [h for entry in config.get("Stop", []) for h in entry.get("hooks", [])]
 
 
-def answer(message: str, active: bool = False) -> dict:
-    """The hook's parsed answer for a `Stop` event carrying `message`."""
-    event = {
-        "hook_event_name": "Stop",
-        "session_id": "check-restate-reply",
-        "stop_hook_active": active,
-        "last_assistant_message": message,
-    }
-    result = run(json.dumps(event))
-    assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)
+def judge() -> dict:
+    """The single agent-type `Stop` handler."""
+    (handler,) = stop_handlers()
+    return handler
 
 
 class RestateReply(unittest.TestCase):
-    def test_one_line_reply_blocks(self) -> None:
-        """Without it a length threshold creeps back in and short replies are
-        left unrestated, which is the arm this hook exists to measure."""
-        self.assertEqual(answer("Done.").get("decision"), "block")
+    def test_one_agent_handler_on_stop(self) -> None:
+        """Without it a second Stop handler stacks a second restatement, or a
+        command or prompt hook returns that cannot read the user's message."""
+        self.assertEqual(judge()["type"], "agent")
 
-    def test_reason_is_the_plain_request(self) -> None:
-        """Without it the reason grows back into a keep-and-cut list or asks
-        for maximum compression, both of which failed on #485."""
-        reason = answer("Done.")["reason"]
-        self.assertTrue(reason.startswith("Restate concisely."))
-        self.assertNotIn("as concisely as you can", reason)
-
-    def test_reason_has_no_exemption(self) -> None:
-        """Without it an exemption returns and the model calls every reply
-        such a case and declines to restate (#458)."""
-        reason = answer("Done.")["reason"].lower()
-        for wording in ("document", "list", "stands as written", "stand as written"):
-            self.assertNotIn(wording, reason)
-
-    def test_reason_requires_the_separator_verbatim(self) -> None:
-        """Without it the restatement arrives with no visible line between it
-        and the draft, or with a paraphrase a transcript check cannot match."""
-        self.assertIn(SEPARATOR, answer("Done.")["reason"])
-        self.assertIn(SEPARATOR, SCRIPT.read_text(encoding="utf-8"))
-
-    def test_active_stop_allows(self) -> None:
-        """Without it the hook blocks its own restatement forever; the
-        loop guard is the only thing that ends the turn."""
-        self.assertEqual(answer("Done.", active=True), {})
-
-    def test_missing_message_still_blocks(self) -> None:
-        """Without it a reply the hook cannot read crashes the hook instead of
-        asking for a restatement, or silently skips the turn."""
-        result = run(json.dumps({"stop_hook_active": False}))
-        self.assertEqual(result.returncode, 0)
-        self.assertEqual(json.loads(result.stdout).get("decision"), "block")
-
-    def test_malformed_stdin_fails_loudly(self) -> None:
-        """Without it garbage on stdin exits 0 with an empty answer, or exits 2,
-        which on a Stop event blocks the stop and sends a spurious extra turn."""
-        for stdin in ("", "not json", "[]", "null", '"hi"'):
-            with self.subTest(stdin=stdin):
-                result = run(stdin)
-                self.assertEqual(result.returncode, 1)
-                self.assertEqual(result.stdout.strip(), "")
-
-    def test_bad_argv_fails(self) -> None:
-        """Without it a typo in hooks.json passes silently."""
-        self.assertEqual(run("{}", "extra").returncode, 1)
-
-    def test_script_is_executable(self) -> None:
-        """Without it the hook command fails to launch and nothing is restated."""
-        self.assertTrue(os.access(SCRIPT, os.X_OK))
-
-    def test_docstring_records_the_separator(self) -> None:
-        """Without it the separator the reason demands and the one the
-        docstring documents drift apart."""
-        doc = re.search(r'"""(.*?)"""', SCRIPT.read_text(encoding="utf-8"), re.S)
-        self.assertIsNotNone(doc)
-        self.assertIn(SEPARATOR, doc.group(1))
-
-    def test_wiring_is_stop_only(self) -> None:
-        """Without it the hook is wired to the wrong event and never fires, or
-        to SubagentStop, where it would restate a report the parent reads."""
+    def test_not_wired_to_subagent_stop(self) -> None:
+        """Without it the judge restates a subagent's report, which the parent
+        reads and the user never does."""
         config = json.loads(HOOKS_JSON.read_text(encoding="utf-8"))["hooks"]
-        wired = {
-            event: [
-                h
-                for entry in entries
-                for h in entry.get("hooks", [])
-                if SCRIPT.name in h.get("command", "")
-            ]
-            for event, entries in config.items()
-        }
-        self.assertEqual([e for e, hs in wired.items() if hs], ["Stop"])
-        (handler,) = wired["Stop"]
-        self.assertIn("${CLAUDE_PLUGIN_ROOT}", handler["command"])
         self.assertNotIn("SubagentStop", config)
+
+    def test_prompt_receives_the_hook_input(self) -> None:
+        """Without it the judge never sees the reply or the transcript path,
+        and allows every stop."""
+        self.assertIn("$ARGUMENTS", judge()["prompt"])
+
+    def test_loop_guard(self) -> None:
+        """Without it the judge blocks its own restatement and the turn never
+        ends."""
+        prompt = judge()["prompt"]
+        self.assertIn("If stop_hook_active is true", prompt)
+        self.assertIn('{"ok": true}', prompt)
+
+    def test_reads_the_users_message_from_the_transcript(self) -> None:
+        """Without it the judge cannot tell what was asked, and calls nothing
+        unrequested, or everything."""
+        prompt = judge()["prompt"]
+        self.assertIn("transcript_path", prompt)
+        self.assertIn("tool_result", prompt)
+        self.assertIn("last_assistant_message", prompt)
+
+    def test_block_names_the_sentences_and_the_separator(self) -> None:
+        """Without it the block is a bare "restate concisely", which run 4 on
+        #475 showed keeps the unrequested facts; or the restatement has no
+        visible line between it and the draft."""
+        prompt = judge()["prompt"]
+        self.assertIn('"ok": false', prompt)
+        self.assertIn("did not ask for", prompt)
+        self.assertIn(SEPARATOR, prompt)
+
+    def test_no_exemption(self) -> None:
+        """Without it an exemption returns and the judge waves every list or
+        document through, as the model did on #458."""
+        prompt = judge()["prompt"].lower()
+        for wording in ("document", "stands as written", "stand as written"):
+            self.assertNotIn(wording, prompt)
+
+    def test_timeout_is_bounded(self) -> None:
+        """Without it a slow judge holds every reply for the harness's default."""
+        self.assertLessEqual(judge()["timeout"], 60)
 
 
 if __name__ == "__main__":

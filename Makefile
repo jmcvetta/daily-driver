@@ -193,8 +193,8 @@ check-constitution:
 check-ask-in-chat:
 	python3 scripts/check-ask-in-chat.py
 
-# The acceptance test for the `Stop` hook that asks for a concise restatement of
-# every final reply: the real script, synthetic event JSON, no model.
+# The acceptance test for the agent-type `Stop` hook that judges a reply for
+# unrequested content: its wiring and prompt contract, no model.
 check-restate-reply:
 	python3 scripts/check-restate-reply.py
 
