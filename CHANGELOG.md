@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)
+
 ## [0.45.0](https://github.com/jmcvetta/daily-driver/compare/v0.44.0...v0.45.0) (2026-09-28)
 
 
@@ -27,7 +33,6 @@
 
 * **constitution:** scope production ban to operator-controlled systems ([#400](https://github.com/jmcvetta/daily-driver/issues/400)) ([3ce937f](https://github.com/jmcvetta/daily-driver/commit/3ce937fc0dc99fb1ee1bbff00b3a8b5e4b881b5b))
 * **omp:** explain blocked file targets ([#412](https://github.com/jmcvetta/daily-driver/issues/412)) ([5346fb6](https://github.com/jmcvetta/daily-driver/commit/5346fb6f67a00ff6d2bb2f917d6a43a34969e5fe))
-
 ## [0.43.1](https://github.com/jmcvetta/daily-driver/compare/v0.43.0...v0.43.1) (2026-09-26)
 
 
@@ -41,7 +46,6 @@
 ### Features
 
 * **undertake:** remove capability gate from standalone tasks ([#405](https://github.com/jmcvetta/daily-driver/issues/405)) ([5aefcc5](https://github.com/jmcvetta/daily-driver/commit/5aefcc56cd3e262c180fbab7af422ec2b14263c6))
-
 ## [0.42.0](https://github.com/jmcvetta/daily-driver/compare/v0.41.0...v0.42.0) (2026-09-24)
 
 
