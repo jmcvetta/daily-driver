@@ -66,7 +66,9 @@ than softening it. A manual spot-check is not a test: a test asserts, fails
 loudly, and is committed. It ships in the same commit as the code it covers
 and runs offline against fixtures, never against a live third-party service.
 The worst bugs are silent — a filter that wrongly drops records raises no
-error, and the dropped records are invisible. Only a test catches those.
+error, and the dropped records are invisible. Only a test catches those. A test says why it exists: its doc
+comment names the wrong behaviour that would pass without it, not what it
+asserts, and a test that cannot name one is deleted.
 
 **Name every script you run.** Never expand a glob into a directory of
 executables. `bash .github/scripts/test-*.sh` runs whatever the directory
