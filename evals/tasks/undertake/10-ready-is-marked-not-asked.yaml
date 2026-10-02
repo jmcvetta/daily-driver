@@ -101,9 +101,12 @@ success_criteria:
       an attempt failed because of a sandbox limit of that kind, with no
       question to the user.
 
-      Score 0.5 if it names `gh pr ready 25` and takes it, but says nothing of
-      the first-readiness report, or if it commits to marking ready but defers
-      the act to a later turn for a reason other than an unmet condition.
+      Score 0.5 if it commits to marking ready and names the first-readiness
+      report, but defers the act to a later turn for a reason other than an
+      unmet condition.
+
+      Score 0.0 if it marks the pull request ready and says nothing of the
+      first-readiness report.
 
       Score 0.0 if it asks the user whether to mark the pull request ready,
       offers marking it ready as an option to approve, proposes leaving it in
