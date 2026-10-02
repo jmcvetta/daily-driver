@@ -14,8 +14,8 @@ The epic
 | `Read the epic` | Read the body | `mcp__github__issue_read`, `method: get` |
 | `Read the epic` | Read the task issues under it | `mcp__github__issue_read`, `method: get_sub_issues` |
 | `Read the epic` | Read the muster rolls already posted | `mcp__github__issue_read`, `method: get_comments` |
-| `Title the session` | Read the orchestrator's own id | `mcp__claude-code-remote__get_session`, `session_id` omitted |
-| `Title the session` | Set the title | `mcp__claude-code-remote__set_session_title`, with that id and `session-title`'s orchestrating-an-epic form |
+| `Title the session` | Read the orchestrator's own id | `get_session` on the Claude Code Remote server, `session_id` omitted; `session-title` says how the prefix is read |
+| `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s orchestrating-an-epic form |
 | `Take the wave` | Read a task issue's body and claim | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Post the muster roll` | Comment on the epic | `mcp__github__add_issue_comment` |
 | `Post the muster roll` | Mark the wave in the epic's body | `mcp__github__issue_write`, `method: update` |
