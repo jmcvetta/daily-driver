@@ -76,6 +76,7 @@ from coder_eval.streaming.events import (
     TurnStartEvent,
 )
 
+from .home import inherited_files
 from .rpc import (
     AgentFinished,
     ExtensionFailed,
@@ -142,7 +143,14 @@ class OmpAgentConfig(BaseAgentConfig):
     """The Omp executable, resolved on PATH unless an absolute path is given."""
 
     inherit_omp_home: bool = True
-    """Symlink the real `~/.omp/agent/` into the throwaway home.
+    """Symlink the real `~/.omp/agent/`'s provider files into the throwaway home.
+
+    Only `models.yml`, `agent.db` (with its `-wal` and `-shm` siblings) and
+    `secrets.yml` — the files `home.PROVIDER_FILES` lists. `mcp.json` and the
+    instruction files (`AGENTS.md`, `SYSTEM.md`, `SYSTEM_TEMPLATE.md`,
+    `PERSONALITY.md`, `RULES.md`) are left out on purpose: an inherited MCP
+    server escapes `--tools`, and inherited instructions make the bare arm
+    stop being bare in both arms.
 
     On by default, because a run needs a model and the provider configuration
     lives there. Off, the session starts from Omp's own defaults — useful only
@@ -614,8 +622,9 @@ class OmpAgent(Agent[OmpAgentConfig]):
     def _prepare_home(self, home: Path) -> None:
         """A throwaway Omp home that borrows the real one's providers.
 
-        Every file in the real `~/.omp/agent/` is symlinked in, so the run finds
-        the models and credentials a person configured. `config.yml` is written
+        The provider files of the real `~/.omp/agent/` are symlinked in
+        (`home.PROVIDER_FILES`), so the run finds the models and credentials a
+        person configured and nothing else of theirs. `config.yml` is written
         here instead of symlinked: the arm runs on Omp's defaults plus skill
         commands, rather than on whatever a laptop happens to have set, which is
         the same isolation `coder_eval`'s Claude agent gets from
@@ -630,9 +639,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         if self.config.inherit_omp_home:
             real = Path(os.path.expanduser("~")) / ".omp" / "agent"
             if real.is_dir():
-                for entry in sorted(real.iterdir()):
-                    if entry.name == "config.yml" or not entry.is_file():
-                        continue
+                for entry in inherited_files(real):
                     with contextlib.suppress(OSError):
                         (agent_dir / entry.name).symlink_to(entry)
             else:
