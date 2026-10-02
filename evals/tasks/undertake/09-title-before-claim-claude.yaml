@@ -1,0 +1,97 @@
+# Claude Code undertakings reach `Title the session`'s two calls from
+# `undertake`'s own `references/claude.md`, issue #492. Before that row
+# existed the step pointed at `session-title`, whose `SKILL.md` pointed at a
+# third file before the first call was named, and a session dropped the step
+# without anything failing. The graded content is both call names, in order,
+# with the second using the id the first returns, and all of it before the
+# issue body is read.
+#
+# What this row can and cannot see. The sandbox has no Claude Code Remote
+# tools, so neither call can actually be made here. What is observable is what
+# the agent says it will do, so the graded assertion is an `agent_judge` on
+# the reply, plus the skill having fired at all. A positive check that the
+# title was set needs a live Claude Code Remote session, which this harness
+# cannot build.
+#
+# Why this fails the `without` arm: a model with no plugin loaded has no
+# reason to know this harness exposes `get_session` and `set_session_title`,
+# or that the second needs the id the first returns. It names a single
+# self-contained "set the title" call, or none, and has no step order that
+# puts the title ahead of reading the issue body.
+#
+# The prompt avoids the words "title" and "name" for the step itself, so a
+# keyword match on them cannot pass the row; see the header comment in
+# `session-title/04-starting-an-issue.yaml` for the trap.
+
+task_id: undertake-09-title-before-claim-claude
+description: >-
+  An undertaking at `Title the session` reads the session's own id, then sets
+  the title with it, before it reads the issue body.
+tags: [undertake, references, fire, behaviour, claude-only]
+
+initial_prompt: >-
+  I'm handing you issue #52, "Rotate the Aurora access token," to build. You
+  have not read the issue body yet and have posted no claim. Tell me, in
+  order, each call you make next, up to and including the one that reads the
+  issue body.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires for assigned task work"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: agent_judge
+    description: >-
+      The reply calls get_session, then set_session_title with that id, before
+      reading the issue body
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: the reply must list the calls in this order: first
+      `get_session` (with no session id given, to learn the caller's own id),
+      then `set_session_title` (using the id the first call returned), then
+      the call that reads the issue body. A plausible name variant for the
+      first two (e.g. "the get-session tool", "set the session title with that
+      id") is acceptable as long as the order is explicit.
+
+      Score 1.0 if the REPLY lists all three in that order, with the title
+      call explicitly using the id the first returns.
+      Score 0.5 if it names both session calls but the second does not clearly
+      use the first's id, or does not place both before the issue-body read.
+      Score 0.0 if it names only one session call, invents a single
+      self-contained "set title" call, reads the issue body first, or names no
+      specific session call at all.
