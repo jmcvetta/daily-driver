@@ -69,7 +69,12 @@ if (process.argv[2] === '--aggregate') {
     {name: 'unknown path', paths: ['new-component/source.txt'], expected: jobs},
     {name: 'unknown root file', paths: ['new-root-file.txt'], expected: jobs},
     {name: 'deleted component file', paths: ['hooks/removed.py'], expected: ['runtime']},
-    {name: 'cross-component rename', paths: ['omp_configs/old.yml', 'skills/new-skill/SKILL.md'], expected: ['plugin', 'runtime', 'issue', 'omp']},
+    {name: 'cross-component rename', paths: ['omp_configs/old.yml', 'skills/new-skill/SKILL.md'], expected: ['plugin', 'runtime', 'omp']},
+    {name: 'issue-labels skill', paths: ['skills/issue-labels/SKILL.md'], expected: ['plugin', 'runtime', 'issue', 'omp']},
+    {name: 'docs file', paths: ['docs/notes/0001-example.md'], expected: ['plugin']},
+    {name: 'root README', paths: ['README.md'], expected: ['plugin']},
+    {name: 'attic file', paths: ['attic/skills/old/SKILL.md'], expected: []},
+    {name: 'verse file', paths: ['HAIKU.md'], expected: []},
     {name: 'personal overlay', paths: ['omp_configs/new-model.yml'], expected: []},
     {name: 'eval shell fixtures', paths: ['evals/fixtures/example/shared/lib.sh'], expected: ['runtime', 'eval', 'omp']},
   ]
