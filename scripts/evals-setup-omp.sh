@@ -57,7 +57,7 @@ omp --version
 # `omp models find` matches substrings and exits 0 on no match, so neither
 # its status nor a non-empty answer proves the exact model is there.
 serves() {
-	omp models find "$1" --json | python3 -c '
+	omp models find "$1" --json </dev/null | python3 -c '
 import json, sys
 want = sys.argv[1]
 models = json.load(sys.stdin).get("models", [])
@@ -66,7 +66,7 @@ sys.exit(0 if any(m.get("selector") == want for m in models) else 1)
 }
 
 failed=0
-for model in $(sed -n 's/^[[:space:]]*model:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$@" | sort -u); do
+while IFS= read -r model; do
 	if serves "${model}"; then
 		echo "ok: ${model}"
 	elif [[ "${model}" == vercel-ai-gateway/* ]]; then
@@ -75,5 +75,5 @@ for model in $(sed -n 's/^[[:space:]]*model:[[:space:]]*\([^[:space:]#]*\).*/\1/
 	else
 		echo "unconfigured: ${model} (needs this provider's own Omp login; skipped)"
 	fi
-done
+done < <(sed -n 's/^[[:space:]]*model:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$@" | sort -u)
 exit "${failed}"
