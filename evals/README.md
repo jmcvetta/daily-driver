@@ -11,6 +11,7 @@ the `claude` binary, so there is no version to hold back.
 evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
+│   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
 │   ├── omp-*.yaml                  one two-variant Omp experiment per model
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
@@ -152,6 +153,37 @@ Three things the Makefile does that a hand-typed `coder-eval` will not:
   run as a single unlabelled arm on `coder-eval`'s own stale defaults, and the
   ablation silently is not measured.
 - **`TELEMETRY_ENABLED=false`.** See "Two defaults, decided on purpose".
+
+### `base-vs-candidate`: does a constitution change move a row
+
+`with-without.yaml` compares the plugin with no plugin, so its control carries
+no constitution. It cannot isolate a change to the constitution's text. The
+comparison experiment loads the plugin in both arms and varies only the
+revision: `base` is `master`, `candidate` is this checkout. It answers one
+question the ablation cannot: does the new text change a reply once a
+constitution is already delivered?
+
+The base arm needs a second checkout that the experiment cannot create:
+`git worktree add ../daily-driver-base <base-revision>`. Run it narrowed to
+the rows below, five repeats, per-replicate results kept:
+
+```sh
+make evals-run-comparison TASKS="tasks/constitution/answer-selects-from-findings.yaml tasks/constitution/reply-is-concise.yaml tasks/constitution/explanation-request-answered.yaml"
+```
+
+The target records the run against the comparison experiment. Record the
+base revision (the sibling's `git rev-parse HEAD`) and the candidate revision
+with it.
+
+| Row | Role |
+| --- | ---- |
+| `constitution/answer-selects-from-findings.yaml` | finding: the "one contrast" sentence must raise the selection score |
+| `constitution/reply-is-concise.yaml` | control, at 1.000; a drop in `candidate` is a defect |
+| `constitution/explanation-request-answered.yaml` | control: a requested explanation must still arrive |
+
+Report replicates marked `ANCHOR: no-question` or `ANCHOR: tainted-question`
+separately; they measured nothing. The Codex arm stays out: every constitution
+row carries `skip:codex`.
 
 ## What the suites are for
 
