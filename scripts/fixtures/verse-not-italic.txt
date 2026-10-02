@@ -1,8 +1,0 @@
-Closing as not planned.
-
----
-Model: model-x-1
-Harness: Claude Code 2.1.283
-session: https://claude.ai/code/session_01ABC
-
-A road drawn on the map, never walked.
