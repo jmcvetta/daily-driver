@@ -554,7 +554,7 @@ touches the constitution's own gates.
 Where it stops and waits
 ========================
 
-Six, and three of them are reports rather than questions.
+Six, and four of them are reports rather than questions.
 
 - **An issue that is not an epic**, at `Read the epic`. A report: say which
   issue it is and which skill takes it — `undertake` for a task issue, `epic`

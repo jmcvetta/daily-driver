@@ -114,9 +114,10 @@ fleet` and reported as a residual in the banner, by name — securing its work
 was attempted, not guaranteed.
 
 **A session no name can reach is interrupted and never archived.** It cannot
-be told to push, and an archive destroys whatever it holds unpushed. Where the
-muster roll marks it `messaging: unreachable` and `ListAgents` does not name
-it, it is interrupted alone. It is a residual in the banner and in its task
+be told to push, and an archive destroys whatever it holds unpushed. Where
+no name reaches it — the muster roll marks it `messaging: unreachable`, or an
+older roll carries no name for it and `ListAgents` does not name it — it is
+interrupted alone. It is a residual in the banner and in its task
 issue's handoff, with its session link, so that a person can push or archive
 it later.
 
