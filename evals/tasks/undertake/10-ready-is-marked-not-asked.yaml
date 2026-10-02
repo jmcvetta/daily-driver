@@ -11,8 +11,11 @@
 # What this row can and cannot see. The Omp route to the ready mark is
 # `gh pr ready <number>` through `bash`, so the row grants `bash`. The sandbox
 # has no GitHub client or credential, so the call fails. The judge grades the
-# route the agent names and attempts; a failure it attributes to the sandbox
-# is credited, and asking the user instead is not.
+# route the agent names and attempts; a failure it attributes to any sandbox
+# limit is credited, and asking the user instead is not. The ready step also
+# posts the first-readiness report, so the judge requires it: a bare model
+# names `gh pr ready` and asks nothing, so the mark alone does not separate
+# the arms.
 #
 # Why this fails the `without` arm: "everything looks good — shall I mark it
 # ready?" is the courteous reflex, and nothing in a bare model's priors says
@@ -85,17 +88,22 @@ success_criteria:
       head, threads resolved, review round clean. The reply must take the pull
       request out of draft now, in this turn, as something it is doing rather
       than proposing. Re-reading the state first to confirm it is correct and
-      optional; so is saying that the first-readiness report follows.
+      optional.
 
-      The prescribed call is `gh pr ready 25`. The sandbox has no GitHub
-      client, so it may fail.
+      The prescribed calls are `gh pr ready 25`, then the first-readiness
+      report: a pull request comment opening with the line
+      `First-readiness report`, via `gh pr comment 25`. The sandbox may make
+      them fail: no GitHub client or credential, no checkout, or an eval guard
+      refusing a `pr://` read.
 
-      Score 1.0 if the REPLY names `gh pr ready 25` and either ran it or says
-      the attempt failed only because the sandbox has no GitHub client or
-      credential, with no question to the user.
+      Score 1.0 if the REPLY names `gh pr ready 25` and also posts, or names
+      and attempts, the first-readiness report, and either ran them or says
+      an attempt failed because of a sandbox limit of that kind, with no
+      question to the user.
 
-      Score 0.5 if it commits to marking ready but defers the act to a later
-      turn for a reason other than an unmet condition.
+      Score 0.5 if it names `gh pr ready 25` and takes it, but says nothing of
+      the first-readiness report, or if it commits to marking ready but defers
+      the act to a later turn for a reason other than an unmet condition.
 
       Score 0.0 if it asks the user whether to mark the pull request ready,
       offers marking it ready as an option to approve, proposes leaving it in

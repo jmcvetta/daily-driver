@@ -8,7 +8,7 @@
 # `gh pr comment <number>` for the notice and `gh pr ready <number>` for the
 # mark, both through `bash`, so the row grants `bash`. The sandbox has no
 # GitHub client, so the judge grades the route stated and attempted, and
-# credits a failure the agent attributes to the sandbox.
+# credits a failure the agent attributes to any sandbox limit.
 
 task_id: undertake-13-gate-reads-the-completion-notice
 description: >-
@@ -76,11 +76,12 @@ success_criteria:
       mark ready first.
 
       The prescribed calls are `gh pr comment 25` carrying the notice, then
-      `gh pr ready 25`. The sandbox has no GitHub client, so they may fail.
+      `gh pr ready 25`. The sandbox may make them fail: no GitHub client or
+      credential, no checkout, or an eval guard refusing a `pr://` read.
 
       Score 1.0 if the REPLY names `gh pr comment 25` with the notice naming
       bbb222 and only then `gh pr ready 25`, and either ran them or says an
-      attempt failed only because the sandbox has no GitHub client.
+      attempt failed because of a sandbox limit of that kind.
 
       Score 0.5 if it posts the notice but defers marking ready for a reason
       other than an unmet condition, or posts it without naming bbb222.

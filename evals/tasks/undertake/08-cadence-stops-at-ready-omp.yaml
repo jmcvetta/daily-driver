@@ -100,12 +100,12 @@ success_criteria:
       The prescribed route is a named `bash` service `keep-current-<number>`
       running the keep-current script, made durable by
       `write proc://keep-current-<number>/mode` with content `detached`. The
-      sandbox has no GitHub client or plugin checkout, so the call may fail.
+      sandbox may make the call fail: no GitHub client or credential, no
+      checkout of the plugin, or an eval guard refusing a read.
 
       Score 1.0 if the REPLY names that route — the `keep-current-25` service
       made detached through `proc://…/mode` — and either took it or says the
-      attempt failed only because the sandbox lacks a GitHub client or
-      checkout. It need not also name the catch-up look.
+      attempt failed because of a sandbox limit of that kind. It need not also name the catch-up look.
 
       Score 0.5 if it plainly arms a process that survives the session and
       merges the base branch, but names no specific service or detach call.
