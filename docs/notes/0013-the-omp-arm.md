@@ -148,8 +148,8 @@ judge transport — and `make evals-plan` depends on it.
 ## Known limits, recorded rather than fixed
 
 **`allowed_tools` and `disallowed_tools` are enforced through `omp --tools`,
-with one exception and three gaps.** This paragraph once said Omp had no
-per-session tool list. That was wrong: `--tools=<list>` works with `--mode rpc`,
+with one exception, and a guard closes what the flag leaves open.** This
+paragraph once said Omp had no per-session tool list. That was wrong: `--tools=<list>` works with `--mode rpc`,
 and the adapter starts one process per task. Until issue #459, every Omp record
 ran with every Omp tool on. On the GPT 6 Luna `undertake` runs that let an eval
 agent call `bash`, `gh` and Omp's `github` tool against live GitHub.
@@ -163,18 +163,52 @@ leaves `read` on here. A denied read of `skills/<name>/SKILL.md` can therefore
 still happen, and score as an engagement. A no-fire row is weaker on Omp than on
 Claude Code for that reason. The agent logs it for each task.
 
-The gaps, measured on Omp 18.4.10 against a mock model that recorded the tools
-each request offered:
+What `--tools` leaves open, measured on Omp 18.4.10 against a mock model that
+recorded the tools each request offered (issue #461):
 
-- **`--tools` filters built-in tools only.** The plugin's extension tools
-  (`daily_driver_*`) stay on under any list, `--no-tools` included. They act on
-  the session alone: its title and its timers.
+- **`read`, `grep` and `glob` reach the network.** They open URLs, a bare
+  `www.host` included, and Omp's `pr://` and `issue://` schemes read GitHub
+  with the ambient token.
 - **`read` adds a `write`.** With `read` on, Omp also offers `write`, which
-  dispatches the extension tools as `xd://` devices. Its description says it
-  rejects every other path, so it writes no file.
-- **`read` still reaches the network.** It opens URLs, and Omp's `pr://` and
-  `issue://` schemes read GitHub. `--tools` cannot remove that without removing
-  `read`, and so every skill. Closing it needs another mechanism.
+  dispatches the extension tools as `xd://` devices. Only Omp's own check keeps
+  it off the filesystem.
+- **`--tools` filters built-in tools only.** The plugin's extension tools
+  (`daily_driver_*`) stay on under any list, `--no-tools` included.
+
+Two layers close the first two, and both load in both arms, so the ablation
+stays symmetric:
+
+- **`fetch.enabled: false`** in the throwaway `config.yml`
+  (`coder_eval_omp/launch.py`). It refuses every http(s) read, the bare host
+  among them, which no pattern can catch. No row needs fetch: `WebFetch` has no
+  Omp twin, so the tool map refuses a row that allows it.
+- **An eval guard extension**, `coder_eval_omp/eval_guard.js`, loaded with
+  `-e`. For every tool except `bash`, it refuses a call when any string in its
+  input names a `<scheme>://` outside `skill`, `rule`, `xd`, `proc` and `omp`.
+  It matches substrings, because Omp splits a `;` list and resolves each part.
+  Where the row's grant has no `write`, it refuses a `write` to anything but
+  `xd://`. The adapter passes the grant in `CODER_EVAL_OMP_TOOLS`; unset, the
+  guard refuses every `write`. `bash` is out of scope, because a row that
+  allows `Bash` has the network on both harnesses.
+
+`make check-omp-eval-guard` drives the guard offline against each measured
+bypass. CI's Omp job runs `make check-omp-eval-guard-live`, which drives a real
+`omp` with the plugin linked.
+
+The guard has a cost: it reads every string, so a granted `write`, `edit` or
+`task` whose content names `https://` is refused as well. Rows rarely write a
+URL, and a refusal is loud, so the boundary takes the false positive over the
+open path.
+
+**The extension tools stay on, on purpose.** They act on the session alone: its
+title, its timers, and its id. Four Omp-only rows grade them, and
+`undertake/09-title-before-claim-omp` grades a `Write` call carrying
+`daily_driver_set_session_title`, which is the `xd://` device write.
+`tools.xdev: false` would remove that `write` and void the row, so `tools.xdev`
+stays at Omp's default.
+
+**On this arm, the canonical name `Write` covers two things:** a file write, and
+an `xd://` device dispatch. A criterion that counts `Write` calls counts both.
 
 **Two protocol questions are open, and the arm answers them by running.** Omp's
 `docs/rpc.md` shows `toolName` on `tool_execution_start` without showing the

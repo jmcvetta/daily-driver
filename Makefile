@@ -11,7 +11,7 @@ SHELL := /bin/bash
 	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
-	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
+	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-model-classes-builder check-task-worktree-fixture check-eval-arms check-agent-judges check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
@@ -105,7 +105,7 @@ check-runtime: check-constitution check-ask-in-chat check-omp-extension check-mo
 	check-omp-guard-differential check-omp-cache-clean \
 	check-task-worktree-fixture check-scripts
 
-check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
+check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-model-classes-builder check-eval-arms check-agent-judges check-evals-preflight check-evals-provenance \
 	check-evals-results check-model-telemetry
 
@@ -258,6 +258,21 @@ check-scripts:
 # docstring, and evals/coder-eval-omp/README.md for the arm.
 check-omp-agent:
 	python3 scripts/check-omp-agent.py
+
+# check-omp-eval-guard: the Omp eval arm's sandbox guard, driven with a fake
+# `pi` against every bypass issue #461 measured -- a `;` list, scheme case, a
+# `write` the row did not grant. Each one fails open: the row reaches GitHub
+# and nothing reports it. Node only, like check-omp-extension.
+check-omp-eval-guard:
+	node scripts/check-omp-eval-guard.mjs
+
+# check-omp-eval-guard-live: the same guard inside a real `omp --mode rpc`,
+# with the plugin linked and a local mock model scripting the tool calls. It
+# proves what the fake `pi` cannot: that Omp loads `-e` beside the plugin and
+# honours the refusals, and that `fetch.enabled: false` refuses a URL read.
+# Needs `omp`, so it runs in CI's Omp job, for check-omp-plugin's reason.
+check-omp-eval-guard-live:
+	python3 scripts/check-omp-eval-guard-live.py
 
 # check-omp-agent-settle: the acceptance test for the Omp arm's early-stop
 # record -- that a replicate which early-stops on `skill_triggered` cannot
