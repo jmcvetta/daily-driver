@@ -206,9 +206,9 @@ sequence is being re-entered, or by another.
 a task branch another session already began, in this order, and take the first
 source that names one:
 
-1. An open pull request linked to the issue — `closed_by_pull_requests` on the
-   issue read, or a pull request whose body references the issue. Its head
-   branch.
+1. An open pull request linked to the issue — one the issue read reports as
+   set to close it, or a pull request whose body references the issue. Its
+   head branch.
 2. The `Branch:` line of a `stand-down` handoff comment.
 3. The branch in the latest claim comment.
 

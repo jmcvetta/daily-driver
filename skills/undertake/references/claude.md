@@ -13,6 +13,7 @@ The issue
 | `Open the issue` | Search the open issues | `mcp__github__search_issues` |
 | `Open the issue` | Open one, labelled | `mcp__github__issue_write`, method `create`, with `labels` |
 | `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read`, method `get` |
+| `Read the issue and its edges` | Find the pull requests linked to the issue | `mcp__github__issue_read`, method `get` — `closed_by_pull_requests`, then `mcp__github__pull_request_read`, method `get`, for the head branch |
 | `Read the issue and its edges` | Read the comments | `mcp__github__issue_read`, method `get_comments` |
 | `Read the issue and its edges` | Label an issue that carries none | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, method `update`, sending that set plus the new label |
 | `Claim the issue` | Comment on the issue | `mcp__github__add_issue_comment` |
