@@ -556,38 +556,46 @@ evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-d
 # `omp` on PATH and a model configured in the caller's own `~/.omp/agent/`,
 # which the agent borrows rather than copies -- see evals/coder-eval-omp/README.md.
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
+#
+# OMP_RUN_LIMITS overrides every row's turn cap and turn timeout on this arm.
+# Omp's RPC mode does not enforce a row's `allowed_tools`, so the agent reads
+# and runs more than the Claude Code arm, and the caps sized for that arm cut
+# it off before its reply. A 30-turn calibration of GPT 6 Luna on the judged
+# `undertake` rows finished 97 of 100 replicates on their own: 11 turns at the
+# median, 27 at the 95th percentile, 358 s at the slowest.
+OMP_RUN_LIMITS := -D run_limits.max_turns=30 -D run_limits.turn_timeout=600 -D run_limits.task_timeout=1200
 evals-run-omp-glm-5-3: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/omp-glm-5.3.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-glm-5.3.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-glm-5-3-flash: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/omp-glm-5.3-flash.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-glm-5.3-flash.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3-flash.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-deepseek-v4-pro: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/omp-deepseek-v4-pro.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-deepseek-v4-pro.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-deepseek-v4-pro.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/omp-gpt-5.6-sol.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-5.6-sol.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-5.6-sol.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-gpt-6-sol: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/omp-gpt-6-sol.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6-sol.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6-sol.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-gpt-6-luna: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/omp-gpt-6-luna.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6-luna.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
