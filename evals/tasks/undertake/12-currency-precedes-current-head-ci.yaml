@@ -24,7 +24,7 @@ success_criteria:
     weight: 2
     max_turns: 5
     turn_timeout: 120
-    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], permission_mode: default}
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
       Find the final `[RESULT - ...]` reply in AGENT OUTPUT. The sandbox cannot
       read a real pull request; grade the assessment the reply says it will
