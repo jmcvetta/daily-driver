@@ -546,8 +546,9 @@ evals-run: evals-plan evals-preflight
 evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
-# `omp` on PATH and a model configured in the caller's own `~/.omp/agent/`,
-# which the agent borrows rather than copies -- see evals/coder-eval-omp/README.md.
+# `omp` on PATH and the provider's credentials -- `make evals-setup-omp` sets up
+# and checks both for the gateway arms. The agent borrows the caller's
+# `~/.omp/agent/` rather than copies it -- see evals/coder-eval-omp/README.md.
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
 evals-run-omp-glm-5-3: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \

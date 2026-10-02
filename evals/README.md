@@ -870,6 +870,20 @@ score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
 delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
 decision; this section records the model set.
 
+**In a Claude Code cloud session or on a fresh laptop, set up first:**
+
+```sh
+make evals-install && make evals-setup-omp
+```
+
+`evals-setup-omp` installs `omp` with CI's command when it is missing, and
+checks that Omp lists each arm's pinned model. It is free and idempotent. The
+gateway arms need `AI_GATEWAY_API_KEY`, the name Omp reads. A cloud container
+exports `VERCEL_AI_GATEWAY_API_KEY` instead, and the Makefile maps that name to
+Omp's for every target. Without either, Omp lists no gateway model and the
+target fails, naming the variable. The `openai-codex` arm needs Omp's own Codex
+login; the target reports it as unconfigured and does not fail.
+
 ```sh
 make evals-run-omp                            # every configured Omp model
 make evals-run-omp-glm-5-3                    # GLM 5.3 only
@@ -888,8 +902,8 @@ The Omp home the agent borrows configures each of these provider/model IDs:
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
 
-It needs `omp` on PATH and a model configured in the caller's own
-`~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
+It needs `omp` on PATH and the provider's credentials: the gateway key above,
+or a login in the caller's own `~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
 Omp home and writes nothing back into it.
 
 **`agent: {type: omp}` is not a built-in kind.** It comes from
