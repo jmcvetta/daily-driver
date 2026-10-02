@@ -12,7 +12,7 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
+	check-model-classes-builder check-task-worktree-fixture check-eval-arms check-agent-judges check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
@@ -106,7 +106,7 @@ check-runtime: check-constitution check-ask-in-chat check-omp-extension check-mo
 	check-task-worktree-fixture check-scripts
 
 check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-eval-arms check-evals-preflight check-evals-provenance \
+	check-model-classes-builder check-eval-arms check-agent-judges check-evals-preflight check-evals-provenance \
 	check-evals-results check-model-telemetry
 
 
@@ -293,6 +293,12 @@ check-codex-agent:
 # legs. See the script's docstring.
 check-eval-arms:
 	uv run --frozen python3 scripts/check-eval-arms.py
+
+# check-agent-judges: every `agent_judge` denies itself the built-in tools, so
+# it grades the transcript it was given instead of reading the sandbox and
+# timing out without a verdict. See the script's docstring.
+check-agent-judges:
+	uv run --frozen python3 scripts/check-agent-judges.py
 
 # check-eval-fixtures: build every review-depth fixture repository and assert
 # it has the shape the `review` skill needs. Part of `check` because it needs
