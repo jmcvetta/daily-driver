@@ -71,7 +71,7 @@ from coder_eval_omp.rpc import (  # noqa: E402  (the path insert must come first
     render_agent_output,
     skill_name_from_url,
 )
-from coder_eval_omp.launch import OMP_CONFIG, TOOLS_ENV, child_env, guard_path, rpc_argv  # noqa: E402
+from coder_eval_omp.launch import OMP_CONFIG, TOOLS_ENV, child_env, guard_path, reject_tool_flags, rpc_argv  # noqa: E402
 from coder_eval_omp.tools import UnenforceableToolList, select_tools  # noqa: E402
 
 
@@ -401,6 +401,21 @@ def check_start_argv_loads_the_guard() -> None:
     check(guard == str(guard_path()), f"-e must name the eval guard, got {guard}")
     check(Path(guard).is_file(), f"the eval guard must ship inside the package, got {guard}")
     check(argv[-2:] == ["--tools=read", "--extra"], f"the tool flag must precede extra_args, got {argv}")
+
+
+def check_extra_args_cannot_grant_tools() -> None:
+    """A tool flag in `extra_args` refuses the task.
+
+    Without it, `--tools=read,write` there widens what Omp offers while the
+    guard still reads the row's grant, so the row's file writes are refused.
+    """
+    for extra in (["--tools=read,write"], ["--tools", "read"], ["--no-tools"]):
+        try:
+            reject_tool_flags(extra)
+        except UnenforceableToolList:
+            continue
+        raise CheckFailed(f"extra_args {extra} must raise, not run")
+    reject_tool_flags(["--verbose"])  # other flags pass
 
 
 def check_child_env_carries_the_grant() -> None:

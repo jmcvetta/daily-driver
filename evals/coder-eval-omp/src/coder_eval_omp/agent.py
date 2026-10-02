@@ -86,7 +86,7 @@ from .rpc import (
     TurnReducer,
     TurnStarted,
 )
-from .launch import OMP_CONFIG, child_env, rpc_argv
+from .launch import OMP_CONFIG, child_env, reject_tool_flags, rpc_argv
 from .tools import ToolSelection, UnenforceableToolList, select_tools
 
 
@@ -159,7 +159,11 @@ class OmpAgentConfig(BaseAgentConfig):
     """
 
     extra_args: list[str] = []
-    """Arguments appended to the `omp --mode rpc` command line, verbatim."""
+    """Arguments appended to the `omp --mode rpc` command line, verbatim.
+
+    A tool flag here fails the task: tools are granted through the row's
+    `allowed_tools`, which the eval guard reads as well.
+    """
 
 
 class OmpAgent(Agent[OmpAgentConfig]):
@@ -233,6 +237,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         # task here, rather than after a run with every tool on.
         try:
             self._tools = select_tools(self.config.allowed_tools, self.config.disallowed_tools)
+            reject_tool_flags(self.config.extra_args)
         except UnenforceableToolList as error:
             # Not retryable: the same row fails the same way every attempt.
             raise AgentConfigError(str(error)) from error
