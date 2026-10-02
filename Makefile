@@ -555,12 +555,15 @@ evals-run-codex: evals-plan evals-preflight
 # The sibling is asserted here because this is the ONLY place that can: the
 # plugin path is resolved in the agent at run time, so without the checkout the
 # run pays for both arms and measures plugin-versus-nothing.
+# Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=.
+JOBS ?= 16
+
 evals-run-comparison: evals-plan evals-preflight
 	@test -d ../daily-driver-base/skills || { \
 		echo "error: ../daily-driver-base is missing or is not a plugin root;" >&2; \
 		echo "  run: git worktree add ../daily-driver-base <base-revision>" >&2; \
 		exit 1; }
-	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml \
+	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml -j $(JOBS) \
 		--exclude-tags omp-only,codex-only,model-classes,skip:claude $(TASKS)
 
 # evals-run-classes: the model-class capability suite, built from real merged
