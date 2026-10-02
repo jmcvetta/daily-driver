@@ -29,10 +29,14 @@ WHAT IT ASSERTS
     routine frames that imply no action are not.
     The throwaway home inherits the provider files and nothing else of a
     person's real `~/.omp/agent/`: not `mcp.json`, not the instruction files.
+    A row's `allowed_tools` and `disallowed_tools` become the `--tools` flag
+    that enforces them, `Skill` keeps `read` on, and a list the arm cannot
+    enforce raises rather than running with every tool on.
 
 WHAT IT DOES NOT ASSERT
 
-    That `omp` starts, that the plugin installs, or that a skill fires. The
+    That `omp` starts, that the plugin installs, that `omp` honours the
+    `--tools` flag, or that a skill fires. The
     first two are `make check-omp-plugin`'s, which drives a real binary; the
     third needs a model and is what `evals/` is for.
     That the field names this module reads are the ones a live Omp emits. The
@@ -67,6 +71,7 @@ from coder_eval_omp.rpc import (  # noqa: E402  (the path insert must come first
     render_agent_output,
     skill_name_from_url,
 )
+from coder_eval_omp.tools import UnenforceableToolList, select_tools  # noqa: E402
 
 
 class CheckFailed(Exception):
@@ -321,11 +326,114 @@ def check_inherited_home() -> None:
     check(inherited_files(Path("/nonexistent-omp-home")) == [], "a missing home inherits nothing")
 
 
+def check_read_only_row_gets_no_shell() -> None:
+    """A read-only row must not reach `bash` or Omp's `github` tool.
+
+    Without this, the arm runs rows 08, 10 and 13 of `undertake` with every
+    Omp tool on, and an eval agent can call live GitHub while every check here
+    still passes.
+    """
+    selection = select_tools(["Read", "Grep", "Glob", "Skill"], None)
+    check(
+        selection.argv == ("--tools=read,grep,glob",),
+        f"[Read, Grep, Glob, Skill] must be --tools=read,grep,glob, got {selection.argv}",
+    )
+
+
+def check_disallowed_only_row_keeps_read_for_skill() -> None:
+    """A trigger row's deny list removes every tool it names, but not `read`.
+
+    Without this, either the deny list is ignored and `bash` runs, or `read`
+    goes too and no skill can fire on this arm, so every trigger row scores 0
+    for want of the tool rather than for want of the skill.
+    """
+    selection = select_tools(None, ["Read", "Write", "Edit", "NotebookEdit", "Glob", "Grep", "Bash", "Agent", "Task"])
+    check("read" in selection.tools, f"Skill keeps read on, got {selection.tools}")
+    check(selection.read_for_skill, "read kept only for Skill must be reported, so the adapter logs it")
+    for tool in ("bash", "write", "edit", "glob", "grep", "task", "github"):
+        check(tool not in selection.tools, f"{tool} must be off for this deny list, got {selection.tools}")
+
+
+def check_trigger_row_under_the_experiment_default() -> None:
+    """A trigger row on a real Omp experiment gets `read` and nothing else.
+
+    Every Omp experiment sets `allowed_tools: [Skill]`, and a row's own deny
+    list sits on top of it. Without this, a regression on that path, the one
+    every trigger row takes, passes while only the unset-allow path is tested.
+    """
+    selection = select_tools(["Skill"], ["Read", "Write", "Edit", "NotebookEdit", "Glob", "Grep", "Bash", "Agent", "Task"])
+    check(selection.argv == ("--tools=read",), f"[Skill] minus the trigger deny list must be --tools=read, got {selection.argv}")
+    check(selection.read_for_skill, "read kept only for Skill must be reported, so the adapter logs it")
+
+
+def check_denied_webfetch_is_reported() -> None:
+    """A denied `WebFetch` with `read` on is flagged, because `read` opens URLs.
+
+    Without this, a row that denies web access runs with it through `read`,
+    and nothing in the run says so.
+    """
+    check(select_tools(["Read"], ["NotebookEdit", "WebFetch"]).webfetch_via_read, "WebFetch denied with read on must be flagged")
+    check(not select_tools(["Grep"], ["WebFetch"]).webfetch_via_read, "WebFetch denied with read off is enforced, so not flagged")
+
+
+def check_no_omp_only_builtins_by_default() -> None:
+    """A row with no tool lists gets Claude Code's defaults, not Omp's extras.
+
+    Without this, a row that names no lists gets `github`, `eval` and the
+    other Omp-only tools, which no Claude Code row ever has.
+    """
+    selection = select_tools(None, None)
+    check(
+        set(selection.tools) == {"read", "grep", "glob", "bash", "write", "edit", "task", "web_search"},
+        f"the default set must be the Omp twins of Claude Code's defaults, got {selection.tools}",
+    )
+
+
+def check_omp_only_wait_is_granted_by_name() -> None:
+    """`wait` is granted when a row allows it and never by default.
+
+    Without this, either a row cannot allow `wait` and the CI-wait rows fail at
+    start, or `wait` joins the default grant and rows with no tool lists get a
+    tool no Claude Code row has.
+    """
+    selection = select_tools(["Bash", "Write", "wait"], None)
+    check("wait" in selection.tools, f"an allowed `wait` must be granted, got {selection.tools}")
+    check("wait" not in select_tools(None, None).tools, "`wait` must not be in the default grant")
+    check("wait" not in select_tools(["Bash", "wait"], ["wait"]).tools, "a denied `wait` must be removed")
+
+
+def check_empty_allow_list_is_no_tools() -> None:
+    """`allowed_tools: []` grants nothing.
+
+    Without this, an empty list reads as "unset" and the row runs with the
+    default tools, the opposite of what it asked for.
+    """
+    selection = select_tools([], None)
+    check(selection.argv == ("--no-tools",), f"an empty allow list must be --no-tools, got {selection.argv}")
+
+
+def check_unmapped_allowed_tool_fails_closed() -> None:
+    """An allowed tool with no Omp twin, or a name nobody knows, refuses the row.
+
+    Without this, the arm warns and runs anyway, which is the open failure
+    this module exists to close. `Wait` and `Hub` are names that exist on
+    neither harness, so they must still raise.
+    """
+    for allowed, disallowed in ((["Read", "WebFetch"], None), (["Read", "Hub"], None), (["Read", "Wait"], None), (None, ["bash"])):
+        try:
+            select_tools(allowed, disallowed)
+        except UnenforceableToolList:
+            continue
+        raise CheckFailed(f"allowed={allowed} disallowed={disallowed} must raise, not run")
+    select_tools(["Read"], ["NotebookEdit", "WebFetch"])  # a twinless name in a deny list is harmless
+
+
 def main() -> None:
     for name, checker in sorted(globals().items()):
         if name.startswith("check_") and callable(checker):
             checker()
-    print("check-omp-agent: the Omp frame reduction maps skills, tools, text and usage as the criteria expect")
+    print("check-omp-agent: the Omp frame reduction maps skills, tools, text and usage as the criteria expect, "
+          "and each row's tool lists become the flag that enforces them")
 
 
 if __name__ == "__main__":

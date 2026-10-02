@@ -1,6 +1,9 @@
 # The judge runs on the subscription
 
 **Status:** decided, 2026-09-11.
+*Amended 2026-10-02 — `allowed_tools: []` does not remove tools; every judge
+now carries a `disallowed_tools` list, and `scripts/check-agent-judges.py` is
+the guard this note said it did not add.*
 **Provenance:** found while running
 [#158](https://github.com/jmcvetta/daily-driver/issues/158)'s nine
 `references` rows, on the second attempt at that run.

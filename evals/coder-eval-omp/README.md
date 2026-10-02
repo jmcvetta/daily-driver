@@ -23,7 +23,8 @@ whose target is a `register(registry)` callable — and `coder_eval` registers i
 own built-ins through that same group, so the path cannot silently rot.
 
 Three things this adapter must get right, and each one is a silent zero rather
-than an error if it does not.
+than an error if it does not. A fourth, the row's tool lists, is a boundary
+rather than a score.
 
 **A skill engagement must be visible to `skill_triggered`.** That criterion
 detects a skill by the substring `skills/<name>/` in a tool parameter, or by a
@@ -59,6 +60,16 @@ can reference) are symlinked from the real `~/.omp/agent/`. Nothing else is:
 `PERSONALITY.md` and `RULES.md` would load a person's own instructions into
 the bare arm. The list is `coder_eval_omp/home.py`'s `PROVIDER_FILES`.
 
+**A row's tool lists must hold.** `tools.select_tools` maps a row's
+`allowed_tools` and `disallowed_tools` to Omp's tool names, and the agent
+passes the result as `omp --tools=<list>`, or `--no-tools` for an empty allow
+list. A row with no allow list gets the Omp twins of Claude Code's default
+tools, never Omp-only tools such as `github` or `eval`. A tool the arm cannot
+map fails the task before Omp starts. One exception: an allowed `Skill` keeps
+`read` on even where the row denies `Read`, because Omp engages a skill by
+reading `skill://<name>`. The agent logs it for each task.
+`docs/notes/0013-the-omp-arm.md` records what `--tools` does not restrict.
+
 ## What it records
 
 Issue #173 asks that a red arm be distinguishable from an arm whose plugin
@@ -70,6 +81,7 @@ puts the startup answer in each run's `environment_info`:
 | `omp_skills_loaded` | the skills the session offers, read from its own command registry |
 | `omp_linked_plugins` | the roots `omp plugin link` installed |
 | `omp_extension_errors` | every `extension_error` frame — the constitution rides on the extension |
+| `omp_tools` | the Omp built-in tools the row's lists granted |
 
 The two protocol questions use a later capture. Omp's `docs/rpc.md` shows
 `toolName` on `tool_execution_start` without showing the arguments, and places
@@ -91,9 +103,10 @@ report's Agent Settings.
 
 ## What is tested, and what is not
 
-`rpc.py` imports nothing — not `coder_eval`, not `omp` — and
-`scripts/check-omp-agent.py` drives it against recorded frames in `make check`.
-That is where the three things above live, and it is why they live there.
+`rpc.py` and `tools.py` import nothing — not `coder_eval`, not `omp` — and
+`scripts/check-omp-agent.py` drives them in `make check`, `rpc.py` against
+recorded frames. That is where the four things above live, and it is why they
+live there.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the
