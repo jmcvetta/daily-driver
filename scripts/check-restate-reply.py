@@ -61,8 +61,9 @@ class RestateReply(unittest.TestCase):
         self.assertIn("the reply you just wrote", reason)
         for kept in ("fact", "uncertainty", "risk", "action"):
             self.assertIn(kept, reason)
-        for exempt in ("document the user", "item by item"):
-            self.assertIn(exempt, reason)
+        self.assertIn("document the user", reason)
+        # The list exemption let the model skip every restatement (#458).
+        self.assertNotIn("item by item", reason)
 
     def test_active_stop_allows(self) -> None:
         """Without it the hook blocks its own restatement forever; the

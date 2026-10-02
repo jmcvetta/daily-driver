@@ -47,16 +47,17 @@ _FENCE = re.compile(r"^\s*(```|~~~)")
 
 # What the model is asked to do. It names the artifact, because a bare
 # "restate concisely" made the agent describe its reply instead of giving it,
-# and it names the two things the constitution puts outside the budget.
+# and it names the one exemption it keeps: a document the user asked for.
+# The list exemption is left out on purpose: measured on #458, the model
+# called every over-budget findings dump such a list and restated nothing.
 REASON = (
     "Restate the reply you just wrote — the one the user is about to read — "
     "in at most four lines, and send only that restatement. Keep every fact, "
     "uncertainty, risk and required action. Drop preamble, recap and detail "
     "the user did not ask for.\n\n"
-    "Two kinds of reply sit outside the four-line budget: a document the user "
-    "asked for, and a list the user will act on item by item. If your reply "
-    "is one of those, it stands. Say so in one line and do not send a second "
-    "copy of it."
+    "A document the user asked for sits outside the four-line budget. If your "
+    "reply is one, it stands. Say so in one line and do not send a second copy "
+    "of it."
 )
 
 
