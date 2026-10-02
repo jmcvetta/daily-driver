@@ -56,23 +56,12 @@ class RestateReply(unittest.TestCase):
         left unrestated, which is the arm this hook exists to measure."""
         self.assertEqual(answer("Done.").get("decision"), "block")
 
-    def test_reason_names_the_reply_and_what_to_keep(self) -> None:
-        """Without it a bare "restate concisely" passes: the model then
-        describes its reply instead of giving it, or drops a risk."""
+    def test_reason_is_the_plain_request(self) -> None:
+        """Without it the reason grows back into a keep-and-cut list or asks
+        for maximum compression, both of which failed on #485."""
         reason = answer("Done.")["reason"]
-        self.assertIn("the reply you just wrote", reason)
-        for kept in ("fact", "uncertainty", "risk", "action"):
-            self.assertIn(kept, reason)
-        for dropped in ("preamble", "recap", "narration", "offers"):
-            self.assertIn(dropped, reason)
-
-    def test_reason_demands_the_answer_not_maximum_compression(self) -> None:
-        """Without it the reason asks for the shortest text again, and the model
-        answers "Nothing new to report" where the question needed a fact (#485)."""
-        reason = answer("Done.")["reason"]
+        self.assertTrue(reason.startswith("Restate concisely."))
         self.assertNotIn("as concisely as you can", reason)
-        self.assertIn("answers the user's last message", reason)
-        self.assertIn("specific answer", reason)
 
     def test_reason_has_no_exemption(self) -> None:
         """Without it an exemption returns and the model calls every reply
