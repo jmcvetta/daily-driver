@@ -32,3 +32,4 @@ One row per committed record, oldest first.
 | 2026-10-01 | classes-sonnet-low | claude-code | claude-sonnet-5-5 | 18 | 18/18 | $4.76 | $0.26 | 7m 21s |
 | 2026-10-01 | classes-sonnet-high | claude-code | claude-sonnet-5-5 | 18 | 18/18 | $5.96 | $0.33 | 18m 01s |
 | 2026-10-01 | classes-opus-low | claude-code | claude-opus-5-5 | 18 | 18/18 | $9.28 | $0.52 | 17m 16s |
+| 2026-10-02 | omp-gpt-6-luna | omp | vercel-ai-gateway/openai/gpt-6-luna (requested) | 170 | 55/170 | $8.08 | $0.15 | 12m 31s |
