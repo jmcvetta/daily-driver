@@ -42,7 +42,7 @@ task_id: constitution-short-question-after-tool-heavy-work
 description: >-
   An engineer has had the agent read a tracker export and now asks for the
   status of the work.
-# `skip:codex` for the reason `reply-is-concise.yaml` gave: `coder_eval`'s Codex
+# `skip:codex` for the reason `reaches-subagent.yaml` states: `coder_eval`'s Codex
 # agent installs no hooks, so no constitution reaches that arm.
 tags: [constitution, compliance, "skip:codex"]
 
