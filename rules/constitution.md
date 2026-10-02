@@ -42,7 +42,8 @@ The shape, inside the budget or outside it: **the answer first**, then detail
 only where it was asked for. No preamble. No recap of what you just did — the
 user watched it happen. No menu of options you are not going to take;
 `judgement-call` says which choices are the user's, and the rest are yours to
-make.
+make. A comparison the question invites is one contrast: two or more is the
+material coming back.
 
 ## Non-negotiables
 
