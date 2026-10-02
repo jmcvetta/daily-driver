@@ -309,6 +309,28 @@ def check_disallowed_only_row_keeps_read_for_skill() -> None:
         check(tool not in selection.tools, f"{tool} must be off for this deny list, got {selection.tools}")
 
 
+def check_trigger_row_under_the_experiment_default() -> None:
+    """A trigger row on a real Omp experiment gets `read` and nothing else.
+
+    Every Omp experiment sets `allowed_tools: [Skill]`, and a row's own deny
+    list sits on top of it. Without this, a regression on that path, the one
+    every trigger row takes, passes while only the unset-allow path is tested.
+    """
+    selection = select_tools(["Skill"], ["Read", "Write", "Edit", "NotebookEdit", "Glob", "Grep", "Bash", "Agent", "Task"])
+    check(selection.argv == ("--tools=read",), f"[Skill] minus the trigger deny list must be --tools=read, got {selection.argv}")
+    check(selection.read_for_skill, "read kept only for Skill must be reported, so the adapter logs it")
+
+
+def check_denied_webfetch_is_reported() -> None:
+    """A denied `WebFetch` with `read` on is flagged, because `read` opens URLs.
+
+    Without this, a row that denies web access runs with it through `read`,
+    and nothing in the run says so.
+    """
+    check(select_tools(["Read"], ["NotebookEdit", "WebFetch"]).webfetch_via_read, "WebFetch denied with read on must be flagged")
+    check(not select_tools(["Grep"], ["WebFetch"]).webfetch_via_read, "WebFetch denied with read off is enforced, so not flagged")
+
+
 def check_no_omp_only_builtins_by_default() -> None:
     """A row with no tool lists gets Claude Code's defaults, not Omp's extras.
 

@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Literal, NoReturn
 
 from coder_eval.agent import Agent
-from coder_eval.errors import AgentCrashError, TurnTimeoutError
+from coder_eval.errors import AgentConfigError, AgentCrashError, TurnTimeoutError
 from coder_eval.models import (
     AgentState,
     ApiRoute,
@@ -86,7 +86,7 @@ from .rpc import (
     TurnReducer,
     TurnStarted,
 )
-from .tools import ToolSelection, select_tools
+from .tools import ToolSelection, UnenforceableToolList, select_tools
 
 
 logger = logging.getLogger(__name__)
@@ -207,7 +207,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._extension_errors: list[str] = []
         self._argument_keys_seen: set[str] = set()
         self._usage_keys_seen: set[str] = set()
-        self._tools = ToolSelection(tools=(), read_for_skill=False)
+        self._tools = ToolSelection(tools=(), read_for_skill=False, webfetch_via_read=False)
         self._state = AgentState.WORKING
 
     # --- lifecycle ---------------------------------------------------------
@@ -235,7 +235,14 @@ class OmpAgent(Agent[OmpAgentConfig]):
 
         # Before anything is built: a list this arm cannot enforce fails the
         # task here, rather than after a run with every tool on.
-        self._tools = select_tools(self.config.allowed_tools, self.config.disallowed_tools)
+        try:
+            self._tools = select_tools(self.config.allowed_tools, self.config.disallowed_tools)
+        except UnenforceableToolList as error:
+            # Not retryable: the same row fails the same way every attempt.
+            raise AgentConfigError(str(error)) from error
+        if self._tools.webfetch_via_read:
+            # Omp has no fetch tool to remove: `read` opens URLs itself.
+            logger.warning("omp: the row denies WebFetch, but `read` is on and still opens URLs on this arm.")
         if self._tools.read_for_skill:
             # The one place a row's list is not met exactly. Omp engages a
             # skill by reading `skill://<name>`, so `Skill` needs `read`.

@@ -42,21 +42,10 @@ OMP_TOOL_FOR: dict[str, str | None] = {
     "WebFetch": None,
 }
 
-# The Claude Code tools a row gets when it names no `allowed_tools`. Omp-only
-# built-ins (`github`, `eval`, `debug`, `lsp`, the memory tools and the rest)
-# have no place here, so a row never gets them.
-_CLAUDE_CODE_DEFAULTS: tuple[str, ...] = (
-    "Read",
-    "Grep",
-    "Glob",
-    "Bash",
-    "Write",
-    "Edit",
-    "Task",
-    "Agent",
-    "WebSearch",
-    "Skill",
-)
+# The Claude Code tools a row gets when it names no `allowed_tools`: every
+# tool with an Omp twin. Omp-only built-ins (`github`, `eval`, `debug`, `lsp`,
+# the memory tools and the rest) have no place here, so a row never gets them.
+_CLAUDE_CODE_DEFAULTS: tuple[str, ...] = tuple(name for name, tool in OMP_TOOL_FOR.items() if tool is not None)
 
 
 class UnenforceableToolList(ValueError):
@@ -72,6 +61,9 @@ class ToolSelection:
 
     read_for_skill: bool
     """`read` is on only because the row allows `Skill`, not `Read`."""
+
+    webfetch_via_read: bool
+    """The row denies `WebFetch`, but `read` is on and still opens URLs."""
 
     @property
     def argv(self) -> tuple[str, ...]:
@@ -123,4 +115,5 @@ def select_tools(allowed: Sequence[str] | None, disallowed: Sequence[str] | None
     return ToolSelection(
         tools=tuple(tools),
         read_for_skill="Skill" in granted and "Read" not in granted,
+        webfetch_via_read="WebFetch" in denied and "read" in tools,
     )
