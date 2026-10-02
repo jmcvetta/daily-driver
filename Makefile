@@ -35,8 +35,8 @@ CODER_EVAL_VERSION := 0.11.6
 # through so it cannot be forgotten at a prompt.
 #
 # CREDENTIALS: Claude arms and judges inherit this shell's subscription auth.
-# Never route an Anthropic model through the Vercel AI Gateway, and set no
-# ANTHROPIC_* variable. See "Credentials" in evals/README.md.
+# Never run an Anthropic model through the API or the Vercel AI Gateway, and
+# set no ANTHROPIC_* variable. See "Credentials" in evals/README.md.
 CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
 
 # Dev dependencies of the Python legs, managed with uv. The repository has no
