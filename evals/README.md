@@ -545,8 +545,10 @@ after long, tool-heavy work, when a short question gets a recap, narration, an
 offer or a menu around one fact.
 
 Turn one asks the agent to read a local tracker export (issues, pull requests,
-comments, check listings) and catch up; it is not graded. Turn two is the word
-`Status`, and the honest answer is one fact: #457 is blocked by #279. The
+comments, check listings) and catch up; it is not graded. Turn two is the
+question `What's the status?`, and the honest answer is one fact: #457 is
+blocked by #279. A sentence rather than the one word `Status`, because one word
+reached the agent as harness tags and read as noise (issue #486). The
 fixture holds a draft pull request with green checks, a long comment thread, a
 closed issue and an epic, so every recap is true. The interlocutor is steered,
 not pinned, with the limits `answer-selects-from-findings` documents, and the
