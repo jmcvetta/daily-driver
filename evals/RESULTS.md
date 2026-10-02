@@ -35,3 +35,4 @@ One row per committed record, oldest first.
 | 2026-10-02 | base-vs-candidate | claude-code | claude-sonnet-5 | 30 | 28/30 | $6.00 | $0.21 | 2m 14s |
 | 2026-10-02 | with-without | claude-code | claude-sonnet-5 | 10 | 0/10 | $3.42 | no task completed | 12m 10s |
 | 2026-10-02 | base-vs-candidate | claude-code | claude-sonnet-5 | 20 | 7/20 | $5.05 | $0.72 | 2m 26s |
+| 2026-10-02 | base-vs-candidate | claude-code | claude-sonnet-5 | 20 | 9/20 | $5.14 | $0.57 | 2m 42s |
