@@ -124,8 +124,8 @@ judge transport — and `make evals-plan` depends on it.
 ## Known limits, recorded rather than fixed
 
 **`allowed_tools` and `disallowed_tools` are enforced through `omp --tools`,
-with one exception, and a guard that closes what the flag leaves open.** This paragraph once said Omp had no
-per-session tool list. That was wrong: `--tools=<list>` works with `--mode rpc`,
+with one exception, and a guard closes what the flag leaves open.** This
+paragraph once said Omp had no per-session tool list. That was wrong: `--tools=<list>` works with `--mode rpc`,
 and the adapter starts one process per task. Until issue #459, every Omp record
 ran with every Omp tool on. On the GPT 6 Luna `undertake` runs that let an eval
 agent call `bash`, `gh` and Omp's `github` tool against live GitHub.

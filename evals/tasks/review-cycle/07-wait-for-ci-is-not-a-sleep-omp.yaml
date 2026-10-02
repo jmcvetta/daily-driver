@@ -3,9 +3,10 @@
 # is the same on both harnesses — the round is entered with CI still running,
 # and the wait must not be a shell `sleep` — and what replaces the sleep is
 # not. On Claude it is the read-wake-read loop `How to wait` prescribes. On
-# Omp, `hub` supervises `gh pr checks --watch` for a bounded fifteen minutes;
-# after it exits, `gh api` reads the head commit's check runs and statuses.
-# `skills/review-cycle/references/omp.md` names all three calls.
+# Omp, a named `bash` service runs `gh pr checks --watch` under a fifteen-minute
+# `timeout`, `write proc://<name>/mode` makes it durable, and `wait` blocks until
+# it completes; then `gh api` reads the head commit's check runs and statuses.
+# `skills/review-cycle/references/omp.md` names the calls.
 #
 # Why the Claude sibling could not be reused: the two rows grade the same
 # negative but stand in front of different mechanisms, and the comment that
@@ -20,6 +21,10 @@
 # pull request and a working GitHub client, which is not a sandbox this harness
 # can build.
 #
+# `wait` is Omp's own tool name, allowed through `OMP_ONLY_TOOLS`. `Write` is
+# allowed because `proc://<name>/mode` needs a real `write`, and `Bash` could
+# write files already, so it adds no capability.
+#
 # `Bash` is deliberately open. A negative control on a tool the model was never
 # offered passes vacuously, and this one has to be able to fail.
 
@@ -33,7 +38,7 @@ initial_prompt: >-
   Review the head and bring me the findings.
 
 agent:
-  allowed_tools: [Bash, Hub, Read, Grep, Glob, Skill, Agent, Task]
+  allowed_tools: [Bash, Read, Write, Grep, Glob, Skill, Agent, Task, wait]
 
 run_limits:
   max_turns: 12

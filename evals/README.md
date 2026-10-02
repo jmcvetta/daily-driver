@@ -72,6 +72,36 @@ record again. Records at versions 1 and 2 stay as they are.
 
 ## Running them
 
+### Credentials: read this before any paid run
+
+**Claude runs on the subscription, and only on the subscription.** The agent
+under test and every `agent_judge` inherit the Claude auth of the shell that
+runs `make`. Set nothing. On a laptop that is the logged-in `claude` CLI. In a
+Claude Code cloud session it is the session's own auth, inherited as is: check
+it with `claude -p "Reply with the word pong" --model claude-sonnet-5
+</dev/null`, then run the target unchanged.
+
+**Never route an Anthropic model through the Vercel AI Gateway.** The
+container can hold a `VERCEL_AI_GATEWAY_API_KEY`, and the gateway lists
+`anthropic/*` models, but it is not the route for them. Do not point
+`ANTHROPIC_BASE_URL` or `ANTHROPIC_AUTH_TOKEN` at the gateway, and do not strip
+the session's environment to make the CLI use it. The gateway serves the
+non-Anthropic models the Omp arms pin (`vercel-ai-gateway/...`), and nothing
+else.
+
+**Never run an Anthropic model through the API.** Not the Anthropic API, not
+Bedrock, not any other metered endpoint, not even for one test call. There is
+no metered Anthropic key, and none is acquired. So no `ANTHROPIC_API_KEY`, no
+`AWS_BEARER_TOKEN_BEDROCK`, and no new `llm_judge` criterion: `llm_judge`
+calls the API directly and cannot run here. Write judges as `agent_judge`, with
+`allowed_tools: []`, `permission_mode: default` and the `disallowed_tools`
+list that `scripts/check-agent-judges.py` enforces. `allowed_tools: []` alone
+hides nothing: a judge without the list reads the sandbox, times out, and
+scores 0.0 with no verdict.
+[`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
+is the decision. `make evals-preflight` stops a run that still carries an
+`llm_judge` row. Port the row; do not look for a key.
+
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.

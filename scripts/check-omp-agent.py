@@ -348,6 +348,19 @@ def check_no_omp_only_builtins_by_default() -> None:
     )
 
 
+def check_omp_only_wait_is_granted_by_name() -> None:
+    """`wait` is granted when a row allows it and never by default.
+
+    Without this, either a row cannot allow `wait` and the CI-wait rows fail at
+    start, or `wait` joins the default grant and rows with no tool lists get a
+    tool no Claude Code row has.
+    """
+    selection = select_tools(["Bash", "Write", "wait"], None)
+    check("wait" in selection.tools, f"an allowed `wait` must be granted, got {selection.tools}")
+    check("wait" not in select_tools(None, None).tools, "`wait` must not be in the default grant")
+    check("wait" not in select_tools(["Bash", "wait"], ["wait"]).tools, "a denied `wait` must be removed")
+
+
 def check_empty_allow_list_is_no_tools() -> None:
     """`allowed_tools: []` grants nothing.
 
@@ -362,9 +375,10 @@ def check_unmapped_allowed_tool_fails_closed() -> None:
     """An allowed tool with no Omp twin, or a name nobody knows, refuses the row.
 
     Without this, the arm warns and runs anyway, which is the open failure
-    this module exists to close.
+    this module exists to close. `Wait` and `Hub` are names that exist on
+    neither harness, so they must still raise.
     """
-    for allowed, disallowed in ((["Read", "WebFetch"], None), (["Read", "Hub"], None), (None, ["bash"])):
+    for allowed, disallowed in ((["Read", "WebFetch"], None), (["Read", "Hub"], None), (["Read", "Wait"], None), (None, ["bash"])):
         try:
             select_tools(allowed, disallowed)
         except UnenforceableToolList:

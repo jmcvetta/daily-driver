@@ -27,6 +27,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       FIRST, FIND THE REPLY. Grade only the text after the last
