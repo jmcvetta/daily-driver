@@ -5,7 +5,8 @@
 # Without it these pass silently: a cloud container that exports only
 # VERCEL_AI_GATEWAY_API_KEY, where Omp lists no gateway model; a reinstall over
 # an `omp` that is already there; an `omp models find` substring hit
-# (glm-5.3-flash for glm-5.3) taken as the exact model; and a missing key that
+# (glm-5.3-flash for glm-5.3) taken as the exact model; an experiment list
+# that yields no model, which checks nothing and passes; and a missing key that
 # a later paid run discovers instead of this setup.
 
 set -euo pipefail
@@ -52,14 +53,20 @@ cat >"${ROOT}/omp-b.yaml" <<'EOF'
     model: openai-codex/gpt-5.6-sol   # a comment
 EOF
 
-# run NAME EXPECTED_STATUS ENV...: run the setup with only ENV set.
+# run NAME EXPECTED_STATUS ENV...: run the setup with only ENV set, over
+# EXPERIMENTS (default: the two files above). EXPECTED_STATUS `nz` accepts any
+# failure, for an exit status that is sed's rather than the script's.
 run() {
 	local name="$1" expected="$2" status=0
 	shift 2
+	# shellcheck disable=SC2086 # EXPERIMENTS is a list of paths
 	env -i HOME="${ROOT}/home" PATH="${BIN}:/usr/bin:/bin" "$@" \
-		bash "${SETUP}" "${ROOT}/omp-a.yaml" "${ROOT}/omp-b.yaml" \
+		bash "${SETUP}" ${EXPERIMENTS:-"${ROOT}/omp-a.yaml" "${ROOT}/omp-b.yaml"} \
 		>"${ROOT}/out" 2>&1 || status=$?
-	if [ "${status}" -ne "${expected}" ]; then
+	if [ "${expected}" = nz ] && [ "${status}" -ne 0 ]; then
+		expected="${status}"
+	fi
+	if [ "${status}" != "${expected}" ]; then
 		echo "FAIL ${name}: exit ${status}, want ${expected}" >&2
 		cat "${ROOT}/out" >&2
 		exit 1
@@ -90,6 +97,13 @@ expect_out "error: Omp does not list vercel-ai-gateway/zai/glm-5.3"
 
 run "codex arm unconfigured" 0 AI_GATEWAY_API_KEY=k STUB_NO_CODEX=1
 expect_out "unconfigured: openai-codex/gpt-5.6-sol"
+
+EXPERIMENTS="${ROOT}/missing.yaml" run "missing experiment file" nz AI_GATEWAY_API_KEY=k
+expect_out "missing.yaml"
+
+printf 'variants: []\n' >"${ROOT}/empty.yaml"
+EXPERIMENTS="${ROOT}/empty.yaml" run "no model to check" 1 AI_GATEWAY_API_KEY=k
+expect_out "error: no model: line"
 
 if [ -e "${ROOT}/curl-called" ]; then
 	echo "FAIL: the installer ran although omp was on PATH" >&2

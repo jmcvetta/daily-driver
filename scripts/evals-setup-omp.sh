@@ -65,6 +65,14 @@ sys.exit(0 if any(m.get("selector") == want for m in models) else 1)
 ' "$1"
 }
 
+# Read outside a process substitution, so a failing `sed` (a missing file)
+# stops the run, and an empty list fails rather than checking nothing.
+models="$(sed -n 's/^[[:space:]]*model:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$@" | sort -u)"
+if [ -z "${models}" ]; then
+	echo "error: no model: line in $*" >&2
+	exit 1
+fi
+
 failed=0
 while IFS= read -r model; do
 	if serves "${model}"; then
@@ -75,5 +83,5 @@ while IFS= read -r model; do
 	else
 		echo "unconfigured: ${model} (needs this provider's own Omp login; skipped)"
 	fi
-done < <(sed -n 's/^[[:space:]]*model:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$@" | sort -u)
+done <<<"${models}"
 exit "${failed}"
