@@ -88,12 +88,12 @@ The shape that shipped is the ordinary one.
   be addressed, or they are minor. That is trust between two people. An
   unattended round has no second person to trust, so it takes Gerrit's
   shape rather than Google's.
-- **Agent review tools** converge on the same delta. CodeRabbit's docs for
-  its `@coderabbitai review` command describe an incremental review of the
-  changes since its last full review, and GitHub's changelog of 2026-09-18
-  for Copilot code review describes findings grouped by whether they were
-  resolved since the last review. Neither text was read at source for this
-  note; both are recorded from the vendors' published summaries.
+- **Agent review tools** converge on the same delta. CodeRabbit's docs
+  describe an incremental review of the changes since its last full review,
+  and GitHub describes Copilot code review grouping its findings by whether
+  they were resolved since the last review. Neither text was read at source
+  for this note; both are recorded from search summaries of the vendors'
+  documentation.
 
 ## Decided
 
