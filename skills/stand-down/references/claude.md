@@ -44,8 +44,9 @@ the recorded name — the usual sign that the session under it has already
 stopped. `SendMessage`'s `to` takes that name, never the `session_01AbC…`
 identifier the muster roll also records, which does not resolve as an
 address. A member no roll entry and no `ListAgents` listing can name cannot
-be reached at all; it is not sent a wrap-up, and it is named as a residual
-at `Secure the work` rather than retried.
+be reached at all, and `ListAgents` can omit a session that is still running.
+It is interrupted, not sent a wrap-up, and named as a residual with its link
+at `Secure the work` rather than retried. **It is not archived.**
 
 **The wrap-up message** tells the session, in words: commit everything in
 progress to the task branch, push it, and end the turn without starting
@@ -67,10 +68,11 @@ non-fast-forward exactly as readily inside the deadline as outside it. Only
 a bucket showing the turn ended without error counts as the session having
 had its chance; an error bucket is recorded as a residual the same as a
 missed deadline, never read as `Secured: yes` on the strength of having left
-`working` alone. A session the deadline outlasts, a session `ListAgents`
-never named, and a session whose turn ended in error are all recorded as a
-residual for that implementor at this step, and are archived anyway at
-`Stop the fleet` — securing the work is attempted once, not guaranteed.
+`working` alone. A session the deadline outlasts and a session whose turn
+ended in error are recorded as a residual for that implementor at this step,
+and are archived anyway at `Stop the fleet` — securing the work is attempted
+once, not guaranteed. A session `ListAgents` never named is recorded as a
+residual too, but it is not archived.
 
 **`Stop the fleet` archives without reading status again.** The interrupt and
 the wrap-up wait already happened at `Secure the work`; archiving does not
@@ -79,7 +81,9 @@ covers a session still working and one merely stuck alike — is not consulted
 here. If the archive call refuses a session it believes is still running,
 the one bounded retry happens after the interrupt's result is in; a second
 refusal is a residual for the banner. A session the archive call has already
-retired is skipped, which is what makes a re-run of the stops safe.
+retired is skipped, which is what makes a re-run of the stops safe. A session
+no name could reach is skipped too: it was interrupted at `Secure the work`
+and stays unarchived, and the handoff and banner give its link.
 
 
 The watches
@@ -113,10 +117,10 @@ and the claim comment `undertake` posted names the branch a replacement
 reuses.
 
 **Loss is possible only where the wrap-up did not land in time** — the
-session missed the three-minute deadline, `ListAgents` never named it to
-begin with, or its turn ended in error before the commit or the push
-completed. There, whatever that session held and never pushed is gone at
-the archive, exactly as before this route existed. `Secure the work` records
+session missed the three-minute deadline or its turn ended in error before
+the commit or the push completed. There, whatever that session held and never
+pushed is gone at the archive. A session `ListAgents` never named is not
+archived at all, so its unpushed work survives until a person pushes it. `Secure the work` records
 it as a residual the moment the deadline, the listing, or the turn's own
 outcome fails, so the banner and the handoff both say so before the archive
 happens, rather than after.

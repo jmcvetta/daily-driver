@@ -108,11 +108,17 @@ everything in progress to the task branch, push it, and end the turn without
 starting anything else. Then wait, on one shared deadline for the whole
 fleet, until every session's turn has ended or the deadline passes; the
 reference file names the read and the deadline. Leaving that wait is not
-itself securing: a session the deadline outlasts, a session no name can
-reach at all, and a session whose turn ends in error before its push
-completes are all archived anyway at `Stop the fleet` and reported as a
-residual in the banner, by name — securing its work was attempted, not
-guaranteed.
+itself securing: a session the deadline outlasts and a session whose turn
+ends in error before its push completes are archived anyway at `Stop the
+fleet` and reported as a residual in the banner, by name — securing its work
+was attempted, not guaranteed.
+
+**A session no name can reach is interrupted and never archived.** It cannot
+be told to push, and an archive destroys whatever it holds unpushed. Where the
+muster roll marks it `messaging: unreachable` and `ListAgents` does not name
+it, it is interrupted alone. It is a residual in the banner and in its task
+issue's handoff, with its session link, so that a person can push or archive
+it later.
 
 **Harness-local subagents (Omp, Codex).** Cancel the subagent first, by its
 dispatch handle, exactly as `Stop the fleet` always has, then this session
@@ -161,6 +167,8 @@ is yours to reclaim.
 - Worktree (this machine): <path, or "none">.
 - Secured: <yes — work in progress was committed and pushed before the stop
   | no — residual, see the stand-down comment on the epic>.
+- Session: <link, left running or interrupted and unarchived where it could
+  not be messaged — push or archive it yourself; otherwise "retired">.
 
 Work in progress was committed and pushed to the branch above before this
 implementor was retired, where securing it succeeded — the origin tip is
@@ -235,11 +243,12 @@ straight to the stops.
 Everything in one parallel batch, and nothing polled beyond `Secure the
 work`'s one bounded wait, already spent by the time this step runs.
 
-**A web session is archived.** It was already interrupted and sent its
-wrap-up at `Secure the work`; this step is the archive alone. It runs
-whether that session's turn ended inside the deadline or not — a session the
-deadline outlasted was already named a residual there, and archiving it here
-does not undo that naming. If the archive call rejects a session it believes
+**A web session is archived, unless no name could reach it.** It was already
+interrupted and sent its wrap-up at `Secure the work`; this step is the
+archive alone. It runs whether that session's turn ended inside the deadline
+or not — a session the deadline outlasted was already named a residual there,
+and archiving it here does not undo that naming. **An unreachable session is
+not archived**: it was interrupted only, and stays a residual with its link. If the archive call rejects a session it believes
 is still running, one retry after the interruption's result is in; a second
 refusal is reported as a residual, not retried in a loop.
 
@@ -286,7 +295,8 @@ residuals remain:
 ```
 
 Residuals are listed, one line each, never silent: an implementor whose work
-could not be secured — the wrap-up deadline passed, no name could reach it,
+could not be secured — the wrap-up deadline passed, no name could reach it
+(left unarchived, named with its session link),
 its turn ended in error before the push completed, or a worktree would not
 commit or push — an implementor that could not be stopped, a comment that
 failed to post, or a watch that could not be

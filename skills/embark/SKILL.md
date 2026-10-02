@@ -225,6 +225,7 @@ Landing: orchestrator
 | Task | Implementor | Required class | Selected route | Actual model |
 | ---- | ----------- | -------------- | -------------- | ------------ |
 | #144 — Validate against the schema. | session `session_01AbC` — `worker-3` | `implementation` | `route-standard` | `model-standard` |
+| #145 — Add the retry loop. | session `session_01DeF` — messaging: unreachable | `implementation` | `route-standard` | `model-standard` |
 | #147 — Document the format. | subagent `agent://abc` | `mechanical` | `sonic` | `unreported` |
 | #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — | — |
 ```
@@ -240,7 +241,9 @@ The roll distinguishes required class, selected route, and actual model. A
 and shared advisor; a web-session row links, and on Claude Code the
 `Implementor` cell also carries the name `ListAgents` gives that session —
 resolved once, here, so `Watch the wave` and `Recover a session` can address it
-straight off the roll. Do not describe an actual model that the harness did
+straight off the roll. A session the listing does not name gets `messaging:
+unreachable` in that cell instead of a name: reachability is read, never
+assumed. Do not describe an actual model that the harness did
 not report.
 
 The comment carries `provenance`'s block after the table, naming this
@@ -459,10 +462,15 @@ Reached from `Watch the wave`, and it returns there.
   session id.** `Post the muster roll` resolved that name through the agent
   listing when the session opened; read it from the roll rather than calling
   the listing again. Re-resolve through the listing only when the roll carries
-  no name for this task, or a send to the recorded name fails to reach it —
-  usually the sign that the session under it has already stopped. A fleet
-  member the listing does not name cannot be steered at all, and is reopened
-  instead.
+  no name for this task, or a send to the recorded name fails to reach it.
+  Read the listing again before acting on a session marked `messaging:
+  unreachable`, because reachability can change.
+- **A session the listing does not name is not thereby stopped.** Read its
+  session first. Reopen only one reported archived, failed or not found. A
+  running or idle one that cannot be messaged is interrupted and not reopened:
+  a second session on its branch would collide with the first. Record the
+  task as a stop under `Where it stops and waits`, naming the task, the
+  session link and its pull request.
 - **A message is sent, not a conversation.** The session receives it and acts
   on it, but nothing here reads back that it did — the result of a correction
   is read from the pull request, the same as everything else this watch reads.
@@ -546,7 +554,7 @@ touches the constitution's own gates.
 Where it stops and waits
 ========================
 
-Five, and three of them are reports rather than questions.
+Six, and three of them are reports rather than questions.
 
 - **An issue that is not an epic**, at `Read the epic`. A report: say which
   issue it is and which skill takes it — `undertake` for a task issue, `epic`
@@ -562,6 +570,9 @@ Five, and three of them are reports rather than questions.
   or a delivery that failed. Guessing at
   the answer is guessing at intent twice over — the constitution forbids it
   once, and this skill did not write the code being asked about.
+- **A live session that cannot be messaged**, at `Recover a session`. A
+  report: name the task, the session link and its pull request, and leave the
+  session interrupted and unarchived for the user to decide.
 - **The epic's graph disagreeing with its body about a blocker**, at `Take the
   wave`. The graph wins, so the wave is not in doubt; the body is wrong, and
   fixing it is `epic`'s `Fill in the epic` rather than an edit made in passing
