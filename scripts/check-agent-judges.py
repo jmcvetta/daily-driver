@@ -17,6 +17,9 @@ narrowest route it allows. See docs/notes/0014 for the other two settings.
 
 WHAT IT ASSERTS
 
+    No criterion under `evals/tasks/` has `type: llm_judge`: it calls the
+    metered Anthropic API, which this repository does not use (docs/notes/0014).
+
     Every `agent_judge` criterion, in `success_criteria` and
     `post_failure_criteria`, carries an `agent` block with
     `allowed_tools: []`, `permission_mode: default`, and a `disallowed_tools`
@@ -67,9 +70,11 @@ def problems(path: Path) -> list[str]:
     found = []
     criteria = (data.get("success_criteria") or []) + (data.get("post_failure_criteria") or [])
     for index, criterion in enumerate(criteria):
+        where = f"{path.relative_to(path.parents[1])}: criterion {index}"
+        if criterion.get("type") == "llm_judge":
+            found.append(f"{where}: llm_judge is refused; use agent_judge")
         if criterion.get("type") != "agent_judge":
             continue
-        where = f"{path.relative_to(path.parents[1])}: criterion {index}"
         agent = criterion.get("agent") or {}
         if agent.get("allowed_tools") != []:
             found.append(f"{where}: allowed_tools is not []")
@@ -82,7 +87,7 @@ def problems(path: Path) -> list[str]:
 
 
 def self_test() -> None:
-    """A judge with no denylist must be reported, or the check proves nothing."""
+    """A judge with no denylist, or an `llm_judge`, must be reported, or the check proves nothing."""
     bare = {
         "success_criteria": [
             {"type": "agent_judge", "agent": {"allowed_tools": [], "permission_mode": "default"}}
@@ -94,6 +99,9 @@ def self_test() -> None:
         path.write_text(yaml.safe_dump(bare))
         if not problems(path):
             sys.exit("check-agent-judges: self-test failed: a judge without disallowed_tools passed")
+        path.write_text(yaml.safe_dump({"success_criteria": [{"type": "llm_judge"}]}))
+        if not problems(path):
+            sys.exit("check-agent-judges: self-test failed: an llm_judge row passed")
 
 
 def main() -> int:

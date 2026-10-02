@@ -100,8 +100,9 @@ list that `scripts/check-agent-judges.py` enforces. `allowed_tools: []` alone
 hides nothing: a judge without the list reads the sandbox, times out, and
 scores 0.0 with no verdict.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
-is the decision. `make evals-preflight` stops a run that still carries an
-`llm_judge` row. Port the row; do not look for a key.
+is the decision. `make check` refuses an `llm_judge` row, and `make
+evals-preflight` stops a run that carries one anyway. Port the row; do not look
+for a key.
 
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
@@ -168,7 +169,7 @@ The base arm needs a second checkout that the experiment cannot create:
 the rows below, five repeats, per-replicate results kept:
 
 ```sh
-make evals-run-comparison TASKS="tasks/constitution/answer-selects-from-findings.yaml tasks/constitution/reply-is-concise.yaml tasks/constitution/explanation-request-answered.yaml"
+make evals-run-comparison TASKS="tasks/constitution/answer-selects-from-findings.yaml tasks/constitution/short-question-after-tool-heavy-work.yaml tasks/constitution/explanation-request-answered.yaml"
 ```
 
 The target records the run against the comparison experiment. Record the
@@ -178,7 +179,7 @@ with it.
 | Row | Role |
 | --- | ---- |
 | `constitution/answer-selects-from-findings.yaml` | finding: the "one contrast" sentence must raise the selection score |
-| `constitution/reply-is-concise.yaml` | control, at 1.000; a drop in `candidate` is a defect |
+| `constitution/short-question-after-tool-heavy-work.yaml` | finding: fails on `master` by construction; the restatement hook must raise it |
 | `constitution/explanation-request-answered.yaml` | control: a requested explanation must still arrive |
 
 Report replicates marked `ANCHOR: no-question` or `ANCHOR: tainted-question`
@@ -330,11 +331,10 @@ constitution's own test, described under "Checks" in the repository README. Its 
 `scripts/check-constitution.py`.
 
 **The compliance rows differ in how much true material the model is holding,
-and that turns out to be the axis that matters.** `reply-is-concise` asks a
-question with one honest answer, so the model gives it: measured at 1.000 in
-every arm of every run, treated and bare alike, which means it separates
-nothing — not two versions of the rule, and not a session carrying the
-constitution from one without it. **Unrecorded.**
+and that turns out to be the axis that matters.** The retired
+`reply-is-concise` asked a question with one honest answer, so the model gave
+it: measured at 1.000 in every arm of every run, treated and bare alike, which
+means it separated nothing. **Unrecorded.**
 `answer-selects-from-findings` first spends a turn filling the context with
 five true findings the model wrote itself, and only then asks for one of them.
 That is a selection problem rather than a compression one, and it is where the
@@ -537,68 +537,36 @@ bubble into the parent's telemetry tagged with `parent_tool_use_id`, and
 same hole — the parent could simply type the answer. Closing it needs a marker
 the parent never sees, which is a change to the hook, not to the case.
 
-### `reply-is-concise`, the first compliance row
+### `short-question-after-tool-heavy-work`, the row built to fail on `master`
 
-Reach is settled; whether an injected rule *lands* is not, and `reply-is-concise`
-is the first case here that asks. It picks the `Before you reply` rule because
-a session obeys or breaks it in plain sight. That makes it the cheapest
-instrument in the repository for the general question, and a cheap instrument
-is the one that gets built.
+Issue #474. The first compliance row, `reply-is-concise`, asked a small question
+with one honest answer and scored 1.000 in every arm, bare included, so it
+could not show a rule working. It is retired. The verbosity users get arrives
+after long, tool-heavy work, when a short question gets a recap, narration, an
+offer or a menu around one fact.
 
-The case asks why a documented-inclusive slice drops its last item. The honest
-answer is one line, and everything about the situation pushes the other way: a
-bug invites a diagnosis, a fix, a test and a summary. `Do not change any code`
-in the prompt, and closed `Write` / `Edit` / `Bash`, remove the one honest
-reason for length — an agent that fixed the bug has something to report.
+Turn one asks the agent to read a local tracker export (issues, pull requests,
+comments, check listings) and catch up; it is not graded. Turn two is the
+question `What's the status?`, and the honest answer is one fact: #457 is
+blocked by #279. A sentence rather than the one word `Status`, because one word
+reached the agent as harness tags and read as noise (issue #486). The
+fixture holds a draft pull request with green checks, a long comment thread, a
+closed issue and an epic, so every recap is true. The interlocutor is steered,
+not pinned, with the limits `answer-selects-from-findings` documents, and the
+rubrics carry the same `ANCHOR:` tokens.
 
-Both graders are `agent_judge`, because the reply is the only artifact the case
-produces and nothing in `coder_eval` matches the final message deterministically
-(see "How the graders ported"). The brevity grader, at weight 2, judges
-unnecessary content: the reply carries the cause and nothing else — no fix
-offer, no test proposal, no tour of the code, no recap. It does not count
-lines, because the constitution's audience rule carries no number to count
-against. Beneath it sits a correctness grader at weight 1: a brevity grader
-alone pays for silence, and short and wrong is not what the rule asks for.
-Each rubric carries a calibration pair — verbose-but-correct fails brevity,
-short-but-incomplete fails correctness — so neither grader compensates for the
-other.
-
-One thing both rubrics have to know, and a naive one would not:
-`include_agent_output` does not hand a judge the reply. It hands over
-`format_messages`' whole-turn transcript — `[ASSISTANT]` starting each block of
-thinking aloud, and a terminal `[RESULT - …]` repeating the answer, so the
-answer appears twice. Read whole, that transcript counts narration, and counts
-it *against* the arm that stopped to obey a rule; graded whole, it lets an agent
-that worked the answer out aloud and then did not say it pass the correctness
-floor. So both rubrics locate the reply at the last `[RESULT - …]` tag first
-and read nothing above it — and nothing below it either, since
-`_render_user_message` appends the harness's own closing instruction straight
-after the block with no delimiter.
-
-Measured against the pinned harness rather than assumed, because the tags are
-not all there: `format_messages` has a `[TOOL USE]` branch that never fires,
-duck-typing on a `msg.type` the SDK's `StreamEvent` does not carry. That is the
-kind of thing pinning `CODER_EVAL_VERSION` holds still.
-
-There is deliberately **no fallback** when the `[RESULT - …]` anchor is
-missing. Counting the last `[ASSISTANT]` block instead would turn a drifted
-harness into a plausible number, and the SDK ends every turn with a
-`ResultMessage`, so a missing tag means the format moved rather than that the
-turn had no reply. Both rubrics write `ANCHOR: none` and score 0.0 there,
-failing the case identically in both arms. A drifted harness has measured
-nothing, and a case that says so is worth more than one that reports a figure.
-
-Its weakness is the judgment. A line count was crude but reproducible; a
-judgment on unnecessary content is faithful to the rule but is a model's call.
-Read `per_replicate_scores`: a disagreement between replicates is a finding
-about the rubric, not noise to average away. Neither the constitution nor the
-rubric carries a line number any more, so there is no threshold to keep in
-step between them.
+Two `agent_judge` criteria. The floor, at weight 1, wants the one fact. The
+unrequested-content criterion, at weight 2, scores recap, narration, offers,
+menus and headings or bullets around a one-fact answer, and never counts
+length. Each rubric carries a calibration pair, so neither compensates for the
+other. The acceptance bar is a mean at or below 0.6 on the second criterion on
+`master` with the plugin loaded; a probe that passes there cannot show the
+restatement hook working.
 
 ### `answer-selects-from-findings`, the row that is not at ceiling
 
-`reply-is-concise` scores 1.000 in every arm of every run, bare arms included.
-**Unrecorded.** It separates nothing: a row at ceiling on both sides is
+The retired `reply-is-concise` scored 1.000 in every arm of every run, bare arms included.
+**Unrecorded.** It separated nothing: a row at ceiling on both sides is
 measuring the model's default rather than the rule. This row is built to separate.
 Turn one asks for an audit of a five-file service, is meant to be long, and is
 not graded — it exists to fill the context with five true findings the model
@@ -635,8 +603,8 @@ model rather than a field. Read the dialogs before trusting a mean.
 
 ### `completion-report-is-lean`, the row that grades a report
 
-`reply-is-concise` grades an *answer*. So does `answer-selects-from-findings`,
-the section above. Both ask a question with one honest factual answer, and issue
+`short-question-after-tool-heavy-work` and `answer-selects-from-findings` grade an *answer*.
+Both ask a question with one honest factual answer, and issue
 #279's comparison across five probes of that shape measured a paired difference
 of exactly 0.000, three of them at ceiling in both arms. **Unrecorded.** A probe
 both arms pass cannot show a rule working.
