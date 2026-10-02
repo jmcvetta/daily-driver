@@ -12,8 +12,8 @@ description: >-
   and the banner that says stopping is safe. Runs fast by design: parallel
   batches, no polls, one bounded wrap-up wait, one bounded retry anywhere.
   Not for the watch ending because the epic is worked out — `embark` reports
-  that itself — and not for a single issue, which has no fleet to stand
-  down.
+  that itself — and not for a single issue, which has no fleet to stand down
+  and whose stop is `undertake`'s `The stop`.
 ---
 
 # Stand-down
@@ -223,7 +223,9 @@ at-sea status from.
 **Idempotent re-entry.** A stand-down interrupted by a session death is
 re-run, not duplicated, and the writes are idempotent one by one: a handoff
 comment already on a task issue is not posted twice, and a stand-down
-comment already on the epic is not posted again. `Write the handoff` writes
+comment already on the epic is not posted again. A `## Handoff —` comment
+that `undertake`'s `The stop` posted, after the latest claim and naming the
+current pushed head, counts as the handoff already present. `Write the handoff` writes
 only what is missing, and a record that is complete sends this step
 straight to the stops.
 
@@ -306,7 +308,8 @@ reports instead:
 - **Nothing is at sea** — at `Read the fleet`. The banner prints with a
   zero count and the reason; if the invocation named an issue that is not
   an embarked epic, the report says which skill takes it — `undertake` for
-  a task issue, `embark` for an epic still to work.
+  a task issue, `embark` for an epic still to work. A stop instruction for a
+  single undertaking is `undertake`'s `The stop`.
 - **A residual** — at `Print the banner`. Named in the banner, one line
   each, and left for the person reading it. Nothing here retries a
   residual twice.
@@ -335,6 +338,6 @@ Non-goals
   for an answer, and the handoff is written from the record instead.
 - **Does not fire on a worked-out epic.** `Close the epic` ends an embark that
   succeeded; this skill ends one that was interrupted.
-- **Does not fire on a single issue.** One `undertake` has no fleet; the
-  session holding it can simply stop, and its claim comment is already the
-  record.
+- **Does not fire on a single issue.** One `undertake` has no fleet. Its stop
+  is `undertake`'s `The stop`, which secures the work and leaves the handoff
+  a claim comment cannot.
