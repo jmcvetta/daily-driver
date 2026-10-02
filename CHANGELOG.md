@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.46.0](https://github.com/jmcvetta/daily-driver/compare/v0.45.0...v0.46.0) (2026-10-02)
+
+
+### Features
+
+* **constitution:** a test says why it exists ([#454](https://github.com/jmcvetta/daily-driver/issues/454)) ([a98d8f0](https://github.com/jmcvetta/daily-driver/commit/a98d8f0633931fe0581f6e0c7af96c70fc486f34))
+* **model-telemetry:** mine per-model rework from claim and readiness comments ([#422](https://github.com/jmcvetta/daily-driver/issues/422)) ([bddcbfc](https://github.com/jmcvetta/daily-driver/commit/bddcbfc81bdff874ddb120f5c11c03ef01ca8323))
+* **undertake:** leave a handoff when a standalone undertaking stops ([#451](https://github.com/jmcvetta/daily-driver/issues/451)) ([87ebe54](https://github.com/jmcvetta/daily-driver/commit/87ebe54ef35d323a886bac96a27a36bb94fc34bd))
+* **undertake:** resume an issue's existing branch and PR ([#452](https://github.com/jmcvetta/daily-driver/issues/452)) ([a206080](https://github.com/jmcvetta/daily-driver/commit/a2060805272948e5c0349ae897abb1226d79ba86))
+
+
+### Bug Fixes
+
+* handle sessions the agent listing does not name ([#455](https://github.com/jmcvetta/daily-driver/issues/455)) ([bcb12c1](https://github.com/jmcvetta/daily-driver/commit/bcb12c15eb5cbc3ca74918428043070231496d9e))
+* **omp:** route CI waits through supervised services ([#413](https://github.com/jmcvetta/daily-driver/issues/413)) ([868d7ab](https://github.com/jmcvetta/daily-driver/commit/868d7abeee4ab90d233ec216767ac1425cf7804d))
+* **undertake:** read the completion notice in the ready gate ([#444](https://github.com/jmcvetta/daily-driver/issues/444)) ([2e165c3](https://github.com/jmcvetta/daily-driver/commit/2e165c35e4adcb05e5fd1a005dae7d6dd76818c8))
+
 ## [Unreleased]
 
 ### Bug Fixes
