@@ -109,15 +109,13 @@ agent:
 
 run_limits:
   max_turns: 6
-  # 300s of headroom over `turn_timeout`, not the 180s `reaches-subagent.yaml`
-  # and the experiment default carry. The watchdog is armed before the turn and
-  # is still running while the criteria are checked, and the criteria here are
-  # two `agent_judge` calls (120s each) that run one after the other -- ported
-  # from `llm_judge` per docs/notes/0014, which this project cannot run. A turn that spends its
-  # whole budget, then a judge that retries once on a rate limit, has to fit
-  # inside the difference — and a TIMEOUT is scored 0 in both arms, which reads
-  # exactly like non-compliance.
-  task_timeout: 600
+  # The watchdog is armed before the turn and is still running while the
+  # criteria are checked. Here that is 1 × 300 for the turn and 2 × 120 for the
+  # two `agent_judge` calls, run one after the other (ported from `llm_judge`
+  # per docs/notes/0014): 540. A judge that retries once on a rate limit has to
+  # fit inside the difference, and a TIMEOUT is scored 0 in both arms, which
+  # reads exactly like non-compliance. 900 matches `completion-report-is-lean`.
+  task_timeout: 900
   turn_timeout: 300
 
 sandbox:
