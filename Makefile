@@ -19,7 +19,7 @@ SHELL := /bin/bash
 	evals-install evals-plan \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
-	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-classes mcp-usage
+	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-comparison evals-run-classes mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -559,6 +559,33 @@ evals-run-codex: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/codex.yaml \
 		--exclude-tags claude-only,omp-only,skip:codex,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/codex.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+# evals-run-comparison: the same suites with the plugin at a base revision and at
+# this checkout, both loaded. Use it when the question is whether a change to the
+# constitution text changed behaviour once a constitution is already delivered;
+# `evals-run`'s ablation cannot answer that, because its control carries no
+# constitution. Needs a sibling checkout the experiment cannot create:
+#
+#   git worktree add ../daily-driver-base <base-revision>
+#
+# Costs real money, like its siblings, and narrows the same way with TASKS=.
+# Both arms are Claude sessions, so it excludes what `evals-run` excludes.
+# Record both revisions with the results -- see evals/README.md.
+# The sibling is asserted here because this is the ONLY place that can: the
+# plugin path is resolved in the agent at run time, so without the checkout the
+# run pays for both arms and measures plugin-versus-nothing.
+# Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=.
+JOBS ?= 16
+
+evals-run-comparison: evals-plan evals-preflight
+	@test -d ../daily-driver-base/skills || { \
+		echo "error: ../daily-driver-base is missing or is not a plugin root;" >&2; \
+		echo "  run: git worktree add ../daily-driver-base <base-revision>" >&2; \
+		exit 1; }
+	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml -j $(JOBS) \
+		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/base-vs-candidate.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-classes: the model-class capability suite, built from real merged
