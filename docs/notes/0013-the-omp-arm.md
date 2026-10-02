@@ -52,12 +52,36 @@ home built beside the task.
 repository's own measurement says the extension comes from an installed
 manifest, and `omp plugin link` is the route it measured.
 
-**The throwaway home borrows the real one's providers.** Every file in
-`~/.omp/agent/` is symlinked into it, except the config the agent writes, which
-carries Omp's defaults plus skill commands. A run needs a model, and the
+**The throwaway home borrows the real one's providers, and only those.** The
+files `models.yml`, `agent.db` (with its `-wal` and `-shm` siblings) and
+`secrets.yml` in `~/.omp/agent/` are symlinked into it; the config the agent
+writes carries Omp's defaults plus skill commands. A run needs a model, and the
 provider configuration is where it lives; the laptop's own installed plugins
 and settings stay out, which is the isolation `coder_eval`'s Claude agent gets
 from `setting_sources: []`. Nothing is written into the real home.
+
+The first version linked every file except `config.yml`. That also carried
+`mcp.json` and the instruction files (`AGENTS.md`, `SYSTEM.md`,
+`SYSTEM_TEMPLATE.md`, `PERSONALITY.md`, `RULES.md`) into both arms (#466, from
+#461 gap 5). Two measurements settled the allow list. Omp 18.4.10 from npm, on
+`--mode rpc` against a local mock OpenAI-compatible model, with a fresh `HOME`
+per run:
+
+- *An inherited `mcp.json` escapes `--tools=read`.* The real home held an
+  `mcp.json` naming a local stdio MCP server with one tool. With the file
+  linked, the session under `--tools=read` listed `xd://mcp__probe_tool` as a
+  mounted device and was offered a `write` tool it would not otherwise have.
+  With only `models.yml` linked, it listed no devices and was offered `read`
+  alone. So the escape is real, and the allow list closes it.
+- *A setting stored in `agent.db` does not reach the session.* A `settings` row
+  `grep = {"enabled": false}` sat in the linked `agent.db`, with the throwaway
+  `config.yml` present. The session under `--tools=read,grep` still offered
+  `grep`, and the row was untouched after the run. The same setting in
+  `config.yml` made Omp refuse the run ("Built-in tool unavailable in this
+  session: grep"), so the probe can see a setting that applies. This matches
+  the source: `agent.db`'s settings table is read only by the legacy migration,
+  and only when `config.yml` is absent. The agent always writes one, so
+  inheriting `agent.db` brings credentials without settings.
 
 **Three normalisations at the agent boundary, each one a silent zero if it is
 missing.**
@@ -123,11 +147,68 @@ judge transport — and `make evals-plan` depends on it.
 
 ## Known limits, recorded rather than fixed
 
-**`allowed_tools` and `disallowed_tools` are not enforced in this arm.** Omp's
-RPC mode has no per-session tool allowlist. The trigger rows use
-`disallowed_tools` to stop a denied read of `skills/<name>/SKILL.md` scoring as
-an engagement, so a no-fire row is weaker on Omp than on Claude Code. The agent
-warns once per task rather than letting a row believe it constrained anything.
+**`allowed_tools` and `disallowed_tools` are enforced through `omp --tools`,
+with one exception, and a guard closes what the flag leaves open.** This
+paragraph once said Omp had no per-session tool list. That was wrong: `--tools=<list>` works with `--mode rpc`,
+and the adapter starts one process per task. Until issue #459, every Omp record
+ran with every Omp tool on. On the GPT 6 Luna `undertake` runs that let an eval
+agent call `bash`, `gh` and Omp's `github` tool against live GitHub.
+`coder_eval_omp/tools.py` maps a row's lists to Omp's names. A row with no allow
+list gets the Omp twins of Claude Code's default tools and no Omp-only tool. A
+list the arm cannot express fails the task.
+
+The exception: **an allowed `Skill` keeps `read` on.** Omp engages a skill by
+reading `skill://<name>`, so a trigger row's `disallowed_tools: [Read, …]` still
+leaves `read` on here. A denied read of `skills/<name>/SKILL.md` can therefore
+still happen, and score as an engagement. A no-fire row is weaker on Omp than on
+Claude Code for that reason. The agent logs it for each task.
+
+What `--tools` leaves open, measured on Omp 18.4.10 against a mock model that
+recorded the tools each request offered (issue #461):
+
+- **`read`, `grep` and `glob` reach the network.** They open URLs, a bare
+  `www.host` included, and Omp's `pr://` and `issue://` schemes read GitHub
+  with the ambient token.
+- **`read` adds a `write`.** With `read` on, Omp also offers `write`, which
+  dispatches the extension tools as `xd://` devices. Only Omp's own check keeps
+  it off the filesystem.
+- **`--tools` filters built-in tools only.** The plugin's extension tools
+  (`daily_driver_*`) stay on under any list, `--no-tools` included.
+
+Two layers close the first two, and both load in both arms, so the ablation
+stays symmetric:
+
+- **`fetch.enabled: false`** in the throwaway `config.yml`
+  (`coder_eval_omp/launch.py`). It refuses every http(s) read, the bare host
+  among them, which no pattern can catch. No row needs fetch: `WebFetch` has no
+  Omp twin, so the tool map refuses a row that allows it.
+- **An eval guard extension**, `coder_eval_omp/eval_guard.js`, loaded with
+  `-e`. For every tool except `bash`, it refuses a call when any string in its
+  input names a `<scheme>://` outside `skill`, `rule`, `xd`, `proc` and `omp`.
+  It matches substrings, because Omp splits a `;` list and resolves each part.
+  Where the row's grant has no `write`, it refuses a `write` to anything but
+  `xd://`. The adapter passes the grant in `CODER_EVAL_OMP_TOOLS`; unset, the
+  guard refuses every `write`. `bash` is out of scope, because a row that
+  allows `Bash` has the network on both harnesses.
+
+`make check-omp-eval-guard` drives the guard offline against each measured
+bypass. CI's Omp job runs `make check-omp-eval-guard-live`, which drives a real
+`omp` with the plugin linked.
+
+The guard has a cost: it reads every string, so a granted `write`, `edit` or
+`task` whose content names `https://` is refused as well. Rows rarely write a
+URL, and a refusal is loud, so the boundary takes the false positive over the
+open path.
+
+**The extension tools stay on, on purpose.** They act on the session alone: its
+title, its timers, and its id. Four Omp-only rows grade them, and
+`undertake/09-title-before-claim-omp` grades a `Write` call carrying
+`daily_driver_set_session_title`, which is the `xd://` device write.
+`tools.xdev: false` would remove that `write` and void the row, so `tools.xdev`
+stays at Omp's default.
+
+**On this arm, the canonical name `Write` covers two things:** a file write, and
+an `xd://` device dispatch. A criterion that counts `Write` calls counts both.
 
 **Two protocol questions are open, and the arm answers them by running.** Omp's
 `docs/rpc.md` shows `toolName` on `tool_execution_start` without showing the

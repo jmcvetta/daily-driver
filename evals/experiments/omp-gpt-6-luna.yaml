@@ -41,7 +41,8 @@ defaults:
       commit: vercel-ai-gateway/openai/gpt-6-luna
       tiny: vercel-ai-gateway/openai/gpt-6-luna
     permission_mode: acceptEdits
-    # Recorded, not enforced: Omp RPC has no per-session tool allowlist.
+    # Enforced as `omp --tools=read`: `Skill` needs `read`, which is how Omp
+    # engages a skill. A row that restates this field replaces it.
     allowed_tools: [Skill]
 
 variants:

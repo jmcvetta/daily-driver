@@ -29,26 +29,21 @@ The fleet
 | ---- | --------- | ---- |
 | `Read the fleet` | Read the epic's muster rolls | `gh issue view <epic> --json comments` |
 | `Read the fleet` | Read a task issue's claim and handoff | `issue://<number>`, comments included |
-| `Read the fleet` | Read the live dispatch handles | `hub jobs` over the dispatch batch's job ids |
-| `Secure the work` | Cancel a subagent | `hub cancel`, `ids:` the dispatch job ids |
+| `Read the fleet` | Read a background task's job state | `read proc://<job-id>` using the job ID returned by `task` |
+| `Secure the work` | Cancel a subagent | `write proc://<job-id>/kill`, using that same job ID |
 | `Secure the work` | Stage and commit the worktree | `bash`, `git -C <worktree> add <named files>` then `git -C <worktree> commit -m <message>` |
-| `Secure the work` | Push the branch | `bash`, `git -C <worktree> push` |
+| `Secure the work` | Push the branch | `bash`, `git -C <worktree> push`
 | `Write the handoff` | Read a task's pull-request state | `pr://<number>` |
 | `Write the handoff` | Comment on a task issue or the epic | `gh issue comment <number> --body-file <path>` |
+
 | `Cancel the watches` | Cancel the backstop timer | `daily_driver_cancel_schedule`, by the trigger id the call returned |
-| `Cancel the watches` | Stop a persistent CI watcher | `hub stop`, by the process name the watch started |
+| `Cancel the watches` | Stop a persistent CI service | `write proc://<name>/kill`, by the service name review-cycle started |
 
 `--body-file` on every comment write, for the reason the other skills'
 routes give: the handoff carries fenced blocks, backticks and identifiers,
 and a double-quoted shell argument substitutes them before `gh` sees them.
 
-`hub cancel` returns at once and never confirms the job died — that is the
-route, not a limitation to work around. `SKILL.md`'s no-poll rule is what
-the surface delivers, and it is why this step needs no wait: the commit and
-push that follow are this session's own calls, made once the cancel has been
-sent, not a status read on the subagent. A job id the `hub jobs` read no
-longer lists is one that finished on its own; it is recorded as retired, not
-cancelled.
+`write proc://<job-id>/kill` returns without confirming the job stopped; that is the current route. Do not poll. This session commits and pushes after the cancellation request. A job ID no longer listed by `proc://` has finished on its own and is recorded as retired, not cancelled.
 
 **`Stop the fleet` has nothing left to do on this harness.** The cancel, the
 commit, and the push all happened at `Secure the work`, before the handoff
@@ -76,11 +71,11 @@ The watches
 ===========
 
 `daily_driver_schedule` is a managed timer cleared on session shutdown, so a
-backstop armed for the wave dies with this session regardless — the cancel
-runs anyway, so a reminder cannot fire into the last turn. A CI watcher
-started through `hub start` with `persist: true` does **not** die with the
-session: it is stopped by name here, or it outlives the stand-down and keeps
-watching a pull request nobody is working. Omp has no pull-request
+backstop armed for the wave dies with this session regardless — cancel it so
+the reminder cannot fire into the last turn. A CI service started through
+named `bash` with `persist` continues after the last Omp client exits. Stop
+that service by its name with `write proc://<name>/kill`; it can otherwise
+keep watching a pull request nobody is working. Omp has no pull-request
 subscription primitive; the subscriptions row of the epic's stand-down
-record is empty on this harness, and the route table above is the whole
-watch inventory.
+record is empty on this harness. A durable process does not resume the
+orchestrator or perform agent work.

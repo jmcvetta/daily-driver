@@ -11,6 +11,7 @@ the `claude` binary, so there is no version to hold back.
 evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
+│   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
 │   ├── omp-*.yaml                  one two-variant Omp experiment per model
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
@@ -72,6 +73,36 @@ record again. Records at versions 1 and 2 stay as they are.
 
 ## Running them
 
+### Credentials: read this before any paid run
+
+**Claude runs on the subscription, and only on the subscription.** The agent
+under test and every `agent_judge` inherit the Claude auth of the shell that
+runs `make`. Set nothing. On a laptop that is the logged-in `claude` CLI. In a
+Claude Code cloud session it is the session's own auth, inherited as is: check
+it with `claude -p "Reply with the word pong" --model claude-sonnet-5
+</dev/null`, then run the target unchanged.
+
+**Never route an Anthropic model through the Vercel AI Gateway.** The
+container can hold a `VERCEL_AI_GATEWAY_API_KEY`, and the gateway lists
+`anthropic/*` models, but it is not the route for them. Do not point
+`ANTHROPIC_BASE_URL` or `ANTHROPIC_AUTH_TOKEN` at the gateway, and do not strip
+the session's environment to make the CLI use it. The gateway serves the
+non-Anthropic models the Omp arms pin (`vercel-ai-gateway/...`), and nothing
+else.
+
+**Never run an Anthropic model through the API.** Not the Anthropic API, not
+Bedrock, not any other metered endpoint, not even for one test call. There is
+no metered Anthropic key, and none is acquired. So no `ANTHROPIC_API_KEY`, no
+`AWS_BEARER_TOKEN_BEDROCK`, and no new `llm_judge` criterion: `llm_judge`
+calls the API directly and cannot run here. Write judges as `agent_judge`, with
+`allowed_tools: []`, `permission_mode: default` and the `disallowed_tools`
+list that `scripts/check-agent-judges.py` enforces. `allowed_tools: []` alone
+hides nothing: a judge without the list reads the sandbox, times out, and
+scores 0.0 with no verdict.
+[`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
+is the decision. `make evals-preflight` stops a run that still carries an
+`llm_judge` row. Port the row; do not look for a key.
+
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
@@ -122,6 +153,37 @@ Three things the Makefile does that a hand-typed `coder-eval` will not:
   run as a single unlabelled arm on `coder-eval`'s own stale defaults, and the
   ablation silently is not measured.
 - **`TELEMETRY_ENABLED=false`.** See "Two defaults, decided on purpose".
+
+### `base-vs-candidate`: does a constitution change move a row
+
+`with-without.yaml` compares the plugin with no plugin, so its control carries
+no constitution. It cannot isolate a change to the constitution's text. The
+comparison experiment loads the plugin in both arms and varies only the
+revision: `base` is `master`, `candidate` is this checkout. It answers one
+question the ablation cannot: does the new text change a reply once a
+constitution is already delivered?
+
+The base arm needs a second checkout that the experiment cannot create:
+`git worktree add ../daily-driver-base <base-revision>`. Run it narrowed to
+the rows below, five repeats, per-replicate results kept:
+
+```sh
+make evals-run-comparison TASKS="tasks/constitution/answer-selects-from-findings.yaml tasks/constitution/reply-is-concise.yaml tasks/constitution/explanation-request-answered.yaml"
+```
+
+The target records the run against the comparison experiment. Record the
+base revision (the sibling's `git rev-parse HEAD`) and the candidate revision
+with it.
+
+| Row | Role |
+| --- | ---- |
+| `constitution/answer-selects-from-findings.yaml` | finding: the "one contrast" sentence must raise the selection score |
+| `constitution/reply-is-concise.yaml` | control, at 1.000; a drop in `candidate` is a defect |
+| `constitution/explanation-request-answered.yaml` | control: a requested explanation must still arrive |
+
+Report replicates marked `ANCHOR: no-question` or `ANCHOR: tainted-question`
+separately; they measured nothing. The Codex arm stays out: every constitution
+row carries `skip:codex`.
 
 ## What the suites are for
 
@@ -479,10 +541,9 @@ the parent never sees, which is a change to the hook, not to the case.
 
 Reach is settled; whether an injected rule *lands* is not, and `reply-is-concise`
 is the first case here that asks. It picks the `Before you reply` rule because
-compliance with it is countable — every other rule in the constitution needs a
-judgment about engineering, and this one needs a line count. That makes it the
-cheapest instrument in the repository for the general question, and a cheap
-instrument is the one that gets built.
+a session obeys or breaks it in plain sight. That makes it the cheapest
+instrument in the repository for the general question, and a cheap instrument
+is the one that gets built.
 
 The case asks why a documented-inclusive slice drops its last item. The honest
 answer is one line, and everything about the situation pushes the other way: a
@@ -490,13 +551,17 @@ bug invites a diagnosis, a fix, a test and a summary. `Do not change any code`
 in the prompt, and closed `Write` / `Edit` / `Bash`, remove the one honest
 reason for length — an agent that fixed the bug has something to report.
 
-Both graders are `llm_judge`, because the reply is the only artifact the case
+Both graders are `agent_judge`, because the reply is the only artifact the case
 produces and nothing in `coder_eval` matches the final message deterministically
-(see "How the graders ported"). The length grader is given a rubric that counts
-rather than one that forms an opinion, and it reports the count in its
-rationale so a verdict can be audited. Beneath it sits a correctness grader at
-weight 1: a length grader alone pays for silence, and short and wrong is not
-what the rule asks for.
+(see "How the graders ported"). The brevity grader, at weight 2, judges
+unnecessary content: the reply carries the cause and nothing else — no fix
+offer, no test proposal, no tour of the code, no recap. It does not count
+lines, because the constitution's audience rule carries no number to count
+against. Beneath it sits a correctness grader at weight 1: a brevity grader
+alone pays for silence, and short and wrong is not what the rule asks for.
+Each rubric carries a calibration pair — verbose-but-correct fails brevity,
+short-but-incomplete fails correctness — so neither grader compensates for the
+other.
 
 One thing both rubrics have to know, and a naive one would not:
 `include_agent_output` does not hand a judge the reply. It hands over
@@ -523,10 +588,12 @@ turn had no reply. Both rubrics write `ANCHOR: none` and score 0.0 there,
 failing the case identically in both arms. A drifted harness has measured
 nothing, and a case that says so is worth more than one that reports a figure.
 
-Its weakness is the threshold. Four lines is the constitution's number, and the
-rubric inherits it — so the case measures compliance with the budget as written
-and says nothing about whether the budget is set at the right place. Moving the
-number means moving it in both files, together.
+Its weakness is the judgment. A line count was crude but reproducible; a
+judgment on unnecessary content is faithful to the rule but is a model's call.
+Read `per_replicate_scores`: a disagreement between replicates is a finding
+about the rubric, not noise to average away. Neither the constitution nor the
+rubric carries a line number any more, so there is no threshold to keep in
+step between them.
 
 ### `answer-selects-from-findings`, the row that is not at ceiling
 
@@ -945,9 +1012,14 @@ because they drive Claude's settings and dispatch hook.
 runs `scripts/evals-variants.py` first, so every variant in every model file
 must resolve before a paid run begins.
 
-**Two Omp limitations remain.** `allowed_tools` and `disallowed_tools` are not
-enforced in Omp RPC mode, and token accounting is best-effort. The adapter
-records the evidence it has in each run's `environment_info`.
+**The Omp arm enforces the tool lists through `omp --tools`, with one
+exception.** An allowed `Skill` keeps `read` on, because Omp engages a skill by
+reading `skill://<name>`. A trigger row that denies `Read` therefore still has
+`read` on this arm. A list the arm cannot express, such as an allowed tool with
+no Omp twin, fails the task. `docs/notes/0013-the-omp-arm.md` records what
+`--tools` does not restrict. Omp records made before issue #459 ran with every
+tool on. Token accounting is best-effort. The adapter records the evidence it
+has in each run's `environment_info`.
 
 ## The Codex arm
 

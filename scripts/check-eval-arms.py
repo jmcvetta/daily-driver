@@ -184,6 +184,19 @@ def arm_run_targets(spec: dict[str, object]) -> dict[str, str]:
         return {str(target): str(experiment) for target, experiment in targets.items()}
     return {str(spec["run_target"]): str(spec["experiment"])}
 
+# Experiment files that are not arms. An arm answers "which harness does this
+# row run on"; a comparison asks a different question of ONE arm -- the same
+# suites under two revisions of the instructions -- so forcing it into the table
+# above would blur the concept every check here defends. It is still named,
+# because an experiment file nothing claims is one nothing says the agent kind
+# of, which is the drift `check_experiments` exists to catch.
+#
+# `arm` is the arm whose kinds it runs and whose tag exclusions its Make target
+# must repeat: a comparison measures one harness, never two.
+COMPARISONS: dict[str, dict[str, str]] = {
+    "base-vs-candidate.yaml": {"arm": "claude", "run_target": "evals-run-comparison"},
+}
+
 ARM_TAGS = {str(arm["tag"]): name for name, arm in ARMS.items()}
 
 # Kind -> every arm that owns it. Almost always one arm, but `model-classes`
@@ -468,6 +481,65 @@ def check_makefile_routing() -> None:
                     f"{sorted(targets)}"
                 )
 
+    for experiment, spec in COMPARISONS.items():
+        arm, target = spec["arm"], spec["run_target"]
+        recipe = _check_exclude_tags(makefile, target, arm)
+        if f"-e experiments/{experiment}" not in recipe:
+            raise CheckFailed(f"Makefile `{target}` does not run experiments/{experiment}")
+        if "daily-driver-base/skills" not in makefile.split(f"\n{target}:", 1)[1].split("\n\n", 1)[0]:
+            raise CheckFailed(
+                f"Makefile `{target}` does not assert the base checkout; without it the run pays for "
+                "both arms and measures plugin-versus-nothing"
+            )
+
+
+def check_comparison_variants(path: Path, document: dict) -> None:
+    """A comparison's arms load different plugin roots, or it measures nothing.
+
+    The one way a comparison fails silently is both arms pointing at the same
+    checkout. Every criterion then scores the same by construction and the
+    report reads exactly like "the rewrite changed nothing" -- which is the
+    conclusion such a run is read for. Mutation-tested: without this, both arms
+    set to `..` pass the whole file.
+    """
+    variants = [variant for variant in document.get("variants", []) if isinstance(variant, dict)]
+    if len(variants) < 2:
+        raise CheckFailed(
+            f"{path.relative_to(ROOT)}: a comparison needs at least two variants to compare; found "
+            f"{len(variants)}"
+        )
+    roots: dict[str, str] = {}
+    for variant in variants:
+        variant_id = str(variant.get("variant_id"))
+        if variant_id in roots:
+            # `roots` is keyed by id, so a duplicate would overwrite its twin
+            # and the distinctness test below would compare one root against
+            # one root and pass. Mutation-tested: two variants sharing an id
+            # AND a root exited 0 without this.
+            raise CheckFailed(
+                f"{path.relative_to(ROOT)}: two variants share the id {variant_id!r}; `coder_eval` keys its "
+                "report on that id, and the arms would be indistinguishable in it"
+            )
+        agent = variant.get("agent")
+        plugins = agent.get("plugins") if isinstance(agent, dict) else None
+        if not isinstance(plugins, list) or len(plugins) != 1 or not isinstance(plugins[0], dict):
+            raise CheckFailed(
+                f"{path.relative_to(ROOT)}: variant {variant_id!r} must load exactly one local plugin; a "
+                "comparison varies the revision, so an arm loading none is the ablation and not this"
+            )
+        entry = plugins[0]
+        if entry.get("type") != "local" or not entry.get("path"):
+            raise CheckFailed(
+                f"{path.relative_to(ROOT)}: variant {variant_id!r} must load a local plugin with a path"
+            )
+        roots[variant_id] = str(entry["path"])
+    if len(set(roots.values())) != len(roots):
+        raise CheckFailed(
+            f"{path.relative_to(ROOT)}: the variants load the same plugin root {sorted(set(roots.values()))}; "
+            "both arms would then run identical instructions and the report would read as 'no change' by "
+            "construction"
+        )
+
 
 def check_model_class_model(path: Path, document: dict) -> None:
     """Require a usable model pin inside each model-class experiment."""
@@ -490,6 +562,12 @@ def check_experiments() -> None:
     files = sorted(EXPERIMENTS.glob("*.yaml"))
     if not files:
         raise CheckFailed(f"no experiment files under {EXPERIMENTS.relative_to(ROOT)}")
+    for experiment, spec in COMPARISONS.items():
+        if not (EXPERIMENTS / experiment).is_file():
+            raise CheckFailed(
+                f"{experiment} is declared a comparison, and there is no such file under "
+                f"{EXPERIMENTS.relative_to(ROOT)}"
+            )
     for experiment, (arm, _) in arm_of_experiment.items():
         if not (EXPERIMENTS / experiment).is_file():
             raise CheckFailed(
@@ -505,12 +583,27 @@ def check_experiments() -> None:
         if not isinstance(document, dict):
             raise CheckFailed(f"{path.relative_to(ROOT)} does not parse as a mapping")
         arm_and_model = arm_of_experiment.get(path.name)
-        if arm_and_model is None:
+        comparison = COMPARISONS.get(path.name)
+        if arm_and_model is None and comparison is None:
             raise CheckFailed(
-                f"{path.relative_to(ROOT)}: no arm names this experiment file, so nothing says which agent "
-                f"kind it should run; the arms and their files are {sorted(arm_of_experiment)}"
+                f"{path.relative_to(ROOT)}: no arm and no comparison names this experiment file, so nothing "
+                f"says which agent kind it should run; the arms and their files are {sorted(arm_of_experiment)} "
+                f"and the comparisons are {sorted(COMPARISONS)}"
             )
-        arm, model = arm_and_model
+        if arm_and_model is not None and comparison is not None:
+            raise CheckFailed(
+                f"{path.relative_to(ROOT)}: claimed as both an arm's experiment and a comparison; it is one "
+                "or the other, and two claims make the agent kind ambiguous"
+            )
+        if arm_and_model is not None:
+            arm, model = arm_and_model
+        else:
+            arm, model = comparison["arm"], None
+            if arm not in ARMS:
+                raise CheckFailed(
+                    f"{path.relative_to(ROOT)}: declared a comparison on the {arm!r} arm, and there is no "
+                    f"such arm; the arms are {sorted(ARMS)}"
+                )
         wanted = ARMS[arm]["kinds"]
         for variant_id, kind in variants:
             if not kind:
@@ -523,6 +616,8 @@ def check_experiments() -> None:
                 )
         if arm == "model-classes":
             check_model_class_model(path, document)
+        if comparison is not None:
+            check_comparison_variants(path, document)
         if model is not None:
             defaults = document.get("defaults") if isinstance(document, dict) else None
             agent = defaults.get("agent") if isinstance(defaults, dict) else None
@@ -693,6 +788,60 @@ def check_the_checks() -> None:
         except CheckFailed:
             continue
         raise CheckFailed(f"the check for {name!r} did not fail on a row that should fail it")
+
+    # `check_comparison_variants` takes a document rather than task rows, so it
+    # gets its own loop instead of a fourth column in the table above. Same
+    # doctrine: a check nobody has seen fail is a check that passes for ever.
+    synthetic = EXPERIMENTS / "synthetic.yaml"
+    one = {"type": "local", "path": ".."}
+    documents: list[tuple[str, dict]] = [
+        (
+            "a comparison with one variant",
+            {"variants": [{"variant_id": "only", "agent": {"plugins": [one]}}]},
+        ),
+        (
+            "a comparison whose arms load the same root",
+            {
+                "variants": [
+                    {"variant_id": "base", "agent": {"plugins": [one]}},
+                    {"variant_id": "candidate", "agent": {"plugins": [one]}},
+                ]
+            },
+        ),
+        (
+            "a comparison arm loading no plugin",
+            {
+                "variants": [
+                    {"variant_id": "base", "agent": {"plugins": []}},
+                    {"variant_id": "candidate", "agent": {"plugins": [one]}},
+                ]
+            },
+        ),
+        (
+            "a comparison whose variants share an id",
+            {
+                "variants": [
+                    {"variant_id": "base", "agent": {"plugins": [one]}},
+                    {"variant_id": "base", "agent": {"plugins": [one]}},
+                ]
+            },
+        ),
+        (
+            "a comparison arm loading a plugin with no path",
+            {
+                "variants": [
+                    {"variant_id": "base", "agent": {"plugins": [{"type": "local"}]}},
+                    {"variant_id": "candidate", "agent": {"plugins": [one]}},
+                ]
+            },
+        ),
+    ]
+    for name, document in documents:
+        try:
+            check_comparison_variants(synthetic, document)
+        except CheckFailed:
+            continue
+        raise CheckFailed(f"the check for {name!r} did not fail on a document that should fail it")
 
 
 def main() -> None:

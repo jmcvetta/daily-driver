@@ -4,6 +4,8 @@ plugin:
   - 'skills/**'
   - 'agents/**'
   - '.claude-plugin/**'
+  - 'docs/**'
+  - 'README.md'
 runtime:
   - 'hooks/**'
   - 'extensions/**'
@@ -14,7 +16,7 @@ eval:
   - 'evals/**'
 issue:
   - 'infra/**'
-  - 'skills/**'
+  - 'skills/issue-labels/**'
 omp:
   - '.omp-plugin/**'
   - 'agents/**'
@@ -36,7 +38,6 @@ shared:
   - '**/Cargo.lock'
   - '**/go.mod'
   - '**/go.sum'
-  - '*'
 unknown:
   - '**'
   - '!skills/**'
@@ -51,3 +52,10 @@ unknown:
   - '!infra/**'
   - '!scripts/**'
   - '!.github/**'
+  - '!docs/**'
+  - '!attic/**'
+  - '!README.md'
+  - '!CHANGELOG.md'
+  - '!LICENSE'
+  - '!ANTI-LICENSE.md'
+  - '!HAIKU.md'

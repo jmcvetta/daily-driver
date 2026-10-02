@@ -202,6 +202,24 @@ The claim is the second reason, and it stays: `Claim the issue` needs to know
 whether the issue is claimed already — by this session, which means the
 sequence is being re-entered, or by another.
 
+**The issue's own record is the first source of the task's identity.** Look for
+a task branch another session already began, in this order, and take the first
+source that names one:
+
+1. An open pull request linked to the issue — one the issue read reports as
+   set to close it, or a pull request whose body references the issue. Its
+   head branch.
+2. The `Branch:` line of a `stand-down` handoff comment.
+3. The branch in the latest claim comment — a resume branch only where the
+   user handed the issue over to continue it. Without that, a claim from
+   another session is `Claim the issue`'s collision, not a resume.
+
+One branch found is the **resume branch**, and the pull request it carries, if
+any, is the one to adopt. More than one distinct branch is a stop: report them
+and ask. A pull request from a fork the session cannot push to is a stop too:
+report it. Where the record names no branch, there is no resume and
+`Establish task worktree` runs as before.
+
 3 — Establish task worktree
 ---------------------------
 
@@ -210,9 +228,12 @@ repository research has begun. That skill owns the feature branch, its base,
 the sibling worktree, and every later operation's root.
 
 The branch it establishes is the branch `Claim the issue` announces. Do not
-select, create, rename, or check out a second branch here. Where a harness
+select, create, rename, or check out a second branch here. Where `Read the
+issue and its edges` found a resume branch, hand it to `task-worktree` as the
+existing task branch: it is fetched and attached, never recreated from the
+base, and it outranks the harness's designation. Otherwise, where a harness
 already designated one branch for this task, `task-worktree` consumes it;
-otherwise its own project-convention and task-name rules decide.
+then its own project-convention and task-name rules decide.
 
 4 — Claim the issue
 -------------------
@@ -260,9 +281,11 @@ Beyond the claim itself the comment always carries:
   work.
 
 The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. A branch designated by that call must be
+the call `session-title` documents. Without a resume branch, a branch designated by that call must be
 the branch `task-worktree` established; disagreement is a collision, not a
-choice between two branch sources.
+choice between two branch sources. With one, the resume branch is the task
+branch and the designation differing from it is not a collision; the harness
+reference says how a push scope that names the designated branch is handled.
 
 **The comment never goes up with the branch alone.** The branch comes from
 the task worktree's Git state, never from a fresh naming decision in this
@@ -275,6 +298,14 @@ already, and the comments read at `Read the issue and its edges` show it. A
 claim from a different session is not suppressed: that collision is the thing
 the claim exists to make visible, and it is worth a line to the user before
 implementation begins.
+
+**A prior claim is a resume, not a collision, in two cases:** a `stand-down`
+handoff names the branch, or the user handed the issue over to continue it.
+Otherwise a prior claim from another session stays a collision, reported as
+above. On a resume this session still posts its own claim, naming the adopted
+branch; the earliest-claim rule below already keeps the clock start, so no new
+timing rule is needed. A re-entry by the same session posts nothing, as
+before.
 
 **The claim's timestamp is the undertaking's clock start.** The comment's own
 `created_at` is what `The milestone` reads back when the pull request first
@@ -323,6 +354,10 @@ there is, and it is this one. The `Issues` section of the body closes it, and
 has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
 closes.
+
+**On a resume the pull request is adopted, not replaced.** Pushes go to the
+adopted branch, `pr`'s existing-PR check finds its open pull request and
+updates it, and no second pull request is opened.
 
 **Opening or reusing the draft starts supervision.** The undertaking owns its
 continuation from this point, including while CI, review, or `The gate` keeps
@@ -781,6 +816,61 @@ test skipped, push it, and end the turn without starting anything else. It
 opens no pull request and marks nothing ready: that is `stand-down`'s own
 record to write, not a step of this sequence completing.
 
+**It writes no handoff.** `stand-down`'s `Write the handoff` writes the one
+task-issue comment, so a handoff here would make two. `The stop` below is not
+this section: it governs a stop the user gives this session directly.
+
+
+The stop
+========
+
+The user tells this undertaking to stop, stand down or wrap up. It applies at
+any point after `Claim the issue`, whether or not a draft pull request exists.
+A claim says the work started and never says where it ended, so a stop that
+leaves only the claim leaves the next session to guess. **A stop that arrives
+as `stand-down`'s wrap-up message is `The wrap-up`'s, not this section's.**
+
+In order:
+
+1. **Secure the work.** The rules are `stand-down`'s `Secure the work`: commit
+   work in progress to the existing task branch, stage named files, skip no
+   hook and no test, and push. A branch with nothing new is pushed as it is.
+2. **End the watch.** Cancel the `Keep it current` wake slot timer, any CI
+   watcher this session holds, and every pull-request subscription. The
+   reference file for the harness in use names the calls.
+3. **Write the handoff.** One comment on the task issue:
+
+   ```markdown
+   ## Handoff — undertaking stopped <UTC timestamp>
+
+   This session stopped at the user's instruction. The work is yours to reclaim.
+
+   - Branch: `<branch>` — <link>. Pushed head: `<sha>`.
+   - Pull request: <#N and state (draft / ready), or "none open">.
+   - Reached: <the last step of the sequence completed>.
+   - Outstanding: <what is blocked, failing, or unverified — failed checks,
+     open review threads, a human action owed — or "nothing known">.
+   - Resume: <the concrete next action, e.g. "run `/undertake #N`; it resumes
+     on the branch above">.
+   ```
+
+   It ends with `provenance`'s block and carries no verse: somebody acts on
+   it, the reason `stand-down`'s task handoffs carry none. A push that fails
+   is stated here: `Pushed head:` names the last head that reached origin,
+   `Outstanding:` names the failure, and the handoff is still written.
+4. **Stop.** The undertaking does not mark the pull request ready, does not
+   close the issue, and does not call the work complete.
+
+**Idempotent.** Read the issue's comments before posting. A `## Handoff —`
+comment posted after the latest claim comment that names the same pushed head
+is an equivalent handoff: post nothing. One that names an older head is not
+equivalent, so post a new one. This is `stand-down`'s `Idempotent re-entry`.
+
+**An embark-dispatched implementor the user stops directly** runs `The stop`
+and also sends the stop to its orchestrator under `Reporting to an
+orchestrator`. `stand-down` counts that handoff as present where it names the
+current pushed head.
+
 
 Reporting to an orchestrator
 ============================
@@ -817,11 +907,12 @@ The reference file for the harness in use names the route.
 Where it stops and waits
 ========================
 
-Autonomy is the point, so each pause has to earn itself. Twelve stop the
-sequence. Seven stop it to *ask* — the ambiguous issue, the request too vague
+Autonomy is the point, so each pause has to earn itself. Thirteen stop the
+sequence. Eight stop it to *ask* — the ambiguous issue, the request too vague
 to write one for, an issue labelled `proposal`, an issue carrying two of the
 six labels, the failing approach, a designated branch the harness states
-ambiguously, and a base merge whose conflict is a real one. A blocked issue,
+ambiguously, more than one existing task branch on the issue's record, and a
+base merge whose conflict is a real one. A blocked issue,
 an epic, an issue labelled `human`, running or failed CI, a review wall, and a
 human action owed stop it to report the unfinished condition and its actual
 resume path. Where an orchestrator's address was given, every stop is also
@@ -842,6 +933,9 @@ reported to it under `Reporting to an orchestrator`.
   six answers the readiness question twice and answers it neither way.
   `issue-labels` is what each label claims, and what a contradiction between
   two of them costs.
+- **More than one distinct existing task branch** on the issue's record, or a
+  pull request from a fork the session cannot push to, at `Read the issue and
+  its edges`. Report the branches and ask which to resume; never guess.
 - **More than one designated branch** for this repository, at `Cut the
   branch`'s first source. Guessing which one the harness will accept risks a
   claim already posted at `Claim the issue` that no push can honour.
