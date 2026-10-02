@@ -27,6 +27,8 @@ WHAT IT ASSERTS
     handed the judge bare text would fail every judged row in both arms.
     A frame type outside the known vocabulary is recorded as drift, while the
     routine frames that imply no action are not.
+    The throwaway home inherits the provider files and nothing else of a
+    person's real `~/.omp/agent/`: not `mcp.json`, not the instruction files.
 
 WHAT IT DOES NOT ASSERT
 
@@ -54,6 +56,7 @@ PACKAGE_SRC = ROOT / "evals" / "coder-eval-omp" / "src"
 
 sys.path.insert(0, str(PACKAGE_SRC))
 
+from coder_eval_omp.home import inherited_files  # noqa: E402
 from coder_eval_omp.rpc import (  # noqa: E402  (the path insert must come first)
     AgentFinished,
     ToolFinished,
@@ -274,6 +277,48 @@ def check_vocabulary_drift() -> None:
     feed(reducer, {"type": "tool_calling_v2"}, {"type": "turn_start"})
     check(reducer.unrecognized_types == {"tool_calling_v2"}, f"drift is recorded, got {reducer.unrecognized_types}")
     check(reducer.recognized == 1, "turn_start counts as a recognized event frame")
+
+
+def check_inherited_home() -> None:
+    """The throwaway home borrows provider files and none of a person's own setup.
+
+    The wrong behaviour this catches: the bare arm loading a person's
+    instructions. A loop that links every file except `config.yml` passes
+    every other check here and still brings `AGENTS.md`, `SYSTEM.md` and the
+    rest into both arms, and `mcp.json` with them, whose MCP tools Omp enables
+    whatever `--tools` says. Nothing errors; the bare arm is simply not bare.
+    """
+    import tempfile
+
+    provider = ["models.yml", "agent.db", "agent.db-wal", "agent.db-shm", "secrets.yml"]
+    personal = [
+        "mcp.json",
+        "AGENTS.md",
+        "SYSTEM.md",
+        "SYSTEM_TEMPLATE.md",
+        "PERSONALITY.md",
+        "RULES.md",
+        "config.yml",
+        "cache.json",
+    ]
+    with tempfile.TemporaryDirectory() as tmp:
+        real = Path(tmp)
+        for name in provider + personal:
+            (real / name).write_text(name, encoding="utf-8")
+        (real / "sessions").mkdir()
+        (real / "sessions" / "models.yml").write_text("x", encoding="utf-8")
+
+        linked = sorted(path.name for path in inherited_files(real))
+        check(linked == sorted(provider), f"only provider files are inherited, got {linked}")
+
+        (real / "secrets.yml").unlink()
+        (real / "agent.db-wal").unlink()
+        linked = sorted(path.name for path in inherited_files(real))
+        check(
+            linked == ["agent.db", "agent.db-shm", "models.yml"],
+            f"a provider file the real home lacks is skipped, got {linked}",
+        )
+    check(inherited_files(Path("/nonexistent-omp-home")) == [], "a missing home inherits nothing")
 
 
 def main() -> None:

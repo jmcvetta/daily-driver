@@ -52,12 +52,36 @@ home built beside the task.
 repository's own measurement says the extension comes from an installed
 manifest, and `omp plugin link` is the route it measured.
 
-**The throwaway home borrows the real one's providers.** Every file in
-`~/.omp/agent/` is symlinked into it, except the config the agent writes, which
-carries Omp's defaults plus skill commands. A run needs a model, and the
+**The throwaway home borrows the real one's providers, and only those.** The
+files `models.yml`, `agent.db` (with its `-wal` and `-shm` siblings) and
+`secrets.yml` in `~/.omp/agent/` are symlinked into it; the config the agent
+writes carries Omp's defaults plus skill commands. A run needs a model, and the
 provider configuration is where it lives; the laptop's own installed plugins
 and settings stay out, which is the isolation `coder_eval`'s Claude agent gets
 from `setting_sources: []`. Nothing is written into the real home.
+
+The first version linked every file except `config.yml`. That also carried
+`mcp.json` and the instruction files (`AGENTS.md`, `SYSTEM.md`,
+`SYSTEM_TEMPLATE.md`, `PERSONALITY.md`, `RULES.md`) into both arms (#466, from
+#461 gap 5). Two measurements settled the allow list. Omp 18.4.10 from npm, on
+`--mode rpc` against a local mock OpenAI-compatible model, with a fresh `HOME`
+per run:
+
+- *An inherited `mcp.json` escapes `--tools=read`.* The real home held an
+  `mcp.json` naming a local stdio MCP server with one tool. With the file
+  linked, the session under `--tools=read` listed `xd://mcp__probe_tool` as a
+  mounted device and was offered a `write` tool it would not otherwise have.
+  With only `models.yml` linked, it listed no devices and was offered `read`
+  alone. So the escape is real, and the allow list closes it.
+- *A setting stored in `agent.db` does not reach the session.* A `settings` row
+  `grep = {"enabled": false}` sat in the linked `agent.db`, with the throwaway
+  `config.yml` present. The session under `--tools=read,grep` still offered
+  `grep`, and the row was untouched after the run. The same setting in
+  `config.yml` made Omp refuse the run ("Built-in tool unavailable in this
+  session: grep"), so the probe can see a setting that applies. This matches
+  the source: `agent.db`'s settings table is read only by the legacy migration,
+  and only when `config.yml` is absent. The agent always writes one, so
+  inheriting `agent.db` brings credentials without settings.
 
 **Three normalisations at the agent boundary, each one a silent zero if it is
 missing.**

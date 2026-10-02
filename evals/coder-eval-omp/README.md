@@ -50,6 +50,15 @@ score `tasks/constitution/*` zero for the wrong reason. The agent installs each
 the task — the route `scripts/check-omp-plugin.py` measures as loading the
 skills, the extension and the manifest together.
 
+**The throwaway home inherits provider files only.** A run needs a model, so
+`models.yml` (custom providers), `agent.db` with its `-wal` and `-shm`
+siblings (settings and auth storage) and `secrets.yml` (secrets `models.yml`
+can reference) are symlinked from the real `~/.omp/agent/`. Nothing else is:
+`mcp.json` would bring a person's MCP servers, which Omp enables whatever
+`--tools` says, and `AGENTS.md`, `SYSTEM.md`, `SYSTEM_TEMPLATE.md`,
+`PERSONALITY.md` and `RULES.md` would load a person's own instructions into
+the bare arm. The list is `coder_eval_omp/home.py`'s `PROVIDER_FILES`.
+
 ## What it records
 
 Issue #173 asks that a red arm be distinguishable from an arm whose plugin
