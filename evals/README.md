@@ -900,9 +900,9 @@ must configure it. The GPT 6 rows use the Vercel AI Gateway routes
 It needs `omp` on PATH and a model configured in the caller's own
 `~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
 Omp home and writes nothing back into it. It does not borrow `config.yml`: the
-throwaway home gets its own, so an experiment pins Omp's helper roles with
-`model_roles` beside `model`. Unpinned, Omp's subagents and helper calls run on
-whatever the provider catalog offers.
+throwaway home gets its own, which pins every Omp chat role to the arm's
+`model`. Unpinned, Omp's subagents and helper calls would run on whatever the
+provider catalog offers.
 
 ### Running an Omp arm
 

@@ -123,13 +123,22 @@ _RESULT_STATUS: dict[ToolEndStatus, str] = {
 PROTOCOL_EVIDENCE_FILENAME = "omp-protocol-observations.json"
 
 
-def omp_config_text(model_roles: dict[str, str]) -> str:
-    """The throwaway home's `config.yml`: `OMP_CONFIG`, plus `model_roles` as
-    `modelRoles` when any are given. JSON flow style is valid YAML, so no
-    YAML writer is needed."""
-    if not model_roles:
+#: Omp's chat model roles: the `section: "chat"` entries of `MODEL_ROLES` in
+#: Omp's `src/config/model-roles.ts` (18.4.9). Each one left unset falls to
+#: whatever the provider catalog offers, so helper calls and subagents would run
+#: on a model the arm does not measure. The `kind` roles (image, web, speech,
+#: dictation, judge) take other model kinds and are left alone.
+OMP_CHAT_ROLES = ("default", "smol", "slow", "vision", "plan", "commit", "tiny", "memory", "task", "advisor")
+
+
+def omp_config_text(model: str | None) -> str:
+    """The throwaway home's `config.yml`: `OMP_CONFIG`, plus every chat role in
+    `modelRoles` pinned to `model` when the arm names one. JSON flow style is
+    valid YAML, so no YAML writer is needed."""
+    if not model:
         return OMP_CONFIG
-    return OMP_CONFIG + f"modelRoles: {json.dumps(model_roles, sort_keys=True)}\n"
+    roles = {role: model for role in OMP_CHAT_ROLES}
+    return OMP_CONFIG + f"modelRoles: {json.dumps(roles, sort_keys=True)}\n"
 
 
 class OmpAgentConfig(BaseAgentConfig):
@@ -179,15 +188,6 @@ class OmpAgentConfig(BaseAgentConfig):
 
     A tool flag here fails the task: tools are granted through the row's
     `allowed_tools`, which the eval guard reads as well.
-    """
-
-    model_roles: dict[str, str] = {}
-    """Omp `modelRoles` for the throwaway home, role name to `provider/modelId`.
-
-    `model` sets only the session's own model. Omp's other roles -- `smol`,
-    `task`, `commit`, `tiny` and the rest -- otherwise fall to whatever the
-    provider catalog offers, so helper calls and subagents run on a model the
-    arm does not measure. An arm pins them here.
     """
 
 
@@ -664,7 +664,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     real,
                 )
 
-        (agent_dir / "config.yml").write_text(omp_config_text(self.config.model_roles), encoding="utf-8")
+        (agent_dir / "config.yml").write_text(omp_config_text(self.config.model), encoding="utf-8")
 
     async def _link_plugins(self, binary: str, home: Path) -> None:
         """Install every `plugins:` root into the throwaway home.
