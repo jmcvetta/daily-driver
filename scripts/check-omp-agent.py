@@ -247,6 +247,23 @@ def check_message_text() -> None:
     check(reducer.assistant_texts == [], "thinking is not the reply")
 
 
+def check_only_assistant_messages() -> None:
+    """User and tool-result messages stay out of the judge's transcript."""
+    skill_body = "# Skill\n" + "x" * 30_000
+    reducer = TurnReducer()
+    feed(
+        reducer,
+        {"type": "message_end", "messageId": "u1", "message": {"role": "user", "content": "cwd: /work. Do it."}},
+        {"type": "message_end", "messageId": "t1", "message": {"role": "toolResult", "content": [{"type": "text", "text": skill_body}]}},
+        {"type": "message_update", "messageId": "a1", "assistantMessageEvent": {"type": "text", "delta": "Done"}},
+        {"type": "message_end", "messageId": "a1", "message": {"role": "assistant", "content": [{"type": "text", "text": "Done."}]}},
+    )
+    check(reducer.assistant_texts == ["Done."], f"only assistant text is the reply, got {reducer.assistant_texts!r:.200}")
+    rendered = render_agent_output(reducer.assistant_texts)
+    check("x" * 100 not in rendered and "cwd: /work" not in rendered, "non-assistant messages must not be rendered")
+    check(rendered.rstrip().endswith("[RESULT - SUCCESS] Done."), f"the reply must end the output, got {rendered!r:.200}")
+
+
 def check_vocabulary_drift() -> None:
     """A frame type nobody knows is recorded; a routine one is not."""
     reducer = TurnReducer()
