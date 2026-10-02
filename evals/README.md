@@ -876,7 +876,7 @@ make evals-install                       # rebuilds the local agents every time
 export AI_GATEWAY_API_KEY=…              # Omp's name for the Vercel AI Gateway key
 omp models find gpt-6-luna               # the arm's route must resolve
 TASKS="$(cd evals && ls tasks/undertake/*.yaml | grep -v 08-wake-slot-is-refilled | tr '\n' ' ')"
-setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" > luna.log 2>&1 &
+setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" JOBS=12 > luna.log 2>&1 &
 ```
 
 - **The judge runs on the subscription.** Every Omp-arm judge is an
@@ -888,12 +888,14 @@ setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" > luna.log 2>&1 &
   in `TASKS`, tags or not, and refuses a row with an enabled `llm_judge` when no
   API key is set. In `undertake` that row is `08-wake-slot-is-refilled`, which
   is `claude-only` and never runs on Omp anyway.
-- **Run it detached.** Replicates run one at a time, a few minutes each, so a
-  suite takes hours. An interrupted run continues from its run directory:
+- **Run replicates in parallel.** `JOBS` sets how many run at once; the
+  default is one, and one at a time a suite takes about two hours. A replicate
+  waits on model calls, not on the container; the GPT 6 runs used 12.
+- **Run it detached.** An interrupted run continues from its run directory:
 
   ```sh
   cd evals && TELEMETRY_ENABLED=false coder-eval run -e experiments/omp-gpt-6-luna.yaml \
-    --run-dir runs/<run_id> --resume \
+    --run-dir runs/<run_id> --resume --max-parallel 12 \
     --exclude-tags claude-only,codex-only,skip:omp,model-classes $TASKS
   cd .. && make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml
   ```
