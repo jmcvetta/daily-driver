@@ -92,7 +92,10 @@ the missing surface. `provenance`'s
 `Model:` line is read.
 
 The branch comes from the task worktree's Git state:
-`git branch --show-current` runs in that worktree. `OWNER/REPO` for the branch
+`git branch --show-current` runs in that worktree. On a resume that is the
+adopted branch, which `Read the issue and its edges` took from the issue's
+record (`gh issue view <number> --json closedByPullRequestsReferences,comments`);
+fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for the branch
 link comes from the remote `task-worktree` resolved, never from an assumed
 `origin`.
 

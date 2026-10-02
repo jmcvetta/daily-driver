@@ -1,0 +1,50 @@
+task_id: undertake-15-neg-foreign-claim-stays-collision
+description: >-
+  A prior claim from another session with no stand-down handoff and no
+  hand-over from the user is still a collision reported to the user, not a
+  resume.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  Undertake task #52. Its comments hold a claim from a different session naming
+  branch issue-52-strict-parser, posted an hour ago. There is no stand-down
+  handoff comment, no open pull request, and nothing in this request says to
+  continue that session's work. Explain what the session does about the
+  existing claim before it implements anything.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires for assigned task work"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: A foreign claim without a handoff stays a collision
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      permission_mode: default
+    prompt: |
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if it says the other session's claim is a collision that
+      is reported to the user before implementation begins, and that the
+      session does not adopt branch `issue-52-strict-parser` as a resume.
+      Score 0.0 if it silently adopts that branch or ignores the claim.

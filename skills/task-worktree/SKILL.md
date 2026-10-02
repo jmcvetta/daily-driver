@@ -64,7 +64,11 @@ Establish the task root
    otherwise use the remote's default branch. Never branch from whatever
    happens to be checked out. If neither source identifies a base, ask rather
    than guess.
-3. **Choose one task identity.** Use the one feature branch the harness already
+3. **Choose one task identity.** Use the existing task branch the invoking
+   workflow supplies, when it supplies one: a branch another session already
+   began for this task, named by the task's own record. It outranks the
+   harness designation, because the designated branch is only a fresh
+   per-session name. Otherwise use the one feature branch the harness already
    designated for this task, when it designated exactly one. Otherwise use the
    project's branch convention, then a short name tied to the issue or task.
    Derive the worktree directory from the same identity. Put it beside the
@@ -76,7 +80,8 @@ Establish the task root
    unrelated linked worktree for permission to reuse it.
 5. **Otherwise create the branch and worktree together.** If the task branch
    already exists from an earlier run, attach that branch instead of creating
-   a second branch. Stop on a branch or path collision; inspect it before
+   a second branch. A supplied existing branch that is absent locally is
+   fetched from its remote and attached, never recreated from the base. Stop on a branch or path collision; inspect it before
    deciding whether it belongs to this task.
 6. **Verify the boundary.** The task path must be a registered worktree beside
    the primary path, and its checked-out branch must be the task branch.

@@ -13,6 +13,7 @@ The issue
 | `Open the issue` | Search the open issues | `mcp__github__search_issues` |
 | `Open the issue` | Open one, labelled | `mcp__github__issue_write`, method `create`, with `labels` |
 | `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read`, method `get` |
+| `Read the issue and its edges` | Find the pull requests linked to the issue | `mcp__github__issue_read`, method `get` — `closed_by_pull_requests`, then `mcp__github__pull_request_read`, method `get`, for the head branch |
 | `Read the issue and its edges` | Read the comments | `mcp__github__issue_read`, method `get_comments` |
 | `Read the issue and its edges` | Label an issue that carries none | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, method `update`, sending that set plus the new label |
 | `Claim the issue` | Comment on the issue | `mcp__github__add_issue_comment` |
@@ -101,7 +102,16 @@ same call's model and session fields for `Claim the issue`'s block.
 Both branch fields are arrays. Read the outcome whose `git_info.repo` names the
 repository this work will be pushed to. Exactly one branch is a designation;
 more than one is a collision, not a pick. The branch checked out in the task
-worktree must agree before the claim is posted.
+worktree must agree before the claim is posted — the designated branch, or the
+adopted resume branch where `Read the issue and its edges` found one.
+
+**A resume branch differing from the designated one is not a collision.** The
+adopted branch is the task branch. The session's own instructions may still
+require explicit permission to push to a branch other than the designated one.
+Where they do, ask the user once, in one line naming both branches and the
+resume evidence (the pull request, handoff comment or claim that named it),
+then push to the adopted branch. Never push the work to the designated branch
+instead, and never open a second pull request from it.
 
 `external_metadata.current_branches` is a different field and answers a
 different question: what is checked out, not what the harness designated.

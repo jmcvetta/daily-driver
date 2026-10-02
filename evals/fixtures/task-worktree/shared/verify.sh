@@ -19,7 +19,14 @@ fi
 [ ! -e "${task_root}/local-only.txt" ]
 grep -qx 'STRICT_MODE = True' "${task_root}/src/parser.py"
 
-if [ "${mode}" = "linked" ]; then
+if [ "${mode}" = "resume" ]; then
+	remote_tip="$(git ls-remote upstream refs/heads/issue-52-strict-parser | cut -f1)"
+	[ -n "${remote_tip}" ]
+	git merge-base --is-ancestor "${remote_tip}" HEAD
+	[ -e "${task_root}/src/resumed.txt" ]
+fi
+
+if [ "${mode}" = "linked" ] || [ "${mode}" = "resume" ]; then
 	common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
 	primary_root="$(dirname "${common_dir}")"
 	[ "${task_root}" != "${primary_root}" ]
