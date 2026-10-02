@@ -2,8 +2,10 @@
 # `claude-only` because the mechanism it names is Claude's. `SKILL.md`'s
 # `How to wait` says only that "the mechanism is the harness's" and points at
 # the reference files. `skills/review-cycle/references/omp.md` names the Omp
-# mechanism: `hub` supervises `gh pr checks --watch` for at most fifteen
-# minutes, then `gh api` reads the head commit's check runs and commit statuses.
+# mechanism: a named `bash` service runs `gh pr checks --watch` under a
+# fifteen-minute `timeout`, `write proc://<name>/mode` makes it durable, `wait`
+# blocks until it completes, then `gh api` reads the head commit's check runs
+# and commit statuses.
 # The final two reads are both needed because `reported` means their union, and
 # zero check runs plus an empty `statuses` array is an empty result, not green.
 #
@@ -22,13 +24,14 @@
 #
 # Why this fails the `without` arm: a model with no plugin loaded may use
 # `gh pr checks` alone or poll in a loop. What it has no reason to know is that
-# Omp must use Hub supervision and then read both endpoints for the head commit.
+# Omp must use a named bash service and `wait`, then read both endpoints for
+# the head commit.
 # That shape lives only in this skill's own reference file.
 #
 task_id: review-cycle-08-run-watch-then-statuses-omp
 description: >-
-  Waiting on CI supervises the PR check watch for fifteen minutes, then reads
-  the head commit's check runs and statuses.
+  Waiting on CI runs the PR check watch as a bounded named bash service, waits
+  on it, then reads the head commit's check runs and statuses.
 tags: [review-cycle, references, fire, behaviour, omp-only, forks:review-cycle-08-subscribe-before-first-read]
 
 initial_prompt: >-
@@ -38,8 +41,8 @@ initial_prompt: >-
   in order.
 
 agent:
-  allowed_tools: [Read, Grep, Glob, Skill, Bash, Hub]
-  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write, wait]
+  disallowed_tools: [Edit, NotebookEdit, Agent, Task]
 
 run_limits:
   max_turns: 10
@@ -57,7 +60,7 @@ success_criteria:
 
   # The finding.
   - type: agent_judge
-    description: The reply uses Hub to watch checks, then reads both endpoints
+    description: The reply watches checks as a named bash service, waits, then reads both endpoints
     include_agent_output: true
     include_reference: false
     weight: 2
@@ -85,16 +88,18 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the reply must name a bounded, ordered wait with three parts.
-      It starts `gh pr checks --watch` under Omp's `hub` process supervision,
-      waits at most fifteen minutes, then reads BOTH head-commit API endpoints:
+      The rule: the reply must name a bounded, ordered wait. It starts
+      `gh pr checks --watch` as a named `bash` service under a fifteen-minute
+      `timeout`, makes it durable with `write proc://<name>/mode`, blocks with
+      `wait`, then reads BOTH head-commit API endpoints:
       `/commits/{sha}/check-runs` and `/commits/{sha}/status`. It must reject
       zero check runs plus an empty statuses array as an empty result, not
       success.
 
-      Score 1.0 if the REPLY names Hub supervision of the PR check watcher, the
-      fifteen-minute cap, and both API reads after it exits.
-      Score 0.0 if the reply polls in a loop, sleeps, arms a timer or
-      subscription, names `github.run_watch`, names only one endpoint, reads
-      the endpoints before the watch, accepts an empty result, or names no
-      specific call at all.
+      Score 1.0 if the REPLY names, in this order: the bounded watcher started
+      as a named `bash` service with the fifteen-minute `timeout`; persistence
+      through `write proc://<name>/mode`; waiting with `wait`; both endpoint
+      reads after the watcher exits; and rejecting an empty pair.
+      Score 0.0 if the reply polls in a loop, sleeps, names `hub` or
+      `github.run_watch`, names only one endpoint, reads the endpoints before
+      the watch, accepts an empty result, or names no specific call at all.
