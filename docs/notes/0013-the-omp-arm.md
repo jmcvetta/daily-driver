@@ -123,11 +123,34 @@ judge transport — and `make evals-plan` depends on it.
 
 ## Known limits, recorded rather than fixed
 
-**`allowed_tools` and `disallowed_tools` are not enforced in this arm.** Omp's
-RPC mode has no per-session tool allowlist. The trigger rows use
-`disallowed_tools` to stop a denied read of `skills/<name>/SKILL.md` scoring as
-an engagement, so a no-fire row is weaker on Omp than on Claude Code. The agent
-warns once per task rather than letting a row believe it constrained anything.
+**`allowed_tools` and `disallowed_tools` are enforced through `omp --tools`,
+with one exception and three gaps.** This paragraph once said Omp had no
+per-session tool list. That was wrong: `--tools=<list>` works with `--mode rpc`,
+and the adapter starts one process per task. Until issue #459, every Omp record
+ran with every Omp tool on. On the GPT 6 Luna `undertake` runs that let an eval
+agent call `bash`, `gh` and Omp's `github` tool against live GitHub.
+`coder_eval_omp/tools.py` maps a row's lists to Omp's names. A row with no allow
+list gets the Omp twins of Claude Code's default tools and no Omp-only tool. A
+list the arm cannot express fails the task.
+
+The exception: **an allowed `Skill` keeps `read` on.** Omp engages a skill by
+reading `skill://<name>`, so a trigger row's `disallowed_tools: [Read, …]` still
+leaves `read` on here. A denied read of `skills/<name>/SKILL.md` can therefore
+still happen, and score as an engagement. A no-fire row is weaker on Omp than on
+Claude Code for that reason. The agent logs it for each task.
+
+The gaps, measured on Omp 18.4.10 against a mock model that recorded the tools
+each request offered:
+
+- **`--tools` filters built-in tools only.** The plugin's extension tools
+  (`daily_driver_*`) stay on under any list, `--no-tools` included. They act on
+  the session alone: its title and its timers.
+- **`read` adds a `write`.** With `read` on, Omp also offers `write`, which
+  dispatches the extension tools as `xd://` devices. Its description says it
+  rejects every other path, so it writes no file.
+- **`read` still reaches the network.** It opens URLs, and Omp's `pr://` and
+  `issue://` schemes read GitHub. `--tools` cannot remove that without removing
+  `read`, and so every skill. Closing it needs another mechanism.
 
 **Two protocol questions are open, and the arm answers them by running.** Omp's
 `docs/rpc.md` shows `toolName` on `tool_execution_start` without showing the
