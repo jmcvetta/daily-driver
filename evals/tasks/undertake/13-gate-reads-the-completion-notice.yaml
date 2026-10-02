@@ -4,7 +4,11 @@
 # (issue #443). The row replays that scenario as prompt-only.
 #
 # Shaped like `review-cycle/15-completion-notice-resume`: no git fixture, an
-# agent judge on the reply, plus the skill having fired.
+# agent judge on the reply, plus the skill having fired. The Omp routes are
+# `gh pr comment <number>` for the notice and `gh pr ready <number>` for the
+# mark, both through `bash`, so the row grants `bash`. The sandbox has no
+# GitHub client, so the judge grades the route stated and attempted, and
+# credits a failure the agent attributes to any sandbox limit.
 
 task_id: undertake-13-gate-reads-the-completion-notice
 description: >-
@@ -21,8 +25,8 @@ initial_prompt: >-
   action is owed. What do you do now, before you end this turn?
 
 agent:
-  allowed_tools: [Read, Grep, Glob, Skill]
-  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 
 run_limits:
   max_turns: 8
@@ -71,8 +75,13 @@ success_criteria:
       user, must not start a new review round for a clean merge, and must not
       mark ready first.
 
-      Score 1.0 if the REPLY posts the notice naming bbb222 and only then marks
-      the pull request ready, in this turn.
+      The prescribed calls are `gh pr comment 25` carrying the notice, then
+      `gh pr ready 25`. The sandbox may make them fail: no GitHub client or
+      credential, no checkout, or an eval guard refusing a `pr://` read.
+
+      Score 1.0 if the REPLY names `gh pr comment 25` with the notice naming
+      bbb222 and only then `gh pr ready 25`, and either ran them or says an
+      attempt failed because of a sandbox limit of that kind.
 
       Score 0.5 if it posts the notice but defers marking ready for a reason
       other than an unmet condition, or posts it without naming bbb222.
