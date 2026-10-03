@@ -910,7 +910,7 @@ provider catalog offers.
 make evals-install                       # rebuilds the local agents every time
 export AI_GATEWAY_API_KEY=…              # Omp's name for the Vercel AI Gateway key
 omp models find gpt-6-luna               # the arm's route must resolve
-TASKS="$(cd evals && grep -L 'type: llm_judge' tasks/undertake/*.yaml | tr '\n' ' ')"
+TASKS='tasks/undertake/*.yaml'
 setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" JOBS=16 > luna.log 2>&1 &
 ```
 
@@ -919,11 +919,12 @@ setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" JOBS=16 > luna.log 2>&
   login ([`0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)).
   Leave `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` alone: pointed at a
   gateway, they bill every judge call there.
-- **Leave `llm_judge` rows out of `TASKS`.** `evals-preflight` reads every file
-  in `TASKS`, tags or not, and refuses a row with an enabled `llm_judge` when no
-  API key is set. In `undertake` those rows are `08-wake-slot-is-refilled`,
-  which is `claude-only`, and the stop rows 14 to 16, which then do not run on
-  this arm.
+- **Run it where no GitHub credential is ambient.** Some rows grant `bash`,
+  and the agent inherits the shell's environment. Before the first replicate,
+  with `GH_TOKEN` and `GITHUB_TOKEN` unset, `gh auth status` must fail and
+  `curl -s -o /dev/null -w '%{http_code}' https://api.github.com/user` must
+  print `401`. A Claude Code cloud container fails the second check: its proxy
+  signs every GitHub request with the owner's credential.
 - **Run replicates in parallel.** `JOBS` sets how many run at once; the
   default is one, and one at a time a suite takes about two hours. A replicate
   waits on model calls, not on the container: at 12 at once, a four-core
