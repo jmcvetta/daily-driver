@@ -7,7 +7,7 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
-.PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
+.PHONY: git-sync-run check-git-sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
@@ -74,26 +74,25 @@ export PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.bun/bin
 # installs nothing else Python: the legs sync their own environment, so the
 # laptop and CI get PyYAML from the same lock and cannot drift apart.
 
-# git_sync: sync master with origin and delete local branches whose upstream
-# is gone. A gone branch still checked out in a linked worktree has the
-# worktree removed first; `git worktree remove` refuses a worktree holding
-# uncommitted or untracked files (or one that is locked), and any refused
-# worktree is warned about and kept, branch included.
-git_sync:
-	git checkout master
+# git-sync-run: implementation for `wt sync`, which first switches the caller
+# to master's worktree. Offer gone-upstream branches to Worktrunk for cleanup.
+# Worktrunk decides whether each branch is integrated; it refuses dirty or
+# locked worktrees and keeps branches that still add changes.
+git-sync-run:
 	git pull
 	git fetch --prune
 	@git branch -vv | awk '/: gone\]/ {sub(/^\+ /, ""); print $$1}' | \
 	while read -r b; do \
 		wt=$$(git worktree list --porcelain | awk -v b="$$b" '/^worktree /{p = substr($$0, 10)} /^branch /{if (substr($$0, 8) == "refs/heads/" b) {print p; exit}}'); \
 		if [ -n "$$wt" ]; then \
-			if ! git worktree remove "$$wt"; then \
+			if ! wt remove --foreground "$$wt"; then \
 				printf 'WARN: worktree for gone-upstream branch %s could not be removed; kept: %s\n' "$$b" "$$wt" >&2; \
 				continue; \
 			fi; \
 			printf 'removed stale worktree: %s\n' "$$wt"; \
+		else \
+			wt remove --foreground "$$b"; \
 		fi; \
-		git branch -D "$$b"; \
 	done
 
 # omp-update-daily-driver: refresh this repository's installed Omp plugin
@@ -115,8 +114,12 @@ check-plugin-validity: check-plugin check-skills check-agents \
 	check-manifests check-manifest-fixtures check-claude-dependency
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
-	check-omp-guard-differential check-omp-cache-clean \
+	check-omp-guard-differential check-omp-cache-clean check-git-sync \
 	check-task-worktree-fixture check-scripts
+
+# Exercise the shell-integrated alias in isolated Git repositories only.
+check-git-sync:
+	python3 scripts/check-git-sync.py
 
 check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-model-classes-builder check-eval-arms check-agent-judges check-evals-preflight check-evals-provenance \
@@ -464,7 +467,7 @@ evals-setup-omp:
 # the wheel and never looks in the working directory. Get either wrong and the
 # suite runs -- against no plugin, or as a single unlabelled arm.
 #
-# Laptop-only, like git_sync: the cases need a live model, and this
+# Laptop-only, unlike check-git-sync: the cases need a live model, and this
 # repository's CI is deliberately credential-free.
 evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
@@ -648,7 +651,7 @@ evals-run-classes: evals-plan evals-preflight
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # mcp-usage: which GitHub MCP tools were actually called, rolled up to the
-# toolsets that supply them. Laptop-only like git_sync — it reads Claude
+# toolsets that supply them. Laptop-only — it reads Claude
 # Code's session transcripts, which CI does not have — and deliberately not
 # part of `check`. See docs/github-mcp.md for what the answer is for.
 mcp-usage:
