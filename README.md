@@ -75,7 +75,7 @@ every subagent. Nine sections:
 | Before you reply | Concision by audience: text a person reads is edited concise before it is sent, keeping every essential fact; text an agent reads keeps every fact it needs. The shape: the answer first, no preamble, no recap. |
 | Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; repository-changing tasks isolated before research; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
-| When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
+| When you hit a wall | Stop on errors, reassess failing approaches, ask rather than guess at intent, and automatically file confirmed Daily Driver component defects. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
 | Before you call it done | The project's own gates decide, not reasoning about them — and CI is where they run, not this machine. |
 | Dependencies | Added and pinned through the package manager; never a hand-edited manifest or lockfile. |
