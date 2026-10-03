@@ -4,12 +4,12 @@
 # configuration was modelled on. Migrating to a ruleset is a separate change
 # with its own plan.
 #
-# The required checks are the CI aggregate and Release Projection. The latter
-# validates the title release-please consumes, then projects the release from
-# the same runner. It reports on every pull-request head; release-please pull
-# requests skip only projection, leaving title validation as the gate.
+# The required checks are the CI validation job and Release Projection. The
+# latter validates the title release-please consumes, then projects the release
+# from the same runner. It reports on every pull-request head; release-please
+# pull requests skip only projection, leaving title validation as the gate.
 #
-# Adding a job to CI still does not require touching this file unless it is a
+# Adding a CI step still does not require touching this file unless it is a
 # merge gate. The contract for each gate is its job name, not its workflow.
 #
 # Three settings are deliberately loose for a solo repository: zero required

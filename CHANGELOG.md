@@ -39,6 +39,7 @@
 ## [Unreleased]
 
 ### Features
+* consolidate selected pull-request CI checks into one runner and install the prebuilt Worktrunk binary ([#505](https://github.com/jmcvetta/daily-driver/issues/505))
 
 * **ci:** combine release title validation and projection ([#508](https://github.com/jmcvetta/daily-driver/issues/508))
 

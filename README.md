@@ -203,9 +203,9 @@ injects `rules/*.md` carrying `alwaysApply: true`.
 `scripts/check-ask-in-chat.py` run both hooks against synthetic event JSON, and
 `scripts/check-omp-extension.mjs` does the same job for the Omp adapter — all
 three in `make check`, with `scripts/check-omp-plugin.py` covering discovery
-from CI's `omp` job. An adapter that stops firing does not
-fail; it silently reverts the behaviour it was installed for, which is the one
-failure nothing else would report.
+from the component-selected `CI Success` job. An adapter that stops firing does
+not fail; it silently reverts the behaviour it was installed for, which is the
+one failure nothing else would report.
 
 ## Layout
 
@@ -484,11 +484,9 @@ the installed route, `omp plugin list` reporting the plugin after `omp plugin
 link .`, and the extension loading rather than failing silently. It is
 credential-free and calls no model, against a throwaway `HOME` — but it needs
 Omp installed, which `make check` must not start requiring of a laptop that is
-only editing a skill. CI's `omp` job runs it instead, gated on the files that
-can actually break the integration — `package.json`, `.claude-plugin/`,
-`extensions/`, and the check itself. That job reports into `CI Success`
-whether or not the gate opens, so a broken Omp integration blocks a merge; its
-comment says why each file is on the list, and why `skills/` is not.
+only editing a skill. CI's single `CI Success` job runs it when the component
+filter selects Omp integration, so a broken Omp integration blocks a merge.
+Its comment says why each file is on the list, and why `skills/` is not.
 `make check-infra` parses the OpenTofu
 stack — see [infra/github/README.md](infra/github/README.md). `make evals-run` — and `make evals-run-omp` and
 `make evals-run-codex`, the same suites on the second and third harnesses —

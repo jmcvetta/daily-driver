@@ -37,17 +37,19 @@ exclusion below.
 
 ## Required Checks
 
-Branch protection requires two status checks: `CI Success`, which aggregates
-the repository's CI jobs, and `Release Projection`, which validates the
-Conventional Commit pull-request title release-please consumes and projects
-what release-please will ship. The combined job reports on every
-pull-request head. On release-please pull requests, it validates the title
-but skips checkout and projection; GitHub treats those skipped steps in an
-otherwise successful job as successful for branch protection.
+Branch protection requires two status checks: `CI Success`, the real CI job
+that runs repository checks and selected component checks, and `Release
+Projection`, which validates the Conventional Commit pull-request title
+release-please consumes and projects what release-please will ship. The
+combined job reports on every pull-request head. On release-please pull
+requests, it validates the title but skips checkout and projection; GitHub
+treats those skipped steps in an otherwise successful job as successful for
+branch protection.
 
-Adding a CI job is therefore a change to the workflow, not to this
+Adding a CI step is therefore a change to the workflow, not to this
 configuration, unless it is a merge gate. The Tofu binds to each job name, so
-jobs can be added under `CI Success`'s `needs` without touching
+the selected checks inside `CI Success` need no change to
+`branch_protection.tf`.
 `branch_protection.tf`.
 
 `ci.yml` carries no `paths:` filter, and must not grow one. A path-filtered
