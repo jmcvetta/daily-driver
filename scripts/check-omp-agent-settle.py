@@ -26,6 +26,15 @@ THE INVARIANT
     call with its parameters, and the real `SkillTriggeredChecker` must score
     that record 1.0 -- the watcher's pass and the final score cannot disagree.
 
+THE ROLES PIN
+
+    An arm's `model` must reach the throwaway home's `config.yml` as Omp's
+    `modelRoles`, every chat role pinned to it, beside the launch settings,
+    and an arm without a model must get no `modelRoles` at all. Unpinned,
+    Omp's helper roles and subagents run on whatever the provider catalog
+    offers, a model the arm does not measure. Found while preparing the first
+    GPT 6 Luna run (#483).
+
 NEEDS
 
     The pinned `coder_eval` (for the agent base class), and nothing else. No
@@ -212,8 +221,34 @@ async def run_scenario() -> None:
     )
 
 
+def check_roles_pin() -> None:
+    """The arm's `model` pins every Omp chat role in config.yml, and only then."""
+    import yaml
+
+    from coder_eval_omp.agent import OMP_CHAT_ROLES, OmpAgent, OmpAgentConfig
+
+    model = "vercel-ai-gateway/openai/gpt-6-luna"
+    check("memory" in OMP_CHAT_ROLES and "task" in OMP_CHAT_ROLES, f"chat roles incomplete: {OMP_CHAT_ROLES}")
+    for given, expected in ((model, {role: model for role in OMP_CHAT_ROLES}), (None, None)):
+        home = Path(tempfile.mkdtemp(prefix="omp-roles-check-"))
+        agent = OmpAgent(OmpAgentConfig(type="omp", model=given), task_id="roles-check")
+        agent._prepare_home(home)
+        written = yaml.safe_load((home / ".omp" / "agent" / "config.yml").read_text())
+        check(
+            written.get("skills") == {"enableSkillCommands": True},
+            f"config.yml must keep skill commands on, got {written}",
+        )
+        check(written.get("fetch") == {"enabled": False}, f"config.yml must keep fetch off, got {written}")
+        check(
+            written.get("modelRoles") == expected,
+            f"model {given} must write modelRoles {expected}, got {written.get('modelRoles')}",
+        )
+    print("check-omp-agent-settle: the arm's model pins every Omp chat role, and no model pins none")
+
+
 def main() -> None:
     asyncio.run(run_scenario())
+    check_roles_pin()
 
 
 if __name__ == "__main__":

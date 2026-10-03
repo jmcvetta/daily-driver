@@ -224,6 +224,44 @@ def check_usage() -> None:
     usage, seen = extract_usage({"type": "agent_end"})
     check(usage == {} and seen == [], "a frame with no counts reports none rather than zeros")
 
+    # Omp 18.4.9's real shape: no top-level counts, only each assistant
+    # message's pi-ai `usage`, summed over the turn's messages.
+    usage, seen = extract_usage({"type": "agent_end", "messages": [
+        {"role": "user", "content": "go"},
+        {"role": "assistant", "usage": {"input": 100, "output": 7, "cacheRead": 50, "cacheWrite": 5, "totalTokens": 162}},
+        {"role": "toolResult", "content": "ok"},
+        {"role": "assistant", "usage": {"input": 20, "output": 3, "cacheRead": 150, "cacheWrite": 0, "totalTokens": 173}},
+    ]})
+    check(
+        usage == {"uncached_input_tokens": 120, "output_tokens": 10,
+                  "cache_read_input_tokens": 200, "cache_creation_input_tokens": 5},
+        f"assistant messages' usage must be summed into coder_eval's buckets, got {usage}",
+    )
+    check(
+        seen == ["messages[].usage.input", "messages[].usage.output",
+                 "messages[].usage.cacheRead", "messages[].usage.cacheWrite"],
+        f"the message usage keys must be recorded as seen, got {seen}",
+    )
+
+    # A turn that continues past a non-terminal `agent_end` gets one frame per
+    # leg, each carrying only that leg's new messages; the turn's count is the
+    # sum of every leg, not the last one.
+    reducer = TurnReducer()
+    feed(
+        reducer,
+        {"type": "agent_end", "isTerminal": False, "messages": [
+            {"role": "assistant", "usage": {"input": 100, "output": 7, "cacheRead": 50, "cacheWrite": 5}},
+        ]},
+        {"type": "agent_end", "messages": [
+            {"role": "assistant", "usage": {"input": 20, "output": 3, "cacheRead": 150, "cacheWrite": 0}},
+        ]},
+    )
+    check(
+        reducer.usage == {"uncached_input_tokens": 120, "output_tokens": 10,
+                          "cache_read_input_tokens": 200, "cache_creation_input_tokens": 5},
+        f"usage must be summed across a turn's agent_end frames, got {reducer.usage}",
+    )
+
 
 def check_agent_output() -> None:
     """The judge's transcript carries the anchor every rubric here reads."""

@@ -19,7 +19,7 @@ SHELL := /bin/bash
 	evals-install evals-plan \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
-	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-comparison evals-run-classes mcp-usage
+	evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-codex evals-run-comparison evals-run-classes mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -416,10 +416,16 @@ check-infra:
 # `coder-eval-codex` declares `coder-eval[codex]`, so the Codex SDK arrives with
 # it. The pin above stays extras-free on purpose: the extra belongs to the one
 # arm that needs it, not to the two that do not.
+#
+# Both local agents keep one version, so uv would reuse its cached build and an
+# edit to either would never reach the harness. `--reinstall-package` rebuilds
+# them from the working tree every time.
 evals-install:
 	uv tool install --python 3.13 coder-eval==$(CODER_EVAL_VERSION) \
 		--with ./evals/coder-eval-omp \
-		--with ./evals/coder-eval-codex
+		--with ./evals/coder-eval-codex \
+		--reinstall-package coder-eval-omp \
+		--reinstall-package coder-eval-codex
 
 # evals-plan: validate every eval case without calling a model. Free, and it
 # catches the config errors that otherwise cost a paid run to discover -- so
@@ -440,6 +446,8 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-sol.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-luna.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
@@ -466,6 +474,12 @@ evals-variants:
 # see evals/README.md for what and why. Narrow it with TASKS=, e.g.
 #   make evals-run TASKS='tasks/pr/*.yaml'
 TASKS ?= tasks/*/*.yaml
+
+# JOBS: how many replicates a run target executes at once (`coder-eval run
+# --max-parallel`). One by default. Runs are bound by model calls, not by the
+# container, e.g.
+#   make evals-run-omp-gpt-6-luna JOBS=12
+JOBS ?= 1
 
 # evals-preflight: refuse to start evals-run when an enabled `llm_judge`
 # criterion in $(TASKS) has no judge transport to run on -- `coder_eval`
@@ -508,7 +522,7 @@ evals-render-results:
 # replaces the first rather than adding to it -- and the exclusions it dropped
 # come back as rows run in the wrong arm, silently, at full price.
 evals-run: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run -e experiments/with-without.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/with-without.yaml \
 		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
@@ -516,34 +530,54 @@ evals-run: evals-plan evals-preflight
 # evals-run-omp: run every recorded Omp model. Each named target keeps one
 # model's two-arm result separate, so reports compare the plugin against the
 # bare control without conflating model families.
-evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol
+evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
 # `omp` on PATH and a model configured in the caller's own `~/.omp/agent/`,
 # which the agent borrows rather than copies -- see evals/coder-eval-omp/README.md.
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
+#
+# OMP_RUN_LIMITS overrides every row's turn cap and turn timeout on this arm.
+# Omp's RPC mode does not enforce a row's `allowed_tools`, so the agent reads
+# and runs more than the Claude Code arm, and the caps sized for that arm cut
+# it off before its reply. A 30-turn calibration of GPT 6 Luna on the judged
+# `undertake` rows finished 97 of 100 replicates on their own: 11 turns at the
+# median, 27 at the 95th percentile, 358 s at the slowest.
+OMP_RUN_LIMITS := -D run_limits.max_turns=30 -D run_limits.turn_timeout=600 -D run_limits.task_timeout=1200
 evals-run-omp-glm-5-3: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-glm-5.3.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-glm-5-3-flash: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3-flash.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-glm-5.3-flash.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3-flash.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-deepseek-v4-pro: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run -e experiments/omp-deepseek-v4-pro.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-deepseek-v4-pro.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-deepseek-v4-pro.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run -e experiments/omp-gpt-5.6-sol.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-5.6-sol.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-5.6-sol.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+evals-run-omp-gpt-6-sol: evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6-sol.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6-sol.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+evals-run-omp-gpt-6-luna: evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6-luna.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-codex: the same suites on Codex. Needs the Codex SDK, which
@@ -556,7 +590,7 @@ evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 # constitution reaches that arm and every row there would score 0 for the wrong
 # reason. See docs/notes/0015-the-codex-arm.md.
 evals-run-codex: evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run -e experiments/codex.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/codex.yaml \
 		--exclude-tags claude-only,omp-only,skip:codex,model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/codex.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
@@ -608,7 +642,7 @@ evals-run-classes: evals-plan evals-preflight
 		echo "evals-run-classes: set MODEL=<classes experiment stem>, e.g. MODEL=glm" >&2; \
 		exit 1; \
 	fi
-	cd evals && $(CODER_EVAL) run -e experiments/classes-$(MODEL).yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/classes-$(MODEL).yaml \
 		--exclude-tags claude-only,omp-only,codex-only,skip:model-classes $(TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/classes-$(MODEL).yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
