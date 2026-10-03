@@ -8,9 +8,13 @@ skill.
 
 ```
 coder-eval-omp/
+├── fixtures/
+│   └── agent_end_usage.json       redacted live Omp 18.4.3 frame
 ├── pyproject.toml                 the `coder_eval.plugins` entry point
+├── prices.json                    hand-maintained USD/Mtok rates — see `Cost`
 └── src/coder_eval_omp/
     ├── rpc.py                     the frame reduction — pure, and tested
+    ├── pricing.py                 prices.json lookup — pure, and tested
     ├── agent.py                   the process, the events, and what loaded
     └── plugin.py                  register(registry)
 ```
@@ -83,15 +87,19 @@ puts the startup answer in each run's `environment_info`:
 | `omp_extension_errors` | every `extension_error` frame — the constitution rides on the extension |
 | `omp_tools` | the Omp built-in tools the row's lists granted |
 
-The two protocol questions use a later capture. Omp's `docs/rpc.md` shows
-`toolName` on `tool_execution_start` without showing the arguments, and places
-token accounting in "telemetry fields on `agent_end`" without naming them.
-After each completed turn, the adapter atomically writes the sorted observed
-key union to `omp-protocol-observations.json` in the task sandbox:
+The captured `agent_end` frame in `fixtures/agent_end_usage.json` settles token
+usage. It came from a minimal live Omp 18.4.3 RPC session on 2026-09-29; prompt
+and reply content are redacted. Its assistant message sits in `messages` and
+carries `usage.input`, `usage.output`, `usage.cacheRead`, and
+`usage.cacheWrite`. The same assistant message appears first on `message_end`,
+so `rpc.py` accepts both delivery paths and de-duplicates the recorded
+`timestamp` when the message has no `responseId`, before recording the token
+totals and price.
 
-```json
-{"omp_argument_keys_seen":["args"],"omp_usage_keys_seen":["inputTokens","outputTokens"]}
-```
+Tool-call argument keys remain unsettled. The reducer keeps its compatible
+spellings and records the one a run sees; this capture made no tool call.
+After each completed turn, the adapter atomically writes the observed key
+union to `omp-protocol-observations.json` in the task sandbox.
 
 `omp-glm-5.3.yaml` reads that file through its experiment-default `post_run`
 command. Its stdout is each task's durable `post_run_results` evidence. A task
@@ -101,12 +109,27 @@ that object before the first turn. `get_sdk_options` is not a workaround:
 `resolve_agent_settings` prefers it over `agent_config` and would blank the
 report's Agent Settings.
 
+## Cost
+
+`pricing.py` prices a run from `prices.json`, a hand-maintained table of USD
+per million input/output tokens keyed by model identifier — the same spelling
+`omp_configs/*.yml` and an experiment's `agent.model` use
+(`vercel-ai-gateway/zai/glm-5.3`, not a bare model name). Nothing fetches a
+price at run time: the table is a dated snapshot, sourced from
+`@oh-my-pi/pi-catalog@18.4.2`'s bundled model catalog, of the models the
+current `evals/experiments/omp-*.yaml` files actually run. A model with no row
+prices `total_cost_usd` as `None` (`coder_eval`'s own "unreported", not
+`0.0`) — adding a new Omp model to an experiment means adding its row here
+too. `pricing.py` is pure, like `rpc.py`, so `scripts/check-omp-agent.py`
+drives it in `make check` without a `coder_eval` install.
+
 ## What is tested, and what is not
 
-`rpc.py` and `tools.py` import nothing — not `coder_eval`, not `omp` — and
-`scripts/check-omp-agent.py` drives them in `make check`, `rpc.py` against
-recorded frames. That is where the four things above live, and it is why they
-live there.
+`rpc.py`, `pricing.py` and `tools.py` import nothing — not `coder_eval`, not
+`omp` — and `scripts/check-omp-agent.py` drives them in `make check`, `rpc.py`
+against recorded frames and `pricing.py` against a test price table. That is
+where the four things above, and the token-usage and cost math, live, and it is
+why they live there.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the

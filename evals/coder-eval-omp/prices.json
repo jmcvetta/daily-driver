@@ -1,0 +1,22 @@
+{
+  "vercel-ai-gateway/deepseek/deepseek-v4-pro": {
+    "input_usd_per_million": 0.66,
+    "output_usd_per_million": 1.98,
+    "recorded": "2026-09-28"
+  },
+  "vercel-ai-gateway/zai/glm-5.3": {
+    "input_usd_per_million": 1.4,
+    "output_usd_per_million": 4.4,
+    "recorded": "2026-09-28"
+  },
+  "vercel-ai-gateway/zai/glm-5.3-flash": {
+    "input_usd_per_million": 0.15,
+    "output_usd_per_million": 0.5,
+    "recorded": "2026-09-28"
+  },
+  "openai-codex/gpt-5.6-sol": {
+    "input_usd_per_million": 4,
+    "output_usd_per_million": 20,
+    "recorded": "2026-09-28"
+  }
+}

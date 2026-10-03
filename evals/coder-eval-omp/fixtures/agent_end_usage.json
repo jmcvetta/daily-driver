@@ -1,0 +1,38 @@
+{
+  "isTerminal": true,
+  "messages": [
+    {
+      "attribution": "user",
+      "content": "[redacted]",
+      "role": "user",
+      "timestamp": 1790674733323
+    },
+    {
+      "api": "anthropic-messages",
+      "content": "[redacted]",
+      "duration": 1144.427417,
+      "model": "zai/glm-5.3-flash",
+      "provider": "vercel-ai-gateway",
+      "role": "assistant",
+      "stopReason": "stop",
+      "timestamp": 1790674733406,
+      "ttft": 1143.5854080000001,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 0.0002781,
+          "output": 1.5e-06,
+          "total": 0.00027959999999999997
+        },
+        "input": 1854,
+        "output": 3,
+        "totalTokens": 1857
+      }
+    }
+  ],
+  "type": "agent_end",
+  "yielded": true
+}

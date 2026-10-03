@@ -176,6 +176,9 @@ Unknown prices use an operator preference, never an invented free or globally
 cheapest result. A stronger eligible route may run lower-class work. An
 under-capable or tool-incompatible cheap route is excluded.
 
+On Omp, resolution is the lookup that harness's reference describes: the
+`modelRoles.task` row in `Measured routes`, with no candidate search.
+
 The selected route and actual model are distinct from the required class.
 Record `unreported` when actual identity is unavailable; visible provider
 fallbacks are mismatches to report and reassess. No eligible route stops only

@@ -295,6 +295,15 @@ brew install worktrunk
 
 [worktrunk-install]: https://worktrunk.dev/#install
 
+In this checkout, install Worktrunk's shell integration, then run `wt sync`
+from any linked worktree. It switches the calling shell to master's worktree,
+pulls master, and offers gone-upstream branches to Worktrunk for safe cleanup:
+
+```sh
+wt config shell install
+wt sync
+```
+
 Install Daily Driver once per machine. For Claude Code:
 
 ```sh
