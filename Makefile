@@ -12,11 +12,11 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
 	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-task-worktree-fixture check-eval-arms check-agent-judges check-ci-scope check-step-names \
+	check-model-classes-builder check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
-	evals-install evals-plan \
+	evals-install evals-setup-omp evals-plan \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-comparison evals-run-classes mcp-usage
@@ -38,6 +38,18 @@ CODER_EVAL_VERSION := 0.11.6
 # Never run an Anthropic model through the API or the Vercel AI Gateway, and
 # set no ANTHROPIC_* variable. See "Credentials" in evals/README.md.
 CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
+
+# The Omp arms' environment, for every target. Omp reads the Vercel AI Gateway
+# key from AI_GATEWAY_API_KEY; a Claude Code cloud container exports it as
+# VERCEL_AI_GATEWAY_API_KEY, so the second name fills the first when it is
+# unset. Omp's installer puts `omp` in ~/.local/bin, or in ~/.bun/bin when it
+# installs through Bun; both are appended, so they shadow nothing. See
+# scripts/evals-setup-omp.sh for the source of the key name.
+AI_GATEWAY_API_KEY ?= $(VERCEL_AI_GATEWAY_API_KEY)
+ifneq ($(AI_GATEWAY_API_KEY),)
+export AI_GATEWAY_API_KEY
+endif
+export PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.bun/bin
 
 # Dev dependencies of the Python legs, managed with uv. The repository has no
 # Python packaging -- the root `pyproject.toml` declares no package, only the
@@ -107,7 +119,7 @@ check-runtime: check-constitution check-ask-in-chat check-omp-extension check-mo
 
 check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-model-classes-builder check-eval-arms check-agent-judges check-evals-preflight check-evals-provenance \
-	check-evals-results check-model-telemetry
+	check-evals-results check-model-telemetry check-evals-setup-omp
 
 
 check-issue-infra: check-labels check-labels-fixtures
@@ -345,6 +357,12 @@ check-model-classes-builder:
 check-task-worktree-fixture:
 	scripts/check-task-worktree-fixture.sh
 
+# check-evals-setup-omp: evals-setup-omp's key resolution, exact model match
+# and no-reinstall rule, against a stub `omp` and `curl` in a throwaway HOME.
+# Offline: it never runs the real installer or calls the gateway.
+check-evals-setup-omp:
+	scripts/check-evals-setup-omp.sh
+
 # check-step-names: no file may cite a step of a numbered sequence by its
 # number. The numbers are positional, so inserting a step silently invalidates
 # every citation after it -- and a stale `step 7` reads exactly like a correct
@@ -420,6 +438,15 @@ evals-install:
 	uv tool install --python 3.13 coder-eval==$(CODER_EVAL_VERSION) \
 		--with ./evals/coder-eval-omp \
 		--with ./evals/coder-eval-codex
+
+# evals-setup-omp: everything a gateway-routed `evals-run-omp-*` target needs
+# beyond evals-install -- `omp` installed with CI's command when missing, the
+# gateway key resolved, and each arm's pinned model proven listed by Omp. Run
+# `make evals-install && make evals-setup-omp` in a cloud session or on a fresh
+# laptop. Idempotent, free, and writes no credential. The openai-codex arm
+# needs Omp's own Codex login and is reported, not failed.
+evals-setup-omp:
+	scripts/evals-setup-omp.sh evals/experiments/omp-*.yaml
 
 # evals-plan: validate every eval case without calling a model. Free, and it
 # catches the config errors that otherwise cost a paid run to discover -- so
@@ -519,8 +546,9 @@ evals-run: evals-plan evals-preflight
 evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
-# `omp` on PATH and a model configured in the caller's own `~/.omp/agent/`,
-# which the agent borrows rather than copies -- see evals/coder-eval-omp/README.md.
+# `omp` on PATH and the provider's credentials -- `make evals-setup-omp` sets up
+# and checks both for the gateway arms. The agent borrows the caller's
+# `~/.omp/agent/` rather than copies it -- see evals/coder-eval-omp/README.md.
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
 evals-run-omp-glm-5-3: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \

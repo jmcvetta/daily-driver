@@ -54,7 +54,7 @@ omp models find mercury-2.5
 
 Catalog entries do not guarantee that a provider still serves a model. An inference request can fail even when `omp models find` lists it.
 
-The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. The `openai-codex` models use Omp's configured OpenAI Codex credentials.
+The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. Omp reads that name only; it uses `VERCEL_AI_GATEWAY_API_KEY` for catalog discovery, not for requests. In this repository `make evals-setup-omp` maps the second name to the first. The `openai-codex` models use Omp's configured OpenAI Codex credentials.
 
 ## Capability classes
 
