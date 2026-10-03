@@ -24,6 +24,12 @@ operator's configured eligible preference; do not call missing or zero catalog
 cost free. A stronger eligible model may run lower-class work. If no eligible
 route exists, stop only that task and report the configuration gap.
 
+A row in the harness reference's `Measured routes` table outranks this file's
+hand-written `Classes` table. A missing row, or one marked `unmeasured` or
+`unreported`, means the model is unmeasured. A stale row, judged from its
+`Recorded` date, is read the same way. An unmeasured model is unknown, and
+unknown falls to the operator's configured preference above.
+
 Record the requested class separately from the selected route and actual model.
 Use `unreported` when the harness does not report actual execution identity;
 report visible runtime fallback mismatches and reassess before continuing.

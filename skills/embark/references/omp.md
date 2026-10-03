@@ -48,46 +48,25 @@ it, and nothing else. The prompt boundary of `Open the sessions` holds.
 The route an implementor runs
 =============================
 
-The `task` surface selects an `agent`, not a per-item model argument. Select
-the implementor whose name matches the task's required class: `mechanical`,
-`implementation`, or `reasoning`. This per-class agent route replaces a single
-`modelRoles.task` lookup. Resolve that agent's effective selector in order:
-`task.agentModelOverrides[agentName]`, then its frontmatter `model` (for
-example, `@implementation` resolves the `implementation` role). A prewalk or retry fallback
-can change the model that executes, so inspect those settings too; the selected
-agent or its declared role alone does not prove the effective route.
+The `task` surface selects an `agent`, not a model. Each batch item sets only
+`agent`; no item carries a per-item model argument. Dispatch is a lookup, not a
+search:
 
-Assess the effective route before dispatch for demonstrated class suitability,
-required tools, context, modalities, availability, and credentials. The three
-plugin defaults are `mechanical: openai-codex/gpt-6-luna:high`,
-`implementation: openai-codex/gpt-5.6-terra:high`, and
-`reasoning: openai-codex/gpt-6-astra:high`; they require Omp's configured OpenAI
-Codex credentials. The plugin applies each role at session start only when no
-effective assignment exists; global/project settings and CLI overlays present
-before startup take precedence, as do explicit assignments. The assignments are
-runtime-only, and plugin-owned tags keep the roles visible in Omp's `/model`
-Roles UI. Operators can change assignments there for subsequent dispatches.
-Clearing an assignment leaves a visible but unassigned role; report a gap
-rather than restoring a default during that session. A direct configuration-file
-change after startup may remain shadowed until Omp restarts because disk reload
-preserves runtime overrides. The plugin writes no Omp configuration files.
-Treat them as selectors, not proof of class capability:
-catalog presence, effort, and price do not establish suitability. No model
-class evaluation result is established here, so do not claim measured
-capability. Do not infer working credentials from catalog presence. Assess
-every configured fallback against the same requirements. In particular,
-Omp's parent-model authentication fallback does not satisfy the class unless
-independently shown eligible; if a runtime fallback changes the model, report
-the mismatch and reassess before further work.
+1. Read `modelRoles.task` from the running Omp configuration.
+2. Find the row for that configuration in `Measured routes`, in
+   [`issue-body`'s `omp.md`](../../issue-body/references/omp.md).
+3. Compare the row's `Class earned` with the task's required class. When it
+   covers the class required, dispatch. A stronger class may run lower-class
+   work.
+4. Otherwise stop only that task and report the configuration gap: no row, a
+   row that is `unmeasured` or `unreported`, a class earned below the class
+   required, or a row the reader judges stale from its `Recorded` date.
+   Launch the rest of the wave.
 
-A stronger eligible model may handle lower-class work. If the route is missing
-or unsuitable before launch, stop only that task and report the configuration
-gap. If a runtime fallback makes an already launched route unsuitable, stop
-that task and report the observed model and gap; launch the rest of the wave.
-Do not lower the requested class, drop a required tool, or mutate shared roles
-to make a route appear eligible. Mixed-class batch items use their own
-class-named agents and resolve independently. `sonic` is a bundled agent, not
-a model role. Reviewers and scouts are not implementation routes.
+Do not search for another candidate, and do not infer capability from catalog
+presence, effort, price, or an agent's name. Do not alter a shared role during
+a wave to make a row fit. `sonic` is a bundled agent, not a model role.
+Reviewers and scouts are not implementation routes.
 
 For each muster-roll row, keep the required class, selected agent, and actual
 reported model separate. Record `unreported` when the harness provides no
