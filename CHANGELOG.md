@@ -39,6 +39,7 @@
 ## [Unreleased]
 
 ### Features
+* consolidate selected pull-request CI checks into one runner and install the prebuilt Worktrunk binary ([#505](https://github.com/jmcvetta/daily-driver/issues/505))
 
 * adopt Worktrunk for isolated task worktrees and install its official Claude plugin and latest CLI during cloud Setup ([#495](https://github.com/jmcvetta/daily-driver/issues/495))
 
