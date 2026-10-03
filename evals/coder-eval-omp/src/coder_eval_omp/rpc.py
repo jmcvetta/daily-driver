@@ -410,11 +410,18 @@ class TurnReducer:
         that message, so `_accumulate_usage` de-duplicates its `responseId` or
         `timestamp`. `message_update` carries a streaming snapshot and is
         skipped.
+
+        Only assistant messages count. User prompts and tool results arrive on
+        the same frames, and a tool result can hold a whole `SKILL.md`; rendered
+        as reply text, they push the `[RESULT - ...]` anchor past the judge's
+        truncation. A frame with no role is an assistant delta.
         """
         message = frame.get("message")
+        role = message.get("role") if isinstance(message, dict) else None
+        if role is not None and role != "assistant":
+            return []
         if frame.get("type") == "message_end" and isinstance(message, dict):
             self._accumulate_usage(message)
-
         message_id = str(frame.get("messageId") or frame.get("messageID") or frame.get("id") or "message")
         complete = _text_of(message)
         if complete:

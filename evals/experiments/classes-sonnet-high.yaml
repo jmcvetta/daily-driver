@@ -1,0 +1,48 @@
+# The model-classes capability arm for Claude Sonnet 5.5 at `high` effort, on Claude Code.
+#
+# Measures whether this model, in the role it plays for delegated implementation
+# work (its `task` role), clears the mechanical/implementation cases the suite builds from
+# real merged pull requests -- see `scripts/evals-cases-from-prs.py` and
+# `evals/tasks/model-classes/`. One variant: there is no plugin ablation here,
+# only the question "does this model finish this task and leave its own tests
+# passing". `make evals-run-classes MODEL=sonnet-high` runs it.
+#
+# One of three files that price the Claude route table for `embark`'s workflow
+# dispatch (issue #435): this one is the `implementation` candidate the table
+# replaces. Its pair is `classes-opus-low.yaml`. Read pass rate and cost per
+# completed task together.
+#
+# Sonnet 5.5 recalibrated the effort levels from Sonnet 5, so a `high` run here
+# is not comparable with a Sonnet 5 `high` run.
+#
+# It runs on `claude-code`, the harness the route table is for. The session is
+# the bare one `with-without.yaml` measures against: no plugin, and project
+# settings only, so the user's own settings -- an advisor, an enabled plugin --
+# never reach the model under test.
+
+experiment_id: classes-sonnet-high
+description: >-
+  Model-class capability on real merged-pull-request cases, claude-sonnet-5-5 at `high` effort
+  on Claude Code in the `task` role.
+
+defaults:
+  repeats: 3
+
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+
+  agent:
+    type: claude-code
+    model: claude-sonnet-5-5
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+    plugins: []
+    setting_sources: [project]
+    sdk_options:
+      effort: high
+
+variants:
+  - variant_id: default
+    description: This model against the model-classes suite.

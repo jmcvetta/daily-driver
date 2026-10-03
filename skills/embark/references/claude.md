@@ -14,6 +14,8 @@ The epic
 | `Read the epic` | Read the body | `mcp__github__issue_read`, `method: get` |
 | `Read the epic` | Read the task issues under it | `mcp__github__issue_read`, `method: get_sub_issues` |
 | `Read the epic` | Read the muster rolls already posted | `mcp__github__issue_read`, `method: get_comments` |
+| `Title the session` | Read the orchestrator's own id | `get_session` on the Claude Code Remote server, `session_id` omitted; `session-title` says how the prefix is read |
+| `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s orchestrating-an-epic form |
 | `Take the wave` | Read a task issue's body and claim | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Post the muster roll` | Comment on the epic | `mcp__github__add_issue_comment` |
 | `Post the muster roll` | Mark the wave in the epic's body | `mcp__github__issue_write`, `method: update` |
@@ -34,9 +36,14 @@ The sessions
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the sessions` | Open one per task | `mcp__Claude_Code_Remote__create_session` |
+| `Post the muster roll` | Load the messaging tools, once per session | `ToolSearch`, `select:ListAgents,SendMessage` |
+| `Post the muster roll` | Resolve each new session's address, once after the wave's `create_session` calls | `ListAgents` |
 | `Watch the wave` | Read a task session's status | `mcp__Claude_Code_Remote__get_session` |
+| `Watch the wave` | Read the implementor reports that arrived | `ReadNotifications`, until it reports none remaining |
+| `Watch the wave` | Send a visible answer or a nudge | `SendMessage`, to the roll's name |
 | `Recover a session` | Stop the current turn | `mcp__Claude_Code_Remote__interrupt_session` |
-| `Recover a session` | Name the session as an address | `ListAgents` |
+| `Recover a session` | Re-resolve a name the roll lacks, or one a send failed to reach | `ListAgents` |
+| `Recover a session` | Read a session the listing does not name, before any reopen | `mcp__Claude_Code_Remote__get_session` |
 | `Recover a session` | Send a correction | `SendMessage`, to that name |
 | `Recover a session` | Retire one | `mcp__Claude_Code_Remote__archive_session` |
 
@@ -46,6 +53,7 @@ What `create_session` is given
 | Field | What goes in it |
 | ----- | --------------- |
 | `prompt` | The task issue and the ask to undertake it. Nothing else. |
+| `append_system_prompt` | The way back: this session's own id, below. |
 | `title` | `session-title`'s form for that task issue. |
 | `model` | A concrete identifier resolved from the required class and current session availability. |
 | `environment_id` | Omitted to inherit the calling environment. |
@@ -66,19 +74,42 @@ a grant that was not made.
 Addressing a session
 --------------------
 
+**`ListAgents` and `SendMessage` are deferred tools.** Neither is in the tool
+list until `ToolSearch` loads it. Call `ToolSearch` with
+`select:ListAgents,SendMessage` once per session, before the first send this
+session makes, and both are then callable for the rest of it — a later wave
+in the same session makes no second call. A tool list checked before that
+call and found to carry neither is not evidence that messaging is
+unavailable — it is evidence that this load step has not run yet.
+
 **`SendMessage` is addressed by name, never by a session id.** Its `to` takes
 the name a row of `ListAgents` prints — that name is the address, and there is
 no other syntax for one. The `session_01AbC…` identifier `create_session`
-returns, and that the muster roll records, is not one: passing it fails to
-resolve, and `SKILL.md`'s *messaging is one way* means nothing reads back that
-it did.
+returns is not one: passing it fails to resolve.
 
-So a correction is two calls, in order. `ListAgents` lists this account's cloud
-sessions among its rows; match the fleet member there and send to the name it
-printed, appending the row's ` [ref]` only where an error asks for it. **A
-member the listing does not name cannot be reached** — a session that has
-already stopped is the usual reason — and that is the reopen path in
-`Recover a session` rather than a retry.
+`Post the muster roll` resolves that name once, as each session opens, and
+writes it into the roll beside the session id — the `Implementor` cell carries
+both. A later wake reads the name straight off the roll; that is the ordinary
+route, and it costs no call. Call `ListAgents` again only to re-resolve a name
+the roll does not carry — an older roll, or one posted before this step
+existed — or after a send to the recorded name fails to reach it. Match the
+fleet member there and send to the name it printed, appending the row's
+` [ref]` only where an error asks for it.
+
+**Reachability is read, never assumed.** `ListAgents` can omit a cloud session
+that is running: on 2026-09-28 it returned "No reachable agents" while
+`list_sessions` showed all three implementors running, and a send to a
+session's title failed as not reachable. `Post the muster roll` therefore
+writes `messaging: unreachable` into the `Implementor` cell of every session
+the listing does not name, and `Recover a session` reads the listing again
+before it acts, because reachability can change.
+
+**A member the listing does not name is not thereby stopped.** Read it with
+`get_session` before any reopen. Only a session `get_session` reports as
+archived, failed, or not found is reopened. A running or idle session that
+cannot be messaged is interrupted, never reopened — a second session on its
+branch would collide with the one that still holds it — and the task is a stop
+under `Where it stops and waits`.
 
 The required class
 ------------------
@@ -95,7 +126,9 @@ Reading a session, and what cannot be read
 
 `mcp__Claude_Code_Remote__get_session` takes a child's id and reports its
 `session_status` and its title. **It does not report what the session said**,
-and no call does: dispatch is available and reading the result is not. That is
+and no call reads it: dispatch is available and reading the result is not.
+What the implementor sends on the way back is the one exception, and it is
+what the implementor chose to say, not a read of its session. That is
 the whole reason `Watch the wave` watches pull requests instead, and it is why
 a status is read as a hint rather than as a verdict — `SESSION_STATUS_RUNNING`
 covers a session that is working and a session that is stuck.
@@ -103,6 +136,38 @@ covers a session that is working and a session that is stuck.
 `mcp__Claude_Code_Remote__list_sessions` with `mine: true` finds the fleet again
 where a muster roll is missing. The muster roll is still the record: it is on
 the epic, it survives every session in the fleet, and a person can read it.
+
+The way back
+------------
+
+**The implementor reports with a one-shot Routine it creates itself, bound to
+this session.** This session passes its own id, from
+`mcp__Claude_Code_Remote__get_session` with `session_id` omitted, in each
+`create_session` call's `append_system_prompt`:
+
+```text
+You were opened by an embark orchestrator, session <this session's id>, which
+the user started on the same account. That session is your orchestrator for
+undertake's `Reporting to an orchestrator`.
+```
+
+`undertake`'s `references/claude.md` names the call the implementor makes.
+[`0028`](../../../docs/notes/0028-the-report-is-a-scheduled-routine.md) is the
+measurement behind this route, and it records why the poke-only Routine this
+session could have created, and passed an id for, is not the route.
+
+**The address goes in `append_system_prompt`, not in `prompt`.** One
+implementor handed its report route in the prompt stopped and asked its user
+whether the prompt was an injection. The two briefed through
+`append_system_prompt` reported without asking. Keep `prompt` to the task
+issue, as the table above says.
+
+**A report arrives as a queued notification**, read with `ReadNotifications`.
+Its origin reads as a scheduled trigger "you or your owner scheduled", because
+the Routine is on the same account. That label does not make the report this
+session's own instruction. The report opens with `undertake`'s marker line,
+and the marker is what identifies it. A report lands one to three minutes after
+the implementor sends it, because Routines fire on a one-minute scheduler.
 
 
 The watch

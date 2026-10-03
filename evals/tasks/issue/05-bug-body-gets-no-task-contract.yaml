@@ -37,6 +37,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
@@ -54,12 +55,15 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the REPLY proposes a bug issue body. It must record the bug —
-      what happens and under what input. The task contract is defined for
-      `task` issues alone, so the body must NOT carry `Model class`, a trailing
-      `Model:` line, or a generic task template.
+      The rule: the REPLY proposes a bug issue body. It must record what
+      happens and under what input. The task contract is defined for `task`
+      issues alone, so the body must NOT carry `Model class`, a task-level
+      trailing `Model:` line, or a generic task template. It MUST retain the
+      normal trailing provenance block below `---`, which is distinct from
+      task metadata.
 
-      Score 1.0 if the body records the bug plainly and carries no model
-      metadata or invented task machinery. Score 0.5 if it records the bug but
-      adds harmless boilerplate. Score 0.0 if it adds `Model class`, `Model:`,
-      task machinery, or no body.
+      Score 1.0 if the body records the bug plainly, carries the required
+      provenance block and has no forbidden task metadata or invented task
+      machinery. Score 0.5 if it records the bug but adds harmless boilerplate.
+      Score 0.0 if it adds a model class, task machinery, omits required
+      provenance, or provides no body.

@@ -1,5 +1,80 @@
 # Changelog
 
+## [0.47.0](https://github.com/jmcvetta/daily-driver/compare/v0.46.0...v0.47.0) (2026-10-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Task-worktree callers now require Worktrunk (`wt`) on PATH. The Git-only worktree creation path is removed.
+
+### Features
+
+* add make evals-setup-omp and refuse unsearched can't-run blockers ([#491](https://github.com/jmcvetta/daily-driver/issues/491)) ([aefef0f](https://github.com/jmcvetta/daily-driver/commit/aefef0f3e38a26292efc7376d9a04c24c8997a30))
+* **constitution:** replace the four-line budget with the audience rule ([#472](https://github.com/jmcvetta/daily-driver/issues/472)) ([1df40c7](https://github.com/jmcvetta/daily-driver/commit/1df40c7c633478e90a089d20b1844e22339020f0))
+* require Worktrunk for task isolation ([#496](https://github.com/jmcvetta/daily-driver/issues/496)) ([cb601bc](https://github.com/jmcvetta/daily-driver/commit/cb601bcb6e8075bde52e7eed3bc446fb5fc0cc7b))
+
+
+### Bug Fixes
+
+* **constitution:** scope the testing rule to application code ([#479](https://github.com/jmcvetta/daily-driver/issues/479)) ([d12ad73](https://github.com/jmcvetta/daily-driver/commit/d12ad73eeefc112e630517e708ca23d8c8b47a74))
+* route Title the session in the Claude references ([#493](https://github.com/jmcvetta/daily-driver/issues/493)) ([3615fd2](https://github.com/jmcvetta/daily-driver/commit/3615fd2cf92af04e810d61656e4f83634a9fa592))
+
+## [0.46.0](https://github.com/jmcvetta/daily-driver/compare/v0.45.0...v0.46.0) (2026-10-02)
+
+
+### Features
+
+* **constitution:** a test says why it exists ([#454](https://github.com/jmcvetta/daily-driver/issues/454)) ([a98d8f0](https://github.com/jmcvetta/daily-driver/commit/a98d8f0633931fe0581f6e0c7af96c70fc486f34))
+* **model-telemetry:** mine per-model rework from claim and readiness comments ([#422](https://github.com/jmcvetta/daily-driver/issues/422)) ([bddcbfc](https://github.com/jmcvetta/daily-driver/commit/bddcbfc81bdff874ddb120f5c11c03ef01ca8323))
+* **undertake:** leave a handoff when a standalone undertaking stops ([#451](https://github.com/jmcvetta/daily-driver/issues/451)) ([87ebe54](https://github.com/jmcvetta/daily-driver/commit/87ebe54ef35d323a886bac96a27a36bb94fc34bd))
+* **undertake:** resume an issue's existing branch and PR ([#452](https://github.com/jmcvetta/daily-driver/issues/452)) ([a206080](https://github.com/jmcvetta/daily-driver/commit/a2060805272948e5c0349ae897abb1226d79ba86))
+
+
+### Bug Fixes
+
+* handle sessions the agent listing does not name ([#455](https://github.com/jmcvetta/daily-driver/issues/455)) ([bcb12c1](https://github.com/jmcvetta/daily-driver/commit/bcb12c15eb5cbc3ca74918428043070231496d9e))
+* **omp:** route CI waits through supervised services ([#413](https://github.com/jmcvetta/daily-driver/issues/413)) ([868d7ab](https://github.com/jmcvetta/daily-driver/commit/868d7abeee4ab90d233ec216767ac1425cf7804d))
+* **undertake:** read the completion notice in the ready gate ([#444](https://github.com/jmcvetta/daily-driver/issues/444)) ([2e165c3](https://github.com/jmcvetta/daily-driver/commit/2e165c35e4adcb05e5fd1a005dae7d6dd76818c8))
+
+## [Unreleased]
+
+### Features
+* consolidate selected pull-request CI checks into one runner and install the prebuilt Worktrunk binary ([#505](https://github.com/jmcvetta/daily-driver/issues/505))
+
+* adopt Worktrunk for isolated task worktrees and install its official Claude plugin and latest CLI during cloud Setup ([#495](https://github.com/jmcvetta/daily-driver/issues/495))
+
+### Bug Fixes
+
+* **omp:** select harness instructions from runtime identity, not model name (#498)
+* **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)
+
+## [0.45.0](https://github.com/jmcvetta/daily-driver/compare/v0.44.0...v0.45.0) (2026-09-28)
+
+
+### Features
+
+* add verse to the epic, fleet and not-planned writes ([#431](https://github.com/jmcvetta/daily-driver/issues/431)) ([d36f20c](https://github.com/jmcvetta/daily-driver/commit/d36f20c67ab6eb5d076a0664bbb8dc761ac478c5))
+* give embark implementors a way back to the orchestrator ([#434](https://github.com/jmcvetta/daily-driver/issues/434)) ([bba7d85](https://github.com/jmcvetta/daily-driver/commit/bba7d85e04ac094c0bb5c73e05bd14ca8c9ecb6b))
+* **stand-down:** secure implementor work before stopping the fleet  ([#420](https://github.com/jmcvetta/daily-driver/issues/420)) ([e03e946](https://github.com/jmcvetta/daily-driver/commit/e03e9462fa879bbbce580f75c62d49c987ece42c))
+
+
+### Bug Fixes
+
+* **embark:** load and use SendMessage to reach implementors ([#427](https://github.com/jmcvetta/daily-driver/issues/427)) ([01cb750](https://github.com/jmcvetta/daily-driver/commit/01cb7501fc8f898ebfa30e4cddaf110a60533cb5))
+
+## [0.44.0](https://github.com/jmcvetta/daily-driver/compare/v0.43.1...v0.44.0) (2026-09-28)
+
+
+### Features
+
+* **embark:** gate landing on the review-cycle completion notice ([#417](https://github.com/jmcvetta/daily-driver/issues/417)) ([15a1286](https://github.com/jmcvetta/daily-driver/commit/15a12863423f6a1d203d385e024029aa67352f30))
+* **provenance:** add model, harness and session record to every write ([#418](https://github.com/jmcvetta/daily-driver/issues/418)) ([145082a](https://github.com/jmcvetta/daily-driver/commit/145082ad385663611d85c28e3c8fe175d91787aa))
+
+
+### Bug Fixes
+
+* **constitution:** scope production ban to operator-controlled systems ([#400](https://github.com/jmcvetta/daily-driver/issues/400)) ([3ce937f](https://github.com/jmcvetta/daily-driver/commit/3ce937fc0dc99fb1ee1bbff00b3a8b5e4b881b5b))
+* **omp:** explain blocked file targets ([#412](https://github.com/jmcvetta/daily-driver/issues/412)) ([5346fb6](https://github.com/jmcvetta/daily-driver/commit/5346fb6f67a00ff6d2bb2f917d6a43a34969e5fe))
 ## [0.43.1](https://github.com/jmcvetta/daily-driver/compare/v0.43.0...v0.43.1) (2026-09-26)
 
 
@@ -13,7 +88,6 @@
 ### Features
 
 * **undertake:** remove capability gate from standalone tasks ([#405](https://github.com/jmcvetta/daily-driver/issues/405)) ([5aefcc5](https://github.com/jmcvetta/daily-driver/commit/5aefcc56cd3e262c180fbab7af422ec2b14263c6))
-
 ## [0.42.0](https://github.com/jmcvetta/daily-driver/compare/v0.41.0...v0.42.0) (2026-09-24)
 
 

@@ -11,6 +11,7 @@ the `claude` binary, so there is no version to hold back.
 evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
+│   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
 │   ├── omp-*.yaml                  one two-variant Omp experiment per model
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
@@ -38,8 +39,8 @@ evals/
 │   │   ├── shared/       builds the git repository every case starts from
 │   │   └── cases/<name>/ one `case.sh`, mounted alone beside `shared/`
 │   └── model-classes/
-│       ├── shared/       clones the source repo's base SHA; the two grading checks
-│       ├── cases/<repo>-<pr>/  `case.sh` + `tests.patch`, one per selected PR
+│       ├── shared/       clones the source repo's base SHA; the grader and its two checks
+│       ├── cases/<repo>-<pr>/  the answer key, one per selected PR: a `reference:`, never mounted
 │       └── candidates.json     every qualifying PR the builder saw, selected or not
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
@@ -51,13 +52,65 @@ Every measured figure must cite a committed record under
 [`provenance/`](provenance/). A figure without that citation is an
 **unrecorded** anecdote: its run artifacts are no longer available for audit.
 
+Every record also carries a `cases` list, one row per task per repeat.
+`scripts/evals-render-routes.py` reads every committed record's `cases` and
+writes the `Measured routes` table in
+[`omp.md`](../skills/issue-body/references/omp.md) -- the harness-specific
+reference, since every route it names is a concrete Omp model or overlay --
+from them; a model and settings pair with no case row is listed `unmeasured`.
+
+[`RESULTS.md`](RESULTS.md) lists every committed record on one page: pass
+rate, price and wall time per run. `make evals-render-results` writes it, and
+`make check` fails when it is stale.
+
+From schema version 3, every case row carries a numeric `cost` in USD and an
+`elapsed_seconds` above zero. The price is the harness's own where it reports
+one (`cost_source: reported`), as Claude Code does. Omp and Codex report token
+counts only, so the recorder prices those tokens from
+[`prices.yaml`](prices.yaml) (`cost_source: computed`). A model with no entry
+there fails the recording, naming the model: add its published rates, then
+record again. Records at versions 1 and 2 stay as they are.
+
 ## Running them
+
+### Credentials: read this before any paid run
+
+**Claude runs on the subscription, and only on the subscription.** The agent
+under test and every `agent_judge` inherit the Claude auth of the shell that
+runs `make`. Set nothing. On a laptop that is the logged-in `claude` CLI. In a
+Claude Code cloud session it is the session's own auth, inherited as is: check
+it with `claude -p "Reply with the word pong" --model claude-sonnet-5
+</dev/null`, then run the target unchanged.
+
+**Never route an Anthropic model through the Vercel AI Gateway.** The
+container can hold a `VERCEL_AI_GATEWAY_API_KEY`, and the gateway lists
+`anthropic/*` models, but it is not the route for them. Do not point
+`ANTHROPIC_BASE_URL` or `ANTHROPIC_AUTH_TOKEN` at the gateway, and do not strip
+the session's environment to make the CLI use it. The gateway serves the
+non-Anthropic models the Omp arms pin (`vercel-ai-gateway/...`), and nothing
+else.
+
+**Never run an Anthropic model through the API.** Not the Anthropic API, not
+Bedrock, not any other metered endpoint, not even for one test call. There is
+no metered Anthropic key, and none is acquired. So no `ANTHROPIC_API_KEY`, no
+`AWS_BEARER_TOKEN_BEDROCK`, and no new `llm_judge` criterion: `llm_judge`
+calls the API directly and cannot run here. Write judges as `agent_judge`, with
+`allowed_tools: []`, `permission_mode: default` and the `disallowed_tools`
+list that `scripts/check-agent-judges.py` enforces. `allowed_tools: []` alone
+hides nothing: a judge without the list reads the sandbox, times out, and
+scores 0.0 with no verdict.
+[`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
+is the decision. `make check` refuses an `llm_judge` row, and `make
+evals-preflight` stops a run that carries one anyway. Port the row; do not look
+for a key.
 
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
 make evals-run        # the whole suite on Claude Code, both variants. Real money.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
+make evals-render-routes  # rewrite the Measured routes table from committed provenance
+make evals-render-results # rewrite RESULTS.md from committed provenance
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
@@ -101,6 +154,37 @@ Three things the Makefile does that a hand-typed `coder-eval` will not:
   run as a single unlabelled arm on `coder-eval`'s own stale defaults, and the
   ablation silently is not measured.
 - **`TELEMETRY_ENABLED=false`.** See "Two defaults, decided on purpose".
+
+### `base-vs-candidate`: does a constitution change move a row
+
+`with-without.yaml` compares the plugin with no plugin, so its control carries
+no constitution. It cannot isolate a change to the constitution's text. The
+comparison experiment loads the plugin in both arms and varies only the
+revision: `base` is `master`, `candidate` is this checkout. It answers one
+question the ablation cannot: does the new text change a reply once a
+constitution is already delivered?
+
+The base arm needs a second checkout that the experiment cannot create:
+`git worktree add ../daily-driver-base <base-revision>`. Run it narrowed to
+the rows below, five repeats, per-replicate results kept:
+
+```sh
+make evals-run-comparison TASKS="tasks/constitution/answer-selects-from-findings.yaml tasks/constitution/short-question-after-tool-heavy-work.yaml tasks/constitution/explanation-request-answered.yaml"
+```
+
+The target records the run against the comparison experiment. Record the
+base revision (the sibling's `git rev-parse HEAD`) and the candidate revision
+with it.
+
+| Row | Role |
+| --- | ---- |
+| `constitution/answer-selects-from-findings.yaml` | finding: the "one contrast" sentence must raise the selection score |
+| `constitution/short-question-after-tool-heavy-work.yaml` | finding: fails on `master` by construction; the restatement hook must raise it |
+| `constitution/explanation-request-answered.yaml` | control: a requested explanation must still arrive |
+
+Report replicates marked `ANCHOR: no-question` or `ANCHOR: tainted-question`
+separately; they measured nothing. The Codex arm stays out: every constitution
+row carries `skip:codex`.
 
 ## What the suites are for
 
@@ -197,11 +281,12 @@ misread as an invitation.
 
 `task-worktree/` tests the boundary and the work, not a narrated command.
 `01` names the feature branch but says nothing about isolation; the rule and
-skill must supply the sibling worktree. The same Git fixture runs through each
-CLI arm and accepts only a branch from the remote default, the changed file in
-a registered sibling worktree, and an unchanged primary checkout. `04` starts
-detached and requires the feature branch in place. `02` keeps read-only review
-out; `03` keeps an already attached worktree from nesting another one.
+skill must supply Worktrunk creation in a sibling worktree. The shared fixture
+uses real `wt` commands and accepts only a branch from the remote default, the
+changed file in a registered sibling worktree, preserved primary-checkout
+state, and no copied primary-only changes. `04` starts detached and requires the
+feature branch in place. `02` keeps read-only review out; `03` keeps an already
+attached worktree from nesting another one.
 
 `issue-labels/` is separated from `issue-deps`, and the two are one word
 apart: both are about an issue, and both are reached for with "what does this
@@ -247,11 +332,10 @@ constitution's own test, described under "Checks" in the repository README. Its 
 `scripts/check-constitution.py`.
 
 **The compliance rows differ in how much true material the model is holding,
-and that turns out to be the axis that matters.** `reply-is-concise` asks a
-question with one honest answer, so the model gives it: measured at 1.000 in
-every arm of every run, treated and bare alike, which means it separates
-nothing — not two versions of the rule, and not a session carrying the
-constitution from one without it. **Unrecorded.**
+and that turns out to be the axis that matters.** The retired
+`reply-is-concise` asked a question with one honest answer, so the model gave
+it: measured at 1.000 in every arm of every run, treated and bare alike, which
+means it separated nothing. **Unrecorded.**
 `answer-selects-from-findings` first spends a turn filling the context with
 five true findings the model wrote itself, and only then asks for one of them.
 That is a selection problem rather than a compression one, and it is where the
@@ -454,63 +538,36 @@ bubble into the parent's telemetry tagged with `parent_tool_use_id`, and
 same hole — the parent could simply type the answer. Closing it needs a marker
 the parent never sees, which is a change to the hook, not to the case.
 
-### `reply-is-concise`, the first compliance row
+### `short-question-after-tool-heavy-work`, the row built to fail on `master`
 
-Reach is settled; whether an injected rule *lands* is not, and `reply-is-concise`
-is the first case here that asks. It picks the `Before you reply` rule because
-compliance with it is countable — every other rule in the constitution needs a
-judgment about engineering, and this one needs a line count. That makes it the
-cheapest instrument in the repository for the general question, and a cheap
-instrument is the one that gets built.
+Issue #474. The first compliance row, `reply-is-concise`, asked a small question
+with one honest answer and scored 1.000 in every arm, bare included, so it
+could not show a rule working. It is retired. The verbosity users get arrives
+after long, tool-heavy work, when a short question gets a recap, narration, an
+offer or a menu around one fact.
 
-The case asks why a documented-inclusive slice drops its last item. The honest
-answer is one line, and everything about the situation pushes the other way: a
-bug invites a diagnosis, a fix, a test and a summary. `Do not change any code`
-in the prompt, and closed `Write` / `Edit` / `Bash`, remove the one honest
-reason for length — an agent that fixed the bug has something to report.
+Turn one asks the agent to read a local tracker export (issues, pull requests,
+comments, check listings) and catch up; it is not graded. Turn two is the
+question `What's the status?`, and the honest answer is one fact: #457 is
+blocked by #279. A sentence rather than the one word `Status`, because one word
+reached the agent as harness tags and read as noise (issue #486). The
+fixture holds a draft pull request with green checks, a long comment thread, a
+closed issue and an epic, so every recap is true. The interlocutor is steered,
+not pinned, with the limits `answer-selects-from-findings` documents, and the
+rubrics carry the same `ANCHOR:` tokens.
 
-Both graders are `llm_judge`, because the reply is the only artifact the case
-produces and nothing in `coder_eval` matches the final message deterministically
-(see "How the graders ported"). The length grader is given a rubric that counts
-rather than one that forms an opinion, and it reports the count in its
-rationale so a verdict can be audited. Beneath it sits a correctness grader at
-weight 1: a length grader alone pays for silence, and short and wrong is not
-what the rule asks for.
-
-One thing both rubrics have to know, and a naive one would not:
-`include_agent_output` does not hand a judge the reply. It hands over
-`format_messages`' whole-turn transcript — `[ASSISTANT]` starting each block of
-thinking aloud, and a terminal `[RESULT - …]` repeating the answer, so the
-answer appears twice. Read whole, that transcript counts narration, and counts
-it *against* the arm that stopped to obey a rule; graded whole, it lets an agent
-that worked the answer out aloud and then did not say it pass the correctness
-floor. So both rubrics locate the reply at the last `[RESULT - …]` tag first
-and read nothing above it — and nothing below it either, since
-`_render_user_message` appends the harness's own closing instruction straight
-after the block with no delimiter.
-
-Measured against the pinned harness rather than assumed, because the tags are
-not all there: `format_messages` has a `[TOOL USE]` branch that never fires,
-duck-typing on a `msg.type` the SDK's `StreamEvent` does not carry. That is the
-kind of thing pinning `CODER_EVAL_VERSION` holds still.
-
-There is deliberately **no fallback** when the `[RESULT - …]` anchor is
-missing. Counting the last `[ASSISTANT]` block instead would turn a drifted
-harness into a plausible number, and the SDK ends every turn with a
-`ResultMessage`, so a missing tag means the format moved rather than that the
-turn had no reply. Both rubrics write `ANCHOR: none` and score 0.0 there,
-failing the case identically in both arms. A drifted harness has measured
-nothing, and a case that says so is worth more than one that reports a figure.
-
-Its weakness is the threshold. Four lines is the constitution's number, and the
-rubric inherits it — so the case measures compliance with the budget as written
-and says nothing about whether the budget is set at the right place. Moving the
-number means moving it in both files, together.
+Two `agent_judge` criteria. The floor, at weight 1, wants the one fact. The
+unrequested-content criterion, at weight 2, scores recap, narration, offers,
+menus and headings or bullets around a one-fact answer, and never counts
+length. Each rubric carries a calibration pair, so neither compensates for the
+other. The acceptance bar is a mean at or below 0.6 on the second criterion on
+`master` with the plugin loaded; a probe that passes there cannot show the
+restatement hook working.
 
 ### `answer-selects-from-findings`, the row that is not at ceiling
 
-`reply-is-concise` scores 1.000 in every arm of every run, bare arms included.
-**Unrecorded.** It separates nothing: a row at ceiling on both sides is
+The retired `reply-is-concise` scored 1.000 in every arm of every run, bare arms included.
+**Unrecorded.** It separated nothing: a row at ceiling on both sides is
 measuring the model's default rather than the rule. This row is built to separate.
 Turn one asks for an audit of a five-file service, is meant to be long, and is
 not graded — it exists to fill the context with five true findings the model
@@ -547,8 +604,8 @@ model rather than a field. Read the dialogs before trusting a mean.
 
 ### `completion-report-is-lean`, the row that grades a report
 
-`reply-is-concise` grades an *answer*. So does `answer-selects-from-findings`,
-the section above. Both ask a question with one honest factual answer, and issue
+`short-question-after-tool-heavy-work` and `answer-selects-from-findings` grade an *answer*.
+Both ask a question with one honest factual answer, and issue
 #279's comparison across five probes of that shape measured a paired difference
 of exactly 0.000, three of them at ceiling in both arms. **Unrecorded.** A probe
 both arms pass cannot show a rule working.
@@ -814,6 +871,20 @@ score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
 delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
 decision; this section records the model set.
 
+**In a Claude Code cloud session or on a fresh laptop, set up first:**
+
+```sh
+make evals-install && make evals-setup-omp
+```
+
+`evals-setup-omp` installs `omp` with CI's command when it is missing, and
+checks that Omp lists each arm's pinned model. It is free and idempotent. The
+gateway arms need `AI_GATEWAY_API_KEY`, the name Omp reads. A cloud container
+exports `VERCEL_AI_GATEWAY_API_KEY` instead, and the Makefile maps that name to
+Omp's for every target. Without either, Omp lists no gateway model and the
+target fails, naming the variable. The `openai-codex` arm needs Omp's own Codex
+login; the target reports it as unconfigured and does not fail.
+
 ```sh
 make evals-run-omp                            # every configured Omp model
 make evals-run-omp-glm-5-3                    # GLM 5.3 only
@@ -832,8 +903,8 @@ The Omp home the agent borrows configures each of these provider/model IDs:
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
 
-It needs `omp` on PATH and a model configured in the caller's own
-`~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
+It needs `omp` on PATH and the provider's credentials: the gateway key above,
+or a login in the caller's own `~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
 Omp home and writes nothing back into it.
 
 **`agent: {type: omp}` is not a built-in kind.** It comes from
@@ -873,9 +944,14 @@ because they drive Claude's settings and dispatch hook.
 runs `scripts/evals-variants.py` first, so every variant in every model file
 must resolve before a paid run begins.
 
-**Two Omp limitations remain.** `allowed_tools` and `disallowed_tools` are not
-enforced in Omp RPC mode, and token accounting is best-effort. The adapter
-records the evidence it has in each run's `environment_info`.
+**The Omp arm enforces the tool lists through `omp --tools`, with one
+exception.** An allowed `Skill` keeps `read` on, because Omp engages a skill by
+reading `skill://<name>`. A trigger row that denies `Read` therefore still has
+`read` on this arm. A list the arm cannot express, such as an allowed tool with
+no Omp twin, fails the task. `docs/notes/0013-the-omp-arm.md` records what
+`--tools` does not restrict. Omp records made before issue #459 ran with every
+tool on. Token accounting is best-effort. The adapter records the evidence it
+has in each run's `environment_info`.
 
 ## The Codex arm
 
@@ -1008,43 +1084,79 @@ carries no plugin and no ablation, one variant per case, because the question
 is whether a given model, run in the `task` role real dispatch would put it
 in, finishes ordinary delegated work and leaves its own tests passing.
 
-**What it measures.** Six cases, drawn from `jmcvetta/career` and
-`apps/usd2oz-web` in `Green-Pagoda/pagoda`: three `mechanical`, three
-`implementation`, the smallest qualifying candidate of each `class:` tag by
-changed lines, each verified once at build time to fail on the base SHA and pass on
-the merge SHA before it was shipped. A case's `initial_prompt` names the issue
-the pull request closed; its three `run_command` criteria check, in order,
+**What it measures.** Six cases today, all from `jmcvetta/career`: three
+`mechanical` and three `implementation`, small qualifying candidates whose
+answer key asserts only what the issue decides (two of them by a recorded
+trim, below), each verified at build time to fail on the base SHA and pass on
+the merge SHA before it was shipped. A case's `initial_prompt` is the title
+and body of the issue the pull request closed, and names neither number; its
+three `run_command` criteria check, in order,
 that no test file present at the base SHA was deleted, that no skip/xfail
 marker was added to one, and that the pull request's own tests pass once
-`tests.patch` is applied. `evals/fixtures/model-classes/candidates.json`
+`tests.patch` is applied. `shared/apply-tests.sh` applies it: it first puts
+each path the patch names back to the base SHA, because an agent that adds a
+test beside its change has edited the very hunk the patch rewrites, and a
+plain `git apply` would score that correct change 0. The agent's own tests in
+other files stay. `evals/fixtures/model-classes/candidates.json`
 records every qualifying pull request the builder saw, selected or not, so a
 later run can widen the suite without re-walking history.
+
+**Keeping the answer out of reach.** The merged change is the answer, and the
+agent runs on the same host as the grader, so the suite closes each road to it:
+
+- `tests.patch` and the two manifests sit in the case's `reference:`
+  directory. coder_eval stages that outside the sandbox and names it in
+  `REFERENCE_DIR` for criteria only, so a broad `grep` of the checkout cannot
+  surface it. Under the `tempdir` driver the agent is the same user as the
+  harness, so this hides the key rather than locking it.
+- `shared/lib.sh` removes the clone's `origin` once it has fetched the base
+  SHA, so `git fetch origin <default-branch>` or `refs/pull/<n>/head` has
+  nowhere to go.
+- The prompt carries the issue text and tells the agent not to consult the
+  source repository on GitHub; with no number to look up, it has no reason to.
+
+Hiding is not locking, so `scripts/evals-record.py` also checks every
+replicate's tool calls, and what they printed, for the answer key's paths, any
+`git` network command, a `gh` command or URL on the source repository, and a
+pull ref. A replicate that reached any of them is recorded with that evidence
+under `answer_key_contact` and a measured score of 0. It is scored as a
+failure, not dropped: a model that goes looking when stuck has failed the
+case.
 
 **What it does not measure.** No `reasoning` case: that class is decided by
 the production table and public benchmarks, not by a fixture small enough to
 grade in two minutes (see `skills/issue-body/references/model-classes.md`).
 No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
 is the `omp` arm's, over a different question. And nothing here proves a
-model *should* run in the `task` role generally, only that it cleared six
+model *should* run in the `task` role generally, only that it cleared a few
 specific cases; `make evals-run-classes` is a floor to check before promoting
 a model into that role, not the whole case for doing so.
 
 **Running it.** Each `evals/experiments/classes-<name>.yaml` file pins its own
-`defaults.agent.model`. Personal `omp_configs/` overlays do not define or
-validate these experiments:
+`defaults.agent.model` and its own `defaults.agent.type`: the rows pin no
+kind, so one suite measures a model on Omp or on Claude Code. Personal
+`omp_configs/` overlays do not define or validate these experiments:
 
 ```
 make evals-run-classes MODEL=glm
 make evals-run-classes MODEL=cocktail
+make evals-run-classes MODEL=opus-low
 ```
 
-`defaults.repeats` is 3 in every file, so a full run is 6 cases times 3
-repeats: 18 replicates per model, each a real `git apply` plus the
+The Claude Code files (`classes-opus-low`, `classes-sonnet-high`,
+`classes-sonnet-low`) set effort through `sdk_options.effort`, which the
+Agent SDK passes as `claude --effort`. They run the bare session
+`with-without.yaml` measures against — `plugins: []` and
+`setting_sources: [project]` — so an advisor or a plugin in the operator's own
+user settings never reaches the model under test.
+
+`defaults.repeats` is 3 in every file, so a full run is 3 replicates per
+case per model, each a real `git apply` plus the
 repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
-process, so a token exported before `coder-eval run` is what `case.sh` clones
-with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
+process, so a token exported before `coder-eval run` is what
+`shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
 or use the `smoke`-tagged case per class (the smallest of each) to check a new
 overlay cheaply before spending a full run on it.
 
@@ -1052,20 +1164,41 @@ overlay cheaply before spending a full run on it.
 [--path-prefix DIR]` scans a source's merged pull requests and appends
 qualifying ones to `candidates.json`; `--select` then runs the build-time
 answer-key check on the smallest candidates of each class and emits fixtures
-and task YAMLs for the ones that pass, up to `--per-class` each (default 3).
+and task YAMLs for the ones that pass, up to `--per-class` each (default 3);
+`--rewrite-tasks` regenerates the selected cases' YAMLs from
+`candidates.json` after a template change. The build-time check cannot tell whether the
+answer key asserts only what the issue decides, so read each new case's issue
+against its `tests.patch` before shipping it. A key that asserts a name, path
+or wording the issue leaves open fails a model that did exactly what was asked;
+`--exclude owner/repo#N=reason` takes such a case out for good and deletes its
+fixture.
+
+Where only a few assertions overreach, trim the key instead. **A trim
+removes requirements the source issue does not decide, and nothing else.** An
+exact-output assertion may be replaced by a weaker behavioural one that keeps
+the diagnostic or safety contract the issue requires. A trim never adds a
+product requirement, never removes a required behaviour, and is never tuned
+to a model's output. Apply the full key to a checkout of the base SHA, delete the
+assertions or tests the issue leaves open, and diff against the base SHA
+(`git add -N` any new file first); the result replaces the case's
+`tests.patch`. `--trim-key owner/repo#N=reason` records each replacement and
+its source-contract rationale on the candidate, and a trimmed case refuses a rebuild from the pull
+request's diff. `--verify-case owner/repo#N` then runs the build-time check
+on the committed key: it must fail on the base SHA and pass on the merge SHA,
+both applied through `shared/apply-tests.sh`, and the manifests must match it.
 An `unlabelled` candidate — one whose closed issue carries no `## Model
 class` section — needs `--class-override owner/repo#N=mechanical` (or
-`implementation`) before it can be selected; the six shipped cases include three,
+`implementation`) before it can be selected; four shipped cases carry one,
 reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
 API fixtures) are the acceptance test for the qualifying filter, the test-file
 split, the class and elapsed reads, and `task_timeout` derivation.
 
-`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm sharing
-the `omp` arm's agent kind — it is Omp under a different model, not a
-different harness — so `agent.type: omp` alone cannot say which arm a row
-belongs to; the `model-classes` tag is what does. The checker discovers
+`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm that
+owns both the `omp` and `claude-code` kinds — it measures a model, not a
+harness — so the agent kind alone cannot say which arm a row belongs to; the
+`model-classes` tag is what does. The checker discovers
 `classes-*.yaml` experiments inside the eval suite and requires each to pin
 its model. Personal Omp configuration is not an input to this check.
 

@@ -4,7 +4,7 @@
 # lands.
 #
 # Every other concision probe in this repository grades an answer to a
-# question. `reply-is-concise.yaml` asks why a slice drops its last item, and
+# question. `reply-is-concise.yaml` (retired by #474) asked why a slice drops its last item, and
 # `answer-selects-from-findings.yaml` asks which defect breaks first under
 # load. Both have one honest factual answer, both sit at or near
 # ceiling, and issue #279's comparison across five probes of that shape
@@ -195,7 +195,7 @@ description: >-
 # tags are what claim the row.
 tags: [constitution, compliance, "skip:codex"]
 
-# UNLIKE `reply-is-concise.yaml`, the write tools stay OPEN. That row closes
+# UNLIKE the answer rows, the write tools stay OPEN. Those close
 # `Write`, `Edit` and `Bash` because a fixed bug is a legitimate thing to write
 # four paragraphs about, and it grades an answer rather than a report.
 # (`reaches-subagent.yaml` is a `delivery` row, not a compliance one, and it
@@ -352,6 +352,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are grading one completion report for completeness only. Ignore its
@@ -425,6 +426,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are judging a completion report for SPECIFIC NAMED FAILURE MODES,

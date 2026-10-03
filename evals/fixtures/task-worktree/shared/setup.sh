@@ -5,7 +5,7 @@ set -euo pipefail
 
 mode="${1:-linked}"
 case "${mode}" in
-linked | detached) ;;
+linked | detached | resume) ;;
 *)
 	printf 'unknown fixture mode: %s\n' "${mode}" >&2
 	exit 2
@@ -28,6 +28,7 @@ EOF
 cat >.gitignore <<'EOF'
 .fixture/upstream.git/
 .fixture/verification.txt
+.fixture/primary-status.txt
 EOF
 
 git add .gitignore .fixture/setup.sh .fixture/verify.sh src/parser.py
@@ -37,12 +38,27 @@ git init --bare -b master .fixture/upstream.git >/dev/null
 git remote add upstream "$(pwd)/.fixture/upstream.git"
 git push -u upstream master >/dev/null
 git remote set-head upstream -a >/dev/null
+git fetch upstream >/dev/null
+
+if [ "${mode}" = "resume" ]; then
+	# Another session already began the task: its branch exists only on the
+	# remote, with a commit a recreated-from-base branch would not carry.
+	git switch -c issue-52-strict-parser >/dev/null
+	printf 'begun by an earlier session\n' >src/resumed.txt
+	git add src/resumed.txt
+	git commit -m "Begin strict parser" >/dev/null
+	git push upstream issue-52-strict-parser >/dev/null
+	git switch master >/dev/null
+	git branch -D issue-52-strict-parser >/dev/null
+fi
 
 # Make the current local branch the wrong start point. A correct task branch
 # starts from the remote default and therefore never contains this commit.
 printf 'not part of the remote base\n' >local-only.txt
 git add local-only.txt
 git commit -m "Advance only the current checkout" >/dev/null
+printf 'primary-only untracked data\n' >primary-untracked.txt
+git status --short >.fixture/primary-status.txt
 
 if [ "${mode}" = "detached" ]; then
 	git switch --detach upstream/master >/dev/null

@@ -1,0 +1,21 @@
+{
+  "additions": 495,
+  "changed_files": 22,
+  "check_reruns": 1,
+  "claim_model": "claude-sonnet-5",
+  "claimed_at": "2026-09-28T12:35:20Z",
+  "deletions": 76,
+  "elapsed_minutes": 31.73,
+  "findings_count": 1,
+  "harness": "Claude Code 2.1.283",
+  "issue": 414,
+  "merged_at": "2026-09-28T13:21:34Z",
+  "model": "claude-sonnet-5",
+  "model_class": "implementation",
+  "model_mismatch": false,
+  "pull_request": 418,
+  "ready_at": "2026-09-28T13:07:04Z",
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 1,
+  "session": "https://claude.ai/code/session_01AS1Zx5kX3RvmomRuApS4Av"
+}

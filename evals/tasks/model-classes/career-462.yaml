@@ -1,23 +1,24 @@
 task_id: model-classes-career-462
 description: >-
   jmcvetta/career#462: ci: rename projected releases check to projection
-tags: [model-classes, class:mechanical]
+tags: [model-classes, class:mechanical, smoke]
 
 sandbox:
   template_sources:
     - type: template_dir
       path: ../../fixtures/model-classes/shared
       mount_point: .fixture
-    - type: template_dir
-      path: ../../fixtures/model-classes/cases/career-462
-      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/career-462
 
 pre_run:
-  - command: bash .fixture/case.sh
+  - command: bash .fixture/clone-base.sh jmcvetta/career c5da124482fbab8f7d6388b296b229eff56a301f
     timeout: 120
 
 agent:
-  type: omp
   allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
 
 run_limits:
@@ -25,8 +26,7 @@ run_limits:
   task_timeout: 780
   turn_timeout: 660
 
-initial_prompt: >-
-  This is jmcvetta/career, checked out at its state before pull request #462. Implement the change described by issue #461 (title: 'ci: rename projected releases check to projection').
+initial_prompt: "This is jmcvetta/career, checked out at a past commit. Implement the change the issue below describes. Work from this checkout and the issue text alone: do not fetch from jmcvetta/career, and do not look it up on GitHub.\n\n# Rename Projected Releases CI job to projection\n\nThe Projected Releases check appears as `Projected Releases / projection` instead of `Projected Releases / project`.\n\n*One name shifts today*\n*Projection states its purpose*\n*Checks speak what they mean*\n\n## Summary\n\nRename the Projected Releases workflow job from `project` to `projection`. The repository already defines the operation as a projection, and the action step uses `projection`; the current check name is the remaining inconsistent term.\n\nThis is a naming-only change. Workflow behavior and release projection results remain unchanged.\n\n## Model class\n\n`mechanical`\n\nThe transformation is explicit, the affected references are identified, and the existing infrastructure test directly checks the workflow job.\n\n## Detail\n\n### Scope\n\n- Rename the job key in `.github/workflows/projected-releases.yml` from `project` to `projection`.\n- Update `tests/test_infra_github.py::test_projected_releases_skips_release_prs` to read `workflow[\"jobs\"][\"projection\"]` while preserving its release-branch guard assertions.\n- Update both records of the check name in `CLAUDE.md` from `Projected Releases / project` to `Projected Releases / projection`.\n\nDo not change workflow triggers, concurrency, permissions, conditions, steps, the `projection` step ID, or the `jmcvetta/projected-releases-action@v0` reference. Do not make the advisory check required.\n\n### Acceptance\n\n- GitHub reports the workflow check as `Projected Releases / projection`.\n- The renamed job retains the existing configuration and release-please branch guard.\n- No stale `Projected Releases / project` check name or `jobs[\"project\"]` lookup remains.\n- The existing infrastructure and repository-memory checks pass in CI; no new test is needed because the current workflow test covers the affected job and guard.\n"
 
 success_criteria:
   - type: run_command
@@ -43,6 +43,6 @@ success_criteria:
 
   - type: run_command
     description: The pull request's own tests pass after applying tests.patch
-    command: git apply --whitespace=nowarn .fixture/tests.patch && cd viewer && uv run pytest ../tests/test_infra_github.py
+    command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py
     timeout: 720
     weight: 3

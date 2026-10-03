@@ -1,23 +1,24 @@
 task_id: model-classes-career-469
 description: >-
   jmcvetta/career#469: perf(kokoro): compile bytecode at uv sync to stop cold-importing Prefect
-tags: [model-classes, class:implementation, smoke]
+tags: [model-classes, class:implementation]
 
 sandbox:
   template_sources:
     - type: template_dir
       path: ../../fixtures/model-classes/shared
       mount_point: .fixture
-    - type: template_dir
-      path: ../../fixtures/model-classes/cases/career-469
-      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/career-469
 
 pre_run:
-  - command: bash .fixture/case.sh
+  - command: bash .fixture/clone-base.sh jmcvetta/career 7fc9965356b9d04a575123c1250f1950801c7a11
     timeout: 120
 
 agent:
-  type: omp
   allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
 
 run_limits:
@@ -25,8 +26,7 @@ run_limits:
   task_timeout: 780
   turn_timeout: 660
 
-initial_prompt: >-
-  This is jmcvetta/career, checked out at its state before pull request #469. Implement the change described by issue #468 (title: 'perf(kokoro): compile bytecode at uv sync to stop cold-importing Prefect').
+initial_prompt: "This is jmcvetta/career, checked out at a past commit. Implement the change the issue below describes. Work from this checkout and the issue text alone: do not fetch from jmcvetta/career, and do not look it up on GitHub.\n\n# Compile bytecode at uv sync so kokoro CI stops cold-importing Prefect\n\nThe kokoro CI job installs its venv with compiled bytecode, so pytest collection and each Prefect server boot import Prefect from `.pyc` rather than compiling it from source on every run.\n\n*Fresh venv each run;*\n*three processes compile*\n*the same thousand files.*\n\n## Summary\n\n`setup-uv` caches uv's wheel store, not the venv, so every kokoro job builds the venv fresh, and uv does not compile bytecode on install. The first import of every Prefect module in that job is therefore a compile from source, and it happens in four processes: the pytest controller at collection, the two xdist workers, and the uvicorn subprocess each worker starts for `prefect_test_harness`. Measured locally on the current lockfile, cold against warm bytecode: pytest collection over the workspace 19.6 s → 8.0 s, and the server subprocess's `import prefect.server.api.server` 8.9 s → 4.4 s. `uv sync --compile-bytecode` costs 3.7 s once (0.8 s → 4.5 s). Net, roughly 12 s off the pipeline job's 19 s pytest start-up and 4 s off each server boot, for under 4 s spent.\n\nThis is the first of the three levers recorded on #373 for the pipeline-only miss (121 s against a target well under 60 s), and the only one that is a configuration line.\n\n## Model class\n\n`standard`\n\nThe change is one setting plus a pin test and a doc line, but the acceptance is read off CI step timings on the job page and reported against the numbers above, and the pin test lands in `tests/test_infra_github.py`, whose conventions the implementer must read and follow.\n\n## Detail\n\n### Change\n\nAdd to `kokoro/pyproject.toml`, in the workspace root's `[tool.uv]` table:\n\n```toml\n[tool.uv]\ncompile-bytecode = true\n```\n\nThis is the `--compile-bytecode` flag as a persistent setting (`uv sync --help` names it, with `UV_COMPILE_BYTECODE` as the env form). It is set in the project rather than as a workflow `env:` because every `uv run` and `uv sync` reads it, in CI and locally alike, so the venv a contributor builds behaves like the one CI builds. The workflow needs no edit: the kokoro job's first `uv run` (the `Select affected kokoro tests` step) already builds the venv, and the setting applies there.\n\n### Pin\n\n`tests/test_infra_github.py` gains one test asserting `kokoro/pyproject.toml` declares `tool.uv.compile-bytecode = true`, with a docstring stating the reason: the venv is rebuilt every CI run and Prefect is cold-imported four times per pipeline job without it. Follow the file's existing style (module docstring conventions, GoDoc-style test docstrings, `tomllib` for parsing). The test is the guard that a later cleanup of `[tool.uv]` does not silently return the cost.\n\n### Docs\n\nOne line in `CLAUDE.md`'s CI section stating the decision and the failure it came from (the venv is fresh every run and Prefect compiles from source four times), and the measured numbers above in `docs/ci-mechanics.md`, which is where CI mechanism goes per `CLAUDE.md`'s split rule.\n\n### Unchanged / non-goals\n\n- The Prefect server boot itself (`kokoro/pipeline/tests/conftest.py`, `prefect_shared_harness`) and the 112 Alembic migrations it runs (6.4 s per worker) are not touched. A pre-migrated SQLite template is a separate lever, recorded on #373.\n- Caching the built venv across runs is out of scope; the wheel-store cache stays as is.\n- No test is skipped, reordered, or changed.\n\n### Acceptance\n\n- CI on the PR: the kokoro job's `Test with coverage (pytest)` step is measurably shorter on a full selection than the 56 s recorded on run 35330107079, and the first `uv run` step (`Select affected kokoro tests`) is a few seconds longer. Report both step timings and the job total on the PR, with the run link, warm uv cache noted, against the #373 numbers (full job 104 s, pipeline-only 121 s).\n- The new pin test passes; deleting the pyproject line fails it.\n- `make check` and the existing kokoro leg stay green; no test count changes.\n"
 
 success_criteria:
   - type: run_command
@@ -43,6 +43,6 @@ success_criteria:
 
   - type: run_command
     description: The pull request's own tests pass after applying tests.patch
-    command: git apply --whitespace=nowarn .fixture/tests.patch && cd viewer && uv run pytest ../tests/test_infra_github.py
+    command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py
     timeout: 720
     weight: 3

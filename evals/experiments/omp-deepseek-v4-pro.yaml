@@ -35,7 +35,8 @@ defaults:
     # `set_model`.
     model: vercel-ai-gateway/deepseek/deepseek-v4-pro
     permission_mode: acceptEdits
-    # Recorded, not enforced: Omp RPC has no per-session tool allowlist.
+    # Enforced as `omp --tools=read`: `Skill` needs `read`, which is how Omp
+    # engages a skill. A row that restates this field replaces it.
     allowed_tools: [Skill]
 
 variants:

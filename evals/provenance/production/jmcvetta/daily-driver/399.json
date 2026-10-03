@@ -1,0 +1,21 @@
+{
+  "additions": 73,
+  "changed_files": 5,
+  "check_reruns": 3,
+  "claim_model": "gpt-6-luna",
+  "claimed_at": null,
+  "deletions": 8,
+  "elapsed_minutes": null,
+  "findings_count": 0,
+  "harness": "Oh My Pi 18.2.11",
+  "issue": 394,
+  "merged_at": "2026-09-23T14:42:57Z",
+  "model": "gpt-6-luna",
+  "model_class": "implementation",
+  "model_mismatch": false,
+  "pull_request": 399,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 0,
+  "session": "01a0cea1-9b61-72d1-8aa0-813697f2b776"
+}

@@ -1,0 +1,21 @@
+{
+  "additions": 20,
+  "changed_files": 2,
+  "check_reruns": 1,
+  "claim_model": "zai/glm-5.3-flash",
+  "claimed_at": null,
+  "deletions": 4,
+  "elapsed_minutes": null,
+  "findings_count": 1,
+  "harness": null,
+  "issue": 315,
+  "merged_at": "2026-09-18T14:52:30Z",
+  "model": "unreported",
+  "model_class": "unlabelled",
+  "model_mismatch": false,
+  "pull_request": 316,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 1,
+  "session": null
+}

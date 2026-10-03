@@ -36,11 +36,19 @@ success_criteria:
     expected_skill: embark
     skill_name: embark
 
-  - type: llm_judge
+  - type: agent_judge
     description: The orchestrator does not merge without the completion notice
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 

@@ -67,13 +67,16 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
 2. **A haiku.** Immediately after the summary, separated by a blank line:
    three 5-7-5 lines, italicised line by line, as
    [`HAIKU.md`](../../HAIKU.md) shows.
-3. **`## Summary`.** A short human-facing paragraph or two describing the
-   change and reason, without duplicating `Detail`.
+3. **`## Summary`.** A short paragraph or two describing the change and
+   reason, without duplicating `Detail`. It is human-facing, so the
+   constitution's audience rule governs it.
 4. **`## Model class`.** Immediately after `Summary`, before `Detail`. Its
    first paragraph is exactly one backtick-wrapped lowercase class token;
    one short rationale paragraph follows.
 5. **`## Detail`.** The grounded map, settled design, acceptance, and
-   verification. Its internal headings are the author's choice.
+   verification. It is agent-facing: it keeps every fact the implementer
+   needs and is not shortened to a reading budget. Its internal headings are
+   the author's choice.
 
 The class is implementation metadata, not authoring, review, judging, effort,
 or concrete-model provenance. A task body has no trailing `Model:` or

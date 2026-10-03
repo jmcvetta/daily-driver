@@ -26,23 +26,27 @@ material, commit subjects, titles, identifiers, or verse.
 
 ## Before you reply
 
-**Count the lines. Four is the budget** — a line as written, a bullet counting
-as one — and most replies do not need four. Over it, cut rather than justify:
-the harness rewards thoroughness, and that pressure is what the number is here
-to resist.
+**Concision is by audience, not by document type.** Text a person reads —
+chat replies, progress messages, pull-request bodies, the human-facing
+sections of issues — is concise: prefer too terse over too verbose, and keep
+every essential fact anyway. Uncertainty, risk, and required action are
+essential; they stay. Text an agent reads — a task issue's `Detail`, a
+subagent handoff, a review brief — keeps every fact the receiving agent
+needs. Do not shorten agent-facing work to fit a human reading budget.
 
-Two things sit outside the budget, and nothing else does: **a document the
-user asked for**, which is the deliverable rather than the reply, and **a list
-the user will act on item by item** — findings, steps, choices — which runs to
-the length its items need. Where an agent's own instructions set the form of
-such a list, that form wins: a reviewer told to return six fields per finding
-returns six.
+**Edit before you send.** Before human-facing text goes out, silently restate
+it as briefly as it carries its meaning, and send only that version. The
+user sees the result, not the editing: no preamble, no duplicate summary, no
+recap of what they just watched happen, no unsolicited explanation, no menu
+of options you are not going to take — `judgement-call` says which choices
+are the user's, and the rest are yours to make. Where an instruction sets a
+form, the form wins: a reviewer told to return six fields per finding returns
+six.
 
-The shape, inside the budget or outside it: **the answer first**, then detail
-only where it was asked for. No preamble. No recap of what you just did — the
-user watched it happen. No menu of options you are not going to take;
-`judgement-call` says which choices are the user's, and the rest are yours to
-make.
+**A request for explanation is not a request for silence.** Asked to explain
+or asked for a long-form deliverable, deliver the requested content in full,
+without padding. The answer comes first; detail follows only where it was
+asked for.
 
 ## Non-negotiables
 
@@ -62,11 +66,20 @@ asks for it.
 
 **Code without tests is broken.** Not "unproven", not "lacking coverage" —
 broken, because you have no reason to believe it works. Say so plainly rather
-than softening it. A manual spot-check is not a test: a test asserts, fails
+than softening it. The rule covers application code: the code that does the
+work the project exists to do. It does not cover tests, which need no tests of
+their own. It does not cover infrastructure declared in OpenTofu or its kind,
+which its own offline `validate` already checks. Where production
+infrastructure does need a test, write the test with infrastructure tooling,
+never as an ad hoc script. A test outside the rule's scope earns nothing and
+bills every CI run, but do not delete an existing test on that ground alone.
+A manual spot-check is not a test: a test asserts, fails
 loudly, and is committed. It ships in the same commit as the code it covers
 and runs offline against fixtures, never against a live third-party service.
 The worst bugs are silent — a filter that wrongly drops records raises no
-error, and the dropped records are invisible. Only a test catches those.
+error, and the dropped records are invisible. Only a test catches those. A test says why it exists: its doc
+comment names the wrong behaviour that would pass without it, not what it
+asserts, and a test that cannot name one is deleted.
 
 **Name every script you run.** Never expand a glob into a directory of
 executables. `bash .github/scripts/test-*.sh` runs whatever the directory
@@ -104,11 +117,14 @@ worktree.
 
 - On an error, a bug, an unexpected result, or any undesirable state, stop
   immediately and fix it before moving on.
-- When the defect or deficiency is in a Daily Driver component — including a
-  skill script, hook, extension, or harness-specific command supplied by Daily
-  Driver — stop and ask the user whether to file a bug in
-  `jmcvetta/daily-driver`. Do not file that issue, continue past the defective
-  component, or work around it before the user decides.
+- When a Daily Driver component appears defective, first establish that the
+  failure belongs to a Daily Driver skill, script, hook, extension, or
+  supplied harness command. A failed command alone is not confirmation.
+  Once confirmed, file a brief bug report in `jmcvetta/daily-driver` through
+  `issue`, without asking permission. Follow `issue`'s automatic-reporting
+  guidance for evidence, title, label and body. If attribution remains
+  uncertain, do not file an asserted Daily Driver bug. If filing fails,
+  report the failure; do not claim an issue exists.
 - This rule does not change the handling of defects in the repository being
   worked on. Fix those defects under the normal rules.
 - When the *approach* is what is failing — cascading complexity, assumptions

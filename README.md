@@ -24,7 +24,7 @@ nineteen skills:
 | `pr` | Opens the pull request for the current branch, or brings an open one up to date: branch guard, existing-PR check, draft state. Delegates the title and the body. |
 | `pr-title` | The title: concise, and Conventional Commits, which is what release-please reads to decide the next version. |
 | `conventional-commits-type` | Picks the type — `fix`, `feat`, `refactor` and the rest — from what the change *does*, never from what the diff looks like. |
-| `pr-body` | The body: a one-line summary, a salutation in verse, optional `Blockers` and `Issues` sections, an executive summary, and engineering detail. |
+| `pr-body` | The body: a one-line summary, a salutation in verse, optional `Blockers` and `Issues` sections, an executive summary, and the detail a reviewer needs, each fact said once. |
 | `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
 | `issue-labels` | Six mutually exclusive issue kinds — `epic`, `task`, `bug`, `proposal`, `research`, `human` — decide readiness. `story` marks a confirmed direct child of an epic without changing its kind. |
 | `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
@@ -72,10 +72,10 @@ every subagent. Nine sections:
 | Section | What it settles |
 | ------- | --------------- |
 | Voice | Simplified Technical English for prose written in your own voice. |
-| Before you reply | A four-line budget on a reply, the two things outside it, and the shape: the answer first, no preamble, no recap. |
+| Before you reply | Concision by audience: text a person reads is edited concise before it is sent, keeping every essential fact; text an agent reads keeps every fact it needs. The shape: the answer first, no preamble, no recap. |
 | Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; repository-changing tasks isolated before research; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
-| When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
+| When you hit a wall | Stop on errors, reassess failing approaches, ask rather than guess at intent, and automatically file confirmed Daily Driver component defects. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
 | Before you call it done | The project's own gates decide, not reasoning about them — and CI is where they run, not this machine. |
 | Dependencies | Added and pinned through the package manager; never a hand-edited manifest or lockfile. |
@@ -95,10 +95,11 @@ subagent, with every file-reading tool closed, for a phrase only the injected
 constitution could have told it.
 
 **Whether it landed**: arriving and being obeyed are different questions, and
-the `constitution-reply-is-concise` eval asks the second. It puts a one-line
-answer under every pressure to write ten and counts the lines that come back.
-`Before you reply` is the rule it measures because that rule's compliance is
-countable; the rest of the file needs a judgment about engineering instead.
+the `constitution-short-question-after-tool-heavy-work` eval asks the second.
+It asks one short question after long tool-heavy work and grades the reply for
+content the question never asked for. `Before you reply` is the rule it measures because a
+session obeys or breaks it in plain sight; the rest of the file needs a
+judgment about engineering instead.
 
 **How it arrives**: a plugin cannot ship a `CLAUDE.md`, so three injection
 points deliver the file — `SessionStart` for the session, and `PreToolUse` on
@@ -146,9 +147,13 @@ there: it blocks the `ask` tool with the same wording and supplies the
 session-title, reminder, and session-info tools
 (`daily_driver_set_session_title`, `daily_driver_schedule`,
 `daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
-`ExtensionAPI` makes natural. Omp does not relocate a running session when
-the agent creates a task worktree. The `task-worktree` skill roots each later
-task operation there without a separate task-root status.
+`ExtensionAPI` makes natural.
+
+Omp does not relocate a live session when the agent creates a task worktree.
+Use the verified absolute task paths for file tools and shell work. Omp 18.5.0
+offers the user-initiated `/move <path>` for an idle session; the extension API
+does not provide direct relocation, so automatic plugin-driven relocation is
+outside this plugin's scope.
 
 The extension also closes the failure that weaker models exposed in
 `task-worktree`: direct `write` and `edit` calls in the primary checkout or a
@@ -184,11 +189,15 @@ unterminated quote are all refused, and the repair is to write the command
 literally. The cost is cheap because the primary checkout is meant to be
 read-only for agents in the first place.
 
-**What it does not claim.** The guard reads shell commands; it does not audit
-programs. A `make`, `python3` or shell script the model runs can reach the
-primary checkout, and nothing here would see it — only the `task-worktree` rule
-stops that. Saying so is the point: a boundary that overstates itself is the
-failure this guard was rewritten to avoid.
+**What it does not claim.** The guard reads shell command strings, including
+the literal operand to `bash -c` or equivalent forms; arguments after that
+operand are `$0`, `$1`, and later positional values. A literal shell script
+path and its arguments are an opaque program invocation, not command strings
+the guard parses. It does not audit programs it runs. A `make`, `python3` or
+shell script the model runs can reach the primary checkout, and nothing here
+would see it — only the `task-worktree` rule stops that. Saying so is the
+point: a boundary that overstates itself is the failure this guard was
+rewritten to avoid.
 
 The
 constitution needs no delivery adapter on this side — Omp's rule provider
@@ -198,9 +207,9 @@ injects `rules/*.md` carrying `alwaysApply: true`.
 `scripts/check-ask-in-chat.py` run both hooks against synthetic event JSON, and
 `scripts/check-omp-extension.mjs` does the same job for the Omp adapter — all
 three in `make check`, with `scripts/check-omp-plugin.py` covering discovery
-from CI's `omp` job. An adapter that stops firing does not
-fail; it silently reverts the behaviour it was installed for, which is the one
-failure nothing else would report.
+from the component-selected `CI Success` job. An adapter that stops firing does
+not fail; it silently reverts the behaviour it was installed for, which is the
+one failure nothing else would report.
 
 ## Layout
 
@@ -252,7 +261,39 @@ Installation is **per-machine — or, in the cloud, per-environment**. The
 plugin's bytes land under the harness's own directory and are read from there;
 a repository can point at a plugin, it can never carry one.
 
-On a laptop, two commands, once per machine. For Claude Code:
+The Claude Code marketplace install also installs and enables the official
+Worktrunk plugin as `worktrunk@daily-driver`. Worktrunk's `wt` executable is a
+separate dependency installed by the cloud Setup recipe below.
+
+If you already installed `worktrunk@worktrunk`, migrate it before installing
+or updating Daily Driver. Disable and uninstall it at every scope where it is
+installed or enabled, then install Daily Driver at that same scope. For a
+user-scope installation:
+
+```sh
+claude plugin disable worktrunk@worktrunk --scope user
+claude plugin uninstall worktrunk@worktrunk --scope user
+claude plugin install daily-driver@daily-driver --scope user
+```
+
+Repeat the disable and uninstall commands with `--scope project` or
+`--scope local` where the legacy identity exists. A managed installation must
+be migrated by its administrator. Restart or reload Claude Code after the
+migration, then confirm `claude plugin list` shows `worktrunk@daily-driver`
+enabled and no `worktrunk@worktrunk` identity enabled.
+
+Install the Worktrunk CLI separately on a desktop; the Claude plugin dependency
+does not install `wt`. Worktrunk documents [Homebrew and Cargo
+installation][worktrunk-install]:
+
+```sh
+brew install worktrunk
+# or: cargo install worktrunk
+```
+
+[worktrunk-install]: https://worktrunk.dev/#install
+
+Install Daily Driver once per machine. For Claude Code:
 
 ```sh
 claude plugin marketplace add jmcvetta/daily-driver
@@ -292,41 +333,61 @@ knowing before it surprises you, both measured against `codex-cli` 0.154.0:
   `--dangerously-bypass-hook-trust` for automation that has already vetted the
   source.
 
-In the cloud — meaning a Claude Code cloud environment, so the Claude Code pair
-above rather than either of the others — the same two commands go in the
-environment's **Setup script**, which is the one writer that beats the plugin
-scan. The environment dialog is behind
-the cloud icon above the message box at [claude.ai/code][web].
+The shared catalog also lists Worktrunk's official Claude plugin as a Claude
+dependency. Omp and Codex can read the extra catalog entry, but installing
+Daily Driver there does not install the Claude-only dependency.
+
+In Claude Code cloud environments, install Worktrunk and the plugins in the
+environment's **Setup script**, which runs before the plugin scan. The
+environment dialog is behind the cloud icon above the message box at
+[claude.ai/code][web].
 
 [web]: https://claude.ai/code
 
 ```bash
 #!/bin/bash
+set -euo pipefail
 # CACHEBUST: 1
-#
-# The environment snapshots itself on this script's text and later sessions
-# skip it. Bump the number to reinstall at the current release.
+# Setup is cached by script text; bump CACHEBUST only to force a rerun.
+# Each Setup run installs current Cargo; new releases do not trigger a rerun.
+cargo install --locked --root /usr/local worktrunk
+wt --version
+
 claude plugin marketplace add jmcvetta/daily-driver
 claude plugin install --yes daily-driver@daily-driver
 
-# Both commands can return 0 while leaving the plugin uncached, so check
-# what the loader actually reads.
-grep -qF '"daily-driver@daily-driver"' ~/.claude/plugins/installed_plugins.json &&
-  compgen -G ~/.claude/plugins/cache/daily-driver/daily-driver/*/.claude-plugin/plugin.json >/dev/null
+# Verify each plugin is cached at a version and registered as enabled.
+for plugin in daily-driver worktrunk; do
+  grep -qF "\"${plugin}@daily-driver\"" "$HOME/.claude/plugins/installed_plugins.json"
+  compgen -G "$HOME/.claude/plugins/cache/daily-driver/${plugin}/*/.claude-plugin/plugin.json" >/dev/null
+done
+claude plugin list --json | python3 -c '
+import json, sys
+enabled = {plugin["id"] for plugin in json.load(sys.stdin) if plugin.get("enabled")}
+expected = {"daily-driver@daily-driver", "worktrunk@daily-driver"}
+missing = expected - enabled
+if missing:
+    raise SystemExit(f"plugins not enabled: {sorted(missing)}")
+'
 ```
 
 No `|| true`: a script that exits zero on a failed install snapshots the
-failure. Then start a session there and **ask it what it got**, because nothing
-announces a plugin that failed to load —
+failure. Cargo builds Worktrunk during Setup. Each Setup run resolves the
+latest published Cargo release; a reused environment keeps its installed
+binary and runs no updater on session resume. A new Worktrunk release does not
+require a `CACHEBUST` change. Edit Setup only when it should run again. Then
+start a session and **ask it what it got**, because nothing announces a plugin
+that failed to load —
 
 > Without reading any file, say what the constitution tells you about
 > production systems. Then list the skills available to you whose names begin
-> `daily-driver:`. Then run `ls
-> ~/.claude/plugins/cache/daily-driver/daily-driver/`.
+> `daily-driver:`. Then list the enabled plugins `daily-driver@daily-driver`
+> and `worktrunk@daily-driver`, and run `ls
+> ~/.claude/plugins/cache/daily-driver/`.
 
-Do **not** ask what plugins are installed: that question has a known wrong
-answer. After a release, bump the `CACHEBUST` number and ask again — an
-existing environment does not pick up a new release on its own.
+Do not ask only whether plugins are installed: installation is not proof that
+they loaded. A Worktrunk release does not change a reused environment; Setup
+must run again for its install command to resolve a newer release.
 
 [docs/bootstrapping-a-repository.md](docs/bootstrapping-a-repository.md) has
 the mechanism under all of this, and *the stanza* a repository can carry in
@@ -351,6 +412,13 @@ itself: its hook wire contract is Claude Code's — same stdin, same
 `hookSpecificOutput`, same `CLAUDE_PLUGIN_ROOT` in a plugin hook's environment
 — so it needs no adapter of its own, only the extra matcher and extra event
 `hooks/hooks.json` already carries.
+
+**Claude Code inline development needs both plugin directories.** A
+`claude --plugin-dir <daily-driver>` invocation does not fetch marketplace
+dependencies. When testing this route, also pass the official Worktrunk plugin
+directory from `worktrunk/plugins/worktrunk`. The shared catalog dependency is
+installed automatically only through the marketplace route; Omp and Codex
+continue to install Daily Driver alone.
 
 **For local development, `omp --plugin-dir <path>`.** It loads the skills
 straight from a checkout, with nothing installed. It does **not** load the
@@ -390,8 +458,11 @@ both hooks against synthetic event JSON and asserts the constitution comes back
 from each; `scripts/check-labels.py`, which asserts the issue-labels standard
 says the same thing in `issue-labels` and in the OpenTofu that declares it;
 `scripts/check-eval-fixtures.sh`; `scripts/check-task-worktree-fixture.sh`,
-which exercises the linked and detached repositories used by that skill's
-behavior rows; `scripts/check-omp-agent.py`, which drives the Omp eval arm's
+which drives real Worktrunk commands in linked and detached repositories to
+test wrong-base creation, reuse, custom paths, collisions and primary-state
+preservation (`wt` must be installed locally); `scripts/check-claude-dependency.sh`,
+which uses isolated Claude configuration to test dependency installation and
+legacy migration; `scripts/check-omp-agent.py`, which drives the Omp eval arm's
 frame reduction against recorded frames; `scripts/check-codex-agent.py`, which
 asserts the Codex arm renders the judge's anchor byte-identically to the Omp
 arm's; and `scripts/check-eval-arms.py`, which keeps the Claude, Omp and Codex
@@ -417,11 +488,9 @@ the installed route, `omp plugin list` reporting the plugin after `omp plugin
 link .`, and the extension loading rather than failing silently. It is
 credential-free and calls no model, against a throwaway `HOME` — but it needs
 Omp installed, which `make check` must not start requiring of a laptop that is
-only editing a skill. CI's `omp` job runs it instead, gated on the files that
-can actually break the integration — `package.json`, `.claude-plugin/`,
-`extensions/`, and the check itself. That job reports into `CI Success`
-whether or not the gate opens, so a broken Omp integration blocks a merge; its
-comment says why each file is on the list, and why `skills/` is not.
+only editing a skill. CI's single `CI Success` job runs it when the component
+filter selects Omp integration, so a broken Omp integration blocks a merge.
+Its comment says why each file is on the list, and why `skills/` is not.
 `make check-infra` parses the OpenTofu
 stack — see [infra/github/README.md](infra/github/README.md). `make evals-run` — and `make evals-run-omp` and
 `make evals-run-codex`, the same suites on the second and third harnesses —

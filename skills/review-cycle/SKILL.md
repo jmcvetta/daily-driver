@@ -139,14 +139,15 @@ it is also the failure this mechanism was written for: a job named *"Wait ~3
 minutes for CI"* that sits until it times out and never brings the session back
 to the loop.
 
-**And no shell wait at all where the session is unattended**, regardless of
-which command-line clients are installed. The two shapes fail differently and
-both fail: a blocking watch in the foreground is bounded by the Bash tool's
-own timeout, and refused outright on a surface that blocks `sleep`; a
-backgrounded one is not bounded by anything and cannot wake the session, which
-is the report this mechanism answers.
-[`0006`](../../docs/notes/0006-waiting-for-ci.md) is the decision, and carries
-what was rejected with it.
+**No unmanaged shell wait where the session is unattended**, regardless of
+which command-line clients are installed. A foreground watch is bounded by
+the Bash tool's own timeout, and a backgrounded shell job is not supervised
+as a process the session can inspect and stop. Use the harness's supervised
+process service when its reference documents one; a service is not an
+unmanaged shell job. `sleep` remains forbidden as a substitute for observing
+CI.
+[`0006`](../../docs/notes/0006-waiting-for-ci.md) records the original
+decision; this rule clarifies the supervised-service boundary.
 
 **A surface that can neither block nor wake itself cannot wait.** Read the
 checks once, and where they have not all reported, say so and stop. A wait a
@@ -285,7 +286,7 @@ The reply
 Verdict-first, concise, technical. A reader skimming twenty threads should
 never have to parse a paragraph to learn whether the finding was implemented or
 rejected. No thanks, no apologies, no restating the finding back at the
-reviewer, and no poetry — verse attaches to the pull request body, never to a
+reviewer, and no poetry — verse attaches to the writes that name it, never to a
 finding somebody has to act on. `provenance`'s block follows the same rule: it
 attaches to the submitted review and the completion notice below, never to an
 individual finding reply.
@@ -412,7 +413,10 @@ failure and do not claim success.
 
 This notice reports the review cycle, not merge readiness. It never approves,
 merges, changes draft state, or replaces `undertake`'s first-readiness report.
-A standalone review ends at `Review the head` and never posts it. The
+A standalone review ends at `Review the head` and never posts it.
+`undertake`'s `The gate` and `embark`'s `Land the pull request` read this
+notice, which is why a completed round that starts no new review posts it
+before the round returns to its caller, the clean full review included. The
 harness reference names the read and publication route.
 
 

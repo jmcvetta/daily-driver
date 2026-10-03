@@ -1,0 +1,61 @@
+# The constitution comparison: the plugin at `master` against the plugin at
+# this checkout, on the same rows, the same model and the same harness
+# configuration. Both arms carry a constitution; only its text differs.
+#
+# It is NOT `with-without.yaml`. That file ablates the plugin -- treated against
+# a session carrying no plugin at all -- so its control carries no constitution
+# and it cannot isolate a change to the constitution's text. This one loads a plugin in both arms and varies
+# only the revision, which answers "does a change to the constitution change
+# behaviour once a constitution is already delivered?". Keep the two reports apart.
+#
+# THE BASE ARM NEEDS A SECOND CHECKOUT, and this file cannot make one. Create it
+# as a sibling of this repository, named `daily-driver-base`:
+#
+#     git worktree add ../daily-driver-base <base-revision>
+#
+# `path` is resolved against the process working directory, and both eval
+# entry points `cd evals` first, so `../..` is the directory holding this
+# repository and `../../daily-driver-base` is that sibling. Pointed anywhere
+# without a `skills/` subdirectory the SDK loads nothing and says so only in
+# the run log, so the base arm would score like an untreated session and read as
+# a constitution effect. `make evals-run-comparison` refuses to start without it.
+#
+# RECORD BOTH REVISIONS WITH THE RESULTS. The candidate is this checkout's
+# `git rev-parse HEAD`; the base is the sibling's. Neither is recoverable from
+# the report afterwards, and a comparison whose arms are unnamed is not one.
+
+experiment_id: base-vs-candidate
+description: >-
+  The same suites with the daily-driver plugin at a base revision and at this
+  checkout, loaded in both arms; the arms differ only in the constitution text.
+
+defaults:
+  # Read the per-replicate scores in the report rather than the arm averages:
+  # five runs of a non-deterministic agent support a rate, not a point.
+  repeats: 5
+
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+
+  agent:
+    type: claude-code
+    model: claude-sonnet-5
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+
+variants:
+  - variant_id: base
+    description: The daily-driver plugin at the base revision.
+    agent:
+      plugins:
+        - type: local
+          path: "../../daily-driver-base"
+
+  - variant_id: candidate
+    description: The daily-driver plugin at this checkout; the changed constitution.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

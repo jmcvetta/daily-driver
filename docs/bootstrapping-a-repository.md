@@ -149,42 +149,40 @@ Upstream: [anthropics/claude-code#88214][88214], and [#78119][78119],
 
 The environment's **Setup script** runs before Claude Code launches and is
 therefore the only writer that beats the plugin scan. The README carries the
-script; three things about it are worth stating once, here:
+script; four things about it are worth stating once, here:
 
-**The verification line is load-bearing.** Both install commands can return 0
-while leaving the plugin uncached, so nothing else in the script can see that
-failure. Tested isolated: a working install exits 0, a bad marketplace source
-2, a registered-but-never-cached plugin 1.
+**The verification is load-bearing.** `claude plugin marketplace add` and
+`claude plugin install` can return 0 while leaving plugins uncached. The Setup
+recipe checks both marketplace identities in `installed_plugins.json`, checks
+both cached plugin manifests, and checks enabled state through
+`claude plugin list --json`. It also runs `wt --version` after installation.
+That confirms the binary exists; it does not check for a newer version.
 
-**It does not verify the version.** The line greps for the plugin key and globs
-the cache for *any* version, so a cachebust bump that fetched nothing new
-satisfies it, exits 0, and snapshots itself looking exactly like a bump that
-worked. Read the version off the cache directory instead.
+**Setup installs Worktrunk from Cargo.** Claude cloud runs Setup as root on
+Ubuntu, with `cargo` and `rustc` preinstalled. The recipe uses
+`cargo install --locked --root /usr/local worktrunk`: Cargo resolves the
+current published release when Setup runs, and `/usr/local/bin` makes `wt`
+available outside that shell. `--locked` uses the selected release's lockfile;
+it does not pin the Worktrunk version. The recipe does not use GitHub release
+assets because unattached repositories return 403 through the cloud proxy.
+Cargo builds Worktrunk during Setup, not during each session.
 
 **No `|| true`**, against the [docs' generic advice][script-requirements],
-because the reasoning inverts here. Exiting zero on a failed install snapshots
-the failure, and every later session skips the script and starts with no
-plugin — silently, which is the failure this page exists to prevent. Exiting
-non-zero fails the session, builds no snapshot, and the next attempt re-runs
-the script, so a transient failure cures itself. A permanent one fails that
-environment until someone clears the field from a browser, which is the right
-trade.
+because exiting zero on a failed install snapshots the failure. Non-zero
+failure builds no snapshot, so a later setup attempt can retry. A permanent
+failure leaves the environment unusable until a person fixes the Setup script,
+which is the correct trade.
 
 [script-requirements]: https://code.claude.com/docs/en/cloud-environments#script-requirements
 
-**The snapshot is why the script carries a cachebust.** `~/.claude` persists:
-confirmed over two consecutive sessions in a fresh cloud environment, the
-skills, the agents and the constitution hook present in both, the second
-skipping the script entirely and booting from the filesystem snapshot.
-(#88214's separate claim that the plugin tree rebuilds from empty each boot
-did not reproduce.) The snapshot is keyed on the script's *text*, so the
-install line runs once, pins whatever release was current that day, and never
-runs again; a new release does not reach an existing environment, and a
-session inside one cannot update itself out of it, being downstream of the
-snapshot rather than the thing that builds it. Changing any byte of the script
-invalidates the key. A `# CACHEBUST: n` comment is the cheapest byte to
-change, and unlike the `FOO=1` this was first proved with it leaves behind no
-dead variable for shellcheck to flag (SC2034).
+**The snapshot is why Setup runs only when its script changes.** `~/.claude`
+persists, and the environment skips the script on later sessions. Editing any
+byte invalidates the cached environment; `# CACHEBUST: n` is a cheap explicit
+way to do that when a rerun is needed. Each actual Setup run resolves the
+latest published Worktrunk release. Reused environments keep their installed
+binary; a new release alone does not require a cachebust, version check,
+download, or upgrade. The existing plugin versions remain in their caches
+until Setup runs again.
 
 ## Checking whether it loaded
 

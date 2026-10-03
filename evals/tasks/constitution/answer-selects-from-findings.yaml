@@ -1,5 +1,5 @@
 # The constitution's second compliance row, for the failure the first does not
-# reach. `reply-is-concise.yaml` asks a question with ONE honest answer: a
+# reach. `reply-is-concise.yaml` (retired by #474) asked a question with ONE honest answer: a
 # single bug, a single lookup. The model gives it and every arm scores 1.0,
 # measured — which is why that row could not distinguish two policies in issue
 # #279's comparison, and why that comparison concluded nothing. The other
@@ -337,6 +337,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are grading one reply for correctness only. Ignore its length
@@ -417,6 +418,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are judging SELECTION — what the reply chose to include — and not

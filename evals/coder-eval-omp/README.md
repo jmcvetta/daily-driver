@@ -27,7 +27,8 @@ whose target is a `register(registry)` callable — and `coder_eval` registers i
 own built-ins through that same group, so the path cannot silently rot.
 
 Three things this adapter must get right, and each one is a silent zero rather
-than an error if it does not.
+than an error if it does not. A fourth, the row's tool lists, is a boundary
+rather than a score.
 
 **A skill engagement must be visible to `skill_triggered`.** That criterion
 detects a skill by the substring `skills/<name>/` in a tool parameter, or by a
@@ -54,6 +55,25 @@ score `tasks/constitution/*` zero for the wrong reason. The agent installs each
 the task — the route `scripts/check-omp-plugin.py` measures as loading the
 skills, the extension and the manifest together.
 
+**The throwaway home inherits provider files only.** A run needs a model, so
+`models.yml` (custom providers), `agent.db` with its `-wal` and `-shm`
+siblings (settings and auth storage) and `secrets.yml` (secrets `models.yml`
+can reference) are symlinked from the real `~/.omp/agent/`. Nothing else is:
+`mcp.json` would bring a person's MCP servers, which Omp enables whatever
+`--tools` says, and `AGENTS.md`, `SYSTEM.md`, `SYSTEM_TEMPLATE.md`,
+`PERSONALITY.md` and `RULES.md` would load a person's own instructions into
+the bare arm. The list is `coder_eval_omp/home.py`'s `PROVIDER_FILES`.
+
+**A row's tool lists must hold.** `tools.select_tools` maps a row's
+`allowed_tools` and `disallowed_tools` to Omp's tool names, and the agent
+passes the result as `omp --tools=<list>`, or `--no-tools` for an empty allow
+list. A row with no allow list gets the Omp twins of Claude Code's default
+tools, never Omp-only tools such as `github` or `eval`. A tool the arm cannot
+map fails the task before Omp starts. One exception: an allowed `Skill` keeps
+`read` on even where the row denies `Read`, because Omp engages a skill by
+reading `skill://<name>`. The agent logs it for each task.
+`docs/notes/0013-the-omp-arm.md` records what `--tools` does not restrict.
+
 ## What it records
 
 Issue #173 asks that a red arm be distinguishable from an arm whose plugin
@@ -65,6 +85,7 @@ puts the startup answer in each run's `environment_info`:
 | `omp_skills_loaded` | the skills the session offers, read from its own command registry |
 | `omp_linked_plugins` | the roots `omp plugin link` installed |
 | `omp_extension_errors` | every `extension_error` frame — the constitution rides on the extension |
+| `omp_tools` | the Omp built-in tools the row's lists granted |
 
 The captured `agent_end` frame in `fixtures/agent_end_usage.json` settles token
 usage. It came from a minimal live Omp 18.4.3 RPC session on 2026-09-29; prompt
@@ -104,10 +125,11 @@ drives it in `make check` without a `coder_eval` install.
 
 ## What is tested, and what is not
 
-`rpc.py` and `pricing.py` import nothing — not `coder_eval`, not `omp` — and
-`scripts/check-omp-agent.py` drives both against recorded frames and a test
-price table in `make check`. That is where the three things above, and the
-token-usage and cost math, all live, and it is why they live there.
+`rpc.py`, `pricing.py` and `tools.py` import nothing — not `coder_eval`, not
+`omp` — and `scripts/check-omp-agent.py` drives them in `make check`, `rpc.py`
+against recorded frames and `pricing.py` against a test price table. That is
+where the four things above, and the token-usage and cost math, live, and it is
+why they live there.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the

@@ -27,10 +27,19 @@ WHAT IT ASSERTS
     handed the judge bare text would fail every judged row in both arms.
     A frame type outside the known vocabulary is recorded as drift, while the
     routine frames that imply no action are not.
+    The throwaway home inherits the provider files and nothing else of a
+    person's real `~/.omp/agent/`: not `mcp.json`, not the instruction files.
+    A row's `allowed_tools` and `disallowed_tools` become the `--tools` flag
+    that enforces them, `Skill` keeps `read` on, and a list the arm cannot
+    enforce raises rather than running with every tool on.
+    The start command loads the eval guard with `-e`, the child environment
+    tells the guard the row's grant, and the throwaway `config.yml` turns
+    fetch off. Each is half of the sandbox boundary, and each fails open.
 
 WHAT IT DOES NOT ASSERT
 
-    That `omp` starts, that the plugin installs, or that a skill fires. The
+    That `omp` starts, that the plugin installs, that `omp` honours the
+    `--tools` flag, or that a skill fires. The
     first two are `make check-omp-plugin`'s, which drives a real binary; the
     third needs a model and is what `evals/` is for.
     That every Omp version uses the captured token shape. The fixture settles
@@ -57,6 +66,7 @@ CAPTURED_AGENT_END_FRAME = json.loads(
 sys.path.insert(0, str(PACKAGE_SRC))
 
 from coder_eval_omp import pricing  # noqa: E402  (the path insert must come first)
+from coder_eval_omp.home import inherited_files  # noqa: E402
 from coder_eval_omp.rpc import (  # noqa: E402
     AgentFinished,
     ToolFinished,
@@ -67,6 +77,8 @@ from coder_eval_omp.rpc import (  # noqa: E402
     render_agent_output,
     skill_name_from_url,
 )
+from coder_eval_omp.launch import OMP_CONFIG, TOOLS_ENV, child_env, guard_path, reject_tool_flags, rpc_argv  # noqa: E402
+from coder_eval_omp.tools import UnenforceableToolList, select_tools  # noqa: E402
 
 
 class CheckFailed(Exception):
@@ -329,6 +341,23 @@ def check_message_text() -> None:
     check(reducer.assistant_texts == [], "thinking is not the reply")
 
 
+def check_only_assistant_messages() -> None:
+    """User and tool-result messages stay out of the judge's transcript."""
+    skill_body = "# Skill\n" + "x" * 30_000
+    reducer = TurnReducer()
+    feed(
+        reducer,
+        {"type": "message_end", "messageId": "u1", "message": {"role": "user", "content": "cwd: /work. Do it."}},
+        {"type": "message_end", "messageId": "t1", "message": {"role": "toolResult", "content": [{"type": "text", "text": skill_body}]}},
+        {"type": "message_update", "messageId": "a1", "assistantMessageEvent": {"type": "text", "delta": "Done"}},
+        {"type": "message_end", "messageId": "a1", "message": {"role": "assistant", "content": [{"type": "text", "text": "Done."}], "usage": {"input": 1, "output": 1, "cacheRead": 0, "cacheWrite": 0}}},
+    )
+    check(reducer.assistant_texts == ["Done."], f"only assistant text is the reply, got {reducer.assistant_texts!r:.200}")
+    rendered = render_agent_output(reducer.assistant_texts)
+    check("x" * 100 not in rendered and "cwd: /work" not in rendered, "non-assistant messages must not be rendered")
+    check(rendered.rstrip().endswith("[RESULT - SUCCESS] Done."), f"the reply must end the output, got {rendered!r:.200}")
+
+
 def check_vocabulary_drift() -> None:
     """A frame type nobody knows is recorded; a routine one is not."""
     reducer = TurnReducer()
@@ -341,11 +370,212 @@ def check_vocabulary_drift() -> None:
     check(reducer.recognized == 1, "turn_start counts as a recognized event frame")
 
 
+def check_inherited_home() -> None:
+    """The throwaway home borrows provider files and none of a person's own setup.
+
+    The wrong behaviour this catches: the bare arm loading a person's
+    instructions. A loop that links every file except `config.yml` passes
+    every other check here and still brings `AGENTS.md`, `SYSTEM.md` and the
+    rest into both arms, and `mcp.json` with them, whose MCP tools Omp enables
+    whatever `--tools` says. Nothing errors; the bare arm is simply not bare.
+    """
+    import tempfile
+
+    provider = ["models.yml", "agent.db", "agent.db-wal", "agent.db-shm", "secrets.yml"]
+    personal = [
+        "mcp.json",
+        "AGENTS.md",
+        "SYSTEM.md",
+        "SYSTEM_TEMPLATE.md",
+        "PERSONALITY.md",
+        "RULES.md",
+        "config.yml",
+        "cache.json",
+    ]
+    with tempfile.TemporaryDirectory() as tmp:
+        real = Path(tmp)
+        for name in provider + personal:
+            (real / name).write_text(name, encoding="utf-8")
+        (real / "sessions").mkdir()
+        (real / "sessions" / "models.yml").write_text("x", encoding="utf-8")
+
+        linked = sorted(path.name for path in inherited_files(real))
+        check(linked == sorted(provider), f"only provider files are inherited, got {linked}")
+
+        (real / "secrets.yml").unlink()
+        (real / "agent.db-wal").unlink()
+        linked = sorted(path.name for path in inherited_files(real))
+        check(
+            linked == ["agent.db", "agent.db-shm", "models.yml"],
+            f"a provider file the real home lacks is skipped, got {linked}",
+        )
+    check(inherited_files(Path("/nonexistent-omp-home")) == [], "a missing home inherits nothing")
+
+
+def check_read_only_row_gets_no_shell() -> None:
+    """A read-only row must not reach `bash` or Omp's `github` tool.
+
+    Without this, the arm runs rows 08, 10 and 13 of `undertake` with every
+    Omp tool on, and an eval agent can call live GitHub while every check here
+    still passes.
+    """
+    selection = select_tools(["Read", "Grep", "Glob", "Skill"], None)
+    check(
+        selection.argv == ("--tools=read,grep,glob",),
+        f"[Read, Grep, Glob, Skill] must be --tools=read,grep,glob, got {selection.argv}",
+    )
+
+
+def check_disallowed_only_row_keeps_read_for_skill() -> None:
+    """A trigger row's deny list removes every tool it names, but not `read`.
+
+    Without this, either the deny list is ignored and `bash` runs, or `read`
+    goes too and no skill can fire on this arm, so every trigger row scores 0
+    for want of the tool rather than for want of the skill.
+    """
+    selection = select_tools(None, ["Read", "Write", "Edit", "NotebookEdit", "Glob", "Grep", "Bash", "Agent", "Task"])
+    check("read" in selection.tools, f"Skill keeps read on, got {selection.tools}")
+    check(selection.read_for_skill, "read kept only for Skill must be reported, so the adapter logs it")
+    for tool in ("bash", "write", "edit", "glob", "grep", "task", "github"):
+        check(tool not in selection.tools, f"{tool} must be off for this deny list, got {selection.tools}")
+
+
+def check_trigger_row_under_the_experiment_default() -> None:
+    """A trigger row on a real Omp experiment gets `read` and nothing else.
+
+    Every Omp experiment sets `allowed_tools: [Skill]`, and a row's own deny
+    list sits on top of it. Without this, a regression on that path, the one
+    every trigger row takes, passes while only the unset-allow path is tested.
+    """
+    selection = select_tools(["Skill"], ["Read", "Write", "Edit", "NotebookEdit", "Glob", "Grep", "Bash", "Agent", "Task"])
+    check(selection.argv == ("--tools=read",), f"[Skill] minus the trigger deny list must be --tools=read, got {selection.argv}")
+    check(selection.read_for_skill, "read kept only for Skill must be reported, so the adapter logs it")
+
+
+def check_denied_webfetch_is_reported() -> None:
+    """A denied `WebFetch` with `read` on is flagged, because `read` opens URLs.
+
+    Without this, a row that denies web access runs with it through `read`,
+    and nothing in the run says so.
+    """
+    check(select_tools(["Read"], ["NotebookEdit", "WebFetch"]).webfetch_via_read, "WebFetch denied with read on must be flagged")
+    check(not select_tools(["Grep"], ["WebFetch"]).webfetch_via_read, "WebFetch denied with read off is enforced, so not flagged")
+
+
+def check_no_omp_only_builtins_by_default() -> None:
+    """A row with no tool lists gets Claude Code's defaults, not Omp's extras.
+
+    Without this, a row that names no lists gets `github`, `eval` and the
+    other Omp-only tools, which no Claude Code row ever has.
+    """
+    selection = select_tools(None, None)
+    check(
+        set(selection.tools) == {"read", "grep", "glob", "bash", "write", "edit", "task", "web_search"},
+        f"the default set must be the Omp twins of Claude Code's defaults, got {selection.tools}",
+    )
+
+
+def check_omp_only_wait_is_granted_by_name() -> None:
+    """`wait` is granted when a row allows it and never by default.
+
+    Without this, either a row cannot allow `wait` and the CI-wait rows fail at
+    start, or `wait` joins the default grant and rows with no tool lists get a
+    tool no Claude Code row has.
+    """
+    selection = select_tools(["Bash", "Write", "wait"], None)
+    check("wait" in selection.tools, f"an allowed `wait` must be granted, got {selection.tools}")
+    check("wait" not in select_tools(None, None).tools, "`wait` must not be in the default grant")
+    check("wait" not in select_tools(["Bash", "wait"], ["wait"]).tools, "a denied `wait` must be removed")
+
+
+def check_empty_allow_list_is_no_tools() -> None:
+    """`allowed_tools: []` grants nothing.
+
+    Without this, an empty list reads as "unset" and the row runs with the
+    default tools, the opposite of what it asked for.
+    """
+    selection = select_tools([], None)
+    check(selection.argv == ("--no-tools",), f"an empty allow list must be --no-tools, got {selection.argv}")
+
+
+def check_unmapped_allowed_tool_fails_closed() -> None:
+    """An allowed tool with no Omp twin, or a name nobody knows, refuses the row.
+
+    Without this, the arm warns and runs anyway, which is the open failure
+    this module exists to close. `Wait` and `Hub` are names that exist on
+    neither harness, so they must still raise.
+    """
+    for allowed, disallowed in ((["Read", "WebFetch"], None), (["Read", "Hub"], None), (["Read", "Wait"], None), (None, ["bash"])):
+        try:
+            select_tools(allowed, disallowed)
+        except UnenforceableToolList:
+            continue
+        raise CheckFailed(f"allowed={allowed} disallowed={disallowed} must raise, not run")
+    select_tools(["Read"], ["NotebookEdit", "WebFetch"])  # a twinless name in a deny list is harmless
+
+
+def check_start_argv_loads_the_guard() -> None:
+    """`omp --mode rpc` starts with `-e <eval_guard.js>`, in both arms.
+
+    Without it, a read-only row's `read pr://...` reaches GitHub with the
+    ambient token, and nothing reports it.
+    """
+    selection = select_tools(["Read"], None)
+    argv = rpc_argv("omp", selection, ["--extra"])
+    check(argv[:3] == ["omp", "--mode", "rpc"], f"the argv must start omp in rpc mode, got {argv}")
+    check("-e" in argv, f"the argv must load an extension with -e, got {argv}")
+    guard = argv[argv.index("-e") + 1]
+    check(guard == str(guard_path()), f"-e must name the eval guard, got {guard}")
+    check(Path(guard).is_file(), f"the eval guard must ship inside the package, got {guard}")
+    check(argv[-2:] == ["--tools=read", "--extra"], f"the tool flag must precede extra_args, got {argv}")
+
+
+def check_extra_args_cannot_grant_tools() -> None:
+    """A tool flag in `extra_args` refuses the task.
+
+    Without it, `--tools=read,write` there widens what Omp offers while the
+    guard still reads the row's grant, so the row's file writes are refused.
+    """
+    for extra in (["--tools=read,write"], ["--tools", "read"], ["--no-tools"]):
+        try:
+            reject_tool_flags(extra)
+        except UnenforceableToolList:
+            continue
+        raise CheckFailed(f"extra_args {extra} must raise, not run")
+    reject_tool_flags(["--verbose"])  # other flags pass
+
+
+def check_child_env_carries_the_grant() -> None:
+    """The child environment names the row's Omp tools for the guard.
+
+    Without it the guard cannot tell a granted `write` from Omp's device-only
+    one, and refuses every write, so a row that grants `Write` cannot write.
+    """
+    selection = select_tools(["Read", "Write"], None)
+    env = child_env({"PATH": "/usr/bin", TOOLS_ENV: "stale"}, Path("/tmp/h"), ["/mock"], selection)
+    check(env.get(TOOLS_ENV) == "read,write", f"{TOOLS_ENV} must be the row's grant, got {env.get(TOOLS_ENV)!r}")
+    check(env["HOME"] == "/tmp/h", f"HOME must be the throwaway home, got {env['HOME']}")
+    check(env["PATH"].startswith("/mock"), f"the mock PATH prepend must come first, got {env['PATH']}")
+    empty = child_env({}, Path("/tmp/h"), [], select_tools([], None))
+    check(empty.get(TOOLS_ENV) == "", f"an empty grant is set and empty, not unset, got {empty.get(TOOLS_ENV)!r}")
+
+
+def check_config_turns_fetch_off() -> None:
+    """The throwaway `config.yml` carries `fetch.enabled: false`.
+
+    Without it `read` opens `www.example.com` with no scheme, which the guard's
+    `scheme://` match cannot see.
+    """
+    check("fetch:\n  enabled: false\n" in OMP_CONFIG, f"config.yml must turn fetch off, got {OMP_CONFIG!r}")
+    check("enableSkillCommands: true" in OMP_CONFIG, f"config.yml must keep skill commands on, got {OMP_CONFIG!r}")
+
+
 def main() -> None:
     for name, checker in sorted(globals().items()):
         if name.startswith("check_") and callable(checker):
             checker()
-    print("check-omp-agent: the Omp frame reduction maps skills, tools, text and usage as the criteria expect")
+    print("check-omp-agent: the Omp frame reduction maps skills, tools, text and usage as the criteria expect, "
+          "each row's tool lists become the flag that enforces them, and the start carries the eval guard")
 
 
 if __name__ == "__main__":

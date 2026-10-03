@@ -77,11 +77,19 @@ success_criteria:
     weight: 2
 
   # The other half: the write is reported rather than requested.
-  - type: llm_judge
+  - type: agent_judge
     description: The reply reports the edge it wrote, and does not ask permission to write it
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 

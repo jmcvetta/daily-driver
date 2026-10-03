@@ -1,0 +1,73 @@
+# Issue #449: a user's stop instruction to a standalone undertaking leaves one
+# durable handoff on the task issue, not only the claim comment.
+#
+# What this row can and cannot see. The sandbox has no GitHub client, so no
+# comment is actually posted. What is observable is what the agent says it
+# does, so the graded assertion is a judge on the reply, plus the skill
+# having fired at all.
+
+task_id: stand-down-03-neg-single-undertaking-routes-to-undertake
+description: >-
+  A single undertaking told to stand down is routed to undertake's stop, not to a fleet stand-down.
+tags: [stand-down, undertake, behaviour, fire]
+
+initial_prompt: >-
+  You are running `undertake` on issue #630 alone: no epic, no fleet, no
+  muster roll. Stand down.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`stand-down` does not fire on a single undertaking"
+    expected_skill: none
+    skill_name: stand-down
+    # A misfire has already lost the row, so there is nothing left to pay for.
+    stop_early: {}
+
+  - type: agent_judge
+    description: >-
+      The reply follows undertake's stop route and runs no fleet stand-down
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: a single undertaking has no fleet. The stop is
+      `undertake`'s `The stop`: secure the work, end the watch, post one
+      handoff on issue #630. It reads no muster roll, archives no sessions and
+      prints no fleet banner.
+
+      Score 1.0 if the REPLY secures the work and leaves one handoff on #630.
+
+      Score 0.0 if it runs a fleet stand-down, reads muster rolls, or leaves
+      only the claim comment.

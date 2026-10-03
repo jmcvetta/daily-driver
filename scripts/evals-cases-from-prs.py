@@ -6,9 +6,11 @@ is a fixture nobody has to author: the base SHA is the "before", the merge SHA
 is the "after", and the PR's own diff to its test files is the answer key. This
 script walks a repository's merged pull requests, keeps the ones that qualify
 (see `qualifying_reason`), and for the ones selected into the suite emits a
-fixture directory under `evals/fixtures/model-classes/cases/<repo>-<pr>/` (a
-`case.sh` that shallow-clones the base SHA, and a `tests.patch` restricted to
-the PR's test files) plus a task YAML under `evals/tasks/model-classes/`.
+reference directory under `evals/fixtures/model-classes/cases/<repo>-<pr>/`
+(a `tests.patch` restricted to the PR's test files, and the two manifests the
+deletion and skip checks read) plus a task YAML under
+`evals/tasks/model-classes/`. The task's prompt carries the closed issue's
+title and body, so the agent has no reason to look the work up on GitHub.
 Every qualifying pull request the builder saw, selected or not, is recorded in
 `evals/fixtures/model-classes/candidates.json`.
 
@@ -26,6 +28,12 @@ USAGE
     YAMLs for the ones that pass it, up to `--per-class` each:
 
         python3 scripts/evals-cases-from-prs.py --select
+
+    Rewrite every selected case's task YAML from `candidates.json` -- after a
+    change to the template or the prompt -- without re-running the build-time
+    check:
+
+        python3 scripts/evals-cases-from-prs.py --rewrite-tasks
 
     An `unlabelled` candidate (no `Model class` on the issue it closed) needs
     a class before it can be selected:
@@ -61,6 +69,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -74,6 +83,8 @@ ROOT = Path(__file__).resolve().parent.parent
 FIXTURES_DIR = ROOT / "evals" / "fixtures" / "model-classes"
 CASES_DIR = FIXTURES_DIR / "cases"
 TASKS_DIR = ROOT / "evals" / "tasks" / "model-classes"
+# The grader every case runs, and the one the build-time answer-key check runs.
+_GRADER = FIXTURES_DIR / "shared" / "apply-tests.sh"
 DEFAULT_CANDIDATES_FILE = FIXTURES_DIR / "candidates.json"
 
 API_ROOT = "https://api.github.com"
@@ -479,6 +490,27 @@ def filter_diff_to_paths(diff_text: str, paths: set[str]) -> str:
     return "".join(kept)
 
 
+def paths_present_at_base(tests_patch: str) -> list[str]:
+    """The new-side paths of `tests_patch` that existed at the base SHA: every
+    block except the ones git marks `new file mode`. A test file the pull
+    request creates is not one the agent can delete, so it never belongs in
+    `base-test-files.txt`.
+    """
+    present: list[str] = []
+    path: str | None = None
+    for line in tests_patch.splitlines():
+        header = _DIFF_HEADER_RE.match(line)
+        if header:
+            if path is not None and path not in present:
+                present.append(path)
+            path = header.group(2)
+        elif path is not None and line.startswith("new file mode"):
+            path = None
+    if path is not None and path not in present:
+        present.append(path)
+    return present
+
+
 # ---------------------------------------------------------------------------
 # Candidate records and the candidates.json store.
 # ---------------------------------------------------------------------------
@@ -555,6 +587,8 @@ def scan_repository(
             issue = get_issue(owner, repo, closed_issue, token) if closed_issue else None
             comments = get_issue_comments(owner, repo, number, token)
             record["closed_issue"] = closed_issue
+            record["issue_title"] = issue.get("title") if issue else None
+            record["issue_body"] = issue.get("body") if issue else None
             record["class"] = read_model_class(issue.get("body") if issue else None)
             record["class_source"] = "issue" if record["class"] != "unlabelled" else "unlabelled"
             record["elapsed_minutes"] = read_elapsed_minutes(comments)
@@ -629,6 +663,31 @@ def count_skip_markers(base_path: Path, test_files: list[str]) -> list[str]:
     return lines
 
 
+def apply_answer_key(checkout: Path, base_sha: str, tests_patch: str) -> subprocess.CompletedProcess[str]:
+    """Apply `tests.patch` to `checkout` through the grader a run uses.
+
+    The layout is a run's: scaffolding under `.fixture`, the base SHA in
+    `.fixture/base-sha`, the answer key in a reference directory outside the
+    checkout. So the answer key is validated by the code that will apply it.
+    `checkout` must hold `base_sha`, because the grader restores the key's
+    paths from it.
+    """
+    fixture = checkout / ".fixture"
+    fixture.mkdir(exist_ok=True)
+    (fixture / "base-sha").write_text(base_sha + "\n", encoding="utf-8")
+    shutil.copy(_GRADER, fixture / "apply-tests.sh")
+    with tempfile.TemporaryDirectory(prefix="model-classes-reference-") as reference_dir:
+        (Path(reference_dir) / "tests.patch").write_text(tests_patch, encoding="utf-8")
+        return subprocess.run(
+            ["bash", ".fixture/apply-tests.sh"],
+            cwd=checkout,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env={**os.environ, "REFERENCE_DIR": reference_dir},
+        )
+
+
 def verify_answer_key(
     repo_slug: str,
     record: dict[str, Any],
@@ -636,9 +695,16 @@ def verify_answer_key(
     test_command: str,
     token: str,
 ) -> tuple[bool, str, float, list[str]]:
-    """Clone the base SHA, apply `tests.patch`, and require the test command to
-    FAIL; clone the merge SHA and require it to PASS, under `_MAX_TEST_SECONDS`.
-    Returns (accepted, reason, merge_sha_seconds, base_skip_counts).
+    """Apply `tests.patch` to the base SHA and require the test command to
+    FAIL; apply it to the merge SHA and require it to PASS, under
+    `_MAX_TEST_SECONDS`. Returns (accepted, reason, merge_sha_seconds,
+    base_skip_counts).
+
+    Both sides apply the key through `apply_answer_key`, the grader path. On
+    the merge SHA that is a no-op for a key taken whole from the pull request,
+    and it is what lets a trimmed key be checked at all: the merge SHA carries
+    the assertions the trim removed, and the grader puts the key's paths back
+    to the base before it applies the trimmed patch.
 
     The base SHA is cloned once, here, and read for `base_skip_counts` before
     `tests.patch` is applied to that same checkout -- not cloned a second
@@ -648,16 +714,7 @@ def verify_answer_key(
         base_path = Path(base_dir)
         shallow_clone(repo_slug, record["base_sha"], token, base_path)
         skip_counts = count_skip_markers(base_path, record["test_files"])
-
-        patch_file = base_path / ".model-classes-tests.patch"
-        patch_file.write_text(tests_patch, encoding="utf-8")
-        apply = subprocess.run(
-            ["git", "apply", "--whitespace=nowarn", str(patch_file)],
-            cwd=base_path,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
+        apply = apply_answer_key(base_path, record["base_sha"], tests_patch)
         if apply.returncode != 0:
             return False, f"tests.patch does not apply to the base SHA: {apply.stderr[:300]}", 0.0, skip_counts
         try:
@@ -675,6 +732,16 @@ def verify_answer_key(
     with tempfile.TemporaryDirectory(prefix="model-classes-merge-") as merge_dir:
         merge_path = Path(merge_dir)
         shallow_clone(repo_slug, record["merge_sha"], token, merge_path)
+        subprocess.run(
+            ["git", "fetch", "-q", "--depth", "1", "origin", record["base_sha"]],
+            cwd=merge_path,
+            check=True,
+            capture_output=True,
+            timeout=120,
+        )
+        apply = apply_answer_key(merge_path, record["base_sha"], tests_patch)
+        if apply.returncode != 0:
+            return False, f"tests.patch does not apply over the merge SHA: {apply.stderr[:300]}", 0.0, skip_counts
         started = time.monotonic()
         try:
             code, out, err = run_in(merge_path, test_command, _MAX_TEST_SECONDS)
@@ -689,34 +756,24 @@ def verify_answer_key(
 
 def write_case_fixture(
     case_name: str,
-    repo_slug: str,
-    record: dict[str, Any],
     tests_patch: str,
     base_skip_counts: list[str],
 ) -> None:
-    """The fixture directory for one selected case: `case.sh`, `tests.patch`,
-    `base-test-files.txt`, and `base-skip-counts.txt` (from `base_skip_counts`
+    """The reference directory for one selected case: `tests.patch`,
+    `base-test-files.txt` (the patch's paths the base SHA already had), and
+    `base-skip-counts.txt` (from `base_skip_counts`
     -- `verify_answer_key`'s reading of the base SHA it already cloned, taken
-    before it applied `tests.patch` to that checkout).
+    before it applied `tests.patch` to that checkout). The task mounts none of
+    it into the sandbox: coder_eval stages it outside, for criteria only.
     """
     case_dir = CASES_DIR / case_name
     case_dir.mkdir(parents=True, exist_ok=True)
 
     (case_dir / "tests.patch").write_text(tests_patch, encoding="utf-8")
 
-    base_test_files = "\n".join(record["test_files"]) + "\n"
+    base_test_files = "\n".join(paths_present_at_base(tests_patch)) + "\n"
     (case_dir / "base-test-files.txt").write_text(base_test_files, encoding="utf-8")
     (case_dir / "base-skip-counts.txt").write_text("\n".join(base_skip_counts) + "\n", encoding="utf-8")
-
-    case_sh = f"""#!/usr/bin/env bash
-# Clones {repo_slug}#{record['number']} at its base SHA. See `../../shared/lib.sh`.
-# shellcheck source=../../shared/lib.sh
-source "$(dirname "$0")/lib.sh"
-fixture_clone_base "{repo_slug}" "{record['base_sha']}"
-"""
-    case_path = case_dir / "case.sh"
-    case_path.write_text(case_sh, encoding="utf-8")
-    case_path.chmod(0o755)
 
 
 _TASK_TEMPLATE = """\
@@ -730,16 +787,17 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/model-classes/shared
       mount_point: .fixture
-    - type: template_dir
-      path: ../../fixtures/model-classes/cases/{case_name}
-      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/{case_name}
 
 pre_run:
-  - command: bash .fixture/case.sh
+  - command: bash .fixture/clone-base.sh {repo_slug} {base_sha}
     timeout: 120
 
 agent:
-  type: omp
   allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
 
 run_limits:
@@ -747,8 +805,7 @@ run_limits:
   task_timeout: {task_timeout}
   turn_timeout: {turn_timeout}
 
-initial_prompt: >-
-  {initial_prompt}
+initial_prompt: {initial_prompt}
 
 success_criteria:
   - type: run_command
@@ -776,24 +833,51 @@ def _yaml_escape_block(text: str) -> str:
     return text.replace("\n", "\n  ")
 
 
+def yaml_quoted(text: str) -> str:
+    """`text` as a YAML double-quoted scalar.
+
+    A JSON string is a valid YAML double-quoted scalar, escapes and all, so
+    an issue body's newlines, quotes, backticks and leading `#`s survive
+    verbatim -- which no hand-folded block scalar guarantees.
+    """
+    return json.dumps(text, ensure_ascii=False)
+
+
+def task_prompt(repo_slug: str, record: dict[str, Any]) -> str:
+    """The agent's instructions: the closed issue's own title and body.
+
+    Neither the pull request's number nor the issue's is given. Either one is
+    a lookup key for the merged change, and the issue text is the whole
+    specification, so the agent has nothing to fetch.
+    """
+    title = record.get("issue_title")
+    body = (record.get("issue_body") or "").strip()
+    if not title:
+        raise BuildError(f"{repo_slug}#{record['number']}: no issue title recorded; rescan the repository")
+    return (
+        f"This is {repo_slug}, checked out at a past commit. Implement the change "
+        "the issue below describes. Work from this checkout and the issue text "
+        f"alone: do not fetch from {repo_slug}, and do not look it up on GitHub.\n\n"
+        f"# {title}\n\n{body}\n"
+    )
+
+
 def write_task_yaml(case_name: str, repo_slug: str, record: dict[str, Any], test_command: str, smoke: bool) -> None:
+    """Write the task YAML for one selected case from its candidate record."""
     task_timeout = record["task_timeout"]
     turn_timeout = max(180, task_timeout - 120)
-    grading_command = f"git apply --whitespace=nowarn .fixture/tests.patch && {test_command}"
+    grading_command = f"bash .fixture/apply-tests.sh && {test_command}"
     description = f"{repo_slug}#{record['number']}: {record['title']}"
-    initial_prompt = (
-        f"This is {repo_slug}, checked out at its state before pull request "
-        f"#{record['number']}. Implement the change described by issue "
-        f"#{record['closed_issue']} (title: {record['title']!r})."
-    )
     content = _TASK_TEMPLATE.format(
         case_name=case_name,
         description=_yaml_escape_block(description),
         class_tag=f"class:{record['class']}",
         smoke_tag=", smoke" if smoke else "",
+        repo_slug=repo_slug,
+        base_sha=record["base_sha"],
         task_timeout=task_timeout,
         turn_timeout=turn_timeout,
-        initial_prompt=_yaml_escape_block(initial_prompt),
+        initial_prompt=yaml_quoted(task_prompt(repo_slug, record)),
         grading_command=grading_command,
         grading_timeout=max(60, task_timeout - 60),
     )
@@ -813,10 +897,91 @@ def candidate_pool(candidates: dict[str, dict[str, Any]], klass: str) -> list[st
     pool = [
         (candidate_id, record)
         for candidate_id, record in candidates.items()
-        if record.get("qualifies") and record.get("class") == klass
+        if record.get("qualifies") and record.get("class") == klass and not record.get("excluded")
     ]
     pool.sort(key=lambda item: (item[1].get("additions") or 0) + (item[1].get("deletions") or 0))
     return [candidate_id for candidate_id, _ in pool]
+
+
+def exclude_candidate(candidates: dict[str, dict[str, Any]], candidate_id: str, reason: str) -> None:
+    """Take `candidate_id` out of the suite for good, recording `reason`, and
+    delete the fixture and task YAML it was built into.
+
+    For a case the build-time check cannot catch: one whose answer key passes
+    on the merge SHA but asserts what its issue leaves open or contradicts, so
+    a model that does exactly what the issue asks still fails it.
+    """
+    if candidate_id not in candidates:
+        raise BuildError(f"--exclude names {candidate_id!r}, which is not a known candidate")
+    if not reason.strip():
+        raise BuildError(f"--exclude {candidate_id} needs a reason after '='")
+    record = candidates[candidate_id]
+    record["excluded"] = reason.strip()
+    record["selected"] = False
+    case_name = case_name_for(candidate_id)
+    shutil.rmtree(CASES_DIR / case_name, ignore_errors=True)
+    (TASKS_DIR / f"{case_name}.yaml").unlink(missing_ok=True)
+
+
+def record_key_trim(candidates: dict[str, dict[str, Any]], candidate_id: str, reason: str) -> None:
+    """Record on a selected case that its committed `tests.patch` is trimmed.
+
+    A trim removes only assertions the case's issue does not decide, never
+    adds one. The record is what stops `--select` from rebuilding the key
+    whole from the pull request's diff, and what tells a reader the key and
+    the merged pull request differ on purpose.
+    """
+    if candidate_id not in candidates:
+        raise BuildError(f"--trim-key names {candidate_id!r}, which is not a known candidate")
+    if not reason.strip():
+        raise BuildError(f"--trim-key {candidate_id} needs a reason after '='")
+    record = candidates[candidate_id]
+    if not record.get("selected"):
+        raise BuildError(f"--trim-key {candidate_id}: only a selected case has a key to trim")
+    record["key_trim"] = reason.strip()
+
+
+def manifest_mismatches(case_dir: Path, tests_patch: str, base_skip_counts: list[str]) -> list[str]:
+    """The committed manifests in `case_dir` that disagree with the ones
+    `write_case_fixture` would write for `tests.patch` and `base_skip_counts`.
+
+    A trimmed key is edited by hand after the fixture is written, so its
+    manifests can drift from it; the deletion and skip checks read them.
+    """
+    expected = {
+        "base-test-files.txt": "\n".join(paths_present_at_base(tests_patch)) + "\n",
+        "base-skip-counts.txt": "\n".join(base_skip_counts) + "\n",
+    }
+    mismatches = []
+    for name, content in expected.items():
+        path = case_dir / name
+        if not path.exists() or path.read_text(encoding="utf-8") != content:
+            mismatches.append(name)
+    return mismatches
+
+
+def verify_case(candidates: dict[str, dict[str, Any]], candidate_id: str, token: str) -> bool:
+    """Run the build-time answer-key check on a selected case's committed
+    `tests.patch`, trimmed or not, and check its manifests against it.
+    """
+    record = candidates.get(candidate_id)
+    if record is None:
+        raise BuildError(f"--verify-case names {candidate_id!r}, which is not a known candidate")
+    if not record.get("selected") or not record.get("test_command"):
+        raise BuildError(f"--verify-case {candidate_id}: not a selected case")
+    case_dir = CASES_DIR / case_name_for(candidate_id)
+    tests_patch = (case_dir / "tests.patch").read_text(encoding="utf-8")
+
+    print(f"verifying {candidate_id}...", file=sys.stderr)
+    accepted, reason, _, skip_counts = verify_answer_key(
+        record["repo"], record, tests_patch, record["test_command"], token
+    )
+    if accepted:
+        stale = manifest_mismatches(case_dir, tests_patch, skip_counts)
+        if stale:
+            accepted, reason = False, f"manifests disagree with tests.patch: {', '.join(stale)}"
+    print(f"  {'passed' if accepted else 'failed: ' + reason}", file=sys.stderr)
+    return accepted
 
 
 def case_name_for(candidate_id: str) -> str:
@@ -831,6 +996,8 @@ def try_build_one(candidate_id: str, record: dict[str, Any], token: str, smoke: 
     candidate. Returns whether it was accepted; either way the record is
     updated in place with the outcome.
     """
+    if record.get("key_trim"):
+        raise BuildError(f"{candidate_id} has a trimmed key; check it with --verify-case, not a rebuild")
     repo_slug = record["repo"]
     owner, _, repo = repo_slug.partition("/")
     number = record["number"]
@@ -862,7 +1029,8 @@ def try_build_one(candidate_id: str, record: dict[str, Any], token: str, smoke: 
         return False
 
     case_name = case_name_for(candidate_id)
-    write_case_fixture(case_name, repo_slug, record, tests_patch, skip_counts)
+    ensure_issue_text(record, token)
+    write_case_fixture(case_name, tests_patch, skip_counts)
     write_task_yaml(case_name, repo_slug, record, test_command, smoke=smoke)
 
     record["selected"] = True
@@ -901,6 +1069,37 @@ def build_selected(
             )
 
 
+def ensure_issue_text(record: dict[str, Any], token: str) -> None:
+    """Read the closed issue's title and body into `record` where a scan from
+    before the prompt carried them left it without.
+    """
+    if record.get("issue_title"):
+        return
+    owner, _, repo = record["repo"].partition("/")
+    issue = get_issue(owner, repo, record["closed_issue"], token)
+    if issue is None:
+        raise BuildError(f"{record['repo']}#{record['number']}: issue #{record['closed_issue']} could not be read")
+    record["issue_title"] = issue.get("title")
+    record["issue_body"] = issue.get("body")
+
+
+def rewrite_selected_tasks(candidates: dict[str, dict[str, Any]], token: str) -> None:
+    """Rewrite the task YAML of every selected case from its record, reading
+    the closed issue's text first where the record predates keeping it.
+
+    `smoke` goes to the first selected case of each class in pool order, the
+    same case `build_selected` gave it to.
+    """
+    for klass in BUILDABLE_CLASSES:
+        selected = [cid for cid in candidate_pool(candidates, klass) if candidates[cid].get("selected")]
+        for index, candidate_id in enumerate(selected):
+            record = candidates[candidate_id]
+            repo_slug = record["repo"]
+            ensure_issue_text(record, token)
+            write_task_yaml(case_name_for(candidate_id), repo_slug, record, record["test_command"], smoke=index == 0)
+            print(f"rewrote evals/tasks/model-classes/{case_name_for(candidate_id)}.yaml", file=sys.stderr)
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -923,10 +1122,46 @@ def main(argv: list[str]) -> int:
     )
     parser.add_argument("--select", action="store_true", help="build fixtures + task YAMLs from candidates.json")
     parser.add_argument("--per-class", type=int, default=3, help="cases to select per buildable class")
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="owner/repo#N=reason",
+        help="take a candidate out of the suite for good, and delete its fixture (repeatable)",
+    )
+    parser.add_argument(
+        "--rewrite-tasks",
+        action="store_true",
+        help="rewrite every selected case's task YAML from candidates.json",
+    )
+    parser.add_argument(
+        "--trim-key",
+        action="append",
+        default=[],
+        metavar="owner/repo#N=reason",
+        help="record that a selected case's committed tests.patch is trimmed, and why (repeatable)",
+    )
+    parser.add_argument(
+        "--verify-case",
+        action="append",
+        default=[],
+        metavar="owner/repo#N",
+        help="run the build-time check on a selected case's committed tests.patch (repeatable)",
+    )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="run the offline self-tests and nothing else; needs no token",
+    )
     args = parser.parse_args(argv)
 
-    if not args.repo and not args.select:
-        parser.error("a repo is required unless --select is given")
+    if args.self_test:
+        return 0
+
+    if not (args.repo or args.select or args.rewrite_tasks or args.exclude or args.trim_key or args.verify_case):
+        parser.error(
+            "a repo is required unless --select, --rewrite-tasks, --exclude, --trim-key or --verify-case is given"
+        )
 
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
     if not token:
@@ -950,11 +1185,27 @@ def main(argv: list[str]) -> int:
         candidates[slug]["class"] = token_class
         candidates[slug]["class_source"] = "override"
 
+    for raw in args.exclude:
+        slug, _, reason = raw.partition("=")
+        exclude_candidate(candidates, slug, reason)
+
+    for raw in args.trim_key:
+        slug, _, reason = raw.partition("=")
+        record_key_trim(candidates, slug, reason)
+
     save_candidates(args.candidates_file, candidates)
 
     if args.select:
         build_selected(candidates, args.per_class, token)
         save_candidates(args.candidates_file, candidates)
+
+    if args.rewrite_tasks:
+        rewrite_selected_tasks(candidates, token)
+        save_candidates(args.candidates_file, candidates)
+
+    failed = [slug for slug in args.verify_case if not verify_case(candidates, slug, token)]
+    if failed:
+        raise BuildError(f"--verify-case failed for {', '.join(failed)}")
 
     return 0
 
@@ -975,8 +1226,15 @@ def _run_self_tests() -> None:
     _test_read_elapsed_minutes()
     _test_derive_task_timeout()
     _test_filter_diff_to_paths()
+    _test_paths_present_at_base()
     _test_count_skip_markers()
     _test_resolve_test_command()
+    _test_task_prompt()
+    _test_candidate_pool()
+    _test_yaml_quoted()
+    _test_record_key_trim()
+    _test_manifest_mismatches()
+    _test_apply_answer_key_over_merge()
 
 
 def _test_is_test_path() -> None:
@@ -1172,6 +1430,29 @@ def _test_filter_diff_to_paths() -> None:
     assert "+def test_y" in filtered
 
 
+def _test_paths_present_at_base() -> None:
+    patch = (
+        "diff --git a/tests/test_old.py b/tests/test_old.py\n"
+        "index 111..222 100644\n"
+        "--- a/tests/test_old.py\n"
+        "+++ b/tests/test_old.py\n"
+        "@@ -1 +1 @@\n"
+        "-a\n"
+        "+b\n"
+        "diff --git a/tests/test_new.py b/tests/test_new.py\n"
+        "new file mode 100644\n"
+        "index 000..333\n"
+        "--- /dev/null\n"
+        "+++ b/tests/test_new.py\n"
+        "@@ -0,0 +1 @@\n"
+        "+new file mode is text here, not a header\n"
+        "diff --git a/tests/test_last.py b/tests/test_last.py\n"
+        "index 444..555 100644\n"
+    )
+    assert paths_present_at_base(patch) == ["tests/test_old.py", "tests/test_last.py"]
+    assert paths_present_at_base("") == []
+
+
 def _test_count_skip_markers() -> None:
     with tempfile.TemporaryDirectory(prefix="model-classes-selftest-") as tmp:
         base = Path(tmp)
@@ -1232,6 +1513,140 @@ def _test_resolve_test_command() -> None:
 
     unknown_repo = resolve_test_command("someone/else", ["tests/test_x.py"], None)
     assert unknown_repo is None
+
+
+def _test_task_prompt() -> None:
+    record = {
+        "number": 338,
+        "closed_issue": 337,
+        "title": 'fix(usd2oz-web): say "calculator"',
+        "issue_title": "Methodology page footer link should say \"back to calculator\"",
+        "issue_body": "The footer link reads \"Back to the converter\".\n\n**Definition of done:** it says so.\n",
+    }
+    prompt = task_prompt("Green-Pagoda/pagoda", record)
+    assert "# Methodology page footer link" in prompt, prompt
+    assert "**Definition of done:** it says so." in prompt, prompt
+    # Either number is a lookup key for the merged change.
+    assert "338" not in prompt and "337" not in prompt, prompt
+    assert "do not fetch from Green-Pagoda/pagoda" in prompt, prompt
+    # The pull request's title is not the specification; the issue's is.
+    assert 'say "calculator"' not in prompt, prompt
+    try:
+        task_prompt("Green-Pagoda/pagoda", {**record, "issue_title": None})
+    except BuildError:
+        pass
+    else:
+        raise AssertionError("task_prompt accepted a record with no issue title")
+
+
+def _test_yaml_quoted() -> None:
+    text = 'A "quoted" line\n\n# not a comment\n  - not a list: `x`\n\\ and \u2190 arrow\n'
+    quoted = yaml_quoted(text)
+    assert "\n" not in quoted, quoted
+    assert quoted.startswith('"') and quoted.endswith('"'), quoted
+    assert json.loads(quoted) == text
+    try:
+        import yaml  # noqa: PLC0415 - the dev venv has it; the builder itself never needs it
+    except ImportError:
+        return
+    assert yaml.safe_load(f"initial_prompt: {quoted}\n") == {"initial_prompt": text}
+
+
+
+def _test_candidate_pool() -> None:
+    candidates = {
+        "o/r#3": {"qualifies": True, "class": "mechanical", "additions": 30, "deletions": 0},
+        "o/r#1": {"qualifies": True, "class": "mechanical", "additions": 5, "deletions": 5},
+        "o/r#2": {"qualifies": True, "class": "mechanical", "additions": 1, "deletions": 0, "excluded": "key asserts an open name"},
+        "o/r#4": {"qualifies": False, "class": "mechanical", "additions": 1, "deletions": 0},
+        "o/r#5": {"qualifies": True, "class": "implementation", "additions": 1, "deletions": 0},
+    }
+    # Smallest first; an excluded candidate never returns, however small.
+    assert candidate_pool(candidates, "mechanical") == ["o/r#1", "o/r#3"], candidate_pool(candidates, "mechanical")
+    try:
+        exclude_candidate(candidates, "o/r#1", "  ")
+    except BuildError:
+        pass
+    else:
+        raise AssertionError("exclude_candidate accepted an empty reason")
+
+
+def _test_record_key_trim() -> None:
+    candidates = {
+        "o/r#1": {"selected": True},
+        "o/r#2": {"selected": False},
+    }
+    record_key_trim(candidates, "o/r#1", "  drops an assertion the issue leaves open ")
+    assert candidates["o/r#1"]["key_trim"] == "drops an assertion the issue leaves open"
+    for candidate_id, reason in (("o/r#1", " "), ("o/r#2", "reason"), ("o/r#9", "reason")):
+        try:
+            record_key_trim(candidates, candidate_id, reason)
+        except BuildError:
+            pass
+        else:
+            raise AssertionError(f"record_key_trim accepted {candidate_id}={reason!r}")
+    assert "key_trim" not in candidates["o/r#2"]
+
+    try:
+        try_build_one("o/r#1", candidates["o/r#1"], "no-token", smoke=False)
+    except BuildError:
+        pass
+    else:
+        raise AssertionError("try_build_one rebuilt a trimmed key")
+
+
+def _test_manifest_mismatches() -> None:
+    patch = (
+        "diff --git a/tests/test_old.py b/tests/test_old.py\n"
+        "index 111..222 100644\n"
+        "diff --git a/tests/test_new.py b/tests/test_new.py\n"
+        "new file mode 100644\n"
+    )
+    counts = ["1\ttests/test_old.py", "0\ttests/test_new.py"]
+    with tempfile.TemporaryDirectory(prefix="model-classes-selftest-") as tmp:
+        case_dir = Path(tmp)
+        assert manifest_mismatches(case_dir, patch, counts) == ["base-test-files.txt", "base-skip-counts.txt"]
+        (case_dir / "base-test-files.txt").write_text("tests/test_old.py\n", encoding="utf-8")
+        (case_dir / "base-skip-counts.txt").write_text("\n".join(counts) + "\n", encoding="utf-8")
+        assert manifest_mismatches(case_dir, patch, counts) == []
+        assert manifest_mismatches(case_dir, patch, ["0\ttests/test_old.py", counts[1]]) == ["base-skip-counts.txt"]
+
+
+def _test_apply_answer_key_over_merge() -> None:
+    """A trimmed key applied over the merge SHA leaves the trimmed file, not
+    the merged one; a key that does not match the base fails to apply."""
+    with tempfile.TemporaryDirectory(prefix="model-classes-selftest-") as tmp:
+        repo = Path(tmp)
+
+        def git(*args: str) -> str:
+            return subprocess.run(
+                ["git", *args], cwd=repo, check=True, capture_output=True, text=True
+            ).stdout.strip()
+
+        git("init", "-q", ".")
+        git("config", "user.email", "selftest@example.invalid")
+        git("config", "user.name", "Self Test")
+        git("config", "commit.gpgsign", "false")
+        test_file = repo / "tests" / "test_x.py"
+        test_file.parent.mkdir()
+        test_file.write_text("def test_a(): assert 'old'\n", encoding="utf-8")
+        git("add", "tests")
+        git("commit", "-q", "-m", "base")
+        base_sha = git("rev-parse", "HEAD")
+
+        trimmed = "def test_a(): assert 'new'\n"
+        test_file.write_text(trimmed, encoding="utf-8")
+        trimmed_patch = git("diff") + "\n"
+        test_file.write_text(trimmed + "def test_b(): assert 'undecided'\n", encoding="utf-8")
+        git("commit", "-q", "-am", "merge")
+
+        result = apply_answer_key(repo, base_sha, trimmed_patch)
+        assert result.returncode == 0, result.stderr
+        assert test_file.read_text(encoding="utf-8") == trimmed
+
+        git("checkout", "-q", "--", "tests")
+        wrong_base = trimmed_patch.replace("-def test_a(): assert 'old'", "-def test_a(): assert 'other'")
+        assert apply_answer_key(repo, base_sha, wrong_base).returncode != 0
 
 
 if __name__ == "__main__":
