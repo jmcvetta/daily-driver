@@ -1693,6 +1693,50 @@ function rewritesPrimaryWorkingTree(event, cwd) {
 	return walkShellCommand(event.input.command, toolCwd);
 }
 
+const SHELL_FLAGS_WITHOUT_ARGUMENTS = new Set("BCEHPTefhiklmnptuvxs".split(""));
+
+/** Classify shell options and locate the script or command-string operand. */
+function shellInvocation(name, operands) {
+	if (name === "eval") {
+		if (operands.length !== 1 || !operands[0].literal) return null;
+		return { command: operands[0] };
+	}
+
+	let position = 0;
+	let commandMode = false;
+	while (position < operands.length) {
+		const operand = operands[position];
+		if (!operand.literal) return null;
+		const option = operand.text;
+		if (option === "--") {
+			position++;
+			break;
+		}
+		if (option === "-" || !option.startsWith("-") || option === "") break;
+		if (option.startsWith("--")) return null;
+		for (const flag of option.slice(1)) {
+			if (flag === "c") {
+				commandMode = true;
+				continue;
+			}
+			if (flag === "o") {
+				position++;
+				if (position >= operands.length || !operands[position].literal) return null;
+				break;
+			}
+			if (!SHELL_FLAGS_WITHOUT_ARGUMENTS.has(flag)) return null;
+		}
+		position++;
+	}
+
+	if (commandMode) {
+		const command = operands[position];
+		return command?.literal ? { command } : null;
+	}
+	const file = operands[position];
+	return file?.literal ? { file } : null;
+}
+
 /** Walk one command's segments, tracking the shell's working directory. */
 function walkShellCommand(command, toolCwd) {
 	const { segments, functions, unreadable } = shellSegments(command);
@@ -1791,26 +1835,17 @@ function walkShellCommand(command, toolCwd) {
 		const operands = segment.words.slice(position + 1);
 
 		if (STRING_INTERPRETERS.has(name)) {
-			// `sh -c '…'` and `eval '…'` run a string. One literal string is
-			// read like any other command; anything else is unreadable. `eval`
-			// runs in the current shell, so its directory changes carry; `sh -c`
-			// runs a child, so they do not.
-			const script = operands.filter(
-				(operand) => !(operand.literal && operand.text.startsWith("-")),
-			);
-			if (script.length === 0) continue;
-			if (script.length > 1 || !script[0].literal) {
-				// A shell running more shell is squarely inside what this guard
-				// reads, so an unreadable script is refused wherever it runs: the
-				// string may name the primary checkout itself.
+			const invocation = shellInvocation(name, operands);
+			if (invocation === null) {
 				throw new UnreadableCommandError(
-					"a command runs a string the guard cannot read",
+					"a command runs a string or script the guard cannot classify",
 				);
 			}
+			if (invocation.file !== undefined) continue;
 			if (name === "eval") {
-				if (walkShellCommand(script[0].text, shellCwd)) return true;
+				if (walkShellCommand(invocation.command.text, shellCwd)) return true;
 				shellCwd = null;
-			} else if (walkShellCommand(script[0].text, shellCwd)) {
+			} else if (walkShellCommand(invocation.command.text, shellCwd)) {
 				return true;
 			}
 			continue;
