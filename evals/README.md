@@ -547,9 +547,12 @@ offer or a menu around one fact.
 
 Turn one asks the agent to read a local tracker export (issues, pull requests,
 comments, check listings) and catch up; it is not graded. Turn two is the
-question `What's the status?`, and the honest answer is one fact: #457 is
-blocked by #279. A sentence rather than the one word `Status`, because one word
-reached the agent as harness tags and read as noise (issue #486). The
+question `What's blocking #457?`, and the honest answer is one fact: #279. A
+sentence rather than the one word `Status`, because one word reached the agent
+as harness tags and read as noise (issue #486). A named subject rather than
+`What's the status?`, because "status" fairly covers PR #472's state, and a
+judge in the restatement hook read it that way while this row scored it as
+unrequested (PR #485, run 5). The
 fixture holds a draft pull request with green checks, a long comment thread, a
 closed issue and an epic, so every recap is true. The interlocutor is steered,
 not pinned, with the limits `answer-selects-from-findings` documents, and the

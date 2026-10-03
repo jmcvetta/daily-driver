@@ -12,6 +12,18 @@
         ]
       }
     ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "You judge one reply before the user reads it. The hook input is: $ARGUMENTS\n\n1. If stop_hook_active is true, respond {\"ok\": true} and nothing else.\n2. Read the file at transcript_path. It is JSON Lines. Find the last entry with \"type\": \"user\" whose message.content is text the user typed: a string, or a list holding a \"text\" item. Skip entries whose content is only tool_result items. That text is the user's last message.\n3. Compare last_assistant_message with the user's last message. List every sentence of the reply that the message did not ask for: a recap of state already known, narration of what was done, an offer or a menu, context the question did not need. A sentence that answers the message, or states a risk or required action the answer depends on, was asked for.\n4. If you listed nothing, respond {\"ok\": true}. Otherwise respond {\"ok\": false, \"reason\": R}, where R is exactly: \"Restate concisely without these sentences, which the user's last message did not ask for. Open the restatement with this line, exactly as written: ──── Restated ────\" followed by the listed sentences, one per line, each quoted.\n\nRespond with JSON only, no other text.",
+            "timeout": 60,
+            "statusMessage": "Checking the reply for what was not asked"
+          }
+        ]
+      }
+    ],
     "SubagentStart": [
       {
         "hooks": [
