@@ -149,11 +149,18 @@ The watch is a detached Omp service
 named Bash service owns the process lifecycle. Start the plugin's
 `scripts/pr-keep-current.sh` with `bash` service mode, `name`
 `keep-current-<number>`, its script path and pull-request number as the
-command, and `cwd` set to a checkout of this repository. Service mode rejects
+command, and `cwd` set to a checkout of this repository. Prefix the command
+with `printf 'keep-current-started\n'; exec` and set
+`ready: {"log": "keep-current-started"}`. This launch marker is deterministic
+even when the script's first tick produces no output; it means only that the
+service command launched, not that the pull request was updated. `exec`
+preserves the script's exit status as the service status. Service mode rejects
 `async` and `timeout`; do not supply either field. Read `proc://<name>` before
 starting so a resumed session does not restart an existing loop.
 
-After the service reports ready, request `detached` through
+After readiness, immediately inspect `read proc://<name>`. If it has exited,
+read its logs and report the observed exit instead of requesting persistence or
+calling it durable. Otherwise request `detached` through
 `write proc://<name>/mode` with content `detached`, then confirm
 `read proc://<name>` reports `detached=true`. Detached mode lets the process
 survive broker shutdown and Omp exits. If the mode write fails or the status
