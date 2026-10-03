@@ -522,7 +522,8 @@ RUN ?= evals/runs/latest
 evals-record:
 	test -n "$(EXPERIMENT)"
 	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
-		--experiment "$(EXPERIMENT)" --output evals/provenance
+		--experiment "$(EXPERIMENT)" --output evals/provenance \
+		$(if $(filter 1,$(POST_COMMENTS)),--post-comments)
 
 # evals-render-routes: rewrite the `Measured routes` table in model-classes.md
 # from every committed record under evals/provenance/. Reads no run directory.

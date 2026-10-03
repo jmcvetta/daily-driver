@@ -119,6 +119,17 @@ make evals-run-omp    # every Omp model, each with bare and treated variants.
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
+`make evals-record ... POST_COMMENTS=1` also posts one comment per run on each
+pull request a case was built from (model-classes cases, whose description
+begins `owner/repo#N:`). The comment says an agent re-implemented that task in
+an eval after the fact, and lists one row per model and variant: `pass n/m`
+and the median elapsed minutes. Tokens, cost and transcripts stay in the
+record. A comment is edited, not repeated, when its `eval-result` run marker
+is already on the pull request. The token comes from `GITHUB_TOKEN` or
+`GH_TOKEN`; without one the record is written, the comments are skipped, and
+the command exits non-zero. A failure on one pull request is reported on stderr, the
+rest still post, and the exit is non-zero. Posting is local only; CI never sets the flag.
+
 The `*-neg-*` selector is a filename glob, and one absence assertion does not
 live in a file it matches: `tasks/pr/02-open-a-pr.yaml` is a fire case that
 also asserts `undertake` stays silent. Add `tasks/pr/*.yaml` when the question

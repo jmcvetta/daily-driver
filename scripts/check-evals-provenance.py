@@ -594,10 +594,39 @@ def check_contaminated_replicate(temp: Path) -> None:
     )
 
 
+def check_eval_result_comment() -> None:
+    """The comment renders from a fixture record; the marker decides edit or create."""
+    recorder = load_recorder()
+    cases = []
+    for model, outcomes in (("m/a:high", ["succeeded", "succeeded", "failed"]), ("m/b", ["error", "failed", "failed"])):
+        for index, outcome in enumerate(outcomes):
+            cases.append(
+                {
+                    **_case_row("t", "implementation", outcome, index, model_requested=model, settings="s"),
+                    "variant_id": "bare",
+                    "elapsed_seconds": 360.0 + 60 * index,
+                    "source": "o/r#7",
+                }
+            )
+    cases.append({**_case_row("u", "implementation", "succeeded", 0, model_requested="m/a:high", settings="s"), "source": "o/r#8"})
+    record = {"run_id": "run-1", "started_at": "2026-10-03T10:00:00+00:00", "cases": cases}
+    body = recorder.render_comment(record, "o/r#7", "evals/provenance/x.json")
+    require(body.startswith("<!-- eval-result: run-1 -->\n## Eval result"), "comment opens with the run marker")
+    require("| `m/a:high` | bare | pass 2/3 | 7 min median |" in body, "repeats collapse to pass n/m and a median")
+    require("| `m/b` | bare | pass 0/3 | 7 min median |" in body, "a failed run still posts a row")
+    require("o/r#8" not in body and body.count("| `m/a:high`") == 1, "only the pull request's own cases appear")
+    require("Run `run-1`, recorded in `evals/provenance/x.json`." in body, "the comment cites the record")
+    older = [{"id": 1, "body": "unrelated"}, {"id": 2, "body": "<!-- eval-result: run-0 -->\nold"}]
+    require(recorder.find_result_comment(older, "run-1") is None, "a different run's marker means create")
+    older.append({"id": 3, "body": body})
+    require(recorder.find_result_comment(older, "run-1")["id"] == 3, "the same run's marker means edit")
+
+
 def main() -> int:
     """Run laptop, cloud, invalid-record, committed-record and answer-key cases."""
     validate_committed_records()
     check_answer_key_contact()
+    check_eval_result_comment()
     with tempfile.TemporaryDirectory() as directory:
         check_contaminated_replicate(Path(directory))
     with tempfile.TemporaryDirectory() as directory:
