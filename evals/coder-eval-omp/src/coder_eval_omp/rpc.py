@@ -529,8 +529,11 @@ class TurnReducer:
     def _on_agent_end(self, frame: dict[str, Any]) -> list[Action]:
         usage, seen = extract_usage(frame)
         self.usage_keys_seen.update(seen)
-        if usage:
-            self.usage = usage
+        # Each `agent_end` carries only its own leg's new messages and run
+        # telemetry (pi-agent-core README, "Event Types"), so a turn that
+        # continues past a non-terminal one sums every leg.
+        for bucket, count in usage.items():
+            self.usage[bucket] = self.usage.get(bucket, 0) + count
         terminal = frame.get("isTerminal") is not False
         self.terminal_end_seen = self.terminal_end_seen or terminal
         return [AgentFinished(terminal=terminal, usage=usage)]
