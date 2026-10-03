@@ -49,12 +49,14 @@ The route an implementor runs
 =============================
 
 The `task` surface selects an `agent`, not a model. Each batch item sets only
-`agent`; no item carries a per-item model argument. Dispatch is a lookup, not a
+`agent`, one that runs on the `task` role; no item carries a per-item model
+argument. Dispatch is a lookup, not a
 search:
 
 1. Read `modelRoles.task` from the running Omp configuration.
-2. Find the row for that configuration in `Measured routes`, in
-   [`issue-body`'s `omp.md`](../../issue-body/references/omp.md).
+2. Find its row in `Measured routes`, in
+   [`issue-body`'s `omp.md`](../../issue-body/references/omp.md). Rows are keyed
+   by `Model` and `Settings`, the `omp_configs/` overlay that set the role.
 3. Compare the row's `Class earned` with the task's required class. When it
    covers the class required, dispatch. A stronger class may run lower-class
    work.
