@@ -40,6 +40,8 @@
 
 ### Features
 
+* **ci:** combine release title validation and projection ([#508](https://github.com/jmcvetta/daily-driver/issues/508))
+
 * adopt Worktrunk for isolated task worktrees and install its official Claude plugin and latest CLI during cloud Setup ([#495](https://github.com/jmcvetta/daily-driver/issues/495))
 
 ### Bug Fixes

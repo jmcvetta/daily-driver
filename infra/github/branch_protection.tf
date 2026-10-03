@@ -4,11 +4,10 @@
 # configuration was modelled on. Migrating to a ruleset is a separate change
 # with its own plan.
 #
-# The required checks are the CI aggregate, the PR title validation, and the
-# release projection. The latter two are separate workflows because each
-# checks a merge input rather than a CI area; both report on every applicable
-# pull-request head, and release-please pull requests intentionally report
-# `preview` as skipped, which GitHub treats as successful for protection.
+# The required checks are the CI aggregate and Release Projection. The latter
+# validates the title release-please consumes, then projects the release from
+# the same runner. It reports on every pull-request head; release-please pull
+# requests skip only projection, leaving title validation as the gate.
 #
 # Adding a job to CI still does not require touching this file unless it is a
 # merge gate. The contract for each gate is its job name, not its workflow.
@@ -26,7 +25,7 @@ resource "github_branch_protection" "master" {
 
   required_status_checks {
     strict   = false
-    contexts = ["CI Success", "validate-title", "preview"]
+    contexts = ["CI Success", "Release Projection"]
   }
 
   required_pull_request_reviews {
