@@ -10,4 +10,4 @@ harness reference files, use that skill's `references/omp.md`; do not select a
 Claude Code or Codex reference for this session.
 
 The model and provider identify what serves the turn, not which harness runs
-it. A model name such as `openai-codex/...` does not make this a Codex session.
+it. Neither name makes this a Codex session.
