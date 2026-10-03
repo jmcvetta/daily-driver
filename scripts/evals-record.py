@@ -11,7 +11,10 @@ import re
 import shlex
 import shutil
 import socket
+import statistics
 import subprocess
+import sys
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -270,9 +273,11 @@ def run_cases(
     requested: dict[str, str],
     client_name: str,
     prices: dict[str, dict[str, Any]],
+    sources: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """One row per task result in `run`: model, settings, class, outcome,
-    elapsed seconds, tokens, price and the price's source --
+    elapsed seconds, tokens, price and the price's source, plus the pull
+    request a case was built from (`source`, `owner/repo#N`) where it has one --
     `evals-render-routes.py`'s and `evals-render-results.py`'s input.
     """
     cases = []
@@ -288,8 +293,10 @@ def run_cases(
                 f"{row_label(row)}: no positive wall time (duration {elapsed!r}); "
                 "schema version 3 records only replicates that ran"
             )
+        case_source = (sources or {}).get(row.get("task_id", ""))
         cases.append(
             {
+                **({"source": case_source} if case_source else {}),
                 "task_id": row.get("task_id", "unknown"),
                 "variant_id": variant_id,
                 "replicate_index": row.get("replicate_index", 0),
@@ -311,6 +318,7 @@ def run_cases(
 # `scripts/evals-cases-from-prs.py`; it names the repository whose later
 # history holds the answer.
 _MODEL_CLASSES_SOURCE = re.compile(r"^\s*([\w.-]+/[\w.-]+)#\d+:")
+_SOURCE_PR = re.compile(r"^\s*([\w.-]+/[\w.-]+)#(\d+):")
 
 # Where the answer key, or a copy of it, can be read on the host that ran the
 # replicate: the fixture's old in-sandbox layout, coder_eval's staged
@@ -474,6 +482,27 @@ def contaminated_scores(scores: dict[str, list[Any]], attempts: list[dict[str, A
     return measured
 
 
+def task_sources(run_dir: Path, run: dict[str, Any]) -> dict[str, str]:
+    """`owner/repo#N` per task id, for the tasks built from a pull request.
+
+    The case builder writes it as the head of the task's description; a task
+    whose description does not start that way has no source pull request.
+    """
+    sources: dict[str, str] = {}
+    for result in run.get("task_results", []):
+        task_id = result["task_id"]
+        if task_id in sources:
+            continue
+        replicate = result.get("replicate_index", 0)
+        artifact_path = run_dir / result["variant_id"] / task_id / f"{replicate:02d}" / "task.json"
+        if not artifact_path.is_file():
+            continue
+        match = _SOURCE_PR.match(json.loads(artifact_path.read_text()).get("task_description") or "")
+        if match:
+            sources[task_id] = f"{match.group(1)}#{match.group(2)}"
+    return sources
+
+
 def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Build a committed provenance record from a coder_eval run directory,
     pricing token-only rows from `prices`."""
@@ -542,7 +571,7 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[
         },
         "variants": variants,
         "attempts": attempts,
-        "cases": run_cases(run, experiment["experiment_id"], requested, client_name, prices),
+        "cases": run_cases(run, experiment["experiment_id"], requested, client_name, prices, task_sources(run_dir, run)),
     }
 
 def validate_record(record: dict[str, Any]) -> list[str]:
@@ -627,6 +656,8 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 for field in ("task_id", "variant_id", "model_requested", "model_served", "settings", "outcome"):
                     if not isinstance(case.get(field), str) or not case[field]:
                         errors.append(f"{prefix}.{field} must be a non-empty string")
+                if case.get("source") is not None and not (isinstance(case["source"], str) and _SOURCE_PR.match(case["source"] + ":")):
+                    errors.append(f"{prefix}.source must be 'owner/repo#N' when present")
                 if case.get("class") is not None and not isinstance(case.get("class"), str):
                     errors.append(f"{prefix}.class must be a string or null")
                 if not isinstance(case.get("replicate_index"), int):
@@ -650,6 +681,85 @@ def validate_record(record: dict[str, Any]) -> list[str]:
     return errors
 
 
+_COMMENT_API = "https://api.github.com"
+
+
+def render_comment(record: dict[str, Any], source: str, provenance_file: str) -> str:
+    """The comment for one source pull request: one row per model and variant.
+
+    Repeats collapse into `pass n/m` and a median elapsed. Tokens, cost and
+    transcripts stay in the record.
+    """
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for case in record["cases"]:
+        if case.get("source") == source:
+            groups.setdefault((case["model_requested"], case["variant_id"]), []).append(case)
+    rows = []
+    for (model, variant), cases in sorted(groups.items()):
+        passed = sum(1 for case in cases if case["outcome"] == "succeeded")
+        minutes = round(statistics.median(case["elapsed_seconds"] for case in cases) / 60)
+        rows.append(f"| `{model}` | {variant} | pass {passed}/{len(cases)} | {max(minutes, 1)} min median |")
+    run_id = record["run_id"]
+    return "\n".join(
+        [
+            f"<!-- eval-result: {run_id} -->",
+            "## Eval result",
+            "",
+            f"An agent re-implemented this pull request's task in an eval on {record['started_at'][:10]}, "
+            "after the fact. The implementation above is the real one.",
+            "",
+            "| Model | Variant | Outcome | Elapsed |",
+            "| --- | --- | --- | --- |",
+            *rows,
+            "",
+            f"Run `{run_id}`, recorded in `{provenance_file}`.",
+            "",
+        ]
+    )
+
+
+def find_result_comment(comments: list[dict[str, Any]], run_id: str) -> dict[str, Any] | None:
+    """The existing comment carrying this run's marker, or None where a new one is due."""
+    marker = f"<!-- eval-result: {run_id} -->"
+    for comment in comments:
+        if (comment.get("body") or "").startswith(marker):
+            return comment
+    return None
+
+
+def _api(token: str, method: str, path: str, body: dict[str, Any] | None = None) -> Any:
+    request = urllib.request.Request(
+        _COMMENT_API + path,
+        data=json.dumps(body).encode() if body is not None else None,
+        method=method,
+        headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.load(response)
+
+
+def post_comments(record: dict[str, Any], provenance_file: str, token: str) -> None:
+    """Post or edit the run's comment on each distinct source pull request."""
+    for source in sorted({case["source"] for case in record["cases"] if case.get("source")}):
+        repo, number = source.rsplit("#", 1)
+        base = f"/repos/{repo}/issues"
+        body = render_comment(record, source, provenance_file)
+        comments: list[dict[str, Any]] = []
+        page = 1
+        while True:
+            batch = _api(token, "GET", f"{base}/{number}/comments?per_page=100&page={page}")
+            comments += batch
+            if len(batch) < 100:
+                break
+            page += 1
+        existing = find_result_comment(comments, record["run_id"])
+        if existing:
+            _api(token, "PATCH", f"{base}/comments/{existing['id']}", {"body": body})
+        else:
+            _api(token, "POST", f"{base}/{number}/comments", {"body": body})
+        print(f"{'edited' if existing else 'posted'} eval result on {source}")
+
+
 def parse_args() -> argparse.Namespace:
     """Parse recorder command-line arguments."""
     parser = argparse.ArgumentParser()
@@ -658,6 +768,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=Path("evals/provenance"))
     parser.add_argument("--prices", type=Path, default=Path(__file__).resolve().parent.parent / "evals" / "prices.yaml", help="price table for token-only harnesses")
     parser.add_argument("--validate", action="store_true")
+    parser.add_argument("--post-comments", action="store_true", help="post the run's result on each source pull request")
     return parser.parse_args()
 
 
@@ -684,6 +795,12 @@ def main() -> int:
     path = args.output / f"{record['experiment_id']}-{date}-{record['run_id']}.json"
     path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
     print(path)
+    if args.post_comments:
+        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+        if not token:
+            print("no GITHUB_TOKEN or GH_TOKEN: record written, comments skipped", file=sys.stderr)
+            return 1
+        post_comments(record, f"{args.output.as_posix()}/{path.name}", token)
     return 0
 
 
