@@ -1,9 +1,7 @@
 modelRoles:
-  default: vercel-ai-gateway/zai/glm-5.3-flash:high
-  smol: vercel-ai-gateway/zai/glm-5.3-flash:medium
-  slow: vercel-ai-gateway/alibaba/qwen3.8-max-0902:high
-  plan: vercel-ai-gateway/moonshotai/kimi-k3:high
-  task: vercel-ai-gateway/zai/glm-5.3:high
-  advisor: vercel-ai-gateway/alibaba/qwen3.8-max-0902:high
-  vision: vercel-ai-gateway/minimax/minimax-m3
-  tiny: vercel-ai-gateway/zai/glm-5.3-flash:low
+  default: vercel-ai-gateway/zai/glm-5.3:high
+  task: vercel-ai-gateway/zai/glm-5.3:medium
+  advisor: vercel-ai-gateway/moonshotai/kimi-k3:high
+  mechanical: vercel-ai-gateway/zai/glm-5.3-flash:high
+  implementation: vercel-ai-gateway/zai/glm-5.3:medium
+  reasoning: vercel-ai-gateway/zai/glm-5.3:extra
