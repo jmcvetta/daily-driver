@@ -2053,6 +2053,66 @@ for (const [name, command, blocked] of [
 	);
 }
 
+// An interpreter is classified wherever it stands in a command, so a wrapper in
+// front of it does not hide it. Without these cases the guard reads only the
+// first word, and `exec bash -c '<move>'` passes because `exec` is not a shell.
+for (const [name, command] of [
+	[
+		"the documented keep-current launch",
+		"printf 'keep-current-started\\n'; exec bash scripts/pr-keep-current.sh 686",
+	],
+	["a wrapped script file with an argument", "timeout 5 bash scripts/provision-disposable.sh status"],
+	["a wrapped literal command string that moves nothing", "exec bash -c 'true'"],
+	// `grep -n sh file` reads `sh` as a script file `file`, so it must keep passing.
+	["an interpreter name used as a grep operand", "grep -n sh file"],
+]) {
+	checkGuard(
+		`${name} passes from a task worktree`,
+		false,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
+for (const [name, command] of [
+	["a wrapped expanded command string", 'exec bash -c "$script"'],
+	["a wrapped here-document fed to a shell", "exec bash <<'EOF'\ntrue\nEOF\n"],
+	// A here-document fed to a bare interpreter reads as a script file named
+	// `<<EOF` unless a redirection is refused where the script would stand.
+	["a here-document fed to a shell", "bash <<'EOF'\ntrue\nEOF\n"],
+	["a here-string fed to a shell", "bash <<< 'true'"],
+	["a file redirected into a shell", "bash < script.sh"],
+	["a wrapped shell reading stdin", "env bash -"],
+	// The named cost: a word that only mentions an interpreter has no operands
+	// to classify, so it is refused from any cwd. A visible false positive with
+	// an obvious repair, in place of a silent hole.
+	["an interpreter word that is only mentioned", "command -v bash"],
+]) {
+	checkGuard(
+		`${name} is refused from a task worktree`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+		UNREADABLE_COMMAND_BLOCK_REASON,
+	);
+}
+
+for (const [name, command] of [
+	["a wrapped bash -c", `exec bash -c 'git -C "${worktrees.primary}" switch master'`],
+	["a wrapped sh -c", `timeout 5 sh -c 'git -C "${worktrees.primary}" switch master'`],
+]) {
+	// The wrapped string is walked like a bare one, so the move is still found.
+	checkGuard(
+		`${name} does not hide a branch move in the primary`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
 for (const [name, command] of [
 	["a string run by eval", "eval \"$script\""],
 	["a string run by bash -c", "bash -c \"$script\""],

@@ -1735,6 +1735,10 @@ function shellInvocation(name, operands) {
 		return command?.literal ? { command } : null;
 	}
 	const file = operands[position];
+	// A redirection where the script would stand — `<<EOF`, `<<<`, `< file`,
+	// `0<file` — feeds the interpreter commands from input the guard did not
+	// read. It is no script file.
+	if (file?.literal && /^\d*<+/u.test(file.text)) return null;
 	return file?.literal ? { file } : null;
 }
 
@@ -1833,24 +1837,32 @@ function walkShellCommand(command, toolCwd) {
 		}
 
 		const name = basename(executable.text);
-		const operands = segment.words.slice(position + 1);
 
-		if (STRING_INTERPRETERS.has(name)) {
-			const invocation = shellInvocation(name, operands);
+		// An interpreter is found at every literal word, the way `git` is, so a
+		// wrapper in front of it — `exec bash -c …`, `timeout 5 bash -c …`,
+		// `env bash -` — does not hide it. A word that only mentions an
+		// interpreter (`command -v bash`) has no operands to classify and is
+		// refused: the same visible false positive the guard takes for an
+		// executable that expands.
+		for (let index = position; index < segment.words.length; index++) {
+			const word = segment.words[index];
+			if (!word.literal) continue;
+			const interpreter = basename(word.text);
+			if (!STRING_INTERPRETERS.has(interpreter)) continue;
+			const invocation = shellInvocation(
+				interpreter,
+				segment.words.slice(index + 1),
+			);
 			if (invocation === null) {
 				throw new UnreadableCommandError(
 					"a command runs a string or script the guard cannot classify",
 				);
 			}
 			if (invocation.file !== undefined) continue;
-			if (name === "eval") {
-				if (walkShellCommand(invocation.command.text, shellCwd)) return true;
-				shellCwd = null;
-			} else if (walkShellCommand(invocation.command.text, shellCwd)) {
-				return true;
-			}
-			continue;
+			if (walkShellCommand(invocation.command.text, shellCwd)) return true;
+			if (interpreter === "eval") shellCwd = null;
 		}
+		if (STRING_INTERPRETERS.has(name)) continue;
 
 		if (DIRECTORY_UNKNOWNS.has(name) || defined.has(name)) {
 			// A sourced file and a function body are commands the guard has not

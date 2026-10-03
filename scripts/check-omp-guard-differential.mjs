@@ -201,6 +201,14 @@ function shapes({ root, primary, task, detached }) {
 	add("ordinary arithmetic", task, "n=1; echo $(( $n + 1 ))");
 	add("bash -c expanded", task, `x='${move(primary)}'; bash -c "$x"`);
 
+	// An interpreter behind a wrapper, or reading a here-document. Each moves
+	// the primary under real bash, so each must be refused rather than read as
+	// a wrapper command or a script file.
+	add("exec bash -c literal", task, `exec bash -c '${move(primary)}'`);
+	add("timeout bash -c literal", task, `timeout 5 bash -c '${move(primary)}'`);
+	add("env bash -c literal", task, `env bash -c '${move(primary)}'`);
+	add("bash here-document", task, `bash <<'EOF'\n${move(primary)}\nEOF\n`);
+
 	// Expansions standing where the guard reads a literal.
 	add("expanded cd target", task, `x=${primary}; cd $x; git switch feature/y`);
 	add("expanded executable", primary, "g=git; $g switch feature/y");
