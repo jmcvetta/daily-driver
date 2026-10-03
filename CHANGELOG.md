@@ -19,6 +19,10 @@
 
 ## [Unreleased]
 
+### Features
+
+* adopt Worktrunk for isolated task worktrees and install its official Claude plugin and latest CLI during cloud Setup ([#495](https://github.com/jmcvetta/daily-driver/issues/495))
+
 ### Bug Fixes
 
 * **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)

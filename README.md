@@ -147,9 +147,13 @@ there: it blocks the `ask` tool with the same wording and supplies the
 session-title, reminder, and session-info tools
 (`daily_driver_set_session_title`, `daily_driver_schedule`,
 `daily_driver_cancel_schedule`, `daily_driver_get_session`) that Omp's
-`ExtensionAPI` makes natural. Omp does not relocate a running session when
-the agent creates a task worktree. The `task-worktree` skill roots each later
-task operation there without a separate task-root status.
+`ExtensionAPI` makes natural.
+
+Omp does not relocate a live session when the agent creates a task worktree.
+Use the verified absolute task paths for file tools and shell work. Omp 18.5.0
+offers the user-initiated `/move <path>` for an idle session; the extension API
+does not provide direct relocation, so automatic plugin-driven relocation is
+outside this plugin's scope.
 
 The extension also closes the failure that weaker models exposed in
 `task-worktree`: direct `write` and `edit` calls in the primary checkout or a
@@ -253,7 +257,39 @@ Installation is **per-machine — or, in the cloud, per-environment**. The
 plugin's bytes land under the harness's own directory and are read from there;
 a repository can point at a plugin, it can never carry one.
 
-On a laptop, two commands, once per machine. For Claude Code:
+The Claude Code marketplace install also installs and enables the official
+Worktrunk plugin as `worktrunk@daily-driver`. Worktrunk's `wt` executable is a
+separate dependency installed by the cloud Setup recipe below.
+
+If you already installed `worktrunk@worktrunk`, migrate it before installing
+or updating Daily Driver. Disable and uninstall it at every scope where it is
+installed or enabled, then install Daily Driver at that same scope. For a
+user-scope installation:
+
+```sh
+claude plugin disable worktrunk@worktrunk --scope user
+claude plugin uninstall worktrunk@worktrunk --scope user
+claude plugin install daily-driver@daily-driver --scope user
+```
+
+Repeat the disable and uninstall commands with `--scope project` or
+`--scope local` where the legacy identity exists. A managed installation must
+be migrated by its administrator. Restart or reload Claude Code after the
+migration, then confirm `claude plugin list` shows `worktrunk@daily-driver`
+enabled and no `worktrunk@worktrunk` identity enabled.
+
+Install the Worktrunk CLI separately on a desktop; the Claude plugin dependency
+does not install `wt`. Worktrunk documents [Homebrew and Cargo
+installation][worktrunk-install]:
+
+```sh
+brew install worktrunk
+# or: cargo install worktrunk
+```
+
+[worktrunk-install]: https://worktrunk.dev/#install
+
+Install Daily Driver once per machine. For Claude Code:
 
 ```sh
 claude plugin marketplace add jmcvetta/daily-driver
@@ -293,41 +329,61 @@ knowing before it surprises you, both measured against `codex-cli` 0.154.0:
   `--dangerously-bypass-hook-trust` for automation that has already vetted the
   source.
 
-In the cloud — meaning a Claude Code cloud environment, so the Claude Code pair
-above rather than either of the others — the same two commands go in the
-environment's **Setup script**, which is the one writer that beats the plugin
-scan. The environment dialog is behind
-the cloud icon above the message box at [claude.ai/code][web].
+The shared catalog also lists Worktrunk's official Claude plugin as a Claude
+dependency. Omp and Codex can read the extra catalog entry, but installing
+Daily Driver there does not install the Claude-only dependency.
+
+In Claude Code cloud environments, install Worktrunk and the plugins in the
+environment's **Setup script**, which runs before the plugin scan. The
+environment dialog is behind the cloud icon above the message box at
+[claude.ai/code][web].
 
 [web]: https://claude.ai/code
 
 ```bash
 #!/bin/bash
+set -euo pipefail
 # CACHEBUST: 1
-#
-# The environment snapshots itself on this script's text and later sessions
-# skip it. Bump the number to reinstall at the current release.
+# Setup is cached by script text; bump CACHEBUST only to force a rerun.
+# Each Setup run installs current Cargo; new releases do not trigger a rerun.
+cargo install --locked --root /usr/local worktrunk
+wt --version
+
 claude plugin marketplace add jmcvetta/daily-driver
 claude plugin install --yes daily-driver@daily-driver
 
-# Both commands can return 0 while leaving the plugin uncached, so check
-# what the loader actually reads.
-grep -qF '"daily-driver@daily-driver"' ~/.claude/plugins/installed_plugins.json &&
-  compgen -G ~/.claude/plugins/cache/daily-driver/daily-driver/*/.claude-plugin/plugin.json >/dev/null
+# Verify each plugin is cached at a version and registered as enabled.
+for plugin in daily-driver worktrunk; do
+  grep -qF "\"${plugin}@daily-driver\"" "$HOME/.claude/plugins/installed_plugins.json"
+  compgen -G "$HOME/.claude/plugins/cache/daily-driver/${plugin}/*/.claude-plugin/plugin.json" >/dev/null
+done
+claude plugin list --json | python3 -c '
+import json, sys
+enabled = {plugin["id"] for plugin in json.load(sys.stdin) if plugin.get("enabled")}
+expected = {"daily-driver@daily-driver", "worktrunk@daily-driver"}
+missing = expected - enabled
+if missing:
+    raise SystemExit(f"plugins not enabled: {sorted(missing)}")
+'
 ```
 
 No `|| true`: a script that exits zero on a failed install snapshots the
-failure. Then start a session there and **ask it what it got**, because nothing
-announces a plugin that failed to load —
+failure. Cargo builds Worktrunk during Setup. Each Setup run resolves the
+latest published Cargo release; a reused environment keeps its installed
+binary and runs no updater on session resume. A new Worktrunk release does not
+require a `CACHEBUST` change. Edit Setup only when it should run again. Then
+start a session and **ask it what it got**, because nothing announces a plugin
+that failed to load —
 
 > Without reading any file, say what the constitution tells you about
 > production systems. Then list the skills available to you whose names begin
-> `daily-driver:`. Then run `ls
-> ~/.claude/plugins/cache/daily-driver/daily-driver/`.
+> `daily-driver:`. Then list the enabled plugins `daily-driver@daily-driver`
+> and `worktrunk@daily-driver`, and run `ls
+> ~/.claude/plugins/cache/daily-driver/`.
 
-Do **not** ask what plugins are installed: that question has a known wrong
-answer. After a release, bump the `CACHEBUST` number and ask again — an
-existing environment does not pick up a new release on its own.
+Do not ask only whether plugins are installed: installation is not proof that
+they loaded. A Worktrunk release does not change a reused environment; Setup
+must run again for its install command to resolve a newer release.
 
 [docs/bootstrapping-a-repository.md](docs/bootstrapping-a-repository.md) has
 the mechanism under all of this, and *the stanza* a repository can carry in
@@ -352,6 +408,13 @@ itself: its hook wire contract is Claude Code's — same stdin, same
 `hookSpecificOutput`, same `CLAUDE_PLUGIN_ROOT` in a plugin hook's environment
 — so it needs no adapter of its own, only the extra matcher and extra event
 `hooks/hooks.json` already carries.
+
+**Claude Code inline development needs both plugin directories.** A
+`claude --plugin-dir <daily-driver>` invocation does not fetch marketplace
+dependencies. When testing this route, also pass the official Worktrunk plugin
+directory from `worktrunk/plugins/worktrunk`. The shared catalog dependency is
+installed automatically only through the marketplace route; Omp and Codex
+continue to install Daily Driver alone.
 
 **For local development, `omp --plugin-dir <path>`.** It loads the skills
 straight from a checkout, with nothing installed. It does **not** load the
@@ -391,8 +454,11 @@ both hooks against synthetic event JSON and asserts the constitution comes back
 from each; `scripts/check-labels.py`, which asserts the issue-labels standard
 says the same thing in `issue-labels` and in the OpenTofu that declares it;
 `scripts/check-eval-fixtures.sh`; `scripts/check-task-worktree-fixture.sh`,
-which exercises the linked and detached repositories used by that skill's
-behavior rows; `scripts/check-omp-agent.py`, which drives the Omp eval arm's
+which drives real Worktrunk commands in linked and detached repositories to
+test wrong-base creation, reuse, custom paths, collisions and primary-state
+preservation (`wt` must be installed locally); `scripts/check-claude-dependency.sh`,
+which uses isolated Claude configuration to test dependency installation and
+legacy migration; `scripts/check-omp-agent.py`, which drives the Omp eval arm's
 frame reduction against recorded frames; `scripts/check-codex-agent.py`, which
 asserts the Codex arm renders the judge's anchor byte-identically to the Omp
 arm's; and `scripts/check-eval-arms.py`, which keeps the Claude, Omp and Codex

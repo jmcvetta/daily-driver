@@ -524,6 +524,39 @@ def main() -> int:
             f"but plugin.json declares the repository {repository!r}"
         )
 
+    if plugin.get("dependencies") != ["worktrunk"]:
+        errors.append("plugin.json dependencies must list only 'worktrunk'")
+
+    expected_worktrunk = {
+        "name": "worktrunk",
+        "description": "Official Worktrunk plugin for Claude Code",
+        "source": {
+            "source": "git-subdir",
+            "url": "https://github.com/max-sixty/worktrunk",
+            "path": "plugins/worktrunk",
+        },
+    }
+    worktrunk_entries = [
+        entry for entry in marketplace["plugins"] if entry.get("name") == "worktrunk"
+    ]
+    if worktrunk_entries != [expected_worktrunk]:
+        errors.append(
+            "marketplace.json must list the official Worktrunk Claude plugin "
+            "once, without a version"
+        )
+
+    omp_manifest = load_json(ROOT / ".omp-plugin" / "plugin.json", errors)
+    if isinstance(omp_manifest, dict) and "dependencies" in omp_manifest:
+        errors.append(
+            ".omp-plugin/plugin.json must not declare Claude plugin dependencies"
+        )
+    if package_path.exists() and isinstance(package, dict):
+        dependencies = package.get("dependencies")
+        if isinstance(dependencies, dict) and "worktrunk" in dependencies:
+            errors.append(
+                "package.json must not install Worktrunk as an Omp dependency"
+            )
+
     # The plugin is the repository root -- `"source": "./"` -- so exactly one
     # marketplace entry describes it, and it has to agree about the name.
     own = [e for e in marketplace["plugins"] if e.get("source") == "./"]

@@ -87,6 +87,10 @@ jobs:
           node-version: 24
       - name: Ensure ShellCheck
         run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
+      - name: Install Worktrunk
+        run: |
+          cargo install --locked --root "$RUNNER_TEMP/worktrunk" worktrunk
+          echo "$RUNNER_TEMP/worktrunk/bin" >> "$GITHUB_PATH"
       - name: Validate runtime behavior and fixtures
         run: make check-runtime
 

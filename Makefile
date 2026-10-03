@@ -19,6 +19,7 @@ SHELL := /bin/bash
 	evals-install evals-setup-omp evals-plan \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
+	check-claude-dependency \
 	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-comparison evals-run-classes mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
@@ -111,7 +112,7 @@ check-ci-scope:
 	node scripts/check-ci-scope.mjs
 
 check-plugin-validity: check-plugin check-skills check-agents \
-	check-manifests check-manifest-fixtures
+	check-manifests check-manifest-fixtures check-claude-dependency
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean \
@@ -184,6 +185,11 @@ check-release-paths:
 # script's docstring.
 check-manifest-fixtures:
 	python3 scripts/check-manifest-fixtures.py
+
+# Catch a plugin marketplace install that returns success without installing
+# its dependency, and a migration that leaves both Worktrunk identities enabled.
+check-claude-dependency:
+	bash scripts/check-claude-dependency.sh
 
 # The credential-free half of the constitution's acceptance test: run both
 # delivery hooks against synthetic event JSON and assert the constitution's
