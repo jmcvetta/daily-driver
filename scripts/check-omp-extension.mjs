@@ -2003,6 +2003,56 @@ check("the unreadable denial tells the model to write the command literally", ()
 	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /eval/iu);
 });
 
+// Shell script arguments are operands to an opaque program, not more command
+// strings. Without these cases, the guard rejects harmless status calls or
+// mistakes stdin for a literal file and lets unread commands escape inspection.
+for (const [name, cwd] of [
+	["in an attached task worktree", worktrees.task],
+	["in the primary worktree", worktrees.primary],
+]) {
+	checkGuard(
+		`a literal file-based shell call with arguments passes ${name}`,
+		false,
+		"bash",
+		{
+			command:
+				`OMP_WEB_PROVISION_KNOWN_HOSTS="$PWD/infra/ansible/inventory/operator.local.known_hosts" ` +
+				"bash scripts/provision-disposable.sh status",
+		},
+		cwd,
+	);
+}
+
+for (const [name, command, blocked] of [
+	[
+		"a shell with ordinary flags",
+		"bash -eu scripts/provision-disposable.sh status",
+		false,
+	],
+	["a shell with an option argument", "bash -o pipefail scripts/provision-disposable.sh status", false],
+	["a shell script after --", "bash -- scripts/provision-disposable.sh status", false],
+	[
+		"a command string with $0 and later arguments",
+		`bash -c 'git -C "${worktrees.primary}" switch master' arg0 extra`,
+		true,
+	],
+	[
+		"a command string with combined flags and later arguments",
+		`bash -ec 'git -C "${worktrees.primary}" switch master' arg0 extra`,
+		true,
+	],
+	["a shell reading commands from stdin", "bash -", true],
+	["an unclassified shell option", "bash --unknown scripts/provision-disposable.sh status", true],
+]) {
+	checkGuard(
+		`${name} ${blocked ? "is refused" : "passes"}`,
+		blocked,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
 for (const [name, command] of [
 	["a string run by eval", "eval \"$script\""],
 	["a string run by bash -c", "bash -c \"$script\""],

@@ -1002,7 +1002,9 @@ Non-goals
   work.
 - **Does not open an issue for anything but the work in hand.** `Open the
   issue` tracks what was asked for. A bug noticed in passing is worth reporting
-  to the user; it is not this run's second issue.
+  to the user; it is not this run's second issue, except a confirmed Daily
+  Driver component defect reported under `issue`'s automatic-reporting policy.
+  That narrow report does not authorize undertaking unrelated fixes.
 - **Does not review, and does not answer a review.** The round is
   `review-cycle`'s, and it is reachable without this sequence: a pull request
   opened by hand, or one a reviewer has come back to, gets the same round

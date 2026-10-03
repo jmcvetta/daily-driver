@@ -103,8 +103,8 @@ omp-update-daily-driver:
 	omp plugin upgrade daily-driver@daily-driver
 
 
-# `check` remains the local all-groups convenience target. CI runs each
-# purpose-named group in a job selected by declarative component filters.
+# `check` remains the local all-groups convenience target. CI runs its
+# unconditional repository checks and selected groups as named `CI Success` steps.
 check: check-ci-scope check-step-names check-release-paths check-plugin-validity check-runtime check-eval-tooling check-issue-infra
 
 check-ci-scope:
@@ -241,9 +241,8 @@ check-omp-guard-differential:
 #
 # Not part of `check`, for the reason check-infra is not: it needs a toolchain
 # -- here a whole second harness -- and `check` must not start requiring Omp on
-# a laptop that is only editing a skill. CI's `omp` job runs it, gated on the
-# files that can actually break the Omp integration, and reports into
-# `CI Success` either way so a break blocks a merge.
+# a laptop that is only editing a skill. The `CI Success` job runs it when the
+# component filter selects Omp integration, so a break blocks a merge.
 #
 # No guard on `omp` either, and that is the same decision as check-infra's. A
 # target nobody runs by accident should fail loudly when its toolchain is

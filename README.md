@@ -75,7 +75,7 @@ every subagent. Nine sections:
 | Before you reply | Concision by audience: text a person reads is edited concise before it is sent, keeping every essential fact; text an agent reads keeps every fact it needs. The shape: the answer first, no preamble, no recap. |
 | Non-negotiables | Never a production system; dangerous commands in a sandbox or not at all; repository-changing tasks isolated before research; code without tests is broken; every script named rather than globbed; problems are fixed, never hidden. |
 | While you write code | The manual before the web or the source, simplicity, no reinventing a library, no workarounds, correct over quick. |
-| When you hit a wall | Stop on the error, re-assess an approach that is failing, ask rather than guess at intent. |
+| When you hit a wall | Stop on errors, reassess failing approaches, ask rather than guess at intent, and automatically file confirmed Daily Driver component defects. |
 | Before you commit | A doc comment on every new exported symbol, focused commits, message style, named files staged. |
 | Before you call it done | The project's own gates decide, not reasoning about them — and CI is where they run, not this machine. |
 | Dependencies | Added and pinned through the package manager; never a hand-edited manifest or lockfile. |
@@ -189,11 +189,15 @@ unterminated quote are all refused, and the repair is to write the command
 literally. The cost is cheap because the primary checkout is meant to be
 read-only for agents in the first place.
 
-**What it does not claim.** The guard reads shell commands; it does not audit
-programs. A `make`, `python3` or shell script the model runs can reach the
-primary checkout, and nothing here would see it — only the `task-worktree` rule
-stops that. Saying so is the point: a boundary that overstates itself is the
-failure this guard was rewritten to avoid.
+**What it does not claim.** The guard reads shell command strings, including
+the literal operand to `bash -c` or equivalent forms; arguments after that
+operand are `$0`, `$1`, and later positional values. A literal shell script
+path and its arguments are an opaque program invocation, not command strings
+the guard parses. It does not audit programs it runs. A `make`, `python3` or
+shell script the model runs can reach the primary checkout, and nothing here
+would see it — only the `task-worktree` rule stops that. Saying so is the
+point: a boundary that overstates itself is the failure this guard was
+rewritten to avoid.
 
 The
 constitution needs no delivery adapter on this side — Omp's rule provider
@@ -203,9 +207,9 @@ injects `rules/*.md` carrying `alwaysApply: true`.
 `scripts/check-ask-in-chat.py` run both hooks against synthetic event JSON, and
 `scripts/check-omp-extension.mjs` does the same job for the Omp adapter — all
 three in `make check`, with `scripts/check-omp-plugin.py` covering discovery
-from CI's `omp` job. An adapter that stops firing does not
-fail; it silently reverts the behaviour it was installed for, which is the one
-failure nothing else would report.
+from the component-selected `CI Success` job. An adapter that stops firing does
+not fail; it silently reverts the behaviour it was installed for, which is the
+one failure nothing else would report.
 
 ## Layout
 
@@ -493,11 +497,9 @@ the installed route, `omp plugin list` reporting the plugin after `omp plugin
 link .`, and the extension loading rather than failing silently. It is
 credential-free and calls no model, against a throwaway `HOME` — but it needs
 Omp installed, which `make check` must not start requiring of a laptop that is
-only editing a skill. CI's `omp` job runs it instead, gated on the files that
-can actually break the integration — `package.json`, `.claude-plugin/`,
-`extensions/`, and the check itself. That job reports into `CI Success`
-whether or not the gate opens, so a broken Omp integration blocks a merge; its
-comment says why each file is on the list, and why `skills/` is not.
+only editing a skill. CI's single `CI Success` job runs it when the component
+filter selects Omp integration, so a broken Omp integration blocks a merge.
+Its comment says why each file is on the list, and why `skills/` is not.
 `make check-infra` parses the OpenTofu
 stack — see [infra/github/README.md](infra/github/README.md). `make evals-run` — and `make evals-run-omp` and
 `make evals-run-codex`, the same suites on the second and third harnesses —
