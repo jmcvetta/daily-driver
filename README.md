@@ -189,11 +189,15 @@ unterminated quote are all refused, and the repair is to write the command
 literally. The cost is cheap because the primary checkout is meant to be
 read-only for agents in the first place.
 
-**What it does not claim.** The guard reads shell commands; it does not audit
-programs. A `make`, `python3` or shell script the model runs can reach the
-primary checkout, and nothing here would see it — only the `task-worktree` rule
-stops that. Saying so is the point: a boundary that overstates itself is the
-failure this guard was rewritten to avoid.
+**What it does not claim.** The guard reads shell command strings, including
+the literal operand to `bash -c` or equivalent forms; arguments after that
+operand are `$0`, `$1`, and later positional values. A literal shell script
+path and its arguments are an opaque program invocation, not command strings
+the guard parses. It does not audit programs it runs. A `make`, `python3` or
+shell script the model runs can reach the primary checkout, and nothing here
+would see it — only the `task-worktree` rule stops that. Saying so is the
+point: a boundary that overstates itself is the failure this guard was
+rewritten to avoid.
 
 The
 constitution needs no delivery adapter on this side — Omp's rule provider
