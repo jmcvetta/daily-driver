@@ -227,12 +227,12 @@ def main() -> int:
             body="# Fixture\n",
         )
 
-        # Rejecting this neutral harness distinction would leave shared runtime
-        # guidance unable to clarify that model identity does not select the harness.
+        # Rejecting this neutral distinction would prevent shared guidance from
+        # clarifying that provider and model identity do not select the harness.
         rule = root / "rules" / "fixture.md"
         rule.parent.mkdir(exist_ok=True)
         rule.write_text(
-            "A model name alone does not make this a Codex session.\n",
+            "Neither a model nor a provider name selects the active harness.\n",
             encoding="utf-8",
         )
         found = guard.shared_guidance_errors([skill], root=root)
