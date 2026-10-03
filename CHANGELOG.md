@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.48.0](https://github.com/jmcvetta/daily-driver/compare/v0.47.0...v0.48.0) (2026-10-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Run `wt sync` with Worktrunk shell integration instead of `make git_sync`.
+
+### Features
+
+* file confirmed Daily Driver bugs automatically ([#519](https://github.com/jmcvetta/daily-driver/issues/519)) ([a13df72](https://github.com/jmcvetta/daily-driver/commit/a13df72fc158e1cdc7ce46d6fb32ee7486129b2f))
+* post eval results on the source pull request ([#524](https://github.com/jmcvetta/daily-driver/issues/524)) ([f728642](https://github.com/jmcvetta/daily-driver/commit/f72864229547fe0e2c45662ef23474dc11e93ba0))
+* switch to master before sync cleanup ([#522](https://github.com/jmcvetta/daily-driver/issues/522)) ([96b96cd](https://github.com/jmcvetta/daily-driver/commit/96b96cd8f830d883e808d770d5e0a1168cc8e865))
+
+
+### Bug Fixes
+
+* **omp-guard:** classify shell interpreters at every word position ([#525](https://github.com/jmcvetta/daily-driver/issues/525)) ([2f32819](https://github.com/jmcvetta/daily-driver/commit/2f32819d73d9aa5c966eeef30d3c952aabfe0a26))
+* **omp:** add readiness signals to watcher services ([#510](https://github.com/jmcvetta/daily-driver/issues/510)) ([34e0244](https://github.com/jmcvetta/daily-driver/commit/34e024483796ef1e50e1d5192cd76595847af435))
+* **omp:** allow shell script arguments through guard ([#512](https://github.com/jmcvetta/daily-driver/issues/512)) ([7a731da](https://github.com/jmcvetta/daily-driver/commit/7a731da7ec4963c84fa311f0739a35e0812f3ff6))
+* **omp:** keep runtime guidance provider-neutral ([#504](https://github.com/jmcvetta/daily-driver/issues/504)) ([57da558](https://github.com/jmcvetta/daily-driver/commit/57da55819f5222a1551cc534d6886754cd6cd20d))
+* **omp:** select instruction routes by runtime ([#500](https://github.com/jmcvetta/daily-driver/issues/500)) ([8777630](https://github.com/jmcvetta/daily-driver/commit/8777630d438162ab210289e4a83e662fcddef7f6))
+
 ## [0.47.0](https://github.com/jmcvetta/daily-driver/compare/v0.46.0...v0.47.0) (2026-10-03)
 
 
