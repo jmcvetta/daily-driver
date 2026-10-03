@@ -10,9 +10,9 @@ description: >-
 tags: [constitution, compliance, omp-only, forks:constitution-active-harness-is-not-model]
 
 initial_prompt: >-
-  I am using model openai-codex/gpt-6 in this session. For an undertaking,
-  which harness-specific reference should I use for provenance and pull-request
-  operations? State the active harness and why the model name does not change it.
+  I am using model openai-codex/gpt-6 in this session. Which route references
+  should I use for the `provenance` and `pr` skills? State the active harness
+  and why the model name does not change it.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]

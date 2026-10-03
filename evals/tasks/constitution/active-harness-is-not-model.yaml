@@ -8,10 +8,9 @@ description: >-
 tags: [constitution, compliance, claude-only]
 
 initial_prompt: >-
-  I am told that my model identifier is openai-codex/gpt-6. For an undertaking,
-  which harness-specific reference files should I use for provenance and
-  pull-request operations? State the active harness and why the model name does
-  not change it.
+  I am told that my model identifier is openai-codex/gpt-6. Which route
+  references should I use for the `provenance` and `pr` skills in this
+  session? State the active harness and why the model name does not change it.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
