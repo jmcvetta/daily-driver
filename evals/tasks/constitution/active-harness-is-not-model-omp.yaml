@@ -7,7 +7,7 @@ task_id: constitution-active-harness-is-not-model-omp
 description: >-
   An Omp session selects Omp-specific routes even when the model identifier
   contains openai-codex.
-tags: [constitution, compliance, omp-only]
+tags: [constitution, compliance, omp-only, forks:constitution-active-harness-is-not-model]
 
 initial_prompt: >-
   I am using model openai-codex/gpt-6 in this session. For an undertaking,
