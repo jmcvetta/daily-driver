@@ -37,6 +37,35 @@ moves below need is named in words here and resolved to a route there:
 [`references/codex.md`](references/codex.md) for Codex. Read the one for the
 harness in use before the first call.
 
+Automatic Daily Driver bug reports
+==================================
+
+When a Daily Driver skill, script, hook, extension, or supplied
+harness-specific command is confirmed defective, file a brief report in
+`jmcvetta/daily-driver` without asking permission. Confirmation must distinguish
+the component from invalid input, caller misuse, missing credentials, a target
+repository defect, and a third-party failure. A failed command alone does not
+establish ownership. Read the relevant documented behavior and available
+evidence; use a safe, bounded reproduction only when needed. Do not repeat an
+already-established failure or require a complete root-cause investigation.
+
+Use the title `[auto-filed] <short defect description>` and the existing `bug`
+label. Keep the body short: name the affected component, expected and observed
+behavior, and the minimal available reproduction or error evidence that
+establishes Daily Driver ownership. Include relevant version and context when
+available, redact secrets and private project data, and end with
+`provenance`'s block. Do not add task sections, a model class, a task template,
+a haiku, an implementation map, an acceptance plan, or a proposed fix.
+
+If attribution remains uncertain, investigate only as needed to resolve it;
+do not file an asserted bug based on suspicion. Target-repository defects
+continue through their normal fix path. After filing, report the issue link
+and return to the original work where safe. Filing does not authorize a
+workaround, require the same session to fix Daily Driver, or override another
+safety rule. If the defect blocks the work, report that blocker. If GitHub
+filing fails, report the actual failure and do not claim that an issue exists.
+
+
 
 What fires, and what does not
 =============================
