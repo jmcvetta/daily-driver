@@ -221,14 +221,31 @@ def main() -> int:
             len(found) == 1 and "the body" in found[0] and ":9:" in found[0],
             f"case 4 (skill body): expected one body error, got {found}",
         )
+        skill = write_skill(
+            root,
+            description="A neutral skill description.",
+            body="# Fixture\n",
+        )
 
+        # Rejecting this neutral harness distinction would leave shared runtime
+        # guidance unable to clarify that model identity does not select the harness.
         rule = root / "rules" / "fixture.md"
         rule.parent.mkdir(exist_ok=True)
+        rule.write_text(
+            "A model name alone does not make this a Codex session.\n",
+            encoding="utf-8",
+        )
+        found = guard.shared_guidance_errors([skill], root=root)
+        require(
+            found == [],
+            f"case 4 (shared rule harness distinction): expected no errors, got {found}",
+        )
+
         rule.write_text("An OpenAI route is not shared guidance.\n", encoding="utf-8")
         found = guard.shared_guidance_errors([skill], root=root)
         require(
-            len(found) == 2 and "rules/fixture.md:1" in found[0],
-            f"case 4 (shared rule): expected rule and body errors, got {found}",
+            len(found) == 1 and "rules/fixture.md:1" in found[0],
+            f"case 4 (shared rule): expected one rule error, got {found}",
         )
 
         skill = write_skill(
