@@ -13,7 +13,7 @@ SHELL := /bin/bash
 	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
 	check-review-cycle-fix-delta-route check-provenance check-verse \
 	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-task-worktree-fixture check-eval-arms check-ci-scope check-step-names \
+	check-task-worktree-fixture check-claude-dependency check-eval-arms check-ci-scope check-step-names \
 	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
 	check-story-fixtures check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra evals-install evals-plan \
@@ -95,7 +95,7 @@ check-ci-scope:
 	node scripts/check-ci-scope.mjs
 
 check-plugin-validity: check-plugin check-skills check-agents \
-	check-manifests check-manifest-fixtures
+	check-manifests check-manifest-fixtures check-claude-dependency
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
@@ -168,6 +168,11 @@ check-release-paths:
 # script's docstring.
 check-manifest-fixtures:
 	python3 scripts/check-manifest-fixtures.py
+
+# Catch a plugin marketplace install that returns success without installing
+# its dependency, and a migration that leaves both Worktrunk identities enabled.
+check-claude-dependency:
+	bash scripts/check-claude-dependency.sh
 
 # The credential-free half of the constitution's acceptance test: run both
 # delivery hooks against synthetic event JSON and assert the constitution's

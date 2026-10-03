@@ -205,11 +205,12 @@ misread as an invitation.
 
 `task-worktree/` tests the boundary and the work, not a narrated command.
 `01` names the feature branch but says nothing about isolation; the rule and
-skill must supply the sibling worktree. The same Git fixture runs through each
-CLI arm and accepts only a branch from the remote default, the changed file in
-a registered sibling worktree, and an unchanged primary checkout. `04` starts
-detached and requires the feature branch in place. `02` keeps read-only review
-out; `03` keeps an already attached worktree from nesting another one.
+skill must supply Worktrunk creation in a sibling worktree. The shared fixture
+uses real `wt` commands and accepts only a branch from the remote default, the
+changed file in a registered sibling worktree, preserved primary-checkout
+state, and no copied primary-only changes. `04` starts detached and requires the
+feature branch in place. `02` keeps read-only review out; `03` keeps an already
+attached worktree from nesting another one.
 
 `issue-labels/` is separated from `issue-deps`, and the two are one word
 apart: both are about an issue, and both are reached for with "what does this

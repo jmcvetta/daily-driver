@@ -13,5 +13,6 @@
     "workflow",
     "conventional-commits"
   ],
-  "agents": []
+  "agents": [],
+  "dependencies": ["worktrunk"]
 }
