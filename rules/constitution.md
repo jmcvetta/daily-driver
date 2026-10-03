@@ -118,15 +118,15 @@ worktree.
 - On an error, a bug, an unexpected result, or any undesirable state, stop
   immediately and fix it before moving on.
 - When a Daily Driver component appears defective, first establish that the
-   failure belongs to a Daily Driver skill, script, hook, extension, or
-   supplied harness command. A failed command alone is not confirmation.
-   Once confirmed, file a brief bug report in `jmcvetta/daily-driver` through
-   `issue`, without asking permission. Follow `issue`'s automatic-reporting
-   guidance for evidence, title, label and body. If attribution remains
-   uncertain, do not file an asserted Daily Driver bug. If filing fails,
-   report the failure; do not claim an issue exists.
+  failure belongs to a Daily Driver skill, script, hook, extension, or
+  supplied harness command. A failed command alone is not confirmation.
+  Once confirmed, file a brief bug report in `jmcvetta/daily-driver` through
+  `issue`, without asking permission. Follow `issue`'s automatic-reporting
+  guidance for evidence, title, label and body. If attribution remains
+  uncertain, do not file an asserted Daily Driver bug. If filing fails,
+  report the failure; do not claim an issue exists.
 - This rule does not change the handling of defects in the repository being
-   worked on. Fix those defects under the normal rules.
+  worked on. Fix those defects under the normal rules.
 - When the *approach* is what is failing — cascading complexity, assumptions
   turning out wrong — stop rather than push through, re-assess, and update the
   plan.
