@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.47.0](https://github.com/jmcvetta/daily-driver/compare/v0.46.0...v0.47.0) (2026-10-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Task-worktree callers now require Worktrunk (`wt`) on PATH. The Git-only worktree creation path is removed.
+
+### Features
+
+* add make evals-setup-omp and refuse unsearched can't-run blockers ([#491](https://github.com/jmcvetta/daily-driver/issues/491)) ([aefef0f](https://github.com/jmcvetta/daily-driver/commit/aefef0f3e38a26292efc7376d9a04c24c8997a30))
+* **constitution:** replace the four-line budget with the audience rule ([#472](https://github.com/jmcvetta/daily-driver/issues/472)) ([1df40c7](https://github.com/jmcvetta/daily-driver/commit/1df40c7c633478e90a089d20b1844e22339020f0))
+* require Worktrunk for task isolation ([#496](https://github.com/jmcvetta/daily-driver/issues/496)) ([cb601bc](https://github.com/jmcvetta/daily-driver/commit/cb601bcb6e8075bde52e7eed3bc446fb5fc0cc7b))
+
+
+### Bug Fixes
+
+* **constitution:** scope the testing rule to application code ([#479](https://github.com/jmcvetta/daily-driver/issues/479)) ([d12ad73](https://github.com/jmcvetta/daily-driver/commit/d12ad73eeefc112e630517e708ca23d8c8b47a74))
+* route Title the session in the Claude references ([#493](https://github.com/jmcvetta/daily-driver/issues/493)) ([3615fd2](https://github.com/jmcvetta/daily-driver/commit/3615fd2cf92af04e810d61656e4f83634a9fa592))
+
 ## [0.46.0](https://github.com/jmcvetta/daily-driver/compare/v0.45.0...v0.46.0) (2026-10-02)
 
 
