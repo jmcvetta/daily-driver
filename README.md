@@ -193,7 +193,9 @@ read-only for agents in the first place.
 the literal operand to `bash -c` or equivalent forms; arguments after that
 operand are `$0`, `$1`, and later positional values. A literal shell script
 path and its arguments are an opaque program invocation, not command strings
-the guard parses. It does not audit programs it runs. A `make`, `python3` or
+the guard parses. An interpreter is classified wherever it stands in the
+command, so a wrapper such as `exec`, `timeout` or `env` does not hide it. It
+does not audit programs it runs. A `make`, `python3` or
 shell script the model runs can reach the primary checkout, and nothing here
 would see it — only the `task-worktree` rule stops that. Saying so is the
 point: a boundary that overstates itself is the failure this guard was
