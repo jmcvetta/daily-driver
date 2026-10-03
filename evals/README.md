@@ -127,7 +127,8 @@ and the median elapsed minutes. Tokens, cost and transcripts stay in the
 record. A comment is edited, not repeated, when its `eval-result` run marker
 is already on the pull request. The token comes from `GITHUB_TOKEN` or
 `GH_TOKEN`; without one the record is written, the comments are skipped, and
-the command exits non-zero. Posting is local only; CI never sets the flag.
+the command exits non-zero. A failure on one pull request is reported on stderr, the
+rest still post, and the exit is non-zero. Posting is local only; CI never sets the flag.
 
 The `*-neg-*` selector is a filename glob, and one absence assertion does not
 live in a file it matches: `tasks/pr/02-open-a-pr.yaml` is a fire case that

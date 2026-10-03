@@ -738,26 +738,37 @@ def _api(token: str, method: str, path: str, body: dict[str, Any] | None = None)
         return json.load(response)
 
 
-def post_comments(record: dict[str, Any], provenance_file: str, token: str) -> None:
-    """Post or edit the run's comment on each distinct source pull request."""
+def post_comments(record: dict[str, Any], provenance_file: str, token: str) -> int:
+    """Post or edit the run's comment on each distinct source pull request.
+
+    A failure on one pull request is reported and the rest still post; the
+    return value is the number that failed.
+    """
+    failed = 0
     for source in sorted({case["source"] for case in record["cases"] if case.get("source")}):
         repo, number = source.rsplit("#", 1)
         base = f"/repos/{repo}/issues"
-        body = render_comment(record, source, provenance_file)
-        comments: list[dict[str, Any]] = []
-        page = 1
-        while True:
-            batch = _api(token, "GET", f"{base}/{number}/comments?per_page=100&page={page}")
-            comments += batch
-            if len(batch) < 100:
-                break
-            page += 1
-        existing = find_result_comment(comments, record["run_id"])
-        if existing:
-            _api(token, "PATCH", f"{base}/comments/{existing['id']}", {"body": body})
-        else:
-            _api(token, "POST", f"{base}/{number}/comments", {"body": body})
+        try:
+            body = render_comment(record, source, provenance_file)
+            comments: list[dict[str, Any]] = []
+            page = 1
+            while True:
+                batch = _api(token, "GET", f"{base}/{number}/comments?per_page=100&page={page}")
+                comments += batch
+                if len(batch) < 100:
+                    break
+                page += 1
+            existing = find_result_comment(comments, record["run_id"])
+            if existing:
+                _api(token, "PATCH", f"{base}/comments/{existing['id']}", {"body": body})
+            else:
+                _api(token, "POST", f"{base}/{number}/comments", {"body": body})
+        except OSError as error:
+            failed += 1
+            print(f"cannot comment on {source}: {error}", file=sys.stderr)
+            continue
         print(f"{'edited' if existing else 'posted'} eval result on {source}")
+    return failed
 
 
 def parse_args() -> argparse.Namespace:
@@ -800,7 +811,7 @@ def main() -> int:
         if not token:
             print("no GITHUB_TOKEN or GH_TOKEN: record written, comments skipped", file=sys.stderr)
             return 1
-        post_comments(record, f"{args.output.as_posix()}/{path.name}", token)
+        return 1 if post_comments(record, f"{args.output.as_posix()}/{path.name}", token) else 0
     return 0
 
 
