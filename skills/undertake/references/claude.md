@@ -12,10 +12,18 @@ The issue
 | ---- | --------- | ---- |
 | `Open the issue` | Search the open issues | `mcp__github__search_issues` |
 | `Open the issue` | Open one, labelled | `mcp__github__issue_write`, method `create`, with `labels` |
+| `Title the session` | Read the session's own id | `get_session` on the Claude Code Remote server, `session_id` omitted — `The session` below describes the call |
+| `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s form |
 | `Read the issue and its edges` | Read the body and the graph | `mcp__github__issue_read`, method `get` |
+| `Read the issue and its edges` | Find the pull requests linked to the issue | `mcp__github__issue_read`, method `get` — `closed_by_pull_requests`, then `mcp__github__pull_request_read`, method `get`, for the head branch |
 | `Read the issue and its edges` | Read the comments | `mcp__github__issue_read`, method `get_comments` |
 | `Read the issue and its edges` | Label an issue that carries none | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, method `update`, sending that set plus the new label |
 | `Claim the issue` | Comment on the issue | `mcp__github__add_issue_comment` |
+
+**The two title calls are `session-title`'s sequence, routed here so the step
+is found without leaving this file.** The form, the budget and the shortening
+stay in `session-title`; the server's prefix is whatever the session registers,
+and `session-title`'s Claude reference says how absence is judged.
 
 **The comments are a second call on this client.** `mcp__github__issue_read`
 takes a `method`, and `get` returns the body, the labels and the hierarchy
@@ -62,6 +70,8 @@ The pull request
 | `The gate` | Read CI on the head | `mcp__github__pull_request_read`, **both** `get_check_runs` and `get_status` |
 | `The gate` | Read the review threads | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments` and `get_comments` — `review-cycle`'s reference owns them |
 | `The gate` | Read the review record | `mcp__github__pull_request_read`, method `get_comments` — the round's own `Review` and `Review verification` comments |
+| `The gate` | Read the completion notice | `mcp__github__pull_request_read`, method `get_comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
+| `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `mcp__github__add_issue_comment` |
 | `The gate` | Read the Blockers section | `mcp__github__pull_request_read`, method `get` — `body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
@@ -99,7 +109,16 @@ same call's model and session fields for `Claim the issue`'s block.
 Both branch fields are arrays. Read the outcome whose `git_info.repo` names the
 repository this work will be pushed to. Exactly one branch is a designation;
 more than one is a collision, not a pick. The branch checked out in the task
-worktree must agree before the claim is posted.
+worktree must agree before the claim is posted — the designated branch, or the
+adopted resume branch where `Read the issue and its edges` found one.
+
+**A resume branch differing from the designated one is not a collision.** The
+adopted branch is the task branch. The session's own instructions may still
+require explicit permission to push to a branch other than the designated one.
+Where they do, ask the user once, in one line naming both branches and the
+resume evidence (the pull request, handoff comment or claim that named it),
+then push to the adopted branch. Never push the work to the designated branch
+instead, and never open a second pull request from it.
 
 `external_metadata.current_branches` is a different field and answers a
 different question: what is checked out, not what the harness designated.
@@ -213,11 +232,29 @@ states the whole check-in, self-contained, in this order:
    assessment. A changed head invalidates earlier CI and readiness evidence.
    Pending or unregistered checks use `review-cycle`'s bounded wait; failed
    checks return to `Fix, answer, resolve, push`, and missing logs remain an
-   evidence blocker. Continue the remaining review or ready-gate work when CI
-   permits it. A capped wait, review wall, or human action reports unfinished
+   evidence blocker. When CI on the current head is green and the gate's
+   notice read finds no completion notice, post the notice before continuing
+   the ready-gate work. Continue the remaining review or ready-gate work when
+   CI permits it. A capped wait, review wall, or human action reports unfinished
    work and its resume path; it never becomes completion.
 
 The slot it occupies is the same slot `review-cycle`'s wait borrows and hands
 back. That ownership starts before ready, including red results and capped
 waits. A pending cadence wake is reused unless a CI wait borrowed it; on
 `End the wait`, cancel that borrowed wake and arm exactly one replacement.
+
+
+The stop
+========
+
+`SKILL.md`'s `The stop` names each operation in words; these are the calls.
+
+| Operation | Call |
+| --------- | ---- |
+| Read the issue's comments, for the claim and any equivalent handoff | `mcp__github__issue_read`, method `get_comments` |
+| Cancel the `Keep it current` wake slot timer | `mcp__Claude_Code_Remote__delete_trigger`, by the `trigger_id` the slot holds |
+| Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
+| Post the handoff | `mcp__github__add_issue_comment` |
+
+The pushed head is `git rev-parse HEAD` after a push that succeeded, and the
+last head `git ls-remote origin <branch>` reports where it did not.

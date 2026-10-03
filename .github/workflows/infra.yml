@@ -3,8 +3,8 @@
 # Nothing else in this repository reads those files: the stack is applied by
 # hand, because CI holds no GitHub-admin credentials and so cannot run `plan`.
 # Without this workflow the first thing to parse the configuration would be
-# someone mid-`tofu apply` against live branch protection. `make check-infra`
-# moves that discovery here, and needs no credentials: `tofu init
+# someone mid-`tofu apply` against live branch protection. Running `tofu fmt`
+# and `validate` here moves that discovery into CI, and needs no credentials: `tofu init
 # -backend=false` fetches the provider without touching state or the GitHub
 # API.
 #
@@ -14,9 +14,9 @@
 # skipped check, no toolchain download. The cost being avoided is two
 # downloads, on every push, for a directory that changes a few times a year.
 #
-# The filter is the leg's real input set rather than its directory: `tofu
-# validate` reads infra/**, and the root Makefile holds the `check-infra`
-# command line.
+# The filter is the leg's real input set: `tofu validate` reads infra/**, and
+# the step below calls the stack's own Makefile under infra/ directly, so a
+# change to the root Makefile cannot change what this leg runs.
 #
 # Safe to gate this way only because `infra` is not a required check. Branch
 # protection requires `CI Success`, `validate-title`, and `preview`; ci.yml
@@ -35,11 +35,9 @@ on:
     # request ran.
     paths:
       - infra/**
-      - Makefile
   pull_request:
     paths:
       - infra/**
-      - Makefile
 
 permissions:
   contents: read
@@ -66,9 +64,9 @@ jobs:
           tofu_wrapper: false
 
       - name: tofu fmt, init and validate
-        run: make check-infra
+        run: make -C infra/github check-fmt validate
 
-      # After the step above, and only works there. `check-infra` runs `tofu
+      # After the step above, and only works there. The check runs `tofu
       # init`, which rewrites .terraform.lock.hcl in place; this step asks git
       # what that rewrite changed. Run first, it would diff a clean checkout
       # against itself and pass every time.

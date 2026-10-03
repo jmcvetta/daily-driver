@@ -1,4 +1,0 @@
----
-Model: <model id that served the turn>
-Harness: Claude Code 2.1.283
-session: n/a

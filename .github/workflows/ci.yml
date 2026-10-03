@@ -138,7 +138,7 @@ jobs:
       - name: Verify Omp is on PATH
         run: omp --version
       - name: Validate Omp integration
-        run: make check-omp-plugin check-omp-agent-settle
+        run: make check-omp-plugin check-omp-eval-guard-live check-omp-agent-settle
 
   ci-success:
     name: CI Success

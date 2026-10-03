@@ -1,0 +1,56 @@
+diff --git a/kokoro/pipeline/tests/test_llm_agents.py b/kokoro/pipeline/tests/test_llm_agents.py
+index d2fe509c..3a9f567c 100644
+--- a/kokoro/pipeline/tests/test_llm_agents.py
++++ b/kokoro/pipeline/tests/test_llm_agents.py
+@@ -19,7 +19,7 @@
+     agent_for,
+     prompt_for,
+ )
+-from kokoro_pipeline.stages import LLM_STAGES
++from kokoro_pipeline.stages.names import LLM_STAGES
+ from pydantic_ai.messages import ModelMessage, ModelResponse, ToolCallPart
+ from pydantic_ai.models import ModelRequestParameters
+ from pydantic_ai.models.function import AgentInfo, FunctionModel
+diff --git a/kokoro/pipeline/tests/test_manifest.py b/kokoro/pipeline/tests/test_manifest.py
+index 74557405..92c5b84a 100644
+--- a/kokoro/pipeline/tests/test_manifest.py
++++ b/kokoro/pipeline/tests/test_manifest.py
+@@ -17,7 +17,7 @@
+     mark_stopped,
+     record_stage,
+ )
+-from kokoro_pipeline.stages import STAGE_NAMES
++from kokoro_pipeline.stages.names import STAGE_NAMES
+ 
+ 
+ def _manifest(
+diff --git a/kokoro/pipeline/tests/test_stages_registry.py b/kokoro/pipeline/tests/test_stages_registry.py
+index 7bac71fa..6b81b705 100644
+--- a/kokoro/pipeline/tests/test_stages_registry.py
++++ b/kokoro/pipeline/tests/test_stages_registry.py
+@@ -14,7 +14,7 @@
+ from pathlib import Path
+ 
+ import pytest
+-from kokoro_pipeline.stages import STAGE_REGISTRY
++from kokoro_pipeline.stages import STAGE_REGISTRY, names
+ 
+ REPO_ROOT = Path(__file__).resolve().parents[3]
+ PIPELINE_STAGES_TS = REPO_ROOT / "core" / "src" / "pipeline-stages.ts"
+@@ -88,3 +88,16 @@ def test_registry_matches_dossier_sources_ts() -> None:
+ 
+     for stage in STAGE_REGISTRY:
+         assert list(stage.reads) == ts_dossier.get(stage.name, []), stage.name
++
++
++def test_names_match_registry() -> None:
++    """`stages.names`'s two tuples agree with `STAGE_REGISTRY`'s own columns.
++
++    `names.py` is a transcription of the registry's `name` and `cost`
++    columns; a stage added to the registry and not to `names.py` fails here.
++    """
++    assert tuple(spec.name for spec in STAGE_REGISTRY) == names.STAGE_NAMES
++    assert (
++        tuple(spec.name for spec in STAGE_REGISTRY if spec.cost != "mechanical")
++        == names.LLM_STAGES
++    )

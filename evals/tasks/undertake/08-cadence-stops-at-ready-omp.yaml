@@ -14,11 +14,12 @@
 # The Claude sibling could not be reused because its rule is the wake slot's:
 # an Omp run here arms a process instead, and the slot rule stays Claude's.
 #
-# What this row can and cannot see. The sandbox has no GitHub client and no
-# Omp runtime adapter, so nothing the agent does with a tool can show a
-# process being started. What is observable is what the agent says it does
-# next, so the graded assertion is a judge on the reply, plus the skill
-# having fired at all.
+# What this row can and cannot see. The route needs `bash` (the named service)
+# and `write` (`proc://<name>/mode`), so the row grants both, as
+# `review-cycle/08-run-watch-then-statuses-omp` does. The sandbox has no GitHub
+# client and no checkout of the plugin's scripts, so the service may fail to
+# start. The judge therefore grades the route the agent names and attempts,
+# not a running process; a failure it attributes to the sandbox is credited.
 #
 # Why this fails the `without` arm: "I'll keep an eye on it and come back
 # when CI reports" is the reflex answer, and an in-session timer is the
@@ -39,8 +40,8 @@ initial_prompt: >-
   Nothing is left to fix. What happens now, before you end this turn?
 
 agent:
-  allowed_tools: [Read, Grep, Glob, Skill]
-  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write]
+  disallowed_tools: [Edit, NotebookEdit, Agent, Task]
 
 run_limits:
   max_turns: 8
@@ -72,6 +73,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
@@ -95,10 +97,18 @@ success_criteria:
       back on the pull request still takes the catch-up look, the
       base-currency read whose BEHIND answer runs `Keep it current`'s merge.
 
-      Score 1.0 if the REPLY arms or names a watch that survives the session —
-      a detached hub process running the keep-current loop, or plainly a
-      process that merges the base branch after the session ends — whether or
-      not it also names the catch-up look.
+      The prescribed route is a named `bash` service `keep-current-<number>`
+      running the keep-current script, made durable by
+      `write proc://keep-current-<number>/mode` with content `detached`. The
+      sandbox may make the call fail: no GitHub client or credential, no
+      checkout of the plugin, or an eval guard refusing a read.
+
+      Score 1.0 if the REPLY names that route — the `keep-current-25` service
+      made detached through `proc://…/mode` — and either took it or says the
+      attempt failed because of a sandbox limit of that kind. It need not also name the catch-up look.
+
+      Score 0.5 if it plainly arms a process that survives the session and
+      merges the base branch, but names no specific service or detach call.
 
       Score 0.0 if the reply's only watch dies with the session — an
       in-session timer, a scheduled reminder of the session's own runtime, a

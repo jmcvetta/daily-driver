@@ -1,0 +1,21 @@
+{
+  "additions": 71,
+  "changed_files": 2,
+  "check_reruns": 1,
+  "claim_model": "gpt-6-luna",
+  "claimed_at": null,
+  "deletions": 10,
+  "elapsed_minutes": null,
+  "findings_count": 1,
+  "harness": "Omp 18.2.11",
+  "issue": 390,
+  "merged_at": "2026-09-23T12:32:51Z",
+  "model": "gpt-6-luna",
+  "model_class": "implementation",
+  "model_mismatch": false,
+  "pull_request": 393,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 1,
+  "session": "01a0ce27-46cd-72d5-b5e0-6ce68369115e"
+}

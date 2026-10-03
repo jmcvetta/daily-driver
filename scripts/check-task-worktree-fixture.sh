@@ -105,4 +105,29 @@ copy_fixture "${DETACHED}"
 [ "$(git -C "${DETACHED}" branch --show-current)" = "${TASK_BRANCH}" ]
 [ "$(json_branch_path "$(wt -C "${DETACHED}" --config-set 'list.json-schema=2' list --format=json)" "${TASK_BRANCH}")" = "${DETACHED}" ]
 
-printf 'Worktrunk task fixtures verify base selection, reuse, isolation, collisions and detached attachment\n'
+
+# A recorded task branch that only exists on its remote must resume at that tip.
+RESUME_PRIMARY="${ROOT}/resume primary"
+copy_fixture "${RESUME_PRIMARY}"
+(
+	cd "${RESUME_PRIMARY}"
+	bash .fixture/setup.sh resume
+)
+RESUME_BASELINE="$(git -C "${RESUME_PRIMARY}" status --short)"
+git -C "${RESUME_PRIMARY}" fetch upstream \
+	"+refs/heads/${TASK_BRANCH}:refs/remotes/upstream/${TASK_BRANCH}" >/dev/null
+RESUME_TIP="$(git -C "${RESUME_PRIMARY}" rev-parse "upstream/${TASK_BRANCH}")"
+resumed="$(wt -C "${RESUME_PRIMARY}" switch --create "${TASK_BRANCH}" \
+	--base "upstream/${TASK_BRANCH}" --no-cd --format=json)"
+RESUME_ROOT="$(json_path "${resumed}")"
+[ "$(git -C "${RESUME_ROOT}" branch --show-current)" = "${TASK_BRANCH}" ]
+[ "$(git -C "${RESUME_ROOT}" rev-parse HEAD)" = "${RESUME_TIP}" ]
+[ -e "${RESUME_ROOT}/src/resumed.txt" ]
+printf '\nSTRICT_MODE = True\n' >>"${RESUME_ROOT}/src/parser.py"
+(
+	cd "${RESUME_ROOT}"
+	bash .fixture/verify.sh resume
+)
+[ "$(git -C "${RESUME_PRIMARY}" status --short)" = "${RESUME_BASELINE}" ]
+
+printf 'Worktrunk task fixtures verify base selection, remote-task resume, reuse, isolation, collisions and detached attachment\n'

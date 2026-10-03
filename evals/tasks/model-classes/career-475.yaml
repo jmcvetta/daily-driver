@@ -1,0 +1,48 @@
+task_id: model-classes-career-475
+description: >-
+  jmcvetta/career#475: fix: clean merged worktrees without upstreams
+tags: [model-classes, class:implementation, smoke]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/model-classes/shared
+      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/career-475
+
+pre_run:
+  - command: bash .fixture/clone-base.sh jmcvetta/career 93124bbc200e68a2c2028855f23e4c7124dc4db2
+    timeout: 120
+
+agent:
+  allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+run_limits:
+  max_turns: 30
+  task_timeout: 780
+  turn_timeout: 660
+
+initial_prompt: "This is jmcvetta/career, checked out at a past commit. Implement the change the issue below describes. Work from this checkout and the issue text alone: do not fetch from jmcvetta/career, and do not look it up on GitHub.\n\n# git_sync misses merged worktrees without upstreams\n\n`make git_sync` removes clean merged worktrees even when their branches lack tracking metadata.\n\n## Summary\n\nPR #458 copied the working `daily-driver` cleanup loop, but most Career task branches have no configured upstream. `git branch -vv` therefore never reports `[gone]`, so the loop never sees those worktrees after their pull requests merge and their remote branches disappear.\n\n## Detail\n\nKeep the existing gone-upstream behavior. Also treat a linked branch as stale when all three conditions hold after `git fetch --prune`:\n\n- the branch has no configured upstream;\n- the base remote has no same-named remote-tracking branch;\n- the branch is merged into `master`.\n\nRun both candidate paths through the existing plain `git worktree remove` guard. Dirty, untracked, or locked worktrees and their branches must remain. Do not delete direct local branches merely because they lack an upstream. Do not delete a linked branch while its same-named remote branch exists.\n\nAdd sandbox coverage for the missed no-upstream case and the live-remote protection. The tests must remain local-only and must exercise `make git_sync`.\n"
+
+success_criteria:
+  - type: run_command
+    description: No test file present at the base SHA was deleted
+    command: bash .fixture/check-no-deleted.sh
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: No skip or xfail marker was added to a test file
+    command: bash .fixture/check-no-skip.sh
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: The pull request's own tests pass after applying tests.patch
+    command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_git_sync.py
+    timeout: 720
+    weight: 3

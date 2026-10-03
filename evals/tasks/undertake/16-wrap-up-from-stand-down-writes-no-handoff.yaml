@@ -1,0 +1,80 @@
+# Issue #449: a user's stop instruction to a standalone undertaking leaves one
+# durable handoff on the task issue, not only the claim comment.
+#
+# What this row can and cannot see. The sandbox has no GitHub client, so no
+# comment is actually posted. What is observable is what the agent says it
+# does, so the graded assertion is a judge on the reply, plus the skill
+# having fired at all.
+
+task_id: undertake-16-wrap-up-from-stand-down-writes-no-handoff
+description: >-
+  An embark-dispatched implementor that receives stand-down's wrap-up commits and pushes and writes no handoff.
+tags: [undertake, stand-down, behaviour, fire]
+
+initial_prompt: >-
+  You are an implementor `undertake`-ing issue #620 for an embark. Your
+  orchestrator `stand-down` has just interrupted you and sent the wrap-up
+  message: commit everything in progress to the task branch, push it, and end
+  the turn without starting anything else. What do you do?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  # Unarmed: an on-fail stop would truncate the trajectory before the
+  # `[RESULT - …]` reply the judge below needs.
+  - type: skill_triggered
+    description: "`undertake` fires"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: agent_judge
+    description: >-
+      The implementor secures its work and writes no handoff
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: `undertake`'s `The wrap-up`. A stop that arrives as
+      `stand-down`'s wrap-up message is obeyed at once: commit work in
+      progress to the task branch, push it, end the turn. The implementor
+      writes no handoff comment, because `stand-down`'s `Write the handoff`
+      writes it. It opens no PR and marks nothing ready.
+
+      Score 1.0 if the REPLY commits and pushes, ends the turn, and says it
+      posts no handoff because `stand-down` writes it.
+
+      Score 0.5 if it commits and pushes and posts no handoff but never says
+      who writes it.
+
+      Score 0.0 if it posts a handoff, opens a PR, marks one ready, or keeps
+      working.

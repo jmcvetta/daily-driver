@@ -12,8 +12,8 @@ description: >-
   and the banner that says stopping is safe. Runs fast by design: parallel
   batches, no polls, one bounded wrap-up wait, one bounded retry anywhere.
   Not for the watch ending because the epic is worked out — `embark` reports
-  that itself — and not for a single issue, which has no fleet to stand
-  down.
+  that itself — and not for a single issue, which has no fleet to stand down
+  and whose stop is `undertake`'s `The stop`.
 ---
 
 # Stand-down
@@ -108,11 +108,18 @@ everything in progress to the task branch, push it, and end the turn without
 starting anything else. Then wait, on one shared deadline for the whole
 fleet, until every session's turn has ended or the deadline passes; the
 reference file names the read and the deadline. Leaving that wait is not
-itself securing: a session the deadline outlasts, a session no name can
-reach at all, and a session whose turn ends in error before its push
-completes are all archived anyway at `Stop the fleet` and reported as a
-residual in the banner, by name — securing its work was attempted, not
-guaranteed.
+itself securing: a session the deadline outlasts and a session whose turn
+ends in error before its push completes are archived anyway at `Stop the
+fleet` and reported as a residual in the banner, by name — securing its work
+was attempted, not guaranteed.
+
+**A session no name can reach is interrupted and never archived.** It cannot
+be told to push, and an archive destroys whatever it holds unpushed. Where
+no name reaches it — the muster roll marks it `messaging: unreachable`, or an
+older roll carries no name for it and `ListAgents` does not name it — it is
+interrupted alone. It is a residual in the banner and in its task
+issue's handoff, with its session link, so that a person can push or archive
+it later.
 
 **Harness-local subagents (Omp, Codex).** Cancel the subagent first, by its
 dispatch handle, exactly as `Stop the fleet` always has, then this session
@@ -161,6 +168,8 @@ is yours to reclaim.
 - Worktree (this machine): <path, or "none">.
 - Secured: <yes — work in progress was committed and pushed before the stop
   | no — residual, see the stand-down comment on the epic>.
+- Session: <link, left running or interrupted and unarchived where it could
+  not be messaged — push or archive it yourself; otherwise "retired">.
 
 Work in progress was committed and pushed to the branch above before this
 implementor was retired, where securing it succeeded — the origin tip is
@@ -223,7 +232,9 @@ at-sea status from.
 **Idempotent re-entry.** A stand-down interrupted by a session death is
 re-run, not duplicated, and the writes are idempotent one by one: a handoff
 comment already on a task issue is not posted twice, and a stand-down
-comment already on the epic is not posted again. `Write the handoff` writes
+comment already on the epic is not posted again. A `## Handoff —` comment
+that `undertake`'s `The stop` posted, after the latest claim and naming the
+current pushed head, counts as the handoff already present. `Write the handoff` writes
 only what is missing, and a record that is complete sends this step
 straight to the stops.
 
@@ -233,11 +244,12 @@ straight to the stops.
 Everything in one parallel batch, and nothing polled beyond `Secure the
 work`'s one bounded wait, already spent by the time this step runs.
 
-**A web session is archived.** It was already interrupted and sent its
-wrap-up at `Secure the work`; this step is the archive alone. It runs
-whether that session's turn ended inside the deadline or not — a session the
-deadline outlasted was already named a residual there, and archiving it here
-does not undo that naming. If the archive call rejects a session it believes
+**A web session is archived, unless no name could reach it.** It was already
+interrupted and sent its wrap-up at `Secure the work`; this step is the
+archive alone. It runs whether that session's turn ended inside the deadline
+or not — a session the deadline outlasted was already named a residual there,
+and archiving it here does not undo that naming. **An unreachable session is
+not archived**: it was interrupted only, and stays a residual with its link. If the archive call rejects a session it believes
 is still running, one retry after the interruption's result is in; a second
 refusal is reported as a residual, not retried in a loop.
 
@@ -284,7 +296,8 @@ residuals remain:
 ```
 
 Residuals are listed, one line each, never silent: an implementor whose work
-could not be secured — the wrap-up deadline passed, no name could reach it,
+could not be secured — the wrap-up deadline passed, no name could reach it
+(left unarchived, named with its session link),
 its turn ended in error before the push completed, or a worktree would not
 commit or push — an implementor that could not be stopped, a comment that
 failed to post, or a watch that could not be
@@ -306,7 +319,8 @@ reports instead:
 - **Nothing is at sea** — at `Read the fleet`. The banner prints with a
   zero count and the reason; if the invocation named an issue that is not
   an embarked epic, the report says which skill takes it — `undertake` for
-  a task issue, `embark` for an epic still to work.
+  a task issue, `embark` for an epic still to work. A stop instruction for a
+  single undertaking is `undertake`'s `The stop`.
 - **A residual** — at `Print the banner`. Named in the banner, one line
   each, and left for the person reading it. Nothing here retries a
   residual twice.
@@ -335,6 +349,6 @@ Non-goals
   for an answer, and the handoff is written from the record instead.
 - **Does not fire on a worked-out epic.** `Close the epic` ends an embark that
   succeeded; this skill ends one that was interrupted.
-- **Does not fire on a single issue.** One `undertake` has no fleet; the
-  session holding it can simply stop, and its claim comment is already the
-  record.
+- **Does not fire on a single issue.** One `undertake` has no fleet. Its stop
+  is `undertake`'s `The stop`, which secures the work and leaves the handoff
+  a claim comment cannot.

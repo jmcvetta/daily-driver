@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Literal, NoReturn
 
 from coder_eval.agent import Agent
-from coder_eval.errors import AgentCrashError, TurnTimeoutError
+from coder_eval.errors import AgentConfigError, AgentCrashError, TurnTimeoutError
 from coder_eval.models import (
     AgentState,
     ApiRoute,
@@ -76,6 +76,7 @@ from coder_eval.streaming.events import (
     TurnStartEvent,
 )
 
+from .home import inherited_files
 from .rpc import (
     AgentFinished,
     ExtensionFailed,
@@ -86,6 +87,8 @@ from .rpc import (
     TurnReducer,
     TurnStarted,
 )
+from .launch import OMP_CONFIG, child_env, reject_tool_flags, rpc_argv
+from .tools import ToolSelection, UnenforceableToolList, select_tools
 
 
 logger = logging.getLogger(__name__)
@@ -116,11 +119,6 @@ _RESULT_STATUS: dict[ToolEndStatus, str] = {
     ToolEndStatus.UNRESOLVED: "unknown",
 }
 
-# Written into the throwaway Omp home. Skill commands are off by default, and
-# with them off `get_available_commands` reports the builtins alone — so the
-# run could not record which skills it loaded, which is what tells a red arm
-# from an arm whose plugin never arrived.
-_OMP_CONFIG = "skills:\n  enableSkillCommands: true\n"
 #: File in each task sandbox that persists post-turn Omp protocol observations.
 PROTOCOL_EVIDENCE_FILENAME = "omp-protocol-observations.json"
 
@@ -141,7 +139,14 @@ class OmpAgentConfig(BaseAgentConfig):
     """The Omp executable, resolved on PATH unless an absolute path is given."""
 
     inherit_omp_home: bool = True
-    """Symlink the real `~/.omp/agent/` into the throwaway home.
+    """Symlink the real `~/.omp/agent/`'s provider files into the throwaway home.
+
+    Only `models.yml`, `agent.db` (with its `-wal` and `-shm` siblings) and
+    `secrets.yml` — the files `home.PROVIDER_FILES` lists. `mcp.json` and the
+    instruction files (`AGENTS.md`, `SYSTEM.md`, `SYSTEM_TEMPLATE.md`,
+    `PERSONALITY.md`, `RULES.md`) are left out on purpose: an inherited MCP
+    server escapes `--tools`, and inherited instructions make the bare arm
+    stop being bare in both arms.
 
     On by default, because a run needs a model and the provider configuration
     lives there. Off, the session starts from Omp's own defaults — useful only
@@ -162,7 +167,11 @@ class OmpAgentConfig(BaseAgentConfig):
     """
 
     extra_args: list[str] = []
-    """Arguments appended to the `omp --mode rpc` command line, verbatim."""
+    """Arguments appended to the `omp --mode rpc` command line, verbatim.
+
+    A tool flag here fails the task: tools are granted through the row's
+    `allowed_tools`, which the eval guard reads as well.
+    """
 
 
 class OmpAgent(Agent[OmpAgentConfig]):
@@ -206,6 +215,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._extension_errors: list[str] = []
         self._argument_keys_seen: set[str] = set()
         self._usage_keys_seen: set[str] = set()
+        self._tools = ToolSelection(tools=(), read_for_skill=False, webfetch_via_read=False)
         self._state = AgentState.WORKING
 
     # --- lifecycle ---------------------------------------------------------
@@ -231,18 +241,26 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 "Install Omp with `curl -fsSL https://omp.sh/install | sh`."
             )
 
-        unenforced = [
-            field
-            for field in ("allowed_tools", "disallowed_tools", "system_prompt", "system_prompt_file")
-            if getattr(self.config, field, None)
-        ]
+        # Before anything is built: a list this arm cannot enforce fails the
+        # task here, rather than after a run with every tool on.
+        try:
+            self._tools = select_tools(self.config.allowed_tools, self.config.disallowed_tools)
+            reject_tool_flags(self.config.extra_args)
+        except UnenforceableToolList as error:
+            # Not retryable: the same row fails the same way every attempt.
+            raise AgentConfigError(str(error)) from error
+        if self._tools.read_for_skill:
+            # The one place a row's list is not met exactly. Omp engages a
+            # skill by reading `skill://<name>`, so `Skill` needs `read`.
+            logger.warning(
+                "omp: `read` is on for Skill although the row does not allow Read; "
+                "a Read of skills/<name>/SKILL.md can still happen on this arm."
+            )
+
+        unenforced = [field for field in ("system_prompt", "system_prompt_file") if getattr(self.config, field, None)]
         if unenforced:
-            # Said out loud once per task rather than left to be discovered from
-            # a report. `disallowed_tools` is what the trigger rows use to keep
-            # a denied `Read` of `skills/<name>/SKILL.md` from scoring as an
-            # engagement, and this arm cannot enforce it: Omp's RPC mode takes
-            # no per-session tool allowlist. A no-fire row is therefore weaker
-            # here than on Claude Code, and `evals/README.md` says so.
+            # Said out loud once per task rather than left to be discovered
+            # from a report: Omp's RPC mode takes no system-prompt argument.
             logger.warning(
                 "omp: %s set but NOT enforced — Omp's RPC mode has no equivalent knob, so the run is "
                 "unconstrained by them; do not read them as a boundary.",
@@ -320,6 +338,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             "omp_linked_plugins": list(self._linked_plugins),
             "omp_skills_loaded": list(self._loaded_skills),
             "omp_extension_errors": list(self._extension_errors),
+            "omp_tools": list(self._tools.tools),
         }
         if self._session_id:
             info["omp_session_id"] = self._session_id
@@ -601,8 +620,9 @@ class OmpAgent(Agent[OmpAgentConfig]):
     def _prepare_home(self, home: Path) -> None:
         """A throwaway Omp home that borrows the real one's providers.
 
-        Every file in the real `~/.omp/agent/` is symlinked in, so the run finds
-        the models and credentials a person configured. `config.yml` is written
+        The provider files of the real `~/.omp/agent/` are symlinked in
+        (`home.PROVIDER_FILES`), so the run finds the models and credentials a
+        person configured and nothing else of theirs. `config.yml` is written
         here instead of symlinked: the arm runs on Omp's defaults plus skill
         commands, rather than on whatever a laptop happens to have set, which is
         the same isolation `coder_eval`'s Claude agent gets from
@@ -617,9 +637,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         if self.config.inherit_omp_home:
             real = Path(os.path.expanduser("~")) / ".omp" / "agent"
             if real.is_dir():
-                for entry in sorted(real.iterdir()):
-                    if entry.name == "config.yml" or not entry.is_file():
-                        continue
+                for entry in inherited_files(real):
                     with contextlib.suppress(OSError):
                         (agent_dir / entry.name).symlink_to(entry)
             else:
@@ -629,7 +647,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     real,
                 )
 
-        (agent_dir / "config.yml").write_text(_OMP_CONFIG, encoding="utf-8")
+        (agent_dir / "config.yml").write_text(OMP_CONFIG, encoding="utf-8")
 
     async def _link_plugins(self, binary: str, home: Path) -> None:
         """Install every `plugins:` root into the throwaway home.
@@ -687,8 +705,13 @@ class OmpAgent(Agent[OmpAgentConfig]):
             raise RuntimeError("omp: plugins were declared but none installed; the arm would run untreated")
 
     async def _spawn(self, binary: str, home: Path) -> None:
-        """Start `omp --mode rpc` and wait for its `ready` frame."""
-        argv = [binary, "--mode", "rpc", *self.config.extra_args]
+        """Start `omp --mode rpc` and wait for its `ready` frame.
+
+        `launch.rpc_argv` builds the command line, the eval guard included.
+        Omp exits on a tool name it does not know, which fails the task in
+        `_await_frame` with Omp's own error.
+        """
+        argv = rpc_argv(binary, self._tools, self.config.extra_args)
         self._process = await asyncio.create_subprocess_exec(
             *argv,
             stdin=asyncio.subprocess.PIPE,
@@ -743,19 +766,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
     # --- rpc plumbing ------------------------------------------------------
 
     def _child_env(self, home: Path) -> dict[str, str]:
-        """The child's environment: the caller's, pointed at the throwaway home.
-
-        The PATH prepend is `Agent.start`'s mock-shadowing contract — the
-        sandbox's mock CLI directories must resolve before the real binaries, or
-        a task grading a mocked CLI silently exercises the real one.
-        """
-        env = dict(os.environ)
-        if self._env_path_prepend:
-            env["PATH"] = os.pathsep.join([*self._env_path_prepend, env.get("PATH", "")])
-        env["HOME"] = str(home)
-        for name in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
-            env[name] = str(home / name.lower())
-        return env
+        """The child's environment: the caller's, as `launch.child_env` builds it."""
+        return child_env(os.environ, home, self._env_path_prepend, self._tools)
 
     def _next_request_id(self) -> str:
         self._request_id += 1

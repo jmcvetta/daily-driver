@@ -66,10 +66,11 @@ Establish the task root
    when declared; otherwise keep the full remote-tracking default branch name
    from `git symbolic-ref --short refs/remotes/<remote>/HEAD`. Never branch
    from whichever feature branch happens to be checked out.
-3. **Choose one task identity.** Use the existing task branch from the task's
-   record first, then the one branch designated by the harness. Otherwise use
-   the project's branch convention, then a short name tied to the issue or
-   task. A supplied task branch outranks a fresh harness designation.
+3. **Choose one task identity.** Use the existing branch from the task record
+   first, including its recorded remote when present. Otherwise use exactly one
+   branch designated by the harness; then use the project's convention or a
+   short issue-based name. A supplied task branch outranks a fresh per-session
+   designation.
 4. **Inspect Worktrunk's worktrees.** Require `wt`, then run
    `wt --config-set 'list.json-schema=2' list --format=json`. Parse the JSON
    envelope's `.items[]`; identify the primary row by
@@ -92,18 +93,34 @@ Establish the task root
    worktree. Stop with a clear explanation if placement conflicts with the
    policy; never overwrite the user's template, add a second one, or force a
    collision.
-7. **Create or select with Worktrunk.** For a new task branch, run
+7. **Create or select with Worktrunk.** For a task-record branch, fetch the
+   selected remote branch into its matching remote-tracking ref:
+   `git fetch <remote> +refs/heads/<task-branch>:refs/remotes/<remote>/<task-branch>`.
+   If the local branch does not exist, use
+   `wt switch --create <task-branch> --base <remote>/<task-branch> --no-cd
+   --format=json`; matching branch and base names make the local branch track
+   that remote. If the local branch exists, use
+   `wt switch <task-branch> --no-cd --format=json`, then advance its returned
+   worktree with `git merge --ff-only <remote>/<task-branch>`. A failed
+   fast-forward is a collision to inspect; never recreate a supplied task
+   branch from the default base. For a new task branch, use
    `wt switch --create <task-branch> --base <resolved-base> --no-cd
-   --format=json`. For an existing free task branch, run
-   `wt switch <task-branch> --no-cd --format=json`. Read `.path` from
-   successful stdout JSON; stderr diagnostics are not a path. Quote every
-   path, including paths with spaces. Do not use `--clobber`, `--yes`, or
-   `--no-hooks`; preserve Worktrunk's normal hooks and approval behavior.
+   --format=json`. For an existing local task branch with no remote task
+   branch, use `wt switch <task-branch> --no-cd --format=json`.
+   Read `.path` from successful stdout JSON; stderr diagnostics are not a path.
+   Quote every path, including paths with spaces. Do not use `--clobber`,
+   `--yes`, or `--no-hooks`; preserve Worktrunk's normal hooks and approval
+   behavior.
 8. **Keep the detached-task exception.** When the current detached worktree is
    already dedicated to this task, attach it in place with `git switch
-   <task-branch>` if that branch exists and is free, or `git switch -c
-   <task-branch> <resolved-base>` otherwise. Worktrunk documents `git switch`
-   for changing the branch of an existing worktree; this is not a fallback for
+   <task-branch>` if that local branch exists and is free. For a recorded
+   remote task branch not present locally, fetch its exact remote-tracking ref
+   and use `git switch --track -c <task-branch> <remote>/<task-branch>`.
+   Fast-forward a recorded task branch to its fetched remote tip with
+   `git merge --ff-only <remote>/<task-branch>`; stop if it cannot fast-forward.
+   Otherwise create the fresh task branch in place with `git switch -c
+   <task-branch> <resolved-base>`. Worktrunk documents `git switch` for
+   changing the branch of an existing worktree; this is not a fallback for
    worktree creation.
 9. **Verify the boundary.** Verify the selected path is a registered worktree
    beside the primary path, and its checked-out branch is the task branch.

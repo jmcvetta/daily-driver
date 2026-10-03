@@ -1,7 +1,7 @@
 task_id: model-classes-career-462
 description: >-
   jmcvetta/career#462: ci: rename projected releases check to projection
-tags: [model-classes, class:mechanical]
+tags: [model-classes, class:mechanical, smoke]
 
 sandbox:
   template_sources:

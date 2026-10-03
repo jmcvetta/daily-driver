@@ -14,6 +14,8 @@ The epic
 | `Read the epic` | Read the body | `mcp__github__issue_read`, `method: get` |
 | `Read the epic` | Read the task issues under it | `mcp__github__issue_read`, `method: get_sub_issues` |
 | `Read the epic` | Read the muster rolls already posted | `mcp__github__issue_read`, `method: get_comments` |
+| `Title the session` | Read the orchestrator's own id | `get_session` on the Claude Code Remote server, `session_id` omitted; `session-title` says how the prefix is read |
+| `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s orchestrating-an-epic form |
 | `Take the wave` | Read a task issue's body and claim | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Post the muster roll` | Comment on the epic | `mcp__github__add_issue_comment` |
 | `Post the muster roll` | Mark the wave in the epic's body | `mcp__github__issue_write`, `method: update` |
@@ -35,12 +37,13 @@ The sessions
 | ---- | --------- | ---- |
 | `Open the sessions` | Open one per task | `mcp__Claude_Code_Remote__create_session` |
 | `Post the muster roll` | Load the messaging tools, once per session | `ToolSearch`, `select:ListAgents,SendMessage` |
-| `Post the muster roll` | Resolve each new session's address | `ListAgents` |
+| `Post the muster roll` | Resolve each new session's address, once after the wave's `create_session` calls | `ListAgents` |
 | `Watch the wave` | Read a task session's status | `mcp__Claude_Code_Remote__get_session` |
 | `Watch the wave` | Read the implementor reports that arrived | `ReadNotifications`, until it reports none remaining |
 | `Watch the wave` | Send a visible answer or a nudge | `SendMessage`, to the roll's name |
 | `Recover a session` | Stop the current turn | `mcp__Claude_Code_Remote__interrupt_session` |
 | `Recover a session` | Re-resolve a name the roll lacks, or one a send failed to reach | `ListAgents` |
+| `Recover a session` | Read a session the listing does not name, before any reopen | `mcp__Claude_Code_Remote__get_session` |
 | `Recover a session` | Send a correction | `SendMessage`, to that name |
 | `Recover a session` | Retire one | `mcp__Claude_Code_Remote__archive_session` |
 
@@ -89,12 +92,24 @@ writes it into the roll beside the session id — the `Implementor` cell carries
 both. A later wake reads the name straight off the roll; that is the ordinary
 route, and it costs no call. Call `ListAgents` again only to re-resolve a name
 the roll does not carry — an older roll, or one posted before this step
-existed — or after a send to the recorded name fails to reach it, which is
-usually the sign that the session under it has already stopped. Match the
+existed — or after a send to the recorded name fails to reach it. Match the
 fleet member there and send to the name it printed, appending the row's
-` [ref]` only where an error asks for it. **A member the listing does not name
-cannot be reached at all**, and that is the reopen path in `Recover a session`
-rather than a retry.
+` [ref]` only where an error asks for it.
+
+**Reachability is read, never assumed.** `ListAgents` can omit a cloud session
+that is running: on 2026-09-28 it returned "No reachable agents" while
+`list_sessions` showed all three implementors running, and a send to a
+session's title failed as not reachable. `Post the muster roll` therefore
+writes `messaging: unreachable` into the `Implementor` cell of every session
+the listing does not name, and `Recover a session` reads the listing again
+before it acts, because reachability can change.
+
+**A member the listing does not name is not thereby stopped.** Read it with
+`get_session` before any reopen. Only a session `get_session` reports as
+archived, failed, or not found is reopened. A running or idle session that
+cannot be messaged is interrupted, never reopened — a second session on its
+branch would collide with the one that still holds it — and the task is a stop
+under `Where it stops and waits`.
 
 The required class
 ------------------

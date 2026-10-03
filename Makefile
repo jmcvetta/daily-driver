@@ -10,16 +10,17 @@ SHELL := /bin/bash
 .PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
-	check-omp-cache-clean check-omp-review-cycle-route check-omp-pr-create-route \
-	check-review-cycle-fix-delta-route check-provenance check-verse \
-	check-omp-agent check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-task-worktree-fixture check-claude-dependency check-eval-arms check-ci-scope check-step-names \
-	check-evals-preflight check-evals-provenance check-labels check-labels-fixtures \
-	check-story-fixtures check-infra check-plugin-validity check-runtime \
-	check-eval-tooling check-issue-infra evals-install evals-plan \
-	evals-variants evals-preflight evals-record evals-render-routes evals-run evals-run-omp \
+	check-omp-cache-clean \
+	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
+	check-model-classes-builder check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-ci-scope check-step-names \
+	check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
+	check-infra check-plugin-validity check-runtime \
+	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
+	evals-install evals-setup-omp evals-plan \
+	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
-	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-classes mcp-usage
+	check-claude-dependency \
+	evals-run-omp-gpt-5-6-sol evals-run-codex evals-run-comparison evals-run-classes mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -33,7 +34,23 @@ CODER_EVAL_VERSION := 0.11.6
 # tool that may one day gate a merge should do without being asked. The
 # decision here is OFF, and it is made in the one place both eval targets go
 # through so it cannot be forgotten at a prompt.
+#
+# CREDENTIALS: Claude arms and judges inherit this shell's subscription auth.
+# Never run an Anthropic model through the API or the Vercel AI Gateway, and
+# set no ANTHROPIC_* variable. See "Credentials" in evals/README.md.
 CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
+
+# The Omp arms' environment, for every target. Omp reads the Vercel AI Gateway
+# key from AI_GATEWAY_API_KEY; a Claude Code cloud container exports it as
+# VERCEL_AI_GATEWAY_API_KEY, so the second name fills the first when it is
+# unset. Omp's installer puts `omp` in ~/.local/bin, or in ~/.bun/bin when it
+# installs through Bun; both are appended, so they shadow nothing. See
+# scripts/evals-setup-omp.sh for the source of the key name.
+AI_GATEWAY_API_KEY ?= $(VERCEL_AI_GATEWAY_API_KEY)
+ifneq ($(AI_GATEWAY_API_KEY),)
+export AI_GATEWAY_API_KEY
+endif
+export PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.bun/bin
 
 # Dev dependencies of the Python legs, managed with uv. The repository has no
 # Python packaging -- the root `pyproject.toml` declares no package, only the
@@ -98,15 +115,15 @@ check-plugin-validity: check-plugin check-skills check-agents \
 	check-manifests check-manifest-fixtures check-claude-dependency
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
-	check-omp-guard-differential check-omp-cache-clean check-omp-review-cycle-route \
-	check-omp-pr-create-route check-review-cycle-fix-delta-route check-provenance check-verse \
+	check-omp-guard-differential check-omp-cache-clean \
 	check-task-worktree-fixture check-scripts
 
-check-eval-tooling: check-omp-agent check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-eval-arms check-evals-preflight check-evals-provenance
+check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
+	check-model-classes-builder check-eval-arms check-agent-judges check-evals-preflight check-evals-provenance \
+	check-evals-results check-model-telemetry check-evals-setup-omp
 
 
-check-issue-infra: check-labels check-labels-fixtures check-story-fixtures
+check-issue-infra: check-labels check-labels-fixtures
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -237,43 +254,6 @@ check-omp-plugin:
 check-omp-cache-clean:
 	python3 scripts/check-omp-cache-clean.py
 
-# The Omp review-cycle reference is executable guidance. This credential-free
-# check rejects a route that reaches for optional `github` instead of the
-# essential `hub` and `bash` surface, and holds its cap and empty-result rules.
-check-omp-review-cycle-route:
-	python3 scripts/check-omp-review-cycle-route.py
-
-# The three Omp PR-creation references are executable guidance. This
-# credential-free check rejects the unavailable `github.pr_create` route and
-# requires the supported draft `gh pr create` arguments in each reference.
-check-omp-pr-create-route:
-	python3 scripts/check-omp-pr-create-route.py
-
-# Every harness's fix-delta route is executable guidance too. This
-# credential-free check rejects a blanket "unavailable on this harness" notice
-# for `Verify the fix delta`, holds the briefed-subagent route and the brief's
-# required elements in place across all three references, and holds the
-# pointers `undertake` keeps to them. See the script's docstring.
-check-review-cycle-fix-delta-route:
-	python3 scripts/check-review-cycle-fix-delta-route.py
-
-# check-provenance: the trailing Model:/Harness:/session: block every GitHub
-# write and commit is supposed to carry, checked against fixture text rather
-# than a live write -- a well-formed block parses, a block missing a line or
-# carrying a template placeholder does not, the claim-comment shape still
-# satisfies the Model:/session: lookup undertake describes, and every skill
-# provenance names as a citer actually names it. Credential-free, like the
-# other script legs. See the script's docstring.
-check-provenance:
-	python3 scripts/check-provenance.py
-
-# check-verse: every skill that puts verse on a write names its form and links
-# HAIKU.md, and the comment fixtures that carry verse after the provenance
-# block still parse, with every verse line in italics. See the script's
-# docstring.
-check-verse:
-	python3 scripts/check-verse.py
-
 # check-scripts: ShellCheck the shell under skills, scripts, and eval fixtures.
 # It belongs to check-runtime because eval-fixture scripts are runtime inputs;
 # skills and top-level scripts select that group as well.
@@ -296,6 +276,21 @@ check-scripts:
 # docstring, and evals/coder-eval-omp/README.md for the arm.
 check-omp-agent:
 	python3 scripts/check-omp-agent.py
+
+# check-omp-eval-guard: the Omp eval arm's sandbox guard, driven with a fake
+# `pi` against every bypass issue #461 measured -- a `;` list, scheme case, a
+# `write` the row did not grant. Each one fails open: the row reaches GitHub
+# and nothing reports it. Node only, like check-omp-extension.
+check-omp-eval-guard:
+	node scripts/check-omp-eval-guard.mjs
+
+# check-omp-eval-guard-live: the same guard inside a real `omp --mode rpc`,
+# with the plugin linked and a local mock model scripting the tool calls. It
+# proves what the fake `pi` cannot: that Omp loads `-e` beside the plugin and
+# honours the refusals, and that `fetch.enabled: false` refuses a URL read.
+# Needs `omp`, so it runs in CI's Omp job, for check-omp-plugin's reason.
+check-omp-eval-guard-live:
+	python3 scripts/check-omp-eval-guard-live.py
 
 # check-omp-agent-settle: the acceptance test for the Omp arm's early-stop
 # record -- that a replicate which early-stops on `skill_triggered` cannot
@@ -332,6 +327,12 @@ check-codex-agent:
 check-eval-arms:
 	uv run --frozen python3 scripts/check-eval-arms.py
 
+# check-agent-judges: every `agent_judge` denies itself the built-in tools, so
+# it grades the transcript it was given instead of reading the sandbox and
+# timing out without a verdict. See the script's docstring.
+check-agent-judges:
+	uv run --frozen python3 scripts/check-agent-judges.py
+
 # check-eval-fixtures: build every review-depth fixture repository and assert
 # it has the shape the `review` skill needs. Part of `check` because it needs
 # only git and bash -- no model, no credentials -- and because a fixture that
@@ -351,11 +352,22 @@ check-eval-fixtures:
 check-model-classes-grader:
 	scripts/check-model-classes-grader.sh
 
+# check-model-classes-builder: the case builder's offline self-tests, which
+# every invocation runs first -- here with no token and no network.
+check-model-classes-builder:
+	python3 scripts/evals-cases-from-prs.py --self-test
+
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.
 # The model-driven rows remain outside CI; their test instrument does not.
 check-task-worktree-fixture:
 	scripts/check-task-worktree-fixture.sh
+
+# check-evals-setup-omp: evals-setup-omp's key resolution, exact model match
+# and no-reinstall rule, against a stub `omp` and `curl` in a throwaway HOME.
+# Offline: it never runs the real installer or calls the gateway.
+check-evals-setup-omp:
+	scripts/check-evals-setup-omp.sh
 
 # check-step-names: no file may cite a step of a numbered sequence by its
 # number. The numbers are positional, so inserting a step silently invalidates
@@ -381,6 +393,20 @@ check-evals-preflight:
 check-evals-provenance:
 	uv run --frozen python3 scripts/check-evals-provenance.py
 
+# check-evals-results: `evals/RESULTS.md` matches a fresh render of every
+# committed record, so a record cannot land without its row. Standard library
+# only, so plain `python3`.
+check-evals-results:
+	python3 scripts/evals-render-results.py --check
+
+# check-model-telemetry: `scripts/model-telemetry.py`'s claim, readiness and
+# review-verification comment parsers, checked against fixture text -- no
+# credentials, no network. `model-telemetry.py` itself imports nothing beyond
+# the standard library, so unlike its `uv run --frozen` neighbours above it
+# runs under plain `python3`. See the script's docstring.
+check-model-telemetry:
+	python3 scripts/check-model-telemetry.py
+
 # check-labels: the issue-label standard is written twice -- the table in
 # `issue-labels` and the resources in infra/github/labels.tf -- and this leg
 # asserts the two say the same thing. Part of `check` because it needs nothing
@@ -396,12 +422,6 @@ check-labels:
 # marker is still parsed or that its silent drift failures remain failures.
 check-labels-fixtures:
 	python3 scripts/check-labels-fixtures.py
-
-# check-story-fixtures: execute offline direct-parent scenarios for the
-# supplemental marker. It proves no live issue, label, or graph write is needed
-# to cover additions, removals, graph failures, closure, and kind invariants.
-check-story-fixtures:
-	python3 scripts/check-story-fixtures.py
 
 # check-infra: parse the OpenTofu stack without credentials. Not part of
 # `check`, which must not start requiring OpenTofu on a laptop that is only
@@ -424,6 +444,15 @@ evals-install:
 	uv tool install --python 3.13 coder-eval==$(CODER_EVAL_VERSION) \
 		--with ./evals/coder-eval-omp \
 		--with ./evals/coder-eval-codex
+
+# evals-setup-omp: everything a gateway-routed `evals-run-omp-*` target needs
+# beyond evals-install -- `omp` installed with CI's command when missing, the
+# gateway key resolved, and each arm's pinned model proven listed by Omp. Run
+# `make evals-install && make evals-setup-omp` in a cloud session or on a fresh
+# laptop. Idempotent, free, and writes no credential. The openai-codex arm
+# needs Omp's own Codex login and is reported, not failed.
+evals-setup-omp:
+	scripts/evals-setup-omp.sh evals/experiments/omp-*.yaml
 
 # evals-plan: validate every eval case without calling a model. Free, and it
 # catches the config errors that otherwise cost a paid run to discover -- so
@@ -498,6 +527,11 @@ evals-record:
 evals-render-routes:
 	uv run --frozen python3 scripts/evals-render-routes.py
 
+# evals-render-results: rewrite `evals/RESULTS.md`, one row per committed
+# record under evals/provenance/. Reads no run directory.
+evals-render-results:
+	python3 scripts/evals-render-results.py
+
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tag is what routes a row to its arm, and
 # `make check-eval-arms` is what keeps the three sets in step.
@@ -518,8 +552,9 @@ evals-run: evals-plan evals-preflight
 evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
-# `omp` on PATH and a model configured in the caller's own `~/.omp/agent/`,
-# which the agent borrows rather than copies -- see evals/coder-eval-omp/README.md.
+# `omp` on PATH and the provider's credentials -- `make evals-setup-omp` sets up
+# and checks both for the gateway arms. The agent borrows the caller's
+# `~/.omp/agent/` rather than copies it -- see evals/coder-eval-omp/README.md.
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
 evals-run-omp-glm-5-3: evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \
@@ -560,6 +595,33 @@ evals-run-codex: evals-plan evals-preflight
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/codex.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
+# evals-run-comparison: the same suites with the plugin at a base revision and at
+# this checkout, both loaded. Use it when the question is whether a change to the
+# constitution text changed behaviour once a constitution is already delivered;
+# `evals-run`'s ablation cannot answer that, because its control carries no
+# constitution. Needs a sibling checkout the experiment cannot create:
+#
+#   git worktree add ../daily-driver-base <base-revision>
+#
+# Costs real money, like its siblings, and narrows the same way with TASKS=.
+# Both arms are Claude sessions, so it excludes what `evals-run` excludes.
+# Record both revisions with the results -- see evals/README.md.
+# The sibling is asserted here because this is the ONLY place that can: the
+# plugin path is resolved in the agent at run time, so without the checkout the
+# run pays for both arms and measures plugin-versus-nothing.
+# Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=.
+JOBS ?= 16
+
+evals-run-comparison: evals-plan evals-preflight
+	@test -d ../daily-driver-base/skills || { \
+		echo "error: ../daily-driver-base is missing or is not a plugin root;" >&2; \
+		echo "  run: git worktree add ../daily-driver-base <base-revision>" >&2; \
+		exit 1; }
+	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml -j $(JOBS) \
+		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/base-vs-candidate.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
 # evals-run-classes: the model-class capability suite, built from real merged
 # pull requests (scripts/evals-cases-from-prs.py) and run on one Omp model at
 # a time -- MODEL= names the eval experiment stem, e.g.
@@ -591,3 +653,17 @@ evals-run-classes: evals-plan evals-preflight
 # part of `check`. See docs/github-mcp.md for what the answer is for.
 mcp-usage:
 	python3 scripts/github-mcp-usage.py
+
+# model-telemetry: mine `undertake`'s claim/readiness comments and
+# `review-cycle`'s `Review verification` comments for one repository's
+# production rework, and re-render evals/provenance/production/README.md
+# over every repository's records on disk. Needs GITHUB_TOKEN or GH_TOKEN,
+# so like mcp-usage it is laptop-only and deliberately not part of `check`.
+#   make model-telemetry REPO=owner/repo
+#   make model-telemetry REPO=owner/repo REFRESH=1
+model-telemetry:
+	@if [ -z "$(REPO)" ]; then \
+		echo "model-telemetry: set REPO=owner/repo, e.g. REPO=jmcvetta/daily-driver" >&2; \
+		exit 1; \
+	fi
+	python3 scripts/model-telemetry.py $(REPO) $(if $(REFRESH),--refresh,) $(if $(SINCE),--since $(SINCE),)

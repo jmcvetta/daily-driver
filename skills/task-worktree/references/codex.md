@@ -20,6 +20,10 @@ wt --config-set 'list.json-schema=2' list --format=json
 wt config show
 wt switch --create <task-branch> --base <resolved-base> --no-cd --format=json
 wt switch <task-branch> --no-cd --format=json
+git fetch <remote> +refs/heads/<task-branch>:refs/remotes/<remote>/<task-branch>
+wt switch --create <task-branch> --base <remote>/<task-branch> --no-cd --format=json
+git -C <task-worktree> merge --ff-only <remote>/<task-branch>
+git switch --track -c <task-branch> <remote>/<task-branch>
 ```
 
 Use the remote declared by the task or repository, then `remote.pushDefault`,
@@ -44,6 +48,17 @@ convention or a short issue-based name. Reuse only a worktree already dedicated
 to this task. For a new branch use `wt switch --create`; for an existing free
 branch use `wt switch`. Parse `.path` from successful stdout JSON only; stderr
 is diagnostics. Do not use `--clobber`, `--yes`, or `--no-hooks`.
+
+An existing task branch from the task record is not a new branch. Fetch the
+selected remote ref with the explicit refspec above. If no local branch exists,
+use `wt switch --create <task-branch> --base <remote>/<task-branch>` to attach
+it to its remote tip; matching names retain tracking. If the local branch
+exists, use `wt switch`, then run `git -C <returned-path> merge --ff-only
+<remote>/<task-branch>`. A failed fast-forward or a branch held by another task
+is a collision, not a reason to recreate it from the default base. In a
+dedicated detached task worktree, use `git switch --track -c <task-branch>
+<remote>/<task-branch>` for a remote-only task branch, then fast-forward it.
+Fresh task branches still start from the resolved base.
 
 In a detached worktree already dedicated to the task, attach in place with
 `git switch <task-branch>` or `git switch -c <task-branch> <resolved-base>`.
