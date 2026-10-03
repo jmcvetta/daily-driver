@@ -1712,7 +1712,8 @@ function shellInvocation(name, operands) {
 			position++;
 			break;
 		}
-		if (option === "-" || !option.startsWith("-") || option === "") break;
+		if (option === "-") return null;
+		if (!option.startsWith("-") || option === "") break;
 		if (option.startsWith("--")) return null;
 		for (const flag of option.slice(1)) {
 			if (flag === "c") {
