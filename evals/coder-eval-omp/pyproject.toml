@@ -34,3 +34,11 @@ daily_driver_omp = "coder_eval_omp.plugin:register"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/coder_eval_omp"]
+
+# `prices.json` lives at the package root next to this file (so a price
+# update is a diff to a top-level, committed file) but must ship beside the
+# installed module: `pricing.load_prices()` resolves it as a sibling of
+# `pricing.py`. `force-include` copies it there at build time without moving
+# the source.
+[tool.hatch.build.targets.wheel.force-include]
+"prices.json" = "coder_eval_omp/prices.json"
