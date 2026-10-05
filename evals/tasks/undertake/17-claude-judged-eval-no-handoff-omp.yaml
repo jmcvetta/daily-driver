@@ -5,7 +5,7 @@ task_id: undertake-17-claude-judged-eval-no-handoff-omp
 description: >-
   An Omp agent asked to run a Claude-judged evaluation has no handoff facility, so it records a
   precise Claude Code-session handoff and asks for no login repair.
-tags: [undertake, evals, behaviour, omp-only, "forks:undertake-17-claude-judged-eval-uses-handoff-omp"]
+tags: [undertake, evals, behaviour]
 
 initial_prompt: >-
   On Omp, run the `undertake-12-draft-handoff-omp` evaluation, which is judged

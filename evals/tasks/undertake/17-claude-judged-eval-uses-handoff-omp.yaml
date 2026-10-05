@@ -5,7 +5,7 @@ task_id: undertake-17-claude-judged-eval-uses-handoff-omp
 description: >-
   An Omp agent asked to run a Claude-judged evaluation hands it to a Claude
   Code session through the available facility, with no local auth probe.
-tags: [undertake, evals, behaviour, omp-only, "forks:undertake-17-claude-judged-eval-no-handoff-omp"]
+tags: [undertake, evals, behaviour]
 
 initial_prompt: >-
   On Omp, run the `undertake-12-draft-handoff-omp` evaluation, which is judged
