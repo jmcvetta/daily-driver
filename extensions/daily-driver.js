@@ -1698,7 +1698,9 @@ const SHELL_FLAGS_WITHOUT_ARGUMENTS = new Set("BCEHPTefhiklmnptuvxs".split(""));
 /** Classify shell options and locate the script or command-string operand. */
 function shellInvocation(name, operands) {
 	if (name === "eval") {
-		if (operands.length !== 1 || !operands[0].literal) return null;
+		if (operands.length !== 1 || !operands[0].literal) {
+			throw new UnreadableCommandError("eval needs one literal command string");
+		}
 		return { command: operands[0] };
 	}
 
@@ -1706,15 +1708,21 @@ function shellInvocation(name, operands) {
 	let commandMode = false;
 	while (position < operands.length) {
 		const operand = operands[position];
-		if (!operand.literal) return null;
+		if (!operand.literal) {
+			throw new UnreadableCommandError("a shell option or script operand expands");
+		}
 		const option = operand.text;
 		if (option === "--") {
 			position++;
 			break;
 		}
-		if (option === "-") return null;
+		if (option === "-") {
+			throw new UnreadableCommandError("a shell reads commands from stdin");
+		}
 		if (!option.startsWith("-") || option === "") break;
-		if (option.startsWith("--")) return null;
+		if (option.startsWith("--")) {
+			throw new UnreadableCommandError("a shell uses an unclassified option");
+		}
 		for (const flag of option.slice(1)) {
 			if (flag === "c") {
 				commandMode = true;
@@ -1722,24 +1730,38 @@ function shellInvocation(name, operands) {
 			}
 			if (flag === "o") {
 				position++;
-				if (position >= operands.length || !operands[position].literal) return null;
+				if (position >= operands.length || !operands[position].literal) {
+					throw new UnreadableCommandError("a shell option needs a literal argument");
+				}
 				break;
 			}
-			if (!SHELL_FLAGS_WITHOUT_ARGUMENTS.has(flag)) return null;
+			if (!SHELL_FLAGS_WITHOUT_ARGUMENTS.has(flag)) {
+				throw new UnreadableCommandError("a shell uses an unclassified option");
+			}
 		}
 		position++;
 	}
 
 	if (commandMode) {
 		const command = operands[position];
-		return command?.literal ? { command } : null;
+		if (!command?.literal) {
+			throw new UnreadableCommandError("a shell -c needs a literal command string");
+		}
+		return { command };
 	}
 	const file = operands[position];
 	// A redirection where the script would stand — `<<EOF`, `<<<`, `< file`,
 	// `0<file` — feeds the interpreter commands from input the guard did not
 	// read. It is no script file.
-	if (file?.literal && /^\d*<+/u.test(file.text)) return null;
-	return file?.literal ? { file } : null;
+	if (file?.literal && /^\d*<+/u.test(file.text)) {
+		throw new UnreadableCommandError("a shell reads commands from redirected input");
+	}
+	if (!file?.literal) {
+		throw new UnreadableCommandError(
+			file ? "a shell script operand expands" : "a shell reads commands from stdin",
+		);
+	}
+	return { file };
 }
 
 /** Walk one command's segments, tracking the shell's working directory. */
@@ -1853,11 +1875,6 @@ function walkShellCommand(command, toolCwd) {
 				interpreter,
 				segment.words.slice(index + 1),
 			);
-			if (invocation === null) {
-				throw new UnreadableCommandError(
-					"a command runs a string or script the guard cannot classify",
-				);
-			}
 			if (invocation.file !== undefined) continue;
 			if (walkShellCommand(invocation.command.text, shellCwd)) return true;
 			if (interpreter === "eval") shellCwd = null;
@@ -2035,7 +2052,11 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 				return { block: true, reason: UNANCHORED_PATH_BLOCK_REASON };
 			}
 			if (err instanceof UnreadableCommandError) {
-				return { block: true, reason: UNREADABLE_COMMAND_BLOCK_REASON };
+				// Every classification cause is a fixed string, not a user operand.
+				return {
+					block: true,
+					reason: `${UNREADABLE_COMMAND_BLOCK_REASON}\nClassification: ${err.message}`,
+				};
 			}
 			if (!(err instanceof GitUnavailableError)) throw err;
 			// Say so on stderr as well as to the model: an operator must be able

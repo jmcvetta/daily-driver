@@ -2003,6 +2003,78 @@ check("the unreadable denial tells the model to write the command literally", ()
 	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /eval/iu);
 });
 
+// Without the event shape, a direct parser check can pass while the service
+// hook still refuses the documented command before it runs.
+for (const command of [
+	"bash scripts/pr-keep-current.sh 511",
+	"printf 'keep-current-started\\n'; exec bash scripts/pr-keep-current.sh 511",
+]) {
+	checkGuard(
+		`the keep-current service accepts ${command}`,
+		false,
+		"bash",
+		{
+			command,
+			cwd: worktrees.task,
+			name: "keep-current-511",
+			ready: { log: "keep-current-started" },
+		},
+		worktrees.primary,
+	);
+}
+
+// Service metadata must not exempt a wrapped command string that targets the
+// primary checkout from the same guard that accepts the script invocation.
+checkGuard(
+	"a service wrapper cannot move the primary checkout",
+	true,
+	"bash",
+	{
+		command: `printf 'keep-current-started\\n'; exec bash -c 'git -C "${worktrees.primary}" switch master'`,
+		cwd: worktrees.task,
+		name: "keep-current-511",
+		ready: { log: "keep-current-started" },
+	},
+	worktrees.primary,
+);
+
+/**
+ * A generic refusal gives no clue which shell element failed; copying the
+ * operand or environment into that clue instead leaks a secret.
+ */
+check("unreadable refusals identify the mode without copying secrets", () => {
+	for (const [command, cause] of [
+		["bash --unclassified-secret scripts/pr-keep-current.sh 511", /unclassified option/iu],
+		["bash -c \"$PRIVATE_COMMAND\"", /-c needs a literal command string/iu],
+		["env bash -", /commands from stdin/iu],
+		["bash <<< 'private-command-secret'", /redirected input/iu],
+		["$PRIVATE_PROGRAM switch master", /executable that expands/iu],
+		["git status 'private-unterminated-secret", /quote is never closed/iu],
+	]) {
+		const decision = guardDecision(
+			"bash",
+			{
+				command,
+				cwd: worktrees.task,
+				name: "keep-current-511",
+				ready: { log: "keep-current-started" },
+				env: { PRIVATE_KEY: "private-environment-secret" },
+			},
+			worktrees.primary,
+		);
+		assert.equal(decision?.block, true);
+		assert.ok(decision.reason.startsWith(UNREADABLE_COMMAND_BLOCK_REASON));
+		assert.match(decision.reason, cause);
+		assert.ok(decision.reason.length < 700, "classification cause must be bounded");
+		for (const secret of [
+			"unclassified-secret", "PRIVATE_COMMAND", "private-command-secret",
+			"PRIVATE_PROGRAM", "private-unterminated-secret", "private-environment-secret",
+		]) {
+			assert.ok(!decision.reason.includes(secret), "refusal must not copy command or environment values");
+		}
+	}
+});
+
 // Shell script arguments are operands to an opaque program, not more command
 // strings. Without these cases, the guard rejects harmless status calls or
 // mistakes stdin for a literal file and lets unread commands escape inspection.
