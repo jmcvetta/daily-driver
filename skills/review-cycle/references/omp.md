@@ -78,11 +78,16 @@ which that mode rejects:
 
 ```text
 {
-  "command": "timeout --signal=TERM --kill-after=5s 900s gh pr checks --watch <pr> --repo <owner>/<repo>",
+  "command": "printf 'ci-watch-started\\n'; exec timeout --signal=TERM --kill-after=5s 900s gh pr checks --watch <pr> --repo <owner>/<repo>",
   "name": "ci-<pr>-<short-sha>",
-  "cwd": "<task-worktree>"
+  "cwd": "<task-worktree>",
+  "ready": {"log": "ci-watch-started"}
 }
 ```
+
+`ready.log` matches only the launch marker printed before the watcher starts.
+It means the service command launched, not that CI passed or a check registered.
+The `exec` preserves the watcher's exit status as the service's status.
 
 The service command uses GNU coreutils `timeout`. It owns the fifteen-minute
 deadline, sends `TERM` at the cap, then sends `KILL` after five seconds if the

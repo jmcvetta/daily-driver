@@ -69,10 +69,10 @@ jobs:
       # forever. Since then the runs are created but held in
       # `action_required` until someone with write access clicks "Approve
       # workflows to run" — better, and still a human on every release.
-      # A GitHub App is a distinct identity, so CI and PR Title Check report
-      # on its pull requests unprompted. (Projected Releases skips
-      # release-please branches by its own `if:`, and reports `skipped` under
-      # every identity.)
+      # A GitHub App is a distinct identity, so CI and Release Projection
+      # report on its pull requests unprompted. The combined check validates
+      # the release-please title while its projection steps skip, so a valid
+      # title reports success under every identity.
       #
       # https://github.blog/changelog/2026-06-11-bot-created-pull-requests-can-run-workflows-if-approved/
       #

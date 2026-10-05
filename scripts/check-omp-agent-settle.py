@@ -110,7 +110,6 @@ while True:
         emit({"type": "tool_execution_end", "toolCallId": "t1", "toolName": "read",
               "result": {"content": [{"type": "text", "text": "SKILL.md body"}]}})
         emit({"type": "agent_end", "isTerminal": True,
-              "usage": {"inputTokens": 22586, "outputTokens": 47},
               "messages": [{"role": "assistant",
                             "usage": {"input": 22586, "output": 47, "cacheRead": 10,
                                       "cacheWrite": 0, "totalTokens": 22643}}]})
@@ -177,7 +176,7 @@ async def run_scenario() -> None:
         json.loads((workdir / PROTOCOL_EVIDENCE_FILENAME).read_text())
         == {
             "omp_argument_keys_seen": ["args"],
-            "omp_usage_keys_seen": ["inputTokens", "outputTokens"],
+            "omp_usage_keys_seen": ["cacheRead", "cacheWrite", "input", "output"],
         },
         "post-turn protocol evidence must contain the exact observed key union",
     )

@@ -1,51 +1,23 @@
 # Continuous integration.
 #
-# `CI Success` is a required status on master. It always runs and checks both
-# shared change detection and every selected validation job.
+# `CI Success` is a required status on master. It always runs one job and
+# selects component checks from the changed paths.
 name: CI
 
 on:
   pull_request:
-  push:
-    branches: [master]
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  changes:
-    name: Detect changed components
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      plugin: ${{ steps.filter.outputs.plugin }}
-      runtime: ${{ steps.filter.outputs.runtime }}
-      eval: ${{ steps.filter.outputs.eval }}
-      issue: ${{ steps.filter.outputs.issue }}
-      omp: ${{ steps.filter.outputs.omp }}
-      shared: ${{ steps.filter.outputs.shared }}
-      unknown: ${{ steps.filter.outputs.unknown }}
-    steps:
-      - uses: actions/checkout@v7
-        if: github.event_name == 'push'
-        with:
-          fetch-depth: 0
-      - uses: actions/checkout@v7
-        if: github.event_name == 'pull_request'
-      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
-        id: filter
-        with:
-          filters: .github/ci-filters.yml
-          predicate-quantifier: some-with-excludes
-
-  repository-checks:
-    name: Repository-wide checks
+  ci-success:
+    name: CI Success
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -53,115 +25,79 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-      - name: Validate CI selection and result contract
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
+        id: filter
+        with:
+          filters: .github/ci-filters.yml
+          predicate-quantifier: some-with-excludes
+      - name: Validate component selection
+        env:
+          FILTER_PLUGIN: ${{ steps.filter.outputs.plugin }}
+          FILTER_RUNTIME: ${{ steps.filter.outputs.runtime }}
+          FILTER_EVAL: ${{ steps.filter.outputs.eval }}
+          FILTER_ISSUE: ${{ steps.filter.outputs.issue }}
+          FILTER_OMP: ${{ steps.filter.outputs.omp }}
+          FILTER_SHARED: ${{ steps.filter.outputs.shared }}
+          FILTER_UNKNOWN: ${{ steps.filter.outputs.unknown }}
+        run: |
+          set -euo pipefail
+          for output in "$FILTER_PLUGIN" "$FILTER_RUNTIME" "$FILTER_EVAL" \
+            "$FILTER_ISSUE" "$FILTER_OMP" "$FILTER_SHARED" "$FILTER_UNKNOWN"; do
+            case "$output" in
+              true|false) ;;
+              *) printf 'invalid component filter output: %s\n' "$output" >&2; exit 1 ;;
+            esac
+          done
+      - name: Validate CI selection
         run: make check-ci-scope
       - name: Validate repository step references
         run: make check-step-names
       - name: Validate release path classification
         run: make check-release-paths
-
-  plugin-validity:
-    name: Plugin validity
-    needs: changes
-    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.plugin == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
       - name: Install the Claude Code CLI
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.plugin == 'true'
         run: npm install -g @anthropic-ai/claude-code@latest
       - name: Validate plugin content
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.plugin == 'true'
         run: make check-plugin-validity
-
-  runtime:
-    name: Runtime behavior
-    needs: changes
-    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.runtime == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
       - name: Ensure ShellCheck
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.runtime == 'true'
         run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
+      - name: Install Worktrunk
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.runtime == 'true'
+        run: |
+          set -euo pipefail
+          installer="$RUNNER_TEMP/worktrunk-installer.sh"
+          curl --fail --location --retry 5 --retry-delay 2 --retry-all-errors \
+            --output "$installer" \
+            https://github.com/max-sixty/worktrunk/releases/download/v0.80.0/worktrunk-installer.sh
+          echo '53b606fa48b84169180f8881a61f5c31c770645e1d51328032aa5aeb4f2e155a  '"$installer" | sha256sum --check -
+          WORKTRUNK_UNMANAGED_INSTALL="$RUNNER_TEMP/worktrunk/bin" sh "$installer"
+          echo "$RUNNER_TEMP/worktrunk/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/worktrunk/bin/wt" --version
       - name: Validate runtime behavior and fixtures
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.runtime == 'true'
         run: make check-runtime
-
-  eval-tooling:
-    name: Eval tooling
-    needs: changes
-    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.eval == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
       - name: Install uv
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.eval == 'true' || steps.filter.outputs.omp == 'true'
         run: |
           set -euo pipefail
           curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Validate eval tooling and fixtures
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.eval == 'true'
         run: make check-eval-tooling
-
-  issue-infra:
-    name: Issue-rule consistency
-    needs: changes
-    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.issue == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
       - name: Validate issue and infrastructure rules
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.issue == 'true'
         run: make check-issue-infra
-
-  omp-integration:
-    name: Omp integration
-    needs: changes
-    if: needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.omp == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
       - name: Install Omp
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.omp == 'true'
         run: |
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Install uv
-        run: |
-          set -euo pipefail
-          curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Verify Omp is on PATH
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.omp == 'true'
         run: omp --version
       - name: Validate Omp integration
+        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.omp == 'true'
         run: make check-omp-plugin check-omp-eval-guard-live check-omp-agent-settle
-
-  ci-success:
-    name: CI Success
-    needs: [changes, repository-checks, plugin-validity, runtime, eval-tooling, issue-infra, omp-integration]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Verify selected jobs succeeded
-        env:
-          DETECTION: ${{ needs.changes.result }}
-          REPOSITORY: ${{ needs.repository-checks.result }}
-          FILTER_PLUGIN: ${{ needs.changes.outputs.plugin }}
-          FILTER_RUNTIME: ${{ needs.changes.outputs.runtime }}
-          FILTER_EVAL: ${{ needs.changes.outputs.eval }}
-          FILTER_ISSUE: ${{ needs.changes.outputs.issue }}
-          FILTER_OMP: ${{ needs.changes.outputs.omp }}
-          FILTER_SHARED: ${{ needs.changes.outputs.shared }}
-          FILTER_UNKNOWN: ${{ needs.changes.outputs.unknown }}
-          PLUGIN_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.plugin == 'true' }}
-          PLUGIN_RESULT: ${{ needs.plugin-validity.result }}
-          RUNTIME_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.runtime == 'true' }}
-          RUNTIME_RESULT: ${{ needs.runtime.result }}
-          EVAL_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.eval == 'true' }}
-          EVAL_RESULT: ${{ needs.eval-tooling.result }}
-          ISSUE_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.issue == 'true' }}
-          ISSUE_RESULT: ${{ needs.issue-infra.result }}
-          OMP_SELECTED: ${{ needs.changes.outputs.shared == 'true' || needs.changes.outputs.unknown == 'true' || needs.changes.outputs.omp == 'true' }}
-          OMP_RESULT: ${{ needs.omp-integration.result }}
-        run: node scripts/check-ci-scope.mjs --aggregate

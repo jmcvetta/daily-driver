@@ -119,6 +119,17 @@ make evals-run-omp    # every Omp model, each with bare and treated variants.
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
+`make evals-record ... POST_COMMENTS=1` also posts one comment per run on each
+pull request a case was built from (model-classes cases, whose description
+begins `owner/repo#N:`). The comment says an agent re-implemented that task in
+an eval after the fact, and lists one row per model and variant: `pass n/m`
+and the median elapsed minutes. Tokens, cost and transcripts stay in the
+record. A comment is edited, not repeated, when its `eval-result` run marker
+is already on the pull request. The token comes from `GITHUB_TOKEN` or
+`GH_TOKEN`; without one the record is written, the comments are skipped, and
+the command exits non-zero. A failure on one pull request is reported on stderr, the
+rest still post, and the exit is non-zero. Posting is local only; CI never sets the flag.
+
 The `*-neg-*` selector is a filename glob, and one absence assertion does not
 live in a file it matches: `tasks/pr/02-open-a-pr.yaml` is a fire case that
 also asserts `undertake` stays silent. Add `tasks/pr/*.yaml` when the question
@@ -281,11 +292,12 @@ misread as an invitation.
 
 `task-worktree/` tests the boundary and the work, not a narrated command.
 `01` names the feature branch but says nothing about isolation; the rule and
-skill must supply the sibling worktree. The same Git fixture runs through each
-CLI arm and accepts only a branch from the remote default, the changed file in
-a registered sibling worktree, and an unchanged primary checkout. `04` starts
-detached and requires the feature branch in place. `02` keeps read-only review
-out; `03` keeps an already attached worktree from nesting another one.
+skill must supply Worktrunk creation in a sibling worktree. The shared fixture
+uses real `wt` commands and accepts only a branch from the remote default, the
+changed file in a registered sibling worktree, preserved primary-checkout
+state, and no copied primary-only changes. `04` starts detached and requires the
+feature branch in place. `02` keeps read-only review out; `03` keeps an already
+attached worktree from nesting another one.
 
 `issue-labels/` is separated from `issue-deps`, and the two are one word
 apart: both are about an issue, and both are reached for with "what does this
@@ -873,6 +885,20 @@ score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
 delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
 decision; this section records the model set.
 
+**In a Claude Code cloud session or on a fresh laptop, set up first:**
+
+```sh
+make evals-install && make evals-setup-omp
+```
+
+`evals-setup-omp` installs `omp` with CI's command when it is missing, and
+checks that Omp lists each arm's pinned model. It is free and idempotent. The
+gateway arms need `AI_GATEWAY_API_KEY`, the name Omp reads. A cloud container
+exports `VERCEL_AI_GATEWAY_API_KEY` instead, and the Makefile maps that name to
+Omp's for every target. Without either, Omp lists no gateway model and the
+target fails, naming the variable. The `openai-codex` arm needs Omp's own Codex
+login; the target reports it as unconfigured and does not fail.
+
 ```sh
 make evals-run-omp                            # every configured Omp model
 make evals-run-omp-glm-5-3                    # GLM 5.3 only
@@ -897,12 +923,12 @@ must configure it. The GPT 6 rows use the Vercel AI Gateway routes
 | `omp-gpt-6-sol.yaml` | `vercel-ai-gateway/openai/gpt-6-sol` |
 | `omp-gpt-6-luna.yaml` | `vercel-ai-gateway/openai/gpt-6-luna` |
 
-It needs `omp` on PATH and a model configured in the caller's own
-`~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
-Omp home and writes nothing back into it. It does not borrow `config.yml`: the
-throwaway home gets its own, which pins every Omp chat role to the arm's
-`model`. Unpinned, Omp's subagents and helper calls would run on whatever the
-provider catalog offers.
+It needs `omp` on PATH and the provider's credentials: the gateway key above,
+or a login in the caller's own `~/.omp/agent/`. The agent borrows that directory
+by symlink into a throwaway Omp home and writes nothing back into it. It does
+not borrow `config.yml`: the throwaway home gets its own, which pins every Omp
+chat role to the arm's `model`. Unpinned, Omp's subagents and helper calls would
+run on whatever the provider catalog offers.
 
 ### Running an Omp arm
 
@@ -910,6 +936,10 @@ provider catalog offers.
 make evals-install                       # rebuilds the local agents every time
 export AI_GATEWAY_API_KEY=…              # Omp's name for the Vercel AI Gateway key
 omp models find gpt-6-luna               # the arm's route must resolve
+unset GH_TOKEN GITHUB_TOKEN SSH_AUTH_SOCK
+export GH_CONFIG_DIR="$(mktemp -d)"        # hide the laptop's gh keyring login
+gh auth status                          # must fail before any replicate
+curl -s -o /dev/null -w '%{http_code}\n' https://api.github.com/user  # must print 401
 TASKS='tasks/undertake/*.yaml'
 setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" JOBS=16 > luna.log 2>&1 &
 ```
@@ -920,11 +950,12 @@ setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" JOBS=16 > luna.log 2>&
   Leave `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` alone: pointed at a
   gateway, they bill every judge call there.
 - **Run it where no GitHub credential is ambient.** Some rows grant `bash`,
-  and the agent inherits the shell's environment. Before the first replicate,
-  with `GH_TOKEN` and `GITHUB_TOKEN` unset, `gh auth status` must fail and
-  `curl -s -o /dev/null -w '%{http_code}' https://api.github.com/user` must
-  print `401`. A Claude Code cloud container fails the second check: its proxy
-  signs every GitHub request with the owner's credential.
+  and the agent inherits the shell's environment. On a logged-in laptop,
+  unsetting token variables alone leaves `gh` authenticated through its
+  keyring. Isolate `GH_CONFIG_DIR` and unset `SSH_AUTH_SOCK` as shown above;
+  stop unless `gh auth status` fails and the GitHub user endpoint returns
+  `401`. A Claude Code cloud container fails the second check: its proxy
+  signs GitHub requests with the owner's credential.
 - **Run replicates in parallel.** `JOBS` sets how many run at once; the
   default is one, and one at a time a suite takes about two hours. A replicate
   waits on model calls, not on the container: at 12 at once, a four-core

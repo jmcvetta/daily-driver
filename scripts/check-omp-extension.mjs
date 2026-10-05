@@ -2003,6 +2003,188 @@ check("the unreadable denial tells the model to write the command literally", ()
 	assert.match(UNREADABLE_COMMAND_BLOCK_REASON, /eval/iu);
 });
 
+// Without the event shape, a direct parser check can pass while the service
+// hook still refuses the documented command before it runs.
+for (const command of [
+	"bash scripts/pr-keep-current.sh 511",
+	"printf 'keep-current-started\\n'; exec bash scripts/pr-keep-current.sh 511",
+]) {
+	checkGuard(
+		`the keep-current service accepts ${command}`,
+		false,
+		"bash",
+		{
+			command,
+			cwd: worktrees.task,
+			name: "keep-current-511",
+			ready: { log: "keep-current-started" },
+		},
+		worktrees.primary,
+	);
+}
+
+// Service metadata must not exempt a wrapped command string that targets the
+// primary checkout from the same guard that accepts the script invocation.
+checkGuard(
+	"a service wrapper cannot move the primary checkout",
+	true,
+	"bash",
+	{
+		command: `printf 'keep-current-started\\n'; exec bash -c 'git -C "${worktrees.primary}" switch master'`,
+		cwd: worktrees.task,
+		name: "keep-current-511",
+		ready: { log: "keep-current-started" },
+	},
+	worktrees.primary,
+);
+
+/**
+ * A generic refusal gives no clue which shell element failed; copying the
+ * operand or environment into that clue instead leaks a secret.
+ */
+check("unreadable refusals identify the mode without copying secrets", () => {
+	for (const [command, cause] of [
+		["bash --unclassified-secret scripts/pr-keep-current.sh 511", /unclassified option/iu],
+		["bash -c \"$PRIVATE_COMMAND\"", /-c needs a literal command string/iu],
+		["env bash -", /commands from stdin/iu],
+		["bash <<< 'private-command-secret'", /redirected input/iu],
+		["$PRIVATE_PROGRAM switch master", /executable that expands/iu],
+		["git status 'private-unterminated-secret", /quote is never closed/iu],
+	]) {
+		const decision = guardDecision(
+			"bash",
+			{
+				command,
+				cwd: worktrees.task,
+				name: "keep-current-511",
+				ready: { log: "keep-current-started" },
+				env: { PRIVATE_KEY: "private-environment-secret" },
+			},
+			worktrees.primary,
+		);
+		assert.equal(decision?.block, true);
+		assert.ok(decision.reason.startsWith(UNREADABLE_COMMAND_BLOCK_REASON));
+		assert.match(decision.reason, cause);
+		assert.ok(decision.reason.length < 700, "classification cause must be bounded");
+		for (const secret of [
+			"unclassified-secret", "PRIVATE_COMMAND", "private-command-secret",
+			"PRIVATE_PROGRAM", "private-unterminated-secret", "private-environment-secret",
+		]) {
+			assert.ok(!decision.reason.includes(secret), "refusal must not copy command or environment values");
+		}
+	}
+});
+
+// Shell script arguments are operands to an opaque program, not more command
+// strings. Without these cases, the guard rejects harmless status calls or
+// mistakes stdin for a literal file and lets unread commands escape inspection.
+for (const [name, cwd] of [
+	["in an attached task worktree", worktrees.task],
+	["in the primary worktree", worktrees.primary],
+]) {
+	checkGuard(
+		`a literal file-based shell call with arguments passes ${name}`,
+		false,
+		"bash",
+		{
+			command:
+				`OMP_WEB_PROVISION_KNOWN_HOSTS="$PWD/infra/ansible/inventory/operator.local.known_hosts" ` +
+				"bash scripts/provision-disposable.sh status",
+		},
+		cwd,
+	);
+}
+
+for (const [name, command, blocked] of [
+	[
+		"a shell with ordinary flags",
+		"bash -eu scripts/provision-disposable.sh status",
+		false,
+	],
+	["a shell with an option argument", "bash -o pipefail scripts/provision-disposable.sh status", false],
+	["a shell script after --", "bash -- scripts/provision-disposable.sh status", false],
+	[
+		"a command string with $0 and later arguments",
+		`bash -c 'git -C "${worktrees.primary}" switch master' arg0 extra`,
+		true,
+	],
+	[
+		"a command string with combined flags and later arguments",
+		`bash -ec 'git -C "${worktrees.primary}" switch master' arg0 extra`,
+		true,
+	],
+	["a shell reading commands from stdin", "bash -", true],
+	["an unclassified shell option", "bash --unknown scripts/provision-disposable.sh status", true],
+]) {
+	checkGuard(
+		`${name} ${blocked ? "is refused" : "passes"}`,
+		blocked,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
+// An interpreter is classified wherever it stands in a command, so a wrapper in
+// front of it does not hide it. Without these cases the guard reads only the
+// first word, and `exec bash -c '<move>'` passes because `exec` is not a shell.
+for (const [name, command] of [
+	[
+		"the documented keep-current launch",
+		"printf 'keep-current-started\\n'; exec bash scripts/pr-keep-current.sh 686",
+	],
+	["a wrapped script file with an argument", "timeout 5 bash scripts/provision-disposable.sh status"],
+	["a wrapped literal command string that moves nothing", "exec bash -c 'true'"],
+	// `grep -n sh file` reads `sh` as a script file `file`, so it must keep passing.
+	["an interpreter name used as a grep operand", "grep -n sh file"],
+]) {
+	checkGuard(
+		`${name} passes from a task worktree`,
+		false,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
+for (const [name, command] of [
+	["a wrapped expanded command string", 'exec bash -c "$script"'],
+	["a wrapped here-document fed to a shell", "exec bash <<'EOF'\ntrue\nEOF\n"],
+	// A here-document fed to a bare interpreter reads as a script file named
+	// `<<EOF` unless a redirection is refused where the script would stand.
+	["a here-document fed to a shell", "bash <<'EOF'\ntrue\nEOF\n"],
+	["a here-string fed to a shell", "bash <<< 'true'"],
+	["a file redirected into a shell", "bash < script.sh"],
+	["a wrapped shell reading stdin", "env bash -"],
+	// The named cost: a word that only mentions an interpreter has no operands
+	// to classify, so it is refused from any cwd. A visible false positive with
+	// an obvious repair, in place of a silent hole.
+	["an interpreter word that is only mentioned", "command -v bash"],
+]) {
+	checkGuard(
+		`${name} is refused from a task worktree`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+		UNREADABLE_COMMAND_BLOCK_REASON,
+	);
+}
+
+for (const [name, command] of [
+	["a wrapped bash -c", `exec bash -c 'git -C "${worktrees.primary}" switch master'`],
+	["a wrapped sh -c", `timeout 5 sh -c 'git -C "${worktrees.primary}" switch master'`],
+]) {
+	// The wrapped string is walked like a bare one, so the move is still found.
+	checkGuard(
+		`${name} does not hide a branch move in the primary`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
 for (const [name, command] of [
 	["a string run by eval", "eval \"$script\""],
 	["a string run by bash -c", "bash -c \"$script\""],

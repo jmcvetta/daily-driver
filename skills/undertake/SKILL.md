@@ -959,6 +959,14 @@ reported to it under `Reporting to an orchestrator`.
   until the branch carries the result. An apply is not something CI reports,
   and no check a session can read answers for it.
 
+**"It cannot run here" is not a stop until the docs say so.** An acceptance
+step the session believes it cannot perform in this environment — a missing
+tool, a missing credential, a run that "needs a laptop" — is not a blocker
+until the session has searched the repository's docs and Makefile for the
+route. A blocker posted to a pull request or an issue names what was searched
+and what it found. A blocker that cites no search is a guess, and the next
+session pays to disprove it.
+
 The round at `Review the head` and `Fix, answer, resolve, push` has three stops
 of its own — its own wait on CI, a review finding whose fix is a real
 trade-off, and fixes that will not converge, which is the wall at `Verify the
@@ -994,7 +1002,9 @@ Non-goals
   work.
 - **Does not open an issue for anything but the work in hand.** `Open the
   issue` tracks what was asked for. A bug noticed in passing is worth reporting
-  to the user; it is not this run's second issue.
+  to the user; it is not this run's second issue, except a confirmed Daily
+  Driver component defect reported under `issue`'s automatic-reporting policy.
+  That narrow report does not authorize undertaking unrelated fixes.
 - **Does not review, and does not answer a review.** The round is
   `review-cycle`'s, and it is reachable without this sequence: a pull request
   opened by hand, or one a reviewer has come back to, gets the same round

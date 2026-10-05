@@ -12,6 +12,7 @@ runtime:
   - 'rules/**'
   - 'skills/**'
   - 'evals/**'
+  - '.config/wt.toml'
 eval:
   - 'evals/**'
 issue:
@@ -51,6 +52,7 @@ unknown:
   - '!omp_configs/**'
   - '!infra/**'
   - '!scripts/**'
+  - '!.config/wt.toml'
   - '!.github/**'
   - '!docs/**'
   - '!attic/**'

@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.48.0](https://github.com/jmcvetta/daily-driver/compare/v0.47.0...v0.48.0) (2026-10-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* Run `wt sync` with Worktrunk shell integration instead of `make git_sync`.
+
+### Features
+
+* file confirmed Daily Driver bugs automatically ([#519](https://github.com/jmcvetta/daily-driver/issues/519)) ([a13df72](https://github.com/jmcvetta/daily-driver/commit/a13df72fc158e1cdc7ce46d6fb32ee7486129b2f))
+* post eval results on the source pull request ([#524](https://github.com/jmcvetta/daily-driver/issues/524)) ([f728642](https://github.com/jmcvetta/daily-driver/commit/f72864229547fe0e2c45662ef23474dc11e93ba0))
+* switch to master before sync cleanup ([#522](https://github.com/jmcvetta/daily-driver/issues/522)) ([96b96cd](https://github.com/jmcvetta/daily-driver/commit/96b96cd8f830d883e808d770d5e0a1168cc8e865))
+
+
+### Bug Fixes
+
+* **omp-guard:** classify shell interpreters at every word position ([#525](https://github.com/jmcvetta/daily-driver/issues/525)) ([2f32819](https://github.com/jmcvetta/daily-driver/commit/2f32819d73d9aa5c966eeef30d3c952aabfe0a26))
+* **omp:** add readiness signals to watcher services ([#510](https://github.com/jmcvetta/daily-driver/issues/510)) ([34e0244](https://github.com/jmcvetta/daily-driver/commit/34e024483796ef1e50e1d5192cd76595847af435))
+* **omp:** allow shell script arguments through guard ([#512](https://github.com/jmcvetta/daily-driver/issues/512)) ([7a731da](https://github.com/jmcvetta/daily-driver/commit/7a731da7ec4963c84fa311f0739a35e0812f3ff6))
+* **omp:** keep runtime guidance provider-neutral ([#504](https://github.com/jmcvetta/daily-driver/issues/504)) ([57da558](https://github.com/jmcvetta/daily-driver/commit/57da55819f5222a1551cc534d6886754cd6cd20d))
+* **omp:** select instruction routes by runtime ([#500](https://github.com/jmcvetta/daily-driver/issues/500)) ([8777630](https://github.com/jmcvetta/daily-driver/commit/8777630d438162ab210289e4a83e662fcddef7f6))
+
+## [0.47.0](https://github.com/jmcvetta/daily-driver/compare/v0.46.0...v0.47.0) (2026-10-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Task-worktree callers now require Worktrunk (`wt`) on PATH. The Git-only worktree creation path is removed.
+
+### Features
+
+* add make evals-setup-omp and refuse unsearched can't-run blockers ([#491](https://github.com/jmcvetta/daily-driver/issues/491)) ([aefef0f](https://github.com/jmcvetta/daily-driver/commit/aefef0f3e38a26292efc7376d9a04c24c8997a30))
+* **constitution:** replace the four-line budget with the audience rule ([#472](https://github.com/jmcvetta/daily-driver/issues/472)) ([1df40c7](https://github.com/jmcvetta/daily-driver/commit/1df40c7c633478e90a089d20b1844e22339020f0))
+* require Worktrunk for task isolation ([#496](https://github.com/jmcvetta/daily-driver/issues/496)) ([cb601bc](https://github.com/jmcvetta/daily-driver/commit/cb601bcb6e8075bde52e7eed3bc446fb5fc0cc7b))
+
+
+### Bug Fixes
+
+* **constitution:** scope the testing rule to application code ([#479](https://github.com/jmcvetta/daily-driver/issues/479)) ([d12ad73](https://github.com/jmcvetta/daily-driver/commit/d12ad73eeefc112e630517e708ca23d8c8b47a74))
+* route Title the session in the Claude references ([#493](https://github.com/jmcvetta/daily-driver/issues/493)) ([3615fd2](https://github.com/jmcvetta/daily-driver/commit/3615fd2cf92af04e810d61656e4f83634a9fa592))
+
 ## [0.46.0](https://github.com/jmcvetta/daily-driver/compare/v0.45.0...v0.46.0) (2026-10-02)
 
 
@@ -19,8 +60,16 @@
 
 ## [Unreleased]
 
+### Features
+* consolidate selected pull-request CI checks into one runner and install the prebuilt Worktrunk binary ([#505](https://github.com/jmcvetta/daily-driver/issues/505))
+
+* **ci:** combine release title validation and projection ([#508](https://github.com/jmcvetta/daily-driver/issues/508))
+
+* adopt Worktrunk for isolated task worktrees and install its official Claude plugin and latest CLI during cloud Setup ([#495](https://github.com/jmcvetta/daily-driver/issues/495))
+
 ### Bug Fixes
 
+* **omp:** select harness instructions from runtime identity, not model name (#498)
 * **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)
 
 ## [0.45.0](https://github.com/jmcvetta/daily-driver/compare/v0.44.0...v0.45.0) (2026-09-28)

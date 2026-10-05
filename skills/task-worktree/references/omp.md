@@ -4,61 +4,102 @@
 performs them. Claude Code's route is in [`claude.md`](claude.md), and Codex's
 in [`codex.md`](codex.md).
 
-Use the `bash` tool for the Git setup:
+Before Worktrunk worktree inspection, source `scripts/ensure-worktrunk.sh`
+from the repository root and run `ensure_worktrunk`. It returns without
+installing when `wt` exists. If missing, it uses Homebrew or Cargo in user
+scope, adds the installed bin directory to this shell's `PATH`, and verifies
+`wt --version`. Source and run it again in each later shell invocation that
+uses `wt`; it restores the installed bin path without reinstalling. It never
+upgrades `wt`; if neither installer works, stop with the helper's cause and
+actionable installation requirement. Do not use bare Git worktree creation as
+a fallback.
+
+Use the `bash` tool for Git boundary reads and Worktrunk:
 
 ```sh
 git rev-parse --show-toplevel
 git branch --show-current
-git worktree list --porcelain
 git remote
 git config --get remote.pushDefault
 git symbolic-ref --short refs/remotes/<remote>/HEAD
 git -C <primary-worktree> status --short
-git worktree add -b <task-branch> <sibling-path> <remote>/<base>
+source scripts/ensure-worktrunk.sh && ensure_worktrunk
+wt --config-set 'list.json-schema=2' list --format=json
+wt config show
+wt switch --create <task-branch> --base <resolved-base> --no-cd --format=json
+wt switch <task-branch> --no-cd --format=json
+git fetch <remote> +refs/heads/<task-branch>:refs/remotes/<remote>/<task-branch>
+wt switch --create <task-branch> --base <remote>/<task-branch> --no-cd --format=json
+git -C <task-worktree> merge --ff-only <remote>/<task-branch>
+git switch --track -c <task-branch> <remote>/<task-branch>
 ```
 
-The first entry from `git worktree list --porcelain` is the primary worktree.
 Use the remote declared by the task or repository, then `remote.pushDefault`,
-then the only configured remote. More than one unexplained remote is a stop,
-not permission to assume `origin`. Keep the full remote-tracking name returned
-for `<remote>/HEAD` as the start point.
+then the only configured remote. More than one unexplained remote is a stop.
+Keep the full remote-tracking name returned by `git symbolic-ref` as the base.
+Never use the current feature branch as the base.
 
-An existing task branch the invoking workflow supplies comes before any
-designated branch. Fetch it from the remote (`git fetch <remote> <task-branch>`),
-then run `git worktree add <sibling-path> <task-branch>` without `-b`; where
-no local branch of that name exists, `git worktree add --track -b <task-branch>
-<sibling-path> <remote>/<task-branch>` attaches it from the remote. Never
-recreate it from `<remote>/<base>`.
-A local branch of that name left from an earlier run is brought to the
-remote tip with `git merge --ff-only <remote>/<task-branch>` once attached;
-a branch that will not fast-forward is a collision to inspect.
+Inspect `.items[]` from schema-2 JSON. `.worktree.main` identifies the primary
+worktree; `.worktree.path` supplies its path. `wt config show` reports config
+locations and the project identifier, not the effective path value. Inspect
+`WORKTRUNK_WORKTREE_PATH`, system/user `worktree-path` settings, and matching
+project-specific settings in system/user config. If none is set, Worktrunk's
+documented default is
+`{{ repo_path }}/../{{ repo }}.{{ branch | sanitize }}`. Resolve that template
+for this task before creating: its path must be beside the primary worktree
+and outside every existing worktree. Do not change user configuration to make
+the policy fit.
 
-If the task branch already exists and is free, omit `-b` and put that branch
-last. In a detached worktree already dedicated to the task, use `git switch
-<task-branch>` when the branch exists and is free; otherwise use `git switch -c
-<task-branch> <remote>/<base>`. A branch held by another worktree is a
-collision to inspect, not one to force.
+Use the task branch from the task record before a new per-session designation.
+Otherwise use exactly one branch designated for this task, then the project
+convention or a short issue-based name. Reuse only a worktree already dedicated
+to this task. For a new branch use `wt switch --create`; for an existing free
+branch use `wt switch`. Parse `.path` from successful stdout JSON only; stderr
+is diagnostics. Do not use `--clobber`, `--yes`, or `--no-hooks`.
 
-After verifying the task path and branch, use that path as the root for every
-later task operation. Omp does not relocate the live session when the agent
-creates a worktree, and no extension tool registers or displays a separate
-task-root status. Do not invoke `/wt`: it creates another worktree and may
-carry primary-checkout changes into it.
+An existing task branch from the task record is not a new branch. Fetch the
+selected remote ref with the explicit refspec above. If no local branch exists,
+use `wt switch --create <task-branch> --base <remote>/<task-branch>` to attach
+it to its remote tip; matching names retain tracking. If the local branch
+exists, use `wt switch`, then run `git -C <returned-path> merge --ff-only
+<remote>/<task-branch>`. A failed fast-forward or a branch held by another task
+is a collision, not a reason to recreate it from the default base. In a
+dedicated detached task worktree, use `git switch --track -c <task-branch>
+<remote>/<task-branch>` for a remote-only task branch, then fast-forward it.
+Fresh task branches still start from the resolved base.
+
+In a detached worktree already dedicated to the task, attach in place with
+`git switch <task-branch>` or `git switch -c <task-branch> <resolved-base>`.
+This is Worktrunk's documented method to change the branch of an existing
+worktree, not a fallback for creating one. Stop and inspect branch or path
+collisions; do not force them.
+
+**Omp does not relocate the live session when `wt` creates a worktree.**
+Continue every task operation with the verified absolute task paths. For a
+new task where a new process is useful, start one inside the task worktree:
+
+```sh
+wt switch --create <task-branch> --base <resolved-base> -x omp
+```
+
+The user may optionally move an idle existing session with `/move
+<returned-path>`. Do not require that move for the explicit-path workflow.
+Omp 18.5.0 has no direct supported relocation operation in its inspected
+extension API; automatic plugin-driven relocation needs upstream API work and
+is outside this task. Do not invoke Omp's built-in `/wt`: it has a separate
+creation path, starts from current `HEAD`, and carries uncommitted changes.
+The official Worktrunk Omp integration tracks activity only; it is not an
+isolation mechanism and must not be duplicated here.
 
 **File tools do not inherit a bash cwd change.** Omp resolves each `write`
-target and each path in an `edit` payload against the session's own cwd. A
-relative hashline header such as `[extensions/file.mjs#ABCD]` therefore still
-targets the session root, even after a previous bash call changed directory.
-Use the absolute task-worktree path in every file-tool target, including
-hashline headers and move destinations; preserve the full path and snapshot
-tag returned by `read`. The extension reports the supplied target, resolved
-path, containing worktree, primary worktree, and branch state when it blocks a
-file mutation. Follow that classification; never retry a rejected mutation
-with the same relative path.
+target and each path in an `edit` payload against the session's own cwd. Use
+the absolute task-worktree path in every file-tool target, including hashline
+headers and move destinations; preserve the full path and snapshot tag returned
+by `read`. Never retry a rejected primary mutation with the same relative path.
 
 Set `cwd` to the task worktree on every later `bash` call. Pass absolute
 task-worktree paths to `read`, `write`, `edit`, `glob`, and `grep`. Give the
-same absolute path to a `task` handling a delegated slice. Verify with
-`git -C <task-worktree> branch --show-current` and compare
-`git -C <primary-worktree> status --short` with the setup baseline before
-delivery.
+same absolute path to a `task` handling a delegated slice. Verify registration
+and branch with Worktrunk JSON and Git, then compare the primary status with its
+setup baseline before delivery. Use `wt remove` for later manual cleanup, never
+bare `git worktree remove`.

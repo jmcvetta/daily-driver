@@ -10,7 +10,16 @@
       "name": "daily-driver",
       "source": "./",
       "description": "Daily-driver skills for Claude Code, Omp and Codex: the PR workflow, and whatever else earns its place.",
-      "version": "0.46.0"
+      "version": "0.48.0"
+    },
+    {
+      "name": "worktrunk",
+      "description": "Official Worktrunk plugin for Claude Code",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/max-sixty/worktrunk",
+        "path": "plugins/worktrunk"
+      }
     }
   ]
 }

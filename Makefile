@@ -7,18 +7,19 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
-.PHONY: git_sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
+.PHONY: __git_sync_run check-git-sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
 	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-task-worktree-fixture check-eval-arms check-agent-judges check-ci-scope check-step-names \
-	check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
+	check-model-classes-builder check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-ci-scope check-step-names \
+	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
-	evals-install evals-plan \
+	evals-install evals-setup-omp evals-plan \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
+	check-claude-dependency \
 	evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-codex evals-run-comparison evals-run-classes mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
@@ -38,6 +39,18 @@ CODER_EVAL_VERSION := 0.11.6
 # Never run an Anthropic model through the API or the Vercel AI Gateway, and
 # set no ANTHROPIC_* variable. See "Credentials" in evals/README.md.
 CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
+
+# The Omp arms' environment, for every target. Omp reads the Vercel AI Gateway
+# key from AI_GATEWAY_API_KEY; a Claude Code cloud container exports it as
+# VERCEL_AI_GATEWAY_API_KEY, so the second name fills the first when it is
+# unset. Omp's installer puts `omp` in ~/.local/bin, or in ~/.bun/bin when it
+# installs through Bun; both are appended, so they shadow nothing. See
+# scripts/evals-setup-omp.sh for the source of the key name.
+AI_GATEWAY_API_KEY ?= $(VERCEL_AI_GATEWAY_API_KEY)
+ifneq ($(AI_GATEWAY_API_KEY),)
+export AI_GATEWAY_API_KEY
+endif
+export PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.bun/bin
 
 # Dev dependencies of the Python legs, managed with uv. The repository has no
 # Python packaging -- the root `pyproject.toml` declares no package, only the
@@ -61,26 +74,25 @@ CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
 # installs nothing else Python: the legs sync their own environment, so the
 # laptop and CI get PyYAML from the same lock and cannot drift apart.
 
-# git_sync: sync master with origin and delete local branches whose upstream
-# is gone. A gone branch still checked out in a linked worktree has the
-# worktree removed first; `git worktree remove` refuses a worktree holding
-# uncommitted or untracked files (or one that is locked), and any refused
-# worktree is warned about and kept, branch included.
-git_sync:
-	git checkout master
+# __git_sync_run: implementation for `wt sync`, which first switches the caller
+# to master's worktree. Offer gone-upstream branches to Worktrunk for cleanup.
+# Worktrunk decides whether each branch is integrated; it refuses dirty or
+# locked worktrees and keeps branches that still add changes.
+__git_sync_run:
 	git pull
 	git fetch --prune
 	@git branch -vv | awk '/: gone\]/ {sub(/^\+ /, ""); print $$1}' | \
 	while read -r b; do \
 		wt=$$(git worktree list --porcelain | awk -v b="$$b" '/^worktree /{p = substr($$0, 10)} /^branch /{if (substr($$0, 8) == "refs/heads/" b) {print p; exit}}'); \
 		if [ -n "$$wt" ]; then \
-			if ! git worktree remove "$$wt"; then \
+			if ! wt remove --foreground "$$wt"; then \
 				printf 'WARN: worktree for gone-upstream branch %s could not be removed; kept: %s\n' "$$b" "$$wt" >&2; \
 				continue; \
 			fi; \
 			printf 'removed stale worktree: %s\n' "$$wt"; \
+		else \
+			wt remove --foreground "$$b"; \
 		fi; \
-		git branch -D "$$b"; \
 	done
 
 # omp-update-daily-driver: refresh this repository's installed Omp plugin
@@ -91,23 +103,27 @@ omp-update-daily-driver:
 	omp plugin upgrade daily-driver@daily-driver
 
 
-# `check` remains the local all-groups convenience target. CI runs each
-# purpose-named group in a job selected by declarative component filters.
+# `check` remains the local all-groups convenience target. CI runs its
+# unconditional repository checks and selected groups as named `CI Success` steps.
 check: check-ci-scope check-step-names check-release-paths check-plugin-validity check-runtime check-eval-tooling check-issue-infra
 
 check-ci-scope:
 	node scripts/check-ci-scope.mjs
 
 check-plugin-validity: check-plugin check-skills check-agents \
-	check-manifests check-manifest-fixtures
+	check-manifests check-manifest-fixtures check-claude-dependency
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
-	check-omp-guard-differential check-omp-cache-clean \
-	check-task-worktree-fixture check-scripts
+	check-omp-guard-differential check-omp-cache-clean check-git-sync \
+	check-task-worktree-fixture check-worktrunk-install check-scripts
+
+# Exercise the shell-integrated alias in isolated Git repositories only.
+check-git-sync:
+	python3 scripts/check-git-sync.py
 
 check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-model-classes-builder check-eval-arms check-agent-judges check-evals-preflight check-evals-provenance \
-	check-evals-results check-model-telemetry
+	check-evals-results check-model-telemetry check-evals-setup-omp
 
 
 check-issue-infra: check-labels check-labels-fixtures
@@ -173,6 +189,11 @@ check-release-paths:
 check-manifest-fixtures:
 	python3 scripts/check-manifest-fixtures.py
 
+# Catch a plugin marketplace install that returns success without installing
+# its dependency, and a migration that leaves both Worktrunk identities enabled.
+check-claude-dependency:
+	bash scripts/check-claude-dependency.sh
+
 # The credential-free half of the constitution's acceptance test: run both
 # delivery hooks against synthetic event JSON and assert the constitution's
 # body comes back, identically, from each — with the Omp `alwaysApply`
@@ -220,9 +241,8 @@ check-omp-guard-differential:
 #
 # Not part of `check`, for the reason check-infra is not: it needs a toolchain
 # -- here a whole second harness -- and `check` must not start requiring Omp on
-# a laptop that is only editing a skill. CI's `omp` job runs it, gated on the
-# files that can actually break the Omp integration, and reports into
-# `CI Success` either way so a break blocks a merge.
+# a laptop that is only editing a skill. The `CI Success` job runs it when the
+# component filter selects Omp integration, so a break blocks a merge.
 #
 # No guard on `omp` either, and that is the same decision as check-infra's. A
 # target nobody runs by accident should fail loudly when its toolchain is
@@ -345,6 +365,17 @@ check-model-classes-builder:
 check-task-worktree-fixture:
 	scripts/check-task-worktree-fixture.sh
 
+# Conditional user-scope installation is tested with stub package managers;
+# the fixtures never invoke a real installer or access the network.
+check-worktrunk-install:
+	scripts/check-worktrunk-install.sh
+
+# check-evals-setup-omp: evals-setup-omp's key resolution, exact model match
+# and no-reinstall rule, against a stub `omp` and `curl` in a throwaway HOME.
+# Offline: it never runs the real installer or calls the gateway.
+check-evals-setup-omp:
+	scripts/check-evals-setup-omp.sh
+
 # check-step-names: no file may cite a step of a numbered sequence by its
 # number. The numbers are positional, so inserting a step silently invalidates
 # every citation after it -- and a stale `step 7` reads exactly like a correct
@@ -427,6 +458,15 @@ evals-install:
 		--reinstall-package coder-eval-omp \
 		--reinstall-package coder-eval-codex
 
+# evals-setup-omp: everything a gateway-routed `evals-run-omp-*` target needs
+# beyond evals-install -- `omp` installed with CI's command when missing, the
+# gateway key resolved, and each arm's pinned model proven listed by Omp. Run
+# `make evals-install && make evals-setup-omp` in a cloud session or on a fresh
+# laptop. Idempotent, free, and writes no credential. The openai-codex arm
+# needs Omp's own Codex login and is reported, not failed.
+evals-setup-omp:
+	scripts/evals-setup-omp.sh evals/experiments/omp-*.yaml
+
 # evals-plan: validate every eval case without calling a model. Free, and it
 # catches the config errors that otherwise cost a paid run to discover -- so
 # run it before every `evals-run`.
@@ -438,7 +478,7 @@ evals-install:
 # the wheel and never looks in the working directory. Get either wrong and the
 # suite runs -- against no plugin, or as a single unlabelled arm.
 #
-# Laptop-only, like git_sync: the cases need a live model, and this
+# Laptop-only, unlike check-git-sync: the cases need a live model, and this
 # repository's CI is deliberately credential-free.
 evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
@@ -501,7 +541,8 @@ RUN ?= evals/runs/latest
 evals-record:
 	test -n "$(EXPERIMENT)"
 	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
-		--experiment "$(EXPERIMENT)" --output evals/provenance
+		--experiment "$(EXPERIMENT)" --output evals/provenance \
+		$(if $(filter 1,$(POST_COMMENTS)),--post-comments)
 
 # evals-render-routes: rewrite the `Measured routes` table in model-classes.md
 # from every committed record under evals/provenance/. Reads no run directory.
@@ -533,8 +574,9 @@ evals-run: evals-plan evals-preflight
 evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
-# `omp` on PATH and a model configured in the caller's own `~/.omp/agent/`,
-# which the agent borrows rather than copies -- see evals/coder-eval-omp/README.md.
+# `omp` on PATH and the provider's credentials -- `make evals-setup-omp` sets up
+# and checks both for the gateway arms. The agent borrows the caller's
+# `~/.omp/agent/` rather than copies it -- see evals/coder-eval-omp/README.md.
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
 #
 # OMP_RUN_LIMITS overrides every row's turn cap and turn timeout on this arm.
@@ -648,7 +690,7 @@ evals-run-classes: evals-plan evals-preflight
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # mcp-usage: which GitHub MCP tools were actually called, rolled up to the
-# toolsets that supply them. Laptop-only like git_sync — it reads Claude
+# toolsets that supply them. Laptop-only — it reads Claude
 # Code's session transcripts, which CI does not have — and deliberately not
 # part of `check`. See docs/github-mcp.md for what the answer is for.
 mcp-usage:

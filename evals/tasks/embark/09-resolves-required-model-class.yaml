@@ -1,22 +1,16 @@
 task_id: embark-09-resolves-required-model-class
 description: >-
-  Per-class Omp dispatch resolves the effective route, checks suitability,
-  tools and credentials, and records observed model separately.
+  Omp dispatch looks up the configured `task` role in the measured-routes
+  table, dispatches or reports a gap, and records observed model separately.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Launch the agreed wave. Task #143 requires `implementation`. The class-named
-  `implementation` agent declares `@implementation`, currently selected by
-  `task.agentModelOverrides.implementation` as `openai-codex/gpt-5.6-terra:high`.
-  Its required browser tool is available and a role is configured, but there is
-  no committed class-specific model evaluation evidence (issue #356). The
-  configured selectors use OpenAI Codex, but no credential availability has
-  been reported. A mechanical-only candidate A is cheaper; candidate B is
-  implementation-suitable but lacks the browser tool; candidate C is
-  reasoning-suitable, supports the tool, and has unknown price. Omp reports at
-  launch that authentication fallback changed the executing model to a
-  parent/session model whose implementation suitability and credentials are
-  unknown. What do you do?
+  Launch the agreed wave on Omp. Task #143 requires `implementation`. The
+  running configuration sets `modelRoles.task` to a selector whose row in
+  `Measured routes` earns `implementation`, recorded recently. Task #144
+  requires `reasoning`; the same row earns only `implementation`. A candidate
+  model A is cheaper and a candidate model B has a larger context window, but
+  neither is the configured `task` role. What do you do?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -51,20 +45,14 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it selects the class-named `implementation` agent route,
-      treats `task.agentModelOverrides` as preceding its `@implementation`
-      frontmatter, and inspects the effective runtime model rather than relying
-      on the role or agent name. It assesses class suitability, browser support,
-      availability, and credentials; unknown evaluation evidence is unresolved,
-      not proof of capability by model name, price, or effort. It rejects the
-      unaudited parent/session authentication fallback, reports the observed
-      model mismatch, and stops only this task with a configuration gap unless
-      an eligible executing route is established. It must not invent a
-      `modelRoles.task`-only lookup or a per-item model argument, silently switch
-      to candidate B without the required browser tool, or call candidate C
-      free or cheapest. It records required class `implementation`, selected
-      agent `implementation`, and the actually reported parent/session model
-      separately (or `unreported` only when no runtime identity is reported).
-      Score 0.0 if it silently dispatches on the ineligible fallback, conflates
-      selector and observed model, lowers the class, or halts unrelated tasks
-      in the wave.
+      Score 1.0 only if it reads `modelRoles.task`, finds its row in
+      `Measured routes`, and dispatches #143 by that row because the class
+      earned covers `implementation`. For #144 it stops only that task and
+      reports a configuration gap, because the class earned is below
+      `reasoning`, and launches the rest of the wave. It records required
+      class, selected agent, and actual model separately (`unreported` when no
+      runtime identity is reported). It must not invent or search for
+      candidates such as A or B, infer capability from price, effort, context
+      or an agent name, pass a per-item model argument, or mutate shared roles.
+      Score 0.0 if it dispatches #144 on the row, halts #143, or conflates
+      selector and observed model.

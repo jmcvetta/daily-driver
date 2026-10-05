@@ -28,6 +28,7 @@ EOF
 cat >.gitignore <<'EOF'
 .fixture/upstream.git/
 .fixture/verification.txt
+.fixture/primary-status.txt
 EOF
 
 git add .gitignore .fixture/setup.sh .fixture/verify.sh src/parser.py
@@ -37,6 +38,7 @@ git init --bare -b master .fixture/upstream.git >/dev/null
 git remote add upstream "$(pwd)/.fixture/upstream.git"
 git push -u upstream master >/dev/null
 git remote set-head upstream -a >/dev/null
+git fetch upstream >/dev/null
 
 if [ "${mode}" = "resume" ]; then
 	# Another session already began the task: its branch exists only on the
@@ -55,6 +57,8 @@ fi
 printf 'not part of the remote base\n' >local-only.txt
 git add local-only.txt
 git commit -m "Advance only the current checkout" >/dev/null
+printf 'primary-only untracked data\n' >primary-untracked.txt
+git status --short >.fixture/primary-status.txt
 
 if [ "${mode}" = "detached" ]; then
 	git switch --detach upstream/master >/dev/null

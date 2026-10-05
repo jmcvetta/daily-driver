@@ -29,24 +29,27 @@ exclusion below.
 - **`github_workflow_repository_permissions`** — the default workflow token
   scope, and whether Actions may open a pull request (the release job's
   default-token fallback needs the latter)
-- **`github_branch_protection`** on `master` — required `CI Success`,
-  `validate-title`, and `preview` checks, linear history, conversation
-  resolution, no force pushes or deletions
+- **`github_branch_protection`** on `master` — required `CI Success` and
+  `Release Projection` checks, linear history, conversation resolution, no
+  force pushes or deletions
 - **`github_issue_label`** ×7 — six issue kinds plus the `story` supplemental
   marker. The `issue-labels` skill defines their contract.
 
 ## Required Checks
 
-Branch protection requires three status checks: `CI Success`, which aggregates
-the repository's CI jobs; `validate-title`, which checks the Conventional
-Commit pull-request title release-please consumes; and `preview`, which shows
-what release-please will ship. Each check reports on applicable pull-request
-heads, and release-please pull requests intentionally skip `preview`; GitHub
-treats that skipped result as successful for branch protection.
+Branch protection requires two status checks: `CI Success`, the real CI job
+that runs repository checks and selected component checks, and `Release
+Projection`, which validates the Conventional Commit pull-request title
+release-please consumes and projects what release-please will ship. The
+combined job reports on every pull-request head. On release-please pull
+requests, it validates the title but skips checkout and projection; GitHub
+treats those skipped steps in an otherwise successful job as successful for
+branch protection.
 
-Adding a CI job is therefore a change to the workflow, not to this
-configuration, unless the job is a merge gate. The Tofu binds to each job
-name, so jobs can be added under `CI Success`'s `needs` without touching
+Adding a CI step is therefore a change to the workflow, not to this
+configuration, unless it is a merge gate. The Tofu binds to each job name, so
+the selected checks inside `CI Success` need no change to
+`branch_protection.tf`.
 `branch_protection.tf`.
 
 `ci.yml` carries no `paths:` filter, and must not grow one. A path-filtered

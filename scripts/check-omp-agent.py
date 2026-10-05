@@ -42,11 +42,9 @@ WHAT IT DOES NOT ASSERT
     `--tools` flag, or that a skill fires. The
     first two are `make check-omp-plugin`'s, which drives a real binary; the
     third needs a model and is what `evals/` is for.
-    That the field names this module reads are the ones a live Omp emits. The
-    reduction reads every plausible spelling and records which one answered, in
-    `omp_argument_keys_seen` and `omp_usage_keys_seen` on the run's
-    environment info. The first live run is what settles that, and this script
-    cannot.
+    That every Omp version uses the captured token shape. The fixture settles
+    the 18.4.3 frame; `require_token_telemetry` makes a later drift fail
+    loudly. Tool-call argument spellings remain runtime observations.
 
 No third-party imports, for the reason `check-manifests.py` gives: a dependency
 install between the laptop and CI is a place for them to differ.
@@ -54,17 +52,22 @@ install between the laptop and CI is a place for them to differ.
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_SRC = ROOT / "evals" / "coder-eval-omp" / "src"
+CAPTURED_AGENT_END_FRAME = json.loads(
+    (ROOT / "evals" / "coder-eval-omp" / "fixtures" / "agent_end_usage.json").read_text(encoding="utf-8")
+)
 
 sys.path.insert(0, str(PACKAGE_SRC))
 
+from coder_eval_omp import pricing  # noqa: E402  (the path insert must come first)
 from coder_eval_omp.home import inherited_files  # noqa: E402
-from coder_eval_omp.rpc import (  # noqa: E402  (the path insert must come first)
+from coder_eval_omp.rpc import (  # noqa: E402
     AgentFinished,
     ToolFinished,
     ToolStarted,
@@ -141,7 +144,7 @@ def check_tool_lifecycle() -> None:
     actions = feed(
         reducer,
         {"type": "tool_execution_start", "toolCallId": "c1", "toolName": "bash"},
-        {"type": "tool_execution_update", "toolCallId": "c1", "arguments": {"command": "make check"}},
+        {"type": "tool_execution_update", "toolCallId": "c1", "args": {"command": "make check"}},
         {"type": "tool_execution_end", "toolCallId": "c1", "result": "ok"},
     )
     starts = [a for a in actions if isinstance(a, ToolStarted)]
@@ -152,14 +155,14 @@ def check_tool_lifecycle() -> None:
         f"arguments arriving on the update frame must reach the telemetry, got {starts[0].parameters}",
     )
     check(ends[0].status == "ok", "a result with no error is ok")
-    check("arguments" in reducer.argument_keys_seen, "the argument key that answered is recorded")
+    check("args" in reducer.argument_keys_seen, "the argument key that answered is recorded")
 
     reducer = TurnReducer()
     ends = [
         a
         for a in feed(
             reducer,
-            {"type": "tool_execution_start", "toolCallId": "c2", "toolName": "bash", "input": {"command": "false"}},
+            {"type": "tool_execution_start", "toolCallId": "c2", "toolName": "bash", "args": {"command": "false"}},
             {"type": "tool_execution_end", "toolCallId": "c2", "error": "exit 1"},
         )
         if isinstance(a, ToolFinished)
@@ -184,7 +187,7 @@ def check_skill_engagement_end_to_end() -> None:
             "type": "tool_execution_start",
             "toolCallId": "s1",
             "toolName": "read",
-            "arguments": {"url": "skill://undertake"},
+            "args": {"url": "skill://undertake"},
         },
     )
     starts = [a for a in actions if isinstance(a, ToolStarted)]
@@ -210,38 +213,74 @@ def check_turn_settlement() -> None:
 
 
 def check_usage() -> None:
-    """Token counts are found wherever the payload keeps them."""
-    usage, seen = extract_usage({"type": "agent_end", "usage": {"inputTokens": 10, "outputTokens": 4}})
+    """Captured Omp usage is complete, strict, and counted once per response."""
+    usage, seen = extract_usage(CAPTURED_AGENT_END_FRAME)
     check(
-        usage == {"uncached_input_tokens": 10, "output_tokens": 4},
-        f"counts under `usage` must map to coder_eval's buckets, got {usage}",
-    )
-    check(sorted(seen) == ["inputTokens", "outputTokens"], f"the spellings that answered are recorded, got {seen}")
-
-    usage, _ = extract_usage({"type": "agent_end", "telemetry": {"input_tokens": 3, "output_tokens": 1}})
-    check(usage.get("uncached_input_tokens") == 3, "counts nested under `telemetry` are found too")
-
-    usage, seen = extract_usage({"type": "agent_end"})
-    check(usage == {} and seen == [], "a frame with no counts reports none rather than zeros")
-
-    # Omp 18.4.9's real shape: no top-level counts, only each assistant
-    # message's pi-ai `usage`, summed over the turn's messages.
-    usage, seen = extract_usage({"type": "agent_end", "messages": [
-        {"role": "user", "content": "go"},
-        {"role": "assistant", "usage": {"input": 100, "output": 7, "cacheRead": 50, "cacheWrite": 5, "totalTokens": 162}},
-        {"role": "toolResult", "content": "ok"},
-        {"role": "assistant", "usage": {"input": 20, "output": 3, "cacheRead": 150, "cacheWrite": 0, "totalTokens": 173}},
-    ]})
-    check(
-        usage == {"uncached_input_tokens": 120, "output_tokens": 10,
-                  "cache_read_input_tokens": 200, "cache_creation_input_tokens": 5},
-        f"assistant messages' usage must be summed into coder_eval's buckets, got {usage}",
+        usage
+        == {
+            "uncached_input_tokens": 1854,
+            "output_tokens": 3,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+        },
+        f"the captured agent_end frame must map its complete usage, got {usage}",
     )
     check(
-        seen == ["messages[].usage.input", "messages[].usage.output",
-                 "messages[].usage.cacheRead", "messages[].usage.cacheWrite"],
-        f"the message usage keys must be recorded as seen, got {seen}",
+        sorted(seen) == ["cacheRead", "cacheWrite", "input", "output"],
+        f"the captured usage spellings must be recorded, got {seen}",
     )
+
+    try:
+        extract_usage({"type": "agent_end", "messages": [{"role": "assistant"}]})
+    except ValueError:
+        pass
+    else:
+        raise CheckFailed("an assistant message without usage must fail loudly")
+
+    assistant = next(
+        message
+        for message in CAPTURED_AGENT_END_FRAME["messages"]
+        if message.get("role") == "assistant"
+    )
+    reducer = TurnReducer()
+    actions = feed(
+        reducer,
+        {"type": "message_end", "messageId": "captured-message", "message": assistant},
+        {"type": "agent_end", "isTerminal": True, "messages": [assistant]},
+    )
+    ends = [action for action in actions if isinstance(action, AgentFinished)]
+    check(
+        ends and ends[-1].usage == usage,
+        f"the repeated terminal assistant message must not double-count, got {ends[-1].usage if ends else None}",
+    )
+
+    reducer = TurnReducer()
+    actions = feed(
+        reducer,
+        {
+            "type": "agent_end",
+            "isTerminal": True,
+            "messages": [
+                {"role": "assistant", "usage": {"input": 22586, "output": 47, "cacheRead": 10, "cacheWrite": 0}},
+            ],
+        },
+    )
+    ends = [action for action in actions if isinstance(action, AgentFinished)]
+    check(
+        ends
+        and ends[0].usage
+        == {
+            "uncached_input_tokens": 22586,
+            "output_tokens": 47,
+            "cache_read_input_tokens": 10,
+            "cache_creation_input_tokens": 0,
+        },
+        f"a message settling only in agent_end.messages must still be counted, got {ends[0].usage if ends else None}",
+    )
+
+    reducer = TurnReducer()
+    feed(reducer, {"type": "agent_end", "messages": [{"role": "user", "content": []}]})
+    check(reducer.usage == {}, f"a non-assistant message in agent_end.messages must be ignored, got {reducer.usage}")
 
     # A turn that continues past a non-terminal `agent_end` gets one frame per
     # leg, each carrying only that leg's new messages; the turn's count is the
@@ -261,6 +300,30 @@ def check_usage() -> None:
                           "cache_read_input_tokens": 200, "cache_creation_input_tokens": 5},
         f"usage must be summed across a turn's agent_end frames, got {reducer.usage}",
     )
+
+
+def check_pricing() -> None:
+    """`cost_usd` bills a known model, refuses to guess at an unknown one, and zero tokens cost zero."""
+    prices = {"test/known": pricing.Price(input_usd_per_million=2.0, output_usd_per_million=10.0, recorded="2026-01-01")}
+
+    cost = pricing.cost_usd("test/known", {"uncached_input_tokens": 1_000_000, "output_tokens": 500_000}, prices)
+    check(cost == 2.0 + 5.0, f"cost must bill uncached input and output at their per-million rate, got {cost}")
+
+    cost = pricing.cost_usd("test/unknown", {"uncached_input_tokens": 100, "output_tokens": 50}, prices)
+    check(
+        cost == pricing.UNREPORTED,
+        f"a model with no price row must report {pricing.UNREPORTED!r}, not a guess, got {cost}",
+    )
+
+    cost = pricing.cost_usd("test/known", {"uncached_input_tokens": 0, "output_tokens": 0}, prices)
+    check(cost == 0.0, f"zero tokens on a priced model must cost 0.0, not {pricing.UNREPORTED!r}, got {cost}")
+
+    committed = pricing.load_prices()
+    check(committed, "the committed prices.json must not be empty")
+    for model, price in committed.items():
+        check(price.input_usd_per_million > 0, f"{model}: input rate must be a positive USD/Mtok rate, got {price}")
+        check(price.output_usd_per_million > 0, f"{model}: output rate must be a positive USD/Mtok rate, got {price}")
+        check(price.recorded, f"{model}: `recorded` date must not be empty")
 
 
 def check_agent_output() -> None:
@@ -306,7 +369,7 @@ def check_only_assistant_messages() -> None:
         {"type": "message_end", "messageId": "u1", "message": {"role": "user", "content": "cwd: /work. Do it."}},
         {"type": "message_end", "messageId": "t1", "message": {"role": "toolResult", "content": [{"type": "text", "text": skill_body}]}},
         {"type": "message_update", "messageId": "a1", "assistantMessageEvent": {"type": "text", "delta": "Done"}},
-        {"type": "message_end", "messageId": "a1", "message": {"role": "assistant", "content": [{"type": "text", "text": "Done."}]}},
+        {"type": "message_end", "messageId": "a1", "message": {"role": "assistant", "content": [{"type": "text", "text": "Done."}], "usage": {"input": 1, "output": 1, "cacheRead": 0, "cacheWrite": 0}}},
     )
     check(reducer.assistant_texts == ["Done."], f"only assistant text is the reply, got {reducer.assistant_texts!r:.200}")
     rendered = render_agent_output(reducer.assistant_texts)
