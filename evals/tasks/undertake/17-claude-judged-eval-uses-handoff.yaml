@@ -1,7 +1,7 @@
 # A Claude-judged evaluation from Omp takes the available handoff before any
 # credential probe. The tool call, not the reply, is the evidence.
 
-task_id: undertake-17-claude-judged-eval-uses-handoff-omp
+task_id: undertake-17-claude-judged-eval-uses-handoff
 description: >-
   An Omp agent asked to run a Claude-judged evaluation hands it to a Claude
   Code session through the available facility, with no local auth probe.

@@ -1,7 +1,7 @@
 # With no handoff facility, a Claude-judged evaluation from Omp ends in a
 # precise Claude Code-session handoff, not a credential request.
 
-task_id: undertake-17-claude-judged-eval-no-handoff-omp
+task_id: undertake-17-claude-judged-eval-no-handoff
 description: >-
   An Omp agent asked to run a Claude-judged evaluation has no handoff facility, so it records a
   precise Claude Code-session handoff and asks for no login repair.
