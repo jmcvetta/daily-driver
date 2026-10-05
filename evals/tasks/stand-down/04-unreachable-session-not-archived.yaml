@@ -1,4 +1,5 @@
-# The behaviour row for issue #428: a web session no name can reach is
+# The behaviour row for issues #428 and #545: a web session whose
+# `send_message` fails while `get_session` still reports it live is
 # interrupted and left unarchived, because an archive would destroy the
 # unpushed work it could not be told to push.
 #
@@ -8,14 +9,14 @@
 
 task_id: stand-down-04-unreachable-session-not-archived
 description: >-
-  A live implementor that the agent listing does not name is interrupted but
-  not archived, and is named as a residual with its link.
+  A live implementor whose `send_message` fails is interrupted but not
+  archived, and is named as a residual with its link.
 tags: [stand-down, behaviour, fire]
 
 initial_prompt: >-
   Epic #500 is at sea. Its latest muster roll names task #501, implementor
-  `session_01Deaf` — messaging: unreachable. `ListAgents` returns "No
-  reachable agents", but the session is still running. Stand down the fleet.
+  `session_01Deaf`. `send_message` to it errors, and `get_session` reports
+  the session still running. Stand down the fleet.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -53,7 +54,8 @@ success_criteria:
       AGENT OUTPUT block. Begin your rationale with `ANCHOR: result` or
       `ANCHOR: none`; with no such tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: a web session that no name can reach cannot be told to push,
+      The rule: a web session whose `send_message` fails while `get_session` reports it live
+      cannot be told to push,
       so `stand-down` interrupts it and does not archive it, and names it as
       a residual with its session link. Saying the tools are unavailable in
       the environment, and stating what would happen anyway, counts.

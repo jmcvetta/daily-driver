@@ -36,15 +36,12 @@ The sessions
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the sessions` | Open one per task | `mcp__Claude_Code_Remote__create_session` |
-| `Post the muster roll` | Load the messaging tools, once per session | `ToolSearch`, `select:ListAgents,SendMessage` |
-| `Post the muster roll` | Resolve each new session's address, once after the wave's `create_session` calls | `ListAgents` |
 | `Watch the wave` | Read a task session's status | `mcp__Claude_Code_Remote__get_session` |
 | `Watch the wave` | Read the implementor reports that arrived | `ReadNotifications`, until it reports none remaining |
-| `Watch the wave` | Send a visible answer or a nudge | `SendMessage`, to the roll's name |
+| `Watch the wave` | Send a visible answer or a nudge | `mcp__Claude_Code_Remote__send_message`, `session_id` the roll's session id |
 | `Recover a session` | Stop the current turn | `mcp__Claude_Code_Remote__interrupt_session` |
-| `Recover a session` | Re-resolve a name the roll lacks, or one a send failed to reach | `ListAgents` |
-| `Recover a session` | Read a session the listing does not name, before any reopen | `mcp__Claude_Code_Remote__get_session` |
-| `Recover a session` | Send a correction | `SendMessage`, to that name |
+| `Recover a session` | Read a session whose send errored, before any reopen | `mcp__Claude_Code_Remote__get_session` |
+| `Recover a session` | Send a correction | `mcp__Claude_Code_Remote__send_message`, `session_id` the roll's session id, `priority` omitted |
 | `Recover a session` | Retire one | `mcp__Claude_Code_Remote__archive_session` |
 
 What `create_session` is given
@@ -74,42 +71,25 @@ a grant that was not made.
 Addressing a session
 --------------------
 
-**`ListAgents` and `SendMessage` are deferred tools.** Neither is in the tool
-list until `ToolSearch` loads it. Call `ToolSearch` with
-`select:ListAgents,SendMessage` once per session, before the first send this
-session makes, and both are then callable for the rest of it — a later wave
-in the same session makes no second call. A tool list checked before that
-call and found to carry neither is not evidence that messaging is
-unavailable — it is evidence that this load step has not run yet.
+**The address is the session id.** Every send to an implementor is
+`mcp__Claude_Code_Remote__send_message`, with `session_id` set to the id
+`create_session` returned. That id is already in the muster roll's
+`Implementor` cell, so a send costs no lookup. Nothing on this route loads
+`ListAgents` or `SendMessage`: they are a different transport, addressed by
+name, and they do not reach a cloud session.
 
-**`SendMessage` is addressed by name, never by a session id.** Its `to` takes
-the name a row of `ListAgents` prints — that name is the address, and there is
-no other syntax for one. The `session_01AbC…` identifier `create_session`
-returns is not one: passing it fails to resolve.
+Measured 2026-10-05, Claude Code 2.1.289: `ListAgents` returned "No reachable
+agents" while `get_session` showed two implementors running and connected.
+`SendMessage` to a session id failed to resolve. `send_message` with that id
+and `priority: later` succeeded and queued an event with `inbound_origin:
+mcp_send_message`.
 
-`Post the muster roll` resolves that name once, as each session opens, and
-writes it into the roll beside the session id — the `Implementor` cell carries
-both. A later wake reads the name straight off the roll; that is the ordinary
-route, and it costs no call. Call `ListAgents` again only to re-resolve a name
-the roll does not carry — an older roll, or one posted before this step
-existed — or after a send to the recorded name fails to reach it. Match the
-fleet member there and send to the name it printed, appending the row's
-` [ref]` only where an error asks for it.
-
-**Reachability is read, never assumed.** `ListAgents` can omit a cloud session
-that is running: on 2026-09-28 it returned "No reachable agents" while
-`list_sessions` showed all three implementors running, and a send to a
-session's title failed as not reachable. `Post the muster roll` therefore
-writes `messaging: unreachable` into the `Implementor` cell of every session
-the listing does not name, and `Recover a session` reads the listing again
-before it acts, because reachability can change.
-
-**A member the listing does not name is not thereby stopped.** Read it with
-`get_session` before any reopen. Only a session `get_session` reports as
-archived, failed, or not found is reopened. A running or idle session that
-cannot be messaged is interrupted, never reopened — a second session on its
-branch would collide with the one that still holds it — and the task is a stop
-under `Where it stops and waits`.
+**Reachability is read from the send.** A `send_message` that errors is the
+signal. Then `get_session` decides. Reopen only a session it reports as
+archived, failed, or not found. A running or idle session whose send errors is
+interrupted, never reopened — a second session on its branch would collide
+with the one that still holds it — and the task is a stop under `Where it
+stops and waits`.
 
 The required class
 ------------------
