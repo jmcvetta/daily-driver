@@ -389,9 +389,8 @@ check-step-names:
 # -- synthetic task YAML in a temp dir, no credentials, no model. Part of
 # `check` for the same reason as the other script legs: the guard it tests is
 # itself credential-free, so nothing stops it running on a laptop and in CI.
-# See the script's docstring for what it does and does not catch, and
-# docs/notes/0012-the-judge-needs-its-own-transport.md for why the guard
-# exists.
+# See the script's docstring and docs/notes/0014-the-judge-runs-on-the-subscription.md
+# for the no-metered-API boundary.
 check-evals-preflight:
 	uv run --frozen python3 scripts/check-evals-preflight.py
 
@@ -507,14 +506,12 @@ evals-variants:
 #   make evals-run TASKS='tasks/pr/*.yaml'
 TASKS ?= tasks/*/*.yaml
 
-# evals-preflight: refuse to start evals-run when an enabled `llm_judge`
-# criterion in $(TASKS) has no judge transport to run on -- `coder_eval`
-# does not fail that case, it scores the criterion 0.0 and the run
-# continues, which reads exactly like a real result and is not one. Not a
-# `check` leg, for the same reason `evals-plan` is not one: it needs task
-# YAML in hand to mean anything, and `make check` runs with none. See
-# docs/notes/0012-the-judge-needs-its-own-transport.md for the defect this
-# closes and what it costs to keep this mirroring `coder_eval`'s own rule.
+# evals-preflight: refuse every enabled `llm_judge` criterion. `llm_judge`
+# calls Anthropic's metered API, which this project does not use even when a
+# key or alternate transport is present. Claude judges use `agent_judge` from
+# a Claude Code web or CLI session; see evals/README.md for the route.
+# This is not a `check` leg: it needs task YAML in hand, while `make check`
+# runs with none.
 #
 # Runs from `evals/`, same as the model call below, so `$(TASKS)`'s default
 # glob and any override resolve identically in both places.

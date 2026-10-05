@@ -41,6 +41,12 @@ and lets the SDK inherit the environment. So the judge authenticates exactly
 the way the agent under test already does, which on this project is the
 subscription.
 
+The execution session matters as well as the judge choice: a Claude-judged
+evaluation must run from a Claude Code web or CLI session so the SDK inherits
+that session's subscription. The operational route, including Omp handoff and
+credential-failure guidance, lives in the single
+[`evaluation runbook`](../../evals/README.md#choose-the-execution-session-first).
+
 `AgentJudgeCriterion` mirrors `LLMJudgeCriterion`'s prompt and context fields —
 `prompt`, `include_agent_output`, `include_reference`, `weight` are all shared
 — so the eight findings ported across unchanged. Only the `type` line and a new
