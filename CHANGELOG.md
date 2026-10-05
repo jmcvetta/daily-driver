@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.49.1](https://github.com/jmcvetta/daily-driver/compare/v0.49.0...v0.49.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* message cloud implementors by session id through send_message ([#546](https://github.com/jmcvetta/daily-driver/issues/546)) ([cb14114](https://github.com/jmcvetta/daily-driver/commit/cb14114f2aab4d8c5e22c515010b308f7cd21c1b))
+
 ## [0.49.0](https://github.com/jmcvetta/daily-driver/compare/v0.48.0...v0.49.0) (2026-10-05)
 
 
