@@ -11,6 +11,10 @@
 # was invoked from, which for `make evals-run` is `evals/`.
 evals/runs/
 
+# The task tree `make ... JUDGE=<non-Claude judge>` writes: the same tasks with
+# `agent_judge` disabled, regenerated per run by scripts/evals-judge.py.
+evals/tasks-judged/
+
 # `coder_eval` reads a `.env` from the working directory with
 # `load_dotenv(override=True)`, so it beats the shell environment --
 # `ANTHROPIC_API_KEY` included. Never commit one.

@@ -40,6 +40,11 @@ One row per committed record, oldest first.
 - **Models served** is what the harness reported serving. Where it reported
   none -- Omp never does -- the requested model is shown, marked
   `(requested)`.
+- **Judge** is who graded the semantic (`agent_judge`) criteria, apart from the
+  subject: `omp-glm-5.3 (run-selected)` names the judge a run selected,
+  `claude-code claude-sonnet-5 (task-pinned)` the Claude judge the task files
+  pin, and `not recorded` a record that predates judge provenance. Records
+  graded by different judges are different measurements.
 - **Pass rate** counts replicates whose final status is `SUCCESS`. A
   model-classes replicate that reached its answer key counts as a failure.
 - **Total price** is the record's summed per-replicate price, in USD, judge
@@ -108,6 +113,18 @@ def wall_time(record: dict[str, Any]) -> str:
     return f"{hours}h {minutes:02d}m {seconds:02d}s" if hours else f"{minutes}m {seconds:02d}s"
 
 
+def judge_text(record: dict[str, Any]) -> str:
+    """Who graded the record's semantic criteria, or `not recorded` / `none`."""
+    judge = record.get("judge")
+    if not isinstance(judge, dict):
+        return NOT_RECORDED
+    if judge.get("selection") == "run-selected":
+        return f"{judge.get('judge_id', judge.get('route'))} (run-selected)"
+    requested = judge.get("model_requested")
+    model = ", ".join(requested) if isinstance(requested, list) else str(requested)
+    return f"{judge.get('route', 'claude-code')} {model} (task-pinned)"
+
+
 def render_row(record: dict[str, Any]) -> str:
     """One markdown table row for `record`."""
     attempts = record.get("attempts") or []
@@ -123,6 +140,7 @@ def render_row(record: dict[str, Any]) -> str:
         str(record.get("experiment_id", "unknown")),
         str(record.get("client", {}).get("name", "unknown")),
         models_served(record),
+        judge_text(record),
         str(len(attempts)),
         f"{passes}/{len(attempts)}",
         price_text,
@@ -135,10 +153,10 @@ def render_row(record: dict[str, Any]) -> str:
 def render_page(records: list[dict[str, Any]]) -> str:
     """The whole of `RESULTS.md` for `records`."""
     header = (
-        "| Date | Experiment | Harness | Models served | Replicates | Pass rate "
+        "| Date | Experiment | Harness | Models served | Judge | Replicates | Pass rate "
         "| Total price | Price per completed task | Wall time |"
     )
-    separator = "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+    separator = "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
     rows = [render_row(record) for record in records]
     return PREAMBLE + "\n" + "\n".join([header, separator, *rows]) + "\n"
 

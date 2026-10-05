@@ -1,0 +1,6 @@
+  1. [success] Skill undertake
+  2. [success] Read issue://52 → #52 Rotate the Aurora access token
+  3. [success] Bash `git branch --show-current` → issue-52-rotate-token
+  4. [success] Write xd://daily_driver_set_session_title {"title":"#52 Rotate the Aurora access token"} → ok
+  5. [success] Grep pattern=Model class
+  6. [success] Bash `gh issue comment 52 --body "Taking issue #52."` → offline GitHub mock: issue comment 52 --body …
