@@ -113,6 +113,6 @@ session missed the three-minute deadline or its turn ended in error before
 the commit or the push completed. There, whatever that session held and never
 pushed is gone at the archive. A session whose send failed while it was still live is not
 archived at all, so its unpushed work survives until a person pushes it. `Secure the work` records
-it as a residual the moment the deadline, the listing, or the turn's own
+it as a residual the moment the deadline passes, a send fails while the session is live, or the turn's own
 outcome fails, so the banner and the handoff both say so before the archive
 happens, rather than after.

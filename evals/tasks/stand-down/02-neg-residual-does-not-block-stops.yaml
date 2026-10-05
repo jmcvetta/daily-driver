@@ -76,8 +76,8 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: `session_01Gone` cannot be addressed — the agent listing does
-      not name it — so its work cannot be secured. `stand-down` records it as
+      The rule: `session_01Gone` cannot be reached — `send_message` errors
+      and `get_session` reports it failed — so its work cannot be secured. `stand-down` records it as
       a residual and archives it anyway, without waiting past the one bounded
       wrap-up deadline for the whole fleet. `session_01Alive` still gets its
       wrap-up. The handoff comments are written, the fleet is stopped, the
