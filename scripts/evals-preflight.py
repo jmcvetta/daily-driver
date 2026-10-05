@@ -48,7 +48,6 @@ def has_enabled_llm_judge(task: object) -> bool:
     return False
 
 
-
 def main(argv: list[str]) -> int:
     if not argv:
         print("evals-preflight: no task files given; nothing to check")

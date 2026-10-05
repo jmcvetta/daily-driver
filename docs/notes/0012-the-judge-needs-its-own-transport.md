@@ -22,7 +22,6 @@ before running or troubleshooting an evaluation. Do not seek a metered key.
 that transport is separate from whatever authenticates the agent under test.
 On the default DIRECT backend,
 `models/routing.py::_resolve_direct_judge_transport` picks `"anthropic"` iff
-
 `ANTHROPIC_API_KEY` is set, and `None` otherwise. `criteria/llm_judge.py` does
 not fail the run when it gets `None` — it returns score 0.0 with
 `details="(judge transport unconfigured)"`, logs one `ERROR` line, and the run
