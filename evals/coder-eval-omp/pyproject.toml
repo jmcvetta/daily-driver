@@ -42,3 +42,9 @@ packages = ["src/coder_eval_omp"]
 # the source.
 [tool.hatch.build.targets.wheel.force-include]
 "prices.json" = "coder_eval_omp/prices.json"
+
+# uv rebuilds a local package only when a cache key changes, and the default
+# key is `pyproject.toml` alone. `uv run --with ./evals/coder-eval-omp` would
+# otherwise reuse a build made before `src/` or `prices.json` changed.
+[tool.uv]
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.py" }, { file = "prices.json" }]

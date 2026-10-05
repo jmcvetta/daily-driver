@@ -118,6 +118,7 @@ USAGE_KEYS: dict[str, str] = {
     "cache_creation_input_tokens": "cacheWrite",
 }
 
+
 # The frame types this module knows what to do with. A turn that recognized
 # NONE of them captured no telemetry, and the agent crashes it rather than
 # reporting a clean empty success — `coder_eval`'s OpenCode agent learned that

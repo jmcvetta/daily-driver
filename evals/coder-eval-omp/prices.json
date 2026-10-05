@@ -18,5 +18,15 @@
     "input_usd_per_million": 4,
     "output_usd_per_million": 20,
     "recorded": "2026-09-28"
+  },
+  "vercel-ai-gateway/openai/gpt-6-luna": {
+    "input_usd_per_million": 0.1,
+    "output_usd_per_million": 0.5,
+    "recorded": "2026-10-01"
+  },
+  "vercel-ai-gateway/openai/gpt-6-sol": {
+    "input_usd_per_million": 2,
+    "output_usd_per_million": 10,
+    "recorded": "2026-10-01"
   }
 }

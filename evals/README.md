@@ -990,8 +990,11 @@ pull-request lookup finds nothing and the skill assembles the diff from git.
 
 ## The Omp arm
 
-The same suites and plugin run four configured subjects across three model
-families. GLM 5.3 Flash is the tier probe beside full GLM, not a fourth family.
+The same suites and plugin run six configured subjects across three model
+families. GLM 5.3 Flash is the tier probe beside full GLM. GPT 6 Sol and GPT 6
+Luna are two of the GPTs `omp_configs/gpt.yml` routes to: Sol takes default,
+slow and advisor work, and Luna takes small, task, vision, commit and tiny work.
+None of these is a family of its own.
 Each model has one experiment file and the two variants every criterion must
 score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
 delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
@@ -1024,10 +1027,14 @@ make evals-run-omp-glm-5-3                    # GLM 5.3 only
 make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
 make evals-run-omp-deepseek-v4-pro            # DeepSeek v4 Pro only
 make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol only
+make evals-run-omp-gpt-6-sol                  # GPT 6 Sol only
+make evals-run-omp-gpt-6-luna                 # GPT 6 Luna only
 make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
-The Omp home the agent borrows configures each of these provider/model IDs:
+Each experiment pins one provider/model ID, and the Omp home the agent borrows
+must configure it. The GPT 6 rows use the Vercel AI Gateway routes
+`omp_configs/gpt.gateway.yml` names, which need `AI_GATEWAY_API_KEY`.
 
 | Experiment | Model |
 | --- | --- |
@@ -1035,10 +1042,61 @@ The Omp home the agent borrows configures each of these provider/model IDs:
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
+| `omp-gpt-6-sol.yaml` | `vercel-ai-gateway/openai/gpt-6-sol` |
+| `omp-gpt-6-luna.yaml` | `vercel-ai-gateway/openai/gpt-6-luna` |
 
 It needs `omp` on PATH and the provider's credentials: the gateway key above,
-or a login in the caller's own `~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
-Omp home and writes nothing back into it.
+or a login in the caller's own `~/.omp/agent/`. The agent borrows that directory
+by symlink into a throwaway Omp home and writes nothing back into it. It does
+not borrow `config.yml`: the throwaway home gets its own, which pins every Omp
+chat role to the arm's `model`. Unpinned, Omp's subagents and helper calls would
+run on whatever the provider catalog offers.
+
+### Running an Omp arm
+
+```sh
+make evals-install                       # rebuilds the local agents every time
+export AI_GATEWAY_API_KEY=…              # Omp's name for the Vercel AI Gateway key
+omp models find gpt-6-luna               # the arm's route must resolve
+unset GH_TOKEN GITHUB_TOKEN SSH_AUTH_SOCK
+export GH_CONFIG_DIR="$(mktemp -d)"        # hide the laptop's gh keyring login
+gh auth status                          # must fail before any replicate
+curl -s -o /dev/null -w '%{http_code}\n' https://api.github.com/user  # must print 401
+TASKS='tasks/undertake/*.yaml'
+setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" JOBS=16 > luna.log 2>&1 &
+```
+
+- **The judge runs on the subscription.** Every Omp-arm judge is an
+  `agent_judge`, a Claude Code sub-agent that inherits the shell's own Claude
+  login ([`0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)).
+  Leave `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` alone: pointed at a
+  gateway, they bill every judge call there.
+- **Run it where no GitHub credential is ambient.** Some rows grant `bash`,
+  and the agent inherits the shell's environment. On a logged-in laptop,
+  unsetting token variables alone leaves `gh` authenticated through its
+  keyring. Isolate `GH_CONFIG_DIR` and unset `SSH_AUTH_SOCK` as shown above;
+  stop unless `gh auth status` fails and the GitHub user endpoint returns
+  `401`. A Claude Code cloud container fails the second check: its proxy
+  signs GitHub requests with the owner's credential.
+- **Run replicates in parallel.** `JOBS` sets how many run at once; the
+  default is one, and one at a time a suite takes about two hours. A replicate
+  waits on model calls, not on the container: at 12 at once, a four-core
+  container ran about 70% busy.
+- **The Omp targets raise every turn cap to 30.** `OMP_RUN_LIMITS` in the
+  `Makefile` says why: caps sized for the Claude Code arm cut Omp off before
+  its reply.
+- **Run it detached.** An interrupted run continues from its run directory:
+
+  ```sh
+  cd evals && TELEMETRY_ENABLED=false coder-eval run -e experiments/omp-gpt-6-luna.yaml \
+    --run-dir runs/<run_id> --resume --max-parallel 16 \
+    -D run_limits.max_turns=30 -D run_limits.turn_timeout=600 -D run_limits.task_timeout=1200 \
+    --exclude-tags claude-only,codex-only,skip:omp,model-classes $TASKS
+  cd .. && make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml
+  ```
+
+- **`make -n` does not dry-run a run target.** Its recipe line calls
+  `$(MAKE)`, so make executes it. `make evals-plan` is the free check.
 
 **`agent: {type: omp}` is not a built-in kind.** It comes from
 `coder-eval-omp/`, a `coder_eval` plugin in this repository, installed beside
