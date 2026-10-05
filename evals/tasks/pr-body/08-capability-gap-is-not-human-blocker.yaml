@@ -1,0 +1,79 @@
+# Without this row, a PR body can mislabel an agent's missing credentials as
+# a human-only task, even when the undertaking found no human action is owed.
+task_id: pr-body-08-capability-gap-is-not-human-blocker
+description: >-
+  A PR body publishes an established capability gap without calling it a
+  human-only action or losing an unrelated label.
+tags: [pr-body, behaviour, fire]
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-escalation/shared
+      mount_point: .fixture
+pre_run:
+  - command: bash .fixture/setup.sh no-handoff-capability
+    timeout: 30
+  - command: >-
+      printf '%s\n' 'PR #25 remains draft; smoke evidence not yet available.'
+      >.fixture/undertake-evidence.txt
+  - command: >-
+      printf '%s\n' 'Summary' 'Blockers' '- Waits on a laptop-session smoke test.'
+      >.fixture/pr-body.md
+initial_prompt: >-
+  Revise the body of PR #25 from the undertaking's established evidence in
+  `.fixture/undertake-evidence.txt`: this session lacks Vultr credentials and
+  Tailscale network access, and no authorized-agent handoff is available. This
+  is a current-session capability gap, not proof the task is human-only; the
+  smoke evidence gate remains unmet and the PR stays draft. The PR currently
+  has labels `human` and `needs-review`. Update the body to state the precise
+  credential/network prerequisite and resumption path, remove the stale
+  laptop-only language and only the `human` label, and preserve `needs-review`.
+  Use the documented fixture `gh` route; it never contacts GitHub.
+agent:
+  allowed_tools: [Read, Write, Edit, Grep, Glob, Skill, Bash]
+  disallowed_tools: [NotebookEdit, Agent, Task]
+run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 480}
+success_criteria:
+  - type: skill_triggered
+    description: "`pr-body` maintains a PR blocker from undertaking evidence"
+    expected_skill: pr-body
+    skill_name: pr-body
+  - type: command_executed
+    description: The stale PR human label is removed
+    tool_name: Bash
+    command_pattern: 'gh pr edit 25 --remove-label human'
+    min_count: 1
+    weight: 2
+  - type: command_executed
+    description: The corrected body is published through the fixture route
+    tool_name: Bash
+    command_pattern: 'gh pr edit 25 --body-file \.fixture/pr-body\.md'
+    min_count: 1
+    weight: 2
+  - type: file_matches_regex
+    description: The published body names the exact credential and network prerequisite
+    path: .fixture/published-body.md
+    pattern: '(?s)Summary.*Blockers.*Vultr.*Tailscale.*draft.*'
+    weight: 2
+  - type: file_matches_regex
+    description: The published body drops the false device-class blocker
+    path: .fixture/published-body.md
+    pattern: 'laptop-session'
+    must_match: false
+    weight: 2
+  - type: agent_judge
+    description: The revised body does not claim the task is human-only
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply. Score 0 if absent.
+      Score 1 only if it reports the body update and removal of the PR `human`
+      label while preserving `needs-review`, says the PR remains draft pending
+      smoke evidence, names the required Vultr credentials and Tailscale
+      connectivity, and does not call the work laptop-only or human-only.
+      The fixture's recorded gh calls and published body prove the changes;
+      judge only the body-writing decision and the final result.

@@ -71,6 +71,7 @@
 
 * **omp:** select harness instructions from runtime identity, not model name (#498)
 * **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)
+* **undertake:** require evidence for human escalation and revalidate PR blockers ([#535](https://github.com/jmcvetta/daily-driver/issues/535))
 
 ## [0.45.0](https://github.com/jmcvetta/daily-driver/compare/v0.44.0...v0.45.0) (2026-09-28)
 

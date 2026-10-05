@@ -8,10 +8,12 @@ description: >-
   initiative that writes or revises a pull request's body while opening or
   updating one. Supplies the required
   structure: one-line summary, salutation in verse, optional blockers and
-  issue-reference sections, executive summary, and reviewer-relevant detail. A pull
-  request whose diff changes the Tofu stack also carries a human-action blocker
-  and the `human` label, below. Not for the PR title —
-  that is `pr-title`.
+  issue-reference sections, executive summary, and reviewer-relevant detail.
+  A pull request whose diff changes the Tofu stack carries an apply-and-state
+  blocker and the PR `human` label only while that requirement is outstanding.
+  `undertake` owns operational escalation and its evidence; this skill
+  publishes that decision and maintains its visible PR state. Not for the PR
+  title — that is `pr-title`.
 ---
 
 # PR Body
@@ -36,9 +38,9 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   The section below has the format and the rule that decides whether it appears
   at all.
 - **Human-Action Blocker**: A pull request whose diff changes the
-  infrastructure Tofu stack carries its human-action requirement as a bullet
-  in "Blockers", and the pull request itself the `human` label. The section
-  below has the wording and the rule that decides when it appears.
+  infrastructure Tofu stack carries its apply-and-state requirement as a
+  `Blockers` bullet and the PR `human` label while the action is outstanding.
+  The section below has the wording and the rule that decides when it appears.
 - **Executive Summary**: Next, under heading "Summary", give a
   concise high level executive summary of the PR.  If you understand the
   importance of the PR for the larger software development or business
@@ -105,33 +107,45 @@ list with one item per known blocker:
 - Name the concrete action or condition required for a human action, failed
   required check, unresolved review requirement, or other merge blocker.
 
-Omit `Blockers` when there are no blockers to report. Do not emit an empty
 heading. Preserve valid blockers and closing references when revising a body,
-and update the list when the known blocking conditions change.
+and update the list when the known blocking conditions change. `undertake`
+owns investigation, operational escalation, and revalidation on resume;
+publish its current evidence rather than infer inability from an old body,
+label, missing tool, or infrastructure diff.
+
+A current agent's missing credential, network route, tool or permission is not
+by itself evidence that the work is human-only. Where verification remains
+blocked by this session's capabilities, state the concrete prerequisite and
+the authorized handoff or resumption path without describing a device class as
+the requirement. `undertake` decides whether a human contribution is actually
+needed and whether the PR is ready; only an outstanding human action earns a
+human-action blocker or the PR `human` label.
 
 
 The human-action blocker
 ------------------------
 
-A pull request whose diff changes the infrastructure Tofu stack does not
-merge on CI green alone: the changes must be applied, and the updated state
-committed, before the branch lands — and only a person can run the apply.
-Its `Blockers` section carries this bullet:
+A pull request whose diff changes the infrastructure Tofu stack must have the
+changes applied and the updated state committed before the branch lands. Only
+a person can run the apply. While that requirement is outstanding, its
+`Blockers` section carries this bullet:
 
 ```
 - **Waits on a human apply.** This pull request changes the Tofu stack. The
   changes must be applied and the updated state committed before it merges.
 ```
 
-The same act labels the pull request `human` — the label #219 adds to the
-`issue-labels` standard for work only a person can do — so the list view
-says what green CI does not: this one waits on a person. Writing the body
-and setting the label are one act. A body that carries the blocker beside a pull request that does not carry
-the label states the wait twice, differently, and
-one of the two is wrong.
+The PR `human` label accompanies that blocker while the apply-and-state
+requirement is outstanding; it is a temporary PR state, not the issue
+`human` kind from `issue-labels`. Add the blocker and label together. On
+resume, `undertake` revalidates the actual dependency against current evidence.
+When the apply and updated-state commit are present, remove this blocker and
+the PR `human` label; keep any other valid blocker and unrelated label. The
+fact that the diff still contains Tofu changes does not make a satisfied
+requirement outstanding again.
 
-The test is the diff, not the body. When a body is revised and the branch's
-changes touch the Tofu stack, a blocker the first write did not know to add is
-added then, and the label goes on with it. A blocker once earned is not
-removed while the pull request is open: it documents what the merge requires,
-and the merge has not happened yet.
+The test is the diff plus the current evidence of whether the action remains
+owed. When a body is revised, add a missing apply blocker if its requirement
+is still outstanding. Do not retain a blocker solely because it was present
+before: a stale blocker misstates the merge condition just as a missing one
+does.

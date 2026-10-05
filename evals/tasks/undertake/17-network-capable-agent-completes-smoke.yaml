@@ -1,0 +1,54 @@
+# Without this row, an agent can wrongly equate cloud execution with inability
+# even when the current agent has the required credentials and network route.
+task_id: undertake-17-network-capable-agent-completes-smoke
+description: >-
+  A credentialed network-capable agent completes the disposable-host smoke
+  regardless of laptop or cloud location.
+tags: [undertake, behaviour, fire]
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-escalation/shared
+      mount_point: .fixture
+pre_run:
+  - command: bash .fixture/setup.sh authorized-network-agent
+    timeout: 30
+initial_prompt: >-
+  Undertake PR #25's final disposable-host smoke gate. This cloud agent session
+  already has the authorized Vultr credentials and Tailscale route, and the
+  permitted isolated route is documented in `.fixture/README.md`. Use it and
+  report observed evidence. No live system is contacted by this fixture.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 480}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` continues the assigned smoke step"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: command_executed
+    description: The smoke route runs in the capable session
+    tool_name: Bash
+    command_pattern: 'smoke-test --disposable-host'
+    min_count: 1
+    weight: 2
+  - type: file_matches_regex
+    description: The fixture recorded completed smoke evidence
+    path: .fixture/trajectory.log
+    pattern: '(?m)^smoke-test --disposable-host$'
+    weight: 2
+  - type: agent_judge
+    description: The cloud environment is not treated as a blocker
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply. Score 0 if absent.
+      Score 1 only if it reports the fixture's observed smoke results and does
+      not call for a laptop, human, or further credential handoff. The Bash
+      trajectory and fixture trace prove the route ran. Do not let it claim
+      evidence absent from the command output.

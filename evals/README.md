@@ -271,6 +271,22 @@ direction `Keep it current` does not go: that step merges the base branch into
 the pull request, and the word it put in the description is the word this row
 keeps from sweeping in the other one.
 
+The escalation regression rows `undertake/17-*.yaml` and
+`pr-body/08-capability-gap-is-not-human-blocker.yaml` grade both the decision
+and its evidence. Sandbox command stubs in
+`fixtures/undertake-escalation/shared/setup.sh` never access infrastructure or
+GitHub; `command_executed` and the stub's `.fixture/trajectory.log` must both
+show an operation before a judge credits an attempt. The rows cover a permitted
+Tofu plan, an alternative route, an observed person-only authorization, a
+production prohibition with no probe, pending CI, independent work before an
+access gap and before a real human action, credentialed cloud execution, an
+available authorized-agent handoff, a missing-handoff prerequisite, stale
+versus still-outstanding Tofu apply blockers on resume, and PR-body maintenance
+from undertaking evidence.
+Run only this focused set with the documented
+`make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
+route after its `evals-plan`; the normal project checks remain CI's gate.
+
 One collision is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
 `undertake` distractor, because "get it to a pull request" is in `undertake`'s
 register too and the only thing separating them is that the prompt has no issue

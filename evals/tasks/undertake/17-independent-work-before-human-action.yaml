@@ -1,0 +1,64 @@
+# Without this row, an agent can let a real person-only auth requirement
+# suspend unrelated permitted work.
+task_id: undertake-17-independent-work-before-human-action
+description: >-
+  Independent sandbox work is completed before a scoped-token authorization
+  that genuinely requires the account owner is requested.
+tags: [undertake, behaviour, fire]
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-escalation/shared
+      mount_point: .fixture
+pre_run:
+  - command: bash .fixture/setup.sh independent-human-dependency
+    timeout: 30
+initial_prompt: >-
+  Undertake PR #25. Two independent steps remain: a documented sandbox-only
+  Tofu plan and a disposable-host smoke test. Inspect `.fixture/README.md` and
+  run the permitted sandbox plan. Then attempt the isolated smoke route; its
+  fixture will report whether a person-only contribution is actually needed.
+  Finish all permitted work before pausing, and do not request secrets in chat.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 480}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` works through independent steps before escalating"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: command_executed
+    description: The permitted independent sandbox plan ran
+    tool_name: Bash
+    command_pattern: 'tofu plan -var-file=sandbox\.tfvars'
+    min_count: 1
+    weight: 2
+  - type: command_executed
+    description: The smoke route produced its observed auth boundary
+    tool_name: Bash
+    command_pattern: 'smoke-test --disposable-host'
+    min_count: 1
+    weight: 2
+  - type: file_matches_regex
+    description: The trajectory records the independent plan before the smoke attempt
+    path: .fixture/trajectory.log
+    pattern: '(?s)tofu plan -var-file=sandbox\.tfvars.*smoke-test --disposable-host'
+    weight: 2
+  - type: agent_judge
+    description: The result asks only for the scoped authorization after finishing plan work
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply. Score 0 if absent.
+      Score 1 only if it reports the successful sandbox plan, the observed
+      account-owner authorization requirement from the smoke fixture, and the
+      exact contribution needed: authorize the scoped token in the approved
+      secret store. It must keep the PR unready until smoke evidence exists and
+      not ask for credentials in chat or the user to take over the workflow.
+      Both fixture command and trajectory are required evidence that the plan
+      and smoke route were attempted in that order.

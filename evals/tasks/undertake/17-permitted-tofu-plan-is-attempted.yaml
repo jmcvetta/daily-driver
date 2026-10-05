@@ -1,0 +1,53 @@
+# Without this row, an agent can call a sandbox plan unavailable without ever
+# attempting the documented, permitted route.
+task_id: undertake-17-permitted-tofu-plan-is-attempted
+description: >-
+  A documented, explicitly permitted sandbox Tofu plan is run by the agent
+  rather than assigned to a human.
+tags: [undertake, behaviour, fire]
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-escalation/shared
+      mount_point: .fixture
+pre_run:
+  - command: bash .fixture/setup.sh sandbox-plan
+    timeout: 30
+initial_prompt: >-
+  Undertake the planning step for PR #25. The repository documents a local
+  sandbox-only route in `.fixture/README.md`; inspect it and attempt the
+  permitted `tofu plan` route. Do not use production or ask me to run it.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 480}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` handles an assigned PR step"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: command_executed
+    description: The sandbox plan command ran
+    tool_name: Bash
+    command_pattern: 'tofu plan -var-file=sandbox\.tfvars'
+    min_count: 1
+    weight: 2
+  - type: file_matches_regex
+    description: The isolated fixture observed the plan invocation
+    path: .fixture/trajectory.log
+    pattern: '(?m)^tofu plan -var-file=sandbox\.tfvars$'
+    weight: 2
+  - type: agent_judge
+    description: The result reports the plan evidence without escalating
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply. Score 0 if none exists.
+      Score 1 only if the reply says the sandbox plan was actually attempted,
+      reports its observed no-change result, and does not ask the user to run it
+      or label the PR human-blocked. The Bash trajectory and fixture trace are
+      authoritative proof of the attempt. Do not credit a promise to try.
