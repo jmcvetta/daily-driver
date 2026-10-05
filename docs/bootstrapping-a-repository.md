@@ -158,6 +158,11 @@ both cached plugin manifests, and checks enabled state through
 `claude plugin list --json`. It also runs `wt --version` after installation.
 That confirms the binary exists; it does not check for a newer version.
 
+This is the cloud environment's pre-session bootstrap, not the task-time
+installer. Interactive task setup installs `wt` on demand in user scope only
+when it is missing; this recipe still provisions the CLI before the session
+starts and keeps its existing snapshot behavior.
+
 **Setup installs Worktrunk from Cargo.** Claude cloud runs Setup as root on
 Ubuntu, with `cargo` and `rustc` preinstalled. The recipe uses
 `cargo install --locked --root /usr/local worktrunk`: Cargo resolves the

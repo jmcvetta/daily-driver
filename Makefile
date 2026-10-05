@@ -13,7 +13,7 @@ SHELL := /bin/bash
 	check-omp-cache-clean \
 	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-model-classes-builder check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-ci-scope check-step-names \
-	check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
+	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
 	evals-install evals-setup-omp evals-plan \
@@ -115,7 +115,7 @@ check-plugin-validity: check-plugin check-skills check-agents \
 
 check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-git-sync \
-	check-task-worktree-fixture check-scripts
+	check-task-worktree-fixture check-worktrunk-install check-scripts
 
 # Exercise the shell-integrated alias in isolated Git repositories only.
 check-git-sync:
@@ -364,6 +364,11 @@ check-model-classes-builder:
 # The model-driven rows remain outside CI; their test instrument does not.
 check-task-worktree-fixture:
 	scripts/check-task-worktree-fixture.sh
+
+# Conditional user-scope installation is tested with stub package managers;
+# the fixtures never invoke a real installer or access the network.
+check-worktrunk-install:
+	scripts/check-worktrunk-install.sh
 
 # check-evals-setup-omp: evals-setup-omp's key resolution, exact model match
 # and no-reinstall rule, against a stub `omp` and `curl` in a throwaway HOME.
