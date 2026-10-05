@@ -533,7 +533,11 @@ def judged_status(coder_eval_status: str, sidecar: dict[str, Any]) -> str:
         return "ERROR"
     if coder_eval_status != "SUCCESS":
         return coder_eval_status
-    failed = [c for c in sidecar["criteria"] if c.get("weight", 1.0) > 0 and c.get("score", 0.0) < c.get("pass_threshold", 0.7)]
+    failed = [
+        c
+        for c in sidecar["criteria"]
+        if c.get("section") == "success_criteria" and c.get("weight", 1.0) > 0 and c.get("score", 0.0) < c.get("pass_threshold", 0.7)
+    ]
     return "FAILURE" if failed else "SUCCESS"
 
 
@@ -556,7 +560,8 @@ def apply_judge(
             continue
         attempt["coder_eval_status"] = attempt["final_status"]
         attempt["final_status"] = judged_status(attempt["final_status"], sidecar)
-        attempt["measured_score"] = sidecar["weighted_score"]
+        # A replicate that reached the answer key stays at the forced 0.
+        attempt["measured_score"] = 0.0 if attempt.get("answer_key_contact") else sidecar["weighted_score"]
         attempt["judge"] = {
             "freeze_sha": sidecar["freeze_sha"],
             "evaluation_status": sidecar["evaluation_status"],

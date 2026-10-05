@@ -83,18 +83,19 @@ JUDGED_TASKS_DIR = ROOT / "evals" / "tasks-judged"
 OMP_ADAPTER_SRC = ROOT / "evals" / "coder-eval-omp" / "src"
 
 SIDECAR_SCHEMA = 1
+MATERIALIZED_MARKER = ".materialized-by-evals-judge"
 
 ROUTES = ("claude-code", "omp")
 STATUSES = ("default", "candidate", "validated")
 
 # Settings an omp judge may declare. Nothing else is read, so nothing else can
 # change a verdict without changing `freeze_sha` -- an unknown key is refused.
-OMP_SETTINGS = {"thinking", "timeout_seconds", "max_prompt_chars"}
+OMP_SETTINGS = {"thinking", "timeout_seconds", "max_prompt_bytes"}
 CLAUDE_SETTINGS = {"max_turns", "turn_timeout"}
 THINKING_LEVELS = ("off", "minimal", "low", "medium", "high")
 
 DEFAULT_TIMEOUT_SECONDS = 300
-DEFAULT_MAX_PROMPT_CHARS = 120_000
+DEFAULT_MAX_PROMPT_BYTES = 120_000
 # coder_eval's own per-message truncation default for judge context blocks.
 DEFAULT_MAX_FILE_CHARS = 20_000
 DEFAULT_MAX_DIALOG_CHARS = 100_000
@@ -240,7 +241,7 @@ def load_judge(path: Path) -> Judge:
     if route == "omp":
         if settings.get("thinking", "off") not in THINKING_LEVELS:
             raise JudgeError("config", f"{path}: thinking must be one of {list(THINKING_LEVELS)}")
-        for key in ("timeout_seconds", "max_prompt_chars"):
+        for key in ("timeout_seconds", "max_prompt_bytes"):
             if key in settings and not (isinstance(settings[key], int) and settings[key] > 0):
                 raise JudgeError("config", f"{path}: {key} must be a positive integer")
     calibration = data.get("calibration")
@@ -537,12 +538,14 @@ def parse_omp_events(stdout: str) -> RouteResult:
 def run_omp(judge: Judge, system_prompt: str, user_message: str, env: dict[str, str] | None = None) -> RouteResult:
     """Run one grade through `omp`. Any failure is a `JudgeError`; there is no retry and no fallback."""
     base = dict(env if env is not None else os.environ)
+    # The prompt travels in argv, which Linux caps at 131072 bytes per argument: count bytes.
+    max_bytes = min(int(judge.settings.get("max_prompt_bytes", DEFAULT_MAX_PROMPT_BYTES)), DEFAULT_MAX_PROMPT_BYTES)
+    size = len(user_message.encode())
+    if size > max_bytes:
+        raise JudgeError("unsupported", f"prompt is {size} bytes, over this judge's max_prompt_bytes {max_bytes}")
     binary = omp_binary(base)
     if binary is None:
         raise JudgeError("unavailable", "no `omp` on PATH; run `make evals-setup-omp`")
-    max_chars = int(judge.settings.get("max_prompt_chars", DEFAULT_MAX_PROMPT_CHARS))
-    if len(user_message) > max_chars:
-        raise JudgeError("unsupported", f"prompt is {len(user_message)} chars, over this judge's max_prompt_chars {max_chars}")
     timeout = int(judge.settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
     real_agent_dir = Path(base.get("OMP_REAL_AGENT_DIR") or Path(base.get("HOME", str(Path.home()))) / ".omp" / "agent")
     with tempfile.TemporaryDirectory(prefix="evals-judge-") as tmp:
@@ -670,7 +673,11 @@ def materialize(tasks_dir: Path, out_dir: Path) -> int:
     """
     if out_dir.parent != tasks_dir.parent:
         raise JudgeError("config", f"{out_dir} must be a sibling of {tasks_dir} so relative fixture paths resolve")
+    if out_dir.resolve() == tasks_dir.resolve():
+        raise JudgeError("config", f"{out_dir} is the task tree itself; refusing to replace it")
     if out_dir.exists():
+        if any(out_dir.iterdir()) and not (out_dir / MATERIALIZED_MARKER).is_file():
+            raise JudgeError("config", f"{out_dir} exists and was not written by this script; refusing to delete it")
         shutil.rmtree(out_dir)
     count = 0
     for source in sorted(tasks_dir.rglob("*")):
@@ -690,6 +697,8 @@ def materialize(tasks_dir: Path, out_dir: Path) -> int:
             text = yaml.safe_dump(task, sort_keys=False, allow_unicode=True, width=10**6)
             count += 1
         target.write_text(text)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / MATERIALIZED_MARKER).write_text("written by scripts/evals-judge.py; safe to delete\n")
     return count
 
 
@@ -799,7 +808,10 @@ def judge_run(run_dir: Path, judge: Judge, task_files: list[Path], runner: Runne
             skipped += 1
             continue
         replicate = row.get("replicate_index", 0)
-        artifact = json.loads((run_dir / variant / task_id / f"{replicate:02d}" / "task.json").read_text())
+        try:
+            artifact = json.loads((run_dir / variant / task_id / f"{replicate:02d}" / "task.json").read_text())
+        except (OSError, json.JSONDecodeError):
+            artifact = {}  # no turn records: every criterion is recorded as an `unsupported` error
         graded = judge_replicate(judge, pair[1], artifact, runner)
         out = {
             "schema_version": SIDECAR_SCHEMA,
@@ -937,7 +949,10 @@ def cmd_judge_run(args: argparse.Namespace) -> int:
     files = sorted(Path(args.tasks_dir).glob("*/*.yaml"))
     manifest = judge_run(Path(args.run), judge, files, run_omp)
     print(json.dumps(manifest, indent=2, sort_keys=True))
-    return 1 if manifest["criterion_errors"] else 0
+    if manifest["criterion_errors"]:
+        # Recorded in the sidecars and the record, not a reason to lose the paid run.
+        print(f"evals-judge: {manifest['criterion_errors']} criterion error(s) recorded; those replicates carry no score", file=sys.stderr)
+    return 0
 
 
 def cmd_calibrate(args: argparse.Namespace) -> int:
