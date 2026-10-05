@@ -688,8 +688,7 @@ evals-run-codex: evals-judge-preflight evals-plan evals-preflight
 # The sibling is asserted here because this is the ONLY place that can: the
 # plugin path is resolved in the agent at run time, so without the checkout the
 # run pays for both arms and measures plugin-versus-nothing.
-# Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=.
-JOBS ?= 16
+# Runs JOBS tasks at once (`coder-eval run -j`), like the other run targets.
 
 evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 	@test -d ../daily-driver-base/skills || { \
