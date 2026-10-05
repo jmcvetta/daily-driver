@@ -20,10 +20,9 @@ The fleet
 | `Read the fleet` | Read the epic's muster rolls | `mcp__github__issue_read`, `method: get_comments` |
 | `Read the fleet` | Read a task issue's claim and handoffs | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Read the fleet` | Read a task's pull-request state | `mcp__github__pull_request_read` |
-| `Secure the work` | Load the messaging tools, once per session | `ToolSearch`, `select:ListAgents,SendMessage` |
 | `Secure the work` | Stop a session's current turn | `mcp__Claude_Code_Remote__interrupt_session` |
-| `Secure the work` | Name the session as an address | the muster roll's `Implementor` cell, or `ListAgents` to re-resolve a name the roll lacks or a send failed to reach |
-| `Secure the work` | Send the wrap-up | `SendMessage`, to that name |
+| `Secure the work` | Send the wrap-up | `mcp__Claude_Code_Remote__send_message`, `session_id` the session id in the muster roll's `Implementor` cell |
+| `Secure the work` | Read whether a failed send's session is still live | `mcp__Claude_Code_Remote__get_session` |
 | `Secure the work` | Read whether the turn has ended | `mcp__Claude_Code_Remote__get_session`, `status_bucket` |
 | `Write the handoff` | Comment on a task issue or the epic | `mcp__github__add_issue_comment` |
 | `Stop the fleet` | Retire a session | `mcp__Claude_Code_Remote__archive_session` |
@@ -31,22 +30,15 @@ The fleet
 | `Cancel the watches` | Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
 
 **Addressing a session is the same route `embark`'s `Recover a session`
-uses**, named in that skill's [`claude.md`](../../embark/references/claude.md).
-`ListAgents` and `SendMessage` are deferred tools, not in the tool list
-until `ToolSearch` loads them; call it once, before the first send this
-step makes, and both are then callable for the rest of the batch.
-**Read the name off the muster roll first** — `Post the muster roll` writes
-the resolved `ListAgents` name into the roll's `Implementor` cell beside the
-session id, and `Read the fleet` has already read that roll, so the ordinary
-case costs no `ListAgents` call at all. Call `ListAgents` only to re-resolve
-a name an older roll does not carry, or after `SendMessage` fails to reach
-the recorded name — the usual sign that the session under it has already
-stopped. `SendMessage`'s `to` takes that name, never the `session_01AbC…`
-identifier the muster roll also records, which does not resolve as an
-address. A member no roll entry and no `ListAgents` listing can name cannot
-be reached at all, and `ListAgents` can omit a session that is still running.
-It is interrupted, not sent a wrap-up, and named as a residual with its link
-at `Secure the work` rather than retried. **It is not archived.**
+uses**, named in that skill's [`claude.md`](../../embark/references/claude.md):
+`send_message` to the session id the muster roll records. Nothing here loads
+`ListAgents` or `SendMessage`; they are a different transport and do not reach
+a cloud session (measured 2026-10-05, Claude Code 2.1.289, in `embark`'s
+reference). A `send_message` that errors is the signal that the session cannot
+be told to push. Then `get_session` decides: a session it reports archived,
+failed or not found is not live and is archived anyway. A session it reports
+still live is interrupted, named as a residual with its link at `Secure the
+work` rather than retried. **It is not archived.**
 
 **The wrap-up message** tells the session, in words: commit everything in
 progress to the task branch, push it, and end the turn without starting
@@ -71,7 +63,7 @@ missed deadline, never read as `Secured: yes` on the strength of having left
 `working` alone. A session the deadline outlasts and a session whose turn
 ended in error are recorded as a residual for that implementor at this step,
 and are archived anyway at `Stop the fleet` — securing the work is attempted
-once, not guaranteed. A session `ListAgents` never named is recorded as a
+once, not guaranteed. A session whose send failed and that `get_session` still reports live is recorded as a
 residual too, but it is not archived.
 
 **`Stop the fleet` archives without reading status again.** The interrupt and
@@ -82,7 +74,7 @@ here. If the archive call refuses a session it believes is still running,
 the one bounded retry happens after the interrupt's result is in; a second
 refusal is a residual for the banner. A session the archive call has already
 retired is skipped, which is what makes a re-run of the stops safe. A session
-no name could reach is skipped too: it was interrupted at `Secure the work`
+whose send failed while live is skipped too: it was interrupted at `Secure the work`
 and stays unarchived, and the handoff and banner give its link.
 
 
@@ -119,7 +111,7 @@ reuses.
 **Loss is possible only where the wrap-up did not land in time** — the
 session missed the three-minute deadline or its turn ended in error before
 the commit or the push completed. There, whatever that session held and never
-pushed is gone at the archive. A session `ListAgents` never named is not
+pushed is gone at the archive. A session whose send failed while it was still live is not
 archived at all, so its unpushed work survives until a person pushes it. `Secure the work` records
 it as a residual the moment the deadline, the listing, or the turn's own
 outcome fails, so the banner and the handoff both say so before the archive

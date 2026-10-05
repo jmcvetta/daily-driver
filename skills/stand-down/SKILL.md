@@ -101,25 +101,24 @@ cancel-then-commit per harness-local subagent — and nothing here waits on
 more than the one deadline below.
 
 **Web sessions (Claude Code).** Interrupt the session, then address it the
-way `embark`'s `Recover a session` addresses a correction — the muster
-roll's already-resolved name where `Read the fleet` carries one, otherwise
-`ListAgents` — with the wrap-up, sent by `SendMessage` to that name: commit
+way `embark`'s `Recover a session` addresses a correction — the address the
+muster roll records — with the wrap-up: commit
 everything in progress to the task branch, push it, and end the turn without
 starting anything else. Then wait, on one shared deadline for the whole
 fleet, until every session's turn has ended or the deadline passes; the
-reference file names the read and the deadline. Leaving that wait is not
+reference file names the send, the read and the deadline. Leaving that wait is not
 itself securing: a session the deadline outlasts and a session whose turn
 ends in error before its push completes are archived anyway at `Stop the
 fleet` and reported as a residual in the banner, by name — securing its work
 was attempted, not guaranteed.
 
-**A session no name can reach is interrupted and never archived.** It cannot
-be told to push, and an archive destroys whatever it holds unpushed. Where
-no name reaches it — the muster roll marks it `messaging: unreachable`, or an
-older roll carries no name for it and `ListAgents` does not name it — it is
-interrupted alone. It is a residual in the banner and in its task
+**A session whose send fails while it is still live is interrupted and never
+archived.** It cannot be told to push, and an archive destroys whatever it
+holds unpushed. Where the send errors and the session read says it is still
+live, it is interrupted alone. It is a residual in the banner and in its task
 issue's handoff, with its session link, so that a person can push or archive
-it later.
+it later. A session whose send errors and whose read reports it archived,
+failed or not found is not live and is archived at `Stop the fleet`.
 
 **Harness-local subagents (Omp, Codex).** Cancel the subagent first, by its
 dispatch handle, exactly as `Stop the fleet` always has, then this session
@@ -244,11 +243,11 @@ straight to the stops.
 Everything in one parallel batch, and nothing polled beyond `Secure the
 work`'s one bounded wait, already spent by the time this step runs.
 
-**A web session is archived, unless no name could reach it.** It was already
+**A web session is archived, unless its send failed while it was live.** It was already
 interrupted and sent its wrap-up at `Secure the work`; this step is the
 archive alone. It runs whether that session's turn ended inside the deadline
 or not — a session the deadline outlasted was already named a residual there,
-and archiving it here does not undo that naming. **An unreachable session is
+and archiving it here does not undo that naming. **A live session whose send failed is
 not archived**: it was interrupted only, and stays a residual with its link. If the archive call rejects a session it believes
 is still running, one retry after the interruption's result is in; a second
 refusal is reported as a residual, not retried in a loop.
@@ -296,7 +295,7 @@ residuals remain:
 ```
 
 Residuals are listed, one line each, never silent: an implementor whose work
-could not be secured — the wrap-up deadline passed, no name could reach it
+could not be secured — the wrap-up deadline passed, its send failed while it was live
 (left unarchived, named with its session link),
 its turn ended in error before the push completed, or a worktree would not
 commit or push — an implementor that could not be stopped, a comment that

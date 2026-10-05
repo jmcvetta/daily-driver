@@ -1,8 +1,8 @@
 # The negative row for issue #419's `Secure the work` step: an implementor
-# the wrap-up cannot reach — the agent listing never named it — is a residual
+# the wrap-up cannot reach — its `send_message` errors — is a residual
 # the banner reports, never a reason to wait or to leave the rest of the
 # fleet running. Speed is still the design constraint; the one wait this
-# skill takes is bounded, and a member that wait or the listing cannot reach
+# skill takes is bounded, and a member that wait or the send cannot reach
 # does not get a second one.
 #
 # What this row can and cannot see. The sandbox has no session client and no
@@ -21,8 +21,8 @@ tags: [stand-down, behaviour, fire]
 initial_prompt: >-
   Epic #510 is at sea. Its latest muster roll names two live implementors:
   task #511's `session_01Alive`, still working, and task #512's
-  `session_01Gone`, whose cloud workspace no longer exists — the agent
-  listing does not name it at all. Stand down the fleet.
+  `session_01Gone`, whose cloud workspace no longer exists — `send_message` to it errors, and
+  `get_session` reports it failed. Stand down the fleet.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
