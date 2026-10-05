@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.49.0](https://github.com/jmcvetta/daily-driver/compare/v0.48.0...v0.49.0) (2026-10-05)
+
+
+### Features
+
+* **evals:** select eval judges apart from the subject ([#544](https://github.com/jmcvetta/daily-driver/issues/544)) ([6f42a96](https://github.com/jmcvetta/daily-driver/commit/6f42a9606ea9087ba71436e5b5f5a44ec3bba85a))
+* **task-worktree:** install Worktrunk when missing ([#531](https://github.com/jmcvetta/daily-driver/issues/531)) ([1066f86](https://github.com/jmcvetta/daily-driver/commit/1066f8676b48ec80a0e5c43ffe1e733f80c6c4a3))
+
+
+### Bug Fixes
+
+* **omp-guard:** explain unreadable shell refusals ([#536](https://github.com/jmcvetta/daily-driver/issues/536)) ([5c6d469](https://github.com/jmcvetta/daily-driver/commit/5c6d469f839efd4d9dbe6a8ded0a7a3eee782258))
+* **security:** classify dependency batches by shipped impact ([#539](https://github.com/jmcvetta/daily-driver/issues/539)) ([60a1819](https://github.com/jmcvetta/daily-driver/commit/60a1819b29463eb4ecbc4df42b427ec44bd2b24f))
+
 ## [0.48.0](https://github.com/jmcvetta/daily-driver/compare/v0.47.0...v0.48.0) (2026-10-05)
 
 
