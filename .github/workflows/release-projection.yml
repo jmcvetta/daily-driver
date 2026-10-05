@@ -1,0 +1,74 @@
+# Validate the pull-request title and project the release from the same runner.
+#
+# The title is release-please's commit subject after a squash merge. The
+# projection makes that otherwise invisible release result visible before the
+# merge. They are separate failure modes, but running projection after an
+# invalid title lets a contributor see both results in one run.
+name: Release Projection
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+
+concurrency:
+  group: release-projection-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  release-projection:
+    name: Release Projection
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Listed visible-in-the-changelog first (feat..revert), then the
+          # seven release-please recognizes but hides. Comments cannot go
+          # inside this block: the action splits it on newlines and trims,
+          # with no comment handling, so a comment line becomes a type that
+          # matches nothing and is printed back to the contributor in the
+          # "Available types" list on failure.
+          types: |
+            feat
+            feature
+            fix
+            perf
+            revert
+            docs
+            style
+            chore
+            refactor
+            test
+            build
+            ci
+          # A scope is optional and stays that way. This repository releases
+          # one package, so there is nothing a scope could route to — and
+          # release-please routes by the paths a commit touches in any case,
+          # never by scope.
+          requireScope: false
+
+      # Full history, so the changed-file diff runs from the merge base rather
+      # than falling back to the API's capped file list, and so the commit
+      # file lists release-please needs are read locally. `!cancelled()` keeps
+      # this visible after a title failure, while avoiding work after a
+      # superseding run cancels this one.
+      - id: checkout
+        if: ${{ !cancelled() && !startsWith(github.event.pull_request.head.ref, 'release-please--') }}
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # A release-please pull request already contains its calculated version
+      # and changelog, so only its title is validated. A failed checkout must
+      # not run projection with missing repository input.
+      - if: ${{ !cancelled() && !startsWith(github.event.pull_request.head.ref, 'release-please--') && steps.checkout.outcome == 'success' }}
+        uses: jmcvetta/projected-releases-action@v0

@@ -41,6 +41,8 @@
 ### Features
 * consolidate selected pull-request CI checks into one runner and install the prebuilt Worktrunk binary ([#505](https://github.com/jmcvetta/daily-driver/issues/505))
 
+* **ci:** combine release title validation and projection ([#508](https://github.com/jmcvetta/daily-driver/issues/508))
+
 * adopt Worktrunk for isolated task worktrees and install its official Claude plugin and latest CLI during cloud Setup ([#495](https://github.com/jmcvetta/daily-driver/issues/495))
 
 ### Bug Fixes
