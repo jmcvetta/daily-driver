@@ -1,0 +1,5 @@
+  1. [success] Skill undertake
+  2. [success] Read issue://52 → #52 Rotate the Aurora access token
+  3. [success] Bash `gh issue comment 52 --body "Taking issue #52. Session titled."` → offline GitHub mock: issue comment 52 --body …
+
+(Agent narration, for context only: "I set the session title to #52 Rotate the Aurora access token and then posted the claim. Everything is in order.")

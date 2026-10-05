@@ -12,11 +12,12 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
 	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-ci-scope check-step-names \
+	check-model-classes-builder check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
 	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
 	evals-install evals-setup-omp evals-plan \
+	evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	check-claude-dependency \
@@ -122,7 +123,7 @@ check-git-sync:
 	python3 scripts/check-git-sync.py
 
 check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-eval-arms check-agent-judges check-evals-preflight check-evals-provenance \
+	check-model-classes-builder check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
 	check-evals-results check-model-telemetry check-evals-setup-omp
 
 
@@ -335,6 +336,13 @@ check-eval-arms:
 check-agent-judges:
 	uv run --frozen python3 scripts/check-agent-judges.py
 
+# check-evals-judge: the offline acceptance test for `scripts/evals-judge.py` --
+# independent subject/judge selection, unavailable-judge refusal, no fallback,
+# verdict errors and timeouts, transcript-only isolation and judge provenance,
+# against a fake `omp`. No model, no credentials, no network.
+check-evals-judge:
+	uv run --frozen python3 scripts/check-evals-judge.py
+
 # check-eval-fixtures: build every review-depth fixture repository and assert
 # it has the shape the `review` skill needs. Part of `check` because it needs
 # only git and bash -- no model, no credentials -- and because a fixture that
@@ -506,6 +514,37 @@ evals-variants:
 #   make evals-run TASKS='tasks/pr/*.yaml'
 TASKS ?= tasks/*/*.yaml
 
+# JUDGE= selects the judge of the semantic (`agent_judge`) criteria, apart from
+# the subject; see scripts/evals-judge.py and "Choosing the judge" in
+# evals/README.md. Unset, nothing changes: each task's pinned Claude Code
+# `agent_judge` runs inside `coder_eval`, from a Claude Code session.
+#
+#   make evals-run-omp-gpt-5-6-sol JUDGE=omp-glm-5.3     # a non-Claude judge, no Claude session
+#   make evals-run JUDGE=claude-code-sonnet-5            # the pinned route, named
+#
+# A non-Claude judge runs the subject over `tasks-judged/` (the same tasks with
+# `agent_judge` disabled -- the preflight writes it), and `evals-record` then
+# grades the preserved transcripts with that judge before it records the run.
+# An unavailable judge fails in `evals-judge-preflight`, ahead of the subject.
+JUDGE ?=
+JUDGE_ROUTE := $(if $(JUDGE),$(shell uv run --frozen python3 scripts/evals-judge.py route $(JUDGE)))
+RUN_TASKS = $(if $(filter omp,$(JUDGE_ROUTE)),$(patsubst tasks/%,tasks-judged/%,$(TASKS)),$(TASKS))
+
+# evals-judge-preflight: with JUDGE= set, refuse a judge that cannot run here
+# (no omp, a model omp does not list, a Claude judge outside a Claude Code
+# session, a task pinning a different Claude judge) before any subject runs, and
+# write the `tasks-judged/` tree for a non-Claude judge. A no-op without JUDGE=.
+evals-judge-preflight:
+	$(if $(JUDGE),uv run --frozen python3 scripts/evals-judge.py preflight --judge $(JUDGE),@true)
+
+# evals-judge-calibrate: measure a judge against the committed labelled
+# transcripts (evals/judges/calibration/labels.yaml) and write the observed
+# outcome beside them. Needs the judge's route; costs a few cents on omp.
+#   make evals-judge-calibrate JUDGE=omp-glm-5.3
+evals-judge-calibrate:
+	test -n "$(JUDGE)"
+	uv run --frozen python3 scripts/evals-judge.py calibrate --judge $(JUDGE)
+
 # evals-preflight: refuse every enabled `llm_judge` criterion. `llm_judge`
 # calls Anthropic's metered API, which this project does not use even when a
 # key or alternate transport is present. Claude judges use `agent_judge` from
@@ -523,6 +562,7 @@ evals-preflight:
 RUN ?= evals/runs/latest
 evals-record:
 	test -n "$(EXPERIMENT)"
+	$(if $(filter omp,$(JUDGE_ROUTE)),uv run --frozen python3 scripts/evals-judge.py judge-run "$(RUN)" --judge $(JUDGE))
 	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
 		--experiment "$(EXPERIMENT)" --output evals/provenance \
 		$(if $(filter 1,$(POST_COMMENTS)),--post-comments)
@@ -545,9 +585,9 @@ evals-render-results:
 # `str` option that `coder_eval` splits on commas, so a second `--exclude-tags`
 # replaces the first rather than adding to it -- and the exclusions it dropped
 # come back as rows run in the wrong arm, silently, at full price.
-evals-run: evals-plan evals-preflight
+evals-run: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/with-without.yaml \
-		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(TASKS); status=$$?; \
+		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
@@ -561,27 +601,27 @@ evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-d
 # and checks both for the gateway arms. The agent borrows the caller's
 # `~/.omp/agent/` rather than copies it -- see evals/coder-eval-omp/README.md.
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
-evals-run-omp-glm-5-3: evals-plan evals-preflight
+evals-run-omp-glm-5-3: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-evals-run-omp-glm-5-3-flash: evals-plan evals-preflight
+evals-run-omp-glm-5-3-flash: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-glm-5.3-flash.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-glm-5.3-flash.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-evals-run-omp-deepseek-v4-pro: evals-plan evals-preflight
+evals-run-omp-deepseek-v4-pro: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-deepseek-v4-pro.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-deepseek-v4-pro.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
+evals-run-omp-gpt-5-6-sol: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/omp-gpt-5.6-sol.yaml \
-		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(TASKS); status=$$?; \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-5.6-sol.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
@@ -594,9 +634,9 @@ evals-run-omp-gpt-5-6-sol: evals-plan evals-preflight
 # because `coder_eval`'s Codex agent links skills and installs no hooks, so no
 # constitution reaches that arm and every row there would score 0 for the wrong
 # reason. See docs/notes/0015-the-codex-arm.md.
-evals-run-codex: evals-plan evals-preflight
+evals-run-codex: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run -e experiments/codex.yaml \
-		--exclude-tags claude-only,omp-only,skip:codex,model-classes $(TASKS); status=$$?; \
+		--exclude-tags claude-only,omp-only,skip:codex,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/codex.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
@@ -617,13 +657,13 @@ evals-run-codex: evals-plan evals-preflight
 # Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=.
 JOBS ?= 16
 
-evals-run-comparison: evals-plan evals-preflight
+evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 	@test -d ../daily-driver-base/skills || { \
 		echo "error: ../daily-driver-base is missing or is not a plugin root;" >&2; \
 		echo "  run: git worktree add ../daily-driver-base <base-revision>" >&2; \
 		exit 1; }
 	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml -j $(JOBS) \
-		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(TASKS); status=$$?; \
+		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/base-vs-candidate.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
@@ -642,13 +682,13 @@ evals-run-comparison: evals-plan evals-preflight
 # `model-classes` itself, which every other arm already excludes. Still
 # overridable by a caller who wants one case: `TASKS=tasks/model-classes/career-462.yaml`.
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
-evals-run-classes: evals-plan evals-preflight
+evals-run-classes: evals-judge-preflight evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \
 		echo "evals-run-classes: set MODEL=<classes experiment stem>, e.g. MODEL=glm" >&2; \
 		exit 1; \
 	fi
 	cd evals && $(CODER_EVAL) run -e experiments/classes-$(MODEL).yaml \
-		--exclude-tags claude-only,omp-only,codex-only,skip:model-classes $(TASKS); status=$$?; \
+		--exclude-tags claude-only,omp-only,codex-only,skip:model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/classes-$(MODEL).yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
