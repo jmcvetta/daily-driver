@@ -264,8 +264,9 @@ plugin's bytes land under the harness's own directory and are read from there;
 a repository can point at a plugin, it can never carry one.
 
 The Claude Code marketplace install also installs and enables the official
-Worktrunk plugin as `worktrunk@daily-driver`. Worktrunk's `wt` executable is a
-separate dependency installed by the cloud Setup recipe below.
+Worktrunk plugin as `worktrunk@daily-driver`. The `wt` executable is a
+separate dependency: the cloud Setup recipe below provisions it before the
+session, while desktop task setup installs it on demand when missing.
 
 If you already installed `worktrunk@worktrunk`, migrate it before installing
 or updating Daily Driver. Disable and uninstall it at every scope where it is
@@ -284,13 +285,16 @@ be migrated by its administrator. Restart or reload Claude Code after the
 migration, then confirm `claude plugin list` shows `worktrunk@daily-driver`
 enabled and no `worktrunk@worktrunk` identity enabled.
 
-Install the Worktrunk CLI separately on a desktop; the Claude plugin dependency
-does not install `wt`. Worktrunk documents [Homebrew and Cargo
+The Worktrunk CLI (`wt`) is separate from the Claude plugin dependency. On a
+desktop, `task-worktree` installs it on demand when a repository-changing task
+needs isolation and `wt` is missing. The agent uses Homebrew or Cargo in user
+scope and verifies the binary before continuing. You can install it ahead of
+time with Worktrunk's documented [Homebrew or Cargo
 installation][worktrunk-install]:
 
 ```sh
 brew install worktrunk
-# or: cargo install worktrunk
+# or: cargo install --locked worktrunk
 ```
 
 [worktrunk-install]: https://worktrunk.dev/#install

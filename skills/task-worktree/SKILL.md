@@ -20,9 +20,12 @@ description: >-
 One repository-changing task gets one feature branch and one sibling worktree.
 The worktree is the task's execution root, not only the place where edits land.
 
-Worktrunk (`wt`) owns worktree creation and selection. If `wt` is unavailable,
-stop and report that the Worktrunk CLI must be installed. Never fall back to
-`git worktree add`, and never install software from a task-start hook.
+Worktrunk (`wt`) owns worktree creation and selection. Before inspecting
+Worktrunk worktrees, check for `wt`; if it is missing, install it through the
+user-scoped Homebrew or Cargo route in the harness reference, then verify it
+with `wt --version`. Never upgrade an existing installation, fall back to
+`git worktree add`, or install software from a task-start hook. If no supported
+installer works, stop with the cause and an actionable installation requirement.
 
 **The execution routes differ by harness.** Read the reference for the harness
 in use before the first repository read or change:

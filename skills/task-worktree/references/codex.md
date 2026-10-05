@@ -4,8 +4,13 @@
 them. Claude Code's route is in [`claude.md`](claude.md), and Oh My Pi's in
 [`omp.md`](omp.md).
 
-Require Worktrunk (`wt`) before setup. If it is absent, report that it must be
-installed and stop. Do not use bare Git worktree creation as a fallback.
+Before Worktrunk worktree inspection, source `scripts/ensure-worktrunk.sh`
+from the repository root and run `ensure_worktrunk`. It returns without
+installing when `wt` exists. If missing, it uses Homebrew or Cargo in user
+scope, adds the installed bin directory to this shell's `PATH`, and verifies
+`wt --version`. It never upgrades `wt`; if neither installer works, stop with
+the helper's cause and actionable installation requirement. Do not use bare
+Git worktree creation as a fallback.
 
 Use the shell for Git boundary reads and Worktrunk:
 
@@ -16,6 +21,7 @@ git remote
 git config --get remote.pushDefault
 git symbolic-ref --short refs/remotes/<remote>/HEAD
 git -C <primary-worktree> status --short
+source scripts/ensure-worktrunk.sh && ensure_worktrunk
 wt --config-set 'list.json-schema=2' list --format=json
 wt config show
 wt switch --create <task-branch> --base <resolved-base> --no-cd --format=json
