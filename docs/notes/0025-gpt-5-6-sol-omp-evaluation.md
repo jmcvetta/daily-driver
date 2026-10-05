@@ -61,9 +61,17 @@ The Omp-only judged row has a separate limit. Each of its ten `agent_judge`
 calls ended with `AgentCrashError: Failed to authenticate: OAuth session
 expired and could not be refreshed`. The treated 0.333 score comes only from
 its `skill_triggered` criterion; all five +0.333 deltas establish that trigger
-component, not the rubric's finding. The preserved transcripts may receive an
-owner-authorized evaluate-only regrade after login. They do not supply verdicts
-now.
+component, not the rubric's finding. The run contains no judge verdicts.
+
+The preserved transcripts may receive an owner-authorized evaluate-only
+regrade after login. That sentence records the proposed recovery at the time;
+it is historical evidence, not current operational guidance. A Claude-judged
+regrade must run from a Claude Code web or CLI session through the subscription
+route in [`0014`](0014-the-judge-runs-on-the-subscription.md). Do not ask an
+Omp caller to repair local Claude login or acquire credentials; follow the
+[`evaluation runbook`](../../evals/README.md#choose-the-execution-session-first).
+
+The run remains without judge verdicts.
 
 The subject was the named Omp model, but `agent_judge` used `claude-sonnet-5`
 through the Claude subscription, as [0014](0014-the-judge-runs-on-the-subscription.md)

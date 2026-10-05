@@ -74,16 +74,51 @@ record again. Records at versions 1 and 2 stay as they are.
 
 ## Running them
 
+### Choose the execution session first
+
+Choose the subject model, judge model, and execution session separately. A
+Claude subject does not require a Claude judge, and evaluations need not use
+Claude for every judge. **When a Claude judge grades the run — the default for
+every `agent_judge` — run the entire evaluation from a Claude Code session**,
+web or CLI. The judge runs through the Claude Code SDK and inherits that
+session's subscription. A non-Claude judge selected with `JUDGE=` is the
+exception; see [Choosing the judge](#choosing-the-judge). Running
+`make evals-run` from Omp is not a supported route for a Claude-judged
+evaluation, even when the subject arm is Omp. Do not turn a judge failure in
+Omp into a request to repair local Claude authentication.
+
+Before any model or authentication probe, an Omp caller must select a Claude
+Code execution session. Use an existing authorized handoff facility if the
+current environment provides one; do not invent a dispatch or launch a local
+probe to discover this known boundary. If it provides no such facility, record
+this handoff for a Claude Code session:
+
+> Run the requested evaluation from this Claude Code web or CLI session.
+> Use the repository's existing `make evals-plan` and the narrow `make
+> evals-run TASKS='…'` target below. Let the Claude Code SDK inherit this
+> session's subscription. Do not ask for login repair, search for or transfer
+> OAuth tokens, or use a metered Anthropic or gateway route. Return the run
+> identifier and observed results; do not claim a pass without the recorded
+> run evidence.
+
+No local `claude -p` probe is needed before that handoff. A failed supported
+SDK run must be diagnosed from current evidence in the Claude Code execution
+session. A previous error, an agent's claim, or a local CLI failure in Omp
+does not establish that the subscription route is unavailable. Request human
+action only when current evidence shows an indispensable human contribution.
+[`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
+is the current decision; this README is the single operational runbook.
+
 ### Credentials: read this before any paid run
 
 **Claude runs on the subscription, and only on the subscription.** A Claude
 agent under test and every Claude-judged `agent_judge` inherit the Claude auth
 of the shell that runs `make`, so a Claude-judged evaluation runs only from a
 Claude Code web or CLI session. A non-Claude judge does not need one: see
-[Choosing the judge](#choosing-the-judge). Set nothing. On a laptop that is the logged-in `claude` CLI. In a
-Claude Code cloud session it is the session's own auth, inherited as is: check
-it with `claude -p "Reply with the word pong" --model claude-sonnet-5
-</dev/null`, then run the target unchanged.
+[Choosing the judge](#choosing-the-judge). Set nothing. Once the evaluation is
+running from a Claude Code session, use the target unchanged; do not ask the
+user to reauthenticate based on an error observed in another execution
+context.
 
 **Never route an Anthropic model through the Vercel AI Gateway.** The
 container can hold a `VERCEL_AI_GATEWAY_API_KEY`, and the gateway lists
@@ -143,14 +178,16 @@ is deliberately credential-free. What *is* part of `make check` is
 `check-eval-fixtures`, which builds every review-depth fixture repository with
 nothing but git — see "The git problem" below for why that leg exists.
 
-**`llm_judge` needs its own transport, separate from the agent's.** `coder_eval`
-does not fail a run over a missing judge transport — it scores the criterion
-0.0 and keeps going, which reads like a real result in the report and is not
-one. `make evals-run` runs `scripts/evals-preflight.py` first and refuses to
-start when that would happen; see
-[`docs/notes/0012-the-judge-needs-its-own-transport.md`](../docs/notes/0012-the-judge-needs-its-own-transport.md).
-"Two defaults, decided on purpose" below covers how `.env` factors into which
-transport gets picked.
+**`llm_judge` is not an alternate credential route.** It calls Anthropic's
+metered API, which this project does not use. `make evals-run` rejects every
+enabled `llm_judge` criterion, even if a key or alternate transport is
+configured. Use `agent_judge` for subscription-backed Claude judging, and run
+from a Claude Code session as described above. See
+[`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
+for the decision and [`0012`](../docs/notes/0012-the-judge-needs-its-own-transport.md)
+for the historical guard this preflight now enforces more strictly.
+"Two defaults, decided on purpose" below covers how a `.env` file overrides
+your shell environment.
 
 **Run `plan` before every `run`.** It is free, and it catches the config errors
 that otherwise cost a paid run to discover. `make evals-run` depends on
@@ -959,6 +996,13 @@ Each model has one experiment file and the two variants every criterion must
 score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
 delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
 decision; this section records the model set.
+
+The execution session still matters when the subject is Omp: if a Claude
+judge grades a selected case (no `JUDGE=`, or a Claude one), launch this Omp-arm
+command from a Claude Code web or CLI session so the judge inherits that
+subscription. Do not launch it from an Omp session. See
+["Choose the execution session first"](#choose-the-execution-session-first)
+before setup or probes.
 
 **In a Claude Code cloud session or on a fresh laptop, set up first:**
 
