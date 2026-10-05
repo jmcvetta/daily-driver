@@ -180,8 +180,8 @@ from a Claude Code session as described above. See
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
 for the decision and [`0012`](../docs/notes/0012-the-judge-needs-its-own-transport.md)
 for the historical guard this preflight now enforces more strictly.
-"Two defaults, decided on purpose" below covers how `.env` factors into which
-transport gets picked.
+"Two defaults, decided on purpose" below covers how a `.env` file overrides
+your shell environment.
 
 **Run `plan` before every `run`.** It is free, and it catches the config errors
 that otherwise cost a paid run to discover. `make evals-run` depends on
