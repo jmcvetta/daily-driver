@@ -21,25 +21,25 @@ nineteen skills:
 
 | Skill | What it does |
 | ----- | ------------ |
-| `pr` | Opens the pull request for the current branch, or brings an open one up to date: branch guard, existing-PR check, draft state. Delegates the title and the body. |
-| `pr-title` | The title: concise, and Conventional Commits, which is what release-please reads to decide the next version. |
 | `conventional-commits-type` | Picks the type — `fix`, `feat`, `refactor` and the rest — from what the change *does*, never from what the diff looks like. |
-| `pr-body` | The body: a one-line summary, a salutation in verse, optional `Blockers` and `Issues` sections, an executive summary, and the detail a reviewer needs, each fact said once. |
-| `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
-| `issue-labels` | Six mutually exclusive issue kinds — `epic`, `task`, `bug`, `proposal`, `research`, `human` — decide readiness. `story` marks a confirmed direct child of an epic without changing its kind. |
+| `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
+| `embark` | Works an epic: one session per task issue in the current wave — or one harness-local subagent per task where web sessions are unavailable — the muster roll in place of confirmation, a pull-request watch, the squash merge of each merge-ready task, and the close of the finished epic. |
+| `epic` | Breaks work too big for one pull request into task issues under an epic: the two gates that decide there is one, the plan agreed before anything is written, and the waves the sub-issue panel cannot render. |
 | `issue` | The entry point for opening or updating an issue — the session's own writes, `undertake`'s, and `epic`'s — reading what is there before any edit, and delegating the body, the label and the relationship graph rather than restating them. |
 | `issue-body` | What an issue body must carry, decided by the label: a grounded implementation-ready handoff, a readiness test, and a provider-neutral `Model class` section for `task`; every other label's edit runs under existing rules and acquires nothing. |
-| `provenance` | The trailing block every GitHub write and commit carries: the model that served the turn, the harness and its version, and the session — read, never recalled, and never overwritten by a later write to the same body. |
-| `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |
-| `readme` | Writes a README that answers what this is and how to use it, and nothing else: the shape, the reading of length as a symptom, and the list of what belongs in a commit message, a changelog or `docs/` instead. |
+| `issue-deps` | Records and reads GitHub issue relationships — blocked-by, sub-issue, and which pull request closes what. |
+| `issue-labels` | Six mutually exclusive issue kinds — `epic`, `task`, `bug`, `proposal`, `research`, `human` — decide readiness. `story` marks a confirmed direct child of an epic without changing its kind. |
 | `judgement-call` | The gate before a choice is put to you: where the correct, standard way already answers it, Claude answers it and says which way it went. A question that survives the gate is asked in the chat reply — the `AskUserQuestion` widget is denied by hook. |
+| `pr` | Opens the pull request for the current branch, or brings an open one up to date: branch guard, existing-PR check, draft state. Delegates the title and the body. |
+| `pr-body` | The body: a one-line summary, a salutation in verse, optional `Blockers` and `Issues` sections, an executive summary, and the detail a reviewer needs, each fact said once. |
+| `pr-title` | The title: concise, and Conventional Commits, which is what release-please reads to decide the next version. |
+| `provenance` | The trailing block every GitHub write and commit carries: the model that served the turn, the harness and its version, and the session — read, never recalled, and never overwritten by a later write to the same body. |
+| `readme` | Writes a README that answers what this is and how to use it, and nothing else: the shape, the reading of length as a symptom, and the list of what belongs in a commit message, a changelog or `docs/` instead. |
 | `review-cycle` | One round on a pull request: the built-in `/code-review`, a verdict on every finding, and the test for whether a later push has earned a second round. |
-| `undertake` | Takes a piece of work from its description to a pull request ready for review, opening the issue first where there is none, posting a first-readiness report — elapsed time from the claim, and the model, harness and session provenance — the first time the pull request is genuinely merge-ready, and keeping the branch current with its base after. |
-| `task-worktree` | Gives every repository-changing task a feature branch and sibling worktree before task research, then keeps all task operations rooted there without changing the primary worktree. |
-| `epic` | Breaks work too big for one pull request into task issues under an epic: the two gates that decide there is one, the plan agreed before anything is written, and the waves the sub-issue panel cannot render. |
-| `embark` | Works an epic: one session per task issue in the current wave — or one harness-local subagent per task where web sessions are unavailable — the muster roll in place of confirmation, a pull-request watch, the squash merge of each merge-ready task, and the close of the finished epic. |
+| `session-title` | Names the session for the Claude web and mobile lists: forty characters, `#123 shortened issue title` while an issue is in hand. |
 | `stand-down` | Ends an embarked epic's watch when work must stop before the last wave comes in: one handoff comment per task at sea, one stand-down comment on the epic, every implementor stopped and archived, and the banner that says stopping is safe. |
-| `deps` | The bulk dependency upgrade: every ecosystem on one branch through the package managers' own bulk commands, green CI as the whole acceptance test, majors reported rather than taken. |
+| `task-worktree` | Gives every repository-changing task a feature branch and sibling worktree before task research, then keeps all task operations rooted there without changing the primary worktree. |
+| `undertake` | Takes a piece of work from its description to a pull request ready for review, opening the issue first where there is none, posting a first-readiness report — elapsed time from the claim, and the model, harness and session provenance — the first time the pull request is genuinely merge-ready, and keeping the branch current with its base after. |
 
 A skill fires on its slash command where it has one, on natural phrasings of
 the work, and on the session's own tool calls. A description states those
@@ -63,6 +63,161 @@ description over the cap.
 The plugin ships no agents. The reviewer panel `review` dispatched went to the
 attic with it. [`attic/`](attic/) holds what no longer ships; nothing there is
 loaded, and [its README](attic/README.md) says what is kept and why.
+
+## Installing it
+
+Installation is **per-machine — or, in the cloud, per-environment**. The
+plugin's bytes land under the harness's own directory and are read from there;
+a repository can point at a plugin, it can never carry one.
+
+The Claude Code marketplace install also installs and enables the official
+Worktrunk plugin as `worktrunk@daily-driver`. Worktrunk's `wt` executable is a
+separate dependency installed by the cloud Setup recipe below.
+
+If you already installed `worktrunk@worktrunk`, migrate it before installing
+or updating Daily Driver. Disable and uninstall it at every scope where it is
+installed or enabled, then install Daily Driver at that same scope. For a
+user-scope installation:
+
+```sh
+claude plugin disable worktrunk@worktrunk --scope user
+claude plugin uninstall worktrunk@worktrunk --scope user
+claude plugin install daily-driver@daily-driver --scope user
+```
+
+Repeat the disable and uninstall commands with `--scope project` or
+`--scope local` where the legacy identity exists. A managed installation must
+be migrated by its administrator. Restart or reload Claude Code after the
+migration, then confirm `claude plugin list` shows `worktrunk@daily-driver`
+enabled and no `worktrunk@worktrunk` identity enabled.
+
+Install the Worktrunk CLI separately on a desktop; the Claude plugin dependency
+does not install `wt`. Worktrunk documents [Homebrew and Cargo
+installation][worktrunk-install]:
+
+```sh
+brew install worktrunk
+# or: cargo install worktrunk
+```
+
+[worktrunk-install]: https://worktrunk.dev/#install
+
+In this checkout, install Worktrunk's shell integration, then run `wt sync`
+from any linked worktree. It switches the calling shell to master's worktree,
+pulls master, and offers gone-upstream branches to Worktrunk for safe cleanup:
+
+```sh
+wt config shell install
+wt sync
+```
+
+Install Daily Driver once per machine. For Claude Code:
+
+```sh
+claude plugin marketplace add jmcvetta/daily-driver
+claude plugin install daily-driver@daily-driver
+```
+
+For Omp, the same two commands against the same catalog — Omp reads
+`.claude-plugin/marketplace.json` as its Claude-compatible fallback, so there
+is one catalog and no second copy to keep in step:
+
+```sh
+omp plugin marketplace add jmcvetta/daily-driver
+omp plugin install daily-driver@daily-driver
+```
+
+`omp plugin list` is what says it took.
+
+For Codex, the same catalog again — it accepts `.claude-plugin/marketplace.json`
+as one of its marketplace layouts and `.claude-plugin/plugin.json` as one of its
+manifest paths — but **the second verb is `add`, not `install`**:
+
+```sh
+codex plugin marketplace add jmcvetta/daily-driver
+codex plugin add daily-driver@daily-driver
+```
+
+`codex plugin list` is what says it took. Two things about that route are worth
+knowing before it surprises you, both measured against `codex-cli` 0.154.0:
+
+- **The install state lives in `$CODEX_HOME/config.toml`**, in a
+  `[marketplaces.…]` table and a `[plugins."…"]` one. There is no separate
+  install manifest, so a script that rewrites that file uninstalls every plugin
+  silently. Append to it.
+- **Hooks need persisted trust.** Without it the constitution and the question
+  widget's deny are skipped with no warning and no log line — the session looks
+  exactly like one running without the plugin. `codex exec` carries
+  `--dangerously-bypass-hook-trust` for automation that has already vetted the
+  source.
+
+The shared catalog also lists Worktrunk's official Claude plugin as a Claude
+dependency. Omp and Codex can read the extra catalog entry, but installing
+Daily Driver there does not install the Claude-only dependency.
+
+In Claude Code cloud environments, install Worktrunk and the plugins in the
+environment's **Setup script**, which runs before the plugin scan. The
+environment dialog is behind the cloud icon above the message box at
+[claude.ai/code][web].
+
+[web]: https://claude.ai/code
+
+```bash
+#!/bin/bash
+set -euo pipefail
+# CACHEBUST: 1
+# Setup is cached by script text; bump CACHEBUST only to force a rerun.
+# Each Setup run installs current Cargo; new releases do not trigger a rerun.
+cargo install --locked --root /usr/local worktrunk
+wt --version
+
+claude plugin marketplace add jmcvetta/daily-driver
+claude plugin install --yes daily-driver@daily-driver
+
+# Verify each plugin is cached at a version and registered as enabled.
+for plugin in daily-driver worktrunk; do
+  grep -qF "\"${plugin}@daily-driver\"" "$HOME/.claude/plugins/installed_plugins.json"
+  compgen -G "$HOME/.claude/plugins/cache/daily-driver/${plugin}/*/.claude-plugin/plugin.json" >/dev/null
+done
+claude plugin list --json | python3 -c '
+import json, sys
+enabled = {plugin["id"] for plugin in json.load(sys.stdin) if plugin.get("enabled")}
+expected = {"daily-driver@daily-driver", "worktrunk@daily-driver"}
+missing = expected - enabled
+if missing:
+    raise SystemExit(f"plugins not enabled: {sorted(missing)}")
+'
+```
+
+No `|| true`: a script that exits zero on a failed install snapshots the
+failure. Cargo builds Worktrunk during Setup. Each Setup run resolves the
+latest published Cargo release; a reused environment keeps its installed
+binary and runs no updater on session resume. A new Worktrunk release does not
+require a `CACHEBUST` change. Edit Setup only when it should run again. Then
+start a session and **ask it what it got**, because nothing announces a plugin
+that failed to load —
+
+> Without reading any file, say what the constitution tells you about
+> production systems. Then list the skills available to you whose names begin
+> `daily-driver:`. Then list the enabled plugins `daily-driver@daily-driver`
+> and `worktrunk@daily-driver`, and run `ls
+> ~/.claude/plugins/cache/daily-driver/`.
+
+Do not ask only whether plugins are installed: installation is not proof that
+they loaded. A Worktrunk release does not change a reused environment; Setup
+must run again for its install command to resolve a newer release.
+
+[docs/bootstrapping-a-repository.md](docs/bootstrapping-a-repository.md) has
+the mechanism under all of this, and *the stanza* a repository can carry in
+`.claude/settings.json` to say it wants the plugin.
+
+**The stanza is Claude Code's, and `template/` has no Codex counterpart.**
+Measured: a project `.codex/config.toml` is not read by this build at all —
+`codex doctor` names `$CODEX_HOME/config.toml` as the only config it loaded, and
+a marketplace and plugin declared in the project file loaded nothing. So on
+Codex there is no repository-level enable of any kind, not even the
+record-the-intent one the stanza is on Claude Code; enabling is user-level only,
+through the two tables above.
 
 ## The constitution
 
@@ -256,161 +411,6 @@ session that needs them — the one for the harness in use, and only that one.
 `scripts/check-manifests.py` fails a `SKILL.md` that names a harness's own
 routes in its description or its body; a description states its triggers in
 words, and the guard's fixture test holds that rule in place.
-
-## Installing it
-
-Installation is **per-machine — or, in the cloud, per-environment**. The
-plugin's bytes land under the harness's own directory and are read from there;
-a repository can point at a plugin, it can never carry one.
-
-The Claude Code marketplace install also installs and enables the official
-Worktrunk plugin as `worktrunk@daily-driver`. Worktrunk's `wt` executable is a
-separate dependency installed by the cloud Setup recipe below.
-
-If you already installed `worktrunk@worktrunk`, migrate it before installing
-or updating Daily Driver. Disable and uninstall it at every scope where it is
-installed or enabled, then install Daily Driver at that same scope. For a
-user-scope installation:
-
-```sh
-claude plugin disable worktrunk@worktrunk --scope user
-claude plugin uninstall worktrunk@worktrunk --scope user
-claude plugin install daily-driver@daily-driver --scope user
-```
-
-Repeat the disable and uninstall commands with `--scope project` or
-`--scope local` where the legacy identity exists. A managed installation must
-be migrated by its administrator. Restart or reload Claude Code after the
-migration, then confirm `claude plugin list` shows `worktrunk@daily-driver`
-enabled and no `worktrunk@worktrunk` identity enabled.
-
-Install the Worktrunk CLI separately on a desktop; the Claude plugin dependency
-does not install `wt`. Worktrunk documents [Homebrew and Cargo
-installation][worktrunk-install]:
-
-```sh
-brew install worktrunk
-# or: cargo install worktrunk
-```
-
-[worktrunk-install]: https://worktrunk.dev/#install
-
-In this checkout, install Worktrunk's shell integration, then run `wt sync`
-from any linked worktree. It switches the calling shell to master's worktree,
-pulls master, and offers gone-upstream branches to Worktrunk for safe cleanup:
-
-```sh
-wt config shell install
-wt sync
-```
-
-Install Daily Driver once per machine. For Claude Code:
-
-```sh
-claude plugin marketplace add jmcvetta/daily-driver
-claude plugin install daily-driver@daily-driver
-```
-
-For Omp, the same two commands against the same catalog — Omp reads
-`.claude-plugin/marketplace.json` as its Claude-compatible fallback, so there
-is one catalog and no second copy to keep in step:
-
-```sh
-omp plugin marketplace add jmcvetta/daily-driver
-omp plugin install daily-driver@daily-driver
-```
-
-`omp plugin list` is what says it took.
-
-For Codex, the same catalog again — it accepts `.claude-plugin/marketplace.json`
-as one of its marketplace layouts and `.claude-plugin/plugin.json` as one of its
-manifest paths — but **the second verb is `add`, not `install`**:
-
-```sh
-codex plugin marketplace add jmcvetta/daily-driver
-codex plugin add daily-driver@daily-driver
-```
-
-`codex plugin list` is what says it took. Two things about that route are worth
-knowing before it surprises you, both measured against `codex-cli` 0.154.0:
-
-- **The install state lives in `$CODEX_HOME/config.toml`**, in a
-  `[marketplaces.…]` table and a `[plugins."…"]` one. There is no separate
-  install manifest, so a script that rewrites that file uninstalls every plugin
-  silently. Append to it.
-- **Hooks need persisted trust.** Without it the constitution and the question
-  widget's deny are skipped with no warning and no log line — the session looks
-  exactly like one running without the plugin. `codex exec` carries
-  `--dangerously-bypass-hook-trust` for automation that has already vetted the
-  source.
-
-The shared catalog also lists Worktrunk's official Claude plugin as a Claude
-dependency. Omp and Codex can read the extra catalog entry, but installing
-Daily Driver there does not install the Claude-only dependency.
-
-In Claude Code cloud environments, install Worktrunk and the plugins in the
-environment's **Setup script**, which runs before the plugin scan. The
-environment dialog is behind the cloud icon above the message box at
-[claude.ai/code][web].
-
-[web]: https://claude.ai/code
-
-```bash
-#!/bin/bash
-set -euo pipefail
-# CACHEBUST: 1
-# Setup is cached by script text; bump CACHEBUST only to force a rerun.
-# Each Setup run installs current Cargo; new releases do not trigger a rerun.
-cargo install --locked --root /usr/local worktrunk
-wt --version
-
-claude plugin marketplace add jmcvetta/daily-driver
-claude plugin install --yes daily-driver@daily-driver
-
-# Verify each plugin is cached at a version and registered as enabled.
-for plugin in daily-driver worktrunk; do
-  grep -qF "\"${plugin}@daily-driver\"" "$HOME/.claude/plugins/installed_plugins.json"
-  compgen -G "$HOME/.claude/plugins/cache/daily-driver/${plugin}/*/.claude-plugin/plugin.json" >/dev/null
-done
-claude plugin list --json | python3 -c '
-import json, sys
-enabled = {plugin["id"] for plugin in json.load(sys.stdin) if plugin.get("enabled")}
-expected = {"daily-driver@daily-driver", "worktrunk@daily-driver"}
-missing = expected - enabled
-if missing:
-    raise SystemExit(f"plugins not enabled: {sorted(missing)}")
-'
-```
-
-No `|| true`: a script that exits zero on a failed install snapshots the
-failure. Cargo builds Worktrunk during Setup. Each Setup run resolves the
-latest published Cargo release; a reused environment keeps its installed
-binary and runs no updater on session resume. A new Worktrunk release does not
-require a `CACHEBUST` change. Edit Setup only when it should run again. Then
-start a session and **ask it what it got**, because nothing announces a plugin
-that failed to load —
-
-> Without reading any file, say what the constitution tells you about
-> production systems. Then list the skills available to you whose names begin
-> `daily-driver:`. Then list the enabled plugins `daily-driver@daily-driver`
-> and `worktrunk@daily-driver`, and run `ls
-> ~/.claude/plugins/cache/daily-driver/`.
-
-Do not ask only whether plugins are installed: installation is not proof that
-they loaded. A Worktrunk release does not change a reused environment; Setup
-must run again for its install command to resolve a newer release.
-
-[docs/bootstrapping-a-repository.md](docs/bootstrapping-a-repository.md) has
-the mechanism under all of this, and *the stanza* a repository can carry in
-`.claude/settings.json` to say it wants the plugin.
-
-**The stanza is Claude Code's, and `template/` has no Codex counterpart.**
-Measured: a project `.codex/config.toml` is not read by this build at all —
-`codex doctor` names `$CODEX_HOME/config.toml` as the only config it loaded, and
-a marketplace and plugin declared in the project file loaded nothing. So on
-Codex there is no repository-level enable of any kind, not even the
-record-the-intent one the stanza is on Claude Code; enabling is user-level only,
-through the two tables above.
 
 ## Portability
 
