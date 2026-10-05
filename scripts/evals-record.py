@@ -503,6 +503,133 @@ def task_sources(run_dir: Path, run: dict[str, Any]) -> dict[str, str]:
     return sources
 
 
+def judge_sidecars(run_dir: Path) -> tuple[dict[str, Any] | None, dict[tuple[str, str, int], dict[str, Any]]]:
+    """The run-selected judge's manifest and per-replicate sidecars, or `(None, {})`.
+
+    Written by `scripts/evals-judge.py judge-run` under `<run>/judge/<judge-id>/`.
+    One judge per run: two directories are two measurements mixed in one record.
+    """
+    manifests = sorted((run_dir / "judge").glob("*/manifest.json"))
+    if not manifests:
+        return None, {}
+    if len(manifests) > 1:
+        raise ValueError(f"{run_dir}/judge holds more than one judge ({', '.join(m.parent.name for m in manifests)}); one judge per run")
+    manifest = json.loads(manifests[0].read_text())
+    sidecars: dict[tuple[str, str, int], dict[str, Any]] = {}
+    for path in sorted(manifests[0].parent.glob("*/*/*.json")):
+        data = json.loads(path.read_text())
+        sidecars[(data["variant_id"], data["task_id"], data["replicate_index"])] = data
+    return manifest, sidecars
+
+
+def judged_status(coder_eval_status: str, sidecar: dict[str, Any]) -> str:
+    """A replicate's final status once its semantic criteria are graded by the selected judge.
+
+    `coder_eval` scored the disabled `agent_judge` criteria 1.0, so its own
+    SUCCESS only says the deterministic criteria held. A judge error is an
+    evaluation error; a gating criterion under its threshold is a failure.
+    """
+    if sidecar.get("evaluation_status") == "error":
+        return "ERROR"
+    if coder_eval_status != "SUCCESS":
+        return coder_eval_status
+    failed = [c for c in sidecar["criteria"] if c.get("weight", 1.0) > 0 and c.get("score", 0.0) < c.get("pass_threshold", 0.7)]
+    return "FAILURE" if failed else "SUCCESS"
+
+
+def apply_judge(
+    attempts: list[dict[str, Any]],
+    variants: list[dict[str, Any]],
+    cases: list[dict[str, Any]],
+    sidecars: dict[tuple[str, str, int], dict[str, Any]],
+) -> None:
+    """Replace `coder_eval`'s scores for judged replicates with the selected judge's, in place.
+
+    Each judged attempt keeps `coder_eval_status` and `raw_weighted_score` as
+    `coder_eval` wrote them, so the substitution is visible, and gains a `judge`
+    object. A replicate whose judge errored has no score at all: `measured_score`
+    is null and the case outcome is `error`, never a 0.0 the subject earned.
+    """
+    for attempt in attempts:
+        sidecar = sidecars.get((attempt["variant_id"], attempt["task_id"], attempt["replicate_index"]))
+        if sidecar is None:
+            continue
+        attempt["coder_eval_status"] = attempt["final_status"]
+        attempt["final_status"] = judged_status(attempt["final_status"], sidecar)
+        attempt["measured_score"] = sidecar["weighted_score"]
+        attempt["judge"] = {
+            "freeze_sha": sidecar["freeze_sha"],
+            "evaluation_status": sidecar["evaluation_status"],
+            "criteria": sidecar["criteria"],
+        }
+    by_key = {(a["variant_id"], a["task_id"], a["replicate_index"]): a for a in attempts}
+    for case in cases:
+        attempt = by_key.get((case["variant_id"], case["task_id"], case["replicate_index"]))
+        if attempt is not None and "judge" in attempt:
+            case["outcome"] = row_outcome(attempt["final_status"])
+    for variant in variants:
+        for task_id, values in variant["per_replicate_scores"].items():
+            for index in range(len(values)):
+                attempt = by_key.get((variant["variant_id"], task_id, index))
+                if attempt is not None and "judge" in attempt:
+                    values[index] = attempt["measured_score"]
+
+
+def judge_block(manifest: dict[str, Any] | None, sidecars: dict[tuple[str, str, int], dict[str, Any]], attempts: list[dict[str, Any]], root: Path) -> dict[str, Any] | None:
+    """The judge's identity for a record, apart from the subject's.
+
+    Run-selected: from the manifest and sidecars -- the requested judge, the
+    models Omp reported, usage, errors and the freeze hash. Task-pinned (no
+    `judge/` directory): the Claude Code `agent_judge` each task file pins,
+    where observed identity and usage are unavailable. A run with no
+    `agent_judge` criterion has no judge.
+    """
+    if manifest is not None:
+        observed: set[str] = set()
+        usage = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
+        usage_known = True
+        for sidecar in sidecars.values():
+            for criterion in sidecar["criteria"]:
+                model = (criterion.get("observed") or {}).get("model")
+                if model:
+                    observed.add(model)
+                if isinstance(criterion.get("usage"), dict):
+                    for key in usage:
+                        usage[key] += int(criterion["usage"].get(key, 0))
+                else:
+                    usage_known = False
+        return {
+            "selection": "run-selected",
+            **manifest["judge"],
+            "prompt_version": manifest["prompt_version"],
+            "freeze_sha": manifest["freeze_sha"],
+            "models_observed": sorted(observed - {"unavailable"}) or "unavailable",
+            "usage": usage if usage_known and sidecars else "unavailable",
+            "criterion_errors": manifest["criterion_errors"],
+            "price_included_in_cases": False,
+        }
+    if not any(c.get("criterion_type") == "agent_judge" for a in attempts for c in a["criteria"]):
+        return None
+    pins: set[tuple[str, str]] = set()
+    wanted = {a["task_id"] for a in attempts}
+    for path in sorted((root / "evals" / "tasks").glob("*/*.yaml")):
+        task = yaml.safe_load(path.read_text()) if yaml is not None else {}
+        if not isinstance(task, dict) or task.get("task_id") not in wanted:
+            continue
+        for section in ("success_criteria", "post_failure_criteria"):
+            for criterion in task.get(section) or []:
+                if isinstance(criterion, dict) and criterion.get("type") == "agent_judge":
+                    agent = criterion.get("agent") or {}
+                    pins.add((agent.get("type", "unknown"), agent.get("model", "unknown")))
+    return {
+        "selection": "task-pinned",
+        "route": "claude-code",
+        "model_requested": sorted({model for _, model in pins}) or "unknown",
+        "models_observed": "unavailable",
+        "usage": "unavailable",
+    }
+
+
 def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Build a committed provenance record from a coder_eval run directory,
     pricing token-only rows from `prices`."""
@@ -520,6 +647,7 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[
         "unknown",
     )
     attempts = run_attempts(run_dir, run, root)
+    judge_manifest, judge_sidecar_rows = judge_sidecars(run_dir)
     variants = []
     for variant_id in experiment["variant_ids"]:
         observed_requested_models = run_requested_models(run, variant_id)
@@ -546,7 +674,10 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[
     if not isinstance(historical_client_version, str) or not historical_client_version:
         historical_client_version = "unknown"
     session_present = "CLAUDE_CODE_SESSION_ID" in os.environ
-    return {
+    cases = run_cases(run, experiment["experiment_id"], requested, client_name, prices, task_sources(run_dir, run))
+    apply_judge(attempts, variants, cases, judge_sidecar_rows)
+    judge = judge_block(judge_manifest, judge_sidecar_rows, attempts, root)
+    record = {
         "schema_version": SCHEMA_VERSION,
         "run_id": run["run_id"],
         "experiment_id": experiment["experiment_id"],
@@ -571,8 +702,11 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[
         },
         "variants": variants,
         "attempts": attempts,
-        "cases": run_cases(run, experiment["experiment_id"], requested, client_name, prices, task_sources(run_dir, run)),
+        "cases": cases,
     }
+    if judge is not None:
+        record["judge"] = judge
+    return record
 
 def validate_record(record: dict[str, Any]) -> list[str]:
     """Return validation errors for one provenance record."""
@@ -644,6 +778,24 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                     errors.append(f"{prefix}.answer_key_contact must be a list of strings")
                 elif contact and measured_score != 0.0:
                     errors.append(f"{prefix}.measured_score must be 0 when answer_key_contact is non-empty")
+    judge = record.get("judge")
+    if judge is not None:
+        if not isinstance(judge, dict) or judge.get("selection") not in ("run-selected", "task-pinned"):
+            errors.append("judge.selection must be run-selected or task-pinned")
+        else:
+            if judge.get("route") not in ("claude-code", "omp"):
+                errors.append("judge.route must be claude-code or omp")
+            if not judge.get("model_requested"):
+                errors.append("judge.model_requested must be present")
+            for field in ("models_observed", "usage"):
+                if field not in judge:
+                    errors.append(f"judge.{field} must be present (use 'unavailable' where the route reports none)")
+            if judge["selection"] == "run-selected":
+                for field in ("judge_id", "freeze_sha", "prompt_version"):
+                    if not isinstance(judge.get(field), str) or not judge[field]:
+                        errors.append(f"judge.{field} must be a non-empty string")
+                if judge.get("route") == "omp" and record.get("client", {}).get("name") == "claude-code":
+                    pass  # a non-Claude judge may grade a Claude subject; they are separate measurements
     if version in (2, 3):
         if not isinstance(record.get("cases"), list) or not record["cases"]:
             errors.append(f"cases must be non-empty for schema_version {version}")

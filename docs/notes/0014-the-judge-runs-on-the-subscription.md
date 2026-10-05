@@ -4,6 +4,12 @@
 *Amended 2026-10-02 — `allowed_tools: []` does not remove tools; every judge
 now carries a `disallowed_tools` list, and `scripts/check-agent-judges.py` is
 the guard this note said it did not add.*
+*Amended 2026-10-05 — the rule below is conditional: a **Claude-judged**
+evaluation runs from a Claude Code session on its subscription. A non-Claude
+judge need not, and
+[`0030`](0030-the-judge-is-selected-apart-from-the-subject.md) adds that route
+without weakening this one: still no metered Anthropic access, no OAuth token
+sought, and no Claude judge outside a Claude Code session.*
 **Provenance:** found while running
 [#158](https://github.com/jmcvetta/daily-driver/issues/158)'s nine
 `references` rows, on the second attempt at that run.
