@@ -1,0 +1,90 @@
+task_id: conventional-commits-type-09-dependency-security-release-type
+description: >-
+  Dependency batches use a product fix type only when advisory evidence shows
+  that the batch patches a serious vulnerability affecting the shipped artifact.
+tags: [conventional-commits-type, behaviour, fire]
+
+initial_prompt: >-
+  Classify each proposed dependency pull request with a Conventional Commits
+  title type and scope, and explain the evidence and release limits. These are
+  fixture facts; do not look up live advisories.
+
+  A. Routine bulk updates only: several libraries move to current patch
+  versions, with no advisory or product defect reported.
+
+  B. Mixed routine updates plus a shipped runtime dependency. GHSA-aaaa-bbbb-cccc
+  (https://example.invalid/advisories/GHSA-aaaa-bbbb-cccc) is rated HIGH; the
+  advisory affects libparse 2.4.0 through 2.4.3, this shipped application uses
+  2.4.2 on a reachable request path, and the batch includes patched 2.4.4.
+
+  C. A CRITICAL advisory affects a dependency used only by local test
+  verification. The dependency is absent from shipped artifacts and cannot
+  change their build or safety; the batch updates it to the patched version.
+
+  D. The prompt says a package is "security-related" and the advisory is HIGH,
+  but gives no affected version range, installed version, patched version in
+  the batch, or evidence that the package affects the shipped product.
+
+  E. A serious advisory affects a shipped package, but its patched release is
+  in the next major line and the repo's declared constraint excludes that
+  line. The current bulk upgrade cannot include a fixed version.
+
+  F. For B, release projection says a patch is pending but excludes this PR's
+  changed path; another unreleased feature is also pending. Explain whether
+  `security` itself guarantees a release and whether the next release must be
+  exactly a patch.
+
+  G. The title already on B's PR is `build(deps): update routine libraries`,
+  set by another actor. State what should happen to that title.
+
+agent:
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 7
+  task_timeout: 360
+  turn_timeout: 180
+
+success_criteria:
+  - type: skill_triggered
+    description: "`conventional-commits-type` fires for dependency title classification"
+    expected_skill: conventional-commits-type
+    skill_name: conventional-commits-type
+
+  - type: agent_judge
+    description: The reply classifies all fixture batches by product effect and evidence
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the final reply in the AGENT OUTPUT block, beginning at the
+      last [RESULT - SUCCESS] or [RESULT - ERROR] tag.
+
+      Score 1.0 only if the reply makes all of these decisions:
+      - A stays routine/non-product (`build(deps)`), not `fix` merely because
+        dependencies changed.
+      - B is a product `fix(security)` because the HIGH advisory's affected
+        range, installed version, shipped reachable use, and included patched
+        version are all established; the routine updates do not dilute it.
+      - C is not a product `fix` because the fixture establishes verification-
+        only impact and no effect on shipped artifacts.
+      - D is unverified: missing applicability and patch evidence must be
+        named; severity and the word security alone do not prove a fix.
+      - E remains unresolved; the excluded major version is not claimed fixed
+        and the unattended boundary is not crossed.
+      - F says `fix` is release-relevant and `security` is descriptive scope;
+        path exclusions and pending commits matter, so neither a release nor
+        an exact patch as the next version is guaranteed by the title.
+      - G's existing title is not silently overwritten; the disagreement is
+        raised and the agent waits.
+
+      Score 0.0 if any decision is missing or contradicted, including a mere
+      list of rules without applying each one to its fixture.
