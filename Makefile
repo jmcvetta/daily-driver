@@ -617,9 +617,9 @@ evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-d
 # Costs real money, like its siblings, and narrows the same way with TASKS=.
 #
 # OMP_RUN_LIMITS overrides every row's turn cap and turn timeout on this arm.
-# Omp's RPC mode does not enforce a row's `allowed_tools`, so the agent reads
-# and runs more than the Claude Code arm, and the caps sized for that arm cut
-# it off before its reply. A 30-turn calibration of GPT 6 Luna on the judged
+# Omp's agent takes more turns than the Claude Code arm to reach the same
+# reply, and the caps sized for that arm (5 to 10) cut it off before its
+# reply. A 30-turn calibration of GPT 6 Luna on the judged
 # `undertake` rows finished 97 of 100 replicates on their own: 11 turns at the
 # median, 27 at the 95th percentile, 358 s at the slowest.
 OMP_RUN_LIMITS := -D run_limits.max_turns=30 -D run_limits.turn_timeout=600 -D run_limits.task_timeout=1200
@@ -688,14 +688,15 @@ evals-run-codex: evals-judge-preflight evals-plan evals-preflight
 # The sibling is asserted here because this is the ONLY place that can: the
 # plugin path is resolved in the agent at run time, so without the checkout the
 # run pays for both arms and measures plugin-versus-nothing.
-# Runs JOBS tasks at once (`coder-eval run -j`), like the other run targets.
+# Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=. The 16 is
+# this target's own default, so it applies unless JOBS= is given.
 
 evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 	@test -d ../daily-driver-base/skills || { \
 		echo "error: ../daily-driver-base is missing or is not a plugin root;" >&2; \
 		echo "  run: git worktree add ../daily-driver-base <base-revision>" >&2; \
 		exit 1; }
-	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml -j $(JOBS) \
+	cd evals && $(CODER_EVAL) run -e experiments/base-vs-candidate.yaml -j $(if $(filter file,$(origin JOBS)),16,$(JOBS)) \
 		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/base-vs-candidate.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
