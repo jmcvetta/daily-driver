@@ -415,17 +415,24 @@ def check_results_renderer() -> None:
         rows = [line for line in page.splitlines() if line.startswith("| 2026-")]
         require(len(rows) == len(records), "the results page did not carry one row per record")
         require(
-            "| 2026-09-01 | exp-run1 | claude-code | m | 2 | 1/2 | not recorded | not recorded | 1h 02m 03s |" in rows,
+            "| 2026-09-01 | exp-run1 | claude-code | m | not recorded | 2 | 1/2 | not recorded | not recorded | 1h 02m 03s |" in rows,
             "a record with no price was not shown `not recorded`",
         )
         require(
-            "| 2026-09-02 | exp-run2 | omp | req (requested) | 2 | 2/2 | not recorded | not recorded | 1h 02m 03s |" in rows,
+            "| 2026-09-02 | exp-run2 | omp | req (requested) | not recorded | 2 | 2/2 | not recorded | not recorded | 1h 02m 03s |" in rows,
             "a version-2 non-Claude price -- the judge's alone -- was shown, or the requested model was not marked",
         )
         require("| 3 | 2/3 | $3.50 | $1.75 |" in rows[2], "a version-3 price or its per-completed-task figure was wrong")
         require("| 1 | 0/1 | $0.25 | no task completed |" in rows[3], "a run with no pass divided by zero")
         require("| not recorded | not recorded |" in rows[4], "a partly priced record was shown as a whole price")
         require("$0.00" not in page, "a missing price was rendered as $0")
+        require(renderer.judge_text({"judge": {"selection": "run-selected", "judge_id": "omp-glm-5.3"}}) == "omp-glm-5.3 (run-selected)", "a run-selected judge was not named")
+        require(
+            renderer.judge_text({"judge": {"selection": "task-pinned", "route": "claude-code", "model_requested": ["claude-sonnet-5"]}})
+            == "claude-code claude-sonnet-5 (task-pinned)",
+            "a task-pinned judge was not named",
+        )
+        require(renderer.judge_text({}) == "not recorded", "a record with no judge provenance was given one")
 
         target = temp / "RESULTS.md"
         target.write_text(page)

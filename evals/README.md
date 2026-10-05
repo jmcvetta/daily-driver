@@ -42,6 +42,7 @@ evals/
 │       ├── shared/       clones the source repo's base SHA; the grader and its two checks
 │       ├── cases/<repo>-<pr>/  the answer key, one per selected PR: a `reference:`, never mounted
 │       └── candidates.json     every qualifying PR the builder saw, selected or not
+├── judges/              selectable judges of the semantic criteria, and their calibration
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
@@ -73,14 +74,51 @@ record again. Records at versions 1 and 2 stay as they are.
 
 ## Running them
 
+### Choose the execution session first
+
+Choose the subject model, judge model, and execution session separately. A
+Claude subject does not require a Claude judge, and evaluations need not use
+Claude for every judge. **When a Claude judge grades the run — the default for
+every `agent_judge` — run the entire evaluation from a Claude Code session**,
+web or CLI. The judge runs through the Claude Code SDK and inherits that
+session's subscription. A non-Claude judge selected with `JUDGE=` is the
+exception; see [Choosing the judge](#choosing-the-judge). Running
+`make evals-run` from Omp is not a supported route for a Claude-judged
+evaluation, even when the subject arm is Omp. Do not turn a judge failure in
+Omp into a request to repair local Claude authentication.
+
+Before any model or authentication probe, an Omp caller must select a Claude
+Code execution session. Use an existing authorized handoff facility if the
+current environment provides one; do not invent a dispatch or launch a local
+probe to discover this known boundary. If it provides no such facility, record
+this handoff for a Claude Code session:
+
+> Run the requested evaluation from this Claude Code web or CLI session.
+> Use the repository's existing `make evals-plan` and the narrow `make
+> evals-run TASKS='…'` target below. Let the Claude Code SDK inherit this
+> session's subscription. Do not ask for login repair, search for or transfer
+> OAuth tokens, or use a metered Anthropic or gateway route. Return the run
+> identifier and observed results; do not claim a pass without the recorded
+> run evidence.
+
+No local `claude -p` probe is needed before that handoff. A failed supported
+SDK run must be diagnosed from current evidence in the Claude Code execution
+session. A previous error, an agent's claim, or a local CLI failure in Omp
+does not establish that the subscription route is unavailable. Request human
+action only when current evidence shows an indispensable human contribution.
+[`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
+is the current decision; this README is the single operational runbook.
+
 ### Credentials: read this before any paid run
 
-**Claude runs on the subscription, and only on the subscription.** The agent
-under test and every `agent_judge` inherit the Claude auth of the shell that
-runs `make`. Set nothing. On a laptop that is the logged-in `claude` CLI. In a
-Claude Code cloud session it is the session's own auth, inherited as is: check
-it with `claude -p "Reply with the word pong" --model claude-sonnet-5
-</dev/null`, then run the target unchanged.
+**Claude runs on the subscription, and only on the subscription.** A Claude
+agent under test and every Claude-judged `agent_judge` inherit the Claude auth
+of the shell that runs `make`, so a Claude-judged evaluation runs only from a
+Claude Code web or CLI session. A non-Claude judge does not need one: see
+[Choosing the judge](#choosing-the-judge). Set nothing. Once the evaluation is
+running from a Claude Code session, use the target unchanged; do not ask the
+user to reauthenticate based on an error observed in another execution
+context.
 
 **Never route an Anthropic model through the Vercel AI Gateway.** The
 container can hold a `VERCEL_AI_GATEWAY_API_KEY`, and the gateway lists
@@ -140,14 +178,16 @@ is deliberately credential-free. What *is* part of `make check` is
 `check-eval-fixtures`, which builds every review-depth fixture repository with
 nothing but git — see "The git problem" below for why that leg exists.
 
-**`llm_judge` needs its own transport, separate from the agent's.** `coder_eval`
-does not fail a run over a missing judge transport — it scores the criterion
-0.0 and keeps going, which reads like a real result in the report and is not
-one. `make evals-run` runs `scripts/evals-preflight.py` first and refuses to
-start when that would happen; see
-[`docs/notes/0012-the-judge-needs-its-own-transport.md`](../docs/notes/0012-the-judge-needs-its-own-transport.md).
-"Two defaults, decided on purpose" below covers how `.env` factors into which
-transport gets picked.
+**`llm_judge` is not an alternate credential route.** It calls Anthropic's
+metered API, which this project does not use. `make evals-run` rejects every
+enabled `llm_judge` criterion, even if a key or alternate transport is
+configured. Use `agent_judge` for subscription-backed Claude judging, and run
+from a Claude Code session as described above. See
+[`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
+for the decision and [`0012`](../docs/notes/0012-the-judge-needs-its-own-transport.md)
+for the historical guard this preflight now enforces more strictly.
+"Two defaults, decided on purpose" below covers how a `.env` file overrides
+your shell environment.
 
 **Run `plan` before every `run`.** It is free, and it catches the config errors
 that otherwise cost a paid run to discover. `make evals-run` depends on
@@ -165,6 +205,81 @@ Three things the Makefile does that a hand-typed `coder-eval` will not:
   run as a single unlabelled arm on `coder-eval`'s own stale defaults, and the
   ablation silently is not measured.
 - **`TELEMETRY_ENABLED=false`.** See "Two defaults, decided on purpose".
+
+### Choosing the judge
+
+The subject and the judge are selected apart. Every `agent_judge` in
+[`tasks/`](tasks/) pins the Claude Code agent and `claude-sonnet-5`, and
+`coder_eval` 0.11.6 accepts no other agent kind there, so an Omp subject judged
+the usual way still needs a Claude Code session. `JUDGE=` selects the judge of a
+run from [`judges/`](judges/), without copying a task or touching a rubric. The
+decision is
+[`docs/notes/0030`](../docs/notes/0030-the-judge-is-selected-apart-from-the-subject.md).
+
+| `JUDGE=` | Route | Where it can run |
+| --- | --- | --- |
+| unset | each task's pinned Claude Code `agent_judge`, run by `coder_eval` | a Claude Code web or CLI session |
+| `claude-code-sonnet-5` | the same route, named; refuses a task that pins another judge | a Claude Code web or CLI session |
+| `omp-glm-5.3` | no-tools Omp over the Vercel AI Gateway; validated, not the default | anywhere `omp` and the gateway key work |
+
+```sh
+make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
+make evals-run-omp-gpt-5-6-sol JUDGE=omp-glm-5.3 TASKS='tasks/undertake/09-title-before-claim-omp.yaml'
+```
+
+**What a non-Claude judge changes.** `make evals-judge-preflight` runs first and
+fails before any subject if `omp` is missing, Omp does not list the judge's exact
+model, or the definition is invalid: no subject is started and nothing falls back
+to another judge, the subject's model included. It writes `tasks-judged/`, the
+same tasks with each `agent_judge` set `enabled: false`; the run uses that tree,
+so deterministic criteria (`command_executed`, `file_matches_regex`, ...) run
+exactly as before and stay the authority on commands, fixtures and forbidden
+operations. `make evals-record` then runs `scripts/evals-judge.py judge-run`,
+which grades each preserved transcript with the selected judge from the original
+task's rubric, verbatim, and writes a sidecar under `<run>/judge/<judge-id>/`.
+
+**`coder_eval`'s own scores are not the measurement for such a run.** It scores a
+disabled criterion 1.0. The recorder replaces each judged replicate's
+`measured_score` and `final_status` with ones recomputed from the deterministic
+results and the judge's scores, and keeps `coder_eval_status` and
+`raw_weighted_score` beside them.
+
+**What the Omp judge sees.** The rubric and the transcript the criterion asked
+for (`include_agent_output`, `include_tool_calls`, `include_dialog`), marked
+untrusted, and nothing else: `omp --no-tools` with every discovery switch off, in
+an empty directory, in a throwaway home that borrows only the provider files
+`coder_eval_omp.home` lists. A criterion that attaches `files:` or the reference
+cannot be judged that way and is refused, not degraded. `make check-agent-judges`
+asserts the command line and the prompt, as it asserts the Claude denylist.
+
+**Errors are not scores.** A judge that is unreachable, times out, or returns
+anything but exactly one verdict object (`score` in [0, 1], `rationale`,
+`findings`) is an evaluation error. The sidecar records it, the replicate's score
+is null, and the case outcome is `error`; it is never a behavioural 0.0 and never
+a pass. Re-run `judge-run` on the same run directory once the judge works.
+
+**One judge, frozen, per comparison.** The sidecar and the record's `judge`
+object carry a `freeze_sha` over route, model, settings, the judge prompt and
+every rubric. Records with different `freeze_sha` values, or different judges,
+are different measurements; do not read one against the other. The record names
+the *requested* judge and the model Omp *reported*; an identity or usage the route
+did not report is `unavailable`, never filled from the configured name. A
+non-Claude judge's usage is under `judge.usage` and is not in the cases' price.
+Historical records keep their task-pinned Claude judge, with no observed
+identity.
+
+**Adopting a judge.** A judge is `validated` only when
+[`judges/calibration/`](judges/calibration/) holds a committed result that met the
+acceptance rule in `labels.yaml`, declared before the candidate ran. The set is
+11 hand-labelled transcripts written from the real rubric of
+`undertake-09-title-before-claim-omp`: fabricated attempts, missing or misordered
+command evidence, a forbidden client, an injected grade, a valid safety refusal
+and genuine successes. It is measured against those labels, never against Claude.
+`omp-glm-5.3` met the rule on 2026-10-05: 11 of 11, no false pass, no error
+([`observed/omp-glm-5.3.json`](judges/calibration/observed/omp-glm-5.3.json)).
+That is a small sample of one rubric: it licenses recommending the route, not a
+ranking of models, and the default judge stays `claude-code-sonnet-5`. Change the
+labels or the rule and it is a new set with a new `set_id`.
 
 ### `base-vs-candidate`: does a constitution change move a row
 
@@ -884,6 +999,13 @@ Each model has one experiment file and the two variants every criterion must
 score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
 delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
 decision; this section records the model set.
+
+The execution session still matters when the subject is Omp: if a Claude
+judge grades a selected case (no `JUDGE=`, or a Claude one), launch this Omp-arm
+command from a Claude Code web or CLI session so the judge inherits that
+subscription. Do not launch it from an Omp session. See
+["Choose the execution session first"](#choose-the-execution-session-first)
+before setup or probes.
 
 **In a Claude Code cloud session or on a fresh laptop, set up first:**
 

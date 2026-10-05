@@ -9,6 +9,11 @@ One row per committed record, oldest first.
 - **Models served** is what the harness reported serving. Where it reported
   none -- Omp never does -- the requested model is shown, marked
   `(requested)`.
+- **Judge** is who graded the semantic (`agent_judge`) criteria, apart from the
+  subject: `omp-glm-5.3 (run-selected)` names the judge a run selected,
+  `claude-code claude-sonnet-5 (task-pinned)` the Claude judge the task files
+  pin, and `not recorded` a record that predates judge provenance. Records
+  graded by different judges are different measurements.
 - **Pass rate** counts replicates whose final status is `SUCCESS`. A
   model-classes replicate that reached its answer key counts as a failure.
 - **Total price** is the record's summed per-replicate price, in USD, judge
@@ -18,22 +23,23 @@ One row per committed record, oldest first.
   that version recorded the judge's spend alone.
 - **Wall time** is the whole run, `completed_at` minus `started_at`.
 
-| Date | Experiment | Harness | Models served | Replicates | Pass rate | Total price | Price per completed task | Wall time |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-09-16 | omp-gpt-5-6-sol | omp | openai-codex/gpt-5.6-sol (requested) | 40 | 12/40 | not recorded | not recorded | 19m 59s |
-| 2026-09-22 | with-without | claude-code | claude-sonnet-5 | 10 | 5/10 | not recorded | not recorded | 10m 30s |
-| 2026-09-22 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | 40 | 24/40 | not recorded | not recorded | 35m 18s |
-| 2026-09-22 | omp-deepseek-v4-pro | omp | vercel-ai-gateway/deepseek/deepseek-v4-pro (requested) | 40 | 26/40 | not recorded | not recorded | 9m 24s |
-| 2026-09-22 | omp-glm-5-3-flash | omp | vercel-ai-gateway/zai/glm-5.3-flash (requested) | 40 | 25/40 | not recorded | not recorded | 3m 20s |
-| 2026-09-22 | with-without | claude-code | claude-sonnet-5 | 10 | 3/10 | not recorded | not recorded | 11m 24s |
-| 2026-09-26 | with-without | claude-code | claude-sonnet-5 | 20 | 17/20 | not recorded | not recorded | 4m 34s |
-| 2026-09-26 | with-without | claude-code | claude-sonnet-5 | 20 | 17/20 | not recorded | not recorded | 10m 23s |
-| 2026-09-26 | with-without | claude-code | claude-sonnet-5 | 20 | 15/20 | not recorded | not recorded | 30m 50s |
-| 2026-10-01 | classes-sonnet-low | claude-code | claude-sonnet-5-5 | 18 | 18/18 | $4.76 | $0.26 | 7m 21s |
-| 2026-10-01 | classes-sonnet-high | claude-code | claude-sonnet-5-5 | 18 | 18/18 | $5.96 | $0.33 | 18m 01s |
-| 2026-10-01 | classes-opus-low | claude-code | claude-opus-5-5 | 18 | 18/18 | $9.28 | $0.52 | 17m 16s |
-| 2026-10-02 | omp-gpt-6-luna | omp | vercel-ai-gateway/openai/gpt-6-luna (requested) | 170 | 55/170 | $8.08 | $0.15 | 12m 31s |
-| 2026-10-02 | base-vs-candidate | claude-code | claude-sonnet-5 | 30 | 28/30 | $6.00 | $0.21 | 2m 14s |
-| 2026-10-02 | with-without | claude-code | claude-sonnet-5 | 10 | 0/10 | $3.42 | no task completed | 12m 10s |
-| 2026-10-02 | omp-gpt-6-luna | omp | vercel-ai-gateway/openai/gpt-6-luna (requested) | 190 | 80/190 | $6.64 | $0.08 | 12m 09s |
-| 2026-10-02 | with-without | claude-code | claude-sonnet-5 | 10 | 0/10 | $2.98 | no task completed | 9m 21s |
+| Date | Experiment | Harness | Models served | Judge | Replicates | Pass rate | Total price | Price per completed task | Wall time |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-09-16 | omp-gpt-5-6-sol | omp | openai-codex/gpt-5.6-sol (requested) | not recorded | 40 | 12/40 | not recorded | not recorded | 19m 59s |
+| 2026-09-22 | with-without | claude-code | claude-sonnet-5 | not recorded | 10 | 5/10 | not recorded | not recorded | 10m 30s |
+| 2026-09-22 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | not recorded | 40 | 24/40 | not recorded | not recorded | 35m 18s |
+| 2026-09-22 | omp-deepseek-v4-pro | omp | vercel-ai-gateway/deepseek/deepseek-v4-pro (requested) | not recorded | 40 | 26/40 | not recorded | not recorded | 9m 24s |
+| 2026-09-22 | omp-glm-5-3-flash | omp | vercel-ai-gateway/zai/glm-5.3-flash (requested) | not recorded | 40 | 25/40 | not recorded | not recorded | 3m 20s |
+| 2026-09-22 | with-without | claude-code | claude-sonnet-5 | not recorded | 10 | 3/10 | not recorded | not recorded | 11m 24s |
+| 2026-09-26 | with-without | claude-code | claude-sonnet-5 | not recorded | 20 | 17/20 | not recorded | not recorded | 4m 34s |
+| 2026-09-26 | with-without | claude-code | claude-sonnet-5 | not recorded | 20 | 17/20 | not recorded | not recorded | 10m 23s |
+| 2026-09-26 | with-without | claude-code | claude-sonnet-5 | not recorded | 20 | 15/20 | not recorded | not recorded | 30m 50s |
+| 2026-10-01 | classes-sonnet-low | claude-code | claude-sonnet-5-5 | not recorded | 18 | 18/18 | $4.76 | $0.26 | 7m 21s |
+| 2026-10-01 | classes-sonnet-high | claude-code | claude-sonnet-5-5 | not recorded | 18 | 18/18 | $5.96 | $0.33 | 18m 01s |
+| 2026-10-01 | classes-opus-low | claude-code | claude-opus-5-5 | not recorded | 18 | 18/18 | $9.28 | $0.52 | 17m 16s |
+| 2026-10-02 | omp-gpt-6-luna | omp | vercel-ai-gateway/openai/gpt-6-luna (requested) | not recorded | 170 | 55/170 | $8.08 | $0.15 | 12m 31s |
+| 2026-10-02 | base-vs-candidate | claude-code | claude-sonnet-5 | not recorded | 30 | 28/30 | $6.00 | $0.21 | 2m 14s |
+| 2026-10-02 | with-without | claude-code | claude-sonnet-5 | not recorded | 10 | 0/10 | $3.42 | no task completed | 12m 10s |
+| 2026-10-02 | omp-gpt-6-luna | omp | vercel-ai-gateway/openai/gpt-6-luna (requested) | not recorded | 190 | 80/190 | $6.64 | $0.08 | 12m 09s |
+| 2026-10-02 | with-without | claude-code | claude-sonnet-5 | not recorded | 10 | 0/10 | $2.98 | no task completed | 9m 21s |
+| 2026-10-05 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | omp-glm-5.3 (run-selected) | 2 | 1/2 | $0.15 | $0.15 | 5m 17s |
