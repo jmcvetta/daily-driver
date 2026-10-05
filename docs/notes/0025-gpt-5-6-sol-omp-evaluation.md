@@ -72,6 +72,7 @@ Omp caller to repair local Claude login or acquire credentials; follow the
 [`evaluation runbook`](../../evals/README.md#choose-the-execution-session-first).
 
 The run remains without judge verdicts.
+
 The subject was the named Omp model, but `agent_judge` used `claude-sonnet-5`
 through the Claude subscription, as [0014](0014-the-judge-runs-on-the-subscription.md)
 decides. The failed judge is therefore neither a GPT judgment nor evidence of
