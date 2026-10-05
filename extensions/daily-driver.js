@@ -1709,7 +1709,11 @@ function shellInvocation(name, operands) {
 	while (position < operands.length) {
 		const operand = operands[position];
 		if (!operand.literal) {
-			throw new UnreadableCommandError("a shell option or script operand expands");
+			throw new UnreadableCommandError(
+				commandMode
+					? "a shell -c needs a literal command string"
+					: "a shell option or script operand expands",
+			);
 		}
 		const option = operand.text;
 		if (option === "--") {
