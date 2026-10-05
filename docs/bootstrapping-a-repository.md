@@ -1,7 +1,7 @@
 # Bootstrapping a repository
 
 Installing this plugin is **per-machine — or, in the cloud, per-environment**.
-[The README](../README.md#installing-it) has the steps; this page has the
+[The README](../README.md#installation) has the steps; this page has the
 mechanism under them, the measurements they rest on, and how to tell whether
 the plugin actually loaded.
 
