@@ -7,7 +7,7 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
-.PHONY: git-sync-run check-git-sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
+.PHONY: __git_sync_run check-git-sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
@@ -74,11 +74,11 @@ export PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.bun/bin
 # installs nothing else Python: the legs sync their own environment, so the
 # laptop and CI get PyYAML from the same lock and cannot drift apart.
 
-# git-sync-run: implementation for `wt sync`, which first switches the caller
+# __git_sync_run: implementation for `wt sync`, which first switches the caller
 # to master's worktree. Offer gone-upstream branches to Worktrunk for cleanup.
 # Worktrunk decides whether each branch is integrated; it refuses dirty or
 # locked worktrees and keeps branches that still add changes.
-git-sync-run:
+__git_sync_run:
 	git pull
 	git fetch --prune
 	@git branch -vv | awk '/: gone\]/ {sub(/^\+ /, ""); print $$1}' | \
