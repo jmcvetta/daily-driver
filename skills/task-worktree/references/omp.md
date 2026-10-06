@@ -39,7 +39,7 @@ if [ ! -r "$helper" ]; then
   printf 'Worktrunk helper is unavailable: %s\n' "$helper" >&2
   exit 1
 fi
-source "$helper" && ensure_worktrunk
+source "$helper" && ensure_worktrunk || exit 1
 wt --config-set 'list.json-schema=2' list --format=json
 wt config show
 wt switch --create <task-branch> --base <resolved-base> --no-cd --format=json
