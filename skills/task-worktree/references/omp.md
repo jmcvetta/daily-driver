@@ -4,15 +4,22 @@
 performs them. Claude Code's route is in [`claude.md`](claude.md), and Codex's
 in [`codex.md`](codex.md).
 
-Before Worktrunk worktree inspection, source `scripts/ensure-worktrunk.sh`
-from the repository root and run `ensure_worktrunk`. It returns without
+Before Worktrunk worktree inspection, locate the helper in the loaded Daily
+Driver plugin, not in the target repository. Take the absolute path of the
+loaded `skills/task-worktree/SKILL.md` from the skill read result. Its parent
+is `task-worktree`; the next parent is `skills`; the next parent is the plugin
+root. Resolve
+`<plugin-root>/scripts/ensure-worktrunk.sh`, verify that the resolved file is
+readable, then source that quoted absolute path and run `ensure_worktrunk`.
+If the file is unavailable, report the resolved path and stop. Do not fall
+back to a helper under the target repository. The helper returns without
 installing when `wt` exists. If missing, it uses Homebrew or Cargo in user
 scope, adds the installed bin directory to this shell's `PATH`, and verifies
-`wt --version`. Source and run it again in each later shell invocation that
-uses `wt`; it restores the installed bin path without reinstalling. It never
-upgrades `wt`; if neither installer works, stop with the helper's cause and
-actionable installation requirement. Do not use bare Git worktree creation as
-a fallback.
+`wt --version`. Resolve, source and run it again in each later shell
+invocation that uses `wt`; it restores the installed bin path without
+reinstalling. It never upgrades `wt`; if neither installer works, stop with
+the helper's cause and actionable installation requirement. Do not use bare
+Git worktree creation as a fallback.
 
 Use the `bash` tool for Git boundary reads and Worktrunk:
 
@@ -23,7 +30,16 @@ git remote
 git config --get remote.pushDefault
 git symbolic-ref --short refs/remotes/<remote>/HEAD
 git -C <primary-worktree> status --short
-source scripts/ensure-worktrunk.sh && ensure_worktrunk
+# Replace this with the absolute skills/task-worktree/SKILL.md path returned
+# by the skill read. Run from the target repository or task worktree.
+skill_file='<absolute-loaded-plugin-path>/skills/task-worktree/SKILL.md'
+plugin_root=$(dirname "$(dirname "$(dirname "$skill_file")")")
+helper="$plugin_root/scripts/ensure-worktrunk.sh"
+if [ ! -r "$helper" ]; then
+  printf 'Worktrunk helper is unavailable: %s\n' "$helper" >&2
+  exit 1
+fi
+source "$helper" && ensure_worktrunk || exit 1
 wt --config-set 'list.json-schema=2' list --format=json
 wt config show
 wt switch --create <task-branch> --base <resolved-base> --no-cd --format=json
