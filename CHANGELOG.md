@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.49.3](https://github.com/jmcvetta/daily-driver/compare/v0.49.2...v0.49.3) (2026-10-06)
+
+
+### Bug Fixes
+
+* **task-worktree:** resolve Omp helper from loaded plugin ([#561](https://github.com/jmcvetta/daily-driver/issues/561)) ([68d2a4c](https://github.com/jmcvetta/daily-driver/commit/68d2a4ce149bd7db44222bf792d1b0b8a4f18129))
+* **undertake:** require evidence before human escalation ([#537](https://github.com/jmcvetta/daily-driver/issues/537)) ([8d3f9a1](https://github.com/jmcvetta/daily-driver/commit/8d3f9a168122d8d3955b6084f574b38d1f8eeed8))
+
 ## [0.49.2](https://github.com/jmcvetta/daily-driver/compare/v0.49.1...v0.49.2) (2026-10-06)
 
 
@@ -99,6 +107,7 @@
 
 * **omp:** select harness instructions from runtime identity, not model name (#498)
 * **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)
+* **undertake:** require evidence for human escalation and revalidate PR blockers ([#535](https://github.com/jmcvetta/daily-driver/issues/535))
 
 ## [0.45.0](https://github.com/jmcvetta/daily-driver/compare/v0.44.0...v0.45.0) (2026-09-28)
 

@@ -12,7 +12,7 @@ evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
 │   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
-│   ├── omp-*.yaml                  one two-variant Omp experiment per model
+│   ├── omp-*.yaml                  Omp model experiments; paired ablations or focused acceptance runs
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
 ├── tasks/
@@ -67,13 +67,15 @@ from them; a model and settings pair with no case row is listed `unmeasured`.
 rate, price and wall time per run. `make evals-render-results` writes it, and
 `make check` fails when it is stale.
 
-From schema version 3, every case row carries a numeric `cost` in USD and an
-`elapsed_seconds` above zero. The price is the harness's own where it reports
-one (`cost_source: reported`), as Claude Code does. Omp and Codex report token
-counts only, so the recorder prices those tokens from
-[`prices.yaml`](prices.yaml) (`cost_source: computed`). A model with no entry
-there fails the recording, naming the model: add its published rates, then
-record again. Records at versions 1 and 2 stay as they are.
+From schema version 3, every case row carries positive `elapsed_seconds` and
+its cost evidence. `cost` is numeric where the harness reports a price
+(`cost_source: reported`) or reports token counts the recorder can price from
+[`prices.yaml`](prices.yaml) (`cost_source: computed`). When usage is missing,
+or a source documents subscription billing without an applicable per-token
+price, `cost` is null and `cost_source` is `unreported`; it is never treated
+as free. The results page shows that cost as `not recorded`. Reported tokens
+without a rate or explicit unpriced subscription entry still fail recording.
+Records at versions 1 and 2 stay as they are.
 
 ## Running them
 
@@ -145,6 +147,8 @@ make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
 # Do not run `make evals-run-omp` until #494 migrates the GPT 6 routes.
+# Paired ablations compare bare and treated arms; focused runs name one arm.
+# make evals-run-omp
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
@@ -221,6 +225,7 @@ configured route.
 | unset | each task's pinned Claude Code `agent_judge`, run by `coder_eval` | a Claude Code web or CLI session |
 | `claude-code-sonnet-5` | the same route, named; refuses a task that pins another judge | a Claude Code web or CLI session |
 | `omp-glm-5.3` | no-tools Omp over the Vercel AI Gateway; validated, not the default | anywhere `omp` and the gateway key work |
+| `omp-gpt-6.1-sol` | no-tools Omp through `openai-codex`; validated, not the default | anywhere Omp has the OpenAI Codex provider configured |
 
 GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is an owner-approved judge choice.
 That approval is not a selectable definition or a committed calibration result.
@@ -231,6 +236,19 @@ calibration. Do not pass that judge ID to `JUDGE=` until both are available.
 make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
 make evals-run-omp-gpt-5-6-sol JUDGE=omp-glm-5.3 TASKS='tasks/undertake/09-title-before-claim-omp.yaml'
 ```
+
+`omp-gpt-6.1-sol` met the predeclared calibration rule on 2026-10-06: 11 of 11
+labels correct, no false passes, no errors. The small transcript set supports
+this route for the rubric tested; it is not a general model-quality ranking
+([`observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json)).
+
+```sh
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'
+```
+
+Both the subject and judge use `openai-codex` for this configuration. Do not
+route OpenAI models through the Vercel AI Gateway. The experiment uses one
+repeat per variant for the focused run; expand only after reviewing those results.
 
 **What a non-Claude judge changes.** `make evals-judge-preflight` runs first and
 fails before any subject if `omp` is missing, Omp does not list the judge's exact
@@ -390,6 +408,22 @@ answered by asking what it now sweeps in. `07` is `Merge PR #25.`, the
 direction `Keep it current` does not go: that step merges the base branch into
 the pull request, and the word it put in the description is the word this row
 keeps from sweeping in the other one.
+
+The escalation regression rows `undertake/17-*.yaml` and
+`pr-body/08-capability-gap-is-not-human-blocker.yaml` grade both the decision
+and its evidence. Sandbox command stubs in
+`fixtures/undertake-escalation/shared/setup.sh` never access infrastructure or
+GitHub; `command_executed` and the stub's `.fixture/trajectory.log` must both
+show an operation before a judge credits an attempt. The rows cover a permitted
+Tofu plan, an alternative route, an observed person-only authorization, a
+production prohibition with no probe, pending CI, independent work before an
+access gap and before a real human action, credentialed cloud execution, an
+available authorized-agent handoff, a missing-handoff prerequisite, stale
+versus still-outstanding Tofu apply blockers on resume, and PR-body maintenance
+from undertaking evidence.
+Run only this focused set with the documented
+`make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
+route after its `evals-plan`; the normal project checks remain CI's gate.
 
 One collision is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
 `undertake` distractor, because "get it to a pull request" is in `undertake`'s

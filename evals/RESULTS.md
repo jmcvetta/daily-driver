@@ -42,3 +42,11 @@ One row per committed record, oldest first.
 | 2026-10-02 | omp-gpt-6-luna | omp | vercel-ai-gateway/openai/gpt-6-luna (requested) | not recorded | 190 | 80/190 | $6.64 | $0.08 | 12m 09s |
 | 2026-10-02 | with-without | claude-code | claude-sonnet-5 | not recorded | 10 | 0/10 | $2.98 | no task completed | 9m 21s |
 | 2026-10-05 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | omp-glm-5.3 (run-selected) | 2 | 1/2 | $0.15 | $0.15 | 5m 17s |
+| 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 2/3 | not recorded | not recorded | 1m 50s |
+| 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | not recorded | not recorded | 2m 05s |
+| 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 15 | 12/15 | not recorded | not recorded | 10m 31s |
+| 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 2/3 | not recorded | not recorded | 2m 20s |
+| 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 0/1 | not recorded | not recorded | 0m 50s |
+| 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 0/1 | not recorded | not recorded | 1m 06s |
+| 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 1m 13s |
+| 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 1m 03s |

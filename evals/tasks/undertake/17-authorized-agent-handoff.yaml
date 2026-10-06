@@ -1,0 +1,64 @@
+# Without this row, an agent can stop at its own access gap despite an
+# authorized agent handoff that can finish the verification.
+task_id: undertake-17-authorized-agent-handoff
+description: >-
+  An incapable current session uses an available authorized agent handoff and
+  retains the smoke evidence gate until that agent reports evidence.
+tags: [undertake, behaviour, fire]
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-escalation/shared
+      mount_point: .fixture
+pre_run:
+  - command: bash .fixture/setup.sh authorized-handoff
+    timeout: 30
+initial_prompt: >-
+  Undertake PR #25's disposable-host smoke gate. This current session lacks
+  Vultr credentials and a Tailscale route, but an already-authorized capable
+  agent route is available in `.fixture/README.md`. Attempt the local smoke
+  fixture to observe the current-session gap, use the authorized handoff route,
+  and preserve the gate until you receive its evidence. This fixture has no
+  real credentials or network access.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 480}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` handles an access gap with an authorized handoff"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: command_executed
+    description: The incapable session observes its access gap
+    tool_name: Bash
+    command_pattern: 'smoke-test --disposable-host'
+    min_count: 1
+    weight: 2
+  - type: command_executed
+    description: The available authorized agent handoff runs
+    tool_name: Bash
+    command_pattern: 'handoff-smoke --disposable-host'
+    min_count: 1
+    weight: 2
+  - type: file_matches_regex
+    description: The fixture records both the access observation and the authorized handoff
+    path: .fixture/trajectory.log
+    pattern: '(?s)smoke-test --disposable-host.*authorized-agent-handoff --disposable-host'
+    weight: 2
+  - type: agent_judge
+    description: The result reports handoff evidence rather than a laptop requirement
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply. Score 0 if absent.
+      Score 1 only if it reports the initial session's credential/network gap,
+      uses the authorized agent route, reports the fixture's smoke evidence,
+      and does not describe a laptop or a human as intrinsically required. The
+      PR stays blocked only until evidence arrives; the fixture transcript
+      proves both steps.
