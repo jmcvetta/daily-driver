@@ -117,6 +117,8 @@ ARMS: dict[str, dict[str, object]] = {
         "id_suffix": "-omp",
         "kinds": ("omp",),
         "ablation": True,
+        # Focused skill-behavior probes cannot produce a meaningful bare-arm control.
+        "focused_variants": {"omp-gpt-6.1-sol.yaml": "with-plugin"},
         "experiments": {
             "omp-glm-5.3.yaml": "vercel-ai-gateway/zai/glm-5.3",
             "omp-glm-5.3-flash.yaml": "vercel-ai-gateway/zai/glm-5.3-flash",
@@ -542,6 +544,31 @@ def check_comparison_variants(path: Path, document: dict) -> None:
             "construction"
         )
 
+def check_single_arm_experiment(path: Path, document: dict, expected_variant: str) -> None:
+    """Require a focused Omp run to measure only the declared plugin variant."""
+    if expected_variant != "with-plugin":
+        raise CheckFailed(f"{path.relative_to(ROOT)}: focused Omp runs must name `with-plugin`")
+    variants = document.get("variants")
+    if not isinstance(variants, list):
+        raise CheckFailed(f"{path.relative_to(ROOT)}: focused Omp run needs one variant")
+    variants_by_id: dict[str, dict] = {}
+    for variant in variants:
+        if not isinstance(variant, dict) or not isinstance(variant.get("variant_id"), str):
+            raise CheckFailed(f"{path.relative_to(ROOT)}: focused Omp run has an invalid variant")
+        variant_id = variant["variant_id"]
+        if variant_id in variants_by_id:
+            raise CheckFailed(f"{path.relative_to(ROOT)}: duplicate variant {variant_id!r}")
+        variants_by_id[variant_id] = variant
+    if set(variants_by_id) != {expected_variant}:
+        raise CheckFailed(
+            f"{path.relative_to(ROOT)}: focused Omp run must measure only `{expected_variant}`; "
+            f"found {sorted(variants_by_id)}"
+        )
+    agent = variants_by_id[expected_variant].get("agent")
+    if not isinstance(agent, dict) or agent.get("plugins") != [{"type": "local", "path": ".."}]:
+        raise CheckFailed(f"{path.relative_to(ROOT)}: focused Omp run must load the daily-driver plugin")
+
+
 
 def check_model_class_model(path: Path, document: dict) -> None:
     """Require a usable model pin inside each model-class experiment."""
@@ -553,13 +580,17 @@ def check_model_class_model(path: Path, document: dict) -> None:
 
 
 def check_experiments() -> None:
-    """Every experiment has its own arm kind, and Omp has both measured variants."""
+    """Every experiment names its arm; Omp pairs ablations and registers focused runs."""
     variant_kinds = _load_variant_kinds()
     arm_of_experiment = {
         experiment: (name, model)
         for name, spec in ARMS.items()
         for experiment, model in arm_experiments(spec).items()
     }
+    for arm, spec in ARMS.items():
+        focused = spec.get("focused_variants", {})
+        if not isinstance(focused, dict) or set(focused) - set(arm_experiments(spec)):
+            raise CheckFailed(f"the {arm} arm has an invalid focused-experiment declaration")
 
     files = sorted(EXPERIMENTS.glob("*.yaml"))
     if not files:
@@ -625,6 +656,10 @@ def check_experiments() -> None:
             agent = defaults.get("agent") if isinstance(defaults, dict) else None
             if not isinstance(agent, dict) or agent.get("model") != model:
                 raise CheckFailed(f"{path.relative_to(ROOT)}: expected Omp model {model!r}")
+            focused_variants = ARMS[arm].get("focused_variants", {})
+            if isinstance(focused_variants, dict) and path.name in focused_variants:
+                check_single_arm_experiment(path, document, str(focused_variants[path.name]))
+                continue
             if not ARMS[arm].get("ablation"):
                 continue
             variants_by_id = {
@@ -844,6 +879,38 @@ def check_the_checks() -> None:
         except CheckFailed:
             continue
         raise CheckFailed(f"the check for {name!r} did not fail on a document that should fail it")
+
+    focused_valid = {
+        "variants": [
+            {
+                "variant_id": "with-plugin",
+                "agent": {"plugins": [{"type": "local", "path": ".."}]},
+            }
+        ]
+    }
+    check_single_arm_experiment(synthetic, focused_valid, "with-plugin")
+    focused_invalid = [
+        ("focused Omp run with no plugin arm", {"variants": [{"variant_id": "bare", "agent": {"plugins": []}}]}),
+        (
+            "focused Omp run with an extra ablation arm",
+            {
+                "variants": [
+                    {"variant_id": "bare", "agent": {"plugins": []}},
+                    {"variant_id": "with-plugin", "agent": {"plugins": [{"type": "local", "path": ".."}]}},
+                ]
+            },
+        ),
+        (
+            "focused Omp run without the daily-driver plugin",
+            {"variants": [{"variant_id": "with-plugin", "agent": {"plugins": []}}]},
+        ),
+    ]
+    for name, document in focused_invalid:
+        try:
+            check_single_arm_experiment(synthetic, document, "with-plugin")
+        except CheckFailed:
+            continue
+        raise CheckFailed(f"the check for {name!r} did not fail")
 
 
 def main() -> None:

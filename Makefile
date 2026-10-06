@@ -495,6 +495,7 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-luna.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
@@ -605,9 +606,8 @@ evals-run: evals-judge-preflight evals-plan evals-preflight
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-# evals-run-omp: run every recorded Omp model. Each named target keeps one
-# model's two-arm result separate, so reports compare the plugin against the
-# bare control without conflating model families.
+# evals-run-omp: run every registered Omp experiment. Ablation targets compare
+# bare and treated variants; the focused acceptance target measures with-plugin only.
 evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-omp-gpt-6-1-sol
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs

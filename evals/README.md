@@ -12,7 +12,7 @@ evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
 │   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
-│   ├── omp-*.yaml                  one two-variant Omp experiment per model
+│   ├── omp-*.yaml                  Omp model experiments; paired ablations or focused acceptance runs
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
 ├── tasks/
@@ -155,7 +155,7 @@ make evals-render-results # rewrite RESULTS.md from committed provenance
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
-make evals-run-omp    # every Omp model, each with bare and treated variants.
+make evals-run-omp    # each ablation has bare and treated arms; focused runs name their measured arm
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
