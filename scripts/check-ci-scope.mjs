@@ -37,7 +37,8 @@ assert.deepEqual(selectChecks(['scripts/check-labels.py']), ['check-labels', 'ch
 
 // Without these cases, a path outside known inputs could revive the old all-check fallback.
 assert.deepEqual(selectChecks(['scripts/unrelated.py']), [])
-assert.deepEqual(selectChecks(['.github/workflows/infra.yml']), [])
+// Without this scanner dependency, numbered-step references in another workflow can drift unchecked.
+assert.deepEqual(selectChecks(['.github/workflows/infra.yml']), ['check-step-names'])
 assert.deepEqual(selectChecks(['CHANGELOG.md']), [])
 // Without path-local exclusions, a changelog edit can mask README changes in the same commit.
 assert.ok(selectChecks(['README.md', 'CHANGELOG.md']).includes('check-step-names'))
