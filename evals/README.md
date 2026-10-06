@@ -1411,7 +1411,9 @@ reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
 API fixtures) are the acceptance test for the qualifying filter, the test-file
-split, the class and elapsed reads, and `task_timeout` derivation.
+split, the class and elapsed reads, and `task_timeout` derivation. No
+standalone CI check repeats them: the builder runs them before every
+invocation, so a defect in it surfaces on its next run.
 
 `scripts/check-eval-arms.py` treats `model-classes` as a fourth arm that
 owns both the `omp` and `claude-code` kinds — it measures a model, not a
