@@ -13,6 +13,11 @@ takes the row out of the named arm and leaves it in the rest. Today the
 `constitution` rows carry `skip:codex`, because `coder_eval`'s Codex agent links
 skills and installs no hooks, so no constitution reaches that arm.
 
+A row with no counterpart on another harness, because it exercises a skill that
+only one harness loads, carries `native` beside its arm tag instead of a
+`forks:` tag. The `fix-daily-driver-bugs` rows are `omp-only` and `native`: the
+skill lives in `.omp/skills/` and dispatches through Omp's `task` batch.
+
 The `review-depth` rows are tagged `claude-only` without a counterpart: they pin
 `agent.type: claude-code` and drive Claude's own settings and hooks, so they
 have no form on another harness. Untagged, they would run inside the other arms
@@ -223,6 +228,10 @@ FORK_TAG = "forks:"
 # rest. An arm tag cannot say that: it claims exactly one arm.
 SKIP_TAG = "skip:"
 
+# The bare tag that says a non-`claude` row has no Claude sibling to fork,
+# because the skill it exercises is loaded by one harness only.
+NATIVE_TAG = "native"
+
 
 class CheckFailed(Exception):
     """A failed assertion, with the detail that explains it."""
@@ -294,6 +303,13 @@ def check_arm_tags(tasks: list[tuple[Path, dict]]) -> None:
             arm_of_id[task_id] = arm
 
         declared = [tag.split(":", 1)[1] for tag in tags if tag.startswith(FORK_TAG)]
+        native = NATIVE_TAG in tags
+        if native and (arm is None or declared):
+            raise CheckFailed(
+                f"{path.relative_to(ROOT)}: a `{NATIVE_TAG}` row needs an arm tag and must not carry a `{FORK_TAG}` tag; "
+                "it has no sibling in another arm, so naming one would be false and omitting the arm "
+                "would run it everywhere"
+            )
         if declared and arm is None:
             raise CheckFailed(
                 f"{path.relative_to(ROOT)}: carries a `{FORK_TAG}` tag but no arm tag, so it would run in "
@@ -303,11 +319,10 @@ def check_arm_tags(tasks: list[tuple[Path, dict]]) -> None:
         # originals and declare nothing. A row in any other arm exists because a
         # Claude row could not be graded there, so it must say which row that
         # was -- which is also what catches the sibling losing its own tag and
-        # starting to run in every arm. A genuinely harness-native row with no
-        # Claude counterpart would need this rule revisited; there is none, and
-        # making that a deliberate decision rather than a silent gap is the
-        # point of requiring it.
-        if arm is not None and ARMS[arm]["id_suffix"] is not None and len(declared) != 1:
+        # starting to run in every arm. A harness-native row with no Claude
+        # counterpart says so with the `native` tag, which makes that a
+        # deliberate decision rather than a silent gap.
+        if arm is not None and ARMS[arm]["id_suffix"] is not None and not native and len(declared) != 1:
             raise CheckFailed(
                 f"{path.relative_to(ROOT)}: an {ARMS[arm]['tag']} row must name the row it forks, as exactly "
                 f"one `{FORK_TAG}<task_id>` tag; found {declared}"
@@ -741,6 +756,19 @@ def check_the_checks() -> None:
                 (here / "x.yaml", {"task_id": "x-codex", "tags": ["codex-only", "forks:y-codex"]}),
                 (here / "y.yaml", {"task_id": "y-codex", "tags": ["codex-only", "forks:y"]}),
                 (here / "z.yaml", {"task_id": "y", "tags": ["claude-only"]}),
+            ],
+            check_arm_tags,
+        ),
+        (
+            "a native row with no arm tag",
+            [(here / "x.yaml", {"task_id": "x", "tags": ["native"]})],
+            check_arm_tags,
+        ),
+        (
+            "a native row that also forks a sibling",
+            [
+                (here / "x.yaml", {"task_id": "x-omp", "tags": ["omp-only", "native", "forks:y"]}),
+                (here / "y.yaml", {"task_id": "y", "tags": ["claude-only"]}),
             ],
             check_arm_tags,
         ),

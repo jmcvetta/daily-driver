@@ -193,6 +193,12 @@ or update a README. Each skill's `SKILL.md` describes its activation rules.
 | `task-worktree` | Isolates repository changes in a feature branch and sibling worktree before research begins. |
 | `undertake` | Takes a task from its description to a review-ready pull request and keeps the branch current. |
 
+## Local maintenance
+
+In this repository, ask Omp to `fix-daily-driver-bugs` to triage open automatic
+reports and dispatch eligible fixes. Include issue numbers to limit triage.
+This repository-local skill is not part of the published plugin.
+
 ## Development rules
 
 [`rules/constitution.md`](rules/constitution.md) applies to every session and

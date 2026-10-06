@@ -16,6 +16,7 @@ evals/
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
 ├── tasks/
+│   ├── fix-daily-driver-bugs/  offline GitHub-fixture triage and dispatch cases
 │   ├── pr/              does `pr` fire when a PR is opened, and only then?
 │   ├── pr-title/        … when a title is written, and only then?
 │   ├── conventional-commits-type/
@@ -35,6 +36,8 @@ evals/
 │   ├── review-depth/    does `review` send the right panel at the diff?
 │   └── model-classes/   does this model finish real delegated work? see below
 ├── fixtures/
+│   ├── fix-daily-driver-bugs/shared/
+│   │                    offline `gh` recorder and issue-state assertions
 │   ├── review-depth/
 │   │   ├── shared/       builds the git repository every case starts from
 │   │   └── cases/<name>/ one `case.sh`, mounted alone beside `shared/`
@@ -147,6 +150,15 @@ make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 # Paired ablations compare bare and treated arms; focused runs name one arm.
 # make evals-run-omp
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
+```
+
+The repository-local automatic-report workflow has two Omp-only behavioral
+fixtures. They use a fake `gh` that records issue reads and writes; no live
+GitHub issue is read or changed. Run them with an available Omp model and judge:
+
+```sh
+make evals-run-omp-glm-5-3 JUDGE=omp-glm-5.3 \
+  TASKS='tasks/fix-daily-driver-bugs/*.yaml'
 ```
 
 `make evals-record ... POST_COMMENTS=1` also posts one comment per run on each

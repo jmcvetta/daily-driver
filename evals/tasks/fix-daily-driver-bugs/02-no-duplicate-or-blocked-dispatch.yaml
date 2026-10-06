@@ -1,0 +1,208 @@
+task_id: fix-daily-driver-bugs-02-no-duplicate-or-blocked-dispatch-omp
+description: >-
+  Keep unresolved, duplicate, blocked, claimed, already-converted, and partially
+  written reports out of the implementation batch.
+tags: [fix-daily-driver-bugs, behaviour, omp-only, native, fire]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../../.omp/skills/fix-daily-driver-bugs
+      mount_point: .omp/skills/fix-daily-driver-bugs
+    - type: template_dir
+      path: ../../fixtures/fix-daily-driver-bugs/shared
+      mount_point: .fixture
+    - type: starter_files
+      files:
+        - path: fixture-state.json
+          content: |
+            {
+              "issues": {
+                "990003": {
+                  "title": "[auto-filed] Choose token expiry policy",
+                  "state": "OPEN",
+                  "labels": ["bug"],
+                  "body": "Component: auth/token.py\nObserved: tokens do not expire after the configured interval.\nProduct decision: operators have not chosen fixed versus sliding expiry.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
+                "990004": {
+                  "title": "[auto-filed] Empty config is rejected",
+                  "state": "OPEN",
+                  "labels": ["bug"],
+                  "body": "Component: cli/config_reader.py\nObserved: empty config raises a parse error.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
+                "990005": {
+                  "title": "[auto-filed] Selector fallback is wrong",
+                  "state": "OPEN",
+                  "labels": ["bug"],
+                  "body": "Component: cli/selector.py\nObserved: unknown selector returns default handler.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": [{"number": 991005, "state": "OPEN"}]},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
+                "990006": {
+                  "title": "[auto-filed] Config key is ignored",
+                  "state": "OPEN",
+                  "labels": ["bug"],
+                  "body": "Component: cli/config_reader.py\nObserved: supported key is ignored.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [{"body": "I am undertaking this issue.\nBranch: [task-990006](https://github.com/jmcvetta/daily-driver/tree/task-990006)\nModel: fixture-model\nHarness: Omp 18.4.1\nsession: fixture-active\n"}],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
+                "990007": {
+                  "title": "Empty config is read as invalid YAML",
+                  "state": "OPEN",
+                  "labels": ["task"],
+                  "body": "Original automatic report title: [auto-filed] Empty config is read as invalid YAML\n## Model class\n\n`implementation`\n\nThe reported parser failure is reproducible from the checked-in code and has a bounded fix.\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": [{"number": 991007, "state": "OPEN"}]
+                },
+                "990008": {
+                  "title": "[auto-filed] Formatter drops the trailing newline",
+                  "state": "OPEN",
+                  "labels": ["bug"],
+                  "body": "Component: cli/formatter.py\nExpected: --json output ends with a newline.\nObserved: the final newline is dropped.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
+                "991005": {
+                  "title": "Unblock selector fix",
+                  "state": "OPEN",
+                  "labels": ["task"],
+                  "body": "The selector fix can start when this task closes.\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                }
+              },
+              "search_results": [{"number": 990007, "title": "Empty config is read as invalid YAML", "labels": ["task"]}],
+              "pull_requests": [{"number": 991007, "title": "Fix empty config parsing", "state": "OPEN", "body": "Closes #990007"}],
+              "pull_request_details": {"991007": {"number": 991007, "title": "Fix empty config parsing", "state": "OPEN", "isDraft": true, "body": "Closes #990007"}},
+              "fail_body_write": ["990008"]
+            }
+        - path: fixture-expectations.json
+          content: |
+            {
+              "issues": {
+                "990003": {
+                  "title": "[auto-filed] Choose token expiry policy",
+                  "labels": ["bug"],
+                  "body_contains": ["Product decision: operators have not chosen"],
+                  "comment_contains": ["fixed versus sliding expiry"]
+                },
+                "990004": {
+                  "title": "[auto-filed] Empty config is rejected",
+                  "labels": ["bug"],
+                  "body_contains": ["empty config raises a parse error"],
+                  "comment_contains": ["#990007"]
+                },
+                "990005": {
+                  "title": "[auto-filed] Selector fallback is wrong",
+                  "labels": ["bug"],
+                  "body_contains": ["unknown selector returns default handler"]
+                },
+                "990006": {
+                  "title": "[auto-filed] Config key is ignored",
+                  "labels": ["bug"],
+                  "body_contains": ["supported key is ignored"]
+                },
+                "990007": {
+                  "title": "Empty config is read as invalid YAML",
+                  "labels": ["task"],
+                  "body_contains": ["Original automatic report title: [auto-filed] Empty config is read as invalid YAML"]
+                },
+                "990008": {
+                  "title": "[auto-filed] Formatter drops the trailing newline",
+                  "labels": ["bug"],
+                  "body_contains": ["the final newline is dropped"]
+                }
+              },
+              "required_actions": [
+                {"action": "search"},
+                {"action": "pr-list"},
+                {"action": "read", "number": "990003", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "read", "number": "990004", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "read", "number": "990005", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "read", "number": "990006", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "read", "number": "990007", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "read", "number": "990008", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "pr-read", "number": "991007"},
+                {"action": "comment", "number": "990003"},
+                {"action": "comment", "number": "990004"}
+              ],
+              "forbidden_actions": [
+                {"action": "edit", "number": "990003"},
+                {"action": "edit", "number": "990004"},
+                {"action": "edit", "number": "990005"},
+                {"action": "edit", "number": "990006"},
+                {"action": "edit", "number": "990007"}
+              ]
+            }
+
+  mock_path_dirs: [.fixture]
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Task]
+  disallowed_tools: [WebFetch, WebSearch]
+
+run_limits:
+  max_turns: 24
+  turn_timeout: 600
+  task_timeout: 1200
+
+initial_prompt: >-
+  Run the repository-local fix-daily-driver-bugs workflow against only issues
+  #990003 through #990008. These are offline fixtures. Use the supplied fake
+  gh only. Leave the unresolved decision, duplicate, blocked issue, claimed
+  issue, existing task/PR, and injected body-write failure unlaunched. The
+  verifier checks fixture state and recorded GitHub actions; run
+  `python3 .fixture/verify_state.py`. Do not access a live tracker.
+
+success_criteria:
+  - type: skill_triggered
+    description: The repository-local bug triage skill is loaded
+    expected_skill: fix-daily-driver-bugs
+    skill_name: fix-daily-driver-bugs
+
+  - type: command_executed
+    description: The verifier confirms preserved reports and no unsafe edits
+    tool_name: Bash
+    command_pattern: 'python3 .fixture/verify_state.py'
+    min_count: 1
+    require_success: true
+    weight: 2
+
+  - type: file_matches_regex
+    description: Fixture states and recorded GitHub operations pass
+    path: fixture-verification.txt
+    pattern: '^PASS$'
+    weight: 2
+
+  - type: command_executed
+    description: No excluded issue is dispatched
+    tool_name: Agent
+    command_pattern: 'undertake #99000[3-8]'
+    min_count: 0
+    max_count: 0
+    weight: 2

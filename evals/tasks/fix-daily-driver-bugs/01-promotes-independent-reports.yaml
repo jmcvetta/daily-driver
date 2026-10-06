@@ -1,0 +1,162 @@
+task_id: fix-daily-driver-bugs-01-promotes-independent-reports-omp
+description: >-
+  Promote two independent automatic reports, verify both task states, and
+  dispatch both tasks in one bounded Omp batch.
+tags: [fix-daily-driver-bugs, behaviour, omp-only, native, fire]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../../.omp/skills/fix-daily-driver-bugs
+      mount_point: .omp/skills/fix-daily-driver-bugs
+    - type: template_dir
+      path: ../../fixtures/fix-daily-driver-bugs/shared
+      mount_point: .fixture
+    - type: starter_files
+      files:
+        - path: fixture-state.json
+          content: |
+            {
+              "issues": {
+                "990001": {
+                  "title": "[auto-filed] Unknown selector returns default handler",
+                  "state": "OPEN",
+                  "labels": ["bug", "priority:normal"],
+                  "body": "Component: cli/selector.py\nExpected: an unknown selector raises SelectorError before a handler is returned.\nObserved: get_selector('missing') returns the default handler.\nReproduction: call get_selector('missing') against the installed CLI.\nVersion: daily-driver 0.49.2.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [{"body": "The CLI selector report is reproducible. Keep the replay result from shell output."}],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
+                "990002": {
+                  "title": "[auto-filed] Empty config is read as invalid YAML",
+                  "state": "OPEN",
+                  "labels": ["bug"],
+                  "body": "Component: cli/config_reader.py\nExpected: an empty config file uses the documented default configuration.\nObserved: the reader raises a YAML parse error on an empty file.\nReproduction: pass a zero-byte config file to load_config.\nVersion: daily-driver 0.49.2.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                }
+              },
+              "search_results": [],
+              "pull_requests": []
+            }
+        - path: fixture-expectations.json
+          content: |
+            {
+              "issues": {
+                "990001": {
+                  "title": "Unknown selector returns default handler",
+                  "labels": ["priority:normal", "task"],
+                  "body_contains": [
+                    "Original automatic report title: [auto-filed] Unknown selector returns default handler",
+                    "get_selector('missing') returns the default handler",
+                    "Model: fixture-reporter",
+                    "Harness: Omp 18.4.1",
+                    "Model class",
+                    "implementation",
+                    "\n---\nModel: "
+                  ],
+                  "comment_contains": ["Keep the replay result from shell output."]
+                },
+                "990002": {
+                  "title": "Empty config is read as invalid YAML",
+                  "labels": ["task"],
+                  "body_contains": [
+                    "Original automatic report title: [auto-filed] Empty config is read as invalid YAML",
+                    "zero-byte config file",
+                    "Model class",
+                    "implementation"
+                  ]
+                }
+              },
+              "required_actions": [
+                {"action": "list"},
+                {"action": "search"},
+                {"action": "pr-list"},
+                {"action": "read", "number": "990001", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "read", "number": "990002", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "edit", "number": "990001"},
+                {"action": "edit", "number": "990002"}
+              ],
+              "forbidden_actions": []
+            }
+        - path: cli/selector.py
+          content: |
+            class SelectorError(ValueError):
+                pass
+
+            HANDLERS = {"json": object(), "yaml": object()}
+            DEFAULT = object()
+
+            def get_selector(name):
+                return HANDLERS.get(name, DEFAULT)
+        - path: cli/config_reader.py
+          content: |
+            def load_config(text):
+                return parse_yaml(text)
+        - path: docs/config-contract.md
+          content: |
+            A zero-byte configuration file uses the documented default
+            configuration. A non-empty malformed document raises ConfigError.
+            The behavior is implemented in cli/config_reader.py.
+        - path: docs/selector-contract.md
+          content: |
+            The command accepts only selectors listed in HANDLERS. An unknown
+            selector must raise SelectorError before a handler is returned.
+            The behavior is implemented in cli/selector.py and must be covered
+            by a deterministic test for both known and unknown selectors.
+
+  mock_path_dirs: [.fixture]
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Task]
+  disallowed_tools: [WebFetch, WebSearch]
+
+run_limits:
+  max_turns: 24
+  turn_timeout: 600
+  task_timeout: 1200
+
+initial_prompt: >-
+  Triage the entire open automatic-report backlog with the repository-local
+  fix-daily-driver-bugs workflow. Use its default selection, not an explicit
+  issue-number list. The offline fixture has two independent eligible reports.
+  Use the supplied fake gh only; do not use a GitHub MCP, browser, or live
+  client. Inspect each fixture source and contract. Preserve each report and
+  provenance while promoting the same issue numbers. Run
+  `python3 .fixture/verify_state.py` and dispatch both eligible tasks in one
+  Omp task batch, one worker per issue, each instructed to `undertake` its
+  issue. Do not let workers access a live tracker.
+
+success_criteria:
+  - type: skill_triggered
+    description: The repository-local bug triage skill is loaded
+    expected_skill: fix-daily-driver-bugs
+    skill_name: fix-daily-driver-bugs
+
+  - type: command_executed
+    description: The evaluator state verifier runs successfully
+    tool_name: Bash
+    command_pattern: 'python3 .fixture/verify_state.py'
+    min_count: 1
+    require_success: true
+    weight: 2
+
+  - type: file_matches_regex
+    description: The recorded issue state passes all conversion assertions
+    path: fixture-verification.txt
+    pattern: '^PASS$'
+    weight: 2
+
+  - type: command_executed
+    description: Both independent issues are dispatched in one Omp batch
+    tool_name: Agent
+    command_pattern: '(?s)undertake #99000[12].*undertake #99000[12]'
+    min_count: 1
+    max_count: 1
+    require_success: true
+    weight: 2
