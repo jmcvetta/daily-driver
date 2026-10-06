@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {resolve} from 'node:path'
-import {changedMakeTargets, formatPlan, hasTopLevelDirectoryChanges, parseNameStatus, selectChecks, selectChecksForDiff} from './ci-select.mjs'
+import {changedMakeTargets, changedWorkflowChecks, formatPlan, hasTopLevelDirectoryChanges, parseNameStatus, selectChecks, selectChecksForDiff} from './ci-select.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const filters = (await import('js-yaml')).default.load(
@@ -78,6 +78,16 @@ assert.deepEqual(changedMakeTargets('SHELL := /bin/bash\n', 'SHELL := /bin/sh\n'
 // Without these consumers, user-facing cache refreshes or eval-arm recipe changes can drift from CI coverage.
 assert.deepEqual(changedMakeTargets(makeBefore, `${makeBefore}\nomp-update-daily-driver:\n\tomp plugin upgrade\n`), ['check-omp-cache-clean'])
 assert.deepEqual(changedMakeTargets(makeBefore, `${makeBefore}\ncheck-unmapped:\n\ttrue\n`), ['check-ci-scope'])
+
+// Without scanning every command target, a changed multi-target workflow step can leave a check unvalidated.
+const workflowBefore = 'jobs:\n  ci-success:\n    steps:\n      - name: Checks\n        run: make check-git-sync\n'
+const workflowAfter = 'jobs:\n  ci-success:\n    steps:\n      - name: Checks\n        run: make check-git-sync check-worktrunk-install\n'
+assert.deepEqual(changedWorkflowChecks(workflowBefore, workflowAfter), ['check-git-sync', 'check-worktrunk-install'])
+
+// Without examining both step versions, replacing a check command can leave its changed consumer unselected.
+assert.deepEqual(changedWorkflowChecks(workflowBefore, workflowBefore.replace('make check-git-sync', 'echo complete')), [
+  'check-git-sync',
+])
 
 // Without decoding status records, deletions and renames can lose the removed input or one rename side.
 const deletedLabelScript = parseNameStatus(Buffer.from('D\0scripts/check-labels.py\0'))

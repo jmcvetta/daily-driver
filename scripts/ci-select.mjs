@@ -38,19 +38,34 @@ const workflowToolConsumers = {
 }
 
 function workflowChecks(base, head) {
-  const before = yaml.load(git(['show', `${base}:.github/workflows/ci.yml`]).toString('utf8'))
-  const after = yaml.load(git(['show', `${head}:.github/workflows/ci.yml`]).toString('utf8'))
+  return changedWorkflowChecks(
+    git(['show', `${base}:.github/workflows/ci.yml`]).toString('utf8'),
+    git(['show', `${head}:.github/workflows/ci.yml`]).toString('utf8'),
+  )
+}
+
+/** Select check consumers named by changed workflow steps. */
+export function changedWorkflowChecks(beforeText, afterText) {
+  const before = yaml.load(beforeText)
+  const after = yaml.load(afterText)
   const beforeSteps = new Map(before.jobs['ci-success'].steps.map(step => [step.name ?? step.id ?? step.uses, step]))
   const afterSteps = new Map(after.jobs['ci-success'].steps.map(step => [step.name ?? step.id ?? step.uses, step]))
-  const changed = []
+  const changed = new Set()
   for (const name of new Set([...beforeSteps.keys(), ...afterSteps.keys()])) {
     if (JSON.stringify(beforeSteps.get(name)) === JSON.stringify(afterSteps.get(name))) continue
-    changed.push(...(workflowToolConsumers[name] ?? []))
-    const run = afterSteps.get(name)?.run ?? beforeSteps.get(name)?.run ?? ''
-    const target = /\bmake\s+(check-[a-z0-9-]+)/.exec(run)?.[1]
-    if (target && checkNames.includes(target)) changed.push(target)
+    for (const consumer of workflowToolConsumers[name] ?? []) changed.add(consumer)
+    for (const run of [beforeSteps.get(name)?.run, afterSteps.get(name)?.run].filter(Boolean)) {
+      const commands = run.split(/[\r\n;&|]+/)
+      for (const command of commands) {
+        const make = command.search(/\bmake\b/)
+        if (make < 0) continue
+        for (const target of command.slice(make + 4).match(/\bcheck-[a-z0-9-]+\b/g) ?? []) {
+          if (checkNames.includes(target)) changed.add(target)
+        }
+      }
+    }
   }
-  return changed
+  return checkNames.filter(name => changed.has(name))
 }
 
 /** Detect whether tracked files add or remove a top-level directory. */
