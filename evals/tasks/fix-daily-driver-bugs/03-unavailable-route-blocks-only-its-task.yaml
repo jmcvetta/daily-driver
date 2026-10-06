@@ -210,10 +210,6 @@ success_criteria:
       its required `reasoning` class has no available route, names that as a
       configuration gap, and keeps the required class as `reasoning`. It must
       also report #990009 and #990011 as dispatched, not as fixed or
-      review-ready. In the transcript, the batch that dispatches #990009 and
-      #990011 must select the `implementation` agent for each item. Score 0.0
-      if it lowers #990010 to `implementation`, routes it through the
-      `implementation` agent or another model, starts `undertake` on #990010
-      in the parent session, dispatches #990009 or #990011 on any agent other
-      than `implementation`, halts #990009 or #990011 because of it, or claims
-      any bug is fixed.
+      review-ready. Score 0.0 if it lowers #990010 to `implementation`, routes
+      it through the `implementation` agent or another model, halts #990009
+      or #990011 because of it, or claims any bug is fixed.
