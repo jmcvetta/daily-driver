@@ -8,6 +8,19 @@ root = Path.cwd()
 state_path = root / "fixture-state.json"
 log_path = root / "issue-actions.jsonl"
 args = sys.argv[1:]
+# Global repository flags may precede or follow the subcommand, as in real gh.
+cleaned = []
+skip = False
+for value in args:
+    if skip:
+        skip = False
+    elif value in ("-R", "--repo"):
+        skip = True
+    elif value.startswith("--repo="):
+        continue
+    else:
+        cleaned.append(value)
+args = cleaned
 if args == ["--version"]:
     print("gh version 2.94.0 (offline fixture)")
     sys.exit(0)
@@ -24,14 +37,18 @@ def record(action, **details):
         stream.write(json.dumps({"action": action, **details}, sort_keys=True) + "\n")
 
 def issue(number):
-    return state["issues"][str(number)]
+    try:
+        return state["issues"][str(number)]
+    except KeyError:
+        print(f"GraphQL: Could not resolve to an issue with the number of {number}.", file=sys.stderr)
+        sys.exit(1)
 
 def output(value):
     print(json.dumps(value))
 
 if args[:2] == ["issue", "list"]:
     record("list", args=args[2:])
-    output([{"number": int(number), "title": item["title"], "labels": item["labels"]}
+    output([{"number": int(number), "title": item["title"], "labels": [{"name": label} for label in item["labels"]]}
             for number, item in state["issues"].items() if item.get("state", "OPEN") == "OPEN"])
 elif args[:2] == ["search", "issues"]:
     record("search", args=args[2:])
@@ -55,37 +72,45 @@ elif args[:2] == ["issue", "edit"]:
     number = args[2]
     item = issue(number)
     record("edit", number=number, args=args[3:])
+    # One `gh issue edit` is one request: an injected body failure rejects the
+    # whole call, so no label or title change from it persists.
     i = 3
     while i < len(args):
         flag = args[i]
+        value = args[i + 1] if i + 1 < len(args) else ""
         if flag == "--add-label":
-            label = args[i + 1]
-            if label not in item["labels"]:
-                item["labels"].append(label)
-            i += 2
+            for label in filter(None, value.split(",")):
+                if label not in item["labels"]:
+                    item["labels"].append(label)
         elif flag == "--remove-label":
-            label = args[i + 1]
-            item["labels"] = [old for old in item["labels"] if old != label]
-            i += 2
-        elif flag == "--title":
-            item["title"] = args[i + 1]
-            i += 2
-        elif flag == "--body-file":
+            gone = set(value.split(","))
+            item["labels"] = [old for old in item["labels"] if old not in gone]
+        elif flag in ("--title", "-t"):
+            item["title"] = value
+        elif flag in ("--body", "-b", "--body-file", "-F"):
             if number in state.get("fail_body_write", []):
                 print("fixture: injected body write failure", file=sys.stderr)
                 sys.exit(1)
-            item["body"] = Path(args[i + 1]).read_text(encoding="utf-8")
-            i += 2
+            item["body"] = Path(value).read_text(encoding="utf-8") if flag in ("--body-file", "-F") else value
         else:
             i += 1
+            continue
+        i += 2
     state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
     print(f"fixture: updated issue {number}")
 elif args[:2] == ["issue", "comment"]:
     number = args[2]
-    if "-b" in args:
-        body = args[args.index("-b") + 1]
-    elif "--body-file" in args:
-        body = Path(args[args.index("--body-file") + 1]).read_text(encoding="utf-8")
+    for flag in ("-b", "--body"):
+        if flag in args:
+            body = args[args.index(flag) + 1]
+            break
+    else:
+        body = None
+    if body is not None:
+        pass
+    elif "--body-file" in args or "-F" in args:
+        flag = "--body-file" if "--body-file" in args else "-F"
+        body = Path(args[args.index(flag) + 1]).read_text(encoding="utf-8")
     else:
         body = ""
     issue(number).setdefault("comments", []).append({"body": body})

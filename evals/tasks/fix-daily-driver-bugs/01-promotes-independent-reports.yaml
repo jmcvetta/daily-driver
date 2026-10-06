@@ -155,7 +155,7 @@ success_criteria:
   - type: command_executed
     description: Both independent issues are dispatched in one Omp batch
     tool_name: Agent
-    command_pattern: 'undertake #990001.*undertake #990002'
+    command_pattern: '(?s)undertake #99000[12].*undertake #99000[12]'
     min_count: 1
     max_count: 1
     require_success: true

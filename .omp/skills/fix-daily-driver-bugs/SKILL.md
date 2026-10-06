@@ -95,8 +95,10 @@ Perform conversion as one guarded transaction in this order:
 
 1. Prepare and review the complete task body before writing. It must retain the
    report evidence and provenance and satisfy `issue-body`'s readiness test.
-2. Replace the `bug` kind with `task`, preserving every unrelated label.
-3. Replace the body with the prepared task body.
+2. Replace the body with the prepared task body. It carries the
+   `Original automatic report title:` marker, so a report whose later writes
+   fail is still found by the next invocation.
+3. Replace the `bug` kind with `task`, preserving every unrelated label.
 4. Remove only the leading `[auto-filed]` notice and following separator
    whitespace from the live title. Preserve the rest of the title exactly.
 5. Read the issue back. Require the original issue number, expected title,

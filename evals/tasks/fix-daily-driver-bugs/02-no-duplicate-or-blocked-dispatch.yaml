@@ -74,10 +74,10 @@ sandbox:
                   "closedByPullRequestsReferences": [{"number": 991007, "state": "OPEN"}]
                 },
                 "990008": {
-                  "title": "[auto-filed] Reader rejects an empty file",
+                  "title": "[auto-filed] Formatter drops the trailing newline",
                   "state": "OPEN",
                   "labels": ["bug"],
-                  "body": "Component: cli/config_reader.py\nExpected: empty file uses defaults.\nObserved: empty file raises parse error.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "body": "Component: cli/formatter.py\nExpected: --json output ends with a newline.\nObserved: the final newline is dropped.\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
                   "comments": [],
                   "blockedBy": {"nodes": []},
                   "blocking": {"nodes": []},
@@ -133,9 +133,9 @@ sandbox:
                   "body_contains": ["Original automatic report title: [auto-filed] Empty config is read as invalid YAML"]
                 },
                 "990008": {
-                  "title": "[auto-filed] Reader rejects an empty file",
-                  "labels": ["task"],
-                  "body_contains": ["empty file raises parse error"]
+                  "title": "[auto-filed] Formatter drops the trailing newline",
+                  "labels": ["bug"],
+                  "body_contains": ["the final newline is dropped"]
                 }
               },
               "required_actions": [

@@ -306,7 +306,7 @@ def check_arm_tags(tasks: list[tuple[Path, dict]]) -> None:
         native = NATIVE_TAG in tags
         if native and (arm is None or declared):
             raise CheckFailed(
-                f"{path.relative_to(ROOT)}: a `{NATIVE_TAG}` row carries an arm tag and no `{FORK_TAG}` tag; "
+                f"{path.relative_to(ROOT)}: a `{NATIVE_TAG}` row needs an arm tag and must not carry a `{FORK_TAG}` tag; "
                 "it has no sibling in another arm, so naming one would be false and omitting the arm "
                 "would run it everywhere"
             )
@@ -319,10 +319,9 @@ def check_arm_tags(tasks: list[tuple[Path, dict]]) -> None:
         # originals and declare nothing. A row in any other arm exists because a
         # Claude row could not be graded there, so it must say which row that
         # was -- which is also what catches the sibling losing its own tag and
-        # starting to run in every arm. A genuinely harness-native row with no
-        # Claude counterpart would need this rule revisited; there is none, and
-        # making that a deliberate decision rather than a silent gap is the
-        # point of requiring it.
+        # starting to run in every arm. A harness-native row with no Claude
+        # counterpart says so with the `native` tag, which makes that a
+        # deliberate decision rather than a silent gap.
         if arm is not None and ARMS[arm]["id_suffix"] is not None and not native and len(declared) != 1:
             raise CheckFailed(
                 f"{path.relative_to(ROOT)}: an {ARMS[arm]['tag']} row must name the row it forks, as exactly "
