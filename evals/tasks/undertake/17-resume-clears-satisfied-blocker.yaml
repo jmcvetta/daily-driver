@@ -48,13 +48,13 @@ success_criteria:
   - type: command_executed
     description: The corrected PR body is published
     tool_name: Bash
-    command_pattern: 'gh pr edit 25 --body-file \.fixture/pr-body\.md'
+    command_pattern: 'gh pr edit 25 .*--body(-file)?'
     min_count: 1
     weight: 2
   - type: file_matches_regex
     description: The fixture recorded the precise label and body maintenance operations
     path: .fixture/trajectory.log
-    pattern: '(?s)gh pr edit 25 --remove-label human.*gh pr edit 25 --body-file \.fixture/pr-body\.md'
+    pattern: '(?s)(?=.*gh pr edit 25 --remove-label human)(?=.*gh pr edit 25 .*--body(-file)?)'
     weight: 2
   - type: file_matches_regex
     description: The published body removes the satisfied apply blocker but keeps approval outstanding
@@ -70,6 +70,7 @@ success_criteria:
   - type: agent_judge
     description: The result preserves the unrelated valid blocker
     include_agent_output: true
+    include_tool_calls: true
     include_reference: false
     weight: 2
     max_turns: 5

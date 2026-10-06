@@ -124,6 +124,7 @@ ARMS: dict[str, dict[str, object]] = {
             "omp-gpt-5.6-sol.yaml": "openai-codex/gpt-5.6-sol",
             "omp-gpt-6-sol.yaml": "vercel-ai-gateway/openai/gpt-6-sol",
             "omp-gpt-6-luna.yaml": "vercel-ai-gateway/openai/gpt-6-luna",
+            "omp-gpt-6.1-sol.yaml": "openai-codex/gpt-6.1-sol",
         },
         "run_targets": {
             "evals-run-omp-glm-5-3": "omp-glm-5.3.yaml",
@@ -132,6 +133,7 @@ ARMS: dict[str, dict[str, object]] = {
             "evals-run-omp-gpt-5-6-sol": "omp-gpt-5.6-sol.yaml",
             "evals-run-omp-gpt-6-sol": "omp-gpt-6-sol.yaml",
             "evals-run-omp-gpt-6-luna": "omp-gpt-6-luna.yaml",
+            "evals-run-omp-gpt-6-1-sol": "omp-gpt-6.1-sol.yaml",
         },
         "bundle_target": "evals-run-omp",
     },

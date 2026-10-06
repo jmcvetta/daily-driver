@@ -64,6 +64,9 @@ a row, and reading it as current or not is left to the reader.
 | Model | Settings | Class earned | Mechanical pass rate | Implementation pass rate | Cost per passed case | Run | Recorded |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | cheaper | classes-cheaper | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
+| claude-opus-5-5 | classes-opus-low | implementation | 9/9 | 9/9 | $0.53 | 2026-10-01_11-36-04 | 2026-10-01 |
+| claude-sonnet-5-5 | classes-sonnet-high | implementation | 9/9 | 9/9 | $0.34 | 2026-10-01_11-14-25 | 2026-10-01 |
+| claude-sonnet-5-5 | classes-sonnet-low | implementation | 9/9 | 9/9 | $0.27 | 2026-10-01_11-05-50 | 2026-10-01 |
 | cocktail | classes-cocktail | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | cocktail.gpts-choice | classes-cocktail-gpts-choice | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | glm | classes-glm | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |

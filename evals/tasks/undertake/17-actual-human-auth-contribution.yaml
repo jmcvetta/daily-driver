@@ -42,6 +42,7 @@ success_criteria:
   - type: agent_judge
     description: The response requests only the actual account-owner action
     include_agent_output: true
+    include_tool_calls: true
     include_reference: false
     weight: 2
     max_turns: 5

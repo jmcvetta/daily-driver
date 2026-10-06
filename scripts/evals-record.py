@@ -181,12 +181,11 @@ def row_outcome(status: str) -> str:
 
 
 def load_prices(path: Path) -> dict[str, dict[str, Any]]:
-    """Read the committed price table, keyed by model id.
+    """Read per-token rates and explicit subscription-billed models.
 
-    Every entry must give numeric per-token `input`, `output`, `cache_read` and
-    `cache_write` rates in USD, the `source` URL they were read from, and the
-    date they were read on (`read_on`). A malformed entry is an error, never a
-    zero: a price computed from a missing rate is a guessed price.
+    Priced entries give four USD-per-token rates. An unpriced entry names a
+    billing reason, such as a subscription with no applicable per-token price.
+    Both forms cite their source and read date.
     """
     if yaml is None:
         raise RuntimeError("PyYAML is required to read the price table")
@@ -199,10 +198,17 @@ def load_prices(path: Path) -> dict[str, dict[str, Any]]:
     for model, entry in models.items():
         if not isinstance(entry, dict):
             raise ValueError(f"{path}: {model} must be a mapping")
-        for field in PRICE_RATE_FIELDS:
-            value = entry.get(field)
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
-                raise ValueError(f"{path}: {model}.{field} must be a non-negative number (USD per token)")
+        unpriced_reason = entry.get("unpriced_reason")
+        if unpriced_reason:
+            if not isinstance(unpriced_reason, str) or not unpriced_reason.strip():
+                raise ValueError(f"{path}: {model}.unpriced_reason must be non-empty")
+            if any(field in entry for field in PRICE_RATE_FIELDS):
+                raise ValueError(f"{path}: {model} cannot declare both rates and unpriced_reason")
+        else:
+            for field in PRICE_RATE_FIELDS:
+                value = entry.get(field)
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+                    raise ValueError(f"{path}: {model}.{field} must be a non-negative number (USD per token)")
         for field in ("source", "read_on"):
             if not str(entry.get(field) or "").strip():
                 raise ValueError(f"{path}: {model}.{field} must be non-empty")
@@ -231,31 +237,30 @@ def row_label(row: dict[str, Any]) -> str:
     return f"{label}, error: {error}" if error else label
 
 
-def case_price(row: dict[str, Any], model: str, prices: dict[str, dict[str, Any]]) -> tuple[float, str]:
-    """The USD price of one task result, and whether it was `reported` or `computed`.
+def case_price(row: dict[str, Any], model: str, prices: dict[str, dict[str, Any]]) -> tuple[float | None, str]:
+    """The USD price of one task result, and whether it was `reported`, `computed`
+    or `unreported`.
 
     The harness's own figure wins where the subject agent was priced: the row's
     `total_cost_usd` is then the whole bill, judge included. A row whose agent
     spend is unpriced -- a token-only harness -- prices the agent's tokens from
     `prices` and adds whatever judge and simulator spend was reported. Its
     `total_cost_usd` is not used, because there it holds the judge alone.
-    Raises ValueError, naming the model, where there is neither a reported
-    price nor tokens and a price-table entry to compute one from.
+    Missing token counts and no reported price leave the cost unreported; they
+    are never treated as zero or reconstructed from the configured model.
     """
     task = row_label(row)
     if _number(row.get("agent_cost_usd")):
         total = row.get("total_cost_usd")
         return (float(total) if _number(total) else float(row["agent_cost_usd"])), "reported"
     if not _number(row.get("input_tokens")) or not _number(row.get("output_tokens")):
-        raise ValueError(
-            f"{task}: the harness reported neither a price nor token counts for model {model}. "
-            "A replicate that crashed before reporting usage has no price to record; "
-            "a price-table entry cannot supply one"
-        )
+        return None, "unreported"
     key = price_key(model)
     rates = prices.get(key)
     if rates is None:
         raise ValueError(f"{task}: no entry for model {key} in the price table; add its rates rather than guess")
+    if rates.get("unpriced_reason"):
+        return None, "unreported"
     tokens = {
         "input": row["input_tokens"],
         "output": row["output_tokens"],
@@ -826,10 +831,13 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                     errors.append(f"{prefix}.tokens must be an integer or 'unreported'")
                 cost = case.get("cost")
                 if version == 3:
-                    if not _number(cost) or cost < 0:
-                        errors.append(f"{prefix}.cost must be a non-negative number for schema_version 3")
-                    if case.get("cost_source") not in ("reported", "computed"):
-                        errors.append(f"{prefix}.cost_source must be 'reported' or 'computed'")
+                    if cost is None:
+                        if case.get("cost_source") != "unreported":
+                            errors.append(f"{prefix}.cost_source must be 'unreported' when cost is null")
+                    elif not _number(cost) or cost < 0:
+                        errors.append(f"{prefix}.cost must be a non-negative number or null for schema_version 3")
+                    elif case.get("cost_source") not in ("reported", "computed"):
+                        errors.append(f"{prefix}.cost_source must be 'reported' or 'computed' when cost is numeric")
                     elapsed = case.get("elapsed_seconds")
                     if _number(elapsed) and elapsed <= 0:
                         errors.append(f"{prefix}.elapsed_seconds must be greater than 0 for schema_version 3")

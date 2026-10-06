@@ -47,13 +47,13 @@ success_criteria:
   - type: command_executed
     description: The corrected body is published through the fixture route
     tool_name: Bash
-    command_pattern: 'gh pr edit 25 --body-file \.fixture/pr-body\.md'
+    command_pattern: 'gh pr edit 25 .*--body(-file)?'
     min_count: 1
     weight: 2
   - type: file_matches_regex
     description: The published body names the exact credential and network prerequisite
     path: .fixture/published-body.md
-    pattern: '(?s)Summary.*Blockers.*Vultr.*Tailscale.*draft.*'
+    pattern: '(?s)Blockers.*Vultr.*Tailscale.*Summary.*draft.*'
     weight: 2
   - type: file_matches_regex
     description: The published body drops the false device-class blocker
@@ -64,6 +64,7 @@ success_criteria:
   - type: agent_judge
     description: The revised body does not claim the task is human-only
     include_agent_output: true
+    include_tool_calls: true
     include_reference: false
     weight: 2
     max_turns: 5

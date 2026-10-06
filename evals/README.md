@@ -64,13 +64,15 @@ from them; a model and settings pair with no case row is listed `unmeasured`.
 rate, price and wall time per run. `make evals-render-results` writes it, and
 `make check` fails when it is stale.
 
-From schema version 3, every case row carries a numeric `cost` in USD and an
-`elapsed_seconds` above zero. The price is the harness's own where it reports
-one (`cost_source: reported`), as Claude Code does. Omp and Codex report token
-counts only, so the recorder prices those tokens from
-[`prices.yaml`](prices.yaml) (`cost_source: computed`). A model with no entry
-there fails the recording, naming the model: add its published rates, then
-record again. Records at versions 1 and 2 stay as they are.
+From schema version 3, every case row carries positive `elapsed_seconds` and
+its cost evidence. `cost` is numeric where the harness reports a price
+(`cost_source: reported`) or reports token counts the recorder can price from
+[`prices.yaml`](prices.yaml) (`cost_source: computed`). When usage is missing,
+or a source documents subscription billing without an applicable per-token
+price, `cost` is null and `cost_source` is `unreported`; it is never treated
+as free. The results page shows that cost as `not recorded`. Reported tokens
+without a rate or explicit unpriced subscription entry still fail recording.
+Records at versions 1 and 2 stay as they are.
 
 ## Running them
 
@@ -221,11 +223,25 @@ decision is
 | unset | each task's pinned Claude Code `agent_judge`, run by `coder_eval` | a Claude Code web or CLI session |
 | `claude-code-sonnet-5` | the same route, named; refuses a task that pins another judge | a Claude Code web or CLI session |
 | `omp-glm-5.3` | no-tools Omp over the Vercel AI Gateway; validated, not the default | anywhere `omp` and the gateway key work |
+| `omp-gpt-6.1-sol` | no-tools Omp through `openai-codex`; validated, not the default | anywhere Omp has the OpenAI Codex provider configured |
 
 ```sh
 make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
 make evals-run-omp-gpt-5-6-sol JUDGE=omp-glm-5.3 TASKS='tasks/undertake/09-title-before-claim-omp.yaml'
 ```
+
+`omp-gpt-6.1-sol` met the predeclared calibration rule on 2026-10-06: 11 of 11
+labels correct, no false passes, no errors. The small transcript set supports
+this route for the rubric tested; it is not a general model-quality ranking
+([`observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json)).
+
+```sh
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'
+```
+
+Both the subject and judge use `openai-codex` for this configuration. Do not
+route OpenAI models through the Vercel AI Gateway. The experiment uses one
+repeat per variant for the focused run; expand only after reviewing those results.
 
 **What a non-Claude judge changes.** `make evals-judge-preflight` runs first and
 fails before any subject if `omp` is missing, Omp does not list the judge's exact
