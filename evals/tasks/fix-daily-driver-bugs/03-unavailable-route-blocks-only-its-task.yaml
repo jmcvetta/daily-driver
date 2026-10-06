@@ -1,0 +1,215 @@
+task_id: fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp
+description: >-
+  A converted task whose required class has no available route is held back
+  and reported as a configuration gap, and the other eligible tasks still
+  launch in one Omp batch.
+tags: [fix-daily-driver-bugs, behaviour, omp-only, native, fire]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../../.omp/skills/fix-daily-driver-bugs
+      mount_point: .omp/skills/fix-daily-driver-bugs
+    - type: template_dir
+      path: ../../fixtures/fix-daily-driver-bugs/shared
+      mount_point: .fixture
+    - type: starter_files
+      files:
+        - path: fixture-state.json
+          content: |
+            {
+              "issues": {
+                "990009": {
+                  "title": "Unknown selector returns default handler",
+                  "state": "OPEN",
+                  "labels": ["task"],
+                  "body": "Original automatic report title: [auto-filed] Unknown selector returns default handler\n\nComponent: cli/selector.py\nObserved: get_selector('missing') returns the default handler.\nExpected: an unknown selector raises SelectorError, per docs/selector-contract.md.\n\n## Model class\n\n`implementation`\n\nOne function and its test; the contract is settled.\n\n## Acceptance\n\nget_selector raises SelectorError for a name not in HANDLERS, with a deterministic test for known and unknown selectors.\n\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
+                "990010": {
+                  "title": "Cache invalidation races with concurrent writers",
+                  "state": "OPEN",
+                  "labels": ["task"],
+                  "body": "Original automatic report title: [auto-filed] Cache invalidation races with concurrent writers\n\nComponent: cli/cache.py\nObserved: two concurrent writers can leave a stale entry readable after invalidate().\nExpected: invalidate() is linearizable with put(), per docs/cache-contract.md.\n\n## Model class\n\n`reasoning`\n\nThe fix must hold the ordering invariant across interleavings of put, get and invalidate; the failure mode is subtle and the test needs a deterministic interleaving harness.\n\n## Acceptance\n\nNo interleaving of put and invalidate leaves a stale entry readable, proved by a deterministic interleaving test.\n\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                },
+                "990011": {
+                  "title": "Empty config is read as invalid YAML",
+                  "state": "OPEN",
+                  "labels": ["task"],
+                  "body": "Original automatic report title: [auto-filed] Empty config is read as invalid YAML\n\nComponent: cli/config_reader.py\nObserved: a zero-byte config file raises a YAML parse error.\nExpected: a zero-byte config uses the documented defaults, per docs/config-contract.md.\n\n## Model class\n\n`implementation`\n\nOne guard in load_config and its test; the contract is settled.\n\n## Acceptance\n\nload_config returns the documented defaults for a zero-byte file and still raises ConfigError for malformed YAML, with tests for both.\n\n---\nModel: fixture-reporter\nHarness: Omp 18.4.1\nsession: fixture-session\n",
+                  "comments": [],
+                  "blockedBy": {"nodes": []},
+                  "blocking": {"nodes": []},
+                  "parent": null,
+                  "closedByPullRequestsReferences": []
+                }
+              },
+              "search_results": [],
+              "pull_requests": []
+            }
+        - path: fixture-expectations.json
+          content: |
+            {
+              "issues": {
+                "990009": {
+                  "title": "Unknown selector returns default handler",
+                  "labels": ["task"],
+                  "body_contains": ["`implementation`"]
+                },
+                "990010": {
+                  "title": "Cache invalidation races with concurrent writers",
+                  "labels": ["task"],
+                  "body_contains": ["`reasoning`"]
+                },
+                "990011": {
+                  "title": "Empty config is read as invalid YAML",
+                  "labels": ["task"],
+                  "body_contains": ["`implementation`"]
+                }
+              },
+              "required_actions": [
+                {"action": "read", "number": "990009", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "read", "number": "990010", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]},
+                {"action": "read", "number": "990011", "fields_contains": ["title", "body", "comments", "labels", "state", "parent", "blockedBy", "blocking", "closedByPullRequestsReferences"]}
+              ],
+              "forbidden_actions": [
+                {"action": "edit", "number": "990009"},
+                {"action": "edit", "number": "990010"},
+                {"action": "edit", "number": "990011"}
+              ]
+            }
+        - path: cli/selector.py
+          content: |
+            class SelectorError(ValueError):
+                pass
+
+            HANDLERS = {"json": object(), "yaml": object()}
+            DEFAULT = object()
+
+            def get_selector(name):
+                return HANDLERS.get(name, DEFAULT)
+        - path: cli/config_reader.py
+          content: |
+            def load_config(text):
+                return parse_yaml(text)
+        - path: cli/cache.py
+          content: |
+            class Cache:
+                def __init__(self):
+                    self._entries = {}
+
+                def put(self, key, value):
+                    self._entries[key] = value
+
+                def get(self, key):
+                    return self._entries.get(key)
+
+                def invalidate(self, key):
+                    self._entries.pop(key, None)
+        - path: docs/selector-contract.md
+          content: |
+            The command accepts only selectors listed in HANDLERS. An unknown
+            selector must raise SelectorError before a handler is returned.
+        - path: docs/config-contract.md
+          content: |
+            A zero-byte configuration file uses the documented default
+            configuration. A non-empty malformed document raises ConfigError.
+        - path: docs/cache-contract.md
+          content: |
+            invalidate() is linearizable with put(): once invalidate(key)
+            returns, no reader observes a value written before it.
+
+  mock_path_dirs: [.fixture]
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Task]
+  disallowed_tools: [WebFetch, WebSearch]
+
+run_limits:
+  max_turns: 24
+  turn_timeout: 600
+  task_timeout: 1200
+
+initial_prompt: >-
+  Run the repository-local fix-daily-driver-bugs workflow against only issues
+  #990009, #990010 and #990011. They are offline fixtures, already converted
+  from automatic reports, with no blockers, claims or linked pull requests. Use
+  the supplied fake gh only; do not use a GitHub MCP, browser, or live client.
+  In this run the `implementation` agent has an effective route, and the
+  `reasoning` agent has none: its `@reasoning` role is unassigned, with no
+  override and no fallback. Run `python3 .fixture/verify_state.py`, dispatch
+  what is eligible, and report what was not. Do not let workers access a live
+  tracker.
+
+success_criteria:
+  - type: skill_triggered
+    description: The repository-local bug triage skill is loaded
+    expected_skill: fix-daily-driver-bugs
+    skill_name: fix-daily-driver-bugs
+
+  - type: command_executed
+    description: The verifier confirms the tasks were read and not rewritten
+    tool_name: Bash
+    command_pattern: 'python3 .fixture/verify_state.py'
+    min_count: 1
+    require_success: true
+    weight: 2
+
+  - type: file_matches_regex
+    description: Fixture state and recorded GitHub operations pass
+    path: fixture-verification.txt
+    pattern: '^PASS$'
+    weight: 2
+
+  - type: command_executed
+    description: Both routable tasks are dispatched in one Omp batch
+    tool_name: Agent
+    command_pattern: '(?s)^(?=.*undertake #990009\b)(?=.*undertake #990011\b)'
+    min_count: 1
+    max_count: 1
+    require_success: true
+    weight: 2
+
+  - type: command_executed
+    description: The task with no available route is not dispatched
+    tool_name: Agent
+    command_pattern: '990010'
+    min_count: 0
+    max_count: 0
+    weight: 2
+
+  - type: agent_judge
+    description: The unroutable task is reported as a configuration gap at its required class
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if the reply reports #990010 as not dispatched because
+      its required `reasoning` class has no available route, names that as a
+      configuration gap, and keeps the required class as `reasoning`. It must
+      also report #990009 and #990011 as dispatched, not as fixed or
+      review-ready. Score 0.0 if it lowers #990010 to `implementation`, routes
+      it through the `implementation` agent or another model, halts #990009
+      or #990011 because of it, or claims any bug is fixed.

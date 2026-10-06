@@ -152,9 +152,14 @@ make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
-The repository-local automatic-report workflow has two Omp-only behavioral
+The repository-local automatic-report workflow has three Omp-only behavioral
 fixtures. They use a fake `gh` that records issue reads and writes; no live
-GitHub issue is read or changed. Run them with an available Omp model and judge:
+GitHub issue is read or changed. Case 03 states in its prompt that the
+`reasoning` agent has no route; the sandbox does not remove that route from the
+Omp configuration. No criterion checks which agent each batch item selects:
+the judge sees only reply text, and `command_executed` sees a truncated
+serialisation (see the `subagent_type` note below). Run them with an available
+Omp model and judge:
 
 ```sh
 make evals-run-omp-glm-5-3 JUDGE=omp-glm-5.3 \
