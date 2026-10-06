@@ -48,33 +48,37 @@ it, and nothing else. The prompt boundary of `Open the sessions` holds.
 The route an implementor runs
 =============================
 
-The `task` surface selects an `agent`, not a model. Each batch item sets only
-`agent`, one that runs on the `task` role; no item carries a per-item model
-argument. Dispatch is a lookup, not a
-search:
+The `task` surface selects an `agent`, not a model. Select the agent named for
+the task's required class (`mechanical`, `implementation`, or `reasoning`).
+Each batch item sets only `agent`; it carries no per-item model argument.
+Resolve the effective route under [`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
+`task.agentModelOverrides[agentName]` takes precedence over discovered agent
+frontmatter, including a tagged-role assignment such as `@implementation`.
+Resolve configured prewalk and retry fallbacks under the same eligibility
+requirements. Do not use `modelRoles.task` as a universal implementor route.
 
-1. Read `modelRoles.task` from the running Omp configuration.
-2. Find its row in `Measured routes`, in
-   [`issue-body`'s `omp.md`](../../issue-body/references/omp.md). Rows are keyed
-   by `Model` and `Settings`, the `omp_configs/` overlay that set the role.
-3. Compare the row's `Class earned` with the task's required class. When it
-   covers the class required, dispatch. A stronger class may run lower-class
-   work.
-4. Otherwise stop only that task and report the configuration gap: no row, a
-   row that is `unmeasured` or `unreported`, a class earned below the class
-   required, or a row the reader judges stale from its `Recorded` date.
-   Launch the rest of the wave.
+Apply [`model-classes.md`'s selection policy](../../issue-body/references/model-classes.md#selection).
+A current measured class outranks handwritten guidance, and a measured class
+below the task's requirement excludes that route. A missing, `unmeasured`,
+`unreported`, or stale row is unknown, not an automatic rejection; use the
+operator's configured eligible preference without claiming measured
+capability. That preference does not waive class, tools, context, modality,
+availability, or credential requirements. Do not invent a freshness cutoff.
 
-Do not search for another candidate, and do not infer capability from catalog
-presence, effort, price, or an agent's name. Do not alter a shared role during
-a wave to make a row fit. `sonic` is a bundled agent, not a model role.
-Reviewers and scouts are not implementation routes.
+Reassess a visible parent-model authentication fallback or any other runtime
+model mismatch before work continues. Never assume parent inheritance meets
+the required class. Missing assignments, unavailable credentials, or
+unsuitable effective routes stop only the affected task with a configuration
+gap; launch the other eligible tasks in the single concurrent batch. Never
+lower a class, alter shared roles, or restore a role the operator cleared to
+make a wave launch.
 
-For each muster-roll row, keep the required class, selected agent, and actual
-reported model separate. Record `unreported` when the harness provides no
-execution identity; never substitute the agent name, role, or configured
-selector for an observed model. If Omp reports a different model or a fallback,
-record that observed model and reassess it before work continues.
+Keep the required class, selected agent/effective route, and actual execution
+model distinct in the muster roll. Record `unreported` when execution identity
+is unavailable; a selector is not observed identity. If Omp reports a
+different model or fallback, record that observed model and reassess before
+work continues. `sonic` is a bundled agent, not a model role. Reviewers and
+scouts are not implementation routes.
 
 
 Asking for help

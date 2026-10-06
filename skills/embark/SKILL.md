@@ -176,8 +176,12 @@ Unknown prices use an operator preference, never an invented free or globally
 cheapest result. A stronger eligible route may run lower-class work. An
 under-capable or tool-incompatible cheap route is excluded.
 
-On Omp, resolution is the lookup that harness's reference describes: the
-`modelRoles.task` row in `Measured routes`, with no candidate search.
+On Omp, select the class-specific agent and resolve its effective route under
+[`issue-body`'s Omp required-class policy](../issue-body/references/omp.md#the-required-class)
+and [`model-classes.md`'s selection policy](../issue-body/references/model-classes.md#selection).
+The harness reference owns concrete precedence, measurement, fallback, and
+dispatch details; do not treat `modelRoles.task` as a universal implementor
+route.
 
 The selected route and actual model are distinct from the required class.
 Record `unreported` when actual identity is unavailable; visible provider
