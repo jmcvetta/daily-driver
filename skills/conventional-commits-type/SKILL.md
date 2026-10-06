@@ -112,14 +112,16 @@ and nothing below it runs.
 2. **Does the behaviour change — what the thing returns, what it decides,
    what it does as a side effect?** If none of those move, the change is one
    of the silent types: `refactor` for code restructured to do the same
-   thing, `perf` for the same thing done faster, `chore` for a dependency
-   bump or a housekeeping change, `style` for formatting, and `docs`,
-   `test`, `build`, `ci`. Speed, formatting and internal shape are not
-   behaviour here — that is what lets `perf` and `refactor` be silent at
-   all — but an output, a decision or a side effect is, and a `refactor`
-   that moves one is not a refactor. Silent is about behaviour, not about
-   the changelog: `perf` is silent here and still gets a section there, as
-   the table below shows.
+   thing, `perf` for the same thing done faster, `chore` for housekeeping,
+   `style` for formatting, and `docs`, `test`, `build`, `ci`. A routine
+   dependency batch uses its repository convention, `build(deps): …` here;
+   an update that patches a qualifying vulnerability in the shipped product
+   is the `fix` exception described in *Dependency security fixes*. Speed,
+   formatting and internal shape are not behaviour here — that is what lets
+   `perf` and `refactor` be silent at all — but an output, a decision or a
+   side effect is, and a `refactor` that moves one is not a refactor. Silent
+   is about behaviour, not about the changelog: `perf` is silent here and
+   still gets a section there, as the table below shows.
 
 3. **Does anything the repository ships change?** Where the change's whole
    effect is on the repository's own verification — the tests, the `make
@@ -221,6 +223,39 @@ of change, the highest-impact one decides: breaking over `feat`, `feat` over
 request or none of it. An undo carrying unrelated work alongside it — like
 any two changes of consequence in one pull request — wants splitting, which
 is `pr`'s business.
+
+Dependency security fixes
+-------------------------
+
+A dependency update that actually patches a serious vulnerability affecting
+the shipped product is a `fix`, even when no first-party application code
+changes. Use the advisory evidence: record its identifier and link, severity,
+affected dependency and versions, patched version in the proposed update, and
+evidence that the vulnerable dependency affects the shipped product. A high-
+or critical-rated advisory affecting a shipped dependency is a positive case
+when those facts support applicability and impact. Do not infer applicability
+from a package name or severity alone; where evidence is missing, state the
+uncertainty and do not claim a verified security fix.
+
+A routine batch remains `build(deps): …`; preserve `test`, `build` and `ci`
+for changes confined to verification or tooling. A mixed routine batch with a
+qualifying security fix uses `fix(security): …`. An advisory limited to
+development or CI tooling does not automatically change the product: judge
+whether the tooling affects the safety of the shipped artifact, not only the
+manifest's dependency category.
+
+`fix` is the release-relevant type. `security` is descriptive scope, not a
+release instruction. A qualifying security fix does not override the existing
+higher-impact rules for breaking changes and features. The merge commit
+subject, repository path exclusions and other pending commits still affect
+the actual release; read *Projected Releases* when available and do not
+promise a patch release from the title alone.
+
+When the patched version lies outside the existing major-version constraint,
+the vulnerability remains unresolved. Report the constraint and do not claim
+the batch fixed it or cross an unattended dependency-upgrade boundary.
+
+
 
 
 What the type releases

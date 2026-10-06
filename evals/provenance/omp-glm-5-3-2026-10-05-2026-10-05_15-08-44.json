@@ -1,0 +1,360 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "MAX_TURNS_EXHAUSTED",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The session-title tool is called with the exact issue title",
+          "details": "Matched 0/1 required commands (filters: tool_name=Write, pattern=/daily_driver_set_session_title.*#52 Rotate the Aurora access token/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The real title call precedes the offline issue-claim command",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The exact title and offline claim are presented",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "MAX_TURNS_EXHAUSTED",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The real title call precedes the offline issue-claim command",
+            "duration_seconds": 11.84,
+            "findings": [
+              "No Write tool call to xd://daily_driver_set_session_title appears anywhere in the trace",
+              "No Bash call invoking `gh issue comment 52` (or any gh command) was made",
+              "The offline gh stub in mocks/ was identified but never exercised",
+              "Several early calls errored or only listed directories; the agent never reached the title-then-comment sequence"
+            ],
+            "index": 2,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0089c3b51a12f454a1d5b80aefd4139fcb98b0f9ccf3d5ce3ef2071d93f0e607",
+            "rationale": "The trace contains no Write to xd://daily_driver_set_session_title and no Bash call running `gh issue comment 52`; it consists solely of exploratory reads, greps, and directory listings that end before any action was taken.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 340,
+              "cacheWrite": 0,
+              "input": 743,
+              "output": 454
+            },
+            "weight": 2
+          },
+          {
+            "description": "The exact title and offline claim are presented",
+            "duration_seconds": 13.57,
+            "findings": [
+              "Final result contains no session title statement",
+              "No proposed issue claim is presented anywhere in the final reply",
+              "No mention of whether the claim was posted to GitHub",
+              "Result block just repeats a prior ls command with its intent message"
+            ],
+            "index": 3,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3c12d0f73a5ca3f86a454f25f71f6c8c43aa70148eebc3f5249d9994f941e34a",
+            "rationale": "The final [RESULT - SUCCESS] reply merely echoes a directory listing command ('ls skills/ && ls skills/undertake/'); it never states the session title '#52 Rotate the Aurora access token', presents no proposed issue claim, and makes no statement about GitHub posting.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 341,
+              "cacheWrite": 0,
+              "input": 660,
+              "output": 532
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "e515be92c7fe83629bf929e5dbcf5f7d61de4f6eb4d5b0b2f510a222f59a0d5e"
+      },
+      "measured_score": 0.166667,
+      "raw_weighted_score": 0.6666666666666666,
+      "replicate_index": 0,
+      "task_id": "undertake-09-title-before-claim-omp",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires for assigned task work",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The session-title tool is called with the exact issue title",
+          "details": "Matched 1/1 required commands (filters: tool_name=Write, pattern=/daily_driver_set_session_title.*#52 Rotate the Aurora access token/, require_success=True)\nExamples: ['Write({\"file_path\": \"xd://daily_driver_set_session_title\", \"content\": \"{\\\\\"title\\\\\": \\\\\"#)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The real title call precedes the offline issue-claim command",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The exact title and offline claim are presented",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The real title call precedes the offline issue-claim command",
+            "duration_seconds": 18.85,
+            "findings": [
+              "Call 9: successful Write to xd://daily_driver_set_session_title titled exactly '#52 Rotate the Aurora access token'",
+              "Call 13: successful Bash 'gh issue comment 52 ...' executed after the title write, in correct order",
+              "gh output reads 'offline GitHub mock', confirming the mock GitHub client was used, not a real one",
+              "Call 3 was a failed attempt to Read issue://52 (sandbox refusal) but does not violate any scoring criterion"
+            ],
+            "index": 2,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0089c3b51a12f454a1d5b80aefd4139fcb98b0f9ccf3d5ce3ef2071d93f0e607",
+            "rationale": "The trace contains a successful Write to xd://daily_driver_set_session_title (call 9) whose result confirms the exact title '#52 Rotate the Aurora access token', followed later by a successful Bash call running 'gh issue comment 52' (call 13) whose output shows the offline GitHub mock stub, so all required conditions in the correct order are met.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 340,
+              "cacheWrite": 0,
+              "input": 675,
+              "output": 898
+            },
+            "weight": 2
+          },
+          {
+            "description": "The exact title and offline claim are presented",
+            "duration_seconds": 19.9,
+            "findings": [
+              "Title matches the required '#52 Rotate the Aurora access token' verbatim",
+              "Claim is presented with its required components: claim statement, branch link, provenance fields (Model/Harness/session), and verse",
+              "Explicitly states 'nothing was posted to GitHub' \u2014 the comment went through the offline gh mock only",
+              "No statement claiming to have contacted or posted to GitHub"
+            ],
+            "index": 3,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3c12d0f73a5ca3f86a454f25f71f6c8c43aa70148eebc3f5249d9994f941e34a",
+            "rationale": "The final [RESULT - SUCCESS] reply states the session was titled exactly '#52 Rotate the Aurora access token', presents the proposed claim (claim statement, branch link, provenance block, haiku verse), and explicitly states 'nothing was posted to GitHub' since the offline mock was used. None of the 0.0 conditions (missing claim, differing title, or claiming to have posted/contacted GitHub) apply.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 340,
+              "cacheWrite": 0,
+              "input": 1428,
+              "output": 978
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "e515be92c7fe83629bf929e5dbcf5f7d61de4f6eb4d5b0b2f510a222f59a0d5e"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-09-title-before-claim-omp",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.0338998,
+      "cost_source": "reported",
+      "elapsed_seconds": 54.44854140281677,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-09-title-before-claim-omp",
+      "tokens": 60986,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.11871079999999999,
+      "cost_source": "reported",
+      "elapsed_seconds": 262.9163887500763,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-09-title-before-claim-omp",
+      "tokens": 205176,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.6.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-05T15:14:01.882924",
+  "experiment_id": "omp-glm-5-3",
+  "host": {
+    "hostname": "vm",
+    "kind": "cloud",
+    "platform": "Linux-6.18.44-fc-v70-x86_64-with-glibc2.39",
+    "session_id": "cbfec078-166f-5ae5-a9f0-815a7907b533"
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "e515be92c7fe83629bf929e5dbcf5f7d61de4f6eb4d5b0b2f510a222f59a0d5e",
+    "judge_id": "omp-glm-5.3",
+    "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+    "models_observed": [
+      "zai/glm-5.3"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 1361,
+      "cacheWrite": 0,
+      "input": 3506,
+      "output": 2862
+    }
+  },
+  "plugin_revision": {
+    "commit": "c47417a19051b3c7290482c456e9ebf16600ecc9",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-05T15:17:18.201962+00:00",
+  "run_id": "2026-10-05_15-08-44",
+  "schema_version": 3,
+  "started_at": "2026-10-05T15:08:44.496919",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-09-title-before-claim-omp": [
+          0.166667
+        ]
+      },
+      "task_ids": [
+        "undertake-09-title-before-claim-omp"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-09-title-before-claim-omp": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-09-title-before-claim-omp"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

@@ -55,6 +55,14 @@ checkout is meant to be read-only for agents, so a false positive there costs
 the model one rewritten command; a false negative costs the user their
 checkout. Where the two are not symmetric, the guard leans the cheap way.
 
+**A refusal names its cause.** The guard adds a short classification cause to
+its safety guidance, such as an unclassified shell option, stdin input, or an
+expanding executable. It never quotes the command, its operands, or its
+environment. A literal shell script with arguments stays a file invocation:
+`bash scripts/pr-keep-current.sh 511` and the documented service wrapper pass
+from an attached task worktree. This does not exempt shell command strings or
+primary-checkout rewrites from inspection.
+
 ## What it does not claim
 
 The guard reads shell commands. It does not audit programs. A `make`, a

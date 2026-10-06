@@ -25,12 +25,22 @@ WHAT IT ASSERTS
     `allowed_tools: []`, `permission_mode: default`, and a `disallowed_tools`
     list that contains every name in `DENIED`.
 
+    Every judge route in `evals/judges/` stays transcript-only (issue #542). The
+    Claude route is the denylist above. The Omp route has no denylist to read, so
+    this builds its real command line and asserts it runs `--no-tools` with every
+    discovery switch off, and that its judge prompt tells the judge to treat the
+    transcript as untrusted. Each definition must load, exactly one may be the
+    `default`, and a `validated` judge must carry a committed calibration result
+    that met its declared rule against the current labels.
+
 A synthetic case runs first, to show that the check fails on a judge without
 the list. Credential-free; reads YAML only.
 """
 
 from __future__ import annotations
 
+import importlib.util
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -104,10 +114,73 @@ def self_test() -> None:
             sys.exit("check-agent-judges: self-test failed: an llm_judge row passed")
 
 
+OMP_ISOLATION_FLAGS = (
+    "--no-tools",
+    "--no-extensions",
+    "--no-skills",
+    "--no-rules",
+    "--no-lsp",
+    "--no-pty",
+    "--no-session",
+)
+
+
+def load_evals_judge():  # type: ignore[no-untyped-def]
+    spec = importlib.util.spec_from_file_location("evals_judge", ROOT / "scripts" / "evals-judge.py")
+    module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+    sys.modules["evals_judge"] = module
+    spec.loader.exec_module(module)  # type: ignore[union-attr]
+    return module
+
+
+def judge_route_problems() -> list[str]:
+    """Each way a selectable judge in `evals/judges/` can fail to stay transcript-only or honest."""
+    ej = load_evals_judge()
+    found: list[str] = []
+    judges = []
+    for path in sorted((ROOT / "evals" / "judges").glob("*.yaml")):
+        try:
+            judges.append(ej.load_judge(path))
+        except ej.JudgeError as err:
+            found.append(err.message)
+    if sum(1 for j in judges if j.status == "default") != 1:
+        found.append("evals/judges: exactly one judge must have status: default")
+    omp_judges = [j for j in judges if j.route == "omp"]
+    if not omp_judges:
+        found.append("evals/judges: no omp judge defines the non-Claude route")
+    for judge in omp_judges:
+        argv = ej.omp_argv("omp", judge, ej.JUDGE_SYSTEM_PROMPT, "u")
+        missing = [flag for flag in OMP_ISOLATION_FLAGS if flag not in argv]
+        if missing:
+            found.append(f"{judge.judge_id}: omp command line lacks {', '.join(missing)}")
+        if any(a.startswith("--tools") for a in argv):
+            found.append(f"{judge.judge_id}: omp command line grants a tool list")
+        if judge.status == "validated":
+            if not judge.calibration:
+                found.append(f"{judge.judge_id}: validated without a calibration result")
+                continue
+            result_path = ROOT / "evals" / "judges" / judge.calibration
+            if not result_path.is_file():
+                found.append(f"{judge.judge_id}: calibration result {judge.calibration} is missing")
+                continue
+            result = json.loads(result_path.read_text())
+            labels = yaml.safe_load((ROOT / "evals" / "judges" / "calibration" / "labels.yaml").read_text())
+            if not result.get("met_acceptance_rule"):
+                found.append(f"{judge.judge_id}: validated but its calibration did not meet the acceptance rule")
+            if result.get("labels_sha") != ej.sha(labels):
+                found.append(f"{judge.judge_id}: calibration was measured against different labels than are committed")
+            if result.get("judge", {}).get("model_requested") != judge.model:
+                found.append(f"{judge.judge_id}: calibration was measured on a different model")
+    if "UNTRUSTED" not in ej.JUDGE_SYSTEM_PROMPT:
+        found.append("omp judge system prompt does not mark the transcript untrusted")
+    return found
+
+
 def main() -> int:
     """Report every judge that can wander, and exit nonzero if there is one."""
     self_test()
     found = [p for path in sorted(TASKS.glob("*/*.yaml")) for p in problems(path)]
+    found += judge_route_problems()
     for line in found:
         print(f"check-agent-judges: {line}", file=sys.stderr)
     return 1 if found else 0

@@ -37,16 +37,42 @@ harness in use before the first search or write call.
 Green CI is the acceptance test
 ===============================
 
-**If the tests pass, the upgrade worked.** That is the whole gate.
+**Green CI is required, but it is not the whole acceptance test.** The pull
+request title must also reflect whether the batch fixes a serious security
+vulnerability in the shipped product. Classify the title through `pr-title`,
+which routes type selection to `conventional-commits-type`; do not add a
+separate review round.
 
-The suite is the only thing that can say whether a new version broke
-something; reading a lockfile diff by eye says nothing. So this skill runs no
-review round and is not `undertake` work — a review of a lockfile spends quota
-for no finding. It opens the pull request through `pr` and waits on CI.
+For each advisory that may qualify, gather and record its identifier and link,
+severity, affected dependency and versions, patched version included in the
+batch, and evidence that the vulnerable dependency affects the shipped
+product. Do not infer applicability from a package name or severity alone.
+When evidence is insufficient, state what is unknown and do not call it a
+verified security fix. A high- or critical-rated advisory is a positive case
+only when its applicability and product impact are supported.
 
-A red suite is the upgrade talking. It is answered by finding which upgrade
-broke what, and never by pinning around the failure, skipping the test, or
-silencing it — the constitution's *Fix problems, do not hide them*.
+Keep `build(deps): …` for routine bulk upgrades, and preserve the existing
+`test`, `build` and `ci` boundaries for changes confined to verification or
+tooling. A batch that actually patches a serious vulnerability affecting the
+shipped product uses `fix(security): …`, including a mixed batch of routine
+upgrades and that security fix. An advisory limited to development or CI
+tooling is not automatically a product fix; judge whether it changes the
+safety of the shipped artifact, not just the dependency category.
+
+`fix` is the release-relevant type; `security` is descriptive scope. The
+actual release also depends on the merge commit subject, path exclusions and
+other pending commits. Read *Projected Releases* when available; never promise
+a patch release from the title alone. Preserve a type set by a user or
+another actor: raise a disagreement and wait rather than retitling it.
+
+**A security patch held out by the existing major-version constraint remains
+unresolved.** Report the dependency and constraint. Do not call it fixed or
+cross the unattended boundary to take the major upgrade.
+
+A red suite is still answered by finding which upgrade broke what, and never
+by pinning around the failure, skipping the test, or silencing it — the
+constitution's *Fix problems, do not hide them*.
+
 
 
 The run is unattended
