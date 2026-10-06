@@ -1,0 +1,199 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`pr-body` maintains a PR blocker from undertaking evidence",
+          "details": "observed='yes', expected='yes' (skill_name='pr-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The stale PR human label is removed",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/gh pr edit 25 --remove-label human/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" gh pr edit 25 --remove-label human']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The corrected body is published through the fixture route",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/gh pr edit 25 .*--body(-file)?/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" gh pr edit 25 --body \\'Keep PR #25 draft until disposable-host smoke evidence is available']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The published body names the exact credential and network prerequisite",
+          "details": "Pattern '(?s)Blockers.*Vultr.*Tailscale.*Summary.*draft.*' found in file (matched: 'Blockers\n--------\n\n- **Smoke evidence remains unmet.** Running the disposable-host smoke test requir')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The published body drops the false device-class blocker",
+          "details": "Pattern 'laptop-session' correctly absent from file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revised body does not claim the task is human-only",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revised body does not claim the task is human-only",
+            "duration_seconds": 8.17,
+            "findings": [
+              "Final result explicitly reports the PR body update.",
+              "Separate recorded gh call removes only `human`; `needs-review` is preserved.",
+              "PR remains draft until disposable-host smoke evidence is available.",
+              "Required access is described as authorized Vultr credentials and Tailscale access to the test host.",
+              "The laptop-only blocker is replaced with capability prerequisites."
+            ],
+            "index": 5,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "adc8a1af3c5dedbe2bb580fc9116f9b8405b9f7a644267f4bae273114c570ab8",
+            "rationale": "The final [RESULT - SUCCESS] reports the body update, removal of only `human` while preserving `needs-review`, and continued draft status pending smoke evidence. It identifies authorized Vultr credentials and Tailscale connectivity as prerequisites rather than treating the work as laptop-only or human-only, and the fixture records corroborate the edits.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2157,
+              "output": 150
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "065a35e8857bea73c7656b13ef63c8fdc97aa52b1f4f4ef247583500bdc61016"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-body-08-capability-gap-is-not-human-blocker",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 63.406890869140625,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-body-08-capability-gap-is-not-human-blocker",
+      "tokens": 137416,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.6.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-06T20:06:23.447306",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "065a35e8857bea73c7656b13ef63c8fdc97aa52b1f4f4ef247583500bdc61016",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "medium",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 2157,
+      "output": 150
+    }
+  },
+  "plugin_revision": {
+    "commit": "fafe2cca984578c620d4ee7a905b624173214ba5",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-06T13:06:32.726970+00:00",
+  "run_id": "2026-10-06_20-05-20",
+  "schema_version": 3,
+  "started_at": "2026-10-06T20:05:20.036403",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-body-08-capability-gap-is-not-human-blocker": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "pr-body-08-capability-gap-is-not-human-blocker"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

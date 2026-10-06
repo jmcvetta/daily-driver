@@ -121,11 +121,11 @@ the requirement. `undertake` decides whether a human contribution is actually
 needed and whether the PR is ready; only an outstanding human action earns a
 human-action blocker or the PR `human` label.
 
-Changing body text does not change PR labels. Apply the matching label
-operation through the selected harness route and verify it succeeds. On Omp,
-remove a cleared human blocker with `gh pr edit <N> --remove-label human`.
-This is a separate write from editing the body. Preserve unrelated labels.
-Never report a label change based on body content alone.
+When current evidence says an existing PR `human` label is no longer
+warranted, remove it through the selected harness route. Apply and verify this
+label change separately from the body edit; preserve unrelated labels. The
+body write does not change labels, so never report a label change from the
+body update alone.
 
 
 The human-action blocker
