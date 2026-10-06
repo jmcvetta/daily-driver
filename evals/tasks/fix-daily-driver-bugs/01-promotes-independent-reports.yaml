@@ -1,8 +1,8 @@
-task_id: fix-daily-driver-bugs-01-promotes-independent-reports
+task_id: fix-daily-driver-bugs-01-promotes-independent-reports-omp
 description: >-
   Promote two independent automatic reports, verify both task states, and
   dispatch both tasks in one bounded Omp batch.
-tags: [fix-daily-driver-bugs, behaviour, omp-only, fire]
+tags: [fix-daily-driver-bugs, behaviour, omp-only, native, fire]
 
 sandbox:
   template_sources:

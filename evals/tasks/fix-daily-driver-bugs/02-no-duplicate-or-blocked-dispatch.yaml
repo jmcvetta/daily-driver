@@ -1,8 +1,8 @@
-task_id: fix-daily-driver-bugs-02-no-duplicate-or-blocked-dispatch
+task_id: fix-daily-driver-bugs-02-no-duplicate-or-blocked-dispatch-omp
 description: >-
   Keep unresolved, duplicate, blocked, claimed, already-converted, and partially
   written reports out of the implementation batch.
-tags: [fix-daily-driver-bugs, behaviour, omp-only, fire]
+tags: [fix-daily-driver-bugs, behaviour, omp-only, native, fire]
 
 sandbox:
   template_sources:
