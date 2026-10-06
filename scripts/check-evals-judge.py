@@ -212,6 +212,21 @@ def test_prompt_and_portability() -> None:
     expect_error("reference refused", "unsupported", ej.check_portable, {**criterion, "include_reference": True})
     big = ej.Judge("omp-fixture", "omp", OMP_JUDGE.model, "candidate", {}, None)
     expect_error("prompt size is counted in bytes", "unsupported", ej.run_omp, big, "s", "\u00e9" * (ej.DEFAULT_MAX_PROMPT_BYTES // 2 + 1), env={"PATH": "/nonexistent"})
+    long_output = "trace " * 40 + "[RESULT - SUCCESS] verified reply"
+    rendered = ej.render_transcript(
+        {"iterations": [{"agent_output": long_output}]},
+        {"include_agent_output": True, "max_file_chars": 128},
+    )
+    # Prefix-only truncation drops this anchor and makes a real result score as absent.
+    check("long output preserves final result", "[RESULT - SUCCESS] verified reply" in rendered)
+    check("long output stays within its transcript budget", len(rendered.split(":\n", 1)[-1]) <= 128)
+    expect_error(
+        "oversized final reply refused",
+        "unsupported",
+        ej.render_transcript,
+        {"iterations": [{"agent_output": "trace [RESULT - SUCCESS] " + "x" * 80}]},
+        {"include_agent_output": True, "max_file_chars": 32},
+    )
     expect_error("empty output refused", "unsupported", ej.render_transcript, {"iterations": [{"agent_output": ""}]}, criterion)
     expect_error("no turns refused", "unsupported", ej.render_transcript, {"iterations": []}, criterion)
 

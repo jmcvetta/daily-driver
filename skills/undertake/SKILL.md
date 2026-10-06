@@ -367,12 +367,58 @@ resume. Reaching `Ready for review` changes the work being watched; it does
 not start a second watch. Only a merged or closed pull request, or an explicit
 user stop, ends this obligation.
 
-**The body is `pr-body`'s, and so are the blockers that go with a Tofu
-diff.** Where the branch's changes touch the infrastructure Tofu stack, the
-body carries that skill's human-action blocker and the pull request the
-`human` label: the changes must be applied, and the updated state committed,
-before the pull request merges. `Ready for review` is what honours the
-blocker when the round is over — the pause is stated there.
+**The body is `pr-body`'s, and so are blockers that go with a Tofu diff.**
+Where the branch changes the infrastructure Tofu stack, the body carries
+`pr-body`'s apply-and-state blocker and the pull request the `human` label
+while that action remains outstanding. A plan is a separate operation: it is
+not a human action by default, and `Implement`'s escalation gate decides
+whether its target, route and restrictions permit this session to run it.
+`issue-labels`' `human` kind remains an issue classification, not this
+temporary pull-request state.
+
+**Undertake owns operational escalation.** `pr-body` publishes the decision
+and evidence established here; it does not infer inability from a missing
+tool, credential, network route, a Tofu diff, or an old blocker. On each
+operation that might need a person, identify the exact blocked step and
+classify it: unknown route, repairable execution failure, current-session
+capability or access gap, external wait, or genuine human dependency. For an
+unknown route, inspect relevant repository instructions, documentation and
+Makefile routes, plus available tools and access without exposing secrets.
+Attempt each available, permitted route; diagnose ordinary repairable
+failures within this task's scope and the existing workflow bounds.
+Documentation alone is not evidence that a route cannot run.
+
+Capability is not authorization, and this session's capability is not the
+task's actor requirement. Describe required credentials, connectivity, tools
+and authorization directly, not as a laptop-, local-, cloud-, or human-only
+task. An authorized agent with those capabilities may continue through an
+available handoff under existing dispatch rules. If this session lacks access
+and no authorized agent route exists, report the precise environment
+prerequisite and resumption or handoff path; do not invent a dispatch
+facility, transfer secrets, or call the work human-only. If a person must
+provision access or approve an operation, isolate only that contribution from
+the work an authorized agent can do.
+
+An explicit production prohibition or required human approval is enough to
+stop without a probe. Never test a prohibited operation, access production,
+perform a dangerous action to see whether it fails, bypass authentication,
+expand privileges, or treat a binary or token as permission. For `tofu plan`,
+inspect its target, documented route and restrictions first: run an available
+permitted plan without asking the user; do not run a plan against live
+infrastructure in this task. The repository's human-only apply and
+updated-state requirement remains.
+
+Escalate only on an observed human dependency. State the blocked step, the
+attempted route and its observed failure, or the exact restriction that
+precluded an attempt, and request only the smallest contribution the person
+can supply. Evidence can be linked; do not turn every PR body into a
+transcript. Pending CI and other external waits stay with the existing
+continuation; a recoverable execution failure is not a human blocker.
+Complete independent permitted work before pausing unless a higher-priority
+safety rule requires an immediate stop. On resume, revalidate the dependency
+against current evidence, then remove satisfied or stale blocker text and the
+corresponding PR `human` label while preserving unrelated labels. Keep every
+still-valid apply, state, approval or other requirement.
 
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate
@@ -422,17 +468,31 @@ discharges the leaving-draft trigger in its description: it fires on exactly
 the moment this step occupies, and a round already run on this head is that
 trigger already answered.
 
-**A pull request that waits on a person stops here instead.** Where the body
-carries `pr-body`'s human-action blocker — a Tofu change awaiting its apply,
-or any other action only a person can take before merge — the round at
-`Review the head` still runs to its end. The round's end is then a comment
-on the pull request, not a state change: it says the review cycle is
-complete, and names the action the pull request waits on. The pull request
-stays a draft, and the sequence pauses there. What resumes it is the
-person's action landing on the branch — the Tofu applied, the updated state
-committed — after which the pull request returns through the gate below
-like any other. The person's commit is a new diff: `Review the head` runs
-over it once before the gate, the way any changed head earns a round.
+**A verified human dependency stops readiness here.** First revalidate each
+reported blocker against current evidence, including on resume. Do not treat
+the old body, label or an earlier agent claim as proof that the action remains
+outstanding. If evidence shows it is satisfied or stale, update the body and
+remove only its `human` label, preserving other labels; keep any separate,
+valid requirement. Otherwise run the review round to its end first. Its
+completion comment names the exact blocked step, the attempted permitted
+route and observed failure, or the restriction that precluded an attempt, and
+the smallest human contribution needed. The pull request stays a draft.
+Complete independent permitted work before pausing unless a safety rule
+requires an immediate stop. On resume, the person's contribution must be
+reflected in current branch evidence — for Tofu, the apply and committed
+updated state — and the changed head earns its review round before returning
+through the gate. Pending CI and other external waits are not human
+dependencies; follow their existing continuation instead.
+
+**A current-session capability gap is not a human dependency.** If a required
+verification remains unmet because this session lacks credentials,
+connectivity or another capability, use an available authorized-agent
+handoff. If none exists, keep the pull request draft and report the exact
+prerequisite and concrete handoff or resumption path; do not ask for a laptop
+or apply the PR `human` label solely because this session lacks access. Finish
+independent permitted work and the review round before pausing, unless a
+safety rule requires an immediate stop. The gate remains unmet until the
+required verification evidence is recorded.
 
 When the gate clears and the pull request is marked ready, the milestone's
 moment has arrived: the sequence publishes the first-readiness report through
@@ -907,16 +967,17 @@ The reference file for the harness in use names the route.
 Where it stops and waits
 ========================
 
-Autonomy is the point, so each pause has to earn itself. Thirteen stop the
+Autonomy is the point, so each pause has to earn itself. Fifteen stop the
 sequence. Eight stop it to *ask* — the ambiguous issue, the request too vague
 to write one for, an issue labelled `proposal`, an issue carrying two of the
 six labels, the failing approach, a designated branch the harness states
 ambiguously, more than one existing task branch on the issue's record, and a
 base merge whose conflict is a real one. A blocked issue,
-an epic, an issue labelled `human`, running or failed CI, a review wall, and a
-human action owed stop it to report the unfinished condition and its actual
-resume path. Where an orchestrator's address was given, every stop is also
-reported to it under `Reporting to an orchestrator`.
+an epic, an issue labelled `human`, running or failed CI, a review wall, a
+human action owed, and a current-session capability gap with no authorized
+handoff stop it to report the unfinished condition and actual resume path.
+Where an orchestrator's address was given, every stop is also reported to it
+under `Reporting to an orchestrator`.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
@@ -951,21 +1012,28 @@ reported to it under `Reporting to an orchestrator`.
   never met. Where both sides changed the same logic, picking either loses
   behaviour, and that is the constitution's rule against guessing at intent:
   name the conflicting files and wait.
-- **A human action the pull request waits on**, at `Ready for review`. The
-  human-action blocker in `Blockers` marks a Tofu change awaiting its apply — the
-  updated state committed — or any other bar only a person clears. The
-  review round runs to its end first; its end is a comment that says so and
-  names the action, the pull request stays a draft, and the sequence pauses
-  until the branch carries the result. An apply is not something CI reports,
-  and no check a session can read answers for it.
-
-**"It cannot run here" is not a stop until the docs say so.** An acceptance
-step the session believes it cannot perform in this environment — a missing
-tool, a missing credential, a run that "needs a laptop" — is not a blocker
-until the session has searched the repository's docs and Makefile for the
-route. A blocker posted to a pull request or an issue names what was searched
-and what it found. A blocker that cites no search is a guess, and the next
-session pays to disprove it.
+- **A genuine human dependency still owed**, at `Ready for review` or the
+  operation that exposes it. `undertake` owns escalation: classify the
+  blocked step, investigate unknown routes, attempt available permitted
+  routes, and repair ordinary failures within scope. Stop without an attempt
+  only where an explicit prohibition or required approval precludes it. Never
+  probe production or a dangerous operation. A genuine escalation names the
+  attempted route and observed failure, or exact restriction, and asks only
+  for the missing human contribution. Finish independent permitted work first
+  unless safety requires an immediate stop. On resume, revalidate current
+  evidence and clear satisfied or stale blocker text and its PR `human` label
+  without removing unrelated labels or valid outstanding requirements. A
+  Tofu apply and updated-state commit remain human-only.
+- **A current-session capability or access gap with no authorized-agent
+  handoff**, at `Ready for review`. This is not proof the work needs a human.
+  State the exact required credential, connectivity, tool or authorization
+  capability, and the concrete handoff or resumption path. Do not describe a
+  step as laptop-, local-, cloud- or human-only when capabilities, not device
+  or actor, are the requirement. Do not invent a dispatch facility or transfer
+  secrets. Keep the PR draft until the verification evidence exists, and do
+  not add the PR `human` label solely because this session lacks access.
+- **Pending CI and other external waits** are not human actions; retain
+  ownership and use the existing continuation rules.
 
 The round at `Review the head` and `Fix, answer, resolve, push` has three stops
 of its own — its own wait on CI, a review finding whose fix is a real

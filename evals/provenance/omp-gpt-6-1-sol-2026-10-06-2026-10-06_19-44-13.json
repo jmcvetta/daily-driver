@@ -1,0 +1,468 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`pr-body` maintains a PR blocker from undertaking evidence",
+          "details": "observed='yes', expected='yes' (skill_name='pr-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The stale PR human label is removed",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/gh pr edit 25 --remove-label human/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" gh pr edit 25 --remove-label human --body \\'Keep PR #25 draft until disposable-host smoke ']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The corrected body is published through the fixture route",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/gh pr edit 25 .*--body(-file)?/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" gh pr edit 25 --remove-label human --body \\'Keep PR #25 draft until disposable-host smoke ']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The published body names the exact credential and network prerequisite",
+          "details": "Pattern '(?s)Summary.*Blockers.*Vultr.*Tailscale.*draft.*' not found in file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The published body drops the false device-class blocker",
+          "details": "Pattern 'laptop-session' correctly absent from file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revised body does not claim the task is human-only",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revised body does not claim the task is human-only",
+            "duration_seconds": 8.34,
+            "findings": [
+              "Final result explicitly reports the PR body update and required label changes.",
+              "PR remains draft until disposable-host smoke evidence is recorded and readiness revalidated.",
+              "Names authorized Vultr API credentials and Tailscale access to the disposable host.",
+              "Frames the blocker as a session capability gap, with no required device class.",
+              "Fixture gh edit and published-body verification support the reported changes."
+            ],
+            "index": 5,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "adc8a1af3c5dedbe2bb580fc9116f9b8405b9f7a644267f4bae273114c570ab8",
+            "rationale": "The final [RESULT - SUCCESS] reports the body update, removal of only `human` while preserving `needs-review`, and continued draft status pending smoke evidence. The published body and recorded edit identify authorized Vultr API credentials and Tailscale connectivity as the prerequisites without classifying the work as laptop-only or human-only.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2288,
+              "output": 154
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "065a35e8857bea73c7656b13ef63c8fdc97aa52b1f4f4ef247583500bdc61016"
+      },
+      "measured_score": 0.818182,
+      "raw_weighted_score": 0.8181818181818182,
+      "replicate_index": 0,
+      "task_id": "pr-body-08-capability-gap-is-not-human-blocker",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an access gap with an authorized handoff",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The incapable session observes its access gap",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/smoke-test --disposable-host/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" smoke-test --disposable-host']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The available authorized agent handoff runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/handoff-smoke --disposable-host/)\nExamples: ['.fixture/bin/handoff-smoke --disposable-host']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The fixture records both the access observation and the authorized handoff",
+          "details": "Pattern '(?s)smoke-test --disposable-host.*authorized-agent-handoff --disposable-host' found in file (matched: 'smoke-test --disposable-host\nauthorized-agent-handoff --disposable-host')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result reports handoff evidence rather than a laptop requirement",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result reports handoff evidence rather than a laptop requirement",
+            "duration_seconds": 9.57,
+            "findings": [
+              "Initial session lacked Vultr credentials and a Tailscale route; local smoke exited 2.",
+              "Authorized handoff-smoke command executed successfully.",
+              "Final reply reports health=200, network=reachable, session-persisted=yes, and unauthorized-tailnet=denied as fixture evidence.",
+              "No intrinsic human or laptop requirement was asserted; fixture results were distinguished from real-host verification."
+            ],
+            "index": 4,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "c11e8c5639f2be4cc601d615ce86d0752479744b602118c2a0ddd4d37515e8f1",
+            "rationale": "The final [RESULT - SUCCESS] reports the initial credential/network gap, uses the authorized agent handoff, and reports passing fixture smoke evidence without treating a laptop or human as required. The tool transcript confirms both the failed local attempt and successful authorized smoke, and the reply makes the gate pending only until evidence arrived.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1649,
+              "output": 155
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "065a35e8857bea73c7656b13ef63c8fdc97aa52b1f4f4ef247583500bdc61016"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-authorized-agent-handoff",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` revalidates an existing human blocker on resume",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The stale PR human label is removed",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/gh pr edit 25 --remove-label human/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" gh pr edit 25 --remove-label human --body \\'Summary\\n\\nBlockers\\n- Required security approval']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The corrected PR body is published",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/gh pr edit 25 .*--body(-file)?/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" gh pr edit 25 --remove-label human --body \\'Summary\\n\\nBlockers\\n- Required security approval']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The fixture recorded the precise label and body maintenance operations",
+          "details": "Pattern '(?s)(?=.*gh pr edit 25 --remove-label human)(?=.*gh pr edit 25 .*--body(-file)?)' found in file (matched: '')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The published body removes the satisfied apply blocker but keeps approval outstanding",
+          "details": "Pattern '(?s)Summary.*Blockers.*Required security approval remains pending.*' found in file (matched: 'Summary\n\nBlockers\n- Required security approval remains pending.\n\n---\nModel: gpt-6.1-sol\nHarness: Omp')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The published body no longer claims the satisfied apply is outstanding",
+          "details": "Pattern 'Waits on a human apply' correctly absent from file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result preserves the unrelated valid blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result preserves the unrelated valid blocker",
+            "duration_seconds": 9.28,
+            "findings": [
+              "Final result cites authoritative apply and state-commit evidence 1a2b3c4.",
+              "Executed gh pr edit 25 --remove-label human with a replacement body retaining only the security-approval blocker.",
+              "Published-body trace confirms the updated blocker section; the recorded command removes only human, leaving needs-approval unchanged."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "6e458a056c4f1c7e5265c4a2c815d866435657bcb653fba800eb07e27ed70752",
+            "rationale": "The final [RESULT - SUCCESS] states that current apply and state-commit evidence satisfies the old blocker, reports its removal along with the human label, and preserves the separate security approval requirement and needs-approval label. The successful fixture edit command and subsequent published-body and trajectory reads substantiate the updates rather than merely promising them.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1874,
+              "output": 147
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "065a35e8857bea73c7656b13ef63c8fdc97aa52b1f4f4ef247583500bdc61016"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-resume-clears-satisfied-blocker",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 60.80944347381592,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-body-08-capability-gap-is-not-human-blocker",
+      "tokens": 103875,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 36.841227769851685,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-17-authorized-agent-handoff",
+      "tokens": 143271,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 43.21335959434509,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-17-resume-clears-satisfied-blocker",
+      "tokens": 193301,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.6.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-06T19:46:34.586608",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "065a35e8857bea73c7656b13ef63c8fdc97aa52b1f4f4ef247583500bdc61016",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "medium",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 5811,
+      "output": 456
+    }
+  },
+  "plugin_revision": {
+    "commit": "999d0aac2de1e1124028557392f0fd306ff30d40",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-06T12:47:03.488185+00:00",
+  "run_id": "2026-10-06_19-44-13",
+  "schema_version": 3,
+  "started_at": "2026-10-06T19:44:13.711992",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-body-08-capability-gap-is-not-human-blocker": [
+          0.818182
+        ],
+        "undertake-17-authorized-agent-handoff": [
+          1.0
+        ],
+        "undertake-17-resume-clears-satisfied-blocker": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "pr-body-08-capability-gap-is-not-human-blocker",
+        "undertake-17-authorized-agent-handoff",
+        "undertake-17-resume-clears-satisfied-blocker"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

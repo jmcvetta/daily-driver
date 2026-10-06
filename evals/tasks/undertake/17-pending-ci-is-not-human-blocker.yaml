@@ -1,0 +1,35 @@
+# Without this row, an agent can convert an ordinary external CI wait into a
+# human-action blocker and ask for intervention no person can provide.
+task_id: undertake-17-pending-ci-is-not-human-blocker
+description: >-
+  Pending CI remains an external wait with the existing continuation, not a
+  human-action request.
+tags: [undertake, behaviour, fire]
+initial_prompt: >-
+  Undertake PR #25. The branch is current, review is complete, and required CI
+  is still running. Nothing failed and no human approval or action is pending.
+  What remains before the PR can be ready?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 420}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` handles an unfinished PR"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The reply retains ownership through the CI wait
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply. Score 0 if absent.
+      Score 1 only if the reply names the running required CI as an external
+      wait, keeps the PR unready, and retains the existing continuation or
+      owner-resume path. It must not ask a person to run CI, request approval,
+      label the PR human-blocked, or claim readiness.

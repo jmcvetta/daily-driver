@@ -3,14 +3,14 @@
 # price from these rates and the token counts its run row carries. Claude
 # Code reports its own price, so its models need no entry here.
 #
-# Keyed by the requested model id, without a trailing `:<level>` thinking
-# suffix. Each entry gives four rates -- uncached `input`, `output`,
-# `cache_read` and `cache_write` (USD per token, not per million) -- the
-# `source` URL the rates were read from, and the date they were read on
-# (`read_on`, YYYY-MM-DD).
+# Keyed by requested model id, without trailing `:<level>` thinking suffix.
+# Priced entries carry four rates -- uncached `input`, `output`, `cache_read`
+# and `cache_write` (USD per token, not per million). All entries cite the
+# source URL and date read (`read_on`, YYYY-MM-DD).
 #
-# A run whose model has no entry fails to record, naming the model. Add the
-# entry from the provider's published price list; never estimate one.
+# A subscription-billed model with no applicable per-token rate may instead
+# declare `unpriced_reason`, `source` and `read_on`. Its tokens remain recorded;
+# its dollar cost stays unavailable, never zero.
 #
 #   vercel-ai-gateway/zai/glm-5.3:
 #     input: <USD per uncached input token>
@@ -20,4 +20,8 @@
 #     source: <URL of the published price list>
 #     read_on: <YYYY-MM-DD>
 
-models: {}
+models:
+  openai-codex/gpt-6.1-sol:
+    unpriced_reason: Codex subscription usage has no per-token dollar rate.
+    source: https://developers.openai.com/codex/pricing
+    read_on: 2026-10-06
