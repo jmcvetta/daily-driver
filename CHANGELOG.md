@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.49.2](https://github.com/jmcvetta/daily-driver/compare/v0.49.1...v0.49.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* **embark:** honor Omp class-specific routes ([#552](https://github.com/jmcvetta/daily-driver/issues/552)) ([1687199](https://github.com/jmcvetta/daily-driver/commit/1687199dbc41c16d83b7d930ec56d4e79ca8ff8b))
+
 ## [0.49.1](https://github.com/jmcvetta/daily-driver/compare/v0.49.0...v0.49.1) (2026-10-05)
 
 

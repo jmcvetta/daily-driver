@@ -30,8 +30,8 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | File | Role configuration |
 | --- | --- |
 | `glm.yml` | GLM 5.3 Flash for default, small, vision, commit, and tiny work; GLM 5.3 for deep analysis, planning, and advice; GLM 5.3 Fast for task subagents. |
-| `gpt.yml` | Sol for default work, deep analysis, and advice; Luna for small, task, vision, commit, and tiny work; Astra for planning. |
-| `gpt.gateway.yml` | DeepSeek V4 Pro for default and deep work; GLM Flash for small and task work; Kimi K3 for planning; Qwen 3.8 Max for advice; MiniMax M3 for vision; Mercury 2.5 for commit and tiny work. |
+| `gpt.yml` | GPT role overlay using `openai-codex` routes. |
+| `gpt.gateway.yml` | **Unsupported legacy overlay.** Its GPT role pins still use `vercel-ai-gateway`; do not use it for GPT calls. |
 | `cocktail.yml` | GLM 5.3 Flash by default, for task subagents, and for small, vision, and commit work; Kimi K3 for planning and deep work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `cocktail.gpts-choice.yml` | The original GPT-generated cocktail: DeepSeek V4 Pro by default; Luna for small work; Sol for planning and deep work; GLM Flash for task subagents; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
@@ -54,7 +54,12 @@ omp models find mercury-2.5
 
 Catalog entries do not guarantee that a provider still serves a model. An inference request can fail even when `omp models find` lists it.
 
-The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. Omp reads that name only; it uses `VERCEL_AI_GATEWAY_API_KEY` for catalog discovery, not for requests. In this repository `make evals-setup-omp` maps the second name to the first. The `openai-codex` models use Omp's configured OpenAI Codex credentials.
+The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. Omp reads that name
+only; it uses `VERCEL_AI_GATEWAY_API_KEY` for catalog discovery, not for
+requests. In this repository `make evals-setup-omp` maps the second name to the
+first for non-GPT gateway routes. Every GPT subject, judge, and helper call
+must use `openai-codex`; never route a GPT model through the Vercel AI Gateway.
+Other non-GPT gateway routes remain allowed.
 
 ## Capability classes
 
