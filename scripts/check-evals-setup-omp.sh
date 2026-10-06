@@ -26,12 +26,12 @@ catalog="openai-codex/gpt-5.6-sol openai-codex/gpt-6-luna openai-codex/gpt-6-sol
 if [ -n "${AI_GATEWAY_API_KEY:-}" ]; then
 	catalog="${catalog} vercel-ai-gateway/zai/glm-5.3-flash ${STUB_GATEWAY:-vercel-ai-gateway/zai/glm-5.3}"
 fi
-if [ -n "${STUB_NO_CODEX:-}" ]; then
-	catalog="${catalog//openai-codex\\//}"
-fi
 printf '{"models":['
 sep=""
 for m in ${catalog}; do
+	if [[ -n "${STUB_NO_CODEX:-}" && "${m}" == openai-codex/* ]]; then
+		continue
+	fi
 	case "${m}" in *"$3"*) printf '%s{"selector":"%s"}' "${sep}" "${m}"; sep=",";; esac
 done
 printf ']}\n'
