@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# Drive scripts/evals-setup-omp.sh against a stub `omp` and a stub `curl` in a
-# throwaway HOME. Offline: the real installer and the gateway are never reached.
+# Drive scripts/evals-setup-omp.sh against stubs in a throwaway HOME. Offline:
+# the real installer and providers are never reached.
 #
-# Without it these pass silently: a cloud container that exports only
-# VERCEL_AI_GATEWAY_API_KEY, where Omp lists no gateway model; a reinstall over
-# an `omp` that is already there; an `omp models find` substring hit
-# (glm-5.3-flash for glm-5.3) taken as the exact model; an experiment list
-# that yields no model, which checks nothing and passes; and a missing key that
-# a later paid run discovers instead of this setup.
+# Without it these pass silently: missing gateway-key enforcement for gateway
+# models; a Codex-only setup that wrongly demands a gateway key; a reinstall
+# over an Omp already present; substring model matches; and empty/missing model
+# inputs that check nothing.
 
 set -euo pipefail
 
@@ -24,11 +22,13 @@ mkdir -p "${BIN}" "${ROOT}/home"
 cat >"${BIN}/omp" <<'EOF'
 #!/usr/bin/env bash
 if [ "$1" = "--version" ]; then echo "omp/stub"; exit 0; fi
-catalog="openai-codex/gpt-5.6-sol"
+catalog="openai-codex/gpt-5.6-sol openai-codex/gpt-6-luna openai-codex/gpt-6-sol openai-codex/gpt-6.1-sol"
 if [ -n "${AI_GATEWAY_API_KEY:-}" ]; then
 	catalog="${catalog} vercel-ai-gateway/zai/glm-5.3-flash ${STUB_GATEWAY:-vercel-ai-gateway/zai/glm-5.3}"
 fi
-[ -z "${STUB_NO_CODEX:-}" ] || catalog="${catalog#openai-codex/gpt-5.6-sol}"
+if [ -n "${STUB_NO_CODEX:-}" ]; then
+	catalog="${catalog//openai-codex\\//}"
+fi
 printf '{"models":['
 sep=""
 for m in ${catalog}; do
@@ -52,6 +52,10 @@ EOF
 cat >"${ROOT}/omp-b.yaml" <<'EOF'
     model: openai-codex/gpt-5.6-sol   # a comment
 EOF
+cat >"${ROOT}/omp-codex-only.yaml" <<'EOF'
+    model: openai-codex/gpt-6-luna
+EOF
+
 
 # run NAME EXPECTED_STATUS ENV...: run the setup with only ENV set, over
 # EXPERIMENTS (default: the two files above). EXPECTED_STATUS `nz` accepts any
@@ -89,8 +93,11 @@ expect_out "ok: openai-codex/gpt-5.6-sol"
 run "VERCEL_AI_GATEWAY_API_KEY alone" 0 VERCEL_AI_GATEWAY_API_KEY=k
 expect_out "ok: vercel-ai-gateway/zai/glm-5.3"
 
-run "neither key" 1
+run "neither key with gateway model" 1
 expect_out "AI_GATEWAY_API_KEY is not set (nor VERCEL_AI_GATEWAY_API_KEY)"
+
+EXPERIMENTS="${ROOT}/omp-codex-only.yaml" run "Codex-only without gateway key" 0
+expect_out "ok: openai-codex/gpt-6-luna"
 
 run "substring hit is not the model" 1 AI_GATEWAY_API_KEY=k STUB_GATEWAY=none
 expect_out "error: Omp does not list vercel-ai-gateway/zai/glm-5.3"
