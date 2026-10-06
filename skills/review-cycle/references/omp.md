@@ -78,7 +78,7 @@ which that mode rejects:
 
 ```text
 {
-  "command": "printf 'ci-watch-started\\n'; exec timeout --signal=TERM --kill-after=5s 900s gh pr checks --watch <pr> --repo <owner>/<repo>",
+  "command": "printf 'ci-watch-started sha=<sha> deadline=<utc>\\n'; exec timeout --signal=TERM --kill-after=5s <remaining>s gh pr checks --watch <pr> --repo <owner>/<repo>",
   "name": "ci-<pr>-<short-sha>",
   "cwd": "<task-worktree>",
   "ready": {"log": "ci-watch-started"}
@@ -92,13 +92,13 @@ The `exec` preserves the watcher's exit status as the service's status.
 The service command uses GNU coreutils `timeout`. It owns the fifteen-minute
 deadline, sends `TERM` at the cap, then sends `KILL` after five seconds if the
 watcher has not exited. Exit `124` marks expiration; `137` is a `SIGKILL`
-status. Every nonzero exit is non-green. Read both endpoints after the watcher
-exits.
+status. Every nonzero exit is non-green. Read all three sources after the
+watcher exits.
 If `timeout` is not installed, stop before starting an unbounded watch and
 report the missing deadline utility.
 
 After the service reports ready, inspect `read proc://<name>`. If it has
-already exited, read both CI endpoints immediately; do not request persistence
+already exited, read all three CI sources immediately; do not request persistence
 or restart it. Otherwise request persistence with `write proc://<name>/mode`
 and content `persist`, then inspect `read proc://<name>`. Persistence is
 required because the owning session may end during the wait. If the mode write
@@ -122,26 +122,81 @@ completion replay.
 | Half | Call |
 | ---- | ---- |
 | The PR check rollup | Named `bash` service above; inspect with `read proc://<name>`, stop with `write proc://<name>/kill` |
-| The check runs | `gh api /repos/{owner}/{repo}/commits/{sha}/check-runs` |
-| The commit statuses | `gh api /repos/{owner}/{repo}/commits/{sha}/status` |
+| The check runs | `gh api --paginate /repos/{owner}/{repo}/commits/{sha}/check-runs` |
+| The commit statuses | `gh api --paginate /repos/{owner}/{repo}/commits/{sha}/status` |
+| The workflow runs | `gh api --paginate '/repos/{owner}/{repo}/actions/runs?head_sha={sha}&per_page=100'` |
+| One workflow run | Named `bash` service, `gh run watch <run-id> --repo <owner>/<repo>`, below |
 
-The watcher is the wake; the two endpoint reads are the verdict. Read the
-check runs and statuses after `wait` returns or a resumed session finds the
-service exited. `reported` is their union, not the output of
-`gh pr checks` alone.
+The watcher is the wake; the three reads are the verdict. `gh pr checks
+--watch` stops when no rollup entry is pending, and it reads the rollup, not
+the workflow-run inventory. A workflow whose jobs have not registered is
+invisible to it, so its exit proves nothing about CI. Read all three sources,
+every page, after `wait` returns or a resumed session finds the service
+exited. `reported` is their union, not the output of `gh pr checks` alone.
 
-**An empty pair is a registration stop.** `gh pr checks --watch` returns when
-the PR rollup is empty; a process that has already exited cannot observe a
-future first check, however durable its completion is. Zero check runs and an
-empty `statuses` array therefore mean no check has registered. Reject that
-result and report it; do not call it green or hide an unbounded poll behind
-the word *waiting*. This is the partial watch exception `SKILL.md` names. A
+**The deadline is absolute and recorded.** When the wait begins, capture the PR
+head SHA and the deadline (start plus fifteen minutes, as a UTC timestamp), and
+print both in the launch marker: `printf 'ci-watch-started sha=<sha> deadline=<utc>\n'`.
+The service log is the recovery record. Every later watch for that head, a
+resumed session's included, runs `timeout` with the seconds remaining to that
+recorded deadline, never a fresh `900s`. A head that moved voids the old
+verdict and starts a new wait for the new head.
+
+**Workflow runs.** Do not filter the inventory by `status`. Keep a run only if
+its `head_sha` equals the captured SHA, and drop one only when its
+`pull_requests` array is non-empty and names other pull requests; an empty
+array proves nothing, and a branch name alone never ties a run to the head.
+Count the current attempt (`run_attempt`) only. A run is terminal only when
+`status` is `completed` and `conclusion` is non-null. `queued`, `requested`,
+`waiting`, `pending`, `in_progress`, null and unrecognized statuses are
+nonterminal, whether or not the run has registered a check.
+
+**A nonterminal run after the check watcher exits** gets its own service, with
+the original deadline's remainder:
+
+```text
+{
+  "command": "printf 'run-watch-started run=<run-id> attempt=<n>\\n'; exec timeout --signal=TERM --kill-after=5s <remaining>s gh run watch <run-id> --repo <owner>/<repo>",
+  "name": "ci-<pr>-<short-sha>-run-<run-id>-<attempt>",
+  "cwd": "<task-worktree>",
+  "ready": {"log": "run-watch-started"}
+}
+```
+
+Apply the same persistence, status inspection, reuse and cleanup rules as the
+check service. Do not add `--fail-fast`, an unmanaged job or a `sleep`. Fine-grained
+personal access tokens cannot run `gh run watch`; an unavailable watch is a
+reported observation blocker, never completion. Exit 0 from `gh run watch`
+without `--exit-status` can follow a failed run, so it is a wake only.
+
+After any watch finishes, re-read the head and all three sources. A newly
+observed active run blocks completion and receives only the remaining time.
+Terminal failures are facts for `Fix, answer, resolve, push`; they never
+satisfy the green gate and are not a reason to wait on.
+
+**An empty or partial registration is a stop.** `gh pr checks --watch`
+returns when the PR rollup is empty; a process that has already exited cannot
+observe a future first check, however durable its completion is. Zero check
+runs, an empty `statuses` array and no workflow run therefore mean nothing has
+registered. A nonempty successful subset does not prove that all expected CI
+has registered: where repository context names a workflow or check that has not
+registered, the observation is incomplete. Reject both and report them; do not
+call either green, add a fixed grace period, or hide an unbounded poll behind
+the word *waiting*. Where the observable inventory is terminal and no known gap
+remains, report the observed results, not a guarantee about workflows that
+have not appeared. This is the partial watch exception `SKILL.md` names. A
 repository known not to post commit statuses has no status half, but that fact
 must be known rather than inferred from this first read.
 
+**A failed, unauthorized, truncated or malformed read is not an empty
+success.** At the deadline, stop and name the remaining runs and checks, their
+IDs and statuses, and each registration gap. Do not review and do not post a
+completion notice. On resume, inspect the existing services and their recorded
+deadline; never restart a live service to extend the cap.
+
 No `sleep`, subscription, timer, or unmanaged Bash job belongs here. The
-named service is supervised by Omp, and `ci_watch.py` stops its process group
-at the workflow's fifteen-minute cap.
+named services are supervised by Omp, and GNU `timeout` enforces the
+fifteen-minute cap.
 
 Process durability is not session resumption
 --------------------------------------------
@@ -161,7 +216,7 @@ wait here borrows nothing from it — the loop's floor is what keeps a merge
 from restarting a run in flight.
 
 A persistent Omp service can outlive the session, but it does not launch or
-resume one. Its status and logs remain the recovery record. The endpoint reads
+resume one. Its status and logs remain the recovery record. The source reads
 and review still need an agent turn. A resumed session inspects the same
 service name and bases its next action on its current state.
 

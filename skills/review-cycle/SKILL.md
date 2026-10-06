@@ -113,13 +113,19 @@ discipline each mechanism needs. What follows holds whichever one is in use.
   of the two. Both answer for the head commit of the pull request, which is the
   commit the checks are running on: that SHA is the key they are looked up by,
   it does not move while they run, and nothing here is waiting for it to.
+- **A harness may observe a third source: workflow runs.** A workflow can be
+  queued or running before it registers a single check, so checks and statuses
+  alone can show a passing subset while CI is unfinished. Where the reference
+  names a workflow-run read, a run for the head that is not terminal blocks the
+  verdict, and a read that cannot establish what has registered is an incomplete
+  observation, not a pass. The calls are the reference's.
 - **An empty answer is not an answer.** Nothing from either endpoint, on a head
   pushed seconds ago, means nothing has registered yet rather than that
   everything passed — *every check has reported* is otherwise vacuously true of
   a pull request nothing has looked at. Keep waiting, and let the cap decide.
   **The exception is a partial watch that cannot observe registration and
-  cannot wake itself.** Its reference must say so; it rejects the empty result
-  and stops under *A surface that can neither block nor wake itself cannot
+  cannot wake itself.** Its reference must say so; it rejects the empty or
+  partially registered result and stops under *A surface that can neither block nor wake itself cannot
   wait*, rather than hiding an unbounded poll behind the word *waiting*.
 - **A wake that is not about a check is still just a read.** The round is its
   own loudest source of the other kind: a review that posts a thread per
