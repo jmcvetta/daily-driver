@@ -88,7 +88,8 @@ function git(args) {
   return execFileSync('git', args, {cwd: root, encoding: 'buffer', maxBuffer: 32 * 1024 * 1024})
 }
 
-function parseNameStatus(bytes) {
+/** Parse NUL-delimited Git name-status output, retaining both sides of renames. */
+export function parseNameStatus(bytes) {
   const fields = bytes.toString('utf8').split('\0')
   const paths = []
   for (let index = 0; index < fields.length;) {
@@ -97,7 +98,7 @@ function parseNameStatus(bytes) {
     const count = status.startsWith('R') || status.startsWith('C') ? 2 : 1
     for (let n = 0; n < count; n++) {
       const path = fields[index++]
-      if (path === undefined) throw new Error('malformed NUL-delimited git diff output')
+      if (!path) throw new Error('malformed NUL-delimited git diff output')
       paths.push(path)
     }
   }
@@ -190,6 +191,11 @@ export function planChecks({base, head}) {
   return checkNames.filter(name => selected.has(name))
 }
 
+/** Format the visible CI plan, including an explicit message for an empty plan. */
+export function formatPlan(checks) {
+  return `Selected CI checks: ${checks.length ? checks.join(', ') : '(none)'}`
+}
+
 function sameSet(a, b) {
   return a.size === b.size && [...a].every(value => b.has(value))
 }
@@ -203,7 +209,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const head = arg('--head')
   const checks = planChecks({base, head})
   const output = JSON.stringify(checks)
-  console.log(`Selected CI checks: ${checks.length ? checks.join(', ') : '(none)'}`)
+  console.log(formatPlan(checks))
   if (process.env.GITHUB_OUTPUT) {
     await import('node:fs').then(({appendFileSync}) => appendFileSync(process.env.GITHUB_OUTPUT, `checks=${output}\n`))
   }

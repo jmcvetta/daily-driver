@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {resolve} from 'node:path'
-import {changedMakeTargets, hasTopLevelDirectoryChanges, selectChecks, selectChecksForDiff} from './ci-select.mjs'
+import {changedMakeTargets, formatPlan, hasTopLevelDirectoryChanges, parseNameStatus, selectChecks, selectChecksForDiff} from './ci-select.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const filters = (await import('js-yaml')).default.load(
@@ -78,10 +78,22 @@ assert.deepEqual(changedMakeTargets('SHELL := /bin/bash\n', 'SHELL := /bin/sh\n'
 assert.deepEqual(changedMakeTargets(makeBefore, `${makeBefore}\nomp-update-daily-driver:\n\tomp plugin upgrade\n`), ['check-omp-cache-clean'])
 assert.deepEqual(changedMakeTargets(makeBefore, `${makeBefore}\ncheck-unmapped:\n\ttrue\n`), ['check-ci-scope'])
 
-// Without both rename paths, moving a file into or out of a mapped input set misses a check.
-assert.deepEqual(selectChecks(['evals/fixtures/review-depth/old.sh', 'evals/fixtures/model-classes/shared/new.sh']), [
-  'check-scripts', 'check-eval-fixtures', 'check-model-classes-grader',
+// Without decoding status records, deletions and renames can lose the removed input or one rename side.
+const deletedLabelScript = parseNameStatus(Buffer.from('D\0scripts/check-labels.py\0'))
+assert.deepEqual(selectChecks(deletedLabelScript), ['check-labels', 'check-labels-fixtures'])
+const renamedShell = parseNameStatus(Buffer.from('R100\0evals/fixtures/review-depth/old.sh\0evals/fixtures/model-classes/shared/new.sh\0'))
+assert.deepEqual(renamedShell, ['evals/fixtures/review-depth/old.sh', 'evals/fixtures/model-classes/shared/new.sh'])
+assert.deepEqual(selectChecks(renamedShell), [
+  'check-constitution', 'check-scripts', 'check-eval-fixtures', 'check-model-classes-grader',
 ])
+// Without rejecting truncated records, malformed Git output can silently omit an affected path.
+assert.throws(() => parseNameStatus(Buffer.from('R100\0old.sh\0')), /malformed NUL-delimited git diff output/)
+// Without treating paths as NUL-delimited data, tabs and shell metacharacters can corrupt selection.
+const specialPath = 'evals/fixtures/review-depth/cases/case\tname/source;$(id).sh'
+assert.deepEqual(selectChecks(parseNameStatus(Buffer.from(`M\0${specialPath}\0`))), [
+  'check-constitution', 'check-scripts', 'check-eval-fixtures',
+])
+// Without testing both rename paths, a move into or out of a scoped filter can miss its consumer.
 assert.deepEqual(selectChecks(['skills/issue-labels/SKILL.md', 'attic/issue-labels/SKILL.md']), [
   'check-step-names', 'check-skills', 'check-manifests', 'check-labels', 'check-omp-plugin',
 ])
@@ -91,7 +103,8 @@ const makefile = readFileSync(resolve(root, 'Makefile'), 'utf8')
 const declared = new Set([...makefile.matchAll(/^(check-[a-z0-9-]+):/gm)].map(match => match[1]))
 const groups = new Set(['check-plugin-validity', 'check-runtime', 'check-eval-tooling', 'check-issue-infra', 'check-infra'])
 assert.deepEqual([...declared].filter(target => !groups.has(target)).sort(), [...targets].sort())
-// Without this assertion, the local convenience target could silently stop running every retained group.
+// Without an explicit empty-plan line, the required job gives no visible no-work result.
+assert.equal(formatPlan([]), 'Selected CI checks: (none)')
 assert.match(makefile, /^check: check-ci-scope check-step-names check-release-paths check-plugin-validity check-runtime check-eval-tooling check-issue-infra$/m)
 
 console.log(`check-ci-scope: ${targets.length} check mappings and narrow-selection fixtures passed`)
