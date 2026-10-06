@@ -19,8 +19,9 @@ One row per committed record, oldest first.
 - **Total price** is the record's summed per-replicate price, in USD, judge
   included. **Price per completed task** divides it by the replicates that
   passed. A record that carries no price shows `not recorded`, never `$0`.
-  Schema-version-2 prices are shown for Claude Code only: on other harnesses
-  that version recorded the judge's spend alone.
+  Omp Codex subscription records show `subscription` instead of a dollar
+  amount. Schema-version-2 prices are shown for Claude Code only: on other
+  harnesses that version recorded the judge's spend alone.
 - **Wall time** is the whole run, `completed_at` minus `started_at`.
 
 | Date | Experiment | Harness | Models served | Judge | Replicates | Pass rate | Total price | Price per completed task | Wall time |

@@ -424,8 +424,26 @@ def check_subscription_recording(
     for row in codex_run["task_results"]:
         row["agent_config"]["model"] = "openai-codex/gpt-6-luna"
     try:
+        subscription_prices = temp / "subscription-prices.yaml"
+        subscription_prices.write_text(
+            prices.read_text()
+            + """  openai-codex/gpt-6-luna:
+    input: 0.000001
+    output: 0.000002
+    cache_read: 0.0000001
+    cache_write: 0.000003
+    source: https://example.invalid/codex-api-rates
+    read_on: 2026-10-01
+"""
+        )
         run_path.write_text(json.dumps(codex_run))
-        record_path = run_recorder(run_dir, subscription_experiment, temp / "subscription", env, prices)
+        record_path = run_recorder(
+            run_dir,
+            subscription_experiment,
+            temp / "subscription",
+            env,
+            subscription_prices,
+        )
         record = json.loads(record_path.read_text())
         require(record["schema_version"] == 4, "the subscription record did not use schema version 4")
         require(

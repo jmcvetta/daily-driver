@@ -83,8 +83,7 @@ def overlay_settings(experiments_dir: Path, overlay: str) -> str:
 
 
 def model_class_cases(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Every case row tagged with a buildable class, carrying its record's
-    run_id, full completed_at (for ordering) and date (for display).
+    """Every buildable-class case with its record's run, date and client.
 
     A case tagged with a class outside `BUILDABLE_CLASSES` (`reasoning`, or
     any future token) is dropped rather than kept: nothing computes a status
