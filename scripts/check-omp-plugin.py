@@ -25,10 +25,12 @@ THE TWO ROUTES, AND WHY BOTH ARE HERE
 
 WHAT IT ASSERTS
 
-    On both routes, every skill in `skills/` is offered as a `skill:<name>`
-    command. The expected set is read from the tree rather than written down,
-    so a skill added without being discovered fails here and a skill added on
-    purpose needs no edit to this file.
+    On both plugin routes, every published skill is offered as a
+    `skill:<name>` command. The expected set comes from `skills/`, not a
+    hard-coded list.
+    From this repository, the local maintenance skill is discovered and its
+    repository-local body is readable. From an unrelated project, both plugin
+    routes expose the published skills but not that local command.
     On the linked route, `omp plugin list` reports `daily-driver` enabled.
     On the linked route, the extension loads. Omp reports a module that throws
     on import by printing `Failed to load extension` and carrying on, so the
@@ -196,7 +198,13 @@ def read_frames(stream, sink: queue.Queue) -> None:
     sink.put(None)
 
 
-def ask_for_commands(omp: str, env: dict[str, str], stderr_path: Path, plugin_dir: str | None):
+def ask_for_commands(
+    omp: str,
+    env: dict[str, str],
+    stderr_path: Path,
+    plugin_dir: str | None,
+    cwd: Path = ROOT,
+):
     """Run one `omp --mode rpc` session and return what it offered.
 
     Returns `(commands, extension_errors, stderr_text)`. The session is asked
@@ -212,7 +220,7 @@ def ask_for_commands(omp: str, env: dict[str, str], stderr_path: Path, plugin_di
     with stderr_path.open("w", encoding="utf-8") as stderr_file:
         process = subprocess.Popen(
             argv,
-            cwd=ROOT,
+            cwd=cwd,
             env=env,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -324,6 +332,24 @@ def assert_session(route: str, expected: list[str], result) -> None:
         )
 
 
+def assert_absent(route: str, forbidden: list[str], result) -> None:
+    """Require local-only skills to stay out of plugin discovery."""
+    commands, extension_errors, stderr_text = result
+    if extension_errors:
+        detail = "; ".join(
+            f"{err.get('extensionPath')} on {err.get('event')}: {err.get('error')}" for err in extension_errors
+        )
+        raise CheckFailed(f"[{route}] extension_error: {detail}", stderr_text)
+
+    offered = {command.get("name") for command in commands}
+    present = [name for name in forbidden if name in offered]
+    if present:
+        raise CheckFailed(
+            f"[{route}] exposed local-only skill commands: {', '.join(present)}",
+            stderr_text,
+        )
+
+
 def link_plugin(omp: str, env: dict[str, str]) -> None:
     """Install this checkout into the throwaway HOME, and check Omp agrees.
 
@@ -366,29 +392,49 @@ def main() -> None:
     if not expected:
         raise CheckFailed("no skills found under skills/; nothing to check")
 
+    local_skill = "skill:fix-daily-driver-bugs"
+    if not (ROOT / ".omp/skills/fix-daily-driver-bugs/SKILL.md").is_file():
+        raise CheckFailed("the repository-local fix-daily-driver-bugs skill is missing")
+
     with tempfile.TemporaryDirectory(prefix="check-omp-plugin-") as tmp:
         home = Path(tmp)
         env = isolated_environment(home)
+        unrelated = home / "unrelated-project"
+        unrelated.mkdir()
 
-        # The local-development route. Skills only; the extension is not on
-        # this path at all, so nothing here asserts anything about it.
-        assert_session(
-            "plugin-dir",
-            expected,
-            ask_for_commands(omp, env, home / "plugin-dir-stderr.log", plugin_dir="."),
+        # A repository-local session sees the local skill body and can invoke it.
+        local_result = ask_for_commands(omp, env, home / "local-stderr.log", plugin_dir=None, cwd=ROOT)
+        assert_session("local", [], local_result)
+        local_commands = {command.get("name"): command for command in local_result[0]}
+        if local_skill not in local_commands:
+            raise CheckFailed("Omp did not discover the repository-local skill", local_result[2])
+        skill_body = (ROOT / ".omp/skills/fix-daily-driver-bugs/SKILL.md").read_text(encoding="utf-8")
+        if "Promote in place" not in skill_body:
+            raise CheckFailed("the repository-local skill body is unreadable or incomplete")
+
+        # Both plugin routes run from outside this repository. The plugin's
+        # published skills must load, while the project-local skill stays absent.
+        plugin_dir_result = ask_for_commands(
+            omp,
+            env,
+            home / "plugin-dir-stderr.log",
+            plugin_dir=str(ROOT),
+            cwd=unrelated,
         )
+        assert_session("plugin-dir", expected, plugin_dir_result)
+        assert_absent("plugin-dir", [local_skill], plugin_dir_result)
 
-        # The install route. Same skills, plus the extension.
         link_plugin(omp, env)
-        result = ask_for_commands(omp, env, home / "linked-stderr.log", plugin_dir=None)
+        result = ask_for_commands(omp, env, home / "linked-stderr.log", plugin_dir=None, cwd=unrelated)
         assert_session("linked", expected, result)
+        assert_absent("linked", [local_skill], result)
         stderr_text = result[2]
         if LOAD_FAILURE in stderr_text:
             raise CheckFailed("[linked] the Omp extension did not load", stderr_text)
 
     print(
-        f"check-omp-plugin: omp offers all {len(expected)} skill commands on both routes, "
-        f"and loads the extension when {PLUGIN_NAME} is installed"
+        f"check-omp-plugin: Omp exposes the readable local skill in this repository, "
+        f"keeps it off both plugin routes, and offers all {len(expected)} plugin skills"
     )
 
 

@@ -15,6 +15,7 @@
         "docs",
         "evals",
         "infra",
+        ".omp",
         "omp_configs"
       ],
       "extra-files": [
