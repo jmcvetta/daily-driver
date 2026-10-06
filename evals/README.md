@@ -77,35 +77,22 @@ record again. Records at versions 1 and 2 stay as they are.
 ### Choose the execution session first
 
 Choose the subject model, judge model, and execution session separately. A
-Claude subject does not require a Claude judge, and evaluations need not use
-Claude for every judge. **When a Claude judge grades the run — the default for
-every `agent_judge` — run the entire evaluation from a Claude Code session**,
-web or CLI. The judge runs through the Claude Code SDK and inherits that
-session's subscription. A non-Claude judge selected with `JUDGE=` is the
-exception; see [Choosing the judge](#choosing-the-judge). Running
-`make evals-run` from Omp is not a supported route for a Claude-judged
-evaluation, even when the subject arm is Omp. Do not turn a judge failure in
-Omp into a request to repair local Claude authentication.
+Claude subject does not require a Claude judge, and a Claude judge is not
+required for every evaluation. **Only a Claude judge requires a Claude Code
+execution session**, web or CLI: its SDK agent inherits that session's
+subscription. This applies when the subject arm is Omp as well. A non-Claude
+judge runs through its own configured route; see [Choosing the judge](#choosing-the-judge).
+Do not turn a failure in a non-Claude route into a request to repair Claude
+authentication, or a Claude judge failure into a request to use a metered
+Anthropic route.
 
-Before any model or authentication probe, an Omp caller must select a Claude
-Code execution session. Use an existing authorized handoff facility if the
-current environment provides one; do not invent a dispatch or launch a local
-probe to discover this known boundary. If it provides no such facility, record
-this handoff for a Claude Code session:
-
-> Run the requested evaluation from this Claude Code web or CLI session.
-> Use the repository's existing `make evals-plan` and the narrow `make
-> evals-run TASKS='…'` target below. Let the Claude Code SDK inherit this
-> session's subscription. Do not ask for login repair, search for or transfer
-> OAuth tokens, or use a metered Anthropic or gateway route. Return the run
-> identifier and observed results; do not claim a pass without the recorded
-> run evidence.
-
-No local `claude -p` probe is needed before that handoff. A failed supported
-SDK run must be diagnosed from current evidence in the Claude Code execution
-session. A previous error, an agent's claim, or a local CLI failure in Omp
-does not establish that the subscription route is unavailable. Request human
-action only when current evidence shows an indispensable human contribution.
+Select the execution session required by the chosen judge before setup or
+probes. A non-Claude judge does not require a Claude Code session. A supported
+Claude SDK failure must be diagnosed from current evidence in the Claude Code
+execution session. A previous error, an agent's claim, or a local CLI failure
+in Omp does not establish that the subscription route is unavailable. Request
+human action only when current evidence shows an indispensable human
+contribution.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
 is the current decision; this README is the single operational runbook.
 
@@ -124,9 +111,10 @@ context.
 container can hold a `VERCEL_AI_GATEWAY_API_KEY`, and the gateway lists
 `anthropic/*` models, but it is not the route for them. Do not point
 `ANTHROPIC_BASE_URL` or `ANTHROPIC_AUTH_TOKEN` at the gateway, and do not strip
-the session's environment to make the CLI use it. The gateway serves the
-non-Anthropic models the Omp arms pin (`vercel-ai-gateway/...`), and nothing
-else.
+the session's environment to make the CLI use it. Non-GPT, non-Anthropic Omp
+models may use `vercel-ai-gateway/...` when configured. Every GPT subject,
+judge, and helper call must use `openai-codex`; no GPT model may use the Vercel
+AI Gateway.
 
 **Never run an Anthropic model through the API.** Not the Anthropic API, not
 Bedrock, not any other metered endpoint, not even for one test call. There is
@@ -153,7 +141,7 @@ make evals-render-results # rewrite RESULTS.md from committed provenance
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
-make evals-run-omp    # every Omp model, each with bare and treated variants.
+# Do not run `make evals-run-omp` until #494 migrates the GPT 6 routes.
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
@@ -208,19 +196,24 @@ Three things the Makefile does that a hand-typed `coder-eval` will not:
 
 ### Choosing the judge
 
-The subject and the judge are selected apart. Every `agent_judge` in
-[`tasks/`](tasks/) pins the Claude Code agent and `claude-sonnet-5`, and
-`coder_eval` 0.11.6 accepts no other agent kind there, so an Omp subject judged
-the usual way still needs a Claude Code session. `JUDGE=` selects the judge of a
-run from [`judges/`](judges/), without copying a task or touching a rubric. The
+The subject and judge are selected apart. `JUDGE=` selects a configured judge
+from [`judges/`](judges/) without copying a task or touching a rubric. The
 decision is
 [`docs/notes/0030`](../docs/notes/0030-the-judge-is-selected-apart-from-the-subject.md).
+Claude is not required for every judge: only the Claude judge rows below
+require a Claude Code execution session. The Omp judge runs through its own
+configured route.
 
 | `JUDGE=` | Route | Where it can run |
 | --- | --- | --- |
 | unset | each task's pinned Claude Code `agent_judge`, run by `coder_eval` | a Claude Code web or CLI session |
 | `claude-code-sonnet-5` | the same route, named; refuses a task that pins another judge | a Claude Code web or CLI session |
 | `omp-glm-5.3` | no-tools Omp over the Vercel AI Gateway; validated, not the default | anywhere `omp` and the gateway key work |
+
+GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is an owner-approved judge choice.
+That approval is not a selectable definition or a committed calibration result.
+Issue #494 owns the runnable `omp-gpt-6.1-sol` judge definition and its
+calibration. Do not pass that judge ID to `JUDGE=` until both are available.
 
 ```sh
 make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
@@ -990,51 +983,45 @@ pull-request lookup finds nothing and the skill assembles the diff from git.
 
 ## The Omp arm
 
-The same suites and plugin run six configured subjects across three model
-families. GLM 5.3 Flash is the tier probe beside full GLM. GPT 6 Sol and GPT 6
-Luna are two of the GPTs `omp_configs/gpt.yml` routes to: Sol takes default,
-slow and advisor work, and Luna takes small, task, vision, commit and tiny work.
-None of these is a family of its own.
-Each model has one experiment file and the two variants every criterion must
-score: `bare` loads no plugin and `with-plugin` installs daily-driver. The
-delta is the signal. `docs/notes/0013-the-omp-arm.md` records the adapter
-decision; this section records the model set.
+The same suites and plugin run Omp subjects with paired `bare` and
+`with-plugin` variants. GLM 5.3 Flash is the tier probe beside full GLM.
+The committed GPT 6 Sol and Luna experiment files still pin Vercel AI Gateway
+routes. They are unsupported legacy configuration, not supported subjects;
+issue #494 owns their migration. Do not run those targets until the Codex-only
+subject routes are committed. Historical run records remain unchanged.
+`docs/notes/0013-the-omp-arm.md` records the adapter decision.
 
-The execution session still matters when the subject is Omp: if a Claude
-judge grades a selected case (no `JUDGE=`, or a Claude one), launch this Omp-arm
-command from a Claude Code web or CLI session so the judge inherits that
-subscription. Do not launch it from an Omp session. See
+Only a Claude judge requires a Claude Code execution session for an Omp
+subject run. A non-Claude judge uses its own configured route. See
 ["Choose the execution session first"](#choose-the-execution-session-first)
 before setup or probes.
 
-**In a Claude Code cloud session or on a fresh laptop, set up first:**
+**On a fresh machine, set up first:**
 
 ```sh
 make evals-install && make evals-setup-omp
 ```
 
 `evals-setup-omp` installs `omp` with CI's command when it is missing, and
-checks that Omp lists each arm's pinned model. It is free and idempotent. The
-gateway arms need `AI_GATEWAY_API_KEY`, the name Omp reads. A cloud container
-exports `VERCEL_AI_GATEWAY_API_KEY` instead, and the Makefile maps that name to
-Omp's for every target. Without either, Omp lists no gateway model and the
-target fails, naming the variable. The `openai-codex` arm needs Omp's own Codex
-login; the target reports it as unconfigured and does not fail.
+checks that Omp lists each arm's pinned model. It is free and idempotent.
+Non-GPT gateway arms need `AI_GATEWAY_API_KEY`, the name Omp reads. A cloud
+container exports `VERCEL_AI_GATEWAY_API_KEY` instead, and the Makefile maps
+that name to Omp's for those targets. Without either, Omp lists no gateway
+model and the target fails, naming the variable. An `openai-codex` arm needs
+Omp's own Codex login; the target reports it as unconfigured and does not
+fail.
 
 ```sh
-make evals-run-omp                            # every configured Omp model
 make evals-run-omp-glm-5-3                    # GLM 5.3 only
 make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
 make evals-run-omp-deepseek-v4-pro            # DeepSeek v4 Pro only
-make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol only
-make evals-run-omp-gpt-6-sol                  # GPT 6 Sol only
-make evals-run-omp-gpt-6-luna                 # GPT 6 Luna only
+make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol via openai-codex
 make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
 Each experiment pins one provider/model ID, and the Omp home the agent borrows
-must configure it. The GPT 6 rows use the Vercel AI Gateway routes
-`omp_configs/gpt.gateway.yml` names, which need `AI_GATEWAY_API_KEY`.
+must configure it. Every GPT subject, judge, and helper call must use
+`openai-codex`; no GPT call may use the Vercel AI Gateway.
 
 | Experiment | Model |
 | --- | --- |
@@ -1042,42 +1029,36 @@ must configure it. The GPT 6 rows use the Vercel AI Gateway routes
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
-| `omp-gpt-6-sol.yaml` | `vercel-ai-gateway/openai/gpt-6-sol` |
-| `omp-gpt-6-luna.yaml` | `vercel-ai-gateway/openai/gpt-6-luna` |
+| `omp-gpt-6-sol.yaml` (unsupported legacy; do not run) | `vercel-ai-gateway/openai/gpt-6-sol` |
+| `omp-gpt-6-luna.yaml` (unsupported legacy; do not run) | `vercel-ai-gateway/openai/gpt-6-luna` |
 
-It needs `omp` on PATH and the provider's credentials: the gateway key above,
-or a login in the caller's own `~/.omp/agent/`. The agent borrows that directory
-by symlink into a throwaway Omp home and writes nothing back into it. It does
-not borrow `config.yml`: the throwaway home gets its own, which pins every Omp
-chat role to the arm's `model`. Unpinned, Omp's subagents and helper calls would
-run on whatever the provider catalog offers.
+For a supported non-GPT model, the experiment needs `omp` on PATH and its
+provider's credentials: the gateway key above or a login in the caller's own
+`~/.omp/agent/`. The agent borrows that directory by symlink into a throwaway
+Omp home and writes nothing back into it. It does not borrow `config.yml`: the
+throwaway home gets its own, which pins every Omp chat role to the arm's
+`model`. Unpinned, Omp's subagents and helper calls would run on whatever the
+provider catalog offers.
 
 ### Running an Omp arm
 
 ```sh
 make evals-install                       # rebuilds the local agents every time
-export AI_GATEWAY_API_KEY=…              # Omp's name for the Vercel AI Gateway key
-omp models find gpt-6-luna               # the arm's route must resolve
-unset GH_TOKEN GITHUB_TOKEN SSH_AUTH_SOCK
-export GH_CONFIG_DIR="$(mktemp -d)"        # hide the laptop's gh keyring login
-gh auth status                          # must fail before any replicate
-curl -s -o /dev/null -w '%{http_code}\n' https://api.github.com/user  # must print 401
+export AI_GATEWAY_API_KEY=…              # for a non-GPT gateway subject only
+omp models find glm-5.3                  # the supported non-GPT route must resolve
 TASKS='tasks/undertake/*.yaml'
-setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" JOBS=16 > luna.log 2>&1 &
+setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
 ```
 
-- **The judge runs on the subscription.** Every Omp-arm judge is an
-  `agent_judge`, a Claude Code sub-agent that inherits the shell's own Claude
-  login ([`0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)).
-  Leave `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` alone: pointed at a
-  gateway, they bill every judge call there.
-- **Run it where no GitHub credential is ambient.** Some rows grant `bash`,
-  and the agent inherits the shell's environment. On a logged-in laptop,
-  unsetting token variables alone leaves `gh` authenticated through its
-  keyring. Isolate `GH_CONFIG_DIR` and unset `SSH_AUTH_SOCK` as shown above;
-  stop unless `gh auth status` fails and the GitHub user endpoint returns
-  `401`. A Claude Code cloud container fails the second check: its proxy
-  signs GitHub requests with the owner's credential.
+- **The judge runs on its selected route.** Only a Claude-judged `agent_judge`
+  runs through the Claude Code SDK and inherits the shell's Claude subscription
+  ([`0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)). Leave
+  `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` alone: do not direct them to a
+  gateway or use a metered Anthropic route.
+- **Shell access is inherited.** Some rows grant `bash`, so the agent can use
+  the shell's GitHub access. A Claude Code cloud proxy grants the owner's
+  access as well. Run only tasks whose tool permissions and effects you accept;
+  this is a risk disclosure, not a credential-isolation gate.
 - **Run replicates in parallel.** `JOBS` sets how many run at once; the
   default is one, and one at a time a suite takes about two hours. A replicate
   waits on model calls, not on the container: at 12 at once, a four-core
@@ -1088,11 +1069,11 @@ setsid nohup make evals-run-omp-gpt-6-luna TASKS="$TASKS" JOBS=16 > luna.log 2>&
 - **Run it detached.** An interrupted run continues from its run directory:
 
   ```sh
-  cd evals && TELEMETRY_ENABLED=false coder-eval run -e experiments/omp-gpt-6-luna.yaml \
+  cd evals && TELEMETRY_ENABLED=false coder-eval run -e experiments/omp-glm-5.3.yaml \
     --run-dir runs/<run_id> --resume --max-parallel 16 \
     -D run_limits.max_turns=30 -D run_limits.turn_timeout=600 -D run_limits.task_timeout=1200 \
     --exclude-tags claude-only,codex-only,skip:omp,model-classes $TASKS
-  cd .. && make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml
+  cd .. && make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/omp-glm-5.3.yaml
   ```
 
 - **`make -n` does not dry-run a run target.** Its recipe line calls
