@@ -31,7 +31,7 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | --- | --- |
 | `glm.yml` | GLM 5.3 Flash for default, small, vision, commit, and tiny work; GLM 5.3 for deep analysis, planning, and advice; GLM 5.3 Fast for task subagents. |
 | `gpt.yml` | GPT role overlay using `openai-codex` routes. |
-| `gpt.gateway.yml` | **Unsupported legacy overlay.** Its GPT role pins still use `vercel-ai-gateway`; do not use it for GPT calls. Issue #494 owns migration to Codex-only routes. |
+| `gpt.gateway.yml` | **Unsupported legacy overlay.** Its GPT role pins still use `vercel-ai-gateway`; do not use it for GPT calls. |
 | `cocktail.yml` | GLM 5.3 Flash by default, for task subagents, and for small, vision, and commit work; Kimi K3 for planning and deep work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `cocktail.gpts-choice.yml` | The original GPT-generated cocktail: DeepSeek V4 Pro by default; Luna for small work; Sol for planning and deep work; GLM Flash for task subagents; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
@@ -59,8 +59,7 @@ only; it uses `VERCEL_AI_GATEWAY_API_KEY` for catalog discovery, not for
 requests. In this repository `make evals-setup-omp` maps the second name to the
 first for non-GPT gateway routes. Every GPT subject, judge, and helper call
 must use `openai-codex`; never route a GPT model through the Vercel AI Gateway.
-The `gpt.gateway.yml` overlay is unsupported legacy configuration pending
-#494, not a supported GPT route. Other non-GPT gateway routes remain allowed.
+Other non-GPT gateway routes remain allowed.
 
 ## Capability classes
 

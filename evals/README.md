@@ -211,7 +211,7 @@ configured route.
 | `omp-glm-5.3` | no-tools Omp over the Vercel AI Gateway; validated, not the default | anywhere `omp` and the gateway key work |
 
 GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is an owner-approved judge choice.
-That approval does not mean a selectable definition or calibration exists.
+That approval is not a selectable definition or a committed calibration result.
 Issue #494 owns the runnable `omp-gpt-6.1-sol` judge definition and its
 calibration. Do not pass that judge ID to `JUDGE=` until both are available.
 
