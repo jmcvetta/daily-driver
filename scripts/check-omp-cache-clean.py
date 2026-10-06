@@ -94,6 +94,7 @@ def main() -> None:
 
     print("check-omp-cache-clean: target refreshes the marketplace and plugin cache in order")
 
+# Temporary CI selector probe; this comment does not change the checker.
 
 if __name__ == "__main__":
     main()
