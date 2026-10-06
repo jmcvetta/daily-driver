@@ -112,8 +112,6 @@ check-eval-fixtures:
 check-model-classes-grader:
   - 'scripts/check-model-classes-grader.sh'
   - 'evals/fixtures/model-classes/shared/**'
-check-model-classes-builder:
-  - 'scripts/evals-cases-from-prs.py'
 check-eval-arms:
   - 'scripts/check-eval-arms.py'
   - 'scripts/evals-variants.py'

@@ -12,7 +12,7 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
 	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
+	check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
 	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
@@ -123,7 +123,7 @@ check-git-sync:
 	python3 scripts/check-git-sync.py
 
 check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
+	check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
 	check-evals-results check-model-telemetry check-evals-setup-omp
 
 
@@ -361,11 +361,6 @@ check-eval-fixtures:
 # the script's header.
 check-model-classes-grader:
 	scripts/check-model-classes-grader.sh
-
-# check-model-classes-builder: the case builder's offline self-tests, which
-# every invocation runs first -- here with no token and no network.
-check-model-classes-builder:
-	python3 scripts/evals-cases-from-prs.py --self-test
 
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.
