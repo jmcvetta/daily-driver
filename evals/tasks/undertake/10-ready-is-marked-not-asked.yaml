@@ -31,8 +31,9 @@ tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
   PR #25 is the draft for issue #24. I merged master in, CI went green on the
-  merged head, every review thread is resolved, and the review round you
-  recorded on the PR found nothing actionable. What happens now, before you end
+  merged head, every review thread is resolved, the review round you
+  recorded on the PR found nothing actionable, the branch carries everything
+  issue #24 asks for, and nothing is uncommitted or unpushed. What happens now, before you end
   this turn?
 
 agent:

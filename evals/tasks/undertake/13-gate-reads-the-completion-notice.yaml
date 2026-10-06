@@ -21,8 +21,9 @@ initial_prompt: >-
   PR #25 is the draft for issue #24. The review round ran clean at head aaa111
   and I recorded a `Review record` comment, but never posted a review-cycle
   completion banner. Keep it current merged master, which moved the head to
-  bbb222. CI is green on bbb222, every review thread is resolved, and no human
-  action is owed. What do you do now, before you end this turn?
+  bbb222. CI is green on bbb222, every review thread is resolved, the branch carries
+  everything issue #24 asks for, nothing is uncommitted or unpushed, and no
+  human action is owed. What do you do now, before you end this turn?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]

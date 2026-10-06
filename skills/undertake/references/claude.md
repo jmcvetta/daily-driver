@@ -66,6 +66,8 @@ The pull request
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the draft` | Open it | `pr`, which owns the call |
+| `The gate` | Read the worktree and unpushed commits | `git status --porcelain` and `git log @{upstream}..HEAD --oneline`, through `Bash` in the task worktree; each prints nothing |
+| `The gate` | Read the diff against the acceptance section | `mcp__github__pull_request_read`, method `get_files` |
 | `The gate` | Read the branch against its base | `mcp__github__pull_request_read`, method `get` — `mergeable_state` |
 | `The gate` | Read CI on the head | `mcp__github__pull_request_read`, **both** `get_check_runs` and `get_status` |
 | `The gate` | Read the review threads | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments` and `get_comments` — `review-cycle`'s reference owns them |

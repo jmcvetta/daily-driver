@@ -645,10 +645,20 @@ One round over it, and `review-cycle` decides anything further.
 A round after ready goes back to draft
 --------------------------------------
 
-**Return the pull request to draft** before `Review the head` runs, and ready again through `The gate` below when the round closes — the
-same gate, not a second one. A pull request under review is not ready for
+**Return the pull request to draft before any push that changes
+pull-request content** — a fix, a conflict resolution, a new commit — and so
+before `Review the head` runs. Ready again through `The gate` below when the
+round closes — the same gate, not a second one. A ready pull request is liable
+to be merged without notice, and a person merging from the GitHub UI reads no
+completion notice. Pushing to it first leaves unreviewed content on a pull
+request that says it is ready. A pull request under review is not ready for
 review, and a reviewer must not be reading a branch that is changing
 underneath them.
+
+**The base merge at `Keep it current` is the exception.** It changes no
+pull-request content, earns no round under `After the merge`
+([`0022`](../../docs/notes/0022-the-merge-is-mechanical.md)), and does not
+return the pull request to draft.
 
 
 The gate
@@ -664,15 +674,41 @@ Ready is a gate, not a step
 ---------------------------
 
 "After fixing, set the PR to ready" reads as unconditional. It is not. It is
-also not a judgement: **the gate is a read**. Seven conditions decide it, six
+also not a judgement: **the gate is a read**. Eight conditions decide it, seven
 reads answer them, and every read is a call the reference file for the harness
 in use names. A gate that has to be weighed is a gate that gets taken to the
 user, and the user is not the one who can answer it.
 
 Take the reads in this order. The first that does not hold is where the
-sequence stops, and the reason is stated in one line.
+sequence stops, and the reason is stated in one line. Cite a read by its
+condition, never by its position: a read inserted ahead of it moves every
+number.
 
-1. **The branch against its base**, for the condition that it is current and
+1. **The head carries the whole of the issue's work.** Four parts, each a call
+   or a comparison of two texts the session already holds:
+   - The task worktree has no uncommitted change: `git status --porcelain`
+     in the task worktree prints nothing.
+   - The branch has nothing unpushed: `git log @{upstream}..HEAD --oneline`
+     in the task worktree prints nothing.
+   - Every item in the issue's acceptance section — `issue-body`'s
+     requirement 5, the `Acceptance and verification` heading in the bodies
+     this toolkit writes — maps to a file in the pull request's diff, or is
+     answered on the pull request with a reason. Take the issue body as read
+     at `Read the issue and its edges` and the diff through the route the
+     reference file names. Name each item and the diff file that satisfies
+     it. An item with no file and no reason is unmet.
+   - The session has no further change planned for this branch. A planned
+     change is work at `Implement` now, before the gate; never after ready.
+
+   Where the read does not hold, the sequence returns to `Implement`, and
+   comes back through the push, the round and the gate. The pull request stays
+   a draft, and the reason is one line naming the unmet item. This is not a
+   stop and not a question: it is the sequence not yet at the gate. This read
+   comes first because every later read is about the head a reviewer will
+   read and a person will merge. A head that is not whole is not that head,
+   so reads taken on it answer about a commit that will not be the one
+   merged — the same reasoning the merge read gives for its own place.
+2. **The branch against its base**, for the condition that it is current and
    merges cleanly. GitHub's merge state answers it, and only three of its
    values are this read's: `behind` is a base the branch does not carry, so
    `Keep it current` runs its merge and this read is taken again; `dirty` is
@@ -750,9 +786,14 @@ somebody else to carry a claim this session is the one holding the evidence
 for.
 
 A branch behind its base, red CI, an open thread, or a human action still
-owed means it **stays a draft**, and the reason is stated in one line. A red
-pull request marked ready is a claim about the work that is not true, and so
-is a ready one that does not merge. **So is a draft that satisfies every
+owed, or an issue item the diff does not carry, means it **stays a draft**,
+and the reason is stated in one line. A red pull request marked ready is a
+claim about the work that is not true, and so is a ready one that does not
+merge. **A partial pull request marked ready is that false claim in its
+plainest form.** It says the work is done, and a person merges a ready pull
+request without reading the round's record, so the claim is acted on: #558
+passed every other read, was marked ready at 16:29 UTC on 2026-10-06 and was
+merged two minutes later without the fixture #555 required. **So is a draft that satisfies every
 condition**: it tells a reviewer there is nothing to read yet, which is the
 same false claim pointing the other way, and "left in draft to be safe" is
 the sentence it gets written in.
@@ -764,6 +805,8 @@ second round.
 
 [`0021`](../../docs/notes/0021-the-gate-is-a-read.md) is the decision, and the
 two stalls that prompted it.
+[`0031`](../../docs/notes/0031-ready-means-the-work-is-whole.md) adds the
+completeness read, and the draft before a content push.
 
 
 The milestone
