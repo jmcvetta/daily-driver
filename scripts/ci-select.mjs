@@ -151,7 +151,7 @@ function makeTargetBlocks(contents) {
 const aggregateConsumers = {
   'check-plugin-validity': ['check-plugin', 'check-skills', 'check-agents', 'check-manifests', 'check-manifest-fixtures', 'check-claude-dependency'],
   'check-runtime': ['check-constitution', 'check-ask-in-chat', 'check-omp-extension', 'check-model-class-roles', 'check-omp-guard-differential', 'check-omp-cache-clean', 'check-git-sync', 'check-task-worktree-fixture', 'check-worktrunk-install', 'check-scripts'],
-  'check-eval-tooling': ['check-omp-agent', 'check-omp-eval-guard', 'check-codex-agent', 'check-eval-fixtures', 'check-model-classes-grader', 'check-model-classes-builder', 'check-eval-arms', 'check-agent-judges', 'check-evals-judge', 'check-evals-preflight', 'check-evals-provenance', 'check-evals-results', 'check-model-telemetry', 'check-evals-setup-omp'],
+  'check-eval-tooling': ['check-omp-agent', 'check-omp-eval-guard', 'check-codex-agent', 'check-eval-fixtures', 'check-model-classes-grader', 'check-eval-arms', 'check-agent-judges', 'check-evals-judge', 'check-evals-preflight', 'check-evals-provenance', 'check-evals-results', 'check-model-telemetry', 'check-evals-setup-omp'],
   'check-issue-infra': ['check-labels', 'check-labels-fixtures'],
   '__git_sync_run': ['check-git-sync'],
   'omp-update-daily-driver': ['check-omp-cache-clean'],
