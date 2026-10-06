@@ -1,7 +1,4 @@
-# Continuous integration.
-#
-# `CI Success` is a required status on master. It always runs one job and
-# selects component checks from the changed paths.
+# CI Success is the required aggregate status. Selection always runs; only selected checks install tools or run commands.
 name: CI
 
 on:
@@ -21,50 +18,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      - run: npm ci
-      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d
-        id: filter
-        with:
-          filters: .github/ci-filters.yml
-          predicate-quantifier: some-with-excludes
-      - name: Validate component selection
+      - name: Install selector dependencies
+        run: npm ci
+      - name: Plan changed checks
+        id: plan
         env:
-          FILTER_PLUGIN: ${{ steps.filter.outputs.plugin }}
-          FILTER_RUNTIME: ${{ steps.filter.outputs.runtime }}
-          FILTER_EVAL: ${{ steps.filter.outputs.eval }}
-          FILTER_ISSUE: ${{ steps.filter.outputs.issue }}
-          FILTER_OMP: ${{ steps.filter.outputs.omp }}
-          FILTER_SHARED: ${{ steps.filter.outputs.shared }}
-          FILTER_UNKNOWN: ${{ steps.filter.outputs.unknown }}
-        run: |
-          set -euo pipefail
-          for output in "$FILTER_PLUGIN" "$FILTER_RUNTIME" "$FILTER_EVAL" \
-            "$FILTER_ISSUE" "$FILTER_OMP" "$FILTER_SHARED" "$FILTER_UNKNOWN"; do
-            case "$output" in
-              true|false) ;;
-              *) printf 'invalid component filter output: %s\n' "$output" >&2; exit 1 ;;
-            esac
-          done
-      - name: Validate CI selection
-        run: make check-ci-scope
-      - name: Validate repository step references
-        run: make check-step-names
-      - name: Validate release path classification
-        run: make check-release-paths
-      - name: Install the Claude Code CLI
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.plugin == 'true'
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: node scripts/ci-select.mjs --base "$BASE_SHA" --head "$HEAD_SHA"
+      - name: Install Claude Code CLI
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-skills') || contains(fromJSON(steps.plan.outputs.checks), 'check-agents') || contains(fromJSON(steps.plan.outputs.checks), 'check-claude-dependency')
         run: npm install -g @anthropic-ai/claude-code@latest
-      - name: Validate plugin content
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.plugin == 'true'
-        run: make check-plugin-validity
       - name: Ensure ShellCheck
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.runtime == 'true'
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-scripts')
         run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
       - name: Install Worktrunk
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.runtime == 'true'
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-git-sync') || contains(fromJSON(steps.plan.outputs.checks), 'check-task-worktree-fixture') || contains(fromJSON(steps.plan.outputs.checks), 'check-worktrunk-install')
         run: |
           set -euo pipefail
           installer="$RUNNER_TEMP/worktrunk-installer.sh"
@@ -75,29 +49,127 @@ jobs:
           WORKTRUNK_UNMANAGED_INSTALL="$RUNNER_TEMP/worktrunk/bin" sh "$installer"
           echo "$RUNNER_TEMP/worktrunk/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/worktrunk/bin/wt" --version
-      - name: Validate runtime behavior and fixtures
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.runtime == 'true'
-        run: make check-runtime
       - name: Install uv
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.eval == 'true' || steps.filter.outputs.omp == 'true'
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-eval-arms') || contains(fromJSON(steps.plan.outputs.checks), 'check-agent-judges') || contains(fromJSON(steps.plan.outputs.checks), 'check-evals-judge') || contains(fromJSON(steps.plan.outputs.checks), 'check-evals-preflight') || contains(fromJSON(steps.plan.outputs.checks), 'check-evals-provenance') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
         run: |
-          set -euo pipefail
           curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Validate eval tooling and fixtures
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.eval == 'true'
-        run: make check-eval-tooling
-      - name: Validate issue and infrastructure rules
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.issue == 'true'
-        run: make check-issue-infra
       - name: Install Omp
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.omp == 'true'
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard-live') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
         run: |
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Verify Omp is on PATH
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.omp == 'true'
-        run: omp --version
-      - name: Validate Omp integration
-        if: steps.filter.outputs.shared == 'true' || steps.filter.outputs.unknown == 'true' || steps.filter.outputs.omp == 'true'
-        run: make check-omp-plugin check-omp-eval-guard-live check-omp-agent-settle
+      - name: Validate CI selection
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-ci-scope')
+        run: make check-ci-scope
+      - name: Validate repository step references
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-step-names')
+        run: make check-step-names
+      - name: Validate release path classification
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-release-paths')
+        run: make check-release-paths
+      - name: Validate plugin manifest
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-plugin')
+        run: make check-plugin
+      - name: Validate skills
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-skills')
+        run: make check-skills
+      - name: Validate agents
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-agents')
+        run: make check-agents
+      - name: Validate manifests
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-manifests')
+        run: make check-manifests
+      - name: Validate manifest fixtures
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-manifest-fixtures')
+        run: make check-manifest-fixtures
+      - name: Validate Claude dependency
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-claude-dependency')
+        run: make check-claude-dependency
+      - name: Validate constitution hooks
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-constitution')
+        run: make check-constitution
+      - name: Validate Ask in chat hook
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-ask-in-chat')
+        run: make check-ask-in-chat
+      - name: Validate Omp extension
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-extension')
+        run: make check-omp-extension
+      - name: Validate model class roles
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-class-roles')
+        run: make check-model-class-roles
+      - name: Validate Omp guard differential
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-guard-differential')
+        run: make check-omp-guard-differential
+      - name: Validate Omp cache refresh
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-cache-clean')
+        run: make check-omp-cache-clean
+      - name: Validate Git sync
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-git-sync')
+        run: make check-git-sync
+      - name: Validate task worktree fixtures
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-task-worktree-fixture')
+        run: make check-task-worktree-fixture
+      - name: Validate Worktrunk installation
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-worktrunk-install')
+        run: make check-worktrunk-install
+      - name: ShellCheck scripts
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-scripts')
+        run: make check-scripts
+      - name: Validate Omp agent adapter
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent')
+        run: make check-omp-agent
+      - name: Validate Omp eval guard
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard')
+        run: make check-omp-eval-guard
+      - name: Validate Codex agent adapter
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-codex-agent')
+        run: make check-codex-agent
+      - name: Validate eval fixtures
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-eval-fixtures')
+        run: make check-eval-fixtures
+      - name: Validate model classes grader
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-classes-grader')
+        run: make check-model-classes-grader
+      - name: Validate model classes builder
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-classes-builder')
+        run: make check-model-classes-builder
+      - name: Validate eval arms
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-eval-arms')
+        run: make check-eval-arms
+      - name: Validate agent judges
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-agent-judges')
+        run: make check-agent-judges
+      - name: Validate eval judge
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-judge')
+        run: make check-evals-judge
+      - name: Validate eval preflight
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-preflight')
+        run: make check-evals-preflight
+      - name: Validate eval provenance
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-provenance')
+        run: make check-evals-provenance
+      - name: Validate eval results
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-results')
+        run: make check-evals-results
+      - name: Validate model telemetry
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-telemetry')
+        run: make check-model-telemetry
+      - name: Validate Omp eval setup
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-setup-omp')
+        run: make check-evals-setup-omp
+      - name: Validate issue labels
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-labels')
+        run: make check-labels
+      - name: Validate label fixtures
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-labels-fixtures')
+        run: make check-labels-fixtures
+      - name: Validate Omp plugin integration
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin')
+        run: make check-omp-plugin
+      - name: Validate live Omp eval guard
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard-live')
+        run: make check-omp-eval-guard-live
+      - name: Validate Omp agent settlement
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
+        run: make check-omp-agent-settle

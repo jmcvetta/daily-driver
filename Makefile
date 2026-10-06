@@ -104,8 +104,8 @@ omp-update-daily-driver:
 	omp plugin upgrade daily-driver@daily-driver
 
 
-# `check` remains the local all-groups convenience target. CI runs its
-# unconditional repository checks and selected groups as named `CI Success` steps.
+# `check` remains the local all-groups convenience target. CI selects leaf
+# checks from changed inputs and runs each selected check as a named step.
 check: check-ci-scope check-step-names check-release-paths check-plugin-validity check-runtime check-eval-tooling check-issue-infra
 
 check-ci-scope:
