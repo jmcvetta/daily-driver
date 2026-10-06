@@ -655,10 +655,11 @@ request that says it is ready. A pull request under review is not ready for
 review, and a reviewer must not be reading a branch that is changing
 underneath them.
 
-**The base merge at `Keep it current` is the exception.** It changes no
+**A clean base merge at `Keep it current` is the exception.** It changes no
 pull-request content, earns no round under `After the merge`
 ([`0022`](../../docs/notes/0022-the-merge-is-mechanical.md)), and does not
-return the pull request to draft.
+return the pull request to draft. A merge resolved by hand changes content
+and is not the exception.
 
 
 The gate
