@@ -113,6 +113,12 @@ discipline each mechanism needs. What follows holds whichever one is in use.
   of the two. Both answer for the head commit of the pull request, which is the
   commit the checks are running on: that SHA is the key they are looked up by,
   it does not move while they run, and nothing here is waiting for it to.
+- **A harness may observe a third source: workflow runs.** A workflow can be
+  queued or running before it registers a single check, so checks and statuses
+  alone can show a passing subset while CI is unfinished. Where the reference
+  names a workflow-run read, a run for the head that is not terminal blocks the
+  verdict, and a read that cannot establish what has registered is an incomplete
+  observation, not a pass. The calls are the reference's.
 - **An empty answer is not an answer.** Nothing from either endpoint, on a head
   pushed seconds ago, means nothing has registered yet rather than that
   everything passed — *every check has reported* is otherwise vacuously true of
