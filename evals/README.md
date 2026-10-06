@@ -141,7 +141,7 @@ make evals-render-results # rewrite RESULTS.md from committed provenance
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
-# Do not run `make evals-run-omp` until #494 migrates the GPT 6 routes.
+# Run the configured Omp experiments with their provider credentials.
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
@@ -209,11 +209,11 @@ configured route.
 | unset | each task's pinned Claude Code `agent_judge`, run by `coder_eval` | a Claude Code web or CLI session |
 | `claude-code-sonnet-5` | the same route, named; refuses a task that pins another judge | a Claude Code web or CLI session |
 | `omp-glm-5.3` | no-tools Omp over the Vercel AI Gateway; validated, not the default | anywhere `omp` and the gateway key work |
+| `omp-gpt-6.1-sol` | no-tools Omp through `openai-codex`; validated, not the default | anywhere `omp` and the Codex login work |
 
-GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is an owner-approved judge choice.
-That approval is not a selectable definition or a committed calibration result.
-Issue #494 owns the runnable `omp-gpt-6.1-sol` judge definition and its
-calibration. Do not pass that judge ID to `JUDGE=` until both are available.
+GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is selectable as
+`JUDGE=omp-gpt-6.1-sol`. Its committed calibration result meets the existing
+rule in [`judges/calibration/observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json).
 
 ```sh
 make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
@@ -985,10 +985,8 @@ pull-request lookup finds nothing and the skill assembles the diff from git.
 
 The same suites and plugin run Omp subjects with paired `bare` and
 `with-plugin` variants. GLM 5.3 Flash is the tier probe beside full GLM.
-The committed GPT 6 Sol and Luna experiment files still pin Vercel AI Gateway
-routes. They are unsupported legacy configuration, not supported subjects;
-issue #494 owns their migration. Do not run those targets until the Codex-only
-subject routes are committed. Historical run records remain unchanged.
+The committed GPT 6 Sol and Luna experiments use their Codex provider routes.
+Their historical gateway records remain unchanged.
 `docs/notes/0013-the-omp-arm.md` records the adapter decision.
 
 Only a Claude judge requires a Claude Code execution session for an Omp
@@ -1016,6 +1014,8 @@ make evals-run-omp-glm-5-3                    # GLM 5.3 only
 make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
 make evals-run-omp-deepseek-v4-pro            # DeepSeek v4 Pro only
 make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol via openai-codex
+make evals-run-omp-gpt-6-luna                 # GPT 6 Luna via openai-codex
+make evals-run-omp-gpt-6-sol                  # GPT 6 Sol via openai-codex
 make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
@@ -1029,8 +1029,8 @@ must configure it. Every GPT subject, judge, and helper call must use
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
-| `omp-gpt-6-sol.yaml` (unsupported legacy; do not run) | `vercel-ai-gateway/openai/gpt-6-sol` |
-| `omp-gpt-6-luna.yaml` (unsupported legacy; do not run) | `vercel-ai-gateway/openai/gpt-6-luna` |
+| `omp-gpt-6-sol.yaml` | `openai-codex/gpt-6-sol` |
+| `omp-gpt-6-luna.yaml` | `openai-codex/gpt-6-luna` |
 
 For a supported non-GPT model, the experiment needs `omp` on PATH and its
 provider's credentials: the gateway key above or a login in the caller's own
