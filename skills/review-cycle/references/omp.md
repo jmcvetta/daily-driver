@@ -122,9 +122,9 @@ completion replay.
 | Half | Call |
 | ---- | ---- |
 | The PR check rollup | Named `bash` service above; inspect with `read proc://<name>`, stop with `write proc://<name>/kill` |
-| The check runs | `gh api --paginate /repos/{owner}/{repo}/commits/{sha}/check-runs` |
-| The commit statuses | `gh api --paginate /repos/{owner}/{repo}/commits/{sha}/status` |
-| The workflow runs | `gh api --paginate '/repos/{owner}/{repo}/actions/runs?head_sha={sha}&per_page=100'` |
+| The check runs | `gh api --paginate --slurp /repos/{owner}/{repo}/commits/{sha}/check-runs` |
+| The commit statuses | `gh api --paginate --slurp /repos/{owner}/{repo}/commits/{sha}/status` |
+| The workflow runs | `gh api --paginate --slurp '/repos/{owner}/{repo}/actions/runs?head_sha={sha}&per_page=100'` |
 | One workflow run | Named `bash` service, `gh run watch <run-id> --repo <owner>/<repo>`, below |
 
 The watcher is the wake; the three reads are the verdict. `gh pr checks
@@ -139,13 +139,18 @@ head SHA and the deadline (start plus fifteen minutes, as a UTC timestamp), and
 print both in the launch marker: `printf 'ci-watch-started sha=<sha> deadline=<utc>\n'`.
 The service log is the recovery record. Every later watch for that head, a
 resumed session's included, runs `timeout` with the seconds remaining to that
-recorded deadline, never a fresh `900s`. A head that moved voids the old
-verdict and starts a new wait for the new head.
+recorded deadline, never a fresh `900s`. Where the remainder is zero or
+negative, start no watch; stop and report as at the deadline, because GNU
+`timeout` reads `0` as no limit. Where the record cannot be found, treat the
+deadline as expired and report it. A head that moved voids the old verdict:
+kill the old services, record a new deadline for the new head, and start the
+normal new-head wait. A head change is read before each launch and after every
+watch, because a watcher follows whatever head the pull request has.
 
 **Workflow runs.** Do not filter the inventory by `status`. Keep a run only if
-its `head_sha` equals the captured SHA, and drop one only when its
-`pull_requests` array is non-empty and names other pull requests; an empty
-array proves nothing, and a branch name alone never ties a run to the head.
+its `head_sha` equals the captured SHA and its `pull_requests` array is empty
+or contains this pull request; an empty array proves nothing against it, and a
+branch name alone never ties a run to the head.
 Count the current attempt (`run_attempt`) only. A run is terminal only when
 `status` is `completed` and `conclusion` is non-null. `queued`, `requested`,
 `waiting`, `pending`, `in_progress`, null and unrecognized statuses are

@@ -198,7 +198,7 @@ milestone still need an agent turn. Read the service state and logs with
     gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
 
 Merged and closed pull requests end continuation. Read `statusCheckRollup` and
-`review-cycle`'s check and status endpoints before a currency merge; if either
+`review-cycle`'s check, status and workflow-run reads before a currency merge; if any
 reports a run in flight, skip that merge. Otherwise `BEHIND`, `DRAFT`,
 `BLOCKED`, and `UNKNOWN` run `gh pr update-branch <number>`, whose own reply
 settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
@@ -206,7 +206,7 @@ settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
 
 **Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
-`headRefOid`; `review-cycle`'s two endpoint reads remain the CI verdict.
+`headRefOid`; `review-cycle`'s three-source read remains the CI verdict.
 Pending or unregistered checks use its persistent bounded watcher. Failed
 checks return to `Fix, answer, resolve, push`; unavailable logs are a named
 evidence blocker, not green. When CI on the current head is green and the
