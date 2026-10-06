@@ -68,7 +68,7 @@ def _case_row(
     model_requested: str,
     settings: str,
     model_served: str = "unreported",
-    cost: float | str = "unreported",
+    cost: float | str | None = "unreported",
 ) -> dict[str, object]:
     """One `cases[]` row shaped like `evals-record.py`'s `run_cases` output."""
     return {
@@ -87,11 +87,43 @@ def _case_row(
 
 
 def check_renderer() -> None:
-    """Exercise `evals-render-routes.py` on a fixture record set covering a
-    pass, a fail, an unreported served model, a stale row, and an unmeasured
-    overlay.
-    """
+    """A Codex subscription route must not be labeled unreported or dollar-priced."""
     renderer = load_renderer()
+    subscription_case = _case_row(
+        "one",
+        "mechanical",
+        "succeeded",
+        0,
+        model_requested="openai-codex/gpt-6-luna",
+        settings="classes-luna",
+        cost=None,
+    )
+    subscription_case.update(
+        {
+            "run_id": "codex-subscription",
+            "completed_at": "2026-10-06T10:00:00Z",
+            "date": "2026-10-06",
+            "client_name": "omp",
+            "cost_source": "subscription",
+        }
+    )
+    subscription_status = renderer.class_status([subscription_case], "mechanical")
+    require(
+        subscription_status["cost_per_passed_case"] == "subscription",
+        "a Codex subscription route was rendered as unreported or dollar-priced",
+    )
+    unknown_case = {**subscription_case, "model_requested": "openai-codex/gpt-6-unknown"}
+    unknown_status = renderer.class_status([unknown_case], "mechanical")
+    require(
+        unknown_status["cost_per_passed_case"] == "unreported",
+        "an unknown Codex model was labeled as a subscription",
+    )
+    mixed_case = {**subscription_case, "cost": 0.1, "cost_source": "reported"}
+    mixed_status = renderer.class_status([subscription_case, mixed_case], "mechanical")
+    require(
+        mixed_status["cost_per_passed_case"] == "unreported",
+        "a mixed subscription and dollar total was rendered as a whole price",
+    )
     with tempfile.TemporaryDirectory() as directory:
         temp = Path(directory)
         provenance_dir = temp / "provenance"
@@ -370,6 +402,90 @@ def check_unpriceable(run: dict[str, Any], run_dir: Path, experiment: Path, temp
         unpriced_path.write_text(original)
 
 
+def check_subscription_recording(
+    run: dict[str, Any],
+    run_dir: Path,
+    experiment: Path,
+    temp: Path,
+    env: dict[str, str],
+    prices: Path,
+) -> None:
+    """Codex subscription records must not use API prices or lose token usage."""
+    experiment_text = experiment.read_text()
+    subscription_experiment = temp / "subscription.yaml"
+    subscription_experiment.write_text(
+        experiment_text.replace("requested-model", "openai-codex/gpt-6-luna").replace(
+            "treated-model", "openai-codex/gpt-6-luna"
+        )
+    )
+    run_path = run_dir / "run.json"
+    original = run_path.read_text()
+    codex_run = json.loads(json.dumps(run))
+    for row in codex_run["task_results"]:
+        row["agent_config"]["model"] = "openai-codex/gpt-6-luna"
+    try:
+        run_path.write_text(json.dumps(codex_run))
+        record_path = run_recorder(run_dir, subscription_experiment, temp / "subscription", env, prices)
+        record = json.loads(record_path.read_text())
+        require(record["schema_version"] == 4, "the subscription record did not use schema version 4")
+        require(
+            all(case["cost"] is None and case["cost_source"] == "subscription" for case in record["cases"]),
+            "an Omp Codex subscription was given an API-equivalent dollar cost",
+        )
+        require(record["cases"][0]["tokens"] == 1000, "subscription recording discarded reported token usage")
+        recorder = load_recorder()
+        judge_model = "openai-codex/gpt-6.1-sol"
+        judge = recorder.judge_block(
+            {
+                "judge": {"route": "omp", "model_requested": judge_model, "judge_id": "omp-gpt-6.1-sol"},
+                "prompt_version": "synthetic-v1",
+                "freeze_sha": "abc123",
+                "criterion_errors": [],
+            },
+            {
+                ("bare", "one", 0): {
+                    "criteria": [
+                        {
+                            "observed": {"model": judge_model},
+                            "usage": {"input": 10, "output": 5, "cacheRead": 2, "cacheWrite": 1},
+                        }
+                    ]
+                }
+            },
+            [],
+            ROOT,
+        )
+        require(
+            judge["cost_source"] == "subscription"
+            and judge["usage"] == {"input": 10, "output": 5, "cacheRead": 2, "cacheWrite": 1},
+            "the Codex judge lost its subscription source or token usage",
+        )
+        record["judge"] = judge
+        require(not recorder.validate_record(record), "the subscription judge record failed schema validation")
+        invalid = json.loads(json.dumps(record))
+        invalid["cases"][0]["model_requested"] = "openai-codex/gpt-6-unknown"
+        require(
+            any("approved Omp Codex model" in error for error in recorder.validate_record(invalid)),
+            "an unknown Codex model was accepted as a subscription",
+        )
+        for row in codex_run["task_results"]:
+            row["agent_config"]["model"] = "openai-codex/gpt-6-unknown"
+        unknown_experiment = temp / "unknown-codex.yaml"
+        unknown_experiment.write_text(
+            experiment_text.replace("requested-model", "openai-codex/gpt-6-unknown").replace(
+                "treated-model", "openai-codex/gpt-6-unknown"
+            )
+        )
+        run_path.write_text(json.dumps(codex_run))
+        result = recorder_result(run_dir, unknown_experiment, temp / "unknown-codex", env, prices)
+        require(
+            result.returncode != 0 and "openai-codex/gpt-6-unknown" in result.stderr and "price table" in result.stderr,
+            "an unknown Codex model did not fail closed without a price-table entry",
+        )
+    finally:
+        run_path.write_text(original)
+
+
 def load_results_renderer() -> Any:
     """Import `evals-render-results.py` under a valid module name."""
     spec = importlib.util.spec_from_file_location("evals_render_results", RESULTS_RENDERER)
@@ -408,7 +524,19 @@ def check_results_renderer() -> None:
             "run3": record("run3", 3, "omp", [1.0, 2.0, 0.5], ["SUCCESS", "SUCCESS", "FAILURE"]),
             "run4": record("run4", 3, "codex", [0.25], ["FAILURE"]),
             "run5": record("run5", 2, "claude-code", [1.0, "unreported"], ["SUCCESS", "SUCCESS"]),
+            "run6": record("run6", 4, "omp", [None, None], ["SUCCESS", "SUCCESS"]),
+            "run7": record("run7", 4, "omp", [None, 0.1], ["SUCCESS", "SUCCESS"]),
+            "run8": record("run8", 4, "omp", [None], ["SUCCESS"]),
         }
+        for case in records["run6"]["cases"]:
+            case.update({"cost": None, "cost_source": "subscription", "model_requested": "openai-codex/gpt-6-luna"})
+        records["run7"]["cases"] = [
+            {"cost": None, "cost_source": "subscription", "model_requested": "openai-codex/gpt-6-luna"},
+            {"cost": 0.1, "cost_source": "reported", "model_requested": "reported-model"},
+        ]
+        records["run8"]["cases"] = [
+            {"cost": None, "cost_source": "subscription", "model_requested": "openai-codex/gpt-6-unknown"}
+        ]
         for name, value in records.items():
             (provenance / f"{name}.json").write_text(json.dumps(value))
         page = renderer.render_page(renderer.load_records(provenance))
@@ -425,6 +553,9 @@ def check_results_renderer() -> None:
         require("| 3 | 2/3 | $3.50 | $1.75 |" in rows[2], "a version-3 price or its per-completed-task figure was wrong")
         require("| 1 | 0/1 | $0.25 | no task completed |" in rows[3], "a run with no pass divided by zero")
         require("| not recorded | not recorded |" in rows[4], "a partly priced record was shown as a whole price")
+        require("| 2 | 2/2 | subscription | subscription |" in rows[5], "an Omp Codex subscription was given a dollar price or hidden")
+        require("| not recorded | not recorded |" in rows[6], "a mixed subscription and dollar total was rendered as complete")
+        require("| not recorded | not recorded |" in rows[7], "an unknown Codex model was labeled as a subscription")
         require("$0.00" not in page, "a missing price was rendered as $0")
         require(renderer.judge_text({"judge": {"selection": "run-selected", "judge_id": "omp-glm-5.3"}}) == "omp-glm-5.3 (run-selected)", "a run-selected judge was not named")
         require(
@@ -743,7 +874,7 @@ def main() -> int:
         require(laptop["client"]["name"] == "claude-code", "client type was not read from agent_config")
         require(len(laptop["attempts"]) == 3, "attempt-level evidence was not recorded")
         require(laptop["attempts"][0]["criteria"][0]["criterion_type"] == "synthetic", "criterion evidence was not recorded")
-        require(laptop["schema_version"] == 3, "schema_version was not bumped to 3")
+        require(laptop["schema_version"] == 4, "schema_version was not bumped to 4")
         require(len(laptop["cases"]) == 3, "case rows were not recorded one per task result")
         passed, failed = laptop["cases"][0], laptop["cases"][1]
         require(passed["class"] == "mechanical", "class tag was not read from the row's tags")
@@ -776,6 +907,7 @@ def main() -> int:
             "a token-only row was priced from total_cost_usd instead of its tokens",
         )
         check_unpriceable(run, run_dir, experiment, temp, base_env)
+        check_subscription_recording(run, run_dir, experiment, temp, base_env, prices)
         require(omp["variants"][0]["model_served"] == "unknown", "Omp request was recorded as served")
         require(
             all(case["model_served"] == "unreported" for case in omp["cases"]),
@@ -897,7 +1029,9 @@ def main() -> int:
             result.returncode != 0 and "model_requested" in result.stdout,
             "a case row missing model_requested was accepted",
         )
-        check_version_3_rules(laptop, temp)
+        legacy_v3 = json.loads(json.dumps(laptop))
+        legacy_v3["schema_version"] = 3
+        check_version_3_rules(legacy_v3, temp)
     check_renderer()
     check_results_renderer()
     return 0

@@ -64,13 +64,15 @@ from them; a model and settings pair with no case row is listed `unmeasured`.
 rate, price and wall time per run. `make evals-render-results` writes it, and
 `make check` fails when it is stale.
 
-From schema version 3, every case row carries a numeric `cost` in USD and an
-`elapsed_seconds` above zero. The price is the harness's own where it reports
-one (`cost_source: reported`), as Claude Code does. Omp and Codex report token
-counts only, so the recorder prices those tokens from
-[`prices.yaml`](prices.yaml) (`cost_source: computed`). A model with no entry
-there fails the recording, naming the model: add its published rates, then
-record again. Records at versions 1 and 2 stay as they are.
+From schema version 3, every case row carries a `cost` field and an
+`elapsed_seconds` above zero. Versions 3 and 4 retain numeric USD costs for
+reported and price-table-computed rows. Schema version 4 also records the
+exact Omp Codex models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`,
+and `openai-codex/gpt-6.1-sol` with `cost: null` and
+`cost_source: subscription`; token usage remains recorded, but no API price is
+inferred. Other Omp and Codex models still need an entry in
+[`prices.yaml`](prices.yaml), or recording fails closed. Records at versions 1
+through 3 stay as they are.
 
 ## Running them
 
