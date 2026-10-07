@@ -483,6 +483,9 @@ check("gh api POSTing to a comments path is gated; reads and other gh calls are 
 		"gh api --method POST repos/o/r/issues/52/comments",
 		"gh api --method=POST repos/o/r/issues/52/comments",
 		"gh api -XPOST repos/o/r/issues/52/comments",
+		"gh issue -R o/r comment 52 -b done",
+		"gh issue comment 52 --repo o/r -b done",
+		"gh -R o/r pr comment 7 -b done",
 		"cd /tmp && gh issue comment 52 -b done",
 		"bash -c 'gh issue comment 52 -b done'",
 		"timeout 30 gh pr comment 7 -b done",
@@ -492,6 +495,8 @@ check("gh api POSTing to a comments path is gated; reads and other gh calls are 
 	for (const command of [
 		"gh issue view 52",
 		"gh issue view 52 --comments",
+		"gh issue view -R o/r 52",
+		"gh issue -R o/r view 52 --comments",
 		"gh issue list",
 		"gh pr checks",
 		"gh pr view 7 --json comments",

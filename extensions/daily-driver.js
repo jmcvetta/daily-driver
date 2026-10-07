@@ -2022,7 +2022,17 @@ const GH_API_BODY_FLAGS = new Set([
  * POST to a path that ends in `/comments`. Read-only `gh` calls stay open.
  */
 function ghWordsComment(args) {
-	const operands = args.filter((word) => !word.text.startsWith("-"));
+	// A repository selector takes a value, which is no part of the command: in
+	// `gh issue -R o/r comment 12` the value sits where the verb is read from.
+	const operands = [];
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-R" || text === "--repo") {
+			index++;
+		} else if (!text.startsWith("-")) {
+			operands.push(args[index]);
+		}
+	}
 	const [group, verb] = operands.map((word) => word.text);
 	if ((group === "issue" || group === "pr") && verb === "comment") return true;
 	if (group !== "api") return false;
