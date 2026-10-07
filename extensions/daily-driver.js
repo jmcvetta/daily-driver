@@ -63,6 +63,32 @@ export const ASK_BLOCK_REASON =
 	"which way it went, and carry on. This adapter governs how a question that " +
 	"survives that gate is put, not whether it is worth putting.";
 
+/**
+ * What the model is told when it makes the session's first issue comment or
+ * first dispatch before the session is titled. Mirrors the wording of
+ * `hooks/title-gate.py`'s REASON so the two harnesses deny the call the same
+ * way. The form, the budget and the shortening stay `session-title`'s.
+ */
+export const TITLE_BLOCK_REASON =
+	"This call is shut until the session is titled. A retry is denied the " +
+	"same way, so do not retry it.\n\n" +
+	"Set the title first. `daily_driver_get_session` answers this session's " +
+	"current name; `daily_driver_set_session_title({ title })` sets it.\n\n" +
+	"The title takes one of two forms:\n\n" +
+	"    #{number} {shortened issue title}\n" +
+	"    ⛵ EPIC #{number} {shortened epic title}\n\n" +
+	"The first is for a session working on an issue. The second is for the " +
+	"session an epic is run from. The `session-title` skill owns the budget " +
+	"and the shortening.\n\n" +
+	"Once the title is set, the call you were denied succeeds.";
+
+/**
+ * `session-title`'s two forms, as patterns. A second copy of that skill's
+ * forms, so `scripts/check-omp-extension.mjs` asserts on both by example and
+ * a form change turns the repository red rather than silently splitting.
+ */
+const TITLE_FORMS = [/^#\d+ \S/u, /^⛵ EPIC #\d+ \S/u];
+
 /** What a Git command that rewrites a protected worktree is told. */
 export const WORKTREE_BLOCK_REASON =
 	"Git commands that rewrite the primary checkout's working tree are " +
@@ -1981,6 +2007,103 @@ function taskWorktreeBlockReason(event, violation) {
 		: WORKTREE_BLOCK_REASON;
 }
 
+/** The `gh api` flags that send a body, which makes the request a POST. */
+const GH_API_BODY_FLAGS = new Set([
+	"-f",
+	"-F",
+	"--field",
+	"--raw-field",
+	"--input",
+]);
+
+/**
+ * Whether one `gh` invocation, given the words after `gh`, comments on an issue
+ * or pull request: `gh issue comment`, `gh pr comment`, or `gh api` sending a
+ * POST to a path that ends in `/comments`. Read-only `gh` calls stay open.
+ */
+function ghWordsComment(args) {
+	// A repository selector takes a value, which is no part of the command: in
+	// `gh issue -R o/r comment 12` the value sits where the verb is read from.
+	const operands = [];
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-R" || text === "--repo") {
+			index++;
+		} else if (!text.startsWith("-")) {
+			operands.push(args[index]);
+		}
+	}
+	const [group, verb] = operands.map((word) => word.text);
+	if ((group === "issue" || group === "pr") && verb === "comment") return true;
+	if (group !== "api") return false;
+
+	// The method is explicit where given, and POST where a body is sent.
+	let method = null;
+	let sendsBody = false;
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-X" || text === "--method") {
+			method = args[index + 1]?.text ?? null;
+		} else if (text.startsWith("--method=")) {
+			method = text.slice("--method=".length);
+		} else if (/^-X./u.test(text)) {
+			method = text.slice(2);
+		} else if (
+			GH_API_BODY_FLAGS.has(text) ||
+			/^--(field|raw-field|input)=/u.test(text)
+		) {
+			sendsBody = true;
+		}
+	}
+	const posts = (method ?? (sendsBody ? "POST" : "GET")).toUpperCase() === "POST";
+	if (!posts) return false;
+	return operands.slice(1).some((word) => /\/comments(\?.*)?$/u.test(word.text));
+}
+
+/**
+ * Whether a shell command runs a `gh` call that comments on an issue or pull
+ * request. `gh` is found positionally, the way `git` is, so a wrapper in front
+ * of it does not hide it, and a `bash -c` string is read where it is literal.
+ * A command this scan cannot read is not this gate's to refuse: the worktree
+ * guard already refuses what it cannot enumerate.
+ */
+function runsGitHubComment(command) {
+	const { segments, unreadable } = shellSegments(command);
+	if (unreadable !== null) return false;
+	for (const segment of segments) {
+		const words = segment.words ?? [];
+		for (let index = 0; index < words.length; index++) {
+			const word = words[index];
+			if (!word.literal) continue;
+			const name = basename(word.text);
+			if (name === "gh" && ghWordsComment(words.slice(index + 1))) return true;
+			if (!STRING_INTERPRETERS.has(name)) continue;
+			try {
+				const invocation = shellInvocation(name, words.slice(index + 1));
+				if (invocation.command && runsGitHubComment(invocation.command.text)) {
+					return true;
+				}
+			} catch (err) {
+				if (!(err instanceof UnreadableCommandError)) throw err;
+			}
+		}
+	}
+	return false;
+}
+
+/** The dispatch tool `skills/embark/references/omp.md` opens its sessions with. */
+const DISPATCH_TOOL = "task";
+
+/** Whether this call is one the title must precede. */
+function needsTitle(event) {
+	if (event.toolName === DISPATCH_TOOL) return true;
+	return (
+		event.toolName === "bash" &&
+		typeof event.input?.command === "string" &&
+		runsGitHubComment(event.input.command)
+	);
+}
+
 /**
  * New trigger ids. `crypto.randomUUID` is a modern Node global with no
  * import; fall back to a counter where the runtime lacks it (defensive, and
@@ -2015,6 +2138,33 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	// only exists to honour cancel_schedule, forget fired triggers, and be
 	// dropped wholesale on shutdown.
 	const TRIGGERS = new Map();
+
+	// Whether this session titled itself on purpose: `daily_driver_set_session_title`
+	// ran. Per-session state, so it lives in the factory closure like TRIGGERS.
+	let titleSet = false;
+
+	/**
+	 * The title gate's answer for a call that needs the session titled: whether
+	 * to let it through. "Set on purpose" is a recorded title call, or a current
+	 * name already in one of `session-title`'s forms (what lets a session
+	 * `embark` created with a title claim without renaming itself). Where the
+	 * context exposes no name reader and no title call is recorded, the gate
+	 * cannot tell, and a block the model could only cure by renaming its parent
+	 * session is the worse failure, so the call is allowed and the operator told.
+	 */
+	function titleGateAllows(ctx) {
+		if (titleSet) return true;
+		const sessionManager = ctx?.sessionManager;
+		if (typeof sessionManager?.getSessionName !== "function") {
+			console.error(
+				"daily-driver: title gate could not read the session name and no " +
+					"title call is recorded; the call was allowed",
+			);
+			return true;
+		}
+		const name = sessionManager.getSessionName();
+		return typeof name === "string" && TITLE_FORMS.some((form) => form.test(name));
+	}
 
 	/** Idempotently cancel a live trigger. Clean false otherwise. */
 	function cancelTrigger(triggerId) {
@@ -2070,6 +2220,11 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 			);
 			return { block: true, reason: GIT_UNAVAILABLE_BLOCK_REASON };
 		}
+		// After the worktree check: the session's first issue comment and first
+		// dispatch wait for a title that was set on purpose.
+		if (needsTitle(event) && !titleGateAllows(ctx)) {
+			return { block: true, reason: TITLE_BLOCK_REASON };
+		}
 		return undefined;
 	});
 
@@ -2085,6 +2240,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		}),
 		execute: async (_toolCallId, params, _signal, _onUpdate, _ctx) => {
 			await pi.setSessionName(params.title);
+			titleSet = true;
 			return {
 				content: [{ type: "text", text: `Session titled: ${params.title}` }],
 				details: { titled: params.title },

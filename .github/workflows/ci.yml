@@ -92,6 +92,9 @@ jobs:
       - name: Validate Ask in chat hook
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-ask-in-chat')
         run: make check-ask-in-chat
+      - name: Validate Title gate hook
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-title-gate')
+        run: make check-title-gate
       - name: Validate Omp extension
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-extension')
         run: make check-omp-extension

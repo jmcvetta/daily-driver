@@ -8,7 +8,7 @@ SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
 .PHONY: __git_sync_run check-git-sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
-	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
+	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat check-title-gate \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
 	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
@@ -114,7 +114,7 @@ check-ci-scope:
 check-plugin-validity: check-plugin check-skills check-agents \
 	check-manifests check-manifest-fixtures check-claude-dependency
 
-check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
+check-runtime: check-constitution check-ask-in-chat check-title-gate check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-git-sync \
 	check-task-worktree-fixture check-worktrunk-install check-scripts
 
@@ -214,6 +214,15 @@ check-constitution:
 # rather than believed by a session. See the script's docstring.
 check-ask-in-chat:
 	python3 scripts/check-ask-in-chat.py
+
+# The acceptance test for the title gate: run `hooks/title-gate.py` against
+# synthetic event JSON in both modes and assert the session's first issue
+# comment and first dispatch are denied until it is titled. Credential-free
+# like check-ask-in-chat, and needed for the same reason -- a gate that stops
+# firing does not fail, it just gives the step back to the prose. See the
+# script's docstring.
+check-title-gate:
+	python3 scripts/check-title-gate.py
 
 # The acceptance test for the Omp runtime adapter: import extensions/
 # daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
