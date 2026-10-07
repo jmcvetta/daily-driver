@@ -50,3 +50,4 @@ One row per committed record, oldest first.
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 0/1 | not recorded | not recorded | 1m 06s |
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 1m 13s |
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 1m 03s |
+| 2026-10-07 | probe-route-overlay | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | not recorded | 3 | 3/3 | $0.10 | $0.03 | 3m 12s |

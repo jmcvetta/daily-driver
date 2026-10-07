@@ -1,0 +1,159 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "The task tool is called",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent, pattern=/reasoning/)\nExamples: ['Agent({\"context\": \"# Goal\\\\nProbe task routing: verify a `reasoning` agent returns its )']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "probe-route-overlay-03-working-override",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "The task tool is called",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent, pattern=/reasoning/)\nExamples: ['Agent({\"context\": \"# Goal\\\\nEcho probe: the spawned agent must reply with the single wo)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "probe-route-overlay-01-missing-provider",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "The task tool is called",
+          "details": "Matched 1/1 required commands (filters: tool_name=Agent, pattern=/reasoning/)\nExamples: ['Agent({\"tasks\": [{\"agent\": \"reasoning\", \"task\": \"Reply with the single word PONG and n)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "probe-route-overlay-02-no-overlay",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.018925,
+      "cost_source": "reported",
+      "elapsed_seconds": 42.07377099990845,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "probe-route-overlay",
+      "task_id": "probe-route-overlay-03-working-override",
+      "tokens": 21580,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.06250700000000001,
+      "cost_source": "reported",
+      "elapsed_seconds": 190.5104157924652,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "probe-route-overlay",
+      "task_id": "probe-route-overlay-01-missing-provider",
+      "tokens": 34153,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.0224758,
+      "cost_source": "reported",
+      "elapsed_seconds": 56.30754995346069,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "probe-route-overlay",
+      "task_id": "probe-route-overlay-02-no-overlay",
+      "tokens": 22872,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-07T09:29:47.706931",
+  "experiment_id": "probe-route-overlay",
+  "host": {
+    "hostname": "vm",
+    "kind": "cloud",
+    "platform": "Linux-6.18.44-fc-v77-x86_64-with-glibc2.39",
+    "session_id": "243e950c-8786-55de-b22c-34015c21e030"
+  },
+  "plugin_revision": {
+    "commit": "748ebbcb640e5dcb8f4eb71a45e759155a8f80dc",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-07T09:30:54.744672+00:00",
+  "run_id": "2026-10-07_09-26-35",
+  "schema_version": 3,
+  "started_at": "2026-10-07T09:26:35.459734",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "probe-route-overlay-01-missing-provider": [
+          1.0
+        ],
+        "probe-route-overlay-02-no-overlay": [
+          1.0
+        ],
+        "probe-route-overlay-03-working-override": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "probe-route-overlay-03-working-override",
+        "probe-route-overlay-01-missing-provider",
+        "probe-route-overlay-02-no-overlay"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
