@@ -19,13 +19,20 @@ agent:
 
 initial_prompt: >-
   Call the `task` tool exactly once. Use the agent `reasoning` and this
-  assignment: "Reply with the single word PONG and nothing else." Call no other
-  tool. Then quote the task tool's whole result verbatim, including any
-  error text and any model name it reports.
+  assignment: "Reply with the single word PONG and nothing else." When the
+  task result is delivered, write it verbatim, error text included, to
+  `result.txt` with the write tool. Call no other tool, and do not retry the
+  task.
 
 success_criteria:
   - type: command_executed
-    description: The task tool is called
+    description: The reasoning agent is dispatched exactly once
     tool_name: Agent
-    command_pattern: 'reasoning'
+    command_pattern: '"agent":\s*"reasoning"'
     min_count: 1
+    max_count: 1
+
+  - type: file_matches_regex
+    description: The spawn fails for want of a model
+    path: result.txt
+    pattern: 'No model selected'

@@ -7,13 +7,18 @@
 #   TELEMETRY_ENABLED=false AI_GATEWAY_API_KEY=... coder-eval run \
 #     -e probes/route-overlay/experiment.yaml probes/route-overlay/tasks/*.yaml
 #
-# The record of its one run is `evals/provenance/probe-route-overlay-*.json`.
+# Then, from the repository root, record the run:
+#
+#   make evals-record RUN=evals/runs/<run> \
+#     EXPERIMENT=evals/probes/route-overlay/experiment.yaml
+#
+# The committed record is `evals/provenance/probe-route-overlay-*.json`.
 
 experiment_id: probe-route-overlay
 description: >-
   Whether a row-level `--config` overlay reaches Omp, and what Omp's task tool
   does when `task.agentModelOverrides.reasoning` names a selector with no
-  provider.
+  provider, against a control with no overlay.
 
 defaults:
   repeats: 1
@@ -27,7 +32,7 @@ defaults:
     type: omp
     model: vercel-ai-gateway/zai/glm-5.3
     permission_mode: acceptEdits
-    allowed_tools: [Task]
+    allowed_tools: [Task, Write]
 
 variants:
   - variant_id: with-plugin
