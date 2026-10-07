@@ -165,6 +165,9 @@ it, a `session-title` title where the surface supports one, and inherited
 permissions. The issue is the task statement; do not copy its scope into the
 prompt.
 
+The harness denies the first dispatch until this session is titled, as
+`session-title`'s `When to set it` says; `Title the session` precedes this step.
+
 **Validate and, when needed, migrate the required class before dispatch.**
 Read the selected task's `Model class` section and rationale through
 `issue-body`. An old task with a trailing `Model:` field, or invalid class
