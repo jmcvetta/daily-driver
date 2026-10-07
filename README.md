@@ -225,9 +225,12 @@ in chat rather than in a multiple-choice widget:
 | ---- | ----- | ------- |
 | `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers `rules/constitution.md` to the session and every subagent. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the multiple-choice widget and directs the assistant to ask in chat. |
+| `title-gate.py` | `PreToolUse` on `add_issue_comment`/`create_session`; `PostToolUse` on `set_session_title`/`get_session` | On Claude Code cloud sessions, denies the first issue comment and first dispatch until the session is titled. |
 
 Omp uses `extensions/daily-driver.js` instead of hooks. The extension blocks the
-`ask` tool and provides session-title, reminder and session-info tools:
+`ask` tool, holds a `gh` issue or pull request comment and a `task` dispatch
+until the session is titled, and provides session-title, reminder and
+session-info tools:
 `daily_driver_set_session_title`, `daily_driver_schedule`,
 `daily_driver_cancel_schedule` and `daily_driver_get_session`. Omp's rule
 provider loads the constitution from `rules/*.md` with `alwaysApply: true`.

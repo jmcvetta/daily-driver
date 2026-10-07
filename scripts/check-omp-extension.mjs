@@ -188,6 +188,7 @@ const {
 	ASK_BLOCK_REASON,
 	GIT_UNAVAILABLE_BLOCK_REASON,
 	REMINDER_CUSTOM_TYPE,
+	TITLE_BLOCK_REASON,
 	UNANCHORED_PATH_BLOCK_REASON,
 	UNREADABLE_COMMAND_BLOCK_REASON,
 	WORKTREE_BLOCK_REASON,
@@ -392,6 +393,132 @@ check("a tool other than ask passes through", async () => {
 	const toolCtx = { cwd: "/tmp", ui: {} };
 	const decision = s.fire("tool_call", { type: "tool_call", toolCallId: "t2", toolName: "bash", input: { command: "true" } }, toolCtx);
 	assert.equal(decision, undefined, "non-ask tool must not be blocked");
+});
+
+// --- the title gate: the first issue comment and first dispatch wait -------
+const ISSUE_TITLE = "#52 Rotate the Aurora access token";
+const EPIC_TITLE = "⛵ EPIC #12 Rotate the tokens";
+const GH_COMMENT = "gh issue comment 52 -b 'Claiming it.'";
+
+/** A tool context whose session reads `name`; `undefined` is an unnamed session. */
+function namedCtx(name) {
+	return { cwd: "/tmp", ui: {}, sessionManager: { getSessionName: () => name } };
+}
+
+let nextTitleCall = 1;
+function titleCall(session, toolName, input, ctx) {
+	return session.fire(
+		"tool_call",
+		{ type: "tool_call", toolCallId: `title-${nextTitleCall++}`, toolName, input },
+		ctx,
+	);
+}
+
+function assertTitleBlocked(decision) {
+	assert.deepEqual(decision, { block: true, reason: TITLE_BLOCK_REASON });
+}
+
+check("the title reason names the call, both forms, session-title and no retry", () => {
+	assert.match(TITLE_BLOCK_REASON, /do not retry/i);
+	assert.match(TITLE_BLOCK_REASON, /daily_driver_set_session_title\(\{ title \}\)/);
+	assert.match(TITLE_BLOCK_REASON, /succeeds/);
+	assert.match(TITLE_BLOCK_REASON, /`session-title`/);
+	// The two forms are asserted against the skill that owns them, so a change
+	// to either turns this red rather than silently splitting the gate from it.
+	const skill = readFileSync(resolve(ROOT, "skills", "session-title", "SKILL.md"), "utf8");
+	for (const form of ["#{number} {shortened issue title}", "⛵ EPIC #{number} {shortened epic title}"]) {
+		assert.ok(TITLE_BLOCK_REASON.includes(form), `reason quotes ${form}`);
+		assert.ok(skill.includes(form), `session-title still states ${form}`);
+	}
+});
+
+check("a gh issue comment is blocked in an unnamed session", () => {
+	const s = makeSession();
+	assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(undefined)));
+	assertTitleBlocked(titleCall(s, "bash", { command: "gh pr comment 7 --body hi" }, namedCtx(undefined)));
+});
+
+check("a gh issue comment passes after daily_driver_set_session_title", async () => {
+	const s = makeSession();
+	const ctx = namedCtx(undefined);
+	assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, ctx));
+	await s.tools.get("daily_driver_set_session_title").execute("t", { title: ISSUE_TITLE }, undefined, undefined, ctx);
+	assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, ctx), undefined);
+	assert.equal(titleCall(s, "task", { tasks: [] }, ctx), undefined);
+});
+
+check("the recorded call is per session", async () => {
+	const titled = makeSession();
+	await titled.tools.get("daily_driver_set_session_title").execute("t", { title: ISSUE_TITLE }, undefined, undefined, namedCtx(undefined));
+	const other = makeSession();
+	assertTitleBlocked(titleCall(other, "bash", { command: GH_COMMENT }, namedCtx(undefined)));
+});
+
+check("a name already in either form passes without a call", () => {
+	for (const name of [ISSUE_TITLE, EPIC_TITLE]) {
+		const s = makeSession();
+		assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(name)), undefined, name);
+		assert.equal(titleCall(s, "task", {}, namedCtx(name)), undefined, name);
+	}
+});
+
+check("a name outside both forms is blocked", () => {
+	for (const name of ["Fix the parser", "#52", "#52 ", "EPIC #12 Rotate", "", undefined]) {
+		const s = makeSession();
+		assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(name)));
+	}
+});
+
+check("the dispatch tool is gated the same way", () => {
+	const s = makeSession();
+	assertTitleBlocked(titleCall(s, "task", { tasks: [{ id: "a" }] }, namedCtx("Fix the parser")));
+});
+
+check("gh api POSTing to a comments path is gated; reads and other gh calls are not", () => {
+	const s = makeSession();
+	const unnamed = namedCtx(undefined);
+	for (const command of [
+		"gh api repos/o/r/issues/52/comments -f body=hi",
+		"gh api -X POST repos/o/r/issues/52/comments",
+		"gh api --method POST repos/o/r/issues/52/comments",
+		"gh api --method=POST repos/o/r/issues/52/comments",
+		"gh api -XPOST repos/o/r/issues/52/comments",
+		"cd /tmp && gh issue comment 52 -b done",
+		"bash -c 'gh issue comment 52 -b done'",
+		"timeout 30 gh pr comment 7 -b done",
+	]) {
+		assertTitleBlocked(titleCall(s, "bash", { command }, unnamed));
+	}
+	for (const command of [
+		"gh issue view 52",
+		"gh issue view 52 --comments",
+		"gh issue list",
+		"gh pr checks",
+		"gh pr view 7 --json comments",
+		"gh api repos/o/r/issues/52/comments",
+		"gh api -X GET repos/o/r/issues/52/comments",
+		"gh api -X POST repos/o/r/issues",
+		"gh api -f title=x repos/o/r/issues",
+		"gh api -X POST repos/o/r/pulls/7/comments/99/replies",
+		"gh issue create -t x -b y",
+		"echo gh-issue-comment",
+		"git commit -m 'gh issue comment'",
+	]) {
+		assert.equal(titleCall(s, "bash", { command }, unnamed), undefined, command);
+	}
+});
+
+check("a context with no readable name and no recorded call is allowed, loudly", () => {
+	const s = makeSession();
+	const lines = [];
+	const original = console.error;
+	console.error = (...args) => lines.push(args.join(" "));
+	try {
+		assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, { cwd: "/tmp", ui: {} }), undefined);
+	} finally {
+		console.error = original;
+	}
+	assert.ok(lines.some((line) => /title gate/.test(line)), "the operator is told on stderr");
 });
 
 let nextGuardCall = 1;

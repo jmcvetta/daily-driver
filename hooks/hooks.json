@@ -46,6 +46,30 @@
             "statusMessage": "Sending the question to the chat reply"
           }
         ]
+      },
+      {
+        "matcher": "^mcp__.*__(add_issue_comment|create_session)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/title-gate.py pre-tool-use",
+            "timeout": 10,
+            "statusMessage": "Checking the session is titled"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^mcp__.*__(set_session_title|get_session)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/title-gate.py post-tool-use",
+            "timeout": 10,
+            "statusMessage": "Recording the session title"
+          }
+        ]
       }
     ]
   }

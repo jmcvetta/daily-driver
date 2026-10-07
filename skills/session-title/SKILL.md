@@ -133,3 +133,7 @@ closed, issue #41 begun.
 
 Not on every commit, and not to record progress. A title that keeps moving is
 one nobody reads twice.
+
+**The harness denies the session's first issue comment and first dispatch
+until the title is set** — on Claude Code and Omp, where a title surface
+exists. A denied call succeeds once the title is set; the denial says how.

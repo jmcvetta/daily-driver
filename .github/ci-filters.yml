@@ -55,6 +55,11 @@ check-ask-in-chat:
   - 'scripts/check-ask-in-chat.py'
   - 'hooks/ask-in-chat.py'
   - 'hooks/hooks.json'
+check-title-gate:
+  - 'scripts/check-title-gate.py'
+  - 'hooks/title-gate.py'
+  - 'hooks/hooks.json'
+  - 'skills/session-title/SKILL.md'
 check-omp-extension:
   - 'scripts/check-omp-extension.mjs'
   - 'extensions/daily-driver.js'
