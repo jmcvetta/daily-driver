@@ -4,19 +4,25 @@ description: >-
   its own body contract without imposing task metadata on other kinds.
 tags: [epic, behaviour, fire]
 
-initial_prompt: >-
-  This agreed work needs three independently reviewable outcomes, so plan an
-  epic and show the bodies for the epic and its children without posting.
+initial_prompt: |
+  This agreed work needs three independently reviewable outcomes, so revise the
+  epic and show bodies for the epic and its children without posting. The epic
+  issue already has this opening quatrain; retain it verbatim:
+  *The questions cross the morning rain,*
+  *The answers find the shore;*
+  *The tasks return with clear refrain,*
+  *Then guide what follows more.*
   Child A is a settled code change: expose the already-decided retry limit in
   the configuration file. Child B asks whether the audit log must include
   denied requests; the compliance rule is not known and a bounded review of the
   existing policy documents should answer it. Child C is a release owner
-  approval that agents cannot provide. Keep the existing epic quatrain and
-  exactly Summary, Justification, and Sequencing sections. Assign task,
-  research, and human kinds respectively. The task's model class is
-  `implementation`; do not invent a class for the other children. State that
-  the epic is complete only when its coordinated outcome is evidenced, not
-  merely when every child is closed.
+  approval that agents cannot provide. Keep exactly Summary, Justification,
+  and Sequencing sections. Assign task, research, and human kinds respectively.
+  The task's model class is `implementation`; do not invent a class for the
+  other children. There are no blocked-by edges among the children and no
+  requested order; do not invent a dependency. State that the epic is complete
+  only when its coordinated outcome is evidenced, not merely when every child
+  is closed.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -48,16 +54,18 @@ success_criteria:
       permission_mode: default
     prompt: |
       Grade the final reply. Begin rationale with `ANCHOR: result` or
-      `ANCHOR: none`; score 0 if no final result exists. The epic must retain a
-      ballad quatrain, exactly the three required sections, a concise end-state
-      Summary and graph-derived sequencing; it must not copy child progress
-      checklists. The settled code child is a task with an implementation class
-      and settled acceptance. The question child is research with purpose,
-      bounded source scope, evaluation and answer deliverable, not an assumed
-      compliance answer or task class. The reserved approval is a human child
-      with safe action evidence, not agent work or a class. The reply must not
-      require Model class metadata on the research or human child. Epic
-      completion requires evidence for the coordinated outcome; closed children
+      `ANCHOR: none`; score 0 if no final result exists. The epic must retain
+      the supplied four-line ballad quatrain verbatim, exactly the three
+      required sections, and a concise end-state Summary; it must not copy
+      child progress checklists. With no blocked-by edges, sequencing must not
+      invent a dependency; any later wave is an explicit scheduling choice.
+      The settled code child is a task with an implementation class and settled
+      acceptance. The question child is research with purpose, bounded source
+      scope, evaluation and answer deliverable, not an assumed compliance
+      answer or task class. The reserved approval is a human child with safe
+      action evidence, not agent work or a class. Do not require Model class
+      metadata on the research or human children. Epic completion requires
+      evidence for the coordinated outcome; closed children
       alone, a canceled child, or inconclusive research do not suffice. Score
       1.0 if these distinctions hold, 0.5 for a mostly correct decomposition
       with a material omission, and 0.0 if task format/classes spread to all

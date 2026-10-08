@@ -32,10 +32,11 @@ Carry:
   exhaustive survey by default.
 - The required deliverable and destination, such as an answer on the issue, a
   repository note, or implementation-ready issue specifications. Findings
-  separate evidence from inference, cite sources or reproducible experiment
-  details, explain trade-offs, recommend a course when requested, and state
-  uncertainty and limitations. Use dates or versions for time-sensitive
-  evidence. Do not invent numerical confidence.
+  state what each source establishes separately from what the investigator
+  infers; label material conclusions as inferences. Cite sources or
+  reproducible experiment details, explain trade-offs, recommend a course when
+  requested, and state uncertainty and limitations. Use dates or versions for
+  time-sensitive evidence. Do not invent numerical confidence.
 - A stopping rule: enough evidence to answer, or a justified bounded
   investigation after which remaining uncertainty is reported. Bounds can be
   named alternatives, sources, experiments, or another justified limit; do not

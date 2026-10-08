@@ -104,9 +104,10 @@ or concrete-model provenance. A task body has no trailing `Model:` or
 below a `---` rule at the very end of the body and this rule does not touch.
 This shape is `task`'s alone; an `epic` body is untouched.
 
-**The write that lands this body also carries `provenance`'s block**, per
-that skill's placement and field rules — a different thing from either
-metadata field above, and unaffected by the migration rule below.
+Every complete issue-body draft intended for a write includes the block it
+would publish. Withholding the live write does not remove the provenance
+requirement. Follow `provenance`'s placement and field rules, and preserve
+earlier provenance blocks on an edited issue.
 
 
 **Relationships are edges, not prose.** What an issue waits on is

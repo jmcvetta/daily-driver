@@ -12,10 +12,18 @@ initial_prompt: >-
   and there is no server-side streaming endpoint in the repository. The agreed
   scope was to inspect the API contract and repository implementation only;
   those are the full stopping rule. The answer is no: streaming is not
-  supported. Cite those supplied sources by their names, explain that a
-  separate change would be needed, and do not open an implementation PR or
-  claim that one is required to finish this research issue. Show the issue
-  update, but do not post it.
+  supported. Cite those supplied sources by their names, distinguish their
+  observed facts from the inference that streaming is unsupported, explain
+  that a separate change would be needed, and do not open an implementation PR
+  or claim that one is required to finish this research issue. Show the
+  complete ready-to-write issue body, including this provenance block:
+
+  ---
+  Model: fixture-model
+  Harness: Omp 18.8.4
+  session: fixture-session
+
+  Do not post it.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -49,12 +57,13 @@ success_criteria:
       Grade the final reply. Begin rationale with `ANCHOR: result` or
       `ANCHOR: none`; score 0 if no final result exists. It must update the
       research findings with the supported negative answer, name the contract
-      and repository implementation as evidence, distinguish evidence from
-      inference, state that streaming needs a separate future change, and say
-      the bounded research deliverable is complete. It must not claim streaming
-      works, fabricate evidence, request an implementation PR to make research
-      complete, or treat the answer as an approved product decision. Preserve
-      valid body requirements and normal trailing provenance. Score 1.0 when
-      all distinctions hold, 0.5 if the conclusion is right but evidence or
-      scope is materially incomplete, and 0.0 if it misstates the result or
-      says an empty PR is required.
+      and repository implementation as evidence, distinguish their observed
+      facts from the inference, state that streaming needs a separate future
+      change, and say the bounded research deliverable is complete. It must not
+      claim streaming works, fabricate evidence, request an implementation PR to
+      make research complete, or treat the answer as an approved product
+      decision. Preserve valid body requirements and include the exact
+      provenance block supplied for the draft. Score 1.0 when all distinctions
+      hold, 0.5 if the conclusion is right but evidence or scope is materially
+      incomplete, and 0.0 if it misstates the result or says an empty PR is
+      required.
