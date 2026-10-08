@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.50.0](https://github.com/jmcvetta/daily-driver/compare/v0.49.3...v0.50.0) (2026-10-08)
+
+
+### Features
+
+* add repository-local bug triage ([#558](https://github.com/jmcvetta/daily-driver/issues/558)) ([fa74689](https://github.com/jmcvetta/daily-driver/commit/fa74689339fd1aafa7c9972991801c70b3d528bb))
+* deny the claim and the dispatch until the session is titled ([#573](https://github.com/jmcvetta/daily-driver/issues/573)) ([cb51fd5](https://github.com/jmcvetta/daily-driver/commit/cb51fd544d20335cb17b6285132886d020231e9d))
+
+
+### Bug Fixes
+
+* **review-cycle:** observe workflow runs in the Omp CI wait ([#565](https://github.com/jmcvetta/daily-driver/issues/565)) ([ad922a8](https://github.com/jmcvetta/daily-driver/commit/ad922a86a679e27c91f05697496cd84cd6906eed))
+* **undertake:** read whether the head carries the whole of the issue's work ([#570](https://github.com/jmcvetta/daily-driver/issues/570)) ([532565d](https://github.com/jmcvetta/daily-driver/commit/532565da775d04a74ba558666a8ead8fd434e18d))
+
 ## [0.49.3](https://github.com/jmcvetta/daily-driver/compare/v0.49.2...v0.49.3) (2026-10-06)
 
 
