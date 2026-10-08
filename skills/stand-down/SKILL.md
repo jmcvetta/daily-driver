@@ -164,7 +164,7 @@ it asks for a commit and a push, never for a summary or an answer.
 Implementor `<id>` (<session|subagent>) was retired by stand-down. The work
 is yours to reclaim.
 
-- Remote push branch: `<branch>` — <link>. The origin tip is authoritative
+- Branch: `<remote push branch>` — <link>. The origin tip is authoritative
   as of this comment. Local execution branch: `<branch>` when it differs.
 - Pull request: <#N and state, or "none open">.
 - Worktree (this machine): <path, or "none">.

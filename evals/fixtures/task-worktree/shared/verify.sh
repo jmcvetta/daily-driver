@@ -18,6 +18,7 @@ task_list="$(wt --config-set 'list.json-schema=2' list --format=json)"
 
 [ "${branch}" = "${expected_branch}" ]
 [ "${base}" = "upstream/master" ]
+git merge-base --is-ancestor "${base}" HEAD
 if git merge-base --is-ancestor "refs/heads/${primary_branch}" HEAD; then
 	printf 'task branch started from the primary branch, not the remote base\n' >&2
 	exit 1
@@ -101,6 +102,8 @@ primary-tip=$(git -C "${primary_root}" rev-parse HEAD)
 primary-status=unchanged
 remote-execution-branch=absent
 EOF
+	ln -sfn "${task_root}/.fixture/designated-outcome.txt" \
+		"${primary_root}/.fixture/designated-outcome.txt"
 fi
 
 if [ "${public_verification}" != "${verification}" ]; then

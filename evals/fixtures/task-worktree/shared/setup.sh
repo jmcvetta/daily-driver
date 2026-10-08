@@ -31,6 +31,7 @@ cat >.gitignore <<'EOF'
 .fixture/primary-status.txt
 .fixture/primary-branch.txt
 .fixture/primary-tip.txt
+.fixture/designated-outcome.txt
 EOF
 
 git add .gitignore .fixture/setup.sh .fixture/verify.sh src/parser.py
