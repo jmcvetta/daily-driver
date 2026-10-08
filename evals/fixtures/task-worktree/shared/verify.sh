@@ -58,6 +58,7 @@ if [ "${mode}" = "linked" ] || [ "${mode}" = "resume" ] || [ "${mode}" = "design
 		exit 1
 	fi
 	verification="${task_root}/.fixture/verification.txt"
+	public_verification="${primary_root}/.fixture/verification.txt"
 	# Catch pushing the local-only name or moving the primary designation ref.
 	if [ "${mode}" = "designated" ]; then
 		designated="claude/designated-52"
