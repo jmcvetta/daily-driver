@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575))
+
 ## [0.50.0](https://github.com/jmcvetta/daily-driver/compare/v0.49.3...v0.50.0) (2026-10-08)
 
 
