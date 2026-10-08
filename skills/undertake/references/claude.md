@@ -19,6 +19,9 @@ The issue
 | `Read the issue and its edges` | Read the comments | `mcp__github__issue_read`, method `get_comments` |
 | `Read the issue and its edges` | Label an issue that carries none | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, method `update`, sending that set plus the new label |
 | `Claim the issue` | Comment on the issue | `mcp__github__add_issue_comment` |
+| `Implement` (issue-only research) | Publish the claim branch for resumption | `Bash` in the task worktree: `git push --set-upstream <task-worktree remote> <branch>` |
+| `Implement` (issue-only research) | Record findings | `mcp__github__add_issue_comment` |
+| `Implement` (issue-only research) | Close completed research | `mcp__github__issue_write`, method `update`, `state: closed`, `state_reason: completed` |
 
 **The two title calls are `session-title`'s sequence, routed here so the step
 is found without leaving this file.** The form, the budget and the shortening
@@ -45,6 +48,13 @@ For a `task`, read the `Model class` section, validated and repaired through
 its body is old or invalid, before the claim. That guidance is dispatch's —
 `embark` selects a route against it before assigning work — and nothing here
 compares the class to this session's own capability.
+
+**Issue-only research writes use the issue client.** First publish the claim
+branch with the push operation above so another session can resume. If that
+push fails, leave the issue open and report the failure. Post the complete
+answer with `mcp__github__add_issue_comment`, including `provenance`'s block;
+then close with `mcp__github__issue_write` only when `issue-body`'s research
+completion test holds. Failed or incomplete research stays open.
 
 
 The implementor
@@ -158,12 +168,11 @@ than half of it.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the
-issue and its edges` already makes — find the claim by its branch link and
-`Model:` and `session:` lines, and take `created_at`; where more than one
-comment carries that shape, the earliest of them is the start — a later
-claim does not restart the clock. The resumed sequence
-makes this read anyway at `Read the issue and its edges`; an issue with no
-recoverable claim leaves the timing `n/a`, per `SKILL.md`.
+issue and its edges` already makes — find the claim by its branch link plus
+`Model:` and `session:`, and take `created_at`; where more than one comment
+carries that shape, the earliest is the start. The resumed sequence makes this
+read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
+`SKILL.md`.
 
 **The report posts with `mcp__github__add_issue_comment`** — a pull request's
 comments are issue comments, so the claim's write is the report's. The same

@@ -2,29 +2,29 @@
 name: undertake
 description: >-
   This skill should be used whenever a GitHub issue, or a task this skill is
-  explicitly invoked on, is being taken from its description to a pull request
-  ready for review — "/undertake", "undertake #34", "undertake adding a retry
-  loop", "implement #191" — and on the agent's own move from reading an issue
-  to writing code for it. It covers keeping that pull request current after it
-  goes ready too: "the PR is behind master", "bring the branch up to date".
-  Two things fire it: an issue handed over to be worked on, or an explicit
-  invocation. An invocation carrying no issue opens one itself, but one of the
-  two is still required — "implement a retry loop" and "fix this function",
-  with neither, are ordinary work and must NOT fire it. Supplies the step
-  order and gates, the ready gate a branch behind its base
-  does not pass, the pause on a human action, and the base merge that keeps
-  it current; the round is `review-cycle`'s. Not for reading or discussing
-  an issue: "what does #191 say" is a question, not an assignment.
----
+  explicitly invoked on, is being taken from its description to a completed
+  result — a pull request ready for review or an evidenced answer-only research
+  result — and on the agent's own move from reading an issue to writing code
+  for it. It covers keeping a pull request current after it goes ready too:
+  "the PR is behind master", "bring the branch up to date". Two things fire
+  it: an issue handed over to be worked, or an explicit invocation. An
+  invocation carrying no issue opens one itself, but one of the two is still
+  required — "implement a retry loop" and "fix this function", with neither,
+  are ordinary work and must NOT fire it. Supplies the step order and gates,
+  the ready gate a branch behind its base does not pass, the pause on a human
+  action, and the base merge that keeps it current; the round is
+  `review-cycle`'s. Not for reading or discussing an issue: "what does #191
+  say" is a question, not an assignment.
 
 # Undertake
 
-An issue in, a pull request ready for review out, and kept current with its
-base branch after that. Twelve steps, and this skill is the order they run in
-— the first of them, `Open the issue`, skipped in the common case where the
-work already has an issue. Where it does not, that step supplies one: an issue
-is what this skill takes in, and untracked work is what running without one
-leaves behind.
+An issue in, an evidenced result out — a pull request ready for review for
+repository changes, or a completed answer recorded on the issue for
+answer-only research — and any pull request kept current with its base.
+Twelve steps, and this skill is the order they run in. `Open the issue` is
+skipped in the common case where the work already has an issue. Where it does
+not, that step supplies one: an issue is what this skill takes in, and
+untracked work is what running without one leaves behind.
 
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
 restate**. The task branch and execution root live in `task-worktree`, the
@@ -261,9 +261,10 @@ Beyond the claim itself the comment always carries:
   repository the issue is in. Read it from the harness's session call where
   that call supplies it, or from the remote `task-worktree` resolved. Built
   from the issue's repository instead, the link can point to the wrong fork.
-  Until `Open the draft` nothing else on GitHub ties the issue to this branch.
-  The link can return 404 until the first push; write it anyway, because the
-  alternative is a branch name the reader must turn into a URL by hand.
+  Until the first push or `Open the draft`, nothing else on GitHub ties the
+  issue to this branch. The link can return 404 until that push; write it
+  anyway, because the alternative is a branch name the reader must turn into
+  a URL by hand.
 
 - **`provenance`'s block**, immediately after the branch: the model that
   served the turn, the harness and its version, and the session identifier or
@@ -314,13 +315,13 @@ before.
 **The claim's timestamp is the undertaking's clock start.** The comment's own
 `created_at` is what `The milestone` reads back when the pull request first
 reaches merge readiness — through resumes, through whatever draft states the
-sequence has passed since. No timestamp is
-written into the claim for the milestone's sake: the durable start is the
-post, not a line in it. Where more than one comment carries the claim's
-shape — the collision the policy above permits — the earliest of them is the
-start: a later claim does not restart a clock already running. A claim that
-was never posted leaves the milestone with no start to read, and
-`The milestone` reports the timing as unavailable rather than guessing at one.
+sequence has passed since. No timestamp is written into the claim for the
+milestone's sake: the durable start is the post, not a line in it. Where more
+than one comment carries the claim's shape — the collision the policy above
+permits — the earliest of them is the start: a later claim does not restart a
+clock already running. A claim that was never posted leaves the milestone with
+no start to read, and `The milestone` reports the timing as unavailable rather
+than guessing at one.
 
 5 — Implement
 -------------
@@ -328,9 +329,32 @@ was never posted leaves the milestone with no start to read, and
 **The session running this sequence writes the code itself.** No web session,
 no implementor subagent, no second context for the body of the work. An
 undertaking is one issue, and the hand that claimed it is the hand that
-implements it: a session that dispatches another session to undertake the
-issue it has already claimed buys a handoff, a second copy of the context and
-a second claim on the same branch, and buys nothing with them.
+implements it.
+
+**Issue-only research completion.** Use this route only when the agreed
+deliverable is an answer or follow-on issue specifications, the task branch
+contains no repository changes, and no pull request exists. Otherwise use the
+normal PR route for the existing changes. Keep repository content read-only.
+Push the claimed task branch to its resolved remote before research so another
+session can resume from the issue record; do not create an empty commit. If the
+push fails, leave the issue open and report the failure.
+
+Gather the evidence and prepare the agreed answer. If follow-on issue
+specifications are required, create those through `issue` or `epic` under
+their existing gates and include their links in the result. If a required
+issue cannot be created, leave the research issue open and report the failure.
+Post the complete findings to the issue with `provenance`'s block. If that
+write fails, leave the issue open. Close the research issue as completed only
+when `issue-body`'s completion test holds and the answer was recorded. A
+supported no is a result. Inconclusive work is complete only under
+`issue-body`'s bounded-report rule. Failed access, unresolved blocking intent,
+or abandoned work stays open and follows `Where it stops and waits`.
+
+This route skips `Open the draft`, `Review the head`, `Fix, answer, resolve,
+push`, `Verify the fix delta`, `Ready for review`, and `Keep it current`.
+Never create an empty PR or mark an incomplete result complete. Repository
+notes, code, or other repository artifacts use the normal task-worktree and PR
+route, even when research produced the recommendation.
 
 **Subagents belong to the review round, not to the body of the work.**
 `review-cycle`'s `Verify the fix delta` dispatches a briefed subagent, and
@@ -350,6 +374,10 @@ here.
 
 6 — Open the draft
 ------------------
+
+This step and the following PR steps run only on the repository-change route.
+The issue-only research route closes at `Implement` after recording its
+complete answer on the issue.
 
 Push the branch, then invoke `pr`: it owns the branch guard, the existing-PR
 check, draft state, and the call on whether there is an issue to reference —
@@ -940,6 +968,7 @@ as `stand-down`'s wrap-up message is `The wrap-up`'s, not this section's.**
 
 In order:
 
+
 1. **Secure the work.** The rules are `stand-down`'s `Secure the work`: commit
    work in progress to the existing task branch, stage named files, skip no
    hook and no test, and push. A branch with nothing new is pushed as it is.
@@ -968,6 +997,7 @@ In order:
    `Outstanding:` names the failure, and the handoff is still written.
 4. **Stop.** The undertaking does not mark the pull request ready, does not
    close the issue, and does not call the work complete.
+
 
 **Idempotent.** Read the issue's comments before posting. A `## Handoff —`
 comment posted after the latest claim comment that names the same pushed head

@@ -19,6 +19,9 @@ The issue
 | `Read the issue and its edges` | Read the body, the graph and the comments | `gh issue view <number> --json body,labels,comments,blockedBy,subIssues,parent` |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> --body-file <path>` |
+| `Implement` (issue-only research) | Publish the claim branch for resumption | `git push --set-upstream <task-worktree remote> <branch>` through the shell in the task worktree |
+| `Implement` (issue-only research) | Record findings | `gh issue comment <number> --body-file <path>` |
+| `Implement` (issue-only research) | Close completed research | `gh issue close <number> --reason completed` |
 
 `--body-file` rather than `-b`: the claim carries backticks and markdown
 links, and a double-quoted shell argument substitutes the backticks before
@@ -43,6 +46,13 @@ For a `task`, read the `Model class` section, validated and repaired through
 its body is old or invalid, before the claim. That guidance is dispatch's —
 `embark` selects a route against it before assigning work — and nothing here
 compares the class to this session's own capability.
+
+**Issue-only research writes use the issue client.** First publish the claim
+branch with the push operation above so another session can resume. If that
+push fails, leave the issue open and report the failure. Post the complete
+answer with `gh issue comment --body-file`, including `provenance`'s block;
+then close only when `issue-body`'s research completion test holds. Failed or
+incomplete research stays open.
 
 
 The implementor
@@ -126,12 +136,11 @@ are that read's, and CI at the gate comes from `statusCheckRollup` instead.
 
 **The start is the claim comment's `createdAt`.** `gh issue view <issue>
 --json comments` is the read `Read the issue and its edges` already makes —
-`comments` is in its field list — and the claim is the comment carrying the
-branch link and the `Model:` line. Take its `createdAt`; where more than one
-comment carries that shape, the earliest of them is the start — a later
-claim does not restart the clock. A resumed session finds the start with the
-read it makes anyway. An issue with no recoverable
-claim leaves the timing `n/a`, per `SKILL.md`.
+`comments` is in its field list — and the claim carries the branch link and
+the `Model:` and `session:` lines. Take its `createdAt`; where more than one
+comment carries that shape, the earliest is the start. A resumed session
+finds it with the same read. An issue with no recoverable claim leaves the
+timing `n/a`, per `SKILL.md`.
 
 **The report posts as a pull-request comment** — a pull request's comments
 are issue comments:

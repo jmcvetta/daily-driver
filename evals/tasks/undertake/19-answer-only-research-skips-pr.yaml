@@ -1,0 +1,41 @@
+# Without this case, the workflow can still open an empty PR after an answer-only research result.
+task_id: undertake-19-answer-only-research-skips-pr
+description: >-
+  Answer-only research is recorded on its issue and does not enter the PR
+  workflow after its completion contract is met.
+tags: [undertake, research, behaviour, fire]
+initial_prompt: >-
+  Undertake research issue #91. Its agreed deliverable is an answer recorded
+  on the issue, with no repository changes. The bounded investigation is
+  complete, its evidence supports a no-change recommendation, and no follow-on
+  issues are required. Tell me the completion route. Do not claim to have
+  posted comments, pushed a branch, or closed the issue; you cannot write to
+  GitHub in this evaluation.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 6, turn_timeout: 180, task_timeout: 300}
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` handles a completed answer-only research issue"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The research completion route avoids an empty pull request
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final [RESULT - ...] reply. Score 0 if absent or if it claims
+      any external write occurred. Score 1 only if it selects the issue-only
+      research completion path, explains that the complete evidence-based
+      answer goes on #91 with provenance, closes #91 as completed only because
+      the stated completion contract is met, and skips opening a pull request
+      and all later PR steps. It must not suggest a repository change or an
+      empty PR. It should note that no follow-on issue is required. Do not
+      reward generic statements that research is complete without naming the
+      issue-level outcome and no-PR boundary.
