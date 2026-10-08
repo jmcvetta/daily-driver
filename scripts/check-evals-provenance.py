@@ -703,6 +703,7 @@ def main() -> int:
                             "output_tokens": 10,
                             "cache_read_input_tokens": 1000,
                             "cache_creation_input_tokens": 50,
+                            "reasoning_tokens": 7,
                             "agent_cost_usd": None,
                             "judge_cost_usd": 0.5,
                             "total_cost_usd": 0.5,
@@ -764,7 +765,7 @@ def main() -> int:
         require(laptop["client"]["name"] == "claude-code", "client type was not read from agent_config")
         require(len(laptop["attempts"]) == 3, "attempt-level evidence was not recorded")
         require(laptop["attempts"][0]["criteria"][0]["criterion_type"] == "synthetic", "criterion evidence was not recorded")
-        require(laptop["schema_version"] == 3, "schema_version was not bumped to 3")
+        require(laptop["schema_version"] == 4, "schema_version was not bumped to 4")
         require(len(laptop["cases"]) == 3, "case rows were not recorded one per task result")
         passed, failed = laptop["cases"][0], laptop["cases"][1]
         require(passed["class"] == "mechanical", "class tag was not read from the row's tags")
@@ -776,7 +777,65 @@ def main() -> int:
         require(abs(failed["cost"] - 0.50037) < 1e-9, f"a token-only row was mispriced: {failed['cost']}")
         require(failed["cost_source"] == "computed", "a table-priced row was not marked computed")
         require(failed["tokens"] == "unreported", "missing total tokens were not marked unreported")
+        require(
+            passed["token_usage"]
+            == {
+                "uncached_input_tokens": 600,
+                "cache_read_input_tokens": "unreported",
+                "cache_creation_input_tokens": "unreported",
+                "output_tokens": 400,
+                "reasoning_tokens": "unreported",
+            },
+            "missing token buckets were not kept unreported",
+        )
+        require(
+            failed["token_usage"]
+            == {
+                "uncached_input_tokens": 100,
+                "cache_read_input_tokens": 1000,
+                "cache_creation_input_tokens": 50,
+                "output_tokens": 10,
+                "reasoning_tokens": 7,
+            },
+            "measured token buckets were not preserved",
+        )
         require(passed["model_served"] == "unreported", "case model_served used a different sentinel than 'unreported'")
+
+        # Regression: Omp startup failures leave agent_config null, but their
+        # ERROR attempts still need a durable provenance row.
+        errored = json.loads((run_dir / "run.json").read_text())
+        errored_row = errored["task_results"][1]
+        errored_row["status"] = "ERROR"
+        errored_row["agent_config"] = None
+        errored_row["input_tokens"] = None
+        errored_row["output_tokens"] = None
+        errored_row["cache_read_input_tokens"] = None
+        errored_row["cache_creation_input_tokens"] = None
+        errored_row["total_tokens"] = None
+        errored_row["reasoning_tokens"] = None
+        errored_row["agent_cost_usd"] = None
+        errored_row["total_cost_usd"] = None
+        errored_row["error_message"] = "model could not start"
+        (run_dir / "run.json").write_text(json.dumps(errored))
+        error_record = json.loads(
+            run_recorder(run_dir, experiment, temp / "error-record", base_env, prices).read_text()
+        )
+        require(error_record["cases"][1]["outcome"] == "error", "an ERROR row with no agent_config was not recorded")
+        require(error_record["cases"][1]["tokens"] == "unreported", "missing startup usage was recorded as zero")
+
+        # Restore the fixture before testing Omp-specific price handling.
+        errored_row["status"] = "FAILURE"
+        errored_row["agent_config"] = {"type": "claude-code", "model": "requested-model"}
+        errored_row["input_tokens"] = 100
+        errored_row["output_tokens"] = 10
+        errored_row["cache_read_input_tokens"] = 1000
+        errored_row["cache_creation_input_tokens"] = 50
+        errored_row["total_tokens"] = None
+        errored_row["agent_cost_usd"] = None
+        errored_row["total_cost_usd"] = 0.5
+        errored_row.pop("error_message", None)
+        errored_row["reasoning_tokens"] = 7
+        (run_dir / "run.json").write_text(json.dumps(errored))
         require(passed["model_requested"] == "requested-model", "case model_requested was not read from the experiment")
         require(passed["settings"] == "synthetic", "case settings did not carry the experiment_id")
         untagged = laptop["cases"][2]
