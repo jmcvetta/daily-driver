@@ -187,12 +187,24 @@ def main() -> int:
     check("count_check_reruns: two extra runs of the same name is two reruns", reruns == 2)
     check("count_check_reruns: no repeats is zero reruns", mt.count_check_reruns([{"name": "a"}, {"name": "b"}]) == 0)
 
-    # -- model class and closing issue -------------------------------------------
+    for token in ("mechanical", "implementation", "reasoning"):
+        check(
+            f"read_model_class: preserves {token}",
+            mt.read_model_class(f"## Model class\n\n`{token}`\n") == token,
+        )
+    # Without this regression, frontier assignments disappear from telemetry as unlabelled.
     check(
-        "read_model_class: reads the token",
-        mt.read_model_class("## Model class\n\n`implementation`\n\nmore text") == "implementation",
+        "read_model_class: preserves frontier as a class",
+        mt.read_model_class("## Model class\n\n`frontier`\n") == "frontier",
     )
-    check("read_model_class: a body with no section is unlabelled", mt.read_model_class("no section here") == "unlabelled")
+    check(
+        "read_model_class: rejects a suffixed frontier token",
+        mt.read_model_class("## Model class\n\n`frontier-extra`\n") == "unlabelled",
+    )
+    check(
+        "read_model_class: a body with no section is unlabelled",
+        mt.read_model_class("no section here") == "unlabelled",
+    )
     check("closed_issue_number: reads a Closes #N line", mt.closed_issue_number("fixes bug\n\nCloses #361") == 361)
     check("closed_issue_number: a body naming no issue is None", mt.closed_issue_number("no issue line") is None)
 

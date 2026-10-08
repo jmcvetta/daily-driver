@@ -25,8 +25,9 @@
  *    task identity and establishes or reuses its dedicated worktree; this
  *    guard makes forgetting it fail before the user's checkout is changed.
  *
- * 3. Provide runtime defaults for mechanical, implementation, and reasoning model
- *    roles without overwriting operator assignments or writing configuration.
+ * 3. Provide runtime defaults for mechanical, implementation, reasoning, and
+ *    frontier model roles without overwriting operator assignments or writing
+ *    configuration.
  *
  * 4. Provide session-title, scheduled-reminder, and session-info tools that
  *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,

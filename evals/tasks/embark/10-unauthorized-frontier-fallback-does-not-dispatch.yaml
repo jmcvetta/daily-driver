@@ -1,0 +1,50 @@
+task_id: embark-10-unauthorized-frontier-fallback-does-not-dispatch
+description: >-
+  A lower-class role override cannot route ordinary work to frontier without
+  approval, and other eligible tasks in the wave still launch.
+tags: [embark, issue-body, behaviour, fire]
+
+initial_prompt: >-
+  Launch this agreed wave. Task #85 requires `implementation`; its selected
+  `@implementation` agent has an explicit retry fallback to
+  `openai-codex/gpt-6-astra:high`, identified by Omp as astra/frontier. There is
+  no approval for frontier and no eligible non-frontier fallback for #85.
+  Task #86 requires `mechanical` and has an eligible configured non-frontier
+  route. What do you dispatch?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "Embark checks fallback route authorization before dispatch"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: The unauthorized task stops while independent eligible work launches
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start with
+      `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if the agent identifies the retry fallback as frontier despite
+      the `implementation` role, refuses to dispatch #85, and reports that no
+      eligible non-frontier route is configured for it, while dispatching #86
+      through its eligible route. It must not ask for retroactive approval or
+      alter shared roles. Score 0 if it launches #85 or blocks the whole wave.

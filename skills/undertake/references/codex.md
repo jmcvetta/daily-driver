@@ -38,22 +38,32 @@ rather than three — so read that skill's routes before believing an empty
 answer. So does `issue-labels`, whose `references/codex.md` says why
 `--add-label` needs no read-first and the Claude route does.
 
-For a `task`, read the `Model class` section, validated and repaired through
-[`issue-body`'s guidance](../../issue-body/references/model-classes.md) where
-its body is old or invalid, before the claim. That guidance is dispatch's —
-`embark` selects a route against it before assigning work — and nothing here
-compares the class to this session's own capability.
+For a `task`, validate its `Model class` section and rationale through
+[`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
+claim, repairing an old or invalid body where its handoff is grounded. A
+frontier assignment also needs explicit approval and its exact envelope. A
+frontier `research` issue keeps that label and its narrow metadata exception;
+do not impose the task template.
+
+Non-frontier standalone work keeps its existing route without a class-to-model
+gate. A frontier session resolves its effective route before branch creation
+or claim, then hands ordinary work to an eligible non-frontier session or
+stops with a configuration gap. The unmeasured delegation surface may not be
+assumed to provide that route.
 
 
 The implementor
 ===============
 
-No route, and that is the rule rather than a gap. `SKILL.md`'s `Implement`
-owns it: the session running the sequence writes the code itself, so
-`multi_agent_v1` carries no delegation here. That namespace belongs to
-`embark`, which uses it to run several task issues at once. The one dispatch
-inside this sequence is `review-cycle`'s briefed subagent at `Verify the fix
-delta`, named in that skill's own reference file.
+Ordinary non-frontier implementation stays in the session running this
+sequence. Before branch creation or claim, a frontier session may hand off the
+full undertaking through `multi_agent_v1` only if it can establish an eligible
+non-frontier route and the delegation can start a separate `undertake #<issue>`
+session. The receiving session owns its worktree, claim, implementation, and
+pull request. This namespace is not measured; when those requirements cannot
+be established, stop before the claim and report the configuration gap. A
+supported model switch may continue only after the harness reports
+non-frontier execution.
 
 
 The pull request

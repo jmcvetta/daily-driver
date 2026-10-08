@@ -169,11 +169,40 @@ this sequence does not open a pull request with nothing in it.
 **A `task` also carries a required model class.** Validate its one
 `## Model class` section and rationale through `issue-body` before the claim,
 repairing an old or invalid body to the current contract where the handoff is
-otherwise grounded. The class states the capability a dispatcher such as
-`embark` selects a route for; it is not a gate this sequence applies to
-itself, and a standalone undertaking does not stop over a mapping between its
-own model identity and the task's class. Concrete `Model:` lines in claim
-provenance remain actual-model records, not task metadata.
+otherwise grounded. A frontier assignment must carry explicit approval and
+its exact work envelope before execution. Frontier implementation also needs
+an explicit user exception recorded for that implementation scope.
+**Frontier research keeps the `research` label.** When a research issue opts
+into frontier, validate its one class section, rationale, explicit approval,
+and exact work envelope through `issue-body` before claim or substantive work.
+Do not impose the task template on it. A routine research issue does not gain
+frontier metadata merely from its label.
+
+
+**A frontier session does not retain ordinary implementation.** Resolve the
+effective route, including role overrides, fallbacks, and visible parent-model
+inheritance; a role label cannot disguise an astra/fable route. For an ordinary
+`mechanical`, `implementation`, or `reasoning` issue, hand implementation to an
+eligible non-frontier route using an authorized model switch or delegation. The
+frontier session may do only the bounded routing and handoff; it does not keep
+the implementation or supervise it as a substitute for handoff. If no eligible
+route is available, stop and report the configuration gap. Frontier
+implementation requires explicit user authorization of that exception and its
+bounded scope; a research approval is not enough.
+For ordinary work, a frontier session resolves an eligible non-frontier route
+before establishing the task branch or posting a claim. It may continue only
+after a supported model switch reports a non-frontier execution identity, or
+hand off the full undertaking to an eligible non-frontier session. The
+receiving session runs `undertake` and owns its branch and claim. If neither
+route is available, stop here and report the exact configuration gap.
+
+After handing off the full issue, stop this sequence; do not claim it, open a
+second branch, or continue as a frontier supervisor.
+
+A non-frontier standalone undertaking keeps its existing behavior: it does not
+gate on a mapping between its own model identity and the task class. Concrete
+`Model:` lines in claim provenance remain actual-model records, not task
+metadata.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
@@ -321,19 +350,22 @@ was never posted leaves the milestone with no start to read, and
 5 — Implement
 -------------
 
-**The session running this sequence writes the code itself.** No web session,
-no implementor subagent, no second context for the body of the work. An
-undertaking is one issue, and the hand that claimed it is the hand that
-implements it: a session that dispatches another session to undertake the
-issue it has already claimed buys a handoff, a second copy of the context and
-a second claim on the same branch, and buys nothing with them.
+**The session running this sequence writes the code itself** once its effective
+route is confirmed non-frontier, or when the user explicitly authorizes the
+bounded frontier implementation exception. No implementor dispatch is used for
+ordinary undertakings.
 
-**Subagents belong to the review round, not to the body of the work.**
-`review-cycle`'s `Verify the fix delta` dispatches a briefed subagent, and
-that is where a second reader earns its cost — the author of a delta cannot
-be an independent reader of it. That is the one dispatch this sequence makes:
-`Review the head` runs on the harness's own named review surface, which
-`review-cycle` says is the only thing it runs on.
+**A frontier session is the narrow exception.** For ordinary work it hands off
+the full undertaking to an eligible non-frontier session before creating a
+branch or claim, unless a supported model switch changes the verified
+execution identity to a non-frontier route. It does not implement or supervise
+that work on frontier. The receiving session runs this sequence and owns the
+branch and claim. This is routing, not parallelism across issues; `embark` still
+owns wave dispatch.
+
+**The review round has its own dispatch.** `review-cycle`'s `Verify the fix
+delta` sends a briefed subagent because the author of a delta cannot be an
+independent reader.
 
 **Parallelism across issues is `embark`'s.** Where several task issues are
 worked at once, that skill opens a session or a subagent per task, and each of
