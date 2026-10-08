@@ -1364,7 +1364,9 @@ kind, so one suite measures a model on Omp or on Claude Code. Personal
 make evals-run-classes MODEL=glm
 make evals-run-classes MODEL=cocktail
 make evals-run-classes MODEL=opus-low
-```
+make evals-run-classes MODEL=sol-6-1
+make evals-run-classes MODEL=luna-6
+make evals-run-classes MODEL=terra-5-6
 
 The Claude Code files (`classes-opus-low`, `classes-sonnet-high`,
 `classes-sonnet-low`) set effort through `sdk_options.effort`, which the
@@ -1379,9 +1381,12 @@ repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
 process, so a token exported before `coder-eval run` is what
-`shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
-or use the `smoke`-tagged case per class (the smallest of each) to check a new
-overlay cheaply before spending a full run on it.
+`shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case, or use the `smoke`-tagged case per class (the smallest of each) to check a new overlay cheaply before spending a full run on it.
+
+The clone token is not passed to grading. `career-462` isolates `gh` to an
+empty config with no token, so its optional live-label check takes its
+unauthenticated skip instead of contacting GitHub. Other tests in that file
+still run.
 
 **Building more cases.** `python3 scripts/evals-cases-from-prs.py owner/repo
 [--path-prefix DIR]` scans a source's merged pull requests and appends

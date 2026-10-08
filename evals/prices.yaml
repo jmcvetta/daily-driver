@@ -25,3 +25,11 @@ models:
     unpriced_reason: Codex subscription usage has no per-token dollar rate.
     source: https://developers.openai.com/codex/pricing
     read_on: 2026-10-06
+  openai-codex/gpt-6-luna:
+    unpriced_reason: Codex subscription credit usage has no dollar-per-token rate; normalized credits are reported separately.
+    source: https://developers.openai.com/codex/pricing
+    read_on: 2026-10-08
+  openai-codex/gpt-5.6-terra:
+    unpriced_reason: Codex subscription credit usage has no dollar-per-token rate; normalized credits are reported separately.
+    source: https://developers.openai.com/codex/pricing
+    read_on: 2026-10-08
