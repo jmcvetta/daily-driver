@@ -12,11 +12,11 @@ The epic
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Read the epic` | Read the body | `mcp__github__issue_read`, `method: get` |
-| `Read the epic` | Read the task issues under it | `mcp__github__issue_read`, `method: get_sub_issues` |
+| `Read the epic` | Read the child issues under it | `mcp__github__issue_read`, `method: get_sub_issues` |
 | `Read the epic` | Read the muster rolls already posted | `mcp__github__issue_read`, `method: get_comments` |
 | `Title the session` | Read the orchestrator's own id | `get_session` on the Claude Code Remote server, `session_id` omitted; `session-title` says how the prefix is read |
 | `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s orchestrating-an-epic form |
-| `Take the wave` | Read a task issue's body and claim | `mcp__github__issue_read`, `method: get` and `get_comments` |
+| `Take the wave` | Read a child issue's body and claim | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Post the muster roll` | Comment on the epic | `mcp__github__add_issue_comment` |
 | `Post the muster roll` | Mark the wave in the epic's body | `mcp__github__issue_write`, `method: update` |
 
@@ -35,8 +35,8 @@ The sessions
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Open the sessions` | Open one per task | `mcp__Claude_Code_Remote__create_session` |
-| `Watch the wave` | Read a task session's status | `mcp__Claude_Code_Remote__get_session` |
+| `Open the sessions` | Open one per ready, agent-eligible child | `mcp__Claude_Code_Remote__create_session` |
+| `Watch the wave` | Read a child session's status | `mcp__Claude_Code_Remote__get_session` |
 | `Watch the wave` | Read the implementor reports that arrived | `ReadNotifications`, until it reports none remaining |
 | `Watch the wave` | Send a visible answer or a nudge | `mcp__Claude_Code_Remote__send_message`, `session_id` the roll's session id |
 | `Recover a session` | Stop the current turn | `mcp__Claude_Code_Remote__interrupt_session` |
@@ -49,10 +49,10 @@ What `create_session` is given
 
 | Field | What goes in it |
 | ----- | --------------- |
-| `prompt` | The task issue and the ask to undertake it. Nothing else. |
+| `prompt` | The child issue and the ask to undertake it. Nothing else. |
 | `append_system_prompt` | The way back: this session's own id, below. |
-| `title` | `session-title`'s form for that task issue. |
-| `model` | A concrete identifier resolved from the required class and current session availability. |
+| `title` | `session-title`'s form for that child issue. |
+| `model` | A concrete identifier resolved from the task's required class, or from a non-task capability assessment, and current session availability. |
 | `environment_id` | Omitted to inherit the calling environment. |
 | `permission_mode` | Omitted to inherit. |
 | `outcome_branch` | `Recover a session` only. |
@@ -91,15 +91,17 @@ interrupted, never reopened — a second session on its branch would collide
 with the one that still holds it — and the task is a stop under `Where it
 stops and waits`.
 
-The required class
-------------------
+Route assessment
+----------------
 
-Resolve the task's `Model class` using
+For a `task`, resolve its `Model class` using
 [`issue-body`'s shared guidance](../../issue-body/references/model-classes.md)
-before calling `create_session`. `session_context.model` is a candidate
-concrete identifier only after that assessment; `configured_model` can be an
-alias or unsupported suffix. Never pass a class name to `model`, and never
-silently inherit an unchecked model.
+before calling `create_session`. For a `bug` or `research` child, apply its
+`issue-body` readiness contract and assess the work against the same capability
+rubric; do not add a task class section to its body. `session_context.model` is
+a candidate concrete identifier only after that assessment;
+`configured_model` can be an alias or unsupported suffix. Never pass a class
+name to `model`, and never silently inherit an unchecked model.
 
 Reading a session, and what cannot be read
 ------------------------------------------
@@ -155,17 +157,18 @@ The watch
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Watch the wave` | Subscribe to a task's pull request | `mcp__github__subscribe_pr_activity` |
-| `Watch the wave` | Find the pull request for a task issue | `mcp__github__issue_read`, `method: get` — `closed_by_pull_requests` |
+| `Watch the wave` | Subscribe to a task or bug pull request when one exists | `mcp__github__subscribe_pr_activity` |
+| `Watch the wave` | Find a pull request for a child issue when one exists | `mcp__github__issue_read`, `method: get` — `closed_by_pull_requests` |
+| `Watch the wave` | Read an issue-only child result or disposition | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Watch the wave` | Read a pull request's state and checks | `mcp__github__pull_request_read` |
 | `Watch the wave` | Arm the backstop | `mcp__Claude_Code_Remote__send_later`, ten minutes out |
 | `Watch the wave` | Archive a finished session | `mcp__Claude_Code_Remote__archive_session` |
-| `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `mcp__github__pull_request_read`, method `get` |
+| `Land the pull request` | Read a task/bug PR draft, merge state, head SHA, labels, and body | `mcp__github__pull_request_read`, method `get` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
 | `Land the pull request` | Read the review-cycle completion notice | `mcp__github__pull_request_read`, method `get_comments`, every page — `user.login` |
 | `Land the pull request` | Read the commits after the notice's SHA | `mcp__github__get_commit`, from `head.sha` back along first parents — `parents` |
-| `Land the pull request` | Squash merge the gated head | `mcp__github__merge_pull_request`, `merge_method: squash`, `expectedHeadSha: <head.sha>` |
-| `Close the epic` | Comment with the landed pull requests or missing claim | `mcp__github__add_issue_comment` |
+| `Land the pull request` | Squash merge the gated PR | `mcp__github__merge_pull_request`, `merge_method: squash`, `expectedHeadSha: <head.sha>` |
+| `Close the epic` | Comment with outcome evidence or an unsupported claim | `mcp__github__add_issue_comment` |
 | `Close the epic` | Close as completed | `mcp__github__issue_write`, `method: update`, `state: closed`, `state_reason: completed` |
 | `Close the epic` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger` |
 | `Close the epic` | Drop each subscription | `mcp__github__unsubscribe_pr_activity` |
@@ -183,22 +186,22 @@ answer the gate.
 The completion read is the conversation-comment read `review-cycle`'s
 `Review-cycle completion notice` names, read to the last page: the latest
 comment starting with `## Review cycle complete! 🎉` whose author is the
-author of the task issue's claim comment, and the SHA it names. Where that SHA is not
-`head.sha`, walk `get_commit` from `head.sha` along each first parent until the
-named SHA; every commit on the way must carry two `parents`. A single-parent
-commit, or a walk that never reaches the SHA, fails the read.
+author of the task issue's claim comment, and the SHA it names. Where that SHA
+is not `head.sha`, walk `get_commit` from `head.sha` along each first parent
+until the named SHA; every commit on the way must carry two `parents`. A
+single-parent commit, or a walk that never reaches the SHA, fails the read.
 
-The merge call is made only after those reads hold. `expectedHeadSha` makes it
-fail closed if the task session pushes after the read. `merge_method: squash`
-preserves the repository's pull-request-title subject. `Close the epic` uses
-the issue update only after its comment records the pull requests that
-delivered every `Summary` claim.
+The merge call is made only for a task or corrected bug with a pull request,
+after those reads hold. `expectedHeadSha` makes it fail closed if the task
+session pushes after the read. `merge_method: squash` preserves the
+repository's pull-request-title subject. `Close the epic` uses the issue
+update only after the epic's coordinated acceptance condition is evidenced.
 
-**`closed_by_pull_requests` is the link from a task to its pull request**, and
-it is populated by the `Closes #123` line `pr-body` writes. A task issue with
-no pull request against it is a session that has not reached `undertake`'s
-`Open the draft` yet — or one that died before it did, which is what
-`Recover a session` is for.
+**`closed_by_pull_requests` links a task or corrected bug to its pull request**
+through the `Closes #123` line `pr-body` writes. A research answer or bug
+disposition may complete on its issue without a PR. Read the body and comments
+under that kind's `issue-body` completion contract; a closed issue alone is not
+evidence that the epic outcome was met.
 
 **There is a `mcp__Claude_Code_Remote__subscribe_pr_activity` with the same
 contract.** Where both exist, use the GitHub one, and use one namespace

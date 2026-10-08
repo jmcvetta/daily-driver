@@ -2,10 +2,10 @@
 name: issue-body
 description: >-
   This skill should be used whenever the body of a GitHub issue is being
-  written or revised. It supplies the grounded handoff, readiness test, and
-  provider-neutral model class for `task`; every other label's edit keeps its
-  own body rules. It is invoked from `issue` and direct body edits. Not for
-  labels, issue relationships, or pull request bodies.
+  written or revised. It selects the body contract by effective issue kind,
+  including each kind's readiness and completion test. It is invoked from
+  `issue` and direct body edits. Not for labels, issue relationships, or pull
+  request bodies.
 ---
 
 # Issue body
@@ -20,20 +20,39 @@ from the **effective** label — the one the issue carries after the requested
 change — not the one it carried before: relabelling `proposal` to `task`
 makes it a task body from that edit onward.
 
-**What is defined here is defined for `task` alone.** Every other label's
-body properties are undefined by this skill: perform the requested edit under
-the rules that already govern it and impose nothing — no task sections, no
-model metadata, no generic template. The standard does not claim the
-namespace, in the way `issue-labels` says of labels themselves.
+Each of the six managed kinds has a contract. `task`'s grounded handoff and
+fixed opening are defined below. The `research`, `bug`, `proposal`, and
+`human` contracts are in
+[`references/kind-contracts.md`](references/kind-contracts.md).
+`epic`'s existing body contract remains in
+[`epic/SKILL.md`](../epic/SKILL.md#the-epic-body); invoke it rather than
+copying its format here. `issue-labels` owns kind selection. `story` and
+unrelated labels add no body contract.
+
+These are information requirements, not a quota of headings. Keep small
+issues small, omit inapplicable fields, and do not invent facts. Separate
+supplied observations, inspected evidence, assumptions, and open questions.
+Kind eligibility and body sufficiency are separate: an eligible kind's body
+can still fail its readiness test. A valid proposal remains non-executable,
+and a complete human handoff remains human work.
+
+When a body changes, use the effective kind after a requested relabel.
+Preserve valid requirements, evidence, and provenance history. Remove obsolete
+task-format scaffolding when it no longer applies, retaining its substantive
+information in the selected contract. Do not migrate unrelated issues or
+reflow a body for an unrelated label or state change.
 
 **The routes are per harness, and they live beside this file.** The calls
 that open an issue or replace its body are in
 [`references/claude.md`](references/claude.md),
 [`references/omp.md`](references/omp.md), and
-[`references/codex.md`](references/codex.md). The class definitions and
+[`references/codex.md`](references/codex.md). The selected non-task contracts
+are in [`references/kind-contracts.md`](references/kind-contracts.md); the
+epic format remains in
+[`epic/SKILL.md`](../epic/SKILL.md#the-epic-body). The class definitions and
 changeable routing guidance are in
 [`references/model-classes.md`](references/model-classes.md). Read the
-applicable route and the shared guidance before the first call.
+applicable route and shared contract before the first call.
 
 
 The task body
@@ -90,22 +109,49 @@ that skill's placement and field rules — a different thing from either
 metadata field above, and unaffected by the migration rule below.
 
 
-**Relationships are edges, not prose.** What the task waits on is
-`issue-deps`' to record, and a body states only what an edge cannot — that
-rule is `issue-deps`'s, cited here rather than restated.
+**Relationships are edges, not prose.** What an issue waits on is
+`issue-deps`' to record; the body states only what an edge cannot.
 
 
 The readiness test
 ==================
 
-Before an issue is presented as ready: **can an implementer assessed for the
-chosen class implement it from the issue and referenced repository context,
-without making an unstated product or architecture decision?**
+Apply the selected kind's readiness test before unattended work starts.
+Eligibility of a kind does not make an issue body sufficient. Resolve
+repository-answerable gaps. Ask only for intent or another prerequisite that
+cannot be answered from available evidence. Do not silently change a bug or
+research issue to `human` because an agent is blocked.
 
-A repository-answerable question is answered now, by the author. An unresolved
-user decision means the task is not ready at any class. Unknown class tokens,
-multiple class sections, and a missing rationale are invalid metadata, not a
-default to `implementation`.
+- For `task`, ask whether an implementer assessed for its class can implement
+  from the issue and referenced repository context without making an unstated
+  product or architecture decision.
+- For `research`, ask whether an agent can investigate without guessing its
+  purpose, evaluation criteria, permitted actions, or expected output. The
+  unknown answer is not itself a defect.
+- For `bug`, ask whether the incorrect behavior and expected contract are
+  clear enough to begin bounded diagnosis. A reproduction is not mandatory.
+- For `proposal`, readiness is for discussion only, never unattended
+  implementation.
+- For `human`, readiness is for the responsible person to act without
+  reconstructing the request. It is never agent-execution readiness.
+- For `epic`, use both existing epic decomposition gates and confirm the graph
+  agrees with its rendered waves.
+
+The detailed contracts for research, bug, proposal, and human are in
+[`references/kind-contracts.md`](references/kind-contracts.md). The epic
+contract remains in [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body).
+
+An unresolved user decision makes a task unready at every class. Unknown task
+class tokens, multiple class sections, and a missing rationale are invalid
+metadata, not a default to `implementation`.
+
+Task completion
+===============
+
+A task completes when its specified observable change is delivered and its
+required verification passes. A commit or pull request being opened is not
+completion by itself. The acceptance criteria and verification in the task
+body define the evidence.
 
 
 Updating a body

@@ -1,15 +1,17 @@
 task_id: issue-05-bug-body-gets-no-task-contract
 description: >-
-  The body contract is defined for `task` alone. A bug issue's body is
-  written under the rules that already govern it and acquires no task
-  sections, no model metadata, no generic template. `issue-body` still
-  fires — it owns every body — and imposes nothing.
+  The selected bug-body contract applies to supplied failure evidence without
+  requiring a diagnosed cause. The issue body must state uncertainty and keep
+  task machinery out while retaining separate trailing provenance.
 tags: [issue, behaviour, fire]
 
 initial_prompt: >-
-  Open a bug issue: the login endpoint returns a 500 when the email address
-  contains a plus sign. Do not post anything; show me the exact issue body
-  you would open.
+  Open a bug issue: the login endpoint returns HTTP 500 when an email address
+  contains a plus sign. The user's reproduction is POST /login with
+  user+tag@example.test; plus signs are valid email characters, so login should
+  succeed. This happens on every attempt in production, but the affected
+  release/version and root cause are unknown. The failure blocks these users
+  from signing in. Do not post anything; show the exact issue body.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -55,15 +57,20 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the REPLY proposes a bug issue body. It must record what
-      happens and under what input. The task contract is defined for `task`
-      issues alone, so the body must NOT carry `Model class`, a task-level
-      trailing `Model:` line, or a generic task template. It MUST retain the
-      normal trailing provenance block below `---`, which is distinct from
-      task metadata.
+      The reply proposes a useful bug body from supplied evidence. It records
+      the affected login behavior, expected success versus observed HTTP 500,
+      the supplied request as reproduction, known frequency and impact, and
+      explicitly says release/version and root cause are unknown. It must not
+      invent any details. Do not require a diagnosed cause, implementation
+      plan, acceptance template, exhaustive impact study, or model class.
+      It must keep task-only machinery out: no `## Model class`, task sections,
+      fixed task layout, or implementation metadata. A trailing
+      `provenance` block below `---` is required and is distinct from task
+      metadata; do not reject a concrete `Model:` line inside that block.
 
-      Score 1.0 if the body records the bug plainly, carries the required
-      provenance block and has no forbidden task metadata or invented task
-      machinery. Score 0.5 if it records the bug but adds harmless boilerplate.
-      Score 0.0 if it adds a model class, task machinery, omits required
-      provenance, or provides no body.
+      Score 1.0 if the body carries the supplied evidence and uncertainty,
+      adds no invented facts or task machinery, and preserves trailing
+      provenance. Score 0.5 if it reports the bug usefully but omits a known
+      impact/frequency detail or mishandles a minor non-task requirement.
+      Score 0.0 if it invents evidence, asserts a root cause, uses task
+      metadata, omits provenance, or gives no body.

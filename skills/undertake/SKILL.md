@@ -150,30 +150,34 @@ decomposes it, and each task issue it opens comes back here as the issue this
 sequence takes in. **An epic itself is a stop**, under `Where it stops and
 waits`.
 
-The label too, because it states whether the issue is ready for an agent at
-all, and `issue-labels` says what each one means. The `epic` label is that
-stop arriving as one word. **A `proposal` is a stop as well** — its shape is
-still open, so decomposing it is `epic`'s work and agreeing the plan is the
-user's. **A `human` is a stop as well** — the work needs credentials, a
-decision or an action no agent has, so there is nothing to put on a branch.
-**Two of the six on one issue is a stop too**: the label answers the
-readiness question twice, and `issue-labels` says why neither answer wins.
-`task`, `bug` and `research`, one of them and no other, run through — with
-one caveat on the last. **A `research` issue whose answer turns out to be a
-set of issues, or a decision not to do the thing, has nothing to put on a
-branch**, and that is a finished research issue rather than a failed one.
-Where `Implement` reaches that conclusion, say so and stop: the answer goes
-on the issue, `epic` writes the issues where there are issues to write, and
-this sequence does not open a pull request with nothing in it.
+The label too, because it states the kind's agent eligibility, and
+`issue-labels` says what each one means. The `epic` label is that stop arriving
+as one word. **A `proposal` is a stop as well** — its shape is still open, so
+decomposing it is `epic`'s work and agreeing the plan is the user's. **A
+`human` is a stop as well** — there is no agent execution route for the reserved
+action. **Two of the six on one issue is a stop too**: the label answers the
+readiness question twice. `task`, `bug` and `research`, one of them and no
+other, are eligible to proceed, subject to their body readiness tests.
 
-**A `task` also carries a required model class.** Validate its one
+**Eligibility is not body sufficiency.** Before claiming or starting work,
+apply `issue-body`'s readiness test for the effective kind. Repair only gaps
+answerable from the repository and preserve valid content; ask about unresolved
+intent or unavailable prerequisites. Do not silently relabel an underspecified
+bug or research issue `human`. A task must still pass its stricter settled-
+intent and model-class checks. A research issue may finish with an answer,
+follow-on issue specifications, or a supported no; do not open an empty PR
+when its agreed deliverable is answer-only. Bounded inconclusive research is
+complete only with the evidence, limitation, and resolution path required by
+`issue-body`; failed access or abandoned work is not completion.
+
+**Only a `task` carries a required model class.** Validate its one
 `## Model class` section and rationale through `issue-body` before the claim,
 repairing an old or invalid body to the current contract where the handoff is
-otherwise grounded. The class states the capability a dispatcher such as
-`embark` selects a route for; it is not a gate this sequence applies to
-itself, and a standalone undertaking does not stop over a mapping between its
-own model identity and the task's class. Concrete `Model:` lines in claim
-provenance remain actual-model records, not task metadata.
+otherwise grounded. `bug` and `research` use their kind-specific readiness
+tests, not task metadata. The class states the capability a dispatcher such as
+`embark` selects a route for; it is not a gate this sequence applies to itself.
+Concrete `Model:` lines in claim provenance remain actual-model records, not
+task metadata.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
