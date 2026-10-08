@@ -74,15 +74,15 @@ unsuitable effective routes stop only the affected task with a configuration
 gap; launch the other eligible tasks in the single concurrent batch. Never
 lower a class, alter shared roles, or restore a role the operator cleared to
 make a wave launch.
-Treat an effective astra/fable execution route as frontier even when an
+Treat an effective astra/fable route as frontier, regardless of whether an
 override, retry fallback, or visible parent inheritance selects it through
-`reasoning` or another lower-class role. The repository's current
-`reasoning` role default is astra-backed and therefore requires frontier
-authorization until that separate mapping defect is fixed. An issue assigned
-`frontier` must include its explicit approval and exact work envelope before
-dispatch. Reject an unauthorized frontier fallback before the assignment
-starts; continue other tasks and report a configuration gap if no eligible
-non-frontier route exists.
+`reasoning` or another lower-class role. Classify the resolved selector rather
+than its role label: the current `reasoning` default is
+`openai-codex/gpt-6.1-sol:high`, not a frontier route.
+An issue assigned `frontier` must include its explicit approval and exact
+work envelope before dispatch. Reject an unauthorized frontier fallback
+before the assignment starts; continue other tasks and report a configuration
+gap if no eligible non-frontier route exists.
 
 A frontier implementor receiving ordinary work performs only the bounded
 routing and handoff to an eligible non-frontier class. Do not retain its
