@@ -5,7 +5,7 @@ set -euo pipefail
 
 mode="${1:-linked}"
 case "${mode}" in
-linked | detached | resume) ;;
+linked | detached | resume | designated) ;;
 *)
 	printf 'unknown fixture mode: %s\n' "${mode}" >&2
 	exit 2
@@ -29,6 +29,8 @@ cat >.gitignore <<'EOF'
 .fixture/upstream.git/
 .fixture/verification.txt
 .fixture/primary-status.txt
+.fixture/primary-branch.txt
+.fixture/primary-tip.txt
 EOF
 
 git add .gitignore .fixture/setup.sh .fixture/verify.sh src/parser.py
@@ -39,6 +41,12 @@ git remote add upstream "$(pwd)/.fixture/upstream.git"
 git push -u upstream master >/dev/null
 git remote set-head upstream -a >/dev/null
 git fetch upstream >/dev/null
+
+if [ "${mode}" = "designated" ]; then
+	# Model a cloud harness that holds its local-only push designation in the
+	# primary checkout; the sibling must start from upstream/master instead.
+	git switch -c claude/designated-52 >/dev/null
+fi
 
 if [ "${mode}" = "resume" ]; then
 	# Another session already began the task: its branch exists only on the
@@ -58,6 +66,8 @@ printf 'not part of the remote base\n' >local-only.txt
 git add local-only.txt
 git commit -m "Advance only the current checkout" >/dev/null
 printf 'primary-only untracked data\n' >primary-untracked.txt
+git branch --show-current >.fixture/primary-branch.txt
+git rev-parse HEAD >.fixture/primary-tip.txt
 git status --short >.fixture/primary-status.txt
 
 if [ "${mode}" = "detached" ]; then

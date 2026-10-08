@@ -102,15 +102,18 @@ more than the one deadline below.
 
 **Web sessions (Claude Code).** Interrupt the session, then address it the
 way `embark`'s `Recover a session` addresses a correction — the address the
-muster roll records — with the wrap-up: commit
-everything in progress to the task branch, push it, and end the turn without
-starting anything else. Then wait, on one shared deadline for the whole
-fleet, until every session's turn has ended or the deadline passes; the
-reference file names the send, the read and the deadline. Leaving that wait is not
-itself securing: a session the deadline outlasts and a session whose turn
-ends in error before its push completes are archived anyway at `Stop the
-fleet` and reported as a residual in the banner, by name — securing its work
-was attempted, not guaranteed.
+muster roll records — with the wrap-up: commit everything in progress and
+push it, then end the turn without starting anything else. Normally the task
+branch is both local and remote. For the Claude primary-held designation
+mapping, commit on the local execution branch and push to the recorded remote
+push branch with its configured non-force upstream/refspec. Never push or
+open a PR for the local-only name. Then wait, on one shared deadline for the
+whole fleet, until every session's turn has ended or the deadline passes; the
+reference file names the send, the read and the deadline.
+Leaving that wait is not itself securing: a session the deadline outlasts and
+a session whose turn ends in error before its push completes are archived
+anyway at `Stop the fleet` and reported as a residual in the banner, by name —
+securing its work was attempted, not guaranteed.
 
 **A session whose send fails while it is still live is interrupted and never
 archived.** It cannot be told to push, and an archive destroys whatever it
@@ -161,8 +164,8 @@ it asks for a commit and a push, never for a summary or an answer.
 Implementor `<id>` (<session|subagent>) was retired by stand-down. The work
 is yours to reclaim.
 
-- Branch: `<branch>` — <link>. The origin tip is authoritative as of this
-  comment.
+- Remote push branch: `<branch>` — <link>. The origin tip is authoritative
+  as of this comment. Local execution branch: `<branch>` when it differs.
 - Pull request: <#N and state, or "none open">.
 - Worktree (this machine): <path, or "none">.
 - Secured: <yes — work in progress was committed and pushed before the stop
@@ -170,10 +173,12 @@ is yours to reclaim.
 - Session: <link, left running or interrupted and unarchived where it could
   not be messaged — push or archive it yourself; otherwise "retired">.
 
-Work in progress was committed and pushed to the branch above before this
-implementor was retired, where securing it succeeded — the origin tip is
-what it left, not what a cloud workspace held. Where it did not, "Secured:
-no" says so, and nothing beyond the last push survived.
+Work in progress was committed and pushed to the remote push branch above
+before this implementor was retired, where securing it succeeded — the origin
+tip is what it left, not what a cloud workspace held. Where a mapped local
+execution branch differs, that identity is recorded separately for resume.
+Where securing failed, "Secured: no" says so, and nothing beyond the last push
+survived.
 ```
 
 This comment ends with `provenance`'s block, and the stand-down comment below

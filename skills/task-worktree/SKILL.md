@@ -69,11 +69,14 @@ Establish the task root
    when declared; otherwise keep the full remote-tracking default branch name
    from `git symbolic-ref --short refs/remotes/<remote>/HEAD`. Never branch
    from whichever feature branch happens to be checked out.
-3. **Choose one task identity.** Use the existing branch from the task record
-   first, including its recorded remote when present. Otherwise use exactly one
-   branch designated by the harness; then use the project's convention or a
-   short issue-based name. A supplied task branch outranks a fresh per-session
-   designation.
+3. **Choose the task identities.** A recorded resume branch has precedence.
+   Otherwise use exactly one branch designated by the harness. The exception
+   is narrow: when Claude Code's schema-2 Worktrunk list confirms that this
+   designated branch is checked out in the primary worktree, use a distinct
+   short issue-based local execution branch, and retain the designation as
+   the remote push branch. The harness-specific route owns this check and the
+   push repository. If that evidence does not hold, use one branch identity
+   as usual. Multiple designations remain a collision.
 4. **Inspect Worktrunk's worktrees.** Require `wt`, then run
    `wt --config-set 'list.json-schema=2' list --format=json`. Parse the JSON
    envelope's `.items[]`; identify the primary row by
@@ -81,39 +84,51 @@ Establish the task root
    rely on output order, a guessed directory name, or rendered text.
    The schema override applies to this command only and does not rewrite user
    configuration.
-5. **Reuse only the same task.** A registered worktree on the task branch may
+5. **Reuse only the same task.** A registered worktree on the execution branch may
    be reused only when the task record or this session identifies it as
    dedicated to this task. A branch belonging to another task is a collision,
-   not permission to reuse it. Preserve branch and path collision inspection.
+   not permission to reuse it. For the primary-held designation exception,
+   confirm that the designated branch is the primary row's checked-out branch;
+   never move it or attach it to a second worktree. Preserve branch and path
+   collision inspection.
 6. **Check effective placement before creation.** Run `wt config show` to read
    the config file locations and the project identifier. Inspect
    `WORKTRUNK_WORKTREE_PATH`, system/user `worktree-path` values, and the
    most-specific matching `[projects."<host>/<owner>/<repo>"]` setting in
    system/user config. If none sets it, use Worktrunk's documented default:
    `{{ repo_path }}/../{{ repo }}.{{ branch | sanitize }}`. Resolve the
-   effective template for this repository and task branch before creation. Its
-   path must be beside the primary worktree and outside every existing
-   worktree. Stop with a clear explanation if placement conflicts with the
-   policy; never overwrite the user's template, add a second one, or force a
-   collision.
+   effective template for the execution branch before creation. Its path must
+   be beside the primary worktree and outside every existing worktree. Stop
+   with a clear explanation if placement conflicts with the policy; never
+   overwrite the user's template, add a second one, or force a collision.
 7. **Create or select with Worktrunk.** For a task-record branch, fetch the
    selected remote branch into its matching remote-tracking ref:
    `git fetch <remote> +refs/heads/<task-branch>:refs/remotes/<remote>/<task-branch>`.
    If the local branch does not exist, use
    `wt switch --create <task-branch> --base <remote>/<task-branch> --no-cd
    --format=json`; matching branch and base names make the local branch track
-   that remote. If the local branch exists, use
-   `wt switch <task-branch> --no-cd --format=json`, then advance its returned
-   worktree with `git merge --ff-only <remote>/<task-branch>`. A failed
-   fast-forward is a collision to inspect; never recreate a supplied task
-   branch from the default base. For a new task branch, use
-   `wt switch --create <task-branch> --base <resolved-base> --no-cd
-   --format=json`. For an existing local task branch with no remote task
-   branch, use `wt switch <task-branch> --no-cd --format=json`.
-   Read `.path` from successful stdout JSON; stderr diagnostics are not a path.
-   Quote every path, including paths with spaces. Do not use `--clobber`,
-   `--yes`, or `--no-hooks`; preserve Worktrunk's normal hooks and approval
-   behavior.
+   that remote. If the local branch exists, use `wt switch <task-branch>
+   --no-cd --format=json`, then advance its returned worktree with
+   `git merge --ff-only <remote>/<task-branch>`. A failed fast-forward is a
+   collision to inspect; never recreate a supplied task branch from the base.
+   For a new task branch, use `wt switch --create <task-branch> --base
+   <resolved-base> --no-cd --format=json`. For an existing local task branch
+   with no remote task branch, use `wt switch <task-branch> --no-cd
+   --format=json`.
+
+   In the primary-held designation exception, use a distinct short issue-based
+   local execution branch and create it from the resolved remote default base,
+   never from the primary checkout's `HEAD`. Before using the designated
+   remote push branch, inspect its remote tip and the task record. An existing
+   unrelated head is a collision; never overwrite it. Push from the sibling
+   with the explicit, non-force refspec
+   `git push -u <remote> <execution-branch>:<designated-branch>`. Keep the
+   local execution branch and remote push branch as separate identities for
+   every later push, PR lookup, CI read, and claim. Normal non-fast-forward
+   protection remains in force.
+   Read `.path` from successful stdout JSON; stderr is diagnostics. Quote
+   every path, including paths with spaces. Do not use `--clobber`, `--yes`,
+   or `--no-hooks`; preserve Worktrunk's normal hooks and approval behavior.
 8. **Keep the detached-task exception.** When the current detached worktree is
    already dedicated to this task, attach it in place with `git switch
    <task-branch>` if that local branch exists and is free. For a recorded
@@ -126,9 +141,12 @@ Establish the task root
    changing the branch of an existing worktree; this is not a fallback for
    worktree creation.
 9. **Verify the boundary.** Verify the selected path is a registered worktree
-   beside the primary path, and its checked-out branch is the task branch.
-   Preserve the primary-checkout status baseline and do not copy any of its
-   uncommitted changes.
+   beside the primary path and checks out the execution branch. In the
+   primary-held designation exception, verify its `HEAD` starts at the remote
+   default base, the remote designated branch carries the task commit, and no
+   remote branch for the local execution name was created. Preserve the
+   primary checkout's branch, tip, index, tracked files, untracked files and
+   status baseline. Do not copy any of its uncommitted changes.
 
 
 Stay inside it

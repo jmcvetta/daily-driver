@@ -92,6 +92,8 @@ adopted branch, which `Read the issue and its edges` took from the issue's
 record; fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for the branch
 link comes from the remote `task-worktree` resolved, never from an assumed
 `origin`.
+Omp uses one branch identity for the local task and remote push branch. The
+Claude primary-held designation exception does not apply to this route.
 
 
 The milestone

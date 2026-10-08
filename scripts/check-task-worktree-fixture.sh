@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Catch task worktrees that use current HEAD, copy primary data, clobber paths or fail to reuse.
+# Catch use of primary-only state, pushing the local name, or clobbering an unrelated designated head.
 
 set -euo pipefail
 
@@ -130,4 +130,80 @@ printf '\nSTRICT_MODE = True\n' >>"${RESUME_ROOT}/src/parser.py"
 )
 [ "$(git -C "${RESUME_PRIMARY}" status --short)" = "${RESUME_BASELINE}" ]
 
-printf 'Worktrunk task fixtures verify base selection, remote-task resume, reuse, isolation, collisions and detached attachment\n'
+# A primary-held designation gets a sibling execution branch based at remote
+# master, then pushes only that commit to the different designated remote name.
+DESIGNATED_PRIMARY="${ROOT}/designated primary"
+DESIGNATED_BRANCH="claude/designated-52"
+EXECUTION_BRANCH="issue-52-designated-route"
+copy_fixture "${DESIGNATED_PRIMARY}"
+(
+	cd "${DESIGNATED_PRIMARY}"
+	bash .fixture/setup.sh designated
+)
+DESIGNATED_BASELINE="$(git -C "${DESIGNATED_PRIMARY}" status --short)"
+DESIGNATED_PRIMARY_SHA="$(git -C "${DESIGNATED_PRIMARY}" rev-parse HEAD)"
+[ "$(git -C "${DESIGNATED_PRIMARY}" branch --show-current)" = "${DESIGNATED_BRANCH}" ]
+[ -z "$(git -C "${DESIGNATED_PRIMARY}" ls-remote upstream "refs/heads/${DESIGNATED_BRANCH}")" ]
+created="$(wt -C "${DESIGNATED_PRIMARY}" switch --create "${EXECUTION_BRANCH}" \
+	--base upstream/master --no-cd --format=json)"
+DESIGNATED_ROOT="$(json_path "${created}")"
+[ "$(git -C "${DESIGNATED_ROOT}" branch --show-current)" = "${EXECUTION_BRANCH}" ]
+[ "$(git -C "${DESIGNATED_ROOT}" rev-parse HEAD)" = "$(git -C "${DESIGNATED_PRIMARY}" rev-parse upstream/master)" ]
+[ ! -e "${DESIGNATED_ROOT}/local-only.txt" ]
+[ ! -e "${DESIGNATED_ROOT}/primary-untracked.txt" ]
+printf '\nSTRICT_MODE = True\n' >>"${DESIGNATED_ROOT}/src/parser.py"
+git -C "${DESIGNATED_ROOT}" add src/parser.py
+git -C "${DESIGNATED_ROOT}" commit -m "Apply designated branch task" >/dev/null
+git -C "${DESIGNATED_ROOT}" push -u upstream \
+	"${EXECUTION_BRANCH}:${DESIGNATED_BRANCH}" >/dev/null
+(
+	cd "${DESIGNATED_ROOT}"
+	bash .fixture/verify.sh designated
+)
+[ "$(git -C "${DESIGNATED_PRIMARY}" branch --show-current)" = "${DESIGNATED_BRANCH}" ]
+[ "$(git -C "${DESIGNATED_PRIMARY}" rev-parse HEAD)" = "${DESIGNATED_PRIMARY_SHA}" ]
+[ "$(git -C "${DESIGNATED_PRIMARY}" status --short)" = "${DESIGNATED_BASELINE}" ]
+
+# A pre-existing unrelated remote head must remain a collision; accepting a
+# force push here would discard work and lie about the claimed task branch.
+COLLISION_PRIMARY="${ROOT}/designated collision primary"
+copy_fixture "${COLLISION_PRIMARY}"
+(
+	cd "${COLLISION_PRIMARY}"
+	bash .fixture/setup.sh designated
+)
+COLLISION_BASELINE="$(git -C "${COLLISION_PRIMARY}" status --short)"
+COLLISION_EXECUTION_ROOT="$(json_path "$(wt -C "${COLLISION_PRIMARY}" switch --create "${EXECUTION_BRANCH}" \
+	--base upstream/master --no-cd --format=json)")"
+printf '\nSTRICT_MODE = True\n' >>"${COLLISION_EXECUTION_ROOT}/src/parser.py"
+git -C "${COLLISION_EXECUTION_ROOT}" add src/parser.py
+git -C "${COLLISION_EXECUTION_ROOT}" commit -m "Apply collision task" >/dev/null
+UNRELATED_SOURCE="${ROOT}/unrelated remote source"
+git clone "${COLLISION_PRIMARY}/.fixture/upstream.git" "${UNRELATED_SOURCE}" >/dev/null
+git -C "${UNRELATED_SOURCE}" config user.name "Eval Fixture"
+git -C "${UNRELATED_SOURCE}" config user.email "fixture@example.invalid"
+git -C "${UNRELATED_SOURCE}" switch --orphan unrelated-designation >/dev/null
+printf 'unrelated remote work\n' >"${UNRELATED_SOURCE}/unrelated.txt"
+git -C "${UNRELATED_SOURCE}" add unrelated.txt
+git -C "${UNRELATED_SOURCE}" commit -m "Create unrelated designated head" >/dev/null
+git -C "${UNRELATED_SOURCE}" push origin "HEAD:refs/heads/${DESIGNATED_BRANCH}" >/dev/null
+git -C "${COLLISION_EXECUTION_ROOT}" fetch upstream \
+	"+refs/heads/${DESIGNATED_BRANCH}:refs/remotes/upstream/${DESIGNATED_BRANCH}" >/dev/null
+UNRELATED_TIP="$(git -C "${COLLISION_EXECUTION_ROOT}" rev-parse "upstream/${DESIGNATED_BRANCH}")"
+if git -C "${COLLISION_EXECUTION_ROOT}" merge-base --is-ancestor \
+	"upstream/${DESIGNATED_BRANCH}" HEAD; then
+	printf 'unrelated designated head unexpectedly belongs to the task\n' >&2
+	exit 1
+fi
+if git -C "${COLLISION_EXECUTION_ROOT}" push upstream \
+	"${EXECUTION_BRANCH}:${DESIGNATED_BRANCH}" >/dev/null 2>&1; then
+	printf 'non-force push replaced an unrelated designated head\n' >&2
+	exit 1
+fi
+[ "$(git -C "${COLLISION_EXECUTION_ROOT}" ls-remote upstream \
+	"refs/heads/${DESIGNATED_BRANCH}" | cut -f1)" = "${UNRELATED_TIP}" ]
+[ "$(git -C "${COLLISION_PRIMARY}" branch --show-current)" = "${DESIGNATED_BRANCH}" ]
+[ "$(git -C "${COLLISION_PRIMARY}" rev-parse HEAD)" = "$(cat "${COLLISION_PRIMARY}/.fixture/primary-tip.txt")" ]
+[ "$(git -C "${COLLISION_PRIMARY}" status --short)" = "${COLLISION_BASELINE}" ]
+
+printf 'Worktrunk task fixtures verify base selection, remote-task resume, designated push mapping, reuse, isolation, collisions and detached attachment\n'

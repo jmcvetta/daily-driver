@@ -1,0 +1,69 @@
+# Fails if the claim links the local-only execution branch as GitHub's head
+# or omits the execution identity needed to resume the mapped task.
+task_id: undertake-10-claim-mapped-designated-branch
+description: >-
+  A Claude undertaking with a primary-held designation claims the remote push
+  branch while separately naming its local execution branch.
+tags: [undertake, references, fire, behaviour, claude-only]
+
+initial_prompt: >-
+  I'm handing you issue #52 to build. The issue has no resume branch. The
+  Claude session for `https://github.com/acme/widgets` designates
+  `claude/designated-52`, and schema-2 Worktrunk data confirms it is checked
+  out in the primary worktree. `task-worktree` established the sibling local
+  execution branch `issue-52-designated-route` from the remote default base.
+  The session data says the actual model is `claude-opus-5-5` and the session
+  id is `session-52-designated`. Do not post anything. Show the exact claim
+  comment you would post, then explain which branch link is the GitHub push
+  head and which branch remains local.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires on an issue handed over to be worked on"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: agent_judge
+    description: The claim maps the remote head and local execution identity without conflating them
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn transcript.
+      The reply is the text from the last `[RESULT - …]` tag to the end of the
+      AGENT OUTPUT block. Begin your rationale with `ANCHOR: result` or
+      `ANCHOR: none`; no result tag means score 0.0.
+
+      The proposed claim comment must link
+      `[claude/designated-52](https://github.com/acme/widgets/tree/claude/designated-52)`
+      as the remote push branch, and separately name
+      `issue-52-designated-route` as the local execution branch. It must record
+      `Model: claude-opus-5-5` and
+      `session: session-52-designated`. The surrounding explanation must say
+      GitHub and the PR use the designated remote branch, while the local name
+      is only the execution branch. It must not suggest a PR or remote branch
+      for `issue-52-designated-route`.
+
+      Score 1.0 only when every requirement holds. Score 0.5 if the two branch
+      identities are distinguished but the link/provenance or PR explanation
+      is incomplete. Score 0.0 if the claim links the execution name as the
+      GitHub head, omits its separate local identity, or conflates the two.
