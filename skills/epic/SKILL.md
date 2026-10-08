@@ -9,13 +9,11 @@ description: >-
   one pull request to writing issues for it. It is also where `undertake`
   sends work too big for the one issue it takes in, and it fires on an attempt
   to undertake an epic, which carries no code. Supplies the two gates that
-  decide whether there is an epic at all, how child issues use the contract
-  for their selected kinds, the task model class it records, the one stop
-  where the plan is agreed before anything is written, and the shape of the
-  epic body — the sequencing and the waves neither the sub-issue panel nor
-  the dependency graph renders. The graph writes are `issue-deps`'. Not for
-  taking one child issue to a pull request, which is `undertake`, and never
-  fired on work that fits one.
+  decide whether an epic fits, child body contracts by kind, task class, the
+  plan-agreement gate, and the epic body — its sequencing and waves, which the
+  sub-issue panel and dependency graph do not render. The graph writes are
+  `issue-deps`'. Not for taking one child issue to a pull request, which is
+  `undertake`, and never fired on work that fits one.
 ---
 
 # Epic planning
