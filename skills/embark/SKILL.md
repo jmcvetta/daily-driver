@@ -95,7 +95,8 @@ name below. A task issue handed over is `undertake`'s, and work not decomposed
 yet is `epic`'s.
 
 Read the epic's comments too, because `Take the wave` needs to know which tasks
-are at sea already.
+are at sea already. On Omp, an explicit request reads them only after
+`Title the session` has titled the orchestrator.
 
 On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
 `/skill:embark <issue>` request reads the requested issue first. If its
