@@ -1,8 +1,8 @@
 /** Default model selectors for Omp task capability classes. */
 export const MODEL_CLASS_ROLE_DEFAULTS = Object.freeze({
-	mechanical: "openai-codex/gpt-6-luna:high",
-	implementation: "openai-codex/gpt-5.6-terra:high",
-	reasoning: "openai-codex/gpt-6-astra:high",
+	mechanical: "openai-codex/gpt-6-luna:low",
+	implementation: "openai-codex/gpt-6-luna:high",
+	reasoning: "openai-codex/gpt-6.1-sol:high",
 	frontier: "openai-codex/gpt-6-astra:high",
 });
 

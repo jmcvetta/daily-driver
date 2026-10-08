@@ -57,16 +57,38 @@ to this task. For a new branch use `wt switch --create`; for an existing free
 branch use `wt switch`. Parse `.path` from successful stdout JSON only; stderr
 is diagnostics. Do not use `--clobber`, `--yes`, or `--no-hooks`.
 
+**A designated branch checked out in the primary worktree has one narrow
+route.** Only for new work, and only after the issue record proves there is no
+resume branch, read `session_context.outcomes[].git_repository.git_info`
+for the target repository and `wt list` schema-2 data. Require exactly one
+designation and confirm that same branch is checked out in the row with
+`worktree.main == true`. Its repository is the push repository. Do not use
+`external_metadata.current_branches` as designation evidence. Do not move,
+edit or attach the primary branch.
+
+Choose a short issue-based execution branch and create it in a sibling
+worktree with `wt switch --create <execution-branch> --base <resolved-base>
+--no-cd --format=json`. Check the execution branch, target path and remote
+designated ref for collisions. The execution branch must begin at the resolved
+remote default base, excluding primary-only commits and files. If the remote
+designated ref exists, compare its commit and the issue record; an unrelated
+head is a collision, not a target to overwrite. Push only with
+`git push -u <remote> <execution-branch>:<designated-branch>`. This explicit
+non-force refspec records the remote branch as upstream even though its name
+differs. Keep using the execution branch locally and the designated branch as
+the PR/remote head. Do not create a PR or remote branch for the local name.
+
 An existing task branch from the task record is not a new branch. Fetch the
 selected remote ref with the explicit refspec above. If no local branch exists,
 use `wt switch --create <task-branch> --base <remote>/<task-branch>` to attach
-it to its remote tip; matching names retain tracking. If the local branch
-exists, use `wt switch`, then run `git -C <returned-path> merge --ff-only
-<remote>/<task-branch>`. A failed fast-forward or a branch held by another task
-is a collision, not a reason to recreate it from the default base. In a
-dedicated detached task worktree, use `git switch --track -c <task-branch>
-<remote>/<task-branch>` for a remote-only task branch, then fast-forward it.
-Fresh task branches still start from the resolved base.
+it to its remote tip; matching branch and base names retain tracking. If the
+local branch exists, use `wt switch`, then run `git -C <returned-path>
+merge --ff-only <remote>/<task-branch>`. A failed fast-forward or a branch
+held by another task is a collision, not a reason to recreate it from the
+default base. In a dedicated detached task worktree, use
+`git switch --track -c <task-branch> <remote>/<task-branch>` for a remote-only
+task branch, then fast-forward it. Fresh ordinary task branches still start
+from the resolved base.
 
 Claude Code's native `WorktreeCreate` hook is separate from this route. The
 official Worktrunk hook calls `wt switch --create` without this procedure's

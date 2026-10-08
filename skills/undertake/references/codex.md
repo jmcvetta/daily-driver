@@ -111,6 +111,9 @@ fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for th
 link comes from the remote `task-worktree` resolved, never from an assumed
 `origin`.
 
+Codex uses one branch identity for the local task and remote push branch. The
+Claude primary-held designation exception does not apply to this route.
+
 
 The milestone
 =============

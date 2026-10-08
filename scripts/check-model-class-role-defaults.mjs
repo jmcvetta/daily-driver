@@ -36,8 +36,13 @@ assert.deepEqual(clean.roles, MODEL_CLASS_ROLE_DEFAULTS);
 assert.deepEqual(clean.tags, MODEL_CLASS_ROLE_TAGS);
 assert.deepEqual(clean.mutations.map(([kind]) => kind), ["roles", "tags"]);
 
-// Without this case, adding frontier can silently overwrite explicit roles or omit its role tag.
-assert.equal(clean.roles.frontier, "openai-codex/gpt-6-astra:high");
+// Without this case, the fixed ordinary routes or frontier default could drift.
+assert.deepEqual(clean.roles, {
+  mechanical: "openai-codex/gpt-6-luna:low",
+  implementation: "openai-codex/gpt-6-luna:high",
+  reasoning: "openai-codex/gpt-6.1-sol:high",
+  frontier: "openai-codex/gpt-6-astra:high",
+});
 assert.deepEqual(clean.tags.frontier, { name: "Frontier" });
 
 // Without this case, installing the frontier default can overwrite an operator's explicit route or tag.
@@ -57,10 +62,18 @@ assert.deepEqual(operator.tags.implementation, { name: "Operator's implementatio
 assert.deepEqual(operator.tags.frontier, { name: "Custom frontier", color: "magenta" });
 assert.deepEqual(operator.tags.mechanical, { name: "Mechanical" });
 assert.deepEqual(operator.tags.custom, { name: "Custom" });
+const mutationCount = operator.mutations.length;
+installModelClassDefaults(operator.settings, operator.modelTagsSetting);
+assert.equal(operator.mutations.length, mutationCount, "repeated installation must not rewrite established settings");
 
 const cleared = settingsFixture({ implementation: "" });
 installModelClassDefaults(cleared.settings, cleared.modelTagsSetting);
 assert.equal(cleared.roles.implementation, MODEL_CLASS_ROLE_DEFAULTS.implementation);
 
-console.log("check-model-class-role-defaults: typed model-tag handles preserve runtime role and tag metadata");
+console.log(JSON.stringify({
+  installedSelectors: clean.roles,
+  preservedOperatorSelector: operator.roles.implementation,
+  preservedOperatorMetadata: operator.tags.implementation,
+}, null, 2));
+
 

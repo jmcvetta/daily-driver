@@ -280,23 +280,30 @@ claim on work that is not starting is a false record.
 
 Beyond the claim itself the comment always carries:
 
-- **The branch** established by `task-worktree`, **linked** as
+- **The branch linked in the claim is the remote push branch** established by
+  `task-worktree`, linked as
   `[branch](https://github.com/OWNER/REPO/tree/BRANCH)`. `OWNER/REPO` is the
   repository the branch will be pushed to, which on a fork need not be the
   repository the issue is in. Read it from the harness's session call where
   that call supplies it, or from the remote `task-worktree` resolved. Built
   from the issue's repository instead, the link can point to the wrong fork.
-  Until `Open the draft` nothing else on GitHub ties the issue to this branch.
+  Until `Open the draft` nothing else on GitHub ties the claim to this branch.
   The link can return 404 until the first push; write it anyway, because the
   alternative is a branch name the reader must turn into a URL by hand.
 
-- **`provenance`'s block**, immediately after the branch: the model that
-  served the turn, the harness and its version, and the session identifier or
-  `n/a`. That skill owns the block's shape and the rules for reading each
-  field — never a name recalled instead of read, and where the model the
-  session was *set* to run disagrees with the one that served, both are
-  named. The `Model:` and lowercase `session:` line shapes are what the claim
-  lookup below and `The milestone` match on, so they are never varied here.
+  Where `task-worktree` established separate identities, add a separate line
+  naming the local execution branch. Never link the local-only execution
+  branch as the branch GitHub will carry. Ordinary and resume paths have one
+  branch identity, so the linked and local branch are the same.
+
+- **`provenance`'s block**, immediately after the branch identity lines:
+  the model that served the turn, the harness and its version, and the session
+  identifier or `n/a`. That skill owns the block's shape and the rules for
+  reading each field — never a name recalled instead of read, and where the
+  model the session was *set* to run disagrees with the one that served, both
+  are named. The `Model:` and lowercase `session:` line shapes are what the
+  claim lookup below and `The milestone` match on, so they are never varied
+  here.
 - **A brief poem, in the claiming agent's own style, placed last** — after
   the branch, the model and the session, so that a reader looking for the
   branch or the model finds them in a fixed place and is never made to read
@@ -310,11 +317,14 @@ Beyond the claim itself the comment always carries:
   work.
 
 The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. Without a resume branch, a branch designated by that call must be
+the call `session-title` documents. Without a resume or a verified
+primary-held designation exception, a branch designated by that call must be
 the branch `task-worktree` established; disagreement is a collision, not a
-choice between two branch sources. With one, the resume branch is the task
-branch and the designation differing from it is not a collision; the harness
-reference says how a push scope that names the designated branch is handled.
+choice between two branch sources. With a resume, the remote push branch is
+the adopted branch and outranks the designation. In the exception, the local
+execution branch may differ from the designation only as `task-worktree`
+verified; the designated branch remains the push/PR head. Other paths retain
+one branch identity.
 
 **The comment never goes up with the branch alone.** The branch comes from
 the task worktree's Git state, never from a fresh naming decision in this
@@ -981,7 +991,9 @@ In order:
 
    This session stopped at the user's instruction. The work is yours to reclaim.
 
-   - Branch: `<branch>` — <link>. Pushed head: `<sha>`.
+   - Branch: `<remote push branch>` — <link>. Local execution branch:
+     `<local branch>` (omit this line when it is the same branch). Pushed head:
+     `<sha>`.
    - Pull request: <#N and state (draft / ready), or "none open">.
    - Reached: <the last step of the sequence completed>.
    - Outstanding: <what is blocked, failing, or unverified — failed checks,
