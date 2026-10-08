@@ -119,6 +119,8 @@
 
 ### Bug Fixes
 
+* **omp:** refresh Omp task-class role defaults ([#578](https://github.com/jmcvetta/daily-driver/issues/578))
+
 * **omp:** select harness instructions from runtime identity, not model name (#498)
 * **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)
 * **undertake:** require evidence for human escalation and revalidate PR blockers ([#535](https://github.com/jmcvetta/daily-driver/issues/535))
