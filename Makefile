@@ -11,7 +11,7 @@ SHELL := /bin/bash
 	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat check-title-gate \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
-	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
+	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-embark-title-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
 	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
@@ -303,6 +303,11 @@ check-omp-eval-guard:
 # Needs `omp`, so it runs in CI's Omp job, for check-omp-plugin's reason.
 check-omp-eval-guard-live:
 	python3 scripts/check-omp-eval-guard-live.py
+
+# The live embark barrier needs a real Omp but not the eval guard: issue://
+# must reach its offline fixture client to provide the canonical issue metadata.
+check-omp-embark-title-live:
+	python3 scripts/check-omp-embark-title-live.py
 
 # check-omp-agent-settle: the acceptance test for the Omp arm's early-stop
 # record -- that a replicate which early-stops on `skill_triggered` cannot

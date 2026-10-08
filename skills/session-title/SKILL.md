@@ -97,6 +97,11 @@ a glance. The budget counts the whole string, notice included. The epic title
 is shortened by the same cuts `Working on an issue` defines, over whatever
 room the notice leaves.
 
+On Omp, an explicit embark command reads the requested issue first. Once the
+issue result confirms an epic, set this orchestrator form before any unrelated
+tool call. The runtime blocks other calls until the active epic's title is
+applied; free-form embark requests retain the existing title gate.
+
 
 Not working on an issue
 =======================

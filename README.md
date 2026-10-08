@@ -229,8 +229,11 @@ in chat rather than in a multiple-choice widget:
 
 Omp uses `extensions/daily-driver.js` instead of hooks. The extension blocks the
 `ask` tool, holds a `gh` issue or pull request comment and a `task` dispatch
-until the session is titled, and provides session-title, reminder and
-session-info tools:
+until the session is titled, and requires an explicit embark command to read
+the requested issue via `issue://`; when its metadata confirms an epic, the
+orchestrator title must be set before unrelated preparation. This early
+barrier does not classify free-form embark requests. The extension also
+provides session-title, reminder and session-info tools:
 `daily_driver_set_session_title`, `daily_driver_schedule`,
 `daily_driver_cancel_schedule` and `daily_driver_get_session`. Omp's rule
 provider loads the constitution from `rules/*.md` with `alwaysApply: true`.

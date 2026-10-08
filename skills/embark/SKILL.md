@@ -76,6 +76,13 @@ because the graph moved while the fleet was out, and what it finds decides
 whether the next wave sails, the watch resumes, or the epic closes.
 `Land the pull request` and `Recover a session` are reached from `Watch the
 wave`, and each returns there.
+On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
+`/skill:embark <issue>` first reads that single issue through `issue://`.
+After matching epic metadata succeeds, title this session before reading its
+graph or making any other tool call. The runtime enforces that deadline.
+Free-form requests that invoke this skill without an explicit command retain
+the ordinary skill and title-gate behavior.
+
 
 0 — Read the epic
 -----------------
@@ -89,6 +96,13 @@ yet is `epic`'s.
 
 Read the epic's comments too, because `Take the wave` needs to know which tasks
 are at sea already.
+
+On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
+`/skill:embark <issue>` request reads the requested issue first. If its
+metadata confirms an epic, set this orchestrator title before reading its
+comments or graph, or making another unrelated tool call. The extension
+enforces this order; a free-form request that invokes this skill does not
+activate the earlier barrier.
 
 1 — Title the session
 ---------------------
