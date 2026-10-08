@@ -71,12 +71,13 @@ Establish the task root
    from whichever feature branch happens to be checked out.
 3. **Choose the task identities.** A recorded resume branch has precedence.
    Otherwise use exactly one branch designated by the harness. The exception
-   is narrow: when Claude Code's schema-2 Worktrunk list confirms that this
-   designated branch is checked out in the primary worktree, use a distinct
-   short issue-based local execution branch, and retain the designation as
-   the remote push branch. The harness-specific route owns this check and the
-   push repository. If that evidence does not hold, use one branch identity
-   as usual. Multiple designations remain a collision.
+   is narrow: when the active harness-specific route's schema-2 Worktrunk
+   evidence confirms that the designated branch is checked out in the primary
+   worktree, use a distinct short issue-based local execution branch and
+   retain the designation as the remote push branch. The harness-specific
+   route owns this check and the push repository. If that evidence does not
+   hold, use one branch identity as usual. Multiple designations remain a
+   collision.
 4. **Inspect Worktrunk's worktrees.** Require `wt`, then run
    `wt --config-set 'list.json-schema=2' list --format=json`. Parse the JSON
    envelope's `.items[]`; identify the primary row by

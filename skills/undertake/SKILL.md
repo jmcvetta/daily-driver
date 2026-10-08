@@ -288,14 +288,14 @@ Beyond the claim itself the comment always carries:
   work.
 
 The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. Without a resume branch or the confirmed
-Claude primary-held exception, a branch designated by that call must be the
-branch `task-worktree` established; disagreement is a collision, not a choice
-between two branch sources. With a resume, the remote push branch is the
-adopted branch and outranks the designation. In the exception, the local
+the call `session-title` documents. Without a resume or a verified
+primary-held designation exception, a branch designated by that call must be
+the branch `task-worktree` established; disagreement is a collision, not a
+choice between two branch sources. With a resume, the remote push branch is
+the adopted branch and outranks the designation. In the exception, the local
 execution branch may differ from the designation only as `task-worktree`
-verified; the designated branch remains the push/PR head. Other harnesses and
-ordinary/resume paths retain one branch identity.
+verified; the designated branch remains the push/PR head. Other paths retain
+one branch identity.
 
 **The comment never goes up with the branch alone.** The branch comes from
 the task worktree's Git state, never from a fresh naming decision in this

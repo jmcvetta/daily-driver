@@ -104,12 +104,12 @@ more than the one deadline below.
 way `embark`'s `Recover a session` addresses a correction — the address the
 muster roll records — with the wrap-up: commit everything in progress and
 push it, then end the turn without starting anything else. Normally the task
-branch is both local and remote. For the Claude primary-held designation
-mapping, commit on the local execution branch and push to the recorded remote
-push branch with its configured non-force upstream/refspec. Never push or
-open a PR for the local-only name. Then wait, on one shared deadline for the
-whole fleet, until every session's turn has ended or the deadline passes; the
-reference file names the send, the read and the deadline.
+branch is both local and remote. For the primary-held designation mapping,
+commit on the local execution branch and push to the recorded remote push
+branch with its configured non-force upstream/refspec. Never push or open a
+PR for the local-only name.
+Then wait on one shared deadline until every session's turn has ended or the
+deadline passes; the reference file names the send, the read and the deadline.
 Leaving that wait is not itself securing: a session the deadline outlasts and
 a session whose turn ends in error before its push completes are archived
 anyway at `Stop the fleet` and reported as a residual in the banner, by name —
