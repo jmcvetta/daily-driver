@@ -398,32 +398,55 @@ def _heredoc_expansion(body: str) -> str:
 
 
 def _shell_ast(command: str) -> list[tuple[Any, bytes]]:
-    """Parse shell syntax and executable here-document substitutions."""
-    source = command.encode("utf-8")
+    """Parse shell syntax, executable shell scripts, and here-document substitutions."""
     parser = Parser(_BASH_LANGUAGE)
-    tree = parser.parse(source)
-    trees = [(tree.root_node, source)]
-    for node in _shell_nodes(tree.root_node):
-        if node.type != "heredoc_redirect":
-            continue
-        start = next(child for child in node.children if child.type == "heredoc_start")
-        body = next((child for child in node.children if child.type == "heredoc_body"), None)
-        delimiter = _node_text(start, source)
-        if any(char in delimiter for char in ("'", '"', "\\")):
-            continue
-        body_text = _node_text(body, source) if body is not None else ""
-        expansion = _heredoc_expansion(body_text).encode("utf-8")
-        expanded_tree = parser.parse(expansion)
-        if expanded_tree.root_node.has_error:
-            raise ValueError("could not parse an unquoted here-document expansion")
-        for expanded_node in _shell_nodes(expanded_tree.root_node):
-            if expanded_node.type != "command_substitution":
-                continue
-            trees.extend(
-                (node, expansion)
-                for node in _shell_nodes(expanded_node)
-                if node.type == "command"
-            )
+    pending = [command.encode("utf-8")]
+    trees = []
+    while pending:
+        source = pending.pop()
+        root = parser.parse(source).root_node
+        trees.append((root, source))
+        for node in _shell_nodes(root):
+            if node.type == "heredoc_redirect":
+                start = next(child for child in node.children if child.type == "heredoc_start")
+                body = next((child for child in node.children if child.type == "heredoc_body"), None)
+                delimiter = _node_text(start, source)
+                if any(char in delimiter for char in ("'", '"', "\\")):
+                    continue
+                body_text = _node_text(body, source) if body is not None else ""
+                expansion = _heredoc_expansion(body_text).encode("utf-8")
+                expanded_tree = parser.parse(expansion)
+                if expanded_tree.root_node.has_error:
+                    raise ValueError("could not parse an unquoted here-document expansion")
+                pending.extend(
+                    _node_text(child, expansion).encode("utf-8")
+                    for expanded_node in _shell_nodes(expanded_tree.root_node)
+                    if expanded_node.type == "command_substitution"
+                    for child in _shell_nodes(expanded_node)
+                    if child.type == "command"
+                )
+            elif node.type == "command":
+                name = node.child_by_field_name("name")
+                if name is None:
+                    continue
+                arguments = [
+                    _word_value(_node_text(child, source))
+                    for index, child in enumerate(node.children)
+                    if node.field_name_for_child(index) == "argument"
+                ]
+                executable = _word_value(_node_text(name, source)).rsplit("/", 1)[-1]
+                if executable in {"bash", "sh", "dash", "ksh", "zsh"}:
+                    script_index = next(
+                        (index + 1 for index, item in enumerate(arguments) if item == "-c" or item.startswith("-") and "c" in item[1:]),
+                        None,
+                    )
+                    if script_index is not None and script_index < len(arguments):
+                        pending.append(arguments[script_index].encode("utf-8"))
+                elif executable == "eval" and arguments:
+                    script = " ".join(arguments)
+                    if re.search(r"\$(?:[A-Za-z_{(]|`)|`", script):
+                        raise ValueError("cannot statically parse dynamic eval input")
+                    pending.append(script.encode("utf-8"))
     return trees
 
 

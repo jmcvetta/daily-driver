@@ -502,7 +502,7 @@ def bash(command: str, result: str = "") -> dict[str, Any]:
 
 
 def check_answer_key_contact() -> None:
-    """Quoted heredoc data must not zero a passing replicate; executed history access must."""
+    """Quoted data must not zero a score, and shell -c history access must not pass."""
     recorder = load_recorder()
     root = Path("/srv/daily-driver")
     quoted_patch = bash(
@@ -543,6 +543,8 @@ def check_answer_key_contact() -> None:
         bash("grep -rn compile-bytecode .", "./kokoro/pyproject.toml:12:compile-bytecode = true"),
         {"tool_name": "WebFetch", "parameters": {"url": "https://github.com/googleapis/release-please/issues/2853"}},
         {"tool_name": "Edit", "parameters": {"file_path": "README.md", "new_string": "see github.com/jmcvetta/career-scan"}},
+        bash("bash -c 'echo \"git pull\"'"),
+        bash("sh -c 'printf \"%s\" \"git fetch\"'"),
     ]
     for command in clean:
         evidence = recorder.answer_key_contact(classes_artifact(command), root)
@@ -575,6 +577,9 @@ def check_answer_key_contact() -> None:
             "git fetch origin master"
         ),
         "runs a source command through a wrapper": bash("command git fetch origin master"),
+        "fetches through bash -c": bash("bash -c 'git fetch origin master'"),
+        "views through sh -c": bash("sh -c 'gh pr view 469'"),
+        "fetches through eval": bash("eval 'git fetch origin master'"),
     }
     for name, command in reaching.items():
         evidence = recorder.answer_key_contact(classes_artifact(command), root)
@@ -617,7 +622,7 @@ def check_contaminated_replicate(temp: Path) -> None:
                         "agent_cost_usd": 0.1,
                         "total_cost_usd": 0.1,
                     }
-                    for index in (0, 1, 2)
+                    for index in (0, 1, 2, 3)
                 ],
             }
         )
@@ -626,6 +631,7 @@ def check_contaminated_replicate(temp: Path) -> None:
         bash("git diff"),
         bash("cat << 'EOF'\ngit pull\ngit fetch --prune\nEOF"),
         bash("git fetch origin master"),
+        bash("bash -c 'git fetch origin master'"),
     )
     for index, command in enumerate(commands):
         artifact_dir = run_dir / "default" / task_id / f"{index:02d}"
@@ -638,14 +644,14 @@ def check_contaminated_replicate(temp: Path) -> None:
             {
                 "experiment_id": "classes",
                 "variant_ids": ["default"],
-                "per_replicate_scores": {"default": {task_id: [1.0, 1.0, 1.0]}},
+                "per_replicate_scores": {"default": {task_id: [1.0, 1.0, 1.0, 1.0]}},
             }
         )
     )
     env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_SESSION_ID"}
     record_path = run_recorder(run_dir, experiment, temp / "classes-out", env)
     record = json.loads(record_path.read_text())
-    clean, quoted, reached = record["attempts"]
+    clean, quoted, reached, nested_reached = record["attempts"]
     require(clean["answer_key_contact"] == [] and clean["measured_score"] == 1.0, "ordinary work lost its score")
     require(
         quoted["answer_key_contact"] == [] and quoted["measured_score"] == 1.0,
@@ -654,9 +660,25 @@ def check_contaminated_replicate(temp: Path) -> None:
     require(reached["answer_key_contact"], "the git fetch replicate carries no evidence")
     require(reached["measured_score"] == 0.0, "a replicate that reached the answer kept its score")
     require(reached["raw_weighted_score"] == 1.0, "the raw score was not kept beside the measured one")
+    require(nested_reached["answer_key_contact"], "the bash -c replicate carries no evidence")
+    require(nested_reached["measured_score"] == 0.0, "a nested history contact kept its score")
     require(
-        record["variants"][0]["per_replicate_scores"][task_id] == [1.0, 1.0, 0.0],
-        "per_replicate_scores lost quoted data or counted the real history contact",
+        record["variants"][0]["per_replicate_scores"][task_id] == [1.0, 1.0, 0.0, 0.0],
+        "per_replicate_scores missed quoted-data preservation or a shell history contact",
+    )
+    reached["measured_score"] = 1.0
+    record_path.write_text(json.dumps(record))
+    result = subprocess.run(
+        [sys.executable, str(RECORDER), str(record_path), "--experiment", str(experiment), "--validate"],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    require(
+        result.returncode != 0 and "answer_key_contact" in result.stdout,
+        "a record scoring a contaminated replicate above 0 was accepted",
     )
     reached["measured_score"] = 1.0
     record_path.write_text(json.dumps(record))
