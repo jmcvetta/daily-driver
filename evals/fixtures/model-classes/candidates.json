@@ -15681,7 +15681,7 @@
     "repo": "jmcvetta/career",
     "selected": true,
     "task_timeout": 780,
-    "test_command": "cd viewer && uv run pytest ../tests/test_infra_github.py",
+    "test_command": "cd viewer && uv run pytest ../tests/test_infra_github.py::test_projected_releases_skips_release_prs",
     "test_files": [
       "tests/test_infra_github.py"
     ],
