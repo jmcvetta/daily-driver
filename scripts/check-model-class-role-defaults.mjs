@@ -36,22 +36,30 @@ assert.deepEqual(clean.roles, MODEL_CLASS_ROLE_DEFAULTS);
 assert.deepEqual(clean.tags, MODEL_CLASS_ROLE_TAGS);
 assert.deepEqual(clean.mutations.map(([kind]) => kind), ["roles", "tags"]);
 
-// Without these fixed consumer routes, new sessions send mechanical work to
-// high effort, implementation work to Terra, and ordinary reasoning to Astra.
+// Without this case, the fixed ordinary routes or frontier default could drift.
 assert.deepEqual(clean.roles, {
   mechanical: "openai-codex/gpt-6-luna:low",
   implementation: "openai-codex/gpt-6-luna:high",
   reasoning: "openai-codex/gpt-6.1-sol:high",
+  frontier: "openai-codex/gpt-6-astra:high",
 });
+assert.deepEqual(clean.tags.frontier, { name: "Frontier" });
 
+// Without this case, installing the frontier default can overwrite an operator's explicit route or tag.
 const operator = settingsFixture(
-  { implementation: "operator/selected:high" },
-  { implementation: { name: "Operator's implementation", color: "cyan" }, custom: { name: "Custom" } },
+  { implementation: "operator/selected:high", frontier: "operator/frontier-route:high" },
+  {
+    implementation: { name: "Operator's implementation", color: "cyan" },
+    frontier: { name: "Custom frontier", color: "magenta" },
+    custom: { name: "Custom" },
+  },
 );
 installModelClassDefaults(operator.settings, operator.modelTagsSetting);
 assert.equal(operator.roles.implementation, "operator/selected:high");
+assert.equal(operator.roles.frontier, "operator/frontier-route:high");
 assert.equal(operator.roles.mechanical, MODEL_CLASS_ROLE_DEFAULTS.mechanical);
 assert.deepEqual(operator.tags.implementation, { name: "Operator's implementation", color: "cyan" });
+assert.deepEqual(operator.tags.frontier, { name: "Custom frontier", color: "magenta" });
 assert.deepEqual(operator.tags.mechanical, { name: "Mechanical" });
 assert.deepEqual(operator.tags.custom, { name: "Custom" });
 const mutationCount = operator.mutations.length;

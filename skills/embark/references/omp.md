@@ -48,21 +48,20 @@ it, and nothing else. The prompt boundary of `Open the sessions` holds.
 The route an implementor runs
 =============================
 
-The `task` surface selects an `agent`, not a model. For a `task` issue, select
-the agent named for its required class (`mechanical`, `implementation`, or
-`reasoning`). For `bug` and `research`, first apply that kind's `issue-body`
-readiness test, then assess the actual work against the existing
-[`model-classes.md`](../../issue-body/references/model-classes.md) capability
-rubric. Select an eligible agent from that assessment without adding task
-class metadata to the issue. Each batch item sets only `agent`; it carries no
-per-item model argument.
-
-Resolve the effective route under
-[`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
+The `task` surface selects an `agent`, not a model. For a `task` issue,
+select the agent named for its required class (`mechanical`, `implementation`,
+`reasoning`, or `frontier`). For `bug` and `research`, first apply that kind's
+`issue-body` readiness test, then assess the actual work against the same
+capability rubric. For `research` assigned `frontier`, require `issue-body`'s
+explicit approval and exact work envelope before selecting the `frontier`
+agent. Routine research carries no task class metadata. Select an eligible
+agent from the assessment without adding task class metadata to other issue
+kinds. Each batch item sets only `agent`; it carries no per-item model
+argument. Resolve the effective route under [`issue-body`'s required-class
+policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
-frontmatter, including a tagged-role assignment such as `@implementation`.
-Resolve configured prewalk and retry fallbacks under the same eligibility
-requirements.
+frontmatter, including a tagged-role assignment such as `@implementation` or
+`@frontier`. Resolve configured prewalk and retry fallbacks under the same
 
 For a task, a current measured class outranks handwritten guidance, and a
 measured class below its requirement excludes that route. For bug and research
@@ -74,11 +73,28 @@ modality, availability, or credential requirements. Do not invent a freshness
 cutoff or use `modelRoles.task` as a universal implementor route.
 
 Reassess a visible parent-model authentication fallback or any other runtime
-model mismatch before work continues. Missing assignments, unavailable
-credentials, or unsuitable effective routes stop only the affected issue with
-a configuration gap; launch other eligible issues in the single concurrent
-batch. Never lower a task's class, alter shared roles, or restore a role the
-operator cleared to make a wave launch.
+model mismatch before work continues. Never assume parent inheritance meets
+the required class. Missing assignments, unavailable credentials, or
+unsuitable effective routes stop only the affected issue with a configuration
+gap; launch other eligible issues in the single concurrent batch. Never lower
+a task's class, alter shared roles, or restore a role the operator cleared to
+make a wave launch.
+
+Treat an effective astra/fable route as frontier, regardless of whether an
+override, retry fallback, or visible parent inheritance selects it through
+`reasoning` or another lower-class role. Classify the resolved selector rather
+than its role label: the current `reasoning` default is
+`openai-codex/gpt-6.1-sol:high`, not a frontier route.
+An issue assigned `frontier` must include its explicit approval and exact
+work envelope before dispatch. Reject an unauthorized frontier fallback
+before the assignment starts; continue other tasks and report a configuration
+gap if no eligible non-frontier route exists.
+
+A frontier implementor receiving ordinary work performs only the bounded
+routing and handoff to an eligible non-frontier class. Do not retain its
+implementation or supervise it on frontier. Frontier implementation needs
+separate, explicit user authorization for that exception and bounded scope;
+frontier research approval is not enough.
 
 For a task, record its required class; for another kind, record `not
 applicable`. Keep the selected agent/effective route and actual execution model

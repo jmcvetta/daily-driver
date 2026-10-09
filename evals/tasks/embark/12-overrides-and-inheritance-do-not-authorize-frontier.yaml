@@ -1,0 +1,57 @@
+task_id: embark-12-overrides-and-inheritance-do-not-authorize-frontier
+description: >-
+  Explicit agent overrides and visible parent-model inheritance cannot route
+  ordinary work to frontier without assignment-specific approval.
+tags: [embark, issue-body, behaviour, fire]
+
+initial_prompt: >-
+  Launch the agreed wave. Task #89 requires `implementation`; its explicit
+  `task.agentModelOverrides` entry selects the supported astra/frontier route,
+  and there is no approval or eligible non-frontier alternative. Task #90
+  requires `reasoning`; its configured eligible route visibly falls back to
+  an astra/frontier parent model, also without approval or an eligible
+  non-frontier alternative. Task #91 requires `mechanical` and has an eligible
+  non-frontier route. Task #92 requires `reasoning` and resolves to the current
+  `@reasoning` default, `openai-codex/gpt-6.1-sol:high`; its route meets the
+  operator's configured eligibility for the assignment. It has no frontier
+  approval. What do you dispatch?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "Embark checks overrides and parent fallback before dispatch"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: Unauthorized effective frontier routes stop only their tasks
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start with
+      `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if it rejects #89's direct override and #90's visible astra
+      parent fallback as frontier despite their role names, reports the missing
+      eligible non-frontier route for each, and dispatches #91 through its eligible
+      route. It must dispatch #92 through its configured Sol-backed reasoning route
+      without requiring frontier approval. It must not infer approval from
+      configuration, classify only by role label, or block the independent tasks.
+      Score 0 if either unauthorized task starts on frontier, #92 is rejected
+      despite its non-frontier effective route, or #91 or #92 is halted.

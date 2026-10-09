@@ -197,6 +197,23 @@ eligible kinds, the assessment constrains it without creating issue metadata.
 The harness reference owns concrete precedence, measurement, fallback, and
 dispatch details; do not treat `modelRoles.task` as a universal implementor
 route.
+**Authorization is checked on the effective route, not its role name.** A
+frontier assignment may dispatch only when its issue carries explicit
+user approval and the exact approved work envelope. Review agent overrides,
+configured prewalk and retry fallbacks, and visible parent-model inheritance;
+an effective astra/fable execution route is frontier even when selected through
+a lower-class role. The stale Omp helper's astra-backed `reasoning` selector
+does not bypass this check. If a fallback would move ordinary work to frontier
+without approval, reject that route before dispatch and choose an eligible
+non-frontier route; if none exists, report the configuration gap for that task
+and continue other eligible tasks in the wave.
+
+A frontier session assigned ordinary implementation may do only the bounded
+routing and handoff to an eligible non-frontier class. It must not retain the
+implementation or supervise it on frontier. If no authorized handoff or model
+switch is available, report the gap. Frontier implementation requires explicit
+user authorization for that exception and its bounded scope; planning or
+research approval does not cover it.
 
 The selected route and actual model are distinct from any task class. Record
 `unreported` when actual identity is unavailable; visible provider fallbacks
@@ -625,12 +642,10 @@ Non-goals
 - **Does not close the epic in `Landing: by hand` mode.** It reports the epic
   ready and stops there. The default `Landing: orchestrator` mode closes it
   only after `Close the epic` reads every `Summary` claim as delivered.
-- **Does not fire on one issue, and takes nothing with it.** Undertaking a
-  single task is the task session's own job, and running a fleet of one costs
-  an epic, a muster roll and a watch to save nothing. The dispatch does not
-  survive into that case either: `undertake`'s `Implement` has the session
-  that claimed the issue write the code itself, and a dispatch there would
-  only copy the session already on the work. Delegation here buys
-  parallelism across task issues; there is none to buy in a fleet of one.
+- **Does not fire on one issue.** A single task uses `undertake`, not an epic,
+  muster roll, or wave watch. Non-frontier undertakers implement in their
+  session; `undertake`'s narrow frontier exception hands ordinary work to an
+  eligible non-frontier route or stops with a configuration gap. That handoff
+  is not a one-task `embark` fleet.
 - **Does not sweep for epics.** It works the epic in hand. Reading the issue
   list for others to put to sea is `epic`'s manufacturing failure, one level up.

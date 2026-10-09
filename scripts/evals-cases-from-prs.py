@@ -38,18 +38,17 @@ USAGE
     An `unlabelled` candidate (no `Model class` on the issue it closed) needs
     a class before it can be selected:
 
-        python3 scripts/evals-cases-from-prs.py --select \\
-            --class-override jmcvetta/career#511=implementation
-
     Historical issue metadata uses `standard` and `advanced`; explicitly map
     those to `implementation` and `reasoning` with `--class-override` when
     mining old pull requests. Overrides accept only buildable `mechanical` or
-    `implementation`; old names are not canonical input.
+    `implementation`; old names are not canonical input. The `frontier` token
+    is preserved by metadata reads but is not a benchmark class.
 
 Needs `GITHUB_TOKEN` or `GH_TOKEN` for the REST API, `git`, and whatever the
 resolved test command needs (`uv`, `pnpm`) already on PATH. No third-party
 import: the REST client is `urllib`, and the task YAML is written as a string
 template rather than through PyYAML, so nothing here needs the dev venv.
+
 
 SELF-TESTS
 
@@ -89,11 +88,9 @@ DEFAULT_CANDIDATES_FILE = FIXTURES_DIR / "candidates.json"
 
 API_ROOT = "https://api.github.com"
 
-# Classes this suite ever builds a case for. `reasoning` is out of scope by
-# design -- the class is decided by the production table and public benchmarks,
-# not by a fixture small enough to grade in two minutes.
+# The suite builds only mechanical/implementation cases. `reasoning` and
+# `frontier` are valid metadata but do not have a supported benchmark contract.
 BUILDABLE_CLASSES = ("mechanical", "implementation")
-
 
 class BuildError(Exception):
     """Something the builder cannot recover from -- a bad CLI argument, a
@@ -208,13 +205,13 @@ def qualifying_reason(
 
 
 _MODEL_CLASS_RE = re.compile(
-    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|reasoning)`?(?![\w-])",
+    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|reasoning|frontier)`?(?![\w-])",
     re.IGNORECASE | re.MULTILINE,
 )
 
 
 def read_model_class(issue_body: str | None) -> str:
-    """The `## Model class` token from a task issue's body, or `unlabelled`."""
+    """The `## Model class` token from an issue body, or `unlabelled`."""
     if not issue_body:
         return "unlabelled"
     match = _MODEL_CLASS_RE.search(issue_body)
@@ -1333,9 +1330,10 @@ def _test_qualifying_reason() -> None:
 
 
 def _test_read_model_class() -> None:
-    for token in ("mechanical", "implementation", "reasoning"):
+    # Without this check, a frontier assignment is silently mined as unlabelled.
+    for token in ("mechanical", "implementation", "reasoning", "frontier"):
         assert read_model_class(f"## Model class\n`{token}`\n") == token
-    for token in ("standard", "advanced", "implementation-suffix", "reasoning_suffix"):
+    for token in ("standard", "advanced", "implementation-suffix", "reasoning_suffix", "frontier-extra"):
         assert read_model_class(f"## Model class\n`{token}`\n") == "unlabelled"
     assert read_model_class("## Model class\nmechanical-extra\n") == "unlabelled"
     assert read_model_class("no such section here") == "unlabelled"
@@ -1349,7 +1347,7 @@ def _test_read_model_class() -> None:
         "jmcvetta/career#511",
         "implementation",
     )
-    for token in ("reasoning", "standard", "advanced", "implementation-extra"):
+    for token in ("reasoning", "frontier", "standard", "advanced", "implementation-extra"):
         try:
             parse_class_override(f"jmcvetta/career#511={token}")
         except BuildError:

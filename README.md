@@ -237,20 +237,23 @@ provider loads the constitution from `rules/*.md` with `alwaysApply: true`.
 
 ### Omp task roles
 
-The Omp installation provides three task-class roles and matching agents:
-`mechanical`, `implementation` and `reasoning`. At session start, the extension
-adds runtime selectors for roles without an effective assignment:
+The Omp installation provides four task-class roles and matching agents:
+`mechanical`, `implementation`, `reasoning`, and `frontier`. At session start,
+the extension adds runtime selectors for roles without an effective assignment:
 `openai-codex/gpt-6-luna:low` for mechanical work,
-`openai-codex/gpt-6-luna:high` for implementation, and
-`openai-codex/gpt-6.1-sol:high` for ordinary reasoning. It adds visible role
-tags without replacing operator metadata.
+`openai-codex/gpt-6-luna:high` for implementation,
+`openai-codex/gpt-6.1-sol:high` for ordinary reasoning, and
+`openai-codex/gpt-6-astra:high` for frontier. It adds visible role tags without
+replacing operator metadata. Frontier is for explicitly approved, bounded
+research or planning; ordinary implementation uses a non-frontier route unless
+the user separately authorizes that exception.
 
 The default selectors require configured OpenAI Codex credentials. Use
 `/model` → Roles to assign models. Existing `omp_configs/` files remain process
 overlays. Assignments present at startup take precedence; later YAML or overlay
 edits may require an Omp restart because runtime overrides shadow disk reloads.
-Model capabilities are not considered verified until class evaluations report
-them.
+Ordinary model capability is not verified until class evaluations report it.
+The benchmark suite does not measure frontier.
 
 ### Worktree isolation
 

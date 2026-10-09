@@ -104,8 +104,9 @@ carries after the change — is what the rest of the sequence works from: a
 next time somebody remembers.
 
 **The body.** `issue-body` owns what a body must carry. It fires on this
-skill's writes and on direct edits alike, so there is no route past it — which
-is why nothing here restates it.
+skill's writes and on direct edits alike, so there is no route past it. Its
+frontier approval gate applies before publishing or revising any ready frontier
+assignment; issue creation and body revision cannot bypass that stop.
 
 **The edges.** `issue-deps` owns blocked-by, parent and sub-issue. A body
 never states in prose what an edge records; that rule is `issue-deps`'s, cited

@@ -36,11 +36,19 @@ makes further down this file.
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
 read-first and the Claude route does.
 
-For a `task`, read the `Model class` section, validated and repaired through
-[`issue-body`'s guidance](../../issue-body/references/model-classes.md) where
-its body is old or invalid, before the claim. That guidance is dispatch's —
-`embark` selects a route against it before assigning work — and nothing here
-compares the class to this session's own capability.
+For a `task`, validate its `Model class` section and rationale through
+[`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
+claim, repairing an old or invalid body where its handoff is otherwise
+grounded. A frontier task also needs explicit approval and its exact work
+envelope. A frontier `research` issue keeps that label and its narrow metadata
+exception; do not impose the task template.
+
+Use `daily_driver_get_session` to read the current model before branch creation
+or claim when needed for the frontier restriction. If its effective route is
+frontier and the issue is ordinary work, resolve a non-frontier agent using
+[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs).
+Hand off the full undertaking through `task`, or stop with the exact route gap;
+the receiving session owns its branch and claim.
 
 **Issue-only research writes use the issue client.** First publish the claim
 branch with the push operation above so another session can resume. If that
@@ -53,12 +61,15 @@ incomplete research stays open.
 The implementor
 ===============
 
-No route, and that is the rule rather than a gap. `SKILL.md`'s `Implement`
-owns it: the session running the sequence writes the code itself, so `task`
-dispatches no implementor here. Omp has the route and it belongs to `embark`,
-which uses it to run several task issues at once. The one dispatch inside this
-sequence is `review-cycle`'s briefed subagent at `Verify the fix delta`, named
-in that skill's own reference file.
+Ordinary non-frontier implementation stays in the session running this
+sequence. The frontier-only handoff exception runs before branch creation and
+claim: resolve a supported non-frontier agent route using
+[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs),
+then use the `task` surface to dispatch a full `undertake #<issue>` to that
+agent. The receiving session owns its worktree, claim, implementation, and
+pull request. Do not dispatch if the route is unavailable or frontier; report
+the exact configuration gap. A supported model switch may continue here only
+after Omp reports a non-frontier execution identity.
 
 
 The pull request

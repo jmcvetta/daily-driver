@@ -102,6 +102,18 @@ capability rubric without adding task metadata. Otherwise stop that child and
 report the configuration gap. The muster roll records a required class only
 for task issues, plus the selected implementor route and actual model as
 `unreported` when the surface does not report one.
+Treat an effective astra/fable route as frontier even when an override,
+fallback, or visible parent-model inheritance supplies it through a lower-class
+role. Dispatch a frontier assignment only when the issue records explicit user
+approval and its exact work envelope. Do not invent a provider identifier or
+assume an API route. Since this delegation surface does not report a measured
+model argument, stop the affected task with a configuration gap unless the
+configured route and its class can be established.
+
+A frontier session may only route ordinary work to an eligible non-frontier
+implementor; it must not retain or supervise implementation on frontier.
+Frontier implementation requires a separate explicit user exception and
+bounded scope. Research approval covers only its deliverable.
 
 - **Agent-to-agent messaging.** Whether a delegated implementor can send a
   question back to the delegating session is not measured. The route this

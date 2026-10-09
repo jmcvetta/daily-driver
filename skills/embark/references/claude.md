@@ -98,10 +98,21 @@ For a `task`, resolve its `Model class` using
 [`issue-body`'s shared guidance](../../issue-body/references/model-classes.md)
 before calling `create_session`. For a `bug` or `research` child, apply its
 `issue-body` readiness contract and assess the work against the same capability
-rubric; do not add a task class section to its body. `session_context.model` is
-a candidate concrete identifier only after that assessment;
-`configured_model` can be an alias or unsupported suffix. Never pass a class
-name to `model`, and never silently inherit an unchecked model.
+rubric. Do not add a task class section to a `bug` or routine research body. A
+`research` child assigned `frontier` uses `issue-body`'s narrow exception and
+needs its single class section, rationale, approval, and exact work envelope.
+`session_context.model` is a candidate concrete identifier only after that
+assessment; `configured_model` can be an alias or unsupported suffix. Never
+pass a class name to `model`, and never silently inherit an unchecked model.
+The effective model route, including configured fallbacks and visible parent
+inheritance, must be resolved before dispatch. Treat any route the harness
+identifies as astra/fable as frontier regardless of agent or role name. A
+frontier task needs issue-recorded approval and its exact work envelope. Do not
+invent a Fable identifier or assume an API route; if the concrete route cannot
+be established, stop that task with a configuration gap. A frontier route may
+receive ordinary work only for bounded routing and handoff to a non-frontier
+implementor. Frontier implementation requires a separate explicit user
+exception and bounded scope.
 
 Reading a session, and what cannot be read
 ------------------------------------------

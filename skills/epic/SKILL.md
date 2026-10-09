@@ -123,11 +123,22 @@ edge means and what it must not be used to record.
 it to be true. What the epic body carries is the *reading* of it, under
 `The epic body` below.
 
-**A task records its required model class.** Sizing is when the remaining
+**Each task records its required model class.** Sizing is when the remaining
 implementation difficulty is known. `issue-body` owns the task taxonomy,
 section format, readiness test, and routing guidance; `embark` resolves a
 concrete implementer later. Other child kinds do not acquire task class
 metadata by being in an epic.
+
+When any task in a plan needs `frontier`, `Agree the plan` must explicitly
+confirm that exact assignment and its work envelope. State why the cheaper
+classes are insufficient, the question, known input scope, deliverable, and
+proposed frontier sessions or passes; separate facts from estimates and
+unknowns. Do not research the frontier question to estimate it. A general
+agreement to the epic is not frontier approval. Record the approval and
+approved scope in that task issue; material expansion needs a new confirmation.
+If the task asks frontier to implement, the user must explicitly authorize that
+implementation exception and its bounded scope; research approval is not enough.
+
 2 — Agree the plan
 ------------------
 
