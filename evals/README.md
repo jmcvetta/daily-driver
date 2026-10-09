@@ -1324,6 +1324,15 @@ other files stay. `evals/fixtures/model-classes/candidates.json`
 records every qualifying pull request the builder saw, selected or not, so a
 later run can widen the suite without re-walking history.
 
+Career-462 narrows that last command to its measured contract node,
+`test_projected_releases_skips_release_prs`. The source module also checks
+declared GitHub labels, which is unrelated to the projected job and tries to
+query GitHub when `gh` is authenticated. The isolated fixture correctly removes
+its source remote; selecting the projection test keeps the grader offline
+without weakening or skipping the live label-drift test in the source suite.
+The selected command is stored in `candidates.json`, so `--rewrite-tasks`
+preserves this case-specific grading boundary.
+
 **Keeping the answer out of reach.** The merged change is the answer, and the
 agent runs on the same host as the grader, so the suite closes each road to it:
 
