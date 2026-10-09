@@ -12,14 +12,18 @@ Omp's surfaces. The absence of a session-opening client means the agent-driven
 wave needs an owner turn; it does not mean supervised processes cannot survive
 a client exit. The fallback exists for session work, not process supervision.
 
-For an explicit Omp embark command, the first requested-epic read is a single
-issue `issue://` read. It supplies the canonical title, number, URL and labels.
-If its metadata confirms the requested issue is an epic, set the orchestrator
-title in the [`session-title` epic form](../../session-title/SKILL.md) before
-graph traversal or any unrelated tool call. The extension denies calls that
-start after the metadata result; it cannot cancel calls already running in a
-batch. A free-form request that invokes `embark` without an explicit command
-does not activate this earlier barrier.
+For an explicit Omp embark command, the initial identity read must be the
+canonical single-issue `issue://` read. If the command supplied a GitHub URL,
+preserve its repository in that `issue://` reference.
+Read-only discovery and prerequisites may come first, but cannot certify this
+step. The result supplies the canonical title, number, URL and labels. If its
+metadata confirms the requested issue is an epic, set the orchestrator title
+in the [`session-title` epic form](../../session-title/SKILL.md) before graph
+traversal or any unrelated tool call. The extension denies dispatch and writes
+before the identity read, then denies unrelated calls after the metadata
+result; it cannot cancel calls already running in a batch. A free-form request
+that invokes `embark` without an explicit command does not activate this
+earlier barrier.
 
 
 The wave

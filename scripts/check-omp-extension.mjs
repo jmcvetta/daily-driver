@@ -468,7 +468,7 @@ check("explicit embark is gated at the requested epic read and title", async () 
 	assert.equal(startupState(s).status, "awaiting");
 	assert.equal(titleCall(s, "task", {}, ctx).block, true);
 	const docsBeforeIdentity = titleCall(s, "read", { path: "skill://session-title" }, ctx);
-	assert.equal(docsBeforeIdentity.block, true);
+	assert.equal(docsBeforeIdentity, undefined);
 	deliverEpicRead(s, ctx);
 	assert.equal(startupState(s).status, "required");
 	const blocked = titleCall(s, "read", { path: "skills/undertake/SKILL.md" }, ctx);
@@ -539,24 +539,51 @@ check("explicit request parsing excludes mentions and accepts supported referenc
 	}
 });
 
-/** This prevents any discovery or dispatch call from preceding the canonical issue read. */
-check("awaiting startup permits only the exact requested issue read", () => {
+/** This prevents safe preparation from being mistaken for canonical identity or blocked without cause. */
+check("awaiting startup allows read-only preparation but blocks mutations and dispatch", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "first-read-session");
 	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
-	assert.equal(titleCall(s, "read", { path: "issue://582" }, ctx), undefined);
 	for (const [tool, input] of [
 		["read", { path: "README.md" }],
 		["read", { path: "issue://583" }],
 		["grep", { pattern: "epic" }],
 		["glob", { pattern: "issues/**" }],
+		["daily_driver_get_session", {}],
+		["bash", { command: "gh issue view 583 --repo example/project" }],
+		["bash", { command: "gh api -X GET /repos/example/project/issues/583" }],
+	]) {
+		assert.equal(titleCall(s, tool, input, ctx), undefined, `${tool}: ${JSON.stringify(input)}`);
+	}
+	for (const [tool, input] of [
 		["task", { tasks: [] }],
 		["write", { path: "notes.md", content: "x" }],
+		["bash", { command: "gh issue comment 582 -b update" }],
+		["bash", { command: "gh issue edit 582 --title changed" }],
+		["bash", { command: "gh api -X POST /repos/example/project/issues/582/comments" }],
+		["bash", { command: "gh issue view 582 >/tmp/result" }],
 	]) {
 		const result = titleCall(s, tool, input, ctx);
 		assert.equal(result.block, true, `${tool}: ${JSON.stringify(input)}`);
-		assert.match(result.reason, /read the requested issue first/iu);
+		assert.match(result.reason, /canonical.*issue:\/\/|issue:\/\/.*canonical/isu);
 	}
+	deliverEpicRead(s, ctx, epicMetadata, "noncanonical-read", "https://github.com/example/project/issues/582");
+	assert.equal(startupState(s).status, "awaiting");
+	deliverEpicRead(s, ctx);
+	assert.equal(startupState(s).status, "required");
+});
+
+/** This prevents a supplied GitHub URL from bypassing the canonical issue protocol. */
+check("GitHub URL requests require an issue URI result for identity", () => {
+	const s = makeSession();
+	const ctx = startupCtx(s, "canonical-url-session");
+	s.fire("before_agent_start", {
+		prompt: "embark https://github.com/example/project/issues/582",
+	}, ctx);
+	deliverEpicRead(s, ctx, epicMetadata, "url-read", "https://github.com/example/project/issues/582");
+	assert.equal(startupState(s).status, "awaiting");
+	deliverEpicRead(s, ctx, epicMetadata, "canonical-read", "issue://example/project/582");
+	assert.equal(startupState(s).status, "required");
 });
 
 /** This prevents child, malformed and stale issue results from releasing dispatch. */

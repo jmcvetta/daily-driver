@@ -37,13 +37,15 @@ and its first dispatch of an implementor.
 
 **Omp's explicit embark startup barrier is earlier and narrower.** For a
 top-level `embark <issue>`, `/embark <issue>`, or registered
-`/skill:embark <issue>`, `extensions/daily-driver.js` requires a successful
-single-issue `issue://` read first. When that result confirms the requested
-epic, the next unrelated tool call is denied until this session carries
-`⛵ EPIC #<number> <title>`. The target metadata comes from the rendered
-response header, and state follows the active session branch. The barrier does
-not classify free-form requests, issue text or skill examples, and does not
-change the ordinary comment/dispatch gate above.
+`/skill:embark <issue>`, only a successful canonical single-issue `issue://`
+read satisfies the identity step. Read-only preparation may precede it, but
+does not satisfy it; dispatch and writes stay blocked while identity is
+awaiting. When that result confirms the requested epic, the next unrelated
+tool call is denied until this session carries `⛵ EPIC #<number> <title>`.
+The target metadata comes from the rendered response header, and state follows
+the active session branch. The barrier does not classify free-form requests,
+issue text or skill examples, and does not change the ordinary
+comment/dispatch gate above.
 
 The 2026-10-08 report behind #582 records an automatic Omp title, a later
 successful epic read, further instruction reads, and a user correction. It

@@ -38,6 +38,7 @@ TARGETS = {
     583: ("Epic title 583", "⛵ EPIC #583 Epic title 583"),
 }
 RESULTS: dict[tuple[int, int], str] = {}
+RPC_EVENTS: list[dict] = []
 
 
 class CheckFailed(Exception):
@@ -70,24 +71,26 @@ def target_from(messages) -> int:
 def tool_call(number: int, index: int, repository_qualified: bool) -> tuple[str, dict]:
     """Return the next guarded call in one scenario."""
     if index == 0:
+        return "read", {"path": "prep.md"}
+    if index == 1:
         path = f"issue://example/project/{number}" if repository_qualified else f"issue://{number}"
         return "read", {"path": path}
-    if index == 1:
-        return "read", {"path": "README.md"}
     if index == 2:
+        return "read", {"path": "prep.md"}
+    if index == 3:
         return "write", {
             "path": "xd://daily_driver_set_session_title",
             "content": json.dumps({"title": TARGETS[number][1]}),
         }
-    if index == 3:
-        return "read", {"path": "README.md"}
     if index == 4:
+        return "read", {"path": "prep.md"}
+    if index == 5:
         return "daily_driver_get_session", {}
     raise CheckFailed(f"unexpected scripted tool-call index {index}")
 
 
 class MockModel(BaseHTTPRequestHandler):
-    """An OpenAI-compatible local endpoint that scripts five calls per request."""
+    """An OpenAI-compatible local endpoint that scripts six calls per request."""
 
     def log_message(self, *_args) -> None:
         pass
@@ -110,7 +113,7 @@ class MockModel(BaseHTTPRequestHandler):
         last = messages[-1] if messages else {}
         if last.get("role") == "tool":
             RESULTS[(number, index - 1)] = text_of(last.get("content"))
-        if index >= 5:
+        if index >= 6:
             delta = {"role": "assistant", "content": "Startup title verified."}
             finish = "stop"
         else:
@@ -239,6 +242,7 @@ def run(omp: str, env: dict[str, str], cwd: Path, stderr_path: Path) -> None:
                     raise CheckFailed(f"omp exited before {what}", stderr_path.read_text(encoding="utf-8"))
                 if frame.get("type") == "extension_error":
                     raise CheckFailed(f"extension_error: {frame}", stderr_path.read_text(encoding="utf-8"))
+                RPC_EVENTS.append(frame)
                 if predicate(frame):
                     return frame
 
@@ -281,7 +285,8 @@ def main() -> None:
             sandbox = root / "sandbox"
             bin_dir = root / "bin"
             sandbox.mkdir()
-            (sandbox / "README.md").write_text("unrelated content readable after title\n", encoding="utf-8")
+            prep_content = "read-only preparation and resumed read fixture\n"
+            (sandbox / "prep.md").write_text(prep_content, encoding="utf-8")
             write_home(home, server.server_address[1])
             write_fake_gh(bin_dir)
             original_path = os.environ.get("PATH", "")
@@ -304,17 +309,37 @@ def main() -> None:
             run(omp, env, sandbox, stderr_path)
             stderr = stderr_path.read_text(encoding="utf-8")
             for number in TARGETS:
-                denial = RESULTS.get((number, 1), "")
-                resumed = RESULTS.get((number, 3), "")
-                session = RESULTS.get((number, 4), "")
+                issue_read = RESULTS.get((number, 1), "")
+                denial = RESULTS.get((number, 2), "")
+                session = RESULTS.get((number, 5), "")
+                event_results = {
+                    event.get("toolCallId"): event
+                    for event in RPC_EVENTS
+                    if event.get("type") == "tool_execution_end"
+                }
+                for index in (0, 4):
+                    call_id = f"embark-{number}-{index}"
+                    event = event_results.get(call_id, {})
+                    result = event.get("result", {})
+                    if prep_content.strip() not in text_of(result.get("content")):
+                        raise CheckFailed(
+                            f"issue {number}: read-only prep call {index} did not return fixture content: {event!r}",
+                            stderr,
+                        )
+                denied = event_results.get(f"embark-{number}-2", {})
+                if not denied.get("isError"):
+                    raise CheckFailed(f"issue {number}: unrelated read was not blocked after identity: {denied!r}", stderr)
+                if f"# Issue #{number}:" not in issue_read:
+                    raise CheckFailed(
+                        f"issue {number}: canonical issue read did not return metadata: {issue_read[:500]!r}",
+                        stderr,
+                    )
                 if "requested epic" not in denial.lower() and "⛵ epic" not in denial.lower():
                     raise CheckFailed(
                         f"issue {number}: unrelated read was not denied by the title barrier: {denial[:500]!r}; "
-                        f"issue-read result: {RESULTS.get((number, 0), '')[:500]!r}",
+                        f"issue-read result: {issue_read[:500]!r}",
                         stderr,
                     )
-                if "unrelated content readable after title" not in resumed:
-                    raise CheckFailed(f"issue {number}: resumed read did not succeed after the title write: {resumed[:500]!r}", stderr)
                 if TARGETS[number][1] not in session:
                     raise CheckFailed(f"issue {number}: session name does not carry the requested epic title: {session[:500]!r}", stderr)
     finally:

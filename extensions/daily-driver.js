@@ -2103,6 +2103,50 @@ function needsTitle(event) {
 		runsGitHubComment(event.input.command)
 	);
 }
+
+/** Whether one plain `gh` invocation can only read GitHub data. */
+function isReadOnlyGitHubRead(command) {
+	const { segments, unreadable } = shellSegments(command);
+	if (unreadable !== null || segments.length !== 1) return false;
+	const words = segments[0].words ?? [];
+	if (segments[0].group || words.length === 0 ||
+		words.some((word) => !word.literal || /[;&|<>]/u.test(word.text)) ||
+		basename(words[0].text) !== "gh") return false;
+	const args = words.slice(1);
+	const operands = [];
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-R" || text === "--repo" || text === "--hostname" || text === "--config") {
+			index++;
+		} else if (!text.startsWith("-")) {
+			operands.push(text);
+		}
+	}
+	const [group, verb] = operands;
+	if ((group === "issue" || group === "pr" || group === "repo") && verb === "view") return true;
+	if (group === "search" && verb === "issues") return true;
+	if (group !== "api") return false;
+	let method = null;
+	let sendsBody = false;
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-X" || text === "--method") {
+			method = args[index + 1]?.text ?? null;
+		} else if (text.startsWith("--method=")) {
+			method = text.slice("--method=".length);
+		} else if (/^-X./u.test(text)) {
+			method = text.slice(2);
+		} else if (
+			GH_API_BODY_FLAGS.has(text) ||
+			/^--(field|raw-field|input)=/u.test(text)
+		) {
+			sendsBody = true;
+		}
+	}
+	return method
+		? method.toUpperCase() === "GET"
+		: !sendsBody;
+}
 /**
  * State carried on the active session branch while an explicit Omp embark
  * request is being resolved and titled.
@@ -2110,9 +2154,8 @@ function needsTitle(event) {
 const EMBARK_TITLE_STATE = "daily-driver-embark-title";
 const EMBARK_TITLE_PREFIX = "⛵ EPIC #";
 const EMBARK_READ_REASON =
-	"Read the requested issue first with `read` on its single-issue " +
-	"`issue://` URL. The initial issue identity must come from that result; " +
-	"do not dispatch until it succeeds.";
+	"Before dispatch, read the requested issue with `read` on its canonical " +
+	"single-issue `issue://` URL. Other reads do not certify that step.";
 
 /** Parse an explicit embark command without treating quoted prose as one. */
 function explicitEmbarkTarget(prompt) {
@@ -2433,7 +2476,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		const expected = pendingIssueReads.get(event.toolCallId);
 		if (!expected || event.toolName !== "read") return;
 		pendingIssueReads.delete(event.toolCallId);
-		if (event.isError) return;
+		if (event.input?.path !== expected.path) return;
 		const state = startupState(ctx);
 		if (!state || state.status !== "awaiting") return;
 		const text = Array.isArray(event.content)
@@ -2529,13 +2572,23 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		}
 		const startup = ctx?.agent?.kind === "main" ? startupState(ctx) : null;
 		if (startup?.status === "awaiting") {
-			const target = event.toolName === "read" ? parseEmbarkReference(event.input?.path) : null;
+			const path = event.input?.path;
+			const target = event.toolName === "read" && typeof path === "string" &&
+				/^issue:\/\//iu.test(path)
+				? parseEmbarkReference(path)
+				: null;
 			const requestedRepository = startup.target.repository?.toLowerCase();
 			const readRepository = target?.repository?.toLowerCase();
 			if (target?.number === startup.target.number &&
 				readRepository === requestedRepository &&
 				typeof event.toolCallId === "string") {
-				pendingIssueReads.set(event.toolCallId, startup.target);
+				pendingIssueReads.set(event.toolCallId, { path });
+				return undefined;
+			}
+			if (["read", "grep", "glob", "daily_driver_get_session"].includes(event.toolName) ||
+				(event.toolName === "bash" &&
+					typeof event.input?.command === "string" &&
+					isReadOnlyGitHubRead(event.input.command))) {
 				return undefined;
 			}
 			return { block: true, reason: embarkTitleReason(startup) };

@@ -99,11 +99,12 @@ are at sea already. On Omp, an explicit request reads them only after
 `Title the session` has titled the orchestrator.
 
 On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
-`/skill:embark <issue>` request reads the requested issue first. If its
-metadata confirms an epic, set this orchestrator title before reading its
-comments or graph, or making another unrelated tool call. The extension
-enforces this order; a free-form request that invokes this skill does not
-activate the earlier barrier.
+`/skill:embark <issue>` request requires a canonical single-issue `issue://`
+read before dispatch. Read-only discovery and prerequisites may come first,
+but they do not satisfy that identity read. If its metadata confirms an epic,
+set this orchestrator title before reading comments or graph, or making any
+unrelated tool call. The extension enforces the dispatch gate and this
+post-result deadline; free-form requests do not activate the earlier barrier.
 
 1 — Title the session
 ---------------------
