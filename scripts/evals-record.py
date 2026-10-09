@@ -429,11 +429,12 @@ def _shell_ast(command: str) -> list[tuple[Any, bytes]]:
                 name = node.child_by_field_name("name")
                 if name is None:
                     continue
-                arguments = [
-                    _word_value(_node_text(child, source))
+                argument_nodes = [
+                    child
                     for index, child in enumerate(node.children)
                     if node.field_name_for_child(index) == "argument"
                 ]
+                arguments = [_word_value(_node_text(child, source)) for child in argument_nodes]
                 executable = _word_value(_node_text(name, source)).rsplit("/", 1)[-1]
                 if executable in {"bash", "sh", "dash", "ksh", "zsh"}:
                     script_index = next(
@@ -443,10 +444,14 @@ def _shell_ast(command: str) -> list[tuple[Any, bytes]]:
                     if script_index is not None and script_index < len(arguments):
                         pending.append(arguments[script_index].encode("utf-8"))
                 elif executable == "eval" and arguments:
-                    script = " ".join(arguments)
-                    if re.search(r"\$(?:[A-Za-z_{(]|`)|`", script):
+                    dynamic_input = any(
+                        child.type in {"simple_expansion", "expansion", "command_substitution", "process_substitution"}
+                        for argument in argument_nodes
+                        for child in _shell_nodes(argument)
+                    )
+                    if dynamic_input:
                         raise ValueError("cannot statically parse dynamic eval input")
-                    pending.append(script.encode("utf-8"))
+                    pending.append(" ".join(arguments).encode("utf-8"))
     return trees
 
 
