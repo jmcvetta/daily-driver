@@ -1,0 +1,69 @@
+task_id: issue-12-effective-kind-preserves-content
+description: >-
+  A requested kind change uses the new contract, preserves valid evidence and
+  provenance, and ignores story or unrelated labels as body templates.
+tags: [issue, behaviour, fire]
+
+initial_prompt: |
+  Change this issue's kind from `proposal` to `research` and revise its body.
+  Its current body says: "We need to decide whether the nightly report should
+  include archived accounts. Support asked for this twice. The report is used
+  for monthly reconciliation. The data retention policy may constrain this,
+  but nobody has checked it." The issue also has the supplemental `story`
+  label and an unrelated `customer-visible` label. The user now specifies the
+  research purpose: decide whether archived rows belong in the report before
+  changing it. The bounded work is to inspect the report query and retention
+  policy, compare inclusion and exclusion against the reconciliation use, and
+  record a recommendation with evidence. Do not access production or change
+  code. The existing body ends with this provenance block; preserve it exactly:
+
+  ---
+  Model: fixture-model
+  Harness: Omp 18.8.4
+  session: fixture-session
+
+  Show the revised body; do not post.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`issue-body` fires on body revision using the effective kind"
+    expected_skill: issue-body
+    skill_name: issue-body
+
+  - type: agent_judge
+    description: Effective research contract replaces proposal contract without losing valid content or provenance
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply. Begin rationale with `ANCHOR: result` or
+      `ANCHOR: none`; score 0 if no final result exists. It must use the
+      research contract because that is the effective kind. Preserve the
+      original question, both support reports, reconciliation purpose, and
+      uncertain retention-policy fact. State scope and non-goals, compare
+      inclusion/exclusion using the named sources and purpose, require an
+      evidence-backed recommendation, and keep the result bounded. It must not
+      invent policy findings, access production, or prescribe an implementation.
+      `story` and `customer-visible` add no body template. Remove obsolete
+      proposal-only scaffolding if present while retaining its valid content.
+      Preserve trailing provenance history; a `Model:` inside provenance is
+      not task metadata. Score 1.0 when all hold, 0.5 if useful but missing a
+      material research criterion, and 0.0 if it keeps the wrong kind contract
+      or deletes supplied evidence/provenance.

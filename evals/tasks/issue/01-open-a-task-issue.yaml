@@ -73,10 +73,15 @@ success_criteria:
       state the observable outcome and why the change is needed. It must contain
       `## Summary`, immediately followed by `## Model class`, then `## Detail`.
       The class section starts with exactly one backtick-wrapped lowercase class
-      token and a short rationale. The body must not contain a trailing
-      `Model:` or an `Effort:` line. The surrounding REPLY distinguishes the
-      grounded map from routine implementer choices.
+      token and a short rationale. The task metadata section must not add a
+      concrete `Model:` identifier or `Effort:` field between `Summary` and
+      `Detail`. The final `provenance` block below `---` is distinct and must be
+      retained; a concrete `Model:` line inside that block is allowed.
+      The surrounding REPLY distinguishes the grounded map from routine
+      implementer choices.
 
-      Score 1.0 if the exact class-section order, rationale, and no-concrete-ID
-      rule hold. Score 0.5 if the handoff is plausible but misses one. Score 0.0
-      if it lacks a body, a class section, or includes `Model:`/`Effort:`.
+      Score 1.0 if the exact class-section order, rationale, no-concrete-ID
+      task metadata rule, and provenance distinction hold. Score 0.5 if the
+      handoff is plausible but misses one. Score 0.0 if it lacks a body, a
+      class section, or puts concrete model/effort metadata in the task
+      sections.

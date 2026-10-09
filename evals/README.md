@@ -1,6 +1,6 @@
 # Evals
 
-Eighteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
+Nineteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
 than by `claude plugin eval`. The reasoning for the harness is
 [`docs/notes/0002-eval-harness.md`](../docs/notes/0002-eval-harness.md);
 the short version is that the built-in cannot be run on this account, is
@@ -28,6 +28,7 @@ evals/
 │   ├── embark/          … when an epic's wave is put to sea, and never one issue?
 │   ├── deps/            … when the deps are upgraded in bulk, and not for one?
 │   ├── issue-deps/      … when an issue relationship is read or written?
+│   ├── issue/           … when an issue body is written or revised, under its selected kind contract?
 │   ├── issue-labels/    … when an issue is labelled, and not when it is linked?
 │   ├── judgement-call/  … when a choice is about to be put to the user?
 │   ├── session-title/   … when the session is named, and not the PR?
@@ -35,6 +36,7 @@ evals/
 │   ├── constitution/    does the constitution reach a subagent, and land?
 │   ├── review-depth/    does `review` send the right panel at the diff?
 │   └── model-classes/   does this model finish real delegated work? see below
+
 ├── fixtures/
 │   ├── fix-daily-driver-bugs/shared/
 │   │                    offline `gh` recorder and issue-state assertions
@@ -49,6 +51,14 @@ evals/
 ├── coder-eval-omp/      the `omp` agent kind, so the same cases run on Omp
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
+
+`tasks/issue/` covers the six kind-specific body contracts and their
+boundaries: settled versus unresolved task intent, bounded research and
+evidenced negative/inconclusive outcomes, bugs without task metadata,
+non-executable proposals, safe human handoffs, automatic bug reports, and
+effective-kind edits that preserve evidence and provenance. `tasks/epic/`
+includes mixed-kind children and epic outcome completion. These are behavioral
+cases: graders assess decisions and evidence, not a fixed heading list.
 
 ## Provenance
 
@@ -145,12 +155,22 @@ make evals-render-results # rewrite RESULTS.md from committed provenance
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
-
-# Do not run `make evals-run-omp` until #494 migrates the GPT 6 routes.
-# Paired ablations compare bare and treated arms; focused runs name one arm.
-# make evals-run-omp
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
+
+For a focused behavior smoke, run `make evals-plan` first, then name the
+changed case files explicitly in `TASKS` on a supported subject/judge route.
+The run target performs its required preflight and writes ordinary run
+provenance; do not substitute YAML parsing or trigger-only checks for observed
+case results. For example, the Omp GPT 6.1 Sol route is:
+
+```sh
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+  TASKS='tasks/issue/05-bug-body-gets-no-task-contract.yaml tasks/issue/07-research-contract-draft.yaml'
+```
+
+The paired Omp ablation remains available as `make evals-run-omp`; focused
+runs name one arm.
 
 The repository-local automatic-report workflow has three Omp-only behavioral
 fixtures. They use a fake `gh` that records issue reads and writes; no live

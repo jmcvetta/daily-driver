@@ -1,0 +1,64 @@
+task_id: issue-07-research-contract-draft
+description: >-
+  Draft a research body that makes the question investigable without choosing
+  its answer or inheriting an implementation design.
+tags: [issue, behaviour, fire]
+
+initial_prompt: >-
+  Open a research issue about whether to replace the repository's in-memory
+  rate limiter with a shared store. The decision matters because two replicas
+  may currently exceed the configured per-user limit. Known facts: the
+  repository uses two replicas in production and the limiter is process-local;
+  no measurements of actual limit violations are available. Compare keeping
+  the current design, using a shared store, and making no change. Do not assume
+  Redis or decide the outcome. We can inspect repository code and existing
+  metrics, but must not access production or make external requests. Deliver
+  an answer on the issue, including a recommendation and limitations. Bound
+  the work to those three alternatives and available repository evidence.
+  Do not post; show the exact issue body.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`issue-body` fires for research issue authoring"
+    expected_skill: issue-body
+    skill_name: issue-body
+
+  - type: agent_judge
+    description: Research handoff has purpose, bounded criteria, evidence plan, deliverable, and stopping rule
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply's proposed research issue body. Begin rationale with
+      `ANCHOR: result` or `ANCHOR: none`; score 0 if no final result exists.
+      The body must state the exact question and practical purpose, separate
+      supplied facts from missing measurements, define scope and non-goals,
+      permit only repository inspection and available metrics, and prohibit
+      production access or external requests. It must compare the three named
+      alternatives without selecting a conclusion, provide criteria and an
+      evidence plan, require the answer/recommendation/limitations at the
+      specified destination, and state a stopping rule bounded to those
+      alternatives and available evidence. It must not invent citations,
+      measurements, implementation choices, or task Model class metadata.
+      Normal trailing provenance is required; a `Model:` line inside provenance
+      is not task class metadata. Score 1.0 when the body covers these needs
+      without invented facts; 0.5 for a useful but materially incomplete body;
+      0.0 if it preselects the answer, authorizes forbidden access, or uses a
+      settled implementation design.

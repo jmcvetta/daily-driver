@@ -19,6 +19,8 @@ The issue
 | `Read the issue and its edges` | Read the body, the graph and the comments | `gh issue view <number> --json body,labels,comments,blockedBy,subIssues,parent` |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> --body-file <path>` |
+| `Implement` (issue-only research) | Record findings | `gh issue comment <number> --body-file <path>` |
+| `Implement` (issue-only research) | Close completed research | `gh issue close <number> --reason completed` |
 
 `--body-file` rather than `-b`: the claim carries backticks and markdown
 links, and a double-quoted shell argument substitutes the backticks before
@@ -50,6 +52,14 @@ gate. A frontier session resolves its effective route before branch creation
 or claim, then hands ordinary work to an eligible non-frontier session or
 stops with a configuration gap. The unmeasured delegation surface may not be
 assumed to provide that route.
+
+**Issue-only research writes use the issue client.** With no resume branch,
+this route skips `task-worktree`; do not create or publish a branch. If a
+resume branch exists, `task-worktree` attaches it, but the research route
+leaves it unchanged. Post the complete answer with `gh issue comment
+--body-file`, including `provenance`'s block; then close only when
+`issue-body`'s research completion test holds. Failed or incomplete research
+stays open.
 
 
 The implementor
@@ -103,13 +113,14 @@ the missing surface. `provenance`'s
 [`references/codex.md`](../../provenance/references/codex.md) names how the
 `Model:` line is read.
 
-The branch comes from the task worktree's Git state:
-`git branch --show-current` runs in that worktree. On a resume that is the
-adopted branch, which `Read the issue and its edges` took from the issue's
+For branch-free answer-only research, no task worktree exists and the claim
+uses `Branch: none`. Otherwise the branch comes from the task worktree's Git
+state: `git branch --show-current` runs in that worktree. On a resume that is
+the adopted branch, which `Read the issue and its edges` took from the issue's
 record (`gh issue view <number> --json closedByPullRequestsReferences,comments`);
-fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for the branch
-link comes from the remote `task-worktree` resolved, never from an assumed
-`origin`.
+fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for
+the branch link comes from the remote `task-worktree` resolved, never from an
+assumed `origin`.
 
 Codex uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
@@ -139,12 +150,11 @@ are that read's, and CI at the gate comes from `statusCheckRollup` instead.
 
 **The start is the claim comment's `createdAt`.** `gh issue view <issue>
 --json comments` is the read `Read the issue and its edges` already makes —
-`comments` is in its field list — and the claim is the comment carrying the
-branch link and the `Model:` line. Take its `createdAt`; where more than one
-comment carries that shape, the earliest of them is the start — a later
-claim does not restart the clock. A resumed session finds the start with the
-read it makes anyway. An issue with no recoverable
-claim leaves the timing `n/a`, per `SKILL.md`.
+`comments` is in its field list — and the claim carries the branch link and
+the `Model:` and `session:` lines. Take its `createdAt`; where more than one
+comment carries that shape, the earliest is the start. A resumed session
+finds it with the same read. An issue with no recoverable claim leaves the
+timing `n/a`, per `SKILL.md`.
 
 **The report posts as a pull-request comment** — a pull request's comments
 are issue comments:

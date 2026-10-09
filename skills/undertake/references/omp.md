@@ -20,6 +20,8 @@ The issue
 | `Read the issue and its edges` | Read the body, the graph and the comments | `issue://<number>`, comments included |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> -b "…"` |
+| `Implement` (issue-only research) | Record findings | `gh issue comment <number> --body-file <path>` |
+| `Implement` (issue-only research) | Close completed research | `gh issue close <number> --reason completed` |
 
 **Before `Claim the issue`, check the session title.** Read `sessionName` from `daily_driver_get_session`, which the claim already needs for its model and session id. Format the expected title as `#{number} {shortened issue title}` using `session-title`'s forty-character budget and shortening rules. If it differs, call `daily_driver_set_session_title({ title })` before `gh issue comment`; if it already matches, do not rename it. If the title surface is unavailable, report that limitation and continue without an alternate route, as `session-title` requires.
 
@@ -46,6 +48,14 @@ frontier and the issue is ordinary work, resolve a non-frontier agent using
 [`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs).
 Hand off the full undertaking through `task`, or stop with the exact route gap;
 the receiving session owns its branch and claim.
+
+**Issue-only research writes use the issue client.** With no resume branch,
+this route skips `task-worktree`; do not create or publish a branch. If a
+resume branch exists, `task-worktree` attaches it, but the research route
+leaves it unchanged. Post the complete answer with `gh issue comment
+--body-file`, including `provenance`'s block; then close only when
+`issue-body`'s research completion test holds. Failed or incomplete research
+stays open.
 
 
 The implementor
@@ -97,12 +107,13 @@ The session
 `provenance`'s [`references/omp.md`](../../provenance/references/omp.md)
 names the fields it answers and how the block records them.
 
-The branch comes from the task worktree's Git state:
-`git branch --show-current` runs in that worktree. On a resume that is the
-adopted branch, which `Read the issue and its edges` took from the issue's
-record; fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for the branch
-link comes from the remote `task-worktree` resolved, never from an assumed
-`origin`.
+For branch-free answer-only research, no task worktree exists and the claim
+uses `Branch: none`. Otherwise the branch comes from the task worktree's Git
+state: `git branch --show-current` runs in that worktree. On a resume that is
+the adopted branch, which `Read the issue and its edges` took from the issue's
+record; fetch it from the remote before `task-worktree` attaches it.
+`OWNER/REPO` for the branch link comes from the remote `task-worktree`
+resolved, never from an assumed `origin`.
 Omp uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
 
@@ -132,11 +143,10 @@ are that read's, and CI at the gate comes from `statusCheckRollup` instead.
 the comments, so `Read the issue and its edges` already has them; `gh issue
 view <issue> --json comments` is the same read where that resource is not to
 hand. The claim is the comment carrying the branch link and the `Model:` and
-`session:` lines. Take its `createdAt`;
-where more than one comment carries that shape, the earliest of them is the
-start — a later claim does not restart the clock. A resumed session finds
-the start with the read it makes anyway. An issue with no recoverable claim
-leaves the timing `n/a`, per `SKILL.md`.
+`session:` lines. Take its `createdAt`; where more than one comment carries
+that shape, the earliest of them is the start — a later claim does not restart
+the clock. A resumed session finds the start with the same read. An issue
+with no recoverable claim leaves the timing `n/a`, per `SKILL.md`.
 
 **The report posts as a pull-request comment** — a pull request's comments
 are issue comments, so the write is the claim's own:

@@ -1,0 +1,58 @@
+task_id: issue-15-automatic-bug-report-stays-brief
+description: >-
+  A confirmed Daily Driver defect uses the brief ownership-evidence report and
+  trailing provenance, not the generic task machinery.
+tags: [issue, behaviour, fire]
+
+initial_prompt: >-
+  I confirmed that Daily Driver's `session-title` skill says its hard limit is
+  40 characters, but its supplied Omp title tool accepts a 32-character title
+  and the current title helper sends it unchanged. The session title is
+  truncated mid-word. This occurred on Omp 18.8.4 with title `#12 Rotate the
+  access token now`; expected behavior is that the helper shortens it to the
+  declared 40-character limit before calling the tool. I reproduced it twice.
+  Please draft the required automatic Daily Driver bug report, but do not post
+  anything. Show the exact title and body.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`issue` and `issue-body` fire for the automatic bug report"
+    expected_skill: issue
+    skill_name: issue
+
+  - type: agent_judge
+    description: Automatic report stays concise, evidence-based, and provenance-bearing
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply. Begin rationale with `ANCHOR: result` or
+      `ANCHOR: none`; score 0 if no final result exists. It must propose the
+      `[auto-filed]` report title and existing `bug` kind, name the affected
+      Daily Driver component, expected and observed behavior, and minimal
+      evidence establishing ownership, with the known Omp version and context.
+      It must preserve the supplied reproduction count without claiming
+      unobserved tests, be brief, redact no facts needed for diagnosis, and end
+      with a trailing provenance block. It must not include task sections,
+      model class metadata, task template, haiku, implementation map,
+      acceptance plan, or proposed fix. Do not reject a `Model:` line inside
+      provenance. It must not post a live issue. Score 1.0 if all hold, 0.5 if
+      concise but missing one known detail, and 0.0 if it invents evidence,
+      adds task machinery, omits provenance, or claims a live write.
