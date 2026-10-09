@@ -22,9 +22,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from evals_costs import uses_omp_codex_subscription
+
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_PROVENANCE_DIR = ROOT / "evals" / "provenance"
 DEFAULT_TARGET = ROOT / "evals" / "RESULTS.md"
+
 
 NOT_RECORDED = "not recorded"
 
@@ -50,8 +53,9 @@ One row per committed record, oldest first.
 - **Total price** is the record's summed per-replicate price, in USD, judge
   included. **Price per completed task** divides it by the replicates that
   passed. A record that carries no price shows `not recorded`, never `$0`.
-  Schema-version-2 prices are shown for Claude Code only: on other harnesses
-  that version recorded the judge's spend alone.
+  Omp Codex subscription records show `subscription` instead of a dollar
+  amount. Schema-version-2 prices are shown for Claude Code only: on other
+  harnesses that version recorded the judge's spend alone.
 - **Wall time** is the whole run, `completed_at` minus `started_at`.
 """
 
@@ -80,19 +84,36 @@ def passed(attempt: dict[str, Any]) -> bool:
     return status == "SUCCESS" and not attempt.get("answer_key_contact")
 
 
-def total_price(record: dict[str, Any]) -> float | None:
-    """The record's summed price in USD, or None where it carries none.
+def total_price(record: dict[str, Any]) -> float | str | None:
+    """The record's price in USD, `subscription`, or None where unavailable.
 
-    Every case must carry a numeric cost; a partial sum would read as a whole
-    one. Schema version 2 is trusted for Claude Code alone, the one harness
-    that reported its own price before version 3 made the price required.
+    Every case must carry the same known source; mixed or partial totals would
+    read as whole prices. Schema version 2 is trusted for Claude Code alone.
     """
     cases = record.get("cases") or []
     version = record.get("schema_version")
-    if not cases or version not in (2, 3):
+    if not cases or version not in (2, 3, 4):
         return None
     if version == 2 and record.get("client", {}).get("name") != "claude-code":
         return None
+    if version == 4:
+        sources = [case.get("cost_source") for case in cases]
+        costs = [case.get("cost") for case in cases]
+        if (
+            all(source == "subscription" for source in sources)
+            and all(cost is None for cost in costs)
+            and all(
+                uses_omp_codex_subscription(
+                    record.get("client", {}).get("name", ""),
+                    "omp",
+                    case.get("model_requested", ""),
+                )
+                for case in cases
+            )
+        ):
+            return "subscription"
+        if any(source not in ("reported", "computed") for source in sources):
+            return None
     costs = [case.get("cost") for case in cases]
     if not all(isinstance(cost, (int, float)) and not isinstance(cost, bool) for cost in costs):
         return None
@@ -130,7 +151,9 @@ def render_row(record: dict[str, Any]) -> str:
     attempts = record.get("attempts") or []
     passes = sum(1 for attempt in attempts if passed(attempt))
     price = total_price(record)
-    if price is None:
+    if price == "subscription":
+        price_text = per_task_text = "subscription"
+    elif price is None:
         price_text = per_task_text = NOT_RECORDED
     else:
         price_text = f"${price:.2f}"

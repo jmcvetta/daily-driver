@@ -19,8 +19,9 @@ One row per committed record, oldest first.
 - **Total price** is the record's summed per-replicate price, in USD, judge
   included. **Price per completed task** divides it by the replicates that
   passed. A record that carries no price shows `not recorded`, never `$0`.
-  Schema-version-2 prices are shown for Claude Code only: on other harnesses
-  that version recorded the judge's spend alone.
+  Omp Codex subscription records show `subscription` instead of a dollar
+  amount. Schema-version-2 prices are shown for Claude Code only: on other
+  harnesses that version recorded the judge's spend alone.
 - **Wall time** is the whole run, `completed_at` minus `started_at`.
 
 | Date | Experiment | Harness | Models served | Judge | Replicates | Pass rate | Total price | Price per completed task | Wall time |
@@ -43,6 +44,7 @@ One row per committed record, oldest first.
 | 2026-10-02 | with-without | claude-code | claude-sonnet-5 | not recorded | 10 | 0/10 | $2.98 | no task completed | 9m 21s |
 | 2026-10-05 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | omp-glm-5.3 (run-selected) | 2 | 1/2 | $0.15 | $0.15 | 5m 17s |
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 2/3 | not recorded | not recorded | 1m 50s |
+| 2026-10-06 | omp-gpt-6-luna | omp | openai-codex/gpt-6-luna (requested) | omp-gpt-6.1-sol (run-selected) | 240 | 91/240 | subscription | subscription | 16m 29s |
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | not recorded | not recorded | 2m 05s |
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 15 | 12/15 | not recorded | not recorded | 10m 31s |
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 2/3 | not recorded | not recorded | 2m 20s |
@@ -50,6 +52,7 @@ One row per committed record, oldest first.
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 0/1 | not recorded | not recorded | 1m 06s |
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 1m 13s |
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 1m 03s |
+| 2026-10-06 | omp-gpt-6-sol | omp | openai-codex/gpt-6-sol (requested) | omp-gpt-6.1-sol (run-selected) | 240 | 104/240 | subscription | subscription | 12m 52s |
 | 2026-10-07 | probe-route-overlay | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | not recorded | 2 | 2/2 | $0.04 | $0.02 | 0m 52s |
 | 2026-10-08 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 11 | 8/11 | not recorded | not recorded | 7m 51s |
 | 2026-10-08 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 0m 44s |

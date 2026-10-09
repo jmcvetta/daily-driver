@@ -1,10 +1,11 @@
-# Explicit GPT judge calibrated against the committed transcript labels; no fallback.
+# GPT 6.1 Sol judge over Omp's Codex provider route. Its committed calibration
+# result meets calibration/labels.yaml.
 judge_id: omp-gpt-6.1-sol
 route: omp
 model: openai-codex/gpt-6.1-sol
 status: validated
 calibration: calibration/observed/omp-gpt-6.1-sol.json
 settings:
-  thinking: medium
+  thinking: "off"
   timeout_seconds: 300
-description: GPT 6.1 Sol judge through the configured OpenAI Codex provider on Omp.
+description: Validated no-tools GPT 6.1 Sol judge through openai-codex on Omp.

@@ -24,10 +24,9 @@ defaults:
 
   agent:
     type: omp
-    # The route `omp_configs/gpt.gateway.yml` assigns, without its effort
-    # suffix. Checked with `omp models find` against the Vercel AI Gateway
-    # catalog borrowed into the throwaway Omp home.
-    model: vercel-ai-gateway/openai/gpt-6-sol
+    # Exact Codex selector, also pinned for every helper role in this home's
+    # role overlay by the Omp adapter.
+    model: openai-codex/gpt-6-sol
     permission_mode: acceptEdits
     # Enforced as `omp --tools=read`: `Skill` needs `read`, which is how Omp
     # engages a skill. A row that restates this field replaces it.

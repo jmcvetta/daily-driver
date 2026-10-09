@@ -1,22 +1,17 @@
 #!/usr/bin/env bash
-# Make the Omp eval arms runnable here: install `omp` when it is missing,
-# resolve the Vercel AI Gateway key, and prove Omp serves each arm's model.
+# Resolve required provider credentials and prove Omp serves each experiment's
+# pinned model; install `omp` when it is missing.
 #
 # Usage: scripts/evals-setup-omp.sh EXPERIMENT.yaml...
 #
 # The models come from the experiments' own `model:` lines, so this list cannot
-# drift from the arms. A `vercel-ai-gateway/...` model Omp does not list is a
-# failure; any other model (the `openai-codex` arm, which needs Omp's own Codex
-# login) is reported as unconfigured and does not fail the gateway arms.
+# drift from the arms. `vercel-ai-gateway/...` requires its key and exact catalog
+# entry. A Codex model needs Omp's own login; its absence is reported but does
+# not fail setup, so other provider checks can still complete.
 #
-# Omp reads the gateway key from `AI_GATEWAY_API_KEY`: `omp --help` lists it
-# under its environment variables, and Omp's provider rule
-# (pi-catalog/src/compat/rules/providers/vercel-ai-gateway.kdl, omp 18.4.11)
-# uses `VERCEL_AI_GATEWAY_API_KEY` only for catalog discovery. A Claude Code
-# cloud container exports the second name alone, and without the first Omp
-# lists no gateway model at all. The Makefile exports `AI_GATEWAY_API_KEY` from
-# `VERCEL_AI_GATEWAY_API_KEY` for every target; this script does the same for
-# itself, so it also works when run directly.
+# Omp reads the gateway key from `AI_GATEWAY_API_KEY`. `VERCEL_AI_GATEWAY_API_KEY`
+# is used for catalog discovery; this script maps it to the provider's key name
+# when it checks gateway models directly.
 #
 # It writes no credential anywhere, and never touches an `ANTHROPIC_*`
 # variable: evals/README.md's credentials section forbids routing Anthropic
@@ -33,12 +28,7 @@ fi
 # binary, `$HOME/.bun/bin` when Bun is present and it installs through Bun.
 export PATH="${PATH}:${HOME}/.local/bin:${HOME}/.bun/bin"
 
-if [ -z "${AI_GATEWAY_API_KEY:-}" ]; then
-	if [ -z "${VERCEL_AI_GATEWAY_API_KEY:-}" ]; then
-		echo "error: AI_GATEWAY_API_KEY is not set (nor VERCEL_AI_GATEWAY_API_KEY)." >&2
-		echo "Omp's vercel-ai-gateway models need one of them; set it and rerun." >&2
-		exit 1
-	fi
+if [ -z "${AI_GATEWAY_API_KEY:-}" ] && [ -n "${VERCEL_AI_GATEWAY_API_KEY:-}" ]; then
 	export AI_GATEWAY_API_KEY="${VERCEL_AI_GATEWAY_API_KEY}"
 fi
 
@@ -70,6 +60,18 @@ sys.exit(0 if any(m.get("selector") == want for m in models) else 1)
 models="$(sed -n 's/^[[:space:]]*model:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$@" | sort -u)"
 if [ -z "${models}" ]; then
 	echo "error: no model: line in $*" >&2
+	exit 1
+fi
+
+needs_gateway=false
+while IFS= read -r model; do
+	if [[ "${model}" == vercel-ai-gateway/* ]]; then
+		needs_gateway=true
+	fi
+done <<<"${models}"
+if [ "${needs_gateway}" = true ] && [ -z "${AI_GATEWAY_API_KEY:-}" ]; then
+	echo "error: AI_GATEWAY_API_KEY is not set (nor VERCEL_AI_GATEWAY_API_KEY)." >&2
+	echo "Omp's vercel-ai-gateway models need one of them; set it and rerun." >&2
 	exit 1
 fi
 

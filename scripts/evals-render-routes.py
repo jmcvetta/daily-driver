@@ -23,6 +23,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from evals_costs import uses_omp_codex_subscription
+
 try:
     import yaml
 except ImportError:  # pragma: no cover - the repository's uv environment has PyYAML.
@@ -79,8 +81,7 @@ def overlay_settings(experiments_dir: Path, overlay: str) -> str:
 
 
 def model_class_cases(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Every case row tagged with a buildable class, carrying its record's
-    run_id, full completed_at (for ordering) and date (for display).
+    """Every buildable-class case with its record's run, date and client.
 
     A case tagged with a class outside `BUILDABLE_CLASSES` (`reasoning` or
     `frontier`) is dropped rather than kept: nothing computes a status for it,
@@ -101,6 +102,7 @@ def model_class_cases(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "run_id": record.get("run_id", "unknown"),
                     "completed_at": completed_at,
                     "date": completed_at[:10],
+                    "client_name": record.get("client", {}).get("name", ""),
                 }
             )
     return cases
@@ -133,13 +135,34 @@ def class_status(cases: list[dict[str, Any]], klass: str) -> dict[str, Any] | No
         for rows in by_task.values()
     )
     passed = [case for case in latest if case["outcome"] == "succeeded"]
-    costs = [case["cost"] for case in passed if isinstance(case["cost"], (int, float))]
+    cost_sources = [case.get("cost_source") for case in latest]
+    if "subscription" in cost_sources:
+        if (
+            all(source == "subscription" for source in cost_sources)
+            and all(case.get("cost") is None for case in latest)
+            and all(
+                uses_omp_codex_subscription(
+                    case.get("client_name", ""),
+                    "omp",
+                    case.get("model_requested", ""),
+                )
+                for case in latest
+            )
+        ):
+            cost_per_passed_case = "subscription"
+        else:
+            cost_per_passed_case = "unreported"
+    else:
+        costs = [case["cost"] for case in passed if isinstance(case.get("cost"), (int, float))]
+        cost_per_passed_case = (
+            f"${sum(costs) / len(costs):.2f}" if passed and len(costs) == len(passed) else "unreported"
+        )
     return {
         "earned": earned,
         "pass_rate": f"{len(passed)}/{len(latest)}",
-        "cost_per_passed_case": f"${sum(costs) / len(costs):.2f}" if costs else "unreported",
         "run_id": latest_run,
         "date": latest[0]["date"],
+        "cost_per_passed_case": cost_per_passed_case,
     }
 
 
