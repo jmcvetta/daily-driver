@@ -1,0 +1,105 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [
+        "Bash: git pull, git fetch: {\"command\": \"cat << 'EOF' > patch.txt\\n--- Makefile\\n+++ Makefile\\n@@ -499,20 +499,27 @@\\n \\tgit checkout master\\n \\tgit pull\\n \\tgit fetch --prune\\n-\\t@git bra"
+      ],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_git_sync.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-475_moed56eu\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 5 items\n\n../tests/test_git_sync.py .....                                          [100%]\n\n============================= slowest 30 durations =============================\n0.14s call     tests/test_git_sync.py::test_git_sync_removes_merged_worktree_without_upstream\n0.13s call     tests/test_git_sync.py::test_git_sync_continues_after_dirty_worktree_to_direct_branch\n0.13s call     tests/test_git_sync.py::test_git_sync_keeps_merged_worktree_with_remote_branch\n0.13s call     tests/test_git_sync.py::test_git_sync_keeps_dirty_stale_worktree_and_branch\n0.12s call     tests/test_git_sync.py::test_git_sync_removes_clean_stale_worktree_and_branch\n\n(10 durations < 0.005s hidden.  Use -vv to show these durations.)\n============================== 5 passed in 0.69s ===============================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-475_moed56eu/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-475",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 214.71253204345703,
+      "model_requested": "google-antigravity/gemini-3.1-pro:high",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "classes-gemini-3-1-pro",
+      "source": "jmcvetta/career#475",
+      "task_id": "model-classes-career-475",
+      "tokens": 766204,
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T19:02:03.080408",
+  "experiment_id": "classes-gemini-3-1-pro",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "73b2e7b7019a0fbf29bea2d40c53025480ac1370",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-09T12:57:44.818964+00:00",
+  "run_id": "2026-10-08_18-58-28",
+  "schema_version": 3,
+  "started_at": "2026-10-08T18:58:28.362492",
+  "variants": [
+    {
+      "model_requested": "google-antigravity/gemini-3.1-pro:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "model-classes-career-475": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-475"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}

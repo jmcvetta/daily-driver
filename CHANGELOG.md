@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.51.0](https://github.com/jmcvetta/daily-driver/compare/v0.50.0...v0.51.0) (2026-10-09)
+
+
+### Features
+
+* add approval-gated frontier research class ([#584](https://github.com/jmcvetta/daily-driver/issues/584)) ([063f5fe](https://github.com/jmcvetta/daily-driver/commit/063f5fe78676db4350397a251e6509eabb649583))
+* define body contracts for every issue kind ([#587](https://github.com/jmcvetta/daily-driver/issues/587)) ([3bb7f6a](https://github.com/jmcvetta/daily-driver/commit/3bb7f6a4fcfc555d7d06af69f0066502641bceaa))
+* gate Omp embark prep on epic title ([#588](https://github.com/jmcvetta/daily-driver/issues/588)) ([d724a9c](https://github.com/jmcvetta/daily-driver/commit/d724a9c955f47e08f68c1622ddcbe8399c751d98))
+
+
+### Bug Fixes
+
+* **omp:** refresh task-class role defaults ([f674650](https://github.com/jmcvetta/daily-driver/commit/f67465058d36df9aca6110d07657d7ef88b0d251))
+* **task-worktree:** route primary-held designations through sibling branches ([bb73965](https://github.com/jmcvetta/daily-driver/commit/bb73965ecbb78f2e9b3f80282d994e598a76124c))
+
 ## [Unreleased]
 
 ### Bug Fixes
