@@ -43,7 +43,7 @@ harness in use before writing a label.
 | Label | Description | Agent work eligible by kind |
 | ----- | ----------- | --------------------------- |
 | `epic` | Coordinates a sequence of other issues | Only through `embark` |
-| `task` | Discrete work an agent can undertake | Yes; body must pass task readiness |
+| `task` | Discrete work, specified and ready for an agent | Yes; body must pass task readiness |
 | `bug` | Bug report | Yes; body must pass bug diagnosis readiness |
 | `proposal` | Proposed feature | No — discussion, not implementation |
 | `research` | A question to settle | Yes; body must pass research readiness |
