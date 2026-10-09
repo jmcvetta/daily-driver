@@ -552,7 +552,7 @@ def check_answer_key_contact() -> None:
 
 
 def check_contaminated_replicate(temp: Path) -> None:
-    """A replicate that reached the answer is recorded, and scored 0."""
+    """Answer-key access must not earn a class through a raw-success case row."""
     run_dir = temp / "runs" / "2026-09-28_10-00-00"
     run_dir.mkdir(parents=True)
     experiment = temp / "classes.yaml"
@@ -570,6 +570,7 @@ def check_contaminated_replicate(temp: Path) -> None:
                         "variant_id": "default",
                         "replicate_index": index,
                         "weighted_score": 1.0,
+                        "status": "SUCCESS",
                         "agent_config": {"type": "claude-code", "model": "m"},
                         "duration": 30.0,
                         "agent_cost_usd": 0.1,
@@ -606,6 +607,10 @@ def check_contaminated_replicate(temp: Path) -> None:
     require(
         record["variants"][0]["per_replicate_scores"][task_id] == [1.0, 0.0],
         "per_replicate_scores still count the replicate that reached the answer",
+    )
+    require(
+        [case["outcome"] for case in record["cases"]] == ["succeeded", "failed"],
+        "case outcomes still qualify a replicate that reached the answer for a model class",
     )
     reached["measured_score"] = 1.0
     record_path.write_text(json.dumps(record))
@@ -650,6 +655,35 @@ def check_eval_result_comment() -> None:
     require(recorder.find_result_comment(older, "run-1")["id"] == 3, "the same run's marker means edit")
 
 
+def check_failed_omp_start_without_agent_config(
+    run_dir: Path,
+    experiment: Path,
+    output_dir: Path,
+    base_env: dict[str, str],
+    prices: Path,
+    run: dict[str, Any],
+) -> None:
+    """An Omp startup error with no agent_config must remain a recordable error.
+
+    Without this, recording aborts at client identification and loses every
+    row from a run that failed before the adapter created its agent.
+    """
+    failed_run = json.loads(json.dumps(run))
+    for row in failed_run["task_results"]:
+        row["agent_config"] = None
+        row["status"] = "ERROR"
+    (run_dir / "run.json").write_text(json.dumps(failed_run))
+    failed = json.loads(run_recorder(run_dir, experiment, output_dir, base_env, prices).read_text())
+    require(failed["client"]["name"] == "omp", "missing agent_config did not fall back to the experiment client")
+    require(all(case["outcome"] == "error" for case in failed["cases"]), "startup failures were not retained as errors")
+    requested = {"bare": "requested-model", "with-plugin": "treated-model"}
+    require(
+        all(case["model_requested"] == requested[case["variant_id"]] for case in failed["cases"]),
+        "startup errors lost the experiment's requested models",
+    )
+    (run_dir / "run.json").write_text(json.dumps(run))
+
+
 def main() -> int:
     """Run laptop, cloud, invalid-record, committed-record and answer-key cases."""
     validate_committed_records()
@@ -663,7 +697,7 @@ def main() -> int:
         run_dir.mkdir(parents=True)
         experiment = temp / "experiment.yaml"
         experiment.write_text(
-            """experiment_id: synthetic\ndefaults:\n  agent:\n    model: requested-model\nvariants:\n  - variant_id: bare\n  - variant_id: with-plugin\n    agent:\n      model: treated-model\n"""
+            """experiment_id: synthetic\ndefaults:\n  agent:\n    type: omp\n    model: requested-model\nvariants:\n  - variant_id: bare\n  - variant_id: with-plugin\n    agent:\n      model: treated-model\n"""
         )
         (run_dir / "run.json").write_text(
             json.dumps(
@@ -803,6 +837,14 @@ def main() -> int:
             "Omp case rows recorded a served model instead of 'unreported'",
         )
         require(omp["client"]["version"] == "unknown", "Omp recorder version was recorded as historical evidence")
+        check_failed_omp_start_without_agent_config(
+            run_dir,
+            experiment,
+            temp / "omp-start-failed",
+            base_env,
+            prices,
+            run,
+        )
         wrong_experiment = temp / "wrong-experiment.yaml"
         wrong_experiment.write_text(
             experiment.read_text().replace("experiment_id: synthetic", "experiment_id: wrong")
