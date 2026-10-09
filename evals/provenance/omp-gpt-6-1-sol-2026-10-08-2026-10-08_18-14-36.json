@@ -1,0 +1,1075 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on a bug body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The bug body carries no invented task sections or model class",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The bug body carries no invented task sections or model class",
+            "duration_seconds": 8.27,
+            "findings": [
+              "Includes POST /login reproduction with user+tag@example.test.",
+              "Records failure on every reported attempt and blocked sign-in impact.",
+              "Explicitly states affected release/version and root cause are unknown.",
+              "Preserves trailing Model, Harness, and session provenance without task machinery."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2be34171c338dcbe558925915c930c3994030fa756981bf91dfb92650b2fe875",
+            "rationale": "ANCHOR: result The reply provides a useful bug body covering the login failure, reproduction request, expected success versus HTTP 500, frequency, and sign-in impact, while explicitly marking release/version and root cause as unknown. It contains no task metadata and preserves trailing provenance below the separator.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1394,
+              "output": 126
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-05-bug-body-gets-no-task-contract",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires for research issue authoring",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Research handoff has purpose, bounded criteria, evidence plan, deliverable, and stopping rule",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Research handoff has purpose, bounded criteria, evidence plan, deliverable, and stopping rule",
+            "duration_seconds": 11.37,
+            "findings": [
+              "Compares keeping the current design, using a shared store, and making no change, explicitly distinguishing acceptance from deferral.",
+              "Limits investigation to available repository evidence and local metrics; prohibits production access and external requests.",
+              "Requires an evidenced answer, recommendation, and limitations on the issue, with a stopping rule bounded to the three alternatives and available evidence.",
+              "Treats potential aggregate-limit violations as a hypothesis and unsupported estimates as unknown.",
+              "Includes trailing Model, Harness, and session provenance rather than task Model class metadata."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da4fc31076842f81846ec7d13dbe6ecf30e1c5ef74e93ba7fdfec2d3fce96d6d",
+            "rationale": "ANCHOR: result The final issue body states the research question and practical purpose, distinguishes supplied facts from missing evidence, and defines a bounded comparison without preselecting a conclusion. It supplies evaluation criteria, an evidence plan, the issue as the reporting destination, explicit access restrictions, and normal trailing provenance without inventing measurements or implementation decisions.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2343,
+              "output": 184
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-07-research-contract-draft",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on proposal authoring",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Proposal preserves open decisions and hands accepted unknowns to research",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Proposal preserves open decisions and hands accepted unknowns to research",
+            "duration_seconds": 11.11,
+            "findings": [
+              "Identifies field staff, unreliable connectivity, and the value of continuing desktop draft work offline.",
+              "States three user requests and the absence of design research without overstating the evidence.",
+              "Keeps conflict behavior, sync guarantees, and attachment scope undecided.",
+              "Selects no architecture, task Model class, implementation map, or fabricated acceptance test.",
+              "Explicitly hands off to bounded research with an evidence-backed report, not an executable implementation task.",
+              "Marks the proposal as a draft and explicitly states that acceptance is not delivery."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "d71a89517095065b2f332a745227d005a2a3122e23be55e4ea1cce884b14603f",
+            "rationale": "ANCHOR: result The final reply supplies a discussion-ready proposal covering the problem, affected users, value, evidence, constraints, and all three undecided choices. Its explicit research-issue handoff preserves those open decisions and clearly distinguishes proposal acceptance from implementation readiness or feature delivery.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1569,
+              "output": 217
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-10-proposal-remains-open-until-handoff",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires for task issue authoring",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Missing policy decisions are not delegated to a stronger class",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Missing policy decisions are not delegated to a stronger class",
+            "duration_seconds": 8.74,
+            "findings": [
+              "Preserves the stated goal of retention beyond the current 30-day default without inventing a replacement duration.",
+              "Requests authorized decisions on retention duration, early deletion, and policy applicability.",
+              "Explicitly blocks implementation until policy approval and repository grounding are available.",
+              "The proposed `reasoning` section does not make the task ready."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "e21c5d00a11b671d293cef533dc6ed274094cfb06b9d3c29d3d4a5636ea36b26",
+            "rationale": "ANCHOR: result The final reply explicitly leaves retention duration and early deletion unresolved pending authorized policy decisions and refuses implementation readiness. It also makes clear that selecting `reasoning` or a higher model class cannot authorize policy decisions or resolve the readiness gate.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1540,
+              "output": 130
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-13-task-open-decision-blocks-readiness",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on body revision using the effective kind",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Effective research contract replaces proposal contract without losing valid content or provenance",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Effective research contract replaces proposal contract without losing valid content or provenance",
+            "duration_seconds": 14.59,
+            "findings": [
+              "Uses research as the effective kind; story and customer-visible do not introduce a body template.",
+              "Retains the two support requests, monthly reconciliation purpose, and unchecked retention-policy constraint.",
+              "Names the report query and retention policy as evidence sources for comparing inclusion and exclusion.",
+              "Defines scope, non-goals, a deliverable, and an evidence-insufficiency stopping rule.",
+              "Removes the proposal label without retaining proposal-only scaffolding.",
+              "Does not fabricate provenance or claim to have posted changes; instructs that existing trailing history remain unchanged."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "16ebecba45d1d26c208538c0f64fe773bc5a22c02be94c033472cfbe294667ee",
+            "rationale": "ANCHOR: result \u2014 The final reply uses a bounded research contract, preserves the question, both support requests, reconciliation purpose, and retention-policy uncertainty, and requires an evidence-backed comparison and recommendation. It avoids invented findings, production access, and implementation prescriptions, while explicitly requiring preservation of the unavailable trailing provenance.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1248,
+              "output": 291
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-12-effective-kind-preserves-content",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on research body revision",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Failed access is recorded as an obstacle, not completed research",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Failed access is recorded as an obstacle, not completed research",
+            "duration_seconds": 8.61,
+            "findings": [
+              "Dashboard access was denied.",
+              "No evidence sources were examined; the documentation review and sandbox request were not attempted.",
+              "The issue remains open and the proposed update is explicitly marked as not posted.",
+              "No production access is requested, no findings are invented, and the failed attempt is not treated as sufficient."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "fb95650d6942fac0a86ff1fbca73dcc3642045aa235c03074a7df643996226b0",
+            "rationale": "ANCHOR: result The final reply clearly records denied dashboard access, no examined evidence sources, and no completed stopping-rule experiments. It explicitly states that research remains incomplete, the question is unanswered, and this is not an allowed bounded inconclusive result.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1063,
+              "output": 125
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-14-failed-access-is-not-research-completion",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on research findings and readiness",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Bounded inconclusive research is reported honestly and leaves dependent task unready",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Bounded inconclusive research is reported honestly and leaves dependent task unready",
+            "duration_seconds": 9.6,
+            "findings": [
+              "Both adapters' documentation and checked-in tests are identified as examined sources.",
+              "The absence of multi-region failover coverage is explicitly distinguished from proof of support or lack of support.",
+              "No adapter preference is invented.",
+              "Closing or completing #73 is explicitly stated not to resolve #74's prerequisite."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "efb7a40ba8385e18cc7931928a393955b40c1c26e0e60a31d8cf08f0590d275d",
+            "rationale": "ANCHOR: result The final reply records the completed bounded investigation of both documented storage adapters and their checked-in tests, precisely identifies the missing failover evidence, and names a failover contract or representative fixture as the resolution path. It correctly keeps task #74 unready because its implementation contract remains unspecified, despite #73's completed inconclusive research outcome.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1316,
+              "output": 145
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-09-inconclusive-research-does-not-unblock-task",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on human issue authoring",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Human handoff identifies action and safe evidence without secret exposure",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Human handoff identifies action and safe evidence without secret exposure",
+            "duration_seconds": 10.23,
+            "findings": [
+              "Explicit release-owner approval in the change request is required before rotation proceeds.",
+              "Release window and change-request link are identified as missing inputs.",
+              "The responsible role is named, but no individual is invented.",
+              "Completion evidence is an approved change-request link and rotation confirmation, recorded on this issue.",
+              "No credential, secret, or sensitive proof is requested; the reply neither impersonates an approver nor treats the handoff as completion."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "fd2bd279216e559dae1522c4004f921db73c1fab583ef92e6e094103570363d0",
+            "rationale": "ANCHOR: result The final reply identifies the reserved production credential rotation approval, requires explicit release-owner authorization before rotation, and provides a safe handoff without claiming completion. It names the release-window and change-request inputs as unavailable, states that the responsible person is unknown, and specifies nonsensitive completion evidence to record on the issue.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1061,
+              "output": 218
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-11-human-handoff-safe-evidence",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on a research body revision",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Evidence-backed no completes the bounded research issue without an empty PR",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Evidence-backed no completes the bounded research issue without an empty PR",
+            "duration_seconds": 15.22,
+            "findings": [
+              "States that documented CSV export does not support streaming.",
+              "Cites the in-memory-array API contract, generated client, and absence of a repository server-side streaming endpoint.",
+              "Places streaming support in a separate future contract and implementation change.",
+              "Declares the research deliverable complete without treating the finding as an approved product decision.",
+              "Does not explicitly distinguish inference from evidence or include trailing provenance."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7a541ae37f01a24aecb70242fd3909767981ba404717f04a8d852ee13742dcab",
+            "rationale": "ANCHOR: result The final reply gives the supported negative answer, names the contract and repository implementation, and correctly completes the bounded research without requiring an implementation PR. However, it does not clearly separate observed evidence from inferred conclusions, and it omits trailing provenance.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1064,
+              "output": 332
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 0.666667,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-08-research-supported-no-is-complete",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` and `issue-body` fire for the automatic bug report",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Automatic report stays concise, evidence-based, and provenance-bearing",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Automatic report stays concise, evidence-based, and provenance-bearing",
+            "duration_seconds": 12.66,
+            "findings": [
+              "Proposes an `[auto-filed]` title and identifies Daily Driver\u2019s `session-title` skill and supplied Omp helper.",
+              "Preserves two reported reproductions on Omp 18.8.4 and explicitly states no reproduction was rerun.",
+              "Includes expected and observed behavior, diagnostic uncertainty, and trailing provenance.",
+              "Does not claim a live issue write or include prohibited task machinery.",
+              "Missing explicit `bug` kind."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dfdc32581b4e88ad190ff1233d49607c30383f46844cb81e16017f24fb19db0d",
+            "rationale": "ANCHOR: result The final reply is a concise report proposal with the required title prefix, component, behavior, ownership evidence, Omp version, reproduction count, and trailing provenance, but it does not explicitly specify the existing `bug` kind.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1190,
+              "output": 244
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 0.666667,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-15-automatic-bug-report-stays-brief",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`epic` and child body contract skills fire for mixed-kind decomposition",
+          "details": "observed='yes', expected='yes' (skill_name='epic')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Mixed child bodies use each kind's contract and preserve epic completion gate",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Mixed child bodies use each kind's contract and preserve epic completion gate",
+            "duration_seconds": 12.62,
+            "findings": [
+              "Epic has the three required sections, a concise outcome Summary, and no copied child progress checklists.",
+              "The epic quatrain is deferred to an unavailable existing text rather than retained in the delivered draft.",
+              "A is a task with an implementation class and settled acceptance criteria.",
+              "B provides research purpose, bounded sources, evaluation, and a cited answer deliverable without assuming a compliance answer or requiring Model class metadata.",
+              "C reserves approval for a human and requires safe, attributable approval evidence without a class.",
+              "Epic completion requires coordinated outcome evidence and explicitly rejects child closure and inconclusive research as sufficient.",
+              "The second sequencing wave is a scheduling choice rather than a consequence of the stated dependency graph."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "57e47bedf4bb386a0b9d53b90340b25ee6656c3030bd7c4d64b5e872a6c71c78",
+            "rationale": "ANCHOR: result \u2014 The final reply correctly distinguishes implementation, research, and human approval contracts and requires evidence of the coordinated outcome rather than child closure alone. However, it omits the actual epic ballad quatrain and places C in a second wave despite explicitly proposing no dependency edges, so sequencing is not fully graph-derived.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 3229,
+              "output": 265
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 0.666667,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "epic-07-mixed-child-kind-contracts",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 38.0408091545105,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-05-bug-body-gets-no-task-contract",
+      "tokens": 110928,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 63.56907868385315,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-07-research-contract-draft",
+      "tokens": 118530,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 34.74722957611084,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-10-proposal-remains-open-until-handoff",
+      "tokens": 35660,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 46.55140233039856,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-13-task-open-decision-blocks-readiness",
+      "tokens": 36697,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 37.096890449523926,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-12-effective-kind-preserves-content",
+      "tokens": 74834,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 24.37482190132141,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-14-failed-access-is-not-research-completion",
+      "tokens": 29845,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 34.23835301399231,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-09-inconclusive-research-does-not-unblock-task",
+      "tokens": 79482,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 26.41006588935852,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-11-human-handoff-safe-evidence",
+      "tokens": 51809,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 27.266603708267212,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-08-research-supported-no-is-complete",
+      "tokens": 45039,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 42.138654947280884,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-15-automatic-bug-report-stays-brief",
+      "tokens": 62386,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 97.33549571037292,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "epic-07-mixed-child-kind-contracts",
+      "tokens": 130195,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T18:22:28.880287",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "medium",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 17017,
+      "output": 2277
+    }
+  },
+  "plugin_revision": {
+    "commit": "73b2e7b7019a0fbf29bea2d40c53025480ac1370",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-08T11:24:33.695779+00:00",
+  "run_id": "2026-10-08_18-14-36",
+  "schema_version": 3,
+  "started_at": "2026-10-08T18:14:37.084604",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "epic-07-mixed-child-kind-contracts": [
+          0.666667
+        ],
+        "issue-05-bug-body-gets-no-task-contract": [
+          1.0
+        ],
+        "issue-07-research-contract-draft": [
+          1.0
+        ],
+        "issue-08-research-supported-no-is-complete": [
+          0.666667
+        ],
+        "issue-09-inconclusive-research-does-not-unblock-task": [
+          1.0
+        ],
+        "issue-10-proposal-remains-open-until-handoff": [
+          1.0
+        ],
+        "issue-11-human-handoff-safe-evidence": [
+          1.0
+        ],
+        "issue-12-effective-kind-preserves-content": [
+          1.0
+        ],
+        "issue-13-task-open-decision-blocks-readiness": [
+          1.0
+        ],
+        "issue-14-failed-access-is-not-research-completion": [
+          1.0
+        ],
+        "issue-15-automatic-bug-report-stays-brief": [
+          0.666667
+        ]
+      },
+      "task_ids": [
+        "issue-05-bug-body-gets-no-task-contract",
+        "issue-07-research-contract-draft",
+        "issue-10-proposal-remains-open-until-handoff",
+        "issue-13-task-open-decision-blocks-readiness",
+        "issue-12-effective-kind-preserves-content",
+        "issue-14-failed-access-is-not-research-completion",
+        "issue-09-inconclusive-research-does-not-unblock-task",
+        "issue-11-human-handoff-safe-evidence",
+        "issue-08-research-supported-no-is-complete",
+        "issue-15-automatic-bug-report-stays-brief",
+        "epic-07-mixed-child-kind-contracts"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

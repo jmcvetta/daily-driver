@@ -58,7 +58,8 @@ Read that skill's routes before `Write the graph`.
 The required class
 ==================
 
-`issue-body` owns the `Model class` section and shared routing guidance in
-[`model-classes.md`](../../issue-body/references/model-classes.md). Task bodies
-are written under that contract at `Open the issues`; this skill neither
-duplicates the taxonomy nor records a concrete model.
+`issue-body` owns the kind-specific body contracts and shared routing guidance
+in [`model-classes.md`](../../issue-body/references/model-classes.md). Child
+bodies are written under the selected-kind contract at `Open the issues`; only
+task bodies carry a model class. This skill neither duplicates the taxonomy nor
+records a concrete model.

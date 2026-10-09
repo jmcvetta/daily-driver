@@ -175,12 +175,12 @@ or update a README. Each skill's `SKILL.md` describes its activation rules.
 | ----- | ------- |
 | `conventional-commits-type` | Selects the Conventional Commits type from the change's effect on users. |
 | `deps` | Upgrades dependencies through package managers, checks CI and reports major upgrades for review. |
-| `embark` | Coordinates task sessions for an epic, monitors pull requests and merges completed tasks. |
-| `epic` | Plans work that spans multiple pull requests as task issues under an epic. |
+| `embark` | Dispatches ready epic children, watches their kind-specific outcomes and closes the epic on its coordinated result. |
+| `epic` | Plans work that spans multiple pull requests as child issues of the correct kinds under an epic. |
 | `issue` | Creates or updates GitHub issues, including their bodies, labels and relationships. |
-| `issue-body` | Writes issue bodies and implementation-ready task handoffs. |
+| `issue-body` | Applies the information, readiness, and completion contract for each issue kind. |
 | `issue-deps` | Records and reads blocking dependencies, sub-issues and pull-request closing references. |
-| `issue-labels` | Assigns issue kinds and readiness labels. |
+| `issue-labels` | Assigns issue kinds and distinguishes kind eligibility from body readiness. |
 | `judgement-call` | Resolves standard engineering choices and asks the user when intent or a material trade-off requires their decision. |
 | `pr` | Creates a draft pull request or updates the existing pull request for the current branch. |
 | `pr-body` | Writes pull request summaries, blockers, issue references and reviewer details. |

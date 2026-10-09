@@ -42,6 +42,10 @@ initial_prompt: >-
 
   ---
 
+  Model: fixture-model
+  Harness: Omp 18.8.4
+  session: fixture-session
+
   Update it: the fixed delay is wrong — the service owner has confirmed the
   delay must be exponential backoff. Do not post anything; show me the exact
   updated body.
@@ -93,10 +97,14 @@ success_criteria:
       The rule: the REPLY proposes an updated task body. The design section
       must say exponential backoff. The outcome, scope and non-goal, verification,
       and valid `Model class` section must survive unchanged in substance.
-      Valid requirements dropped, reworded into different requirements, or a
-      trailing concrete `Model:` line are preservation failures.
+      Valid requirements dropped, reworded into different requirements, or
+      adding a concrete `Model:` or `Effort:` field inside the task sections
+      are preservation failures. The trailing provenance block below `---` is
+      distinct: preserve it, including its concrete `Model:` line, harness,
+      and session fields.
 
-      Score 1.0 if only the design changes and all valid requirements survive.
-      Score 0.5 if the design changes correctly but a valid requirement is
-      reworded beyond substance. Score 0.0 if a valid requirement is gone, the
-      class section is gone, a concrete `Model:` remains, or there is no body.
+      Score 1.0 if only the design changes, all valid requirements survive,
+      no task-level concrete metadata is introduced, and provenance stays
+      intact. Score 0.5 if a valid requirement is reworded beyond substance.
+      Score 0.0 if a requirement is gone, the class section is gone, task-level
+      metadata is added, provenance is lost, or there is no body.

@@ -4,22 +4,25 @@ description: >-
   This skill should be used whenever a GitHub issue is being labelled, or a
   label on one is being read as a statement about the work — including when
   the user says "/issue-labels", "label this issue", "what label does this
-  get?", "is this an epic or a task?", "that label is wrong", "which issues
-  are ready for an agent?", and including any call the agent makes on its own
-  initiative that sets a label on an issue. It fires too whenever `undertake`
-  opens an issue or reads one it is about to start on. Supplies the six issue
-  kinds and the supplemental story marker, including their write rules.
-  The kind decides readiness. Not for pull request labels or graph writes,
-  which are `issue-deps`'.
+  get?", "is this an epic or a task?", "that label is wrong", or "which issue
+  kinds are eligible for agent work?", and whenever the agent sets a label on
+  an issue. It also fires when `undertake` opens an issue or reads one it is
+  about to start on. Supplies the six issue kinds and the supplemental story
+  marker, including their write rules.
+  The kind determines work eligibility; body readiness is `issue-body`'s.
+  Not for pull request labels or graph writes, which are `issue-deps`'.
 ---
 
 # Issue labels
 
-A label is read by a person scanning a list and by an agent deciding whether
-to start. Six issue-kind labels answer one question:
+A label is read by a person scanning a list and by an agent deciding what kind
+of work the issue describes. The six issue-kind labels answer:
 
-> **What kind of issue is this, and is it ready for an agent to work
-> unattended?**
+> **What kind of issue is this, and is work by an agent eligible by kind?**
+
+Kind eligibility does not prove the issue body is sufficient. `issue-body`
+separately applies the selected kind's readiness test; task, bug, and research
+work may be eligible but still underspecified.
 
 Every issue carries **exactly one** of them. A second answer to one question is
 a disagreement, and nothing resolves it.
@@ -37,14 +40,14 @@ harness in use before writing a label.
 
 <!-- issue-kind-labels-table -->
 
-| Label | Description | Ready for an agent |
-| ----- | ----------- | ------------------ |
-| `epic` | Coordinates a sequence of other issues | Not `undertake`'s — `embark` takes one |
-| `task` | Discrete work, specified and ready for an agent | Yes |
-| `bug` | Bug report | Yes |
-| `proposal` | Proposed feature | No — decompose it first |
-| `research` | A question to settle | Yes |
-| `human` | Work only a person can do | No — the work is a person's |
+| Label | Description | Agent work eligible by kind |
+| ----- | ----------- | --------------------------- |
+| `epic` | Coordinates a sequence of other issues | Only through `embark` |
+| `task` | Discrete work, specified and ready for an agent | Yes; body must pass task readiness |
+| `bug` | Bug report | Yes; body must pass bug diagnosis readiness |
+| `proposal` | Proposed feature | No — discussion, not implementation |
+| `research` | A question to settle | Yes; body must pass research readiness |
+| `human` | Work only a person can do | No — the action belongs to a person |
 
 <!-- supplemental-labels-table -->
 
@@ -63,10 +66,10 @@ Picking one
 Ask the question in this order. The first answer that holds is the label.
 
 1. **Does the issue describe work, or coordinate it?** An issue whose body is
-   a list of other issues is an `epic`. It carries no code of its own, and the
-   epic closes when its children do. `epic` is the skill that decides there is
-   one and writes the children; this label is what the finished epic then
-   carries.
+   a list of other issues is an `epic`. It carries no code of its own, and its
+   stated coordinated outcome is assessed against the dispositions of its
+   children. `epic` is the skill that decides there is one and writes the
+   children; this label is what the finished epic then carries.
 2. **Can an agent do the work at all?** Where it cannot — credentials no
    agent holds, a decision only the user can make, an action outside the
    repository — it is `human`. The question comes before `bug`, `research` and
@@ -99,30 +102,29 @@ is not relabelled in place unless the whole of it fits one task.
 What the label decides
 ======================
 
-**Readiness, and nothing else.** `undertake` reads it at `Read the issue and
-its edges`, and one label out of the six is a stop in three cases:
+**Eligibility by kind, and nothing else.** `undertake` reads it at `Read the
+issue and its edges`; `issue-body` separately checks whether the body is
+sufficient for unattended work. One kind out of the six is a stop in three
+cases:
 
-- An `epic` is a stop **for `undertake`**, which needs code to put on a
-  branch and an epic has none. It is not a stop for every reader of the
-  label: `embark` takes an epic directly and dispatches one ship per child. So
-  the answer is `embark`, or the name of the child to work instead — not a
+- An `epic` is a stop **for `undertake`**, which needs an individual work item
+  and an epic coordinates children. It is not a stop for every reader of the
+  label: `embark` takes an epic directly and dispatches eligible child issues.
+  So the answer is `embark`, or the name of the child to work instead — not a
   refusal.
-- A `proposal` is a stop. It is the vague-request case `Open the issue`
-  already refuses to write an issue for, arriving with an issue already
-  written. Deciding its shape is the user's and decomposing it is `epic`'s,
-  so it goes to the user.
+- A `proposal` is a stop for implementation. Its body can be ready for
+  discussion, but its shape is still open; deciding it is the user's and
+  decomposing accepted work is `epic`'s.
 - A `human` is a stop, and the only one that is a stop for every reader of
-  the label rather than for one skill. There is no agent route to the work,
-  so `undertake` does not cut a branch for it and `embark` does not dispatch
-  a ship for it: it waits for the person, and saying what the person has to
-  do is the whole of the answer.
+  the label rather than for one skill. There is no agent route to the reserved
+  action, so `undertake` does not cut a branch and `embark` does not dispatch
+  an agent for it: it waits for the person.
 
 Two labels out of the six is a fourth stop, and it is below with its remedy.
-`task` and `bug` run through, and both end in a pull request. **`research`
-runs through and need not**: where the answer is a note it lands as a pull
-request like any other, and where the answer is a set of issues or a no,
-there is nothing to put on a branch. The issue closes on the answer either
-way, and `undertake` is not the route for the two that carry no code.
+`task` and a corrected `bug` can produce pull requests when a verified change
+is the deliverable. **`research` runs through and need not**: an answer may be
+follow-on issues, or a supported no, with no code to put on a branch. The issue
+closes on the agreed answer; it does not require an empty pull request.
 
 The invariant at the top of this file breaks two ways, and they are answered
 differently.
@@ -210,10 +212,11 @@ It does not claim the namespace, and it deletes nothing.
 What the body carries
 =====================
 
-The label decides readiness; it does not decide what the body says. `issue-body`
-defines the task-only grounded handoff, readiness test, and `Model class`
-section. Read that skill whenever a body is being written or revised, alongside
-the label picked here.
+`issue-body` defines the task handoff and fixed format, plus distinct
+information, readiness, and completion contracts for all six managed kinds.
+It does not change the taxonomy or make kind eligibility a substitute for
+checking the body. Read it whenever an issue body is written or revised,
+alongside the kind picked here.
 
 
 Where the standard is declared

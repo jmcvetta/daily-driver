@@ -32,58 +32,64 @@ The wave
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Read the epic` | Read its identity before the graph | `read issue://<number>`; preserve an explicitly supplied repository-qualified issue reference |
-| `Take the wave` | Read a task issue's body and claim | `issue://<number>`, comments included |
-| `Open the sessions` | Dispatch one implementor per task, concurrently | `task`, one item per task issue in a single batch |
+| `Take the wave` | Read each eligible child's body and claim | `issue://<number>`, comments included |
+| `Open the sessions` | Dispatch one implementor per eligible child, concurrently | `task`, one item per child issue in a single batch |
 | `Open the sessions` | Name the implementor | the item's `name`, in `session-title`'s form |
 | `Post the muster roll` | Comment on the epic | `gh issue comment <number> --body-file <path>` |
 | `Post the muster roll` | Mark the wave in the epic's body | `gh issue edit <number> --body-file <path>` |
 
-The dispatch is one batch, never one call per task: the items run
+The dispatch is one batch, never one call per child: the items run
 concurrently, and an item that fails to launch is reported in its own result
 while the rest of the batch sails — the one-ship rule `SKILL.md` states,
 delivered by the surface itself. The batch carries a shared `context` beside
 its items, because the surface requires one, and it holds only what every
 implementor needs: the repository, the base branch, and the fallback protocol
-of `Open the sessions`. Task scope stays in the issue; a summary of it in the
+of `Open the sessions`. Issue scope stays in the issue; a summary of it in the
 context is the second copy `SKILL.md` forbids.
 
 Duplicate-dispatch protection is unchanged: the epic's muster rolls and each
-task issue's claim comments are read before the batch is built, exactly as
+child issue's claim comments are read before the batch is built, exactly as
 `Take the wave` words it.
 
-Each item's prompt is the task issue number and the instruction to undertake
+Each item's prompt is the child issue number and the instruction to undertake
 it, and nothing else. The prompt boundary of `Open the sessions` holds.
 
 
 The route an implementor runs
 =============================
 
-The `task` surface selects an `agent`, not a model. Select the agent named for
-the task's required class (`mechanical`, `implementation`, `reasoning`, or
-`frontier`). Each batch item sets only `agent`; it carries no per-item model
+The `task` surface selects an `agent`, not a model. For a `task` issue,
+select the agent named for its required class (`mechanical`, `implementation`,
+`reasoning`, or `frontier`). For `bug` and `research`, first apply that kind's
+`issue-body` readiness test, then assess the actual work against the same
+capability rubric. For `research` assigned `frontier`, require `issue-body`'s
+explicit approval and exact work envelope before selecting the `frontier`
+agent. Routine research carries no task class metadata. Select an eligible
+agent from the assessment without adding task class metadata to other issue
+kinds. Each batch item sets only `agent`; it carries no per-item model
 argument. Resolve the effective route under [`issue-body`'s required-class
 policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
 frontmatter, including a tagged-role assignment such as `@implementation` or
 `@frontier`. Resolve configured prewalk and retry fallbacks under the same
-eligibility requirements. Do not use `modelRoles.task` as a universal
-implementor route.
 
-Apply [`model-classes.md`'s selection policy](../../issue-body/references/model-classes.md#selection).
-A current measured class outranks handwritten guidance, and a measured class
-below the task's requirement excludes that route. A missing, `unmeasured`,
-`unreported`, or stale row is unknown, not an automatic rejection; use the
+For a task, a current measured class outranks handwritten guidance, and a
+measured class below its requirement excludes that route. For bug and research
+work, use measured capability evidence when available; an unmeasured,
+unreported, or stale row is unknown, not proof of suitability. Use the
 operator's configured eligible preference without claiming measured
-capability. That preference does not waive class, tools, context, modality,
-availability, or credential requirements. Do not invent a freshness cutoff.
+capability. That preference never waives class capability, tools, context,
+modality, availability, or credential requirements. Do not invent a freshness
+cutoff or use `modelRoles.task` as a universal implementor route.
 
 Reassess a visible parent-model authentication fallback or any other runtime
 model mismatch before work continues. Never assume parent inheritance meets
 the required class. Missing assignments, unavailable credentials, or
-unsuitable effective routes stop only the affected task with a configuration
-gap; launch the other eligible tasks in the single concurrent batch. Never
-lower a class, alter shared roles, or restore a role the operator cleared to
+unsuitable effective routes stop only the affected issue with a configuration
+gap; launch other eligible issues in the single concurrent batch. Never lower
+a task's class, alter shared roles, or restore a role the operator cleared to
 make a wave launch.
+
 Treat an effective astra/fable route as frontier, regardless of whether an
 override, retry fallback, or visible parent inheritance selects it through
 `reasoning` or another lower-class role. Classify the resolved selector rather
@@ -100,12 +106,13 @@ implementation or supervise it on frontier. Frontier implementation needs
 separate, explicit user authorization for that exception and bounded scope;
 frontier research approval is not enough.
 
-Keep the required class, selected agent/effective route, and actual execution
-model distinct in the muster roll. Record `unreported` when execution identity
-is unavailable; a selector is not observed identity. If Omp reports a
-different model or fallback, record that observed model and reassess before
-work continues. `sonic` is a bundled agent, not a model role. Reviewers and
-scouts are not implementation routes.
+For a task, record its required class; for another kind, record `not
+applicable`. Keep the selected agent/effective route and actual execution model
+distinct in the muster roll. Record `unreported` when execution identity is
+unavailable; a selector is not observed identity. If Omp reports a different
+model or fallback, record that observed model and reassess before work
+continues. `sonic` is a bundled agent, not a model role. Reviewers and scouts
+are not implementation routes.
 
 
 Asking for help
@@ -128,8 +135,8 @@ The watch
 | `Watch the wave` | Read subagent job state | The job IDs returned by `task`: `read proc://<job-id>` for status and `write proc://<job-id>/kill` to cancel |
 | `Watch the wave` | Receive subagent results | `wait` with no arguments when blocked; results also auto-deliver |
 | `Watch the wave` | Preserve a pull request CI watch | `review-cycle`'s persistent named Bash service |
-| `Watch the wave` | Find the pull request for a task issue | `issue://<number>` — `closed_by_pull_requests` |
-| `Watch the wave` | Read a pull request's state and checks | `pr://<number>` |
+| `Watch the wave` | Find a pull request for an issue when one exists | `issue://<number>` — `closed_by_pull_requests` |
+| `Watch the wave` | Read a child issue's body and comments | `issue://<number>` |
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/omp.md` thread read |
 | `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
@@ -153,20 +160,23 @@ author of the task issue's claim comment, and the SHA it names. Where that SHA i
 `rev-list` must print nothing. A SHA off that chain, or any printed commit,
 fails the read.
 
-The merge is one conditional `gh pr merge` call after the gate holds.
-`--match-head-commit <headRefOid>` makes it fail closed if the task session
-pushes after the read. `Close the epic` posts its evidence comment before
-`gh issue close`, and never calls the latter when a `Summary` claim is missing
-or landing is by hand.
+The merge is one conditional `gh pr merge` call for a task or corrected bug
+with a pull request, after the gate holds. `--match-head-commit <headRefOid>`
+makes it fail closed if the task session pushes after the read.
+`Close the epic` posts its evidence comment before `gh issue close`, and never
+calls the latter when a child outcome is unsupported or landing is by hand.
+An issue-only research answer or bug disposition has no pull request to merge;
+read its body and comments against that kind's `issue-body` completion contract.
+An issue's closed state alone does not prove the epic outcome was met.
 
 **A live subagent's result or failure arrives as a wake of its own.** The
 orchestrator ends its turn holding the job IDs returned by `task`, and each
 implementor that finishes wakes it. Inspect a job without consuming delivery
 with `read proc://<job-id>`; cancel it with `write proc://<job-id>/kill`. Use
 `wait` with no arguments only when blocked. The GitHub state remains the
-durable record: a task issue's pull request, checks, and review threads say
-whether work is moving or stuck, and the epic graph says whether a task is
-home.
+durable record: a child issue's body and comments, plus a pull request where
+one exists, show whether work is moving or complete, and the epic graph shows
+whether each child is home.
 
 CI waiting uses `review-cycle`'s persistent named Bash service. Start the
 service once, request `persist` through `write proc://<name>/mode`, and
