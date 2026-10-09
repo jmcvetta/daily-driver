@@ -2477,6 +2477,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		if (!expected || event.toolName !== "read") return;
 		pendingIssueReads.delete(event.toolCallId);
 		if (event.input?.path !== expected.path) return;
+		if (event.isError) return;
 		const state = startupState(ctx);
 		if (!state || state.status !== "awaiting") return;
 		const text = Array.isArray(event.content)

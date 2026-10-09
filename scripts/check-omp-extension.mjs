@@ -612,8 +612,8 @@ check("only matching complete epic metadata arms the immediate barrier", () => {
 	assert.equal(startupState(stale).status, "awaiting");
 });
 
-/** This prevents malformed and failed reads from being mistaken for epic identity. */
-check("malformed or failed issue reads leave embark awaiting", () => {
+/** This prevents an error-marked but parseable issue result from certifying identity. */
+check("failed reads with parseable issue metadata leave embark awaiting", () => {
 	const malformed = makeSession();
 	const malformedCtx = startupCtx(malformed, "malformed-session");
 	malformed.fire("before_agent_start", { prompt: "embark 582" }, malformedCtx);
@@ -634,10 +634,11 @@ check("malformed or failed issue reads leave embark awaiting", () => {
 		toolName: "read",
 		toolCallId: "failed-read",
 		input: { path: "issue://582" },
-		content: [{ type: "text", text: "not found" }],
+		content: [{ type: "text", text: epicMetadata }],
 		isError: true,
 	}, failedCtx);
 	assert.equal(startupState(failed).status, "awaiting");
+	assert.equal(titleCall(failed, "task", {}, failedCtx).block, true);
 });
 
 /** This prevents a same-number issue in another repository from becoming the active epic. */
