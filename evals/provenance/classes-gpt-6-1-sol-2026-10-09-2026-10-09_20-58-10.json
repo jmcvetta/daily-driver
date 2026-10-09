@@ -1,0 +1,103 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts\nExit code: 0 (expected: 0)\nStdout:\nLockfile is up to date, resolution step is skipped\nDone in 671ms using pnpm v10.33.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-career-370_czjqrcmk/core\n\n\n Test Files  1 passed (1)\n      Tests  23 passed (23)\n   Start at  21:00:24\n   Duration  263ms (transform 55ms, setup 0ms, import 95ms, tests 43ms, environment 0ms)\n\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 134.66737985610962,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "classes-gpt-6-1-sol",
+      "source": "jmcvetta/career#370",
+      "task_id": "model-classes-career-370",
+      "tokens": 279013,
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.6",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-09T21:00:25.604598",
+  "experiment_id": "classes-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "e1eba7ef267f69decba6b158f79d31cd0a252ccc",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-09T14:01:47.860022+00:00",
+  "run_id": "2026-10-09_20-58-10",
+  "schema_version": 3,
+  "started_at": "2026-10-09T20:58:10.932786",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "model-classes-career-370": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-370"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}

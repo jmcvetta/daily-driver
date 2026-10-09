@@ -13,7 +13,7 @@ coder-eval-omp/
 ├── pyproject.toml                 the `coder_eval.plugins` entry point
 ├── prices.json                    hand-maintained USD/Mtok rates — see `Cost`
 └── src/coder_eval_omp/
-    ├── rpc.py                     the frame reduction — pure, and tested
+    ├── rpc.py                     the command builder and frame reduction — pure, and tested
     ├── pricing.py                 prices.json lookup — pure, and tested
     ├── agent.py                   the process, the events, and what loaded
     └── plugin.py                  register(registry)
@@ -73,6 +73,12 @@ map fails the task before Omp starts. One exception: an allowed `Skill` keeps
 `read` on even where the row denies `Read`, because Omp engages a skill by
 reading `skill://<name>`. The agent logs it for each task.
 `docs/notes/0013-the-omp-arm.md` records what `--tools` does not restrict.
+
+**A thinking suffix is a separate RPC setting.** Experiments name a model as
+`provider/model:level`, but Omp's `set_model` accepts only the provider and
+model id. `rpc.model_commands` strips a recognized level such as `:high` and
+sends it with `set_thinking_level`; an unknown suffix stays in the model id.
+`scripts/check-omp-agent.py` tests the RPC commands without a model call.
 
 ## What it records
 

@@ -1,0 +1,81 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`task-worktree` does not fire on a read-only review",
+          "details": "observed='no', expected='no' (skill_name='task-worktree')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 19.26279926300049,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "tokens": 23617,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.6",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-09T21:17:53.765433",
+  "experiment_id": "omp-gpt-6-1-sol-workflow",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "e1eba7ef267f69decba6b158f79d31cd0a252ccc",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-09T14:18:13.951293+00:00",
+  "run_id": "2026-10-09_21-17-34",
+  "schema_version": 3,
+  "started_at": "2026-10-09T21:17:34.500067",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "task-worktree-02-neg-read-only-review": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "task-worktree-02-neg-read-only-review"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

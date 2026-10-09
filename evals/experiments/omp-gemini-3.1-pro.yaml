@@ -1,0 +1,21 @@
+# Focused Daily Driver workflow evaluation on Gemini 3.1 Pro through Antigravity.
+experiment_id: omp-gemini-3-1-pro
+description: Focused Daily Driver workflow comparison on Gemini 3.1 Pro.
+defaults:
+  repeats: 3
+  run_limits:
+    max_turns: 30
+    task_timeout: 1200
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: google-antigravity/gemini-3.1-pro:high
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+variants:
+  - variant_id: with-plugin
+    description: Omp session with Daily Driver loaded for workflow behavior tests.
+    agent:
+      plugins:
+        - type: local
+          path: ".."
