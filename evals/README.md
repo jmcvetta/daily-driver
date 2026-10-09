@@ -265,6 +265,10 @@ operations. `make evals-record` then runs `scripts/evals-judge.py judge-run`,
 which grades each preserved transcript with the selected judge from the original
 task's rubric, verbatim, and writes a sidecar under `<run>/judge/<judge-id>/`.
 
+`evals-record` reuses matching sidecars when resuming, and refuses a sidecar
+from a different frozen judge. `JOBS` limits concurrent judge calls; its
+default is one.
+
 **`coder_eval`'s own scores are not the measurement for such a run.** It scores a
 disabled criterion 1.0. The recorder replaces each judged replicate's
 `measured_score` and `final_status` with ones recomputed from the deterministic
@@ -283,7 +287,8 @@ asserts the command line and the prompt, as it asserts the Claude denylist.
 anything but exactly one verdict object (`score` in [0, 1], `rationale`,
 `findings`) is an evaluation error. The sidecar records it, the replicate's score
 is null, and the case outcome is `error`; it is never a behavioural 0.0 and never
-a pass. Re-run `judge-run` on the same run directory once the judge works.
+a pass. Re-run `make evals-record RUN=<run> EXPERIMENT=<experiment> JUDGE=<judge> JOBS=8`
+on the same run directory once the judge works.
 
 **One judge, frozen, per comparison.** The sidecar and the record's `judge`
 object carry a `freeze_sha` over route, model, settings, the judge prompt and
@@ -1109,10 +1114,10 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
   the shell's GitHub access. A Claude Code cloud proxy grants the owner's
   access as well. Run only tasks whose tool permissions and effects you accept;
   this is a risk disclosure, not a credential-isolation gate.
-- **Run replicates in parallel.** `JOBS` sets how many run at once; the
-  default is one, and one at a time a suite takes about two hours. A replicate
-  waits on model calls, not on the container: at 12 at once, a four-core
-  container ran about 70% busy.
+- **Run replicates in parallel.** `JOBS` sets the subject or judge calls in
+  flight; the default is one. One subject at a time a suite takes about two
+  hours. A replicate waits on model calls, not on the container: at 12 subject
+  replicates in flight, a four-core container ran about 70% busy.
 - **The Omp targets raise every turn cap to 30.** `OMP_RUN_LIMITS` in the
   `Makefile` says why: caps sized for the Claude Code arm cut Omp off before
   its reply.

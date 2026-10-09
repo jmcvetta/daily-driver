@@ -532,10 +532,8 @@ evals-variants:
 #   make evals-run TASKS='tasks/pr/*.yaml'
 TASKS ?= tasks/*/*.yaml
 
-# JOBS: how many replicates a run target executes at once (`coder-eval run
-# --max-parallel`). One by default. Runs are bound by model calls, not by the
-# container, e.g.
-#   make evals-run-omp-gpt-6-luna JOBS=12
+# JOBS: max concurrent subject or judge replicates. Subject runs use `coder-eval
+# --max-parallel`; `evals-record` passes this to `judge-run`. Defaults to one.
 JOBS ?= 1
 
 # JUDGE= selects the judge of the semantic (`agent_judge`) criteria, apart from
@@ -586,7 +584,7 @@ evals-preflight:
 RUN ?= evals/runs/latest
 evals-record:
 	test -n "$(EXPERIMENT)"
-	$(if $(filter omp,$(JUDGE_ROUTE)),uv run --frozen python3 scripts/evals-judge.py judge-run "$(RUN)" --judge $(JUDGE))
+	$(if $(filter omp,$(JUDGE_ROUTE)),uv run --frozen python3 scripts/evals-judge.py judge-run "$(RUN)" --judge $(JUDGE) --max-parallel $(JOBS) --resume)
 	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
 		--experiment "$(EXPERIMENT)" --output evals/provenance \
 		$(if $(filter 1,$(POST_COMMENTS)),--post-comments)
