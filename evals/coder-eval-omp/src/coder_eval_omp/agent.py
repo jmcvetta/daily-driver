@@ -87,6 +87,7 @@ from .rpc import (
     TurnFinished,
     TurnReducer,
     TurnStarted,
+    model_commands,
 )
 from .launch import OMP_CONFIG, child_env, reject_tool_flags, rpc_argv
 from .tools import ToolSelection, UnenforceableToolList, select_tools
@@ -766,19 +767,15 @@ class OmpAgent(Agent[OmpAgentConfig]):
             self._session_id = session_id
 
     async def _apply_model(self) -> None:
-        """Pin the session's model, where the task named one.
+        """Pin the task's model and thinking level, where the task named one.
 
-        Omp's `set_model` takes the provider and the model id separately, so
-        `provider/modelId` is split on the first slash. A bare name is sent as
-        the model id alone and Omp resolves the provider.
+        Omp's RPC represents a thinking level with a separate command, not as
+        part of the model id.
         """
         if not self.config.model:
             return
-        provider, _, model_id = self.config.model.partition("/")
-        command: dict[str, Any] = {"type": "set_model", "modelId": model_id or provider}
-        if model_id:
-            command["provider"] = provider
-        await self._request_command(command)
+        for command in model_commands(self.config.model):
+            await self._request_command(command)
 
     # --- rpc plumbing ------------------------------------------------------
 

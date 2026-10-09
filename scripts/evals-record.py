@@ -132,12 +132,14 @@ def run_model(run: dict[str, Any], variant_id: str, client_name: str) -> str:
 
 
 def run_requested_models(run: dict[str, Any], variant_id: str) -> set[str]:
-    """Return every resolved requested model observed for one variant."""
-    return {
-        row["agent_config"]["model"]
-        for row in run.get("task_results", [])
-        if row.get("variant_id") == variant_id and row.get("agent_config", {}).get("model")
-    }
+    """Return requested models reported by configured task agents."""
+    models = set()
+    for row in run.get("task_results", []):
+        agent_config = row.get("agent_config")
+        if row.get("variant_id") == variant_id and isinstance(agent_config, dict) and agent_config.get("model"):
+            models.add(agent_config["model"])
+    return models
+
 
 def run_task_ids(run: dict[str, Any], variant_id: str) -> list[str]:
     """Return distinct task ids in run order for one variant."""
@@ -745,12 +747,13 @@ def apply_judge(
     cases: list[dict[str, Any]],
     sidecars: dict[tuple[str, str, int], dict[str, Any]],
 ) -> None:
-    """Replace `coder_eval`'s scores for judged replicates with the selected judge's, in place.
+    """Synchronize measured outcomes, applying selected judge scores when present.
 
     Each judged attempt keeps `coder_eval_status` and `raw_weighted_score` as
     `coder_eval` wrote them, so the substitution is visible, and gains a `judge`
     object. A replicate whose judge errored has no score at all: `measured_score`
     is null and the case outcome is `error`, never a 0.0 the subject earned.
+    An answer-key contact also disqualifies a raw-success case from earning a class.
     """
     for attempt in attempts:
         sidecar = sidecars.get((attempt["variant_id"], attempt["task_id"], attempt["replicate_index"]))
@@ -768,8 +771,12 @@ def apply_judge(
     by_key = {(a["variant_id"], a["task_id"], a["replicate_index"]): a for a in attempts}
     for case in cases:
         attempt = by_key.get((case["variant_id"], case["task_id"], case["replicate_index"]))
-        if attempt is not None and "judge" in attempt:
+        if attempt is None:
+            continue
+        if "judge" in attempt:
             case["outcome"] = row_outcome(attempt["final_status"])
+        if attempt.get("answer_key_contact") and case["outcome"] == "succeeded":
+            case["outcome"] = "failed"
     for variant in variants:
         for task_id, values in variant["per_replicate_scores"].items():
             for index in range(len(values)):
@@ -845,10 +852,21 @@ def build_record(run_dir: Path, experiment_path: Path, root: Path, prices: dict[
     if configured_variants != experiment.get("variant_ids"):
         raise ValueError("experiment file does not match run artifact variants")
     requested = experiment_models(configured_experiment)
-    client_name = run.get("task_results", [{}])[0].get("agent_config", {}).get(
-        "type",
-        "unknown",
+    first_agent_config = next(
+        (
+            row["agent_config"]
+            for row in run.get("task_results", [])
+            if isinstance(row.get("agent_config"), dict)
+        ),
+        None,
     )
+    default_agent_config = configured_experiment.get("defaults", {}).get("agent", {})
+    client_name = (
+        first_agent_config.get("type")
+        if first_agent_config
+        else default_agent_config.get("type", "unknown")
+    )
+    client_name = client_name or "unknown"
     attempts = run_attempts(run_dir, run, root)
     judge_manifest, judge_sidecar_rows = judge_sidecars(run_dir)
     variants = []

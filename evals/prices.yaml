@@ -25,3 +25,11 @@ models:
     unpriced_reason: Codex subscription usage has no per-token dollar rate.
     source: https://developers.openai.com/codex/pricing
     read_on: 2026-10-06
+  google-antigravity/gemini-3.8-flash:
+    unpriced_reason: Antigravity quota is a subscription allowance with no applicable per-token USD rate.
+    source: https://antigravity.google/docs/plans
+    read_on: 2026-10-08
+  google-antigravity/gemini-3.1-pro:
+    unpriced_reason: Antigravity quota is a subscription allowance with no applicable per-token USD rate.
+    source: https://antigravity.google/docs/plans
+    read_on: 2026-10-08
