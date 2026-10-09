@@ -73,6 +73,9 @@ to this task. For a new branch use `wt switch --create`; for an existing free
 branch use `wt switch`. Parse `.path` from successful stdout JSON only; stderr
 is diagnostics. Do not use `--clobber`, `--yes`, or `--no-hooks`.
 
+The primary-held designated-branch mapping is Claude-specific. Omp keeps its
+ordinary single-branch identity and does not infer a second push branch.
+
 An existing task branch from the task record is not a new branch. Fetch the
 selected remote ref with the explicit refspec above. If no local branch exists,
 use `wt switch --create <task-branch> --base <remote>/<task-branch>` to attach

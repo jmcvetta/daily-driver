@@ -1,0 +1,65 @@
+# Fails if PR lookup or creation follows the local execution name instead of
+# the designated remote head carried by the verified upstream mapping.
+task_id: pr-08-primary-held-designated-head-claude
+description: >-
+  PR lookup and creation use the designated push branch when Claude's primary
+  checkout holds that branch and the task runs on a separate local branch.
+tags: [pr, references, fire, behaviour, claude-only]
+
+initial_prompt: >-
+  Open or update the PR for issue #52. `task-worktree` verified the narrow
+  Claude primary-held designation mapping: this worktree's local execution
+  branch is `issue-52-designated-route`, its upstream is
+  `origin/claude/designated-52`, and `origin` pushes to
+  `acme/widgets`. The issue claim and pushed commit both identify
+  `claude/designated-52` as the remote head. Do not make GitHub changes. Tell
+  me the exact existing-PR lookup head you will use and, if no PR exists, the
+  head you will set when creating one.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`pr` fires on a pull-request request"
+    expected_skill: pr
+    skill_name: pr
+
+  - type: agent_judge
+    description: The PR head and lookup use the verified remote mapping
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn transcript.
+      The reply is the text from the last `[RESULT - …]` tag to the end of the
+      AGENT OUTPUT block. Begin your rationale with `ANCHOR: result` or
+      `ANCHOR: none`; no result tag means score 0.0.
+
+      The reply must say the existing-PR lookup uses `acme:claude/designated-52`
+      (or the equivalent repository-qualified remote head), derived from the
+      verified upstream. If creating, the PR `head` is also
+      `claude/designated-52` in `acme/widgets`. It must reject
+      `issue-52-designated-route` as a GitHub head. It may not create a second
+      PR for the local-only execution name.
+
+      Score 1.0 only when lookup and creation use the designated head and the
+      execution name is explicitly excluded. Score 0.5 if the lookup is right
+      but creation is incomplete, or vice versa. Score 0.0 if either uses the
+      local execution branch as the PR head.

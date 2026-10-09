@@ -41,8 +41,12 @@ Branch
 Already Existing PR
 -------------------
 
-First check whether there is already a PR for this branch — see the
-reference files for the check itself. If there is, update the existing PR.
+First check whether a PR already exists for the current remote push head — see
+the reference files for the lookup. For ordinary and resume work, that is the
+current task branch. For the verified primary-held designation mapping, it is
+the designated branch resolved from the local execution branch's upstream.
+If a PR exists, update that PR rather than creating another.
+
 - Update both title and body of existing PR — the title under `pr-title`,
   which does not rewrite a type this session did not write
 
