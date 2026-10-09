@@ -1,0 +1,59 @@
+task_id: issue-10-proposal-remains-open-until-handoff
+description: >-
+  A proposal records open decisions and remains non-executable; after explicit
+  acceptance it names the correct next issue kind without claiming delivery.
+tags: [issue, behaviour, fire]
+
+initial_prompt: >-
+  Open a proposal issue for optional offline mode in our desktop client.
+  Affected users are field staff with unreliable network access. The desired
+  outcome is to let them finish drafts offline, but conflict behavior,
+  sync guarantees, and whether attachments are in scope are undecided. We have
+  three user requests but no design research. First show a proposal body that
+  is ready for discussion but not implementation. Then answer this explicit
+  follow-up: if the user accepts the goal but those technical facts remain
+  unknown, what handoff is appropriate? Do not post or invent a preferred
+  design.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`issue-body` fires on proposal authoring"
+    expected_skill: issue-body
+    skill_name: issue-body
+
+  - type: agent_judge
+    description: Proposal preserves open decisions and hands accepted unknowns to research
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply. Begin rationale with `ANCHOR: result` or
+      `ANCHOR: none`; score 0 if no final result exists. The proposed body must
+      state the problem, affected users, desired outcome/value, known evidence,
+      constraints, and undecided conflict, sync, and attachment choices. It
+      must be ready for discussion only, with no settled architecture, task
+      Model class, implementation map, fabricated acceptance test, or claim
+      that the feature is delivered. Because research is needed after
+      acceptance, the explicit handoff must be a research issue rather than an
+      executable task; acceptance itself is not delivery. Normal provenance is
+      retained and a concrete `Model:` inside it is not task metadata. Score
+      1.0 when both stages preserve these boundaries, 0.5 for a useful
+      proposal with one material omission, and 0.0 if the open design is
+      silently decided or marked ready for implementation.

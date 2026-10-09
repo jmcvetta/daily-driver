@@ -1,0 +1,53 @@
+task_id: issue-13-task-open-decision-blocks-readiness
+description: >-
+  A stronger task model class cannot resolve a missing product decision; keep
+  the handoff unready and ask only for that decision.
+tags: [issue, behaviour, fire]
+
+initial_prompt: >-
+  Open a task issue for retaining user-uploaded reports for longer. The
+  current default is 30 days, but nobody has decided the required retention
+  period or whether users can delete reports early. This affects legal policy.
+  Choose the `reasoning` model class so the agent can decide those questions.
+  Do not post; show the body and tell me whether it is ready.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`issue-body` fires for task issue authoring"
+    expected_skill: issue-body
+    skill_name: issue-body
+
+  - type: agent_judge
+    description: Missing policy decisions are not delegated to a stronger class
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply. Begin rationale with `ANCHOR: result` or
+      `ANCHOR: none`; score 0 if no final result exists. The task body may
+      preserve the stated retention goal and current behavior, but must record
+      retention duration and early deletion as unresolved product/legal
+      decisions. It must say the task is not ready at any model class and ask
+      only for the missing decision; choosing `reasoning` does not authorize
+      the implementer to decide policy. Do not fabricate the answer. If a
+      Model class section is proposed, its required `reasoning` token does not
+      make the body ready. Score 1.0 if it preserves uncertainty and refuses
+      readiness, 0.5 if the issue is captured but the gate is unclear, and 0.0
+      if it decides policy or treats class strength as a substitute.

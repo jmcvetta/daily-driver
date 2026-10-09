@@ -54,4 +54,10 @@ One row per committed record, oldest first.
 | 2026-10-06 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 1m 03s |
 | 2026-10-06 | omp-gpt-6-sol | omp | openai-codex/gpt-6-sol (requested) | omp-gpt-6.1-sol (run-selected) | 240 | 104/240 | subscription | subscription | 12m 52s |
 | 2026-10-07 | probe-route-overlay | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | not recorded | 2 | 2/2 | $0.04 | $0.02 | 0m 52s |
+| 2026-10-08 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 11 | 8/11 | not recorded | not recorded | 7m 51s |
+| 2026-10-08 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 0m 44s |
+| 2026-10-08 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | not recorded | not recorded | 3m 18s |
 | 2026-10-08 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | omp-glm-5.3 (run-selected) | 4 | 2/4 | $0.17 | $0.08 | 7m 13s |
+| 2026-10-08 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 0m 42s |
+| 2026-10-09 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 0/1 | not recorded | not recorded | 1m 10s |
+| 2026-10-09 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | not recorded | not recorded | 0m 30s |

@@ -9,17 +9,16 @@ description: >-
   one pull request to writing issues for it. It is also where `undertake`
   sends work too big for the one issue it takes in, and it fires on an attempt
   to undertake an epic, which carries no code. Supplies the two gates that
-  decide whether there is an epic at all, what a task issue is and the model
-  class it records, the one stop where the plan is agreed before anything is
-  written, and the shape of the epic body — the sequencing and the waves
-  neither the sub-issue panel nor the dependency graph renders. The graph
-  writes are `issue-deps`'. Not for taking a task issue to a pull request,
-  which is `undertake`, and never fired on work that fits one.
+  decide whether an epic fits, child body contracts by kind, task class, the
+  plan-agreement gate, and the epic body — its sequencing and waves, which the
+  sub-issue panel and dependency graph do not render. The graph writes are
+  `issue-deps`'. Not for taking one child issue to a pull request, which is
+  `undertake`, and never fired on work that fits one.
 ---
 
 # Epic planning
 
-Work too big for one pull request becomes several task issues and one epic to
+Work too big for one pull request becomes several child issues and one epic to
 coordinate them. This skill is the order that happens in, the two gates that
 decide whether it should happen at all, and what the epic body carries.
 
@@ -92,17 +91,13 @@ answer. Where the gates close on it, it stays one issue and nothing is opened.
 
 Nothing reaches GitHub here. The plan is drafted, and then it is agreed.
 
-**A task is one pull request.** Where a candidate task needs two, split it
-again rather than making it a second epic. This skill does not nest: a graph
-two levels deep is read by nobody, and the second level is always a split
-somebody declined to make.
-
-**Each task issue records what was asked and no more**, under the body
+**Each child issue records what was asked and no more**, under the body
 contract `issue-body` supplies — the way `undertake`'s `Open the issue`
-writes one. Scope invented to round out a plan is scope every
-pull request is then measured against. A plan padded to look thorough is this
-skill's manufacturing failure, and it is the same instinct `issue-deps` names
-for edges.
+writes one. Use the contract for the selected child kind; do not force the
+task format on bugs, research questions, or human actions. Scope invented to
+round out a plan is scope every pull request is then measured against. A plan
+padded to look thorough is this skill's manufacturing failure, and it is the
+same instinct `issue-deps` names for edges.
 
 **Cut for parallelism, before there is a graph to read it off.** How much of
 the work can run abreast is decided here, when the tasks are defined — not
@@ -129,9 +124,11 @@ it to be true. What the epic body carries is the *reading* of it, under
 `The epic body` below.
 
 **Each task records its required model class.** Sizing is when the remaining
-implementation difficulty is known. `issue-body` owns the taxonomy, section
-format, readiness test, and routing guidance; `embark` resolves a concrete
-implementer later. This skill does not restate them.
+implementation difficulty is known. `issue-body` owns the task taxonomy,
+section format, readiness test, and routing guidance; `embark` resolves a
+concrete implementer later. Other child kinds do not acquire task class
+metadata by being in an epic.
+
 When any task in a plan needs `frontier`, `Agree the plan` must explicitly
 confirm that exact assignment and its work envelope. State why the cheaper
 classes are insufficient, the question, known input scope, deliverable, and
@@ -146,9 +143,9 @@ implementation exception and its bounded scope; research approval is not enough.
 ------------------
 
 It clears `judgement-call`'s gate on scope. Each task entry states its required
-model class and short rationale, each edge states what it waits on, and the
-plan names any existing issue that becomes the epic. Nothing is written until
-the user agrees.
+model class and short rationale; every other child entry states its own kind
+and body contract. Each edge states what it waits on, and the plan names any
+existing issue that becomes the epic. Nothing is written until the user agrees.
 
 It clears `judgement-call`'s gate on scope. A decomposition is a statement of
 scope: it says what the pieces are and what done means for each, and craft does
@@ -169,8 +166,8 @@ writes them and reports each one, and asks nothing a second time.
 a change described in a prompt has often been described in an issue already,
 and a second issue for it splits the trail in two.
 
-Each task body follows `issue-body`'s contract, including its `Model class`
-section, settled at `Draft the plan`.
+Each child body follows `issue-body`'s contract for its selected kind. Only a
+`task` has the `Model class` section, settled at `Draft the plan`.
 
 Where an issue already describes the whole change, **that issue becomes the
 epic**. Do not open a second one beside it: rewrite its body the way a new
@@ -184,21 +181,24 @@ safe, and neither is optional. `Agree the plan` names the issue and says its
 body is replaced, so the conversion is agreed rather than done to somebody.
 And nothing in the original is dropped: what it says about the whole change
 becomes `Summary` and `Justification`, and what it says about one part goes
-into that part's task issue, which is where the person doing the work will
-read it.
+into that part's child issue, which is where its owner will read it.
 
-The epic first, then the tasks, because a task names the epic as its parent and
-the parent must exist to be named. The epic's body at this point is `Summary`
-and `Justification`, and stops there: `Sequencing` is made of issue numbers
-that do not exist yet, which is why `Fill in the epic` is a step of its own.
+The epic first, then the children, because each child names the epic as its
+parent and the parent must exist to be named. The epic's body at this point is
+`Summary` and `Justification`, and stops there: `Sequencing` is made of issue
+numbers that do not exist yet, which is why `Fill in the epic` is a step of its
+own.
 
 **Every issue this step writes carries an issue kind**, and `issue-labels`
-supplies it. The epic gets `epic`, which stops `undertake` starting on it; each
-task gets `task`, `bug`, `research` or `human`. A child whose work is a person's
-is written and sequenced like any other, and `human` tells `embark` to leave it
-for the person rather than open a session on it. When the create route sets the
-task's parent, verify that edge and invoke `issue-labels` to add `story`.
-The marker supplements the task's kind; it is never sent in place of one.
+supplies it. The epic gets `epic`, which stops `undertake` starting on it;
+children get the kind their work requires: `task`, `bug`, `research`, or
+`human`. Write each child under that kind's `issue-body` contract; only tasks
+carry a model class. A `human` child is still written and sequenced like any
+other, and `human` tells `embark` to leave it for the person rather than open
+an agent session. An unresolved `proposal` is not a child work item; accepted
+intent is decomposed into the appropriate kind. When the create route sets the
+child's parent, verify that edge and invoke `issue-labels` to add `story`. The
+marker supplements the child's kind; it is never sent in place of one.
 
 An issue converted into the epic is **relabelled** rather than labelled: it
 carried something before, and two of the six kinds on one issue is a stop in
@@ -216,10 +216,11 @@ again per issue is the same question eight times.
 Two relationships, and `issue-deps` picks a client for each. They are not
 always the same client, and on a web worker they are not.
 
-- **Parent.** Every task is a sub-issue of the epic. Where the harness's issue
-  client sets the parent as the task is created, that write already happened at
-  `Open the issues`; otherwise write it here. After every parent write, verify
-  the direct edge, then invoke `issue-labels` to reconcile `story`.
+- **Parent.** Every child issue is a sub-issue of the epic. Where the harness's
+  issue client sets the parent as the child is created, that write already
+  happened at `Open the issues`; otherwise write it here. After every parent
+  write, verify the direct edge, then invoke `issue-labels` to reconcile
+  `story`.
 - **Blocked-by.** Only the edges `Draft the plan` named.
 
 **An epic's children are not its blockers.** `issue-deps` says why:
@@ -232,31 +233,31 @@ response is the issue you modified, so it confirms nothing.
 5 — Fill in the epic
 --------------------
 
-Replace the epic's body with the whole of `The epic body`, now that every task
-has a number to put in it.
+Replace the epic's body with the whole of `The epic body`, now that every child
+issue has a number to put in it.
 
 6 — Hand off
 ------------
 
-Every task whose blockers are closed can start now, each in its own session,
-each through `undertake`. Name them, rather than leaving the reader to derive
-the list the first time.
+Every agent-eligible child whose blockers are closed can start now, each in
+its own session, each through `undertake`. Name them, rather than leaving the
+reader to derive the list the first time.
 
-**Putting that wave to sea is `embark`'s**: one ship per task — a session
-where the harness opens web sessions, its subagent fallback where it cannot —
-watched to merge, and the next wave after it. The list named here is what it
-takes in.
+**Putting that wave to sea is `embark`'s**: one ship per eligible child — a
+session where the harness opens web sessions, its subagent fallback where it
+cannot — watched to completion, and the next wave after it. The list named here
+is what it takes in.
 
 **The epic is never undertaken**, which is the stop of that name under
-`Where it stops and waits`. It carries no code; the tasks named above are what
-a session takes.
+`Where it stops and waits`. It carries no code; the child issues named above
+are what a session takes.
 
-**No task pull request closes the epic.** A pull request implements one task,
-and that task is the issue its body closes. Closing a sub-issue does not close
-its parent — GitHub has no such rule. When the fleet runs through `embark`,
-its `Close the epic` step closes the epic against its own `Summary`. Without
-an embarked fleet, a person closes it against the same test. The close is
-usually, but not always, the moment the last task merges.
+**No single child pull request closes the epic.** A pull request implements
+one task or corrected bug. Research and human children use their own completion
+contracts; none closes the epic merely by closing. When the fleet runs through
+`embark`, its `Close the epic` step checks the coordinated outcome against the
+children. Without an embarked fleet, a person applies the same test.
+
 
 
 The epic body
