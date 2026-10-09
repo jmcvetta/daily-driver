@@ -269,6 +269,10 @@ task's rubric, verbatim, and writes a sidecar under `<run>/judge/<judge-id>/`.
 from a different frozen judge. `JOBS` limits concurrent judge calls; its
 default is one.
 
+For an older run, point `JUDGE_TASKS_DIR` at the exact task snapshot used for
+its frozen judge. It defaults to `evals/tasks`; a different rubric freeze fails
+before another judge call.
+
 **`coder_eval`'s own scores are not the measurement for such a run.** It scores a
 disabled criterion 1.0. The recorder replaces each judged replicate's
 `measured_score` and `final_status` with ones recomputed from the deterministic

@@ -582,9 +582,10 @@ evals-preflight:
 # evals-record: commit provenance for an existing run. Pass its experiment
 # explicitly so a record cannot pair one run's scores with another model pin.
 RUN ?= evals/runs/latest
+JUDGE_TASKS_DIR ?= evals/tasks
 evals-record:
 	test -n "$(EXPERIMENT)"
-	$(if $(filter omp,$(JUDGE_ROUTE)),uv run --frozen python3 scripts/evals-judge.py judge-run "$(RUN)" --judge $(JUDGE) --max-parallel $(JOBS) --resume)
+	$(if $(filter omp,$(JUDGE_ROUTE)),uv run --frozen python3 scripts/evals-judge.py judge-run "$(RUN)" --judge $(JUDGE) --tasks-dir "$(JUDGE_TASKS_DIR)" --max-parallel $(JOBS) --resume)
 	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
 		--experiment "$(EXPERIMENT)" --output evals/provenance \
 		$(if $(filter 1,$(POST_COMMENTS)),--post-comments)
