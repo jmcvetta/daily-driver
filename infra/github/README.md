@@ -53,6 +53,10 @@ configuration, unless it is a merge gate. The Tofu binds to each job's display
 name, so the selected checks inside `Checks` need no change to
 `branch_protection.tf`. Renaming a job does: apply the new context in step
 with the workflow change, or pull requests wait on a check nothing reports.
+The order for a rename: apply the stack, then merge the pull request that
+renames the job (merge first and the old context blocks it; apply a rename
+with no merge and every other pull request waits). Open pull requests then
+merge `master` to report the new context.
 
 Neither workflow may carry a `paths:` filter. A path-filtered workflow does not
 report a *skipped* check, it reports nothing at all, so a required context

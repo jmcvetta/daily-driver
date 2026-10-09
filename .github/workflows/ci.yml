@@ -195,11 +195,11 @@ jobs:
         id: validate-infrastructure
         if: ${{ !cancelled() && steps.install-opentofu.outcome == 'success' }}
         run: make check-infra
-      # Only meaningful after the step above: `tofu init` rewrites
+      # Only meaningful after the step above succeeds: `tofu init` rewrites
       # .terraform.lock.hcl in place and this step asks git what changed. A lock
       # file that init would rewrite is not a pin anyone is reading.
       - name: Verify provider lock
-        if: ${{ !cancelled() && steps.validate-infrastructure.outcome != 'skipped' }}
+        if: ${{ !cancelled() && steps.validate-infrastructure.outcome == 'success' }}
         run: |
           if ! git diff --quiet -- infra/github/.terraform.lock.hcl; then
             echo "::error::infra/github/.terraform.lock.hcl is stale. See the diff below." >&2
