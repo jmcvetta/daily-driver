@@ -1388,6 +1388,9 @@ The clone token is not passed to grading. `career-462` and `career-469` isolate
 its unauthenticated skip instead of contacting GitHub. Other tests in those
 files still run.
 
+The 2026-10-08/09 Sol 6.1, Luna 6 and Terra 5.6 comparison, including its
+limits and normalized-credit assumptions, is in
+[`docs/notes/0033`](../docs/notes/0033-sol-luna-terra-model-classes.md).
 **Building more cases.** `python3 scripts/evals-cases-from-prs.py owner/repo
 [--path-prefix DIR]` scans a source's merged pull requests and appends
 qualifying ones to `candidates.json`; `--select` then runs the build-time
