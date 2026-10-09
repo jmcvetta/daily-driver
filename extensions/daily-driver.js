@@ -25,8 +25,9 @@
  *    task identity and establishes or reuses its dedicated worktree; this
  *    guard makes forgetting it fail before the user's checkout is changed.
  *
- * 3. Provide runtime defaults for mechanical, implementation, and reasoning model
- *    roles without overwriting operator assignments or writing configuration.
+ * 3. Provide runtime defaults for mechanical, implementation, reasoning, and
+ *    frontier model roles without overwriting operator assignments or writing
+ *    configuration.
  *
  * 4. Provide session-title, scheduled-reminder, and session-info tools that
  *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,
@@ -2104,6 +2105,230 @@ function needsTitle(event) {
 	);
 }
 
+/** Whether one plain `gh` invocation can only read GitHub data. */
+function isReadOnlyGitHubRead(command) {
+	const { segments, unreadable } = shellSegments(command);
+	if (unreadable !== null || segments.length !== 1) return false;
+	const words = segments[0].words ?? [];
+	if (segments[0].group || words.length === 0 ||
+		words.some((word) => !word.literal || /[;&|<>]/u.test(word.text)) ||
+		basename(words[0].text) !== "gh") return false;
+	const args = words.slice(1);
+	const operands = [];
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-R" || text === "--repo" || text === "--hostname" || text === "--config") {
+			index++;
+		} else if (!text.startsWith("-")) {
+			operands.push(text);
+		}
+	}
+	const [group, verb] = operands;
+	if ((group === "issue" || group === "pr" || group === "repo") && verb === "view") return true;
+	if (group === "search" && verb === "issues") return true;
+	if (group !== "api") return false;
+	let method = null;
+	let sendsBody = false;
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-X" || text === "--method") {
+			method = args[index + 1]?.text ?? null;
+		} else if (text.startsWith("--method=")) {
+			method = text.slice("--method=".length);
+		} else if (/^-X./u.test(text)) {
+			method = text.slice(2);
+		} else if (
+			GH_API_BODY_FLAGS.has(text) ||
+			/^--(field|raw-field|input)=/u.test(text)
+		) {
+			sendsBody = true;
+		}
+	}
+	return method
+		? method.toUpperCase() === "GET"
+		: !sendsBody;
+}
+/**
+ * State carried on the active session branch while an explicit Omp embark
+ * request is being resolved and titled.
+ */
+const EMBARK_TITLE_STATE = "daily-driver-embark-title";
+const EMBARK_TITLE_PREFIX = "⛵ EPIC #";
+const EMBARK_READ_REASON =
+	"Before dispatch, read the requested issue with `read` on its canonical " +
+	"single-issue `issue://` URL. Other reads do not certify that step.";
+
+/** Parse an explicit embark command without treating quoted prose as one. */
+function explicitEmbarkTarget(prompt) {
+	if (typeof prompt !== "string") return null;
+	const skillPrefix =
+		'[IMPORTANT: User invoked the "embark" skill; follow its instructions. Full skill below.]';
+	let command = prompt.trim();
+	if (command.startsWith(skillPrefix)) {
+		const footer = command.lastIndexOf("[Skill directory:");
+		const user = footer < 0 ? -1 : command.indexOf("\nUser:", footer);
+		if (user < 0) return null;
+		command = command.slice(user + "\nUser:".length).trim();
+		const skillArgument = /^(?:(?:\/)?embark\s+)?(\S+)/iu.exec(command);
+		return skillArgument ? parseEmbarkReference(skillArgument[1]) : null;
+	}
+	const match = /^(?:\/)?embark\s+(\S+)/iu.exec(command);
+	return match ? parseEmbarkReference(match[1]) : null;
+}
+
+/** Parse one supported issue reference and retain any explicit repository. */
+function parseEmbarkReference(reference) {
+	if (/^\d+[#.,;:!?)]*$/u.test(reference) || /^#\d+[#.,;:!?)]*$/u.test(reference)) {
+		const number = Number(reference.replace(/[^\d]/gu, ""));
+		return Number.isSafeInteger(number) && number > 0 ? { number } : null;
+	}
+	const numericIssueUri = /^issue:\/\/(\d+)\/?$/iu.exec(reference);
+	if (numericIssueUri) {
+		const number = Number(numericIssueUri[1]);
+		return Number.isSafeInteger(number) && number > 0 ? { number } : null;
+	}
+	const scopedIssueUri = /^issue:\/\/([^/]+)\/([^/]+)\/([^/]+)\/(\d+)\/?$/iu.exec(reference);
+	const githubIssueUri = /^issue:\/\/([^/]+)\/([^/]+)\/(\d+)\/?$/iu.exec(reference);
+	const issueUri = scopedIssueUri ?? githubIssueUri;
+	if (issueUri) {
+		const number = Number(scopedIssueUri ? issueUri[4] : issueUri[3]);
+		return Number.isSafeInteger(number) && number > 0
+			? {
+					number,
+					repository: scopedIssueUri
+						? `${issueUri[1]}/${issueUri[2]}/${issueUri[3]}`
+						: `github.com/${issueUri[1]}/${issueUri[2]}`,
+				}
+			: null;
+	}
+	try {
+		const url = new URL(reference);
+		const match = /^\/([^/]+)\/([^/]+)\/issues\/(\d+)\/?$/u.exec(url.pathname);
+		if (url.protocol !== "https:" || !match) return null;
+		const number = Number(match[3]);
+		return Number.isSafeInteger(number) && number > 0
+			? { number, repository: `${url.host}/${match[1]}/${match[2]}` }
+			: null;
+	} catch {
+		return null;
+	}
+}
+
+/** Read the resolved identity from issue:// output, never from its body. */
+function issueMetadata(content) {
+	const text = Array.isArray(content)
+		? content.map((part) => (part?.type === "text" ? part.text : "")).join("\n")
+		: "";
+	if (!/^## Body\s*$/mu.test(text)) return null;
+	const metadata = text.split(/^## Body\s*$/mu, 1)[0];
+	const title = /^# Issue #(\d+): (.+)$/mu.exec(metadata);
+	const url = /^URL:\s*(https:\/\/\S+)\s*$/mu.exec(metadata);
+	const labels = /^Labels:\s*(.*)$/mu.exec(metadata);
+	if (!title || !url || !labels) return null;
+	let parsedUrl;
+	try {
+		parsedUrl = new URL(url[1]);
+	} catch {
+		return null;
+	}
+	const issue = /\/([^/]+)\/([^/]+)\/issues\/(\d+)\/?$/u.exec(parsedUrl.pathname);
+	if (!issue || Number(title[1]) !== Number(issue[3])) return null;
+	return {
+		number: Number(title[1]),
+		title: title[2].trim(),
+		url: url[1],
+		repository: `${parsedUrl.host}/${issue[1]}/${issue[2]}`.toLowerCase(),
+		labels: labels[1].split(",").map((label) => label.trim()).filter(Boolean),
+	};
+}
+
+/** Whether a title names the active epic and has a nonblank suffix. */
+function matchesEpicTitle(name, number) {
+	return typeof name === "string" &&
+		new RegExp(`^⛵ EPIC #${number} \\S`, "u").test(name);
+}
+
+/** Resolve only exact title-recovery tool and device routes. */
+function embarkTitleRecoveryRoute(event, state) {
+	if (event.toolName === "daily_driver_get_session" || event.toolName === "daily_driver_set_session_title") {
+		return true;
+	}
+	const input = event.input ?? {};
+	if (event.toolName === "read") {
+		const path = input.path;
+		if (path === "skill://session-title" || path === "skill://session-title/references/omp.md") return true;
+		if (path === "xd://daily_driver_get_session" || path === "xd://daily_driver_set_session_title") return true;
+		const target = parseEmbarkReference(path);
+		return target?.number === state.target.number &&
+			(!state.target.requestedRepository ||
+				target.repository?.toLowerCase() === state.target.requestedRepository.toLowerCase()) &&
+			(!target.repository || target.repository.toLowerCase() === state.target.repository.toLowerCase());
+	}
+	if (event.toolName === "write" && input.path === "xd://daily_driver_set_session_title") return true;
+	return false;
+}
+
+/** Identify workflow commands that replace an explicit embark request. */
+function supersedingWorkflow(prompt) {
+	if (typeof prompt !== "string") return false;
+	const text = prompt.trim();
+	if (/^\[IMPORTANT: User invoked the "(?:undertake|stand-down)" skill;/iu.test(text)) return true;
+	return /^(?:\/)?(?:undertake|stand-down)(?:\s|$)/iu.test(text);
+}
+
+/** Read the latest extension state from this session's active branch. */
+function readEmbarkState(ctx) {
+	const manager = ctx?.sessionManager;
+	if (ctx?.agent?.kind !== "main" || typeof manager?.getSessionId !== "function" ||
+		typeof manager?.getBranch !== "function") return null;
+	const sessionId = manager.getSessionId();
+	if (typeof sessionId !== "string" || !sessionId) return null;
+	const entries = manager.getBranch();
+	for (let i = entries.length - 1; i >= 0; i--) {
+		const entry = entries[i];
+		if (entry?.type === "custom" && entry.customType === EMBARK_TITLE_STATE &&
+			entry.data?.sessionId === sessionId && entry.data.state) {
+			return entry.data.state;
+		}
+	}
+	return null;
+}
+
+/** Persist a startup transition on the active session branch. */
+function persistEmbarkState(pi, ctx, state) {
+	const manager = ctx?.sessionManager;
+	if (ctx?.agent?.kind !== "main" || typeof manager?.getSessionId !== "function" ||
+		typeof manager?.getBranch !== "function" || typeof pi.appendEntry !== "function") {
+		console.error("daily-driver: Omp embark title enforcement unavailable; legacy title gate remains active");
+		return false;
+	}
+	const sessionId = manager.getSessionId();
+	if (typeof sessionId !== "string" || !sessionId) {
+		console.error("daily-driver: Omp embark title enforcement unavailable; legacy title gate remains active");
+		return false;
+	}
+	pi.appendEntry(EMBARK_TITLE_STATE, { sessionId, state });
+	return true;
+}
+
+/** Return actionable startup denial text for the active state. */
+function embarkTitleReason(state) {
+	const target = state.target;
+	if (state.status === "awaiting") {
+		return `${EMBARK_READ_REASON}\nRequested issue: #${target.number}` +
+			(target.repository ? ` (${target.repository})` : "");
+	}
+	return (
+		`The requested epic is #${target.number}: ${JSON.stringify(target.title)}. ` +
+		`This call is blocked until this session is titled ` +
+		`${EMBARK_TITLE_PREFIX}${target.number} <shortened epic title>.\n\n` +
+		"Use the `session-title` skill for the existing shortening rules. " +
+		"Allowed recovery: `daily_driver_get_session` and " +
+		"`daily_driver_set_session_title({ title })`, or `write xd://daily_driver_set_session_title`. " +
+		"Reads of `session-title`, its Omp reference, the title-tool documentation, and the same issue are allowed."
+	);
+}
+
 /**
  * New trigger ids. `crypto.randomUUID` is a modern Node global with no
  * import; fall back to a counter where the runtime lacks it (defensive, and
@@ -2123,6 +2348,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 
 	const initializedSettings = new WeakSet();
 	pi.on("session_start", async (_event, ctx) => {
+		invalidateStartupState();
 		if (typeof ctx?.cwd !== "string") return;
 		const settings = pi.settingsManagerFactory
 			? pi.settingsManagerFactory(ctx.cwd)
@@ -2142,6 +2368,42 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	// Whether this session titled itself on purpose: `daily_driver_set_session_title`
 	// ran. Per-session state, so it lives in the factory closure like TRIGGERS.
 	let titleSet = false;
+	let startupSessionId;
+	let startupStateLoaded = false;
+	let cachedStartupState;
+
+	/** Load startup state once from the current branch, then use the closure cache. */
+	function startupState(ctx) {
+		const manager = ctx?.sessionManager;
+		if (ctx?.agent?.kind !== "main" || typeof manager?.getSessionId !== "function") return null;
+		const sessionId = manager.getSessionId();
+		if (typeof sessionId !== "string" || !sessionId) return null;
+		if (!startupStateLoaded || startupSessionId !== sessionId) {
+			startupSessionId = sessionId;
+			cachedStartupState = readEmbarkState(ctx);
+			startupStateLoaded = true;
+		}
+		return cachedStartupState;
+	}
+
+	/** Persist only transitions and keep the active session's cache in sync. */
+	function saveStartupState(ctx, state) {
+		if (!persistEmbarkState(pi, ctx, state)) return false;
+		startupSessionId = ctx.sessionManager.getSessionId();
+		cachedStartupState = state;
+		startupStateLoaded = true;
+		return true;
+	}
+
+	function invalidateStartupState() {
+		startupStateLoaded = false;
+		startupSessionId = undefined;
+		cachedStartupState = undefined;
+	}
+
+	for (const event of ["session_switch", "session_branch", "session_tree"]) {
+		pi.on(event, invalidateStartupState);
+	}
 
 	/**
 	 * The title gate's answer for a call that needs the session titled: whether
@@ -2187,6 +2449,96 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		return true;
 	}
 
+	// Extension state is read from the active branch for each event. This keeps
+	// a resumed session recoverable without sharing a process-global target.
+	const pendingIssueReads = new Map();
+
+	pi.on("before_agent_start", (event, ctx) => {
+		const target = explicitEmbarkTarget(event?.prompt);
+		if (ctx?.agent?.kind === "sub") return;
+		if (ctx?.agent?.kind !== "main") {
+			if (target) {
+				console.error("daily-driver: Omp embark title enforcement unavailable; legacy title gate remains active");
+			}
+			return;
+		}
+		if (target) {
+			pendingIssueReads.clear();
+			saveStartupState(ctx, { status: "awaiting", target });
+			return;
+		}
+		if (supersedingWorkflow(event?.prompt)) {
+			pendingIssueReads.clear();
+			saveStartupState(ctx, { status: "inactive" });
+		}
+	});
+
+	pi.on("tool_result", (event, ctx) => {
+		const expected = pendingIssueReads.get(event.toolCallId);
+		if (!expected || event.toolName !== "read") return;
+		pendingIssueReads.delete(event.toolCallId);
+		if (event.input?.path !== expected.path) return;
+		if (event.isError) return;
+		const state = startupState(ctx);
+		if (!state || state.status !== "awaiting") return;
+		const text = Array.isArray(event.content)
+			? event.content.map((part) => part?.type === "text" ? part.text : "").join("\n")
+			: "";
+		if (/stale cached? (?:issue )?data|stale cache|live github refresh failed|cached and may be stale/iu.test(text)) {
+			return {
+				content: [
+					...event.content,
+					{
+						type: "text",
+						text: "\nThis cached issue result is stale and does not satisfy the required identity read. Refresh the same issue:// target and use the successful current result.",
+					},
+				],
+			};
+		}
+		const metadata = issueMetadata(event.content);
+		if (!metadata || metadata.number !== state.target.number ||
+			(state.target.repository && metadata.repository !== state.target.repository.toLowerCase())) {
+			return {
+				content: [
+					...event.content,
+					{
+						type: "text",
+						text: "\nThis result does not contain matching, complete metadata for the requested issue. Read the requested issue with the canonical issue:// URL before dispatch.",
+					},
+				],
+			};
+		}
+		if (!metadata.labels.some((label) => label.toLowerCase() === "epic")) {
+			saveStartupState(ctx, { status: "inactive" });
+			return undefined;
+		}
+		const status = matchesEpicTitle(ctx?.sessionManager?.getSessionName?.(), metadata.number)
+			? "satisfied"
+			: "required";
+		saveStartupState(ctx, {
+			status,
+			target: {
+				number: metadata.number,
+				title: metadata.title,
+				url: metadata.url,
+				repository: metadata.repository,
+				requestedRepository: state.target.repository,
+			},
+		});
+		if (status === "required") {
+			return {
+				content: [
+					...event.content,
+					{
+						type: "text",
+						text: `\nSet this session's title now to \`${EMBARK_TITLE_PREFIX}${metadata.number} <shortened epic title>\` before any unrelated tool call. Use \`session-title\`; the issue title is ${JSON.stringify(metadata.title)}.`,
+					},
+				],
+			};
+		}
+		return undefined;
+	});
+
 	// Deny preferences and repository boundaries at execution time: unlike an
 	// instruction, a blocked call cannot be ignored by a weaker model.
 	pi.on("tool_call", (event, ctx) => {
@@ -2220,6 +2572,45 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 			);
 			return { block: true, reason: GIT_UNAVAILABLE_BLOCK_REASON };
 		}
+		const startup = ctx?.agent?.kind === "main" ? startupState(ctx) : null;
+		if (startup?.status === "awaiting") {
+			const path = event.input?.path;
+			const target = event.toolName === "read" && typeof path === "string" &&
+				/^issue:\/\//iu.test(path)
+				? parseEmbarkReference(path)
+				: null;
+			const requestedRepository = startup.target.repository?.toLowerCase();
+			const readRepository = target?.repository?.toLowerCase();
+			if (target?.number === startup.target.number &&
+				readRepository === requestedRepository &&
+				typeof event.toolCallId === "string") {
+				pendingIssueReads.set(event.toolCallId, { path });
+				return undefined;
+			}
+			if (["read", "grep", "glob", "daily_driver_get_session"].includes(event.toolName) ||
+				(event.toolName === "bash" &&
+					typeof event.input?.command === "string" &&
+					isReadOnlyGitHubRead(event.input.command))) {
+				return undefined;
+			}
+			return { block: true, reason: embarkTitleReason(startup) };
+		}
+		if (startup?.status === "required" &&
+			event.toolName === "write" &&
+			event.input?.path === "xd://daily_driver_set_session_title") {
+			let title;
+			try {
+				title = JSON.parse(event.input.content)?.title;
+			} catch {
+				title = undefined;
+			}
+			if (!matchesEpicTitle(title, startup.target.number)) {
+				return { block: true, reason: embarkTitleReason(startup) };
+			}
+		}
+		if (startup?.status === "required" && !embarkTitleRecoveryRoute(event, startup)) {
+			return { block: true, reason: embarkTitleReason(startup) };
+		}
 		// After the worktree check: the session's first issue comment and first
 		// dispatch wait for a title that was set on purpose.
 		if (needsTitle(event) && !titleGateAllows(ctx)) {
@@ -2238,9 +2629,28 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		parameters: z.object({
 			title: z.string().describe("The new session title"),
 		}),
-		execute: async (_toolCallId, params, _signal, _onUpdate, _ctx) => {
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => {
+			const startup = ctx?.agent?.kind === "main" ? startupState(ctx) : null;
+			if (startup?.status === "required" && !matchesEpicTitle(params.title, startup.target.number)) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: `Title rejected. The active epic requires \`${EMBARK_TITLE_PREFIX}${startup.target.number} <shortened epic title>\`; the session name was not changed.`,
+						},
+					],
+					details: { titled: null, rejected: true },
+					isError: true,
+				};
+			}
 			await pi.setSessionName(params.title);
-			titleSet = true;
+			if (startup?.status === "required") {
+				if (matchesEpicTitle(ctx?.sessionManager?.getSessionName?.(), startup.target.number)) {
+					saveStartupState(ctx, { ...startup, status: "satisfied" });
+				}
+			} else {
+				titleSet = true;
+			}
 			return {
 				content: [{ type: "text", text: `Session titled: ${params.title}` }],
 				details: { titled: params.title },

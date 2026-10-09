@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575))
+
 ## [0.50.0](https://github.com/jmcvetta/daily-driver/compare/v0.49.3...v0.50.0) (2026-10-08)
 
 
@@ -118,6 +124,8 @@
 * adopt Worktrunk for isolated task worktrees and install its official Claude plugin and latest CLI during cloud Setup ([#495](https://github.com/jmcvetta/daily-driver/issues/495))
 
 ### Bug Fixes
+
+* **omp:** refresh Omp task-class role defaults ([#578](https://github.com/jmcvetta/daily-driver/issues/578))
 
 * **omp:** select harness instructions from runtime identity, not model name (#498)
 * **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)

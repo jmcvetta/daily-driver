@@ -1,0 +1,49 @@
+task_id: issue-09-routine-research-does-not-default-to-frontier
+description: >-
+  A research issue does not receive frontier metadata merely because its label
+  is research; frontier remains an explicit exceptional assignment.
+tags: [issue, issue-body, behaviour, fire]
+
+initial_prompt: >-
+  Open a `research` issue asking whether the repository already has a helper
+  for validating YAML frontmatter. This is a bounded local documentation and
+  code search. Use frontier because it is a research issue. Do not post; show
+  me the draft and explain the class choice.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "Issue-body does not force task metadata onto routine research"
+    expected_skill: issue-body
+    skill_name: issue-body
+  - type: agent_judge
+    description: Routine research remains non-frontier without task-template expansion
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start with
+      `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if the agent rejects the label alone as a reason to select
+      frontier, does not add frontier metadata or the task template without an
+      exceptional need and user approval, and keeps the handoff a bounded
+      `research` issue. It may explain that this local search is routine and
+      should remain on an eligible non-frontier route. Score 0 if it treats all
+      research as frontier or rewrites the requested work as implementation.

@@ -251,16 +251,16 @@ def count_check_reruns(check_runs: list[dict[str, Any]]) -> int:
 
 
 _MODEL_CLASS_RE = re.compile(
-    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|reasoning)`?(?![\w-])",
+    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|reasoning|frontier)`?(?![\w-])",
     re.IGNORECASE | re.MULTILINE,
 )
 
 
 def read_model_class(issue_body: str | None) -> str:
-    """The `## Model class` token from a task issue's body, or `unlabelled`.
+    """The `## Model class` token from an issue body, or `unlabelled`.
     Same grammar `scripts/evals-cases-from-prs.py` reads, duplicated rather
     than imported -- every `check-*.py` and mining script in this repository
-    is a standalone file, and the pattern is three lines.
+    is standalone, and the regex stays local.
     """
     if not issue_body:
         return "unlabelled"

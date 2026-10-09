@@ -1,0 +1,444 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "Issue authoring applies the frontier gate",
+          "details": "observed='no', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The author stops before publishing and asks for scoped approval",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The author stops before publishing and asks for scoped approval",
+            "duration_seconds": 42.82,
+            "findings": [
+              "Reply explicitly refuses to publish or mark ready: 'nothing posted, nothing dispatched to frontier' and 'Until then I won't assign, message, or invoke anything on frontier's behalf'",
+              "Asks for explicit user confirmation of frontier approval and where to file, rather than treating the author's judgement as approval",
+              "Names the question (compare API compatibility strategies and recommend one migration plan), both repositories (acme/accounts-api, acme/billing-api), and the deliverables (per-strategy/per-repo tables, cross-repo matrix, single recommendation with phased plan)",
+              "Marks repo current-state and strategy choices as unverified: 'No current-state data was available at draft time' and flags the unnamed three strategies for user correction",
+              "Does not explain why the three ordinary classes are insufficient",
+              "Does not propose specific frontier sessions or passes, only a pending frontier assignee",
+              "Never states that token, time, cost, or quota are unknown unless measured",
+              "No ready issue was written and no proposed research was performed, so the score-0 triggers are avoided"
+            ],
+            "index": 1,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "933385df0c24e4f433d8172f0fd4cb05502a8a02991bbf93d1988af5a47407ce",
+            "rationale": "ANCHOR: result. The reply correctly refuses to publish or dispatch, treats the missing frontier approval as a blocker rather than approval, drafts the issue rather than posting it, and separates verified facts from unavailable repo-state data. However, it never explains why the three ordinary classes are insufficient, does not name proposed frontier sessions/passes, and says nothing about token/time/cost/quota being unknown unless measured, so it falls well short of the full-credit criteria.",
+            "score": 0.2,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 339,
+              "cacheWrite": 0,
+              "input": 2337,
+              "output": 2390
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d0a840f3442b594452e5f57504176867f73e4bbf8c38e4bef7ce41f9a3fb1148"
+      },
+      "measured_score": 0.133333,
+      "raw_weighted_score": 0.6666666666666666,
+      "replicate_index": 0,
+      "task_id": "issue-07-frontier-needs-explicit-approval",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "Issue authoring applies the frontier gate",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The author stops before publishing and asks for scoped approval",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The author stops before publishing and asks for scoped approval",
+            "duration_seconds": 39.26,
+            "findings": [
+              "Result tag present with a final user-facing reply; anchor is result",
+              "Explicit refusal: 'Nothing posted'; own judgement explicitly stated as not approval",
+              "All three ordinary classes (mechanical, implementation, reasoning) argued insufficient for the cross-repo comparative deliverable",
+              "Question, deliverable (strategy comparison + migration plan), input scope (two named public repos), and one frontier pass/one session all named",
+              "Facts vs unknowns separated; three strategies not invented, and token/duration/cost/quota declared unknown without measurement",
+              "Asks user to explicitly approve or decline the scoped frontier assignment; no research performed and no ready issue written"
+            ],
+            "index": 1,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "933385df0c24e4f433d8172f0fd4cb05502a8a02991bbf93d1988af5a47407ce",
+            "rationale": "ANCHOR: result \u2014 the final reply after [RESULT - SUCCESS] refuses to publish or mark ready, explains why mechanical, implementation, and reasoning classes are insufficient, and asks for explicit approve/decline confirmation while naming the question, both repos (acme/accounts-api, acme/billing-api) as known input scope, the deliverable, and one frontier research pass/session; it separates facts from unknowns and states token/duration/cost/quota are unknown without measurement, and it neither treats its own judgement as approval, writes a ready issue, nor performs the research.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 340,
+              "cacheWrite": 0,
+              "input": 1517,
+              "output": 2226
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d0a840f3442b594452e5f57504176867f73e4bbf8c38e4bef7ce41f9a3fb1148"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-07-frontier-needs-explicit-approval",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "Undertake recognizes the explicit bounded implementation exception",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The agent proceeds only within the explicitly authorized implementation scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The agent proceeds only within the explicitly authorized implementation scope",
+            "duration_seconds": 41.38,
+            "findings": [
+              "Verified the user-approved bounded frontier implementation exception from the offline issue record, explicitly distinct from research approval",
+              "Restated the frontier rationale: ordinary classes cannot settle the parser's interaction with issue-body grammar and malformed-token boundary",
+              "Reproduced the exact two-file scope (scripts/model-telemetry.py and its existing offline regression test) with explicit exclusion of other files/follow-ups",
+              "Reported the execution blocker: no repository, branch, or write tools; both named target files absent",
+              "Made no false claims: explicitly stated 'I claim no implementation' and requested the repo plus write access"
+            ],
+            "index": 1,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "326f718a24b17c833d9e0530b2cb427de896cdb29d43383b52a72e3e1ab10f41",
+            "rationale": "ANCHOR: result \u2014 the final reply reads issue-88.md, verifies the distinct user-approved frontier implementation exception (noting it is separate from research approval, so research approval alone does not suffice), states the frontier rationale that ordinary classes cannot settle the parser grammar issue, and reproduces the exact two-file acceptance scope with no other files or follow-ups. It reports the execution blocker (no repo/branch/write tools, targets absent) while claiming no implementation, branch, or PR.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 9,
+              "cacheWrite": 0,
+              "input": 1510,
+              "output": 2298
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d0a840f3442b594452e5f57504176867f73e4bbf8c38e4bef7ce41f9a3fb1148"
+      },
+      "measured_score": 0.666667,
+      "raw_weighted_score": 0.6666666666666666,
+      "replicate_index": 0,
+      "task_id": "undertake-21-scoped-frontier-implementation-is-authorized",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "Undertake recognizes the explicit bounded implementation exception",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The agent proceeds only within the explicitly authorized implementation scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The agent proceeds only within the explicitly authorized implementation scope",
+            "duration_seconds": 32.25,
+            "findings": [
+              "Reads the offline issue record issue-88.md and checks its Model class and User authorization sections against the contract",
+              "Verifies the distinct user-approved frontier implementation exception and states research/planning approval alone does not qualify",
+              "Cites the recorded rationale that ordinary classes cannot settle the parser interaction with the issue-body grammar and malformed-token boundary",
+              "Restricts authorization to the exact two-file acceptance scope: parser update plus regression case, no other files or follow-ups",
+              "Reports the execution blocker: only issue-88.md in the sandbox, no repository, branch, write tools; explicitly no claim comment, no implementation, no PR claimed"
+            ],
+            "index": 1,
+            "observed": {
+              "model": "zai/glm-5.3",
+              "provider": "vercel-ai-gateway"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "326f718a24b17c833d9e0530b2cb427de896cdb29d43383b52a72e3e1ab10f41",
+            "rationale": "The final reply after the [RESULT - SUCCESS] tag reads the offline issue record and verifies the distinct, user-approved frontier implementation exception marked separate from research approval, including the stated reason ordinary classes are insufficient. It authorizes frontier implementation only within the exact two-file scope (scripts/model-telemetry.py plus its existing offline regression test) and reports the no-repository/no-write-tools execution blocker while explicitly claiming no branch, claim comment, implementation, or PR.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 339,
+              "cacheWrite": 0,
+              "input": 1611,
+              "output": 1534
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d0a840f3442b594452e5f57504176867f73e4bbf8c38e4bef7ce41f9a3fb1148"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-21-scoped-frontier-implementation-is-authorized",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.053190600000000005,
+      "cost_source": "reported",
+      "elapsed_seconds": 157.51816391944885,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "issue-07-frontier-needs-explicit-approval",
+      "tokens": 75126,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.0414796,
+      "cost_source": "reported",
+      "elapsed_seconds": 70.20912194252014,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "issue-07-frontier-needs-explicit-approval",
+      "tokens": 47360,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.012582,
+      "cost_source": "reported",
+      "elapsed_seconds": 49.5371458530426,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-scoped-frontier-implementation-is-authorized",
+      "tokens": 20681,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.0607498,
+      "cost_source": "reported",
+      "elapsed_seconds": 156.39217400550842,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-scoped-frontier-implementation-is-authorized",
+      "tokens": 83527,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T18:46:24.810424",
+  "experiment_id": "omp-glm-5-3",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "d0a840f3442b594452e5f57504176867f73e4bbf8c38e4bef7ce41f9a3fb1148",
+    "judge_id": "omp-glm-5.3",
+    "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+    "models_observed": [
+      "zai/glm-5.3"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 1027,
+      "cacheWrite": 0,
+      "input": 6975,
+      "output": 8448
+    }
+  },
+  "plugin_revision": {
+    "commit": "31f109e52db7e3204e2b0867469c0f0e0282a05e",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-08T11:49:19.532675+00:00",
+  "run_id": "2026-10-08_18-39-10",
+  "schema_version": 3,
+  "started_at": "2026-10-08T18:39:10.985542",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-07-frontier-needs-explicit-approval": [
+          0.133333
+        ],
+        "undertake-21-scoped-frontier-implementation-is-authorized": [
+          0.666667
+        ]
+      },
+      "task_ids": [
+        "issue-07-frontier-needs-explicit-approval",
+        "undertake-21-scoped-frontier-implementation-is-authorized"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-07-frontier-needs-explicit-approval": [
+          1.0
+        ],
+        "undertake-21-scoped-frontier-implementation-is-authorized": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "issue-07-frontier-needs-explicit-approval",
+        "undertake-21-scoped-frontier-implementation-is-authorized"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

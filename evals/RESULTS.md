@@ -56,6 +56,7 @@ One row per committed record, oldest first.
 | 2026-10-08 | classes-smoke-luna-6 | omp | openai-codex/gpt-6-luna (requested) | not recorded | 2 | 2/2 | not recorded | not recorded | 2m 41s |
 | 2026-10-08 | classes-smoke-terra-5-6 | omp | openai-codex/gpt-5.6-terra (requested) | not recorded | 2 | 2/2 | not recorded | not recorded | 7m 08s |
 | 2026-10-08 | classes-sol-6-1 | omp | openai-codex/gpt-6.1-sol (requested) | not recorded | 18 | 14/18 | not recorded | not recorded | 11m 28s |
+| 2026-10-08 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | omp-glm-5.3 (run-selected) | 4 | 2/4 | $0.17 | $0.08 | 7m 13s |
 | 2026-10-08 | classes-sol-6-1 | unknown | openai-codex/gpt-6.1-sol | not recorded | 2 | 0/2 | not recorded | not recorded | 0m 55s |
 | 2026-10-08 | classes-sol-6-1 | unknown | openai-codex/gpt-6.1-sol | not recorded | 3 | 0/3 | not recorded | not recorded | 0m 58s |
 | 2026-10-08 | classes-smoke-sol-6-1 | omp | openai-codex/gpt-6.1-sol (requested) | not recorded | 1 | 1/1 | not recorded | not recorded | 2m 26s |

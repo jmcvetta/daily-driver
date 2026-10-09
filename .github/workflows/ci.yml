@@ -55,7 +55,7 @@ jobs:
           curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Install Omp
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard-live') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard-live') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
         run: |
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
@@ -170,6 +170,9 @@ jobs:
       - name: Validate live Omp eval guard
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard-live')
         run: make check-omp-eval-guard-live
+      - name: Validate live Omp embark title barrier
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live')
+        run: make check-omp-embark-title-live
       - name: Validate Omp agent settlement
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
         run: make check-omp-agent-settle

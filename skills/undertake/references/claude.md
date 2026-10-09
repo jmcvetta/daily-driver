@@ -40,24 +40,32 @@ issue carrying none of the standard's six is not an issue carrying none.
 `issue-labels`, whose `references/claude.md` states that trap where the label
 write lives.
 
-For a `task`, read the `Model class` section, validated and repaired through
-[`issue-body`'s guidance](../../issue-body/references/model-classes.md) where
-its body is old or invalid, before the claim. That guidance is dispatch's —
-`embark` selects a route against it before assigning work — and nothing here
-compares the class to this session's own capability.
+For a `task`, validate its `Model class` section and rationale through
+[`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
+claim, repairing an old or invalid body where its handoff is grounded. A
+frontier assignment also needs explicit approval and its exact envelope. A
+frontier `research` issue keeps that label and its narrow metadata exception;
+do not impose the task template.
+
+Non-frontier standalone work keeps its existing route without a class-to-model
+gate. A frontier session resolves its actual route before branch creation or
+claim and must hand ordinary work to an eligible non-frontier session or stop
+with a configuration gap.
 
 
 The implementor
 ===============
 
-No route, and that is the rule rather than a gap. `SKILL.md`'s `Implement`
-owns it: the session running the sequence writes the code itself, so nothing
-here dispatches `mcp__Claude_Code_Remote__create_session` or the `Agent` tool
-for the body of the work. Both routes exist on this harness and both belong to
-`embark`, which uses them to run several task issues at once — the web session
-is its primary route here. The one dispatch inside this sequence is
-`review-cycle`'s briefed subagent at `Verify the fix delta`, named in that
-skill's own reference file.
+Ordinary non-frontier implementation stays in the session running this
+sequence. Before branch creation or claim, a frontier session may use
+`mcp__Claude_Code_Remote__create_session` or the `Agent` tool only after
+resolving an eligible non-frontier route under
+[`embark`'s Claude routing rules](../../embark/references/claude.md#the-required-class).
+It hands off the full `undertake #<issue>`; the receiving session owns its
+worktree, claim, implementation, and pull request. If the concrete route
+cannot be established, stop and report the configuration gap. A supported
+model switch may continue here only after the harness reports non-frontier
+execution.
 
 
 The pull request
@@ -110,17 +118,26 @@ same call's model and session fields for `Claim the issue`'s block.
 
 Both branch fields are arrays. Read the outcome whose `git_info.repo` names the
 repository this work will be pushed to. Exactly one branch is a designation;
-more than one is a collision, not a pick. The branch checked out in the task
-worktree must agree before the claim is posted — the designated branch, or the
-adopted resume branch where `Read the issue and its edges` found one.
+more than one is a collision, not a pick. `task-worktree` may establish a
+different local execution branch only when this is new work and schema-2
+Worktrunk evidence confirms the designated branch is checked out in the
+primary worktree. The claim links the designated remote push branch and names
+the local execution branch separately. Otherwise the task-worktree branch
+must agree with the designation, or with the adopted resume branch.
 
-**A resume branch differing from the designated one is not a collision.** The
-adopted branch is the task branch. The session's own instructions may still
-require explicit permission to push to a branch other than the designated one.
-Where they do, ask the user once, in one line naming both branches and the
-resume evidence (the pull request, handoff comment or claim that named it),
-then push to the adopted branch. Never push the work to the designated branch
-instead, and never open a second pull request from it.
+**A resume branch differing from the designation is not a collision.** The
+adopted remote branch is the task's push/PR head. The session's own
+instructions may still require explicit permission to push to a branch other
+than the designation. Where they do, ask the user once, in one line naming
+both branches and the resume evidence (the pull request, handoff comment or
+claim that named it), then push to the adopted branch. Never push the work to
+the designated branch instead, and never open a second pull request from it.
+
+For the primary-held designation exception, use the designated branch for the
+claim link, pushes, existing-PR lookup and PR creation. Keep the execution
+branch local; `task-worktree`'s explicit non-force refspec sets the designated
+remote branch as its upstream. CI reads belong to the PR found on that remote
+head; never query or create CI state for the local execution name.
 
 `external_metadata.current_branches` is a different field and answers a
 different question: what is checked out, not what the harness designated.

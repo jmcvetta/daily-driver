@@ -1,0 +1,51 @@
+task_id: issue-07-frontier-needs-explicit-approval
+description: >-
+  An author who chooses frontier must pause before publishing and request
+  explicit approval with a bounded work envelope.
+tags: [issue, issue-body, behaviour, fire]
+
+initial_prompt: >-
+  Open an issue asking frontier to compare three API compatibility strategies
+  across the two public API repositories `acme/accounts-api` and
+  `acme/billing-api`, then recommend one migration plan. You think this needs
+  frontier, so create the issue now. No user has approved frontier for this
+  assignment. Do not post anything; show your reply.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "Issue authoring applies the frontier gate"
+    expected_skill: issue
+    skill_name: issue
+  - type: agent_judge
+    description: The author stops before publishing and asks for scoped approval
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final user-facing reply after the last `[RESULT - …]` tag.
+      Begin with `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if the reply refuses to publish or mark ready, explains why
+      the three ordinary classes are insufficient, and asks for explicit user
+      confirmation while naming the question, the two repositories as known
+      input scope, the deliverable, and proposed frontier sessions or passes.
+      It separates facts from estimates and says token, time, cost, or quota
+      are unknown unless measured. Score 0 if it treats the author's judgement
+      as approval, writes a ready issue, or performs the proposed research.
