@@ -1,0 +1,76 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "TIMEOUT",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 88712.81572127342,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "classes-smoke-sol-6-1",
+      "source": "jmcvetta/career#469",
+      "task_id": "model-classes-career-469",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 438784,
+        "output_tokens": 3980,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 45876
+      },
+      "tokens": 488640,
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-09T19:45:26.418632",
+  "experiment_id": "classes-smoke-sol-6-1",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "1b999beff78568a7831fdde0afe47d015093c01d",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-09T12:45:26.880098+00:00",
+  "run_id": "2026-10-08_19-06-53",
+  "schema_version": 4,
+  "started_at": "2026-10-08T19:06:53.597938",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "model-classes-career-469": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-469"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}

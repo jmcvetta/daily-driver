@@ -1,0 +1,181 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_git_sync.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-475_8wqre5du\nconfigfile: pytest.ini\nplugins: cov-7.1.0, base-url-2.1.0, playwright-0.8.0\ncollected 5 items\n\n../tests/test_git_sync.py .....                                          [100%]\n\n============================= slowest 30 durations =============================\n0.12s call     tests/test_git_sync.py::test_git_sync_continues_after_dirty_worktree_to_direct_branch\n0.11s call     tests/test_git_sync.py::test_git_sync_removes_merged_worktree_without_upstream\n0.11s call     tests/test_git_sync.py::test_git_sync_keeps_merged_worktree_with_remote_branch\n0.10s call     tests/test_git_sync.py::test_git_sync_keeps_dirty_stale_worktree_and_branch\n0.10s call     tests/test_git_sync.py::test_git_sync_removes_clean_stale_worktree_and_branch\n\n(10 durations < 0.005s hidden.  Use -vv to show these durations.)\n============================== 5 passed in 0.58s ===============================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-475_8wqre5du/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-475",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: GH_CONFIG_DIR=\"$(mktemp -d)\" GH_TOKEN= GITHUB_TOKEN= bash -c 'bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py'\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-462_xiu8micp\nconfigfile: pytest.ini\nplugins: cov-7.1.0, playwright-0.8.0, base-url-2.1.0\ncollected 81 items\n\n../tests/test_infra_github.py .........................s................ [ 51%]\n.......................................                                  [100%]\n\n============================= slowest 30 durations =============================\n0.10s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.09s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.09s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.09s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.08s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.07s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.07s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.06s call     tests/test_infra_github.py::test_declared_labels_match_github\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-polite-pace]\n0.05s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.05s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.05s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.05s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.05s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.04s call     tests/test_infra_github.py::test_ci_never_runs_the_v1_suite\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-cflow]\n0.04s call     tests/test_infra_github.py::test_every_change_filter_feeds_a_job\n0.04s call     tests/test_infra_github.py::test_every_leg_is_gated_on_the_change_filter\n0.04s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.04s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-agent-cli]\n0.04s call     tests/test_infra_github.py::test_ci_runs_are_cancelled_when_superseded\n0.04s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.04s call     tests/test_infra_github.py::test_the_aggregate_is_not_guarded_off_release_prs\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.04s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.04s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.04s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n======================== 80 passed, 1 skipped in 2.06s =========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-462_xiu8micp/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 294.6974387168884,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "classes-smoke-terra-5-6",
+      "source": "jmcvetta/career#475",
+      "task_id": "model-classes-career-475",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 293376,
+        "output_tokens": 8965,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 50565
+      },
+      "tokens": 352906,
+      "variant_id": "default"
+    },
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 133.8579180240631,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "classes-smoke-terra-5-6",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 283648,
+        "output_tokens": 2869,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 36264
+      },
+      "tokens": 322781,
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T18:37:07.337073",
+  "experiment_id": "classes-smoke-terra-5-6",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "83d4056bbe9b8292263a23bce85d593c7c343f34",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-08T11:37:08.178085+00:00",
+  "run_id": "2026-10-08_18-29-58",
+  "schema_version": 4,
+  "started_at": "2026-10-08T18:29:58.771944",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "model-classes-career-462": [
+          1.0
+        ],
+        "model-classes-career-475": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-475",
+        "model-classes-career-462"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}
