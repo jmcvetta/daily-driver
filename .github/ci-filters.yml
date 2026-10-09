@@ -1,63 +1,194 @@
-# Component boundaries are deliberately broad. Changes outside these roots
-# select every validation job through `unknown`.
-plugin:
+# Each retained Make target owns only the files and fixtures it reads.
+# Makefile recipes, top-level structure and execution wiring are handled by the selector.
+check-ci-scope:
+  - '.github/ci-filters.yml'
+  - '.github/workflows/ci.yml'
+  - 'scripts/check-ci-scope.mjs'
+  - 'scripts/ci-select.mjs'
+  - 'package.json'
+  - 'package-lock.json'
+check-step-names:
+  - 'scripts/check-step-names.py'
+  - '**/*.md'
+  - '**/*.yaml'
+  - '**/*.yml'
+  - '!CHANGELOG.md'
+check-release-paths:
+  - 'scripts/check-release-paths.py'
+  - 'release-please-config.json'
+check-plugin:
+  - '.claude-plugin/**'
+check-skills:
+  - 'skills/**'
+check-agents:
+  - 'agents/**'
+check-manifests:
+  - 'scripts/check-manifests.py'
+  - 'scripts/stanza.py'
   - 'skills/**'
   - 'agents/**'
+  - 'rules/*.md'
   - '.claude-plugin/**'
-  - 'docs/**'
+  - '.omp-plugin/plugin.json'
+  - 'package.json'
+  - 'template/.claude/settings.json'
+  - '.claude/settings.json'
   - 'README.md'
-runtime:
-  - 'hooks/**'
-  - 'extensions/**'
-  - 'rules/**'
-  - 'skills/**'
-  - 'evals/**'
+  - 'docs/**/*.md'
+check-manifest-fixtures:
+  - 'scripts/check-manifest-fixtures.py'
+  - 'scripts/check-manifests.py'
+  - 'scripts/stanza.py'
+check-claude-dependency:
+  - 'scripts/check-claude-dependency.sh'
+check-constitution:
+  - 'scripts/check-constitution.py'
+  - 'hooks/inject-constitution.py'
+  - 'hooks/hooks.json'
+  - 'rules/constitution.md'
+  - 'evals/**/*.yaml'
+  - 'evals/**/*.yml'
+  - 'evals/**/*.md'
+  - 'evals/**/*.sh'
+  - 'evals/**/*.py'
+check-ask-in-chat:
+  - 'scripts/check-ask-in-chat.py'
+  - 'hooks/ask-in-chat.py'
+  - 'hooks/hooks.json'
+check-title-gate:
+  - 'scripts/check-title-gate.py'
+  - 'hooks/title-gate.py'
+  - 'hooks/hooks.json'
+  - 'skills/session-title/SKILL.md'
+check-omp-extension:
+  - 'scripts/check-omp-extension.mjs'
+  - 'extensions/daily-driver.js'
+  - 'extensions/role-default-helper.mjs'
+  - 'package.json'
+check-model-class-roles:
+  - 'scripts/check-model-class-role-defaults.mjs'
+  - 'extensions/role-default-helper.mjs'
+  - 'package.json'
+check-omp-guard-differential:
+  - 'scripts/check-omp-guard-differential.mjs'
+  - 'extensions/daily-driver.js'
+  - 'extensions/role-default-helper.mjs'
+check-omp-cache-clean:
+  - 'scripts/check-omp-cache-clean.py'
+check-git-sync:
+  - 'scripts/check-git-sync.py'
   - '.config/wt.toml'
-eval:
-  - 'evals/**'
-issue:
-  - 'infra/**'
-  - 'skills/issue-labels/**'
-omp:
-  - '.omp-plugin/**'
-  - 'agents/**'
-  - '.claude-plugin/**'
+check-task-worktree-fixture:
+  - 'scripts/check-task-worktree-fixture.sh'
+  - 'evals/fixtures/task-worktree/shared/**'
+check-worktrunk-install:
+  - 'scripts/check-worktrunk-install.sh'
+  - 'scripts/ensure-worktrunk.sh'
+check-scripts:
+  - 'skills/*/scripts/*.sh'
+  - 'scripts/*.sh'
+  - 'evals/fixtures/*/shared/*.sh'
+  - 'evals/fixtures/*/cases/*/*.sh'
+check-omp-agent:
+  - 'scripts/check-omp-agent.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/__init__.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/rpc.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/home.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/pricing.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/launch.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/tools.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/eval_guard.js'
+  - 'evals/coder-eval-omp/prices.json'
+  - 'evals/coder-eval-omp/fixtures/agent_end_usage.json'
+check-omp-eval-guard:
+  - 'scripts/check-omp-eval-guard.mjs'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/eval_guard.js'
+  - 'package.json'
+check-codex-agent:
+  - 'scripts/check-codex-agent.py'
+  - 'evals/coder-eval-codex/src/coder_eval_codex/__init__.py'
+  - 'evals/coder-eval-codex/src/coder_eval_codex/plugins.py'
+  - 'evals/coder-eval-codex/src/coder_eval_codex/transcript.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/__init__.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/rpc.py'
+check-eval-fixtures:
+  - 'scripts/check-eval-fixtures.sh'
+  - 'evals/fixtures/review-depth/**'
+check-model-classes-grader:
+  - 'scripts/check-model-classes-grader.sh'
+  - 'evals/fixtures/model-classes/shared/**'
+check-eval-arms:
+  - 'scripts/check-eval-arms.py'
+  - 'scripts/evals-variants.py'
+  - 'evals/tasks/**'
+  - 'evals/experiments/**'
+check-agent-judges:
+  - 'scripts/check-agent-judges.py'
+  - 'scripts/evals-judge.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/__init__.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/home.py'
+  - 'evals/tasks/**'
+  - 'evals/judges/**'
+check-evals-judge:
+  - 'scripts/check-evals-judge.py'
+  - 'scripts/evals-judge.py'
+  - 'scripts/evals-record.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/__init__.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/home.py'
+  - 'evals/judges/**'
+  - 'evals/tasks/undertake/09-title-before-claim-omp.yaml'
+check-evals-preflight:
+  - 'scripts/check-evals-preflight.py'
+  - 'scripts/evals-preflight.py'
+check-evals-provenance:
+  - 'scripts/check-evals-provenance.py'
+  - 'scripts/evals-record.py'
+  - 'scripts/evals-render-routes.py'
+  - 'scripts/evals-render-results.py'
+  - 'evals/provenance/*.json'
+  - 'evals/tasks/**'
+check-evals-results:
+  - 'scripts/evals-render-results.py'
+  - 'evals/provenance/*.json'
+  - 'evals/RESULTS.md'
+check-model-telemetry:
+  - 'scripts/check-model-telemetry.py'
+  - 'scripts/model-telemetry.py'
+  - 'scripts/fixtures/model-telemetry-*.txt'
+check-evals-setup-omp:
+  - 'scripts/check-evals-setup-omp.sh'
+  - 'scripts/evals-setup-omp.sh'
+check-labels:
+  - 'scripts/check-labels.py'
+  - 'skills/issue-labels/SKILL.md'
+  - 'infra/github/labels.tf'
+check-labels-fixtures:
+  - 'scripts/check-labels-fixtures.py'
+  - 'scripts/check-labels.py'
+check-omp-plugin:
+  - 'scripts/check-omp-plugin.py'
+  - 'package.json'
+  - '.omp-plugin/plugin.json'
   - 'extensions/**'
-  - 'skills/**'
-  - 'evals/**'
-shared:
-  - 'scripts/**'
-  - '.github/**'
-  - 'Makefile'
+  - 'skills/*/SKILL.md'
+check-omp-embark-title-live:
+  - 'scripts/check-omp-embark-title-live.py'
+  - 'extensions/daily-driver.js'
+  - 'skills/embark/**'
+  - 'skills/session-title/**'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/tools.py'
+check-omp-eval-guard-live:
+  - 'scripts/check-omp-eval-guard-live.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/__init__.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/launch.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/tools.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/eval_guard.js'
+  - 'extensions/**'
+  - '.omp-plugin/plugin.json'
+check-omp-agent-settle:
+  - 'scripts/check-omp-agent-settle.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/**'
+  - 'evals/coder-eval-omp/pyproject.toml'
+  - 'evals/coder-eval-omp/prices.json'
   - 'pyproject.toml'
   - 'uv.lock'
-  - '**/package.json'
-  - '**/package-lock.json'
-  - '**/yarn.lock'
-  - '**/pnpm-lock.yaml'
-  - '**/Cargo.toml'
-  - '**/Cargo.lock'
-  - '**/go.mod'
-  - '**/go.sum'
-unknown:
-  - '**'
-  - '!skills/**'
-  - '!agents/**'
-  - '!.claude-plugin/**'
-  - '!.omp-plugin/**'
-  - '!hooks/**'
-  - '!extensions/**'
-  - '!rules/**'
-  - '!evals/**'
-  - '!omp_configs/**'
-  - '!infra/**'
-  - '!scripts/**'
-  - '!.config/wt.toml'
-  - '!.github/**'
-  - '!docs/**'
-  - '!attic/**'
-  - '!README.md'
-  - '!CHANGELOG.md'
-  - '!LICENSE'
-  - '!ANTI-LICENSE.md'
-  - '!HAIKU.md'

@@ -12,10 +12,11 @@ evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
 │   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
-│   ├── omp-*.yaml                  one two-variant Omp experiment per model
+│   ├── omp-*.yaml                  Omp model experiments; paired ablations or focused acceptance runs
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
 ├── tasks/
+│   ├── fix-daily-driver-bugs/  offline GitHub-fixture triage and dispatch cases
 │   ├── pr/              does `pr` fire when a PR is opened, and only then?
 │   ├── pr-title/        … when a title is written, and only then?
 │   ├── conventional-commits-type/
@@ -35,6 +36,8 @@ evals/
 │   ├── review-depth/    does `review` send the right panel at the diff?
 │   └── model-classes/   does this model finish real delegated work? see below
 ├── fixtures/
+│   ├── fix-daily-driver-bugs/shared/
+│   │                    offline `gh` recorder and issue-state assertions
 │   ├── review-depth/
 │   │   ├── shared/       builds the git repository every case starts from
 │   │   └── cases/<name>/ one `case.sh`, mounted alone beside `shared/`
@@ -64,15 +67,17 @@ from them; a model and settings pair with no case row is listed `unmeasured`.
 rate, price and wall time per run. `make evals-render-results` writes it, and
 `make check` fails when it is stale.
 
-From schema version 3, every case row carries a `cost` field and an
-`elapsed_seconds` above zero. Versions 3 and 4 retain numeric USD costs for
-reported and price-table-computed rows. Schema version 4 also records the
-exact Omp Codex models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`,
-and `openai-codex/gpt-6.1-sol` with `cost: null` and
-`cost_source: subscription`; token usage remains recorded, but no API price is
-inferred. Other Omp and Codex models still need an entry in
-[`prices.yaml`](prices.yaml), or recording fails closed. Records at versions 1
-through 3 stay as they are.
+From schema version 3, every case row carries positive `elapsed_seconds` and
+its cost evidence. `cost` is numeric when the harness reports a price
+(`cost_source: reported`) or reports token counts the recorder can price from
+[`prices.yaml`](prices.yaml) (`cost_source: computed`). The exact Omp Codex
+models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`, and
+`openai-codex/gpt-6.1-sol` use `cost: null` and `cost_source: subscription`;
+token usage remains recorded, but no API price is inferred. When usage is
+missing, `cost` is null and `cost_source: unreported`; it is never treated as
+free. Other token-only routes without a price-table entry or an explicit
+unpriced subscription entry fail recording. Records at versions 1 and 2 stay
+as they are.
 
 ## Running them
 
@@ -143,8 +148,22 @@ make evals-render-results # rewrite RESULTS.md from committed provenance
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
-# Run the configured Omp experiments with their provider credentials.
+# Paired ablations compare bare and treated arms; focused runs name one arm.
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
+```
+
+The repository-local automatic-report workflow has three Omp-only behavioral
+fixtures. They use a fake `gh` that records issue reads and writes; no live
+GitHub issue is read or changed. Case 03 states in its prompt that the
+`reasoning` agent has no route; the sandbox does not remove that route from the
+Omp configuration. No criterion checks which agent each batch item selects:
+the judge sees only reply text, and `command_executed` sees a truncated
+serialisation (see the `subagent_type` note below). Run them with an available
+Omp model and judge:
+
+```sh
+make evals-run-omp-glm-5-3 JUDGE=omp-glm-5.3 \
+  TASKS='tasks/fix-daily-driver-bugs/*.yaml'
 ```
 
 `make evals-record ... POST_COMMENTS=1` also posts one comment per run on each
@@ -221,6 +240,19 @@ rule in [`judges/calibration/observed/omp-gpt-6.1-sol.json`](judges/calibration/
 make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
 make evals-run-omp-gpt-5-6-sol JUDGE=omp-glm-5.3 TASKS='tasks/undertake/09-title-before-claim-omp.yaml'
 ```
+
+`omp-gpt-6.1-sol` met the predeclared calibration rule on 2026-10-06: 11 of 11
+labels correct, no false passes, no errors. The small transcript set supports
+this route for the rubric tested; it is not a general model-quality ranking
+([`observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json)).
+
+```sh
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'
+```
+
+Both the subject and judge use `openai-codex` for this configuration. Do not
+route OpenAI models through the Vercel AI Gateway. The experiment uses one
+repeat per variant for the focused run; expand only after reviewing those results.
 
 **What a non-Claude judge changes.** `make evals-judge-preflight` runs first and
 fails before any subject if `omp` is missing, Omp does not list the judge's exact
@@ -380,6 +412,22 @@ answered by asking what it now sweeps in. `07` is `Merge PR #25.`, the
 direction `Keep it current` does not go: that step merges the base branch into
 the pull request, and the word it put in the description is the word this row
 keeps from sweeping in the other one.
+
+The escalation regression rows `undertake/17-*.yaml` and
+`pr-body/08-capability-gap-is-not-human-blocker.yaml` grade both the decision
+and its evidence. Sandbox command stubs in
+`fixtures/undertake-escalation/shared/setup.sh` never access infrastructure or
+GitHub; `command_executed` and the stub's `.fixture/trajectory.log` must both
+show an operation before a judge credits an attempt. The rows cover a permitted
+Tofu plan, an alternative route, an observed person-only authorization, a
+production prohibition with no probe, pending CI, independent work before an
+access gap and before a real human action, credentialed cloud execution, an
+available authorized-agent handoff, a missing-handoff prerequisite, stale
+versus still-outstanding Tofu apply blockers on resume, and PR-body maintenance
+from undertaking evidence.
+Run only this focused set with the documented
+`make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
+route after its `evals-plan`; the normal project checks remain CI's gate.
 
 One collision is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
 `undertake` distractor, because "get it to a pull request" is in `undertake`'s
@@ -1367,7 +1415,9 @@ reviewed by hand against `skills/issue-body/references/model-classes.md`'s
 table. The script's own module docstring has the full usage, and its
 self-tests (run offline, every invocation, against inline JSON-shaped GitHub
 API fixtures) are the acceptance test for the qualifying filter, the test-file
-split, the class and elapsed reads, and `task_timeout` derivation.
+split, the class and elapsed reads, and `task_timeout` derivation. No
+standalone CI check repeats them: the builder runs them before every
+invocation, so a defect in it surfaces on its next run.
 
 `scripts/check-eval-arms.py` treats `model-classes` as a fourth arm that
 owns both the `omp` and `claude-code` kinds — it measures a model, not a

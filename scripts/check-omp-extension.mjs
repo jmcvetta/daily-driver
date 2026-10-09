@@ -93,7 +93,7 @@ function fakeTimers() {
  */
 function fakeApi(overrides = {}) {
 	const handlers = new Map();
-	const calls = { sessionNames: [], sent: [], entries: [], statuses: [] };
+	const calls = { sessionNames: [], sent: [], entries: [...(overrides.entries ?? [])], statuses: [], sessionName: overrides.sessionName };
 	const tools = new Map();
 	const timers = fakeTimers();
 
@@ -142,6 +142,7 @@ function fakeApi(overrides = {}) {
 		},
 		async setSessionName(name) {
 			calls.sessionNames.push(name);
+			calls.sessionName = name;
 		},
 		sendMessage(msg, opts) {
 			calls.sent.push({ msg, opts });
@@ -188,6 +189,7 @@ const {
 	ASK_BLOCK_REASON,
 	GIT_UNAVAILABLE_BLOCK_REASON,
 	REMINDER_CUSTOM_TYPE,
+	TITLE_BLOCK_REASON,
 	UNANCHORED_PATH_BLOCK_REASON,
 	UNREADABLE_COMMAND_BLOCK_REASON,
 	WORKTREE_BLOCK_REASON,
@@ -392,6 +394,491 @@ check("a tool other than ask passes through", async () => {
 	const toolCtx = { cwd: "/tmp", ui: {} };
 	const decision = s.fire("tool_call", { type: "tool_call", toolCallId: "t2", toolName: "bash", input: { command: "true" } }, toolCtx);
 	assert.equal(decision, undefined, "non-ask tool must not be blocked");
+});
+
+// --- the title gate: the first issue comment and first dispatch wait -------
+const ISSUE_TITLE = "#52 Rotate the Aurora access token";
+const EPIC_TITLE = "⛵ EPIC #12 Rotate the tokens";
+const GH_COMMENT = "gh issue comment 52 -b 'Claiming it.'";
+
+/** A tool context whose session reads `name`; `undefined` is an unnamed session. */
+function namedCtx(name) {
+	return { cwd: "/tmp", ui: {}, sessionManager: { getSessionName: () => name } };
+}
+
+/** A main-session context whose title and persisted branch entries are mutable. */
+function startupCtx(session, sessionId = "main-session", agentKind = "main") {
+	return {
+		cwd: "/tmp",
+		ui: {},
+		agent: { kind: agentKind },
+		sessionManager: {
+			getSessionId: () => sessionId,
+			getSessionName: () => session.rec.sessionName,
+			getBranch: () => session.rec.entries,
+		},
+	};
+}
+
+const epicMetadata = `# Issue #582: Enforce epic titling
+State: OPEN
+Labels: task, epic
+URL: https://github.com/example/project/issues/582
+
+## Body
+embark 999 is quoted issue text.
+`;
+
+/** Return the custom state recorded for an active-session fixture. */
+function startupState(session) {
+	return session.rec.entries.at(-1)?.data?.state;
+}
+
+let nextTitleCall = 1;
+
+/** Drive the canonical issue read and deliver its real-shaped result. */
+function deliverEpicRead(session, ctx, issue = epicMetadata, callId = "epic-read", path = "issue://582") {
+	session.fire("tool_call", {
+		type: "tool_call",
+		toolName: "read",
+		toolCallId: callId,
+		input: { path },
+	}, ctx);
+	session.fire("tool_result", {
+		type: "tool_result",
+		toolName: "read",
+		toolCallId: callId,
+		input: { path },
+		content: [{ type: "text", text: issue }],
+		isError: false,
+	}, ctx);
+}
+/** This prevents an explicit embark from reaching dispatch before the epic title is fixed. */
+check("explicit embark is gated at the requested epic read and title", async () => {
+	const s = makeSession();
+	const ctx = startupCtx(s);
+	await s.tools.get("daily_driver_set_session_title").execute(
+		"stale",
+		{ title: "⛵ EPIC #999 Old epic title" },
+		undefined,
+		undefined,
+		namedCtx(undefined),
+	);
+	s.fire("before_agent_start", { prompt: "embark 582. No agent is currently working on it." }, ctx);
+	assert.equal(startupState(s).status, "awaiting");
+	assert.equal(titleCall(s, "task", {}, ctx).block, true);
+	const docsBeforeIdentity = titleCall(s, "read", { path: "skill://session-title" }, ctx);
+	assert.equal(docsBeforeIdentity, undefined);
+	deliverEpicRead(s, ctx);
+	assert.equal(startupState(s).status, "required");
+	const blocked = titleCall(s, "read", { path: "skills/undertake/SKILL.md" }, ctx);
+	assert.equal(blocked.block, true);
+	assert.match(blocked.reason, /#582: "Enforce epic titling"/);
+	assert.equal(titleCall(s, "write", {
+		path: "xd://daily_driver_set_session_title",
+		content: JSON.stringify({ title: "⛵ EPIC #999 Wrong epic" }),
+	}, ctx).block, true);
+	assert.equal(titleCall(s, "write", {
+		path: "xd://daily_driver_set_session_title",
+		content: JSON.stringify({ title: "⛵ EPIC #582 Enforce epic titling" }),
+	}, ctx), undefined);
+	const setter = s.tools.get("daily_driver_set_session_title");
+	const rejected = await setter.execute("wrong", { title: "#582 Enforce epic titling" }, undefined, undefined, ctx);
+	assert.equal(rejected.isError, true);
+	assert.equal(s.rec.sessionNames.length, 1, "the old title call did not change the active epic title");
+	const titled = await setter.execute(
+		"right",
+		{ title: "⛵ EPIC #582 Enforce epic titling" },
+		undefined,
+		undefined,
+		ctx,
+	);
+	assert.equal(titled.details.titled, "⛵ EPIC #582 Enforce epic titling");
+	assert.equal(s.rec.sessionName, "⛵ EPIC #582 Enforce epic titling");
+	assert.equal(startupState(s).status, "satisfied");
+	assert.equal(titleCall(s, "read", { path: "skills/undertake/SKILL.md" }, ctx), undefined);
+});
+
+/** This prevents skill-body examples from activating while preserving real command forms. */
+check("explicit request parsing excludes mentions and accepts supported references", () => {
+	const cases = [
+		["embark 445. No agent is currently working on it.", 445],
+		["/embark #446", 446],
+		["embark issue://owner/repo/447", 447],
+		["embark https://github.com/owner/repo/issues/448", 448],
+		[
+			'[IMPORTANT: User invoked the "embark" skill; follow its instructions. Full skill below.]\n' +
+				"skill body contains a fake `embark 999` example.\n\n---\n\n" +
+				"[Skill directory: /tmp/skills]\n" +
+				"Resolve relative paths against this directory.\n" +
+				"User: embark 449",
+			449,
+		],
+		[
+			'[IMPORTANT: User invoked the "embark" skill; follow its instructions. Full skill below.]\n' +
+				"skill body contains no user request.\n\n[Skill directory: /tmp/skills]\n" +
+				"Resolve relative paths against this directory.\nUser: issue://owner/repo/450",
+			450,
+		],
+	];
+	for (const [prompt, number] of cases) {
+		const s = makeSession();
+		const ctx = startupCtx(s);
+		s.fire("before_agent_start", { prompt }, ctx);
+		assert.equal(startupState(s).target.number, number, prompt);
+	}
+	for (const prompt of [
+		"Please read the embark skill",
+		"Discuss embark 445 with me",
+		'The command is "embark 445"',
+		"embark without an issue",
+	]) {
+		const s = makeSession();
+		s.fire("before_agent_start", { prompt }, startupCtx(s));
+		assert.equal(startupState(s), undefined, prompt);
+	}
+});
+
+/** This prevents safe preparation from being mistaken for canonical identity or blocked without cause. */
+check("awaiting startup allows read-only preparation but blocks mutations and dispatch", () => {
+	const s = makeSession();
+	const ctx = startupCtx(s, "first-read-session");
+	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	for (const [tool, input] of [
+		["read", { path: "README.md" }],
+		["read", { path: "issue://583" }],
+		["grep", { pattern: "epic" }],
+		["glob", { pattern: "issues/**" }],
+		["daily_driver_get_session", {}],
+		["bash", { command: "gh issue view 583 --repo example/project" }],
+		["bash", { command: "gh api -X GET /repos/example/project/issues/583" }],
+	]) {
+		assert.equal(titleCall(s, tool, input, ctx), undefined, `${tool}: ${JSON.stringify(input)}`);
+	}
+	for (const [tool, input] of [
+		["task", { tasks: [] }],
+		["write", { path: "notes.md", content: "x" }],
+		["bash", { command: "gh issue comment 582 -b update" }],
+		["bash", { command: "gh issue edit 582 --title changed" }],
+		["bash", { command: "gh api -X POST /repos/example/project/issues/582/comments" }],
+		["bash", { command: "gh issue view 582 >/tmp/result" }],
+	]) {
+		const result = titleCall(s, tool, input, ctx);
+		assert.equal(result.block, true, `${tool}: ${JSON.stringify(input)}`);
+		assert.match(result.reason, /canonical.*issue:\/\/|issue:\/\/.*canonical/isu);
+	}
+	deliverEpicRead(s, ctx, epicMetadata, "noncanonical-read", "https://github.com/example/project/issues/582");
+	assert.equal(startupState(s).status, "awaiting");
+	deliverEpicRead(s, ctx);
+	assert.equal(startupState(s).status, "required");
+});
+
+/** This prevents a supplied GitHub URL from bypassing the canonical issue protocol. */
+check("GitHub URL requests require an issue URI result for identity", () => {
+	const s = makeSession();
+	const ctx = startupCtx(s, "canonical-url-session");
+	s.fire("before_agent_start", {
+		prompt: "embark https://github.com/example/project/issues/582",
+	}, ctx);
+	deliverEpicRead(s, ctx, epicMetadata, "url-read", "https://github.com/example/project/issues/582");
+	assert.equal(startupState(s).status, "awaiting");
+	deliverEpicRead(s, ctx, epicMetadata, "canonical-read", "issue://example/project/582");
+	assert.equal(startupState(s).status, "required");
+});
+
+/** This prevents child, malformed and stale issue results from releasing dispatch. */
+check("only matching complete epic metadata arms the immediate barrier", () => {
+	const s = makeSession();
+	const ctx = startupCtx(s, "metadata-session");
+	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	deliverEpicRead(s, ctx, epicMetadata.replace("Labels: task, epic", "Labels: task"));
+	assert.equal(startupState(s).status, "inactive");
+
+	const pending = makeSession();
+	const pendingCtx = startupCtx(pending, "pending-session");
+	pending.fire("before_agent_start", { prompt: "embark 582" }, pendingCtx);
+	deliverEpicRead(pending, pendingCtx, epicMetadata.replace("# Issue #582:", "# Issue #581:"));
+	assert.equal(startupState(pending).status, "awaiting");
+	assert.equal(titleCall(pending, "task", {}, pendingCtx).block, true);
+
+	const stale = makeSession();
+	const staleCtx = startupCtx(stale, "stale-session");
+	stale.fire("before_agent_start", { prompt: "embark 582" }, staleCtx);
+	deliverEpicRead(
+		stale,
+		staleCtx,
+		"> WARNING: Live GitHub refresh failed; this issue content is cached and may be stale.\n" + epicMetadata,
+	);
+	assert.equal(startupState(stale).status, "awaiting");
+});
+
+/** This prevents an error-marked but parseable issue result from certifying identity. */
+check("failed reads with parseable issue metadata leave embark awaiting", () => {
+	const malformed = makeSession();
+	const malformedCtx = startupCtx(malformed, "malformed-session");
+	malformed.fire("before_agent_start", { prompt: "embark 582" }, malformedCtx);
+	deliverEpicRead(malformed, malformedCtx, epicMetadata.replace("\n## Body\n", ""));
+	assert.equal(startupState(malformed).status, "awaiting");
+
+	const failed = makeSession();
+	const failedCtx = startupCtx(failed, "failed-session");
+	failed.fire("before_agent_start", { prompt: "embark 582" }, failedCtx);
+	failed.fire("tool_call", {
+		type: "tool_call",
+		toolName: "read",
+		toolCallId: "failed-read",
+		input: { path: "issue://582" },
+	}, failedCtx);
+	failed.fire("tool_result", {
+		type: "tool_result",
+		toolName: "read",
+		toolCallId: "failed-read",
+		input: { path: "issue://582" },
+		content: [{ type: "text", text: epicMetadata }],
+		isError: true,
+	}, failedCtx);
+	assert.equal(startupState(failed).status, "awaiting");
+	assert.equal(titleCall(failed, "task", {}, failedCtx).block, true);
+});
+
+/** This prevents a same-number issue in another repository from becoming the active epic. */
+check("an explicit repository must match before epic metadata can arm", () => {
+	const s = makeSession();
+	const ctx = startupCtx(s, "repo-session");
+	s.fire("before_agent_start", { prompt: "embark issue://owner/repo/582" }, ctx);
+	deliverEpicRead(s, ctx, epicMetadata, "wrong-repository", "issue://other/repo/582");
+	assert.equal(startupState(s).status, "awaiting");
+	deliverEpicRead(s, ctx, epicMetadata, "wrong-response-repository", "issue://owner/repo/582");
+	assert.equal(startupState(s).status, "awaiting");
+	const matching = epicMetadata.replace("https://github.com/example/project", "https://github.com/owner/repo");
+	deliverEpicRead(s, ctx, matching, "matching-repository", "issue://owner/repo/582");
+	assert.equal(startupState(s).status, "required");
+});
+
+/** This prevents an earlier valid epic title from masking a new undertaking. */
+check("a fresh embark target requires its own epic title", () => {
+	const s = makeSession({ sessionName: "⛵ EPIC #582 Old title" });
+	const ctx = startupCtx(s, "new-epic-session");
+	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	deliverEpicRead(s, ctx);
+	assert.equal(startupState(s).status, "satisfied");
+	assert.equal(s.rec.sessionNames.length, 0, "an already-correct title is not set twice");
+	s.fire("before_agent_start", { prompt: "embark 583" }, ctx);
+	assert.equal(startupState(s).status, "awaiting");
+	assert.equal(startupState(s).target.number, 583);
+});
+
+/** This prevents a failed title write from releasing calls or losing resume state. */
+check("pending title state survives setter failure and session resume", async () => {
+	const first = makeSession({
+		setSessionName: async () => {
+			throw new Error("fixture setter failure");
+		},
+	});
+	const ctx = startupCtx(first, "resumed-session");
+	first.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	deliverEpicRead(first, ctx);
+	await assert.rejects(
+		first.tools.get("daily_driver_set_session_title").execute(
+			"failed-title",
+			{ title: "⛵ EPIC #582 Epic title" },
+			undefined,
+			undefined,
+			ctx,
+		),
+		/fixture setter failure/u,
+	);
+	assert.equal(startupState(first).status, "required");
+	const resumed = makeSession({ entries: first.rec.entries });
+	const resumedCtx = startupCtx(resumed, "resumed-session");
+	assert.equal(titleCall(resumed, "read", { path: "README.md" }, resumedCtx).block, true);
+});
+
+/** This prevents unrelated tools and another session from inheriting title-recovery access. */
+check("epic title recovery is session-scoped and respects exact routes", async () => {
+	const s = makeSession();
+	const ctx = startupCtx(s, "session-a");
+	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	deliverEpicRead(s, ctx);
+	for (const path of [
+		"xd://other/daily_driver_set_session_title",
+		"xd://daily_driver_set_session_title/extra",
+	]) {
+		const denied = titleCall(s, "read", { path }, ctx);
+		assert.equal(denied.block, true, path);
+	}
+	for (const path of [
+		"skill://session-title",
+		"skill://session-title/references/omp.md",
+		"xd://daily_driver_get_session",
+		"xd://daily_driver_set_session_title",
+		"issue://582",
+	]) {
+		assert.equal(titleCall(s, "read", { path }, ctx), undefined, path);
+	}
+	const other = startupCtx(s, "session-b");
+	assert.equal(titleCall(s, "read", { path: "skills/embark/SKILL.md" }, other), undefined);
+	assert.equal(startupState(s).status, "required");
+});
+
+/** This prevents a subagent from renaming the orchestrator that spawned it. */
+check("subagents do not acquire the parent session's embark title requirement", () => {
+	const s = makeSession();
+	s.fire("before_agent_start", { prompt: "embark 582" }, startupCtx(s, "sub-session", "sub"));
+	assert.equal(startupState(s), undefined);
+});
+
+/** This prevents a missing Omp session API from silently claiming enforcement. */
+check("missing main-session APIs report that early enforcement is unavailable", () => {
+	const s = makeSession();
+	const errors = [];
+	const originalError = console.error;
+	console.error = (...args) => errors.push(args.join(" "));
+	try {
+		s.fire("before_agent_start", { prompt: "embark 582" }, { agent: { kind: "main" } });
+	} finally {
+		console.error = originalError;
+	}
+	assert.ok(errors.some((message) => /embark title enforcement unavailable/iu.test(message)));
+	assert.equal(startupState(s), undefined);
+});
+
+/** This prevents a stale embark title requirement from blocking a replacement workflow. */
+check("explicit undertake and stand-down commands supersede startup state", () => {
+	for (const prompt of [
+		"undertake 583",
+		"/stand-down",
+		'[IMPORTANT: User invoked the "undertake" skill; follow its instructions.]\nUser: 583',
+		'[IMPORTANT: User invoked the "stand-down" skill; follow its instructions.]\nUser:',
+	]) {
+		const s = makeSession();
+		const ctx = startupCtx(s, `supersede-${prompt}`);
+		s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+		deliverEpicRead(s, ctx);
+		assert.equal(startupState(s).status, "required");
+		s.fire("before_agent_start", { prompt }, ctx);
+		assert.equal(startupState(s).status, "inactive", prompt);
+	}
+});
+
+function titleCall(session, toolName, input, ctx) {
+	return session.fire(
+		"tool_call",
+		{ type: "tool_call", toolCallId: `title-${nextTitleCall++}`, toolName, input },
+		ctx,
+	);
+}
+
+function assertTitleBlocked(decision) {
+	assert.deepEqual(decision, { block: true, reason: TITLE_BLOCK_REASON });
+}
+
+check("the title reason names the call, both forms, session-title and no retry", () => {
+	assert.match(TITLE_BLOCK_REASON, /do not retry/i);
+	assert.match(TITLE_BLOCK_REASON, /daily_driver_set_session_title\(\{ title \}\)/);
+	assert.match(TITLE_BLOCK_REASON, /succeeds/);
+	assert.match(TITLE_BLOCK_REASON, /`session-title`/);
+	// The two forms are asserted against the skill that owns them, so a change
+	// to either turns this red rather than silently splitting the gate from it.
+	const skill = readFileSync(resolve(ROOT, "skills", "session-title", "SKILL.md"), "utf8");
+	for (const form of ["#{number} {shortened issue title}", "⛵ EPIC #{number} {shortened epic title}"]) {
+		assert.ok(TITLE_BLOCK_REASON.includes(form), `reason quotes ${form}`);
+		assert.ok(skill.includes(form), `session-title still states ${form}`);
+	}
+});
+
+check("a gh issue comment is blocked in an unnamed session", () => {
+	const s = makeSession();
+	assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(undefined)));
+	assertTitleBlocked(titleCall(s, "bash", { command: "gh pr comment 7 --body hi" }, namedCtx(undefined)));
+});
+
+check("a gh issue comment passes after daily_driver_set_session_title", async () => {
+	const s = makeSession();
+	const ctx = namedCtx(undefined);
+	assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, ctx));
+	await s.tools.get("daily_driver_set_session_title").execute("t", { title: ISSUE_TITLE }, undefined, undefined, ctx);
+	assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, ctx), undefined);
+	assert.equal(titleCall(s, "task", { tasks: [] }, ctx), undefined);
+});
+
+check("the recorded call is per session", async () => {
+	const titled = makeSession();
+	await titled.tools.get("daily_driver_set_session_title").execute("t", { title: ISSUE_TITLE }, undefined, undefined, namedCtx(undefined));
+	const other = makeSession();
+	assertTitleBlocked(titleCall(other, "bash", { command: GH_COMMENT }, namedCtx(undefined)));
+});
+
+check("a name already in either form passes without a call", () => {
+	for (const name of [ISSUE_TITLE, EPIC_TITLE]) {
+		const s = makeSession();
+		assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(name)), undefined, name);
+		assert.equal(titleCall(s, "task", {}, namedCtx(name)), undefined, name);
+	}
+});
+
+check("a name outside both forms is blocked", () => {
+	for (const name of ["Fix the parser", "#52", "#52 ", "EPIC #12 Rotate", "", undefined]) {
+		const s = makeSession();
+		assertTitleBlocked(titleCall(s, "bash", { command: GH_COMMENT }, namedCtx(name)));
+	}
+});
+
+check("the dispatch tool is gated the same way", () => {
+	const s = makeSession();
+	assertTitleBlocked(titleCall(s, "task", { tasks: [{ id: "a" }] }, namedCtx("Fix the parser")));
+});
+
+check("gh api POSTing to a comments path is gated; reads and other gh calls are not", () => {
+	const s = makeSession();
+	const unnamed = namedCtx(undefined);
+	for (const command of [
+		"gh api repos/o/r/issues/52/comments -f body=hi",
+		"gh api -X POST repos/o/r/issues/52/comments",
+		"gh api --method POST repos/o/r/issues/52/comments",
+		"gh api --method=POST repos/o/r/issues/52/comments",
+		"gh api -XPOST repos/o/r/issues/52/comments",
+		"gh issue -R o/r comment 52 -b done",
+		"gh issue comment 52 --repo o/r -b done",
+		"gh -R o/r pr comment 7 -b done",
+		"cd /tmp && gh issue comment 52 -b done",
+		"bash -c 'gh issue comment 52 -b done'",
+		"timeout 30 gh pr comment 7 -b done",
+	]) {
+		assertTitleBlocked(titleCall(s, "bash", { command }, unnamed));
+	}
+	for (const command of [
+		"gh issue view 52",
+		"gh issue view 52 --comments",
+		"gh issue view -R o/r 52",
+		"gh issue -R o/r view 52 --comments",
+		"gh issue list",
+		"gh pr checks",
+		"gh pr view 7 --json comments",
+		"gh api repos/o/r/issues/52/comments",
+		"gh api -X GET repos/o/r/issues/52/comments",
+		"gh api -X POST repos/o/r/issues",
+		"gh api -f title=x repos/o/r/issues",
+		"gh api -X POST repos/o/r/pulls/7/comments/99/replies",
+		"gh issue create -t x -b y",
+		"echo gh-issue-comment",
+		"git commit -m 'gh issue comment'",
+	]) {
+		assert.equal(titleCall(s, "bash", { command }, unnamed), undefined, command);
+	}
+});
+
+check("a context with no readable name and no recorded call is allowed, loudly", () => {
+	const s = makeSession();
+	const lines = [];
+	const original = console.error;
+	console.error = (...args) => lines.push(args.join(" "));
+	try {
+		assert.equal(titleCall(s, "bash", { command: GH_COMMENT }, { cwd: "/tmp", ui: {} }), undefined);
+	} finally {
+		console.error = original;
+	}
+	assert.ok(lines.some((line) => /title gate/.test(line)), "the operator is told on stderr");
 });
 
 let nextGuardCall = 1;

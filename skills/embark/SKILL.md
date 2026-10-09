@@ -76,6 +76,13 @@ because the graph moved while the fleet was out, and what it finds decides
 whether the next wave sails, the watch resumes, or the epic closes.
 `Land the pull request` and `Recover a session` are reached from `Watch the
 wave`, and each returns there.
+On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
+`/skill:embark <issue>` first reads that single issue through `issue://`.
+After matching epic metadata succeeds, title this session before reading its
+graph or making any other tool call. The runtime enforces that deadline.
+Free-form requests that invoke this skill without an explicit command retain
+the ordinary skill and title-gate behavior.
+
 
 0 — Read the epic
 -----------------
@@ -88,7 +95,16 @@ name below. A task issue handed over is `undertake`'s, and work not decomposed
 yet is `epic`'s.
 
 Read the epic's comments too, because `Take the wave` needs to know which tasks
-are at sea already.
+are at sea already. On Omp, an explicit request reads them only after
+`Title the session` has titled the orchestrator.
+
+On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
+`/skill:embark <issue>` request requires a canonical single-issue `issue://`
+read before dispatch. Read-only discovery and prerequisites may come first,
+but they do not satisfy that identity read. If its metadata confirms an epic,
+set this orchestrator title before reading comments or graph, or making any
+unrelated tool call. The extension enforces the dispatch gate and this
+post-result deadline; free-form requests do not activate the earlier barrier.
 
 1 — Title the session
 ---------------------
@@ -165,6 +181,9 @@ it, a `session-title` title where the surface supports one, and inherited
 permissions. The issue is the task statement; do not copy its scope into the
 prompt.
 
+The harness denies the first dispatch until this session is titled, as
+`session-title`'s `When to set it` says; `Title the session` precedes this step.
+
 **Validate and, when needed, migrate the required class before dispatch.**
 Read the selected task's `Model class` section and rationale through
 `issue-body`. An old task with a trailing `Model:` field, or invalid class
@@ -182,6 +201,23 @@ and [`model-classes.md`'s selection policy](../issue-body/references/model-class
 The harness reference owns concrete precedence, measurement, fallback, and
 dispatch details; do not treat `modelRoles.task` as a universal implementor
 route.
+**Authorization is checked on the effective route, not its role name.** A
+frontier assignment may dispatch only when its issue carries explicit
+user approval and the exact approved work envelope. Review agent overrides,
+configured prewalk and retry fallbacks, and visible parent-model inheritance;
+an effective astra/fable execution route is frontier even when selected through
+a lower-class role. The stale Omp helper's astra-backed `reasoning` selector
+does not bypass this check. If a fallback would move ordinary work to frontier
+without approval, reject that route before dispatch and choose an eligible
+non-frontier route; if none exists, report the configuration gap for that task
+and continue other eligible tasks in the wave.
+
+A frontier session assigned ordinary implementation may do only the bounded
+routing and handoff to an eligible non-frontier class. It must not retain the
+implementation or supervise it on frontier. If no authorized handoff or model
+switch is available, report the gap. Frontier implementation requires explicit
+user authorization for that exception and its bounded scope; planning or
+research approval does not cover it.
 
 The selected route and actual model are distinct from the required class.
 Record `unreported` when actual identity is unavailable; visible provider
@@ -612,12 +648,10 @@ Non-goals
 - **Does not close the epic in `Landing: by hand` mode.** It reports the epic
   ready and stops there. The default `Landing: orchestrator` mode closes it
   only after `Close the epic` reads every `Summary` claim as delivered.
-- **Does not fire on one issue, and takes nothing with it.** Undertaking a
-  single task is the task session's own job, and running a fleet of one costs
-  an epic, a muster roll and a watch to save nothing. The dispatch does not
-  survive into that case either: `undertake`'s `Implement` has the session
-  that claimed the issue write the code itself, and a dispatch there would
-  only copy the session already on the work. Delegation here buys
-  parallelism across task issues; there is none to buy in a fleet of one.
+- **Does not fire on one issue.** A single task uses `undertake`, not an epic,
+  muster roll, or wave watch. Non-frontier undertakers implement in their
+  session; `undertake`'s narrow frontier exception hands ordinary work to an
+  eligible non-frontier route or stops with a configuration gap. That handoff
+  is not a one-task `embark` fleet.
 - **Does not sweep for epics.** It works the epic in hand. Reading the issue
   list for others to put to sea is `epic`'s manufacturing failure, one level up.

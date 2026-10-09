@@ -193,6 +193,12 @@ or update a README. Each skill's `SKILL.md` describes its activation rules.
 | `task-worktree` | Isolates repository changes in a feature branch and sibling worktree before research begins. |
 | `undertake` | Takes a task from its description to a review-ready pull request and keeps the branch current. |
 
+## Local maintenance
+
+In this repository, ask Omp to `fix-daily-driver-bugs` to triage open automatic
+reports and dispatch eligible fixes. Include issue numbers to limit triage.
+This repository-local skill is not part of the published plugin.
+
 ## Development rules
 
 [`rules/constitution.md`](rules/constitution.md) applies to every session and
@@ -219,26 +225,39 @@ in chat rather than in a multiple-choice widget:
 | ---- | ----- | ------- |
 | `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers `rules/constitution.md` to the session and every subagent. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the multiple-choice widget and directs the assistant to ask in chat. |
+| `title-gate.py` | `PreToolUse` on `add_issue_comment`/`create_session`; `PostToolUse` on `set_session_title`/`get_session` | On Claude Code cloud sessions, denies the first issue comment and first dispatch until the session is titled. |
 
 Omp uses `extensions/daily-driver.js` instead of hooks. The extension blocks the
-`ask` tool and provides session-title, reminder and session-info tools:
+`ask` tool, holds a `gh` issue or pull request comment and a `task` dispatch
+until the session is titled. For an explicit embark command, it requires a
+canonical `issue://` identity read before dispatch; read-only preparation may
+come first but does not satisfy that read. Once metadata confirms an epic, the
+orchestrator title must be set before unrelated calls. This early barrier
+does not classify free-form embark requests. The extension also provides
+session-title, reminder and session-info tools:
 `daily_driver_set_session_title`, `daily_driver_schedule`,
 `daily_driver_cancel_schedule` and `daily_driver_get_session`. Omp's rule
 provider loads the constitution from `rules/*.md` with `alwaysApply: true`.
 
 ### Omp task roles
 
-The Omp installation provides three task-class roles and matching agents:
-`mechanical`, `implementation` and `reasoning`. At session start, the extension
-adds runtime selectors for roles without an effective assignment. It adds
-visible role tags without replacing operator metadata.
+The Omp installation provides four task-class roles and matching agents:
+`mechanical`, `implementation`, `reasoning`, and `frontier`. At session start,
+the extension adds runtime selectors for roles without an effective assignment:
+`openai-codex/gpt-6-luna:low` for mechanical work,
+`openai-codex/gpt-6-luna:high` for implementation,
+`openai-codex/gpt-6.1-sol:high` for ordinary reasoning, and
+`openai-codex/gpt-6-astra:high` for frontier. It adds visible role tags without
+replacing operator metadata. Frontier is for explicitly approved, bounded
+research or planning; ordinary implementation uses a non-frontier route unless
+the user separately authorizes that exception.
 
 The default selectors require configured OpenAI Codex credentials. Use
 `/model` → Roles to assign models. Existing `omp_configs/` files remain process
 overlays. Assignments present at startup take precedence; later YAML or overlay
 edits may require an Omp restart because runtime overrides shadow disk reloads.
-Model capabilities are not considered verified until class evaluations report
-them.
+Ordinary model capability is not verified until class evaluations report it.
+The benchmark suite does not measure frontier.
 
 ### Worktree isolation
 

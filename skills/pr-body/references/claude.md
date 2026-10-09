@@ -8,7 +8,7 @@ Codex's in [`codex.md`](codex.md).
   `mcp__github__create_pull_request` takes `body` directly.
 - **Revising the body of an existing pull request.**
   `mcp__github__update_pull_request` with `body` set.
-- **Labelling the pull request `human`** beside a body that carries the
-  human-action blocker. `mcp__github__update_pull_request` with `labels`
-  set to the pull request's full label set — that call replaces, so read
-  the existing labels first.
+- **Adding or removing the pull request `human` label** beside the matching
+  blocker state. `mcp__github__update_pull_request` with `labels` set to the
+  pull request's full label set — the call replaces, so read existing labels
+  first, add or remove only `human`, and preserve every unrelated label.

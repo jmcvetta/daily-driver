@@ -354,9 +354,14 @@ def check_version_3_rules(record: dict[str, Any], temp: Path) -> None:
 
 
 def check_unpriceable(run: dict[str, Any], run_dir: Path, experiment: Path, temp: Path, env: dict[str, str]) -> None:
-    """A token-only row the table cannot price, or with no tokens, fails to record."""
+    """Reject unknown token rates; preserve usage when its subscription has no token price."""
     unpriced = json.loads(json.dumps(run))
     unpriced_path = run_dir / "run.json"
+    for row in unpriced["task_results"]:
+        if row.get("variant_id") == "with-plugin":
+            row["agent_cost_usd"] = None
+            row["total_cost_usd"] = None
+            row["total_tokens"] = row.get("input_tokens", 0) + row.get("output_tokens", 0)
     prices = temp / "partial-prices.yaml"
     prices.write_text(PARTIAL_PRICE_TABLE)
     original = unpriced_path.read_text()
@@ -369,6 +374,21 @@ def check_unpriceable(run: dict[str, Any], run_dir: Path, experiment: Path, temp
             "a token-only row whose model has no price-table entry was recorded",
         )
         require(not (temp / "unpriced").exists(), "a record was written for a run that could not be priced")
+        subscription_prices = temp / "subscription-prices.yaml"
+        subscription_prices.write_text(
+            PARTIAL_PRICE_TABLE
+            + "  treated-model:\n"
+            + "    unpriced_reason: subscription has no per-token rate\n"
+            + "    source: https://example.invalid/subscription-pricing\n"
+            + "    read_on: 2026-10-01\n"
+        )
+        subscription_path = run_recorder(run_dir, experiment, temp / "subscription", env, subscription_prices)
+        subscription = json.loads(subscription_path.read_text())
+        case = next(case for case in subscription["cases"] if case["model_requested"] == "treated-model")
+        require(
+            isinstance(case["tokens"], int) and case["cost"] is None and case["cost_source"] == "unreported",
+            "subscription usage with no token price was not recorded as unpriced",
+        )
         thinking = temp / "thinking.yaml"
         thinking.write_text(experiment.read_text().replace("treated-model", "requested-model:high"))
         for row in unpriced["task_results"]:
@@ -380,14 +400,15 @@ def check_unpriceable(run: dict[str, Any], run_dir: Path, experiment: Path, temp
             for field in ("input_tokens", "output_tokens"):
                 row.pop(field, None)
         unpriced_path.write_text(json.dumps(unpriced))
-        result = recorder_result(run_dir, thinking, temp / "tokenless", env, prices)
+        tokenless_path = run_recorder(run_dir, thinking, temp / "tokenless", env, prices)
+        tokenless = json.loads(tokenless_path.read_text())
         require(
-            result.returncode != 0 and "neither a price nor token counts" in result.stderr and "requested-model" in result.stderr,
-            "a harness reporting neither a price nor tokens was recorded",
+            all(case["cost"] is None and case["cost_source"] == "unreported" for case in tokenless["cases"]),
+            "a tokenless run was assigned a guessed or zero cost instead of unreported cost",
         )
-        require("replicate 0 (SUCCESS)" in result.stderr, "an unpriceable row's error did not name its replicate and status")
         for row in unpriced["task_results"]:
             row["input_tokens"], row["output_tokens"] = 10, 10
+        unpriced_path.write_text(json.dumps(unpriced))
         for duration in (0.0, None):
             unpriced["task_results"][2]["duration"] = duration
             if duration is None:
@@ -541,7 +562,7 @@ def check_results_renderer() -> None:
             "run2": record("run2", 2, "omp", [0.5, 0.5], ["SUCCESS", "SUCCESS"], served="unknown"),
             "run3": record("run3", 3, "omp", [1.0, 2.0, 0.5], ["SUCCESS", "SUCCESS", "FAILURE"]),
             "run4": record("run4", 3, "codex", [0.25], ["FAILURE"]),
-            "run5": record("run5", 2, "claude-code", [1.0, "unreported"], ["SUCCESS", "SUCCESS"]),
+            "run5": record("run5", 3, "claude-code", [1.0, None], ["SUCCESS", "SUCCESS"]),
             "run6": record("run6", 4, "omp", [None, None], ["SUCCESS", "SUCCESS"]),
             "run7": record("run7", 4, "omp", [None, 0.1], ["SUCCESS", "SUCCESS"]),
             "run8": record("run8", 4, "omp", [None], ["SUCCESS"]),

@@ -8,5 +8,7 @@ session running in Oh My Pi. Claude Code's routes are in
   `gh pr create --draft --title "<title>" --body-file <path>`.
 - **Revising the body of an existing pull request.**
   `gh pr edit --body "…"`.
-- **Labelling the pull request `human`** beside a body that carries the
-  human-action blocker. `gh pr edit --add-label human`.
+- **Adding or removing the pull request `human` label** beside the matching
+  blocker state. Use `gh pr edit --add-label human` or `gh pr edit --remove-label human`;
+  remove only when current evidence satisfies the human action and preserve
+  every unrelated label.

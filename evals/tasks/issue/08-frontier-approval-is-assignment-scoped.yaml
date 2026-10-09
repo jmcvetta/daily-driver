@@ -1,0 +1,51 @@
+task_id: issue-08-frontier-approval-is-assignment-scoped
+description: >-
+  Explicit user approval allows only its stated frontier research assignment,
+  and the issue must record the approved work envelope.
+tags: [issue, issue-body, behaviour, fire]
+
+initial_prompt: >-
+  I explicitly approve one frontier research pass to compare the two named
+  public API repositories on compatibility strategy A versus B. Deliver a
+  recommendation with risks. Token, time, and subscription cost are unknown.
+  Do not implement the migration. Draft the research issue body; do not post it.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "Issue-body constrains approved frontier research"
+    expected_skill: issue-body
+    skill_name: issue-body
+  - type: agent_judge
+    description: The draft records the explicit approval and its bounded scope
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start the rationale
+      with `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if the drafted `research` issue uses the single `frontier`
+      class token and records that approval came from the current chat, one
+      pass, the two named repositories, comparison of A and B, and a
+      recommendation with risks as the deliverable. It must state that
+      implementation is excluded and that token, time, and cost are unknown.
+      It must not claim approval for broader research, repeated passes, or
+      implementation, or invent an approval URL. Score 0 if it uses the task
+      template, widens scope, or omits the approval record.

@@ -1,0 +1,43 @@
+# Issue #571: can an eval row remove a model route from the Omp sandbox?
+#
+# A one-off probe, not a suite. It lives outside `experiments/` and `tasks/`
+# so no `make evals-run*` target and no arm guard picks it up. From `evals/`,
+# after `make evals-install evals-setup-omp`:
+#
+#   TELEMETRY_ENABLED=false AI_GATEWAY_API_KEY=... coder-eval run \
+#     -e probes/route-overlay/experiment.yaml probes/route-overlay/tasks/*.yaml
+#
+# Then, from the repository root, record the run:
+#
+#   make evals-record RUN=evals/runs/<run> \
+#     EXPERIMENT=evals/probes/route-overlay/experiment.yaml
+#
+# The committed record is `evals/provenance/probe-route-overlay-*.json`.
+
+experiment_id: probe-route-overlay
+description: >-
+  Whether a row-level `--config` overlay reaches Omp, and what Omp's task tool
+  does when `task.agentModelOverrides.reasoning` names a selector with no
+  provider, against a control with no overlay.
+
+defaults:
+  repeats: 1
+
+  run_limits:
+    max_turns: 6
+    turn_timeout: 300
+    task_timeout: 300
+
+  agent:
+    type: omp
+    model: vercel-ai-gateway/zai/glm-5.3
+    permission_mode: acceptEdits
+    allowed_tools: [Task, Write]
+
+variants:
+  - variant_id: with-plugin
+    description: An Omp session with the daily-driver plugin installed.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

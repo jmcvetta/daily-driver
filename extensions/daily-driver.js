@@ -25,8 +25,9 @@
  *    task identity and establishes or reuses its dedicated worktree; this
  *    guard makes forgetting it fail before the user's checkout is changed.
  *
- * 3. Provide runtime defaults for mechanical, implementation, and reasoning model
- *    roles without overwriting operator assignments or writing configuration.
+ * 3. Provide runtime defaults for mechanical, implementation, reasoning, and
+ *    frontier model roles without overwriting operator assignments or writing
+ *    configuration.
  *
  * 4. Provide session-title, scheduled-reminder, and session-info tools that
  *    Omp's `ExtensionAPI` makes natural. `daily_driver_set_session_title`,
@@ -62,6 +63,32 @@ export const ASK_BLOCK_REASON =
 	"implementation way already picks the answer, make the call, say in one line " +
 	"which way it went, and carry on. This adapter governs how a question that " +
 	"survives that gate is put, not whether it is worth putting.";
+
+/**
+ * What the model is told when it makes the session's first issue comment or
+ * first dispatch before the session is titled. Mirrors the wording of
+ * `hooks/title-gate.py`'s REASON so the two harnesses deny the call the same
+ * way. The form, the budget and the shortening stay `session-title`'s.
+ */
+export const TITLE_BLOCK_REASON =
+	"This call is shut until the session is titled. A retry is denied the " +
+	"same way, so do not retry it.\n\n" +
+	"Set the title first. `daily_driver_get_session` answers this session's " +
+	"current name; `daily_driver_set_session_title({ title })` sets it.\n\n" +
+	"The title takes one of two forms:\n\n" +
+	"    #{number} {shortened issue title}\n" +
+	"    ⛵ EPIC #{number} {shortened epic title}\n\n" +
+	"The first is for a session working on an issue. The second is for the " +
+	"session an epic is run from. The `session-title` skill owns the budget " +
+	"and the shortening.\n\n" +
+	"Once the title is set, the call you were denied succeeds.";
+
+/**
+ * `session-title`'s two forms, as patterns. A second copy of that skill's
+ * forms, so `scripts/check-omp-extension.mjs` asserts on both by example and
+ * a form change turns the repository red rather than silently splitting.
+ */
+const TITLE_FORMS = [/^#\d+ \S/u, /^⛵ EPIC #\d+ \S/u];
 
 /** What a Git command that rewrites a protected worktree is told. */
 export const WORKTREE_BLOCK_REASON =
@@ -1981,6 +2008,327 @@ function taskWorktreeBlockReason(event, violation) {
 		: WORKTREE_BLOCK_REASON;
 }
 
+/** The `gh api` flags that send a body, which makes the request a POST. */
+const GH_API_BODY_FLAGS = new Set([
+	"-f",
+	"-F",
+	"--field",
+	"--raw-field",
+	"--input",
+]);
+
+/**
+ * Whether one `gh` invocation, given the words after `gh`, comments on an issue
+ * or pull request: `gh issue comment`, `gh pr comment`, or `gh api` sending a
+ * POST to a path that ends in `/comments`. Read-only `gh` calls stay open.
+ */
+function ghWordsComment(args) {
+	// A repository selector takes a value, which is no part of the command: in
+	// `gh issue -R o/r comment 12` the value sits where the verb is read from.
+	const operands = [];
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-R" || text === "--repo") {
+			index++;
+		} else if (!text.startsWith("-")) {
+			operands.push(args[index]);
+		}
+	}
+	const [group, verb] = operands.map((word) => word.text);
+	if ((group === "issue" || group === "pr") && verb === "comment") return true;
+	if (group !== "api") return false;
+
+	// The method is explicit where given, and POST where a body is sent.
+	let method = null;
+	let sendsBody = false;
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-X" || text === "--method") {
+			method = args[index + 1]?.text ?? null;
+		} else if (text.startsWith("--method=")) {
+			method = text.slice("--method=".length);
+		} else if (/^-X./u.test(text)) {
+			method = text.slice(2);
+		} else if (
+			GH_API_BODY_FLAGS.has(text) ||
+			/^--(field|raw-field|input)=/u.test(text)
+		) {
+			sendsBody = true;
+		}
+	}
+	const posts = (method ?? (sendsBody ? "POST" : "GET")).toUpperCase() === "POST";
+	if (!posts) return false;
+	return operands.slice(1).some((word) => /\/comments(\?.*)?$/u.test(word.text));
+}
+
+/**
+ * Whether a shell command runs a `gh` call that comments on an issue or pull
+ * request. `gh` is found positionally, the way `git` is, so a wrapper in front
+ * of it does not hide it, and a `bash -c` string is read where it is literal.
+ * A command this scan cannot read is not this gate's to refuse: the worktree
+ * guard already refuses what it cannot enumerate.
+ */
+function runsGitHubComment(command) {
+	const { segments, unreadable } = shellSegments(command);
+	if (unreadable !== null) return false;
+	for (const segment of segments) {
+		const words = segment.words ?? [];
+		for (let index = 0; index < words.length; index++) {
+			const word = words[index];
+			if (!word.literal) continue;
+			const name = basename(word.text);
+			if (name === "gh" && ghWordsComment(words.slice(index + 1))) return true;
+			if (!STRING_INTERPRETERS.has(name)) continue;
+			try {
+				const invocation = shellInvocation(name, words.slice(index + 1));
+				if (invocation.command && runsGitHubComment(invocation.command.text)) {
+					return true;
+				}
+			} catch (err) {
+				if (!(err instanceof UnreadableCommandError)) throw err;
+			}
+		}
+	}
+	return false;
+}
+
+/** The dispatch tool `skills/embark/references/omp.md` opens its sessions with. */
+const DISPATCH_TOOL = "task";
+
+/** Whether this call is one the title must precede. */
+function needsTitle(event) {
+	if (event.toolName === DISPATCH_TOOL) return true;
+	return (
+		event.toolName === "bash" &&
+		typeof event.input?.command === "string" &&
+		runsGitHubComment(event.input.command)
+	);
+}
+
+/** Whether one plain `gh` invocation can only read GitHub data. */
+function isReadOnlyGitHubRead(command) {
+	const { segments, unreadable } = shellSegments(command);
+	if (unreadable !== null || segments.length !== 1) return false;
+	const words = segments[0].words ?? [];
+	if (segments[0].group || words.length === 0 ||
+		words.some((word) => !word.literal || /[;&|<>]/u.test(word.text)) ||
+		basename(words[0].text) !== "gh") return false;
+	const args = words.slice(1);
+	const operands = [];
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-R" || text === "--repo" || text === "--hostname" || text === "--config") {
+			index++;
+		} else if (!text.startsWith("-")) {
+			operands.push(text);
+		}
+	}
+	const [group, verb] = operands;
+	if ((group === "issue" || group === "pr" || group === "repo") && verb === "view") return true;
+	if (group === "search" && verb === "issues") return true;
+	if (group !== "api") return false;
+	let method = null;
+	let sendsBody = false;
+	for (let index = 0; index < args.length; index++) {
+		const text = args[index].text;
+		if (text === "-X" || text === "--method") {
+			method = args[index + 1]?.text ?? null;
+		} else if (text.startsWith("--method=")) {
+			method = text.slice("--method=".length);
+		} else if (/^-X./u.test(text)) {
+			method = text.slice(2);
+		} else if (
+			GH_API_BODY_FLAGS.has(text) ||
+			/^--(field|raw-field|input)=/u.test(text)
+		) {
+			sendsBody = true;
+		}
+	}
+	return method
+		? method.toUpperCase() === "GET"
+		: !sendsBody;
+}
+/**
+ * State carried on the active session branch while an explicit Omp embark
+ * request is being resolved and titled.
+ */
+const EMBARK_TITLE_STATE = "daily-driver-embark-title";
+const EMBARK_TITLE_PREFIX = "⛵ EPIC #";
+const EMBARK_READ_REASON =
+	"Before dispatch, read the requested issue with `read` on its canonical " +
+	"single-issue `issue://` URL. Other reads do not certify that step.";
+
+/** Parse an explicit embark command without treating quoted prose as one. */
+function explicitEmbarkTarget(prompt) {
+	if (typeof prompt !== "string") return null;
+	const skillPrefix =
+		'[IMPORTANT: User invoked the "embark" skill; follow its instructions. Full skill below.]';
+	let command = prompt.trim();
+	if (command.startsWith(skillPrefix)) {
+		const footer = command.lastIndexOf("[Skill directory:");
+		const user = footer < 0 ? -1 : command.indexOf("\nUser:", footer);
+		if (user < 0) return null;
+		command = command.slice(user + "\nUser:".length).trim();
+		const skillArgument = /^(?:(?:\/)?embark\s+)?(\S+)/iu.exec(command);
+		return skillArgument ? parseEmbarkReference(skillArgument[1]) : null;
+	}
+	const match = /^(?:\/)?embark\s+(\S+)/iu.exec(command);
+	return match ? parseEmbarkReference(match[1]) : null;
+}
+
+/** Parse one supported issue reference and retain any explicit repository. */
+function parseEmbarkReference(reference) {
+	if (/^\d+[#.,;:!?)]*$/u.test(reference) || /^#\d+[#.,;:!?)]*$/u.test(reference)) {
+		const number = Number(reference.replace(/[^\d]/gu, ""));
+		return Number.isSafeInteger(number) && number > 0 ? { number } : null;
+	}
+	const numericIssueUri = /^issue:\/\/(\d+)\/?$/iu.exec(reference);
+	if (numericIssueUri) {
+		const number = Number(numericIssueUri[1]);
+		return Number.isSafeInteger(number) && number > 0 ? { number } : null;
+	}
+	const scopedIssueUri = /^issue:\/\/([^/]+)\/([^/]+)\/([^/]+)\/(\d+)\/?$/iu.exec(reference);
+	const githubIssueUri = /^issue:\/\/([^/]+)\/([^/]+)\/(\d+)\/?$/iu.exec(reference);
+	const issueUri = scopedIssueUri ?? githubIssueUri;
+	if (issueUri) {
+		const number = Number(scopedIssueUri ? issueUri[4] : issueUri[3]);
+		return Number.isSafeInteger(number) && number > 0
+			? {
+					number,
+					repository: scopedIssueUri
+						? `${issueUri[1]}/${issueUri[2]}/${issueUri[3]}`
+						: `github.com/${issueUri[1]}/${issueUri[2]}`,
+				}
+			: null;
+	}
+	try {
+		const url = new URL(reference);
+		const match = /^\/([^/]+)\/([^/]+)\/issues\/(\d+)\/?$/u.exec(url.pathname);
+		if (url.protocol !== "https:" || !match) return null;
+		const number = Number(match[3]);
+		return Number.isSafeInteger(number) && number > 0
+			? { number, repository: `${url.host}/${match[1]}/${match[2]}` }
+			: null;
+	} catch {
+		return null;
+	}
+}
+
+/** Read the resolved identity from issue:// output, never from its body. */
+function issueMetadata(content) {
+	const text = Array.isArray(content)
+		? content.map((part) => (part?.type === "text" ? part.text : "")).join("\n")
+		: "";
+	if (!/^## Body\s*$/mu.test(text)) return null;
+	const metadata = text.split(/^## Body\s*$/mu, 1)[0];
+	const title = /^# Issue #(\d+): (.+)$/mu.exec(metadata);
+	const url = /^URL:\s*(https:\/\/\S+)\s*$/mu.exec(metadata);
+	const labels = /^Labels:\s*(.*)$/mu.exec(metadata);
+	if (!title || !url || !labels) return null;
+	let parsedUrl;
+	try {
+		parsedUrl = new URL(url[1]);
+	} catch {
+		return null;
+	}
+	const issue = /\/([^/]+)\/([^/]+)\/issues\/(\d+)\/?$/u.exec(parsedUrl.pathname);
+	if (!issue || Number(title[1]) !== Number(issue[3])) return null;
+	return {
+		number: Number(title[1]),
+		title: title[2].trim(),
+		url: url[1],
+		repository: `${parsedUrl.host}/${issue[1]}/${issue[2]}`.toLowerCase(),
+		labels: labels[1].split(",").map((label) => label.trim()).filter(Boolean),
+	};
+}
+
+/** Whether a title names the active epic and has a nonblank suffix. */
+function matchesEpicTitle(name, number) {
+	return typeof name === "string" &&
+		new RegExp(`^⛵ EPIC #${number} \\S`, "u").test(name);
+}
+
+/** Resolve only exact title-recovery tool and device routes. */
+function embarkTitleRecoveryRoute(event, state) {
+	if (event.toolName === "daily_driver_get_session" || event.toolName === "daily_driver_set_session_title") {
+		return true;
+	}
+	const input = event.input ?? {};
+	if (event.toolName === "read") {
+		const path = input.path;
+		if (path === "skill://session-title" || path === "skill://session-title/references/omp.md") return true;
+		if (path === "xd://daily_driver_get_session" || path === "xd://daily_driver_set_session_title") return true;
+		const target = parseEmbarkReference(path);
+		return target?.number === state.target.number &&
+			(!state.target.requestedRepository ||
+				target.repository?.toLowerCase() === state.target.requestedRepository.toLowerCase()) &&
+			(!target.repository || target.repository.toLowerCase() === state.target.repository.toLowerCase());
+	}
+	if (event.toolName === "write" && input.path === "xd://daily_driver_set_session_title") return true;
+	return false;
+}
+
+/** Identify workflow commands that replace an explicit embark request. */
+function supersedingWorkflow(prompt) {
+	if (typeof prompt !== "string") return false;
+	const text = prompt.trim();
+	if (/^\[IMPORTANT: User invoked the "(?:undertake|stand-down)" skill;/iu.test(text)) return true;
+	return /^(?:\/)?(?:undertake|stand-down)(?:\s|$)/iu.test(text);
+}
+
+/** Read the latest extension state from this session's active branch. */
+function readEmbarkState(ctx) {
+	const manager = ctx?.sessionManager;
+	if (ctx?.agent?.kind !== "main" || typeof manager?.getSessionId !== "function" ||
+		typeof manager?.getBranch !== "function") return null;
+	const sessionId = manager.getSessionId();
+	if (typeof sessionId !== "string" || !sessionId) return null;
+	const entries = manager.getBranch();
+	for (let i = entries.length - 1; i >= 0; i--) {
+		const entry = entries[i];
+		if (entry?.type === "custom" && entry.customType === EMBARK_TITLE_STATE &&
+			entry.data?.sessionId === sessionId && entry.data.state) {
+			return entry.data.state;
+		}
+	}
+	return null;
+}
+
+/** Persist a startup transition on the active session branch. */
+function persistEmbarkState(pi, ctx, state) {
+	const manager = ctx?.sessionManager;
+	if (ctx?.agent?.kind !== "main" || typeof manager?.getSessionId !== "function" ||
+		typeof manager?.getBranch !== "function" || typeof pi.appendEntry !== "function") {
+		console.error("daily-driver: Omp embark title enforcement unavailable; legacy title gate remains active");
+		return false;
+	}
+	const sessionId = manager.getSessionId();
+	if (typeof sessionId !== "string" || !sessionId) {
+		console.error("daily-driver: Omp embark title enforcement unavailable; legacy title gate remains active");
+		return false;
+	}
+	pi.appendEntry(EMBARK_TITLE_STATE, { sessionId, state });
+	return true;
+}
+
+/** Return actionable startup denial text for the active state. */
+function embarkTitleReason(state) {
+	const target = state.target;
+	if (state.status === "awaiting") {
+		return `${EMBARK_READ_REASON}\nRequested issue: #${target.number}` +
+			(target.repository ? ` (${target.repository})` : "");
+	}
+	return (
+		`The requested epic is #${target.number}: ${JSON.stringify(target.title)}. ` +
+		`This call is blocked until this session is titled ` +
+		`${EMBARK_TITLE_PREFIX}${target.number} <shortened epic title>.\n\n` +
+		"Use the `session-title` skill for the existing shortening rules. " +
+		"Allowed recovery: `daily_driver_get_session` and " +
+		"`daily_driver_set_session_title({ title })`, or `write xd://daily_driver_set_session_title`. " +
+		"Reads of `session-title`, its Omp reference, the title-tool documentation, and the same issue are allowed."
+	);
+}
+
 /**
  * New trigger ids. `crypto.randomUUID` is a modern Node global with no
  * import; fall back to a counter where the runtime lacks it (defensive, and
@@ -2000,6 +2348,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 
 	const initializedSettings = new WeakSet();
 	pi.on("session_start", async (_event, ctx) => {
+		invalidateStartupState();
 		if (typeof ctx?.cwd !== "string") return;
 		const settings = pi.settingsManagerFactory
 			? pi.settingsManagerFactory(ctx.cwd)
@@ -2015,6 +2364,69 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	// only exists to honour cancel_schedule, forget fired triggers, and be
 	// dropped wholesale on shutdown.
 	const TRIGGERS = new Map();
+
+	// Whether this session titled itself on purpose: `daily_driver_set_session_title`
+	// ran. Per-session state, so it lives in the factory closure like TRIGGERS.
+	let titleSet = false;
+	let startupSessionId;
+	let startupStateLoaded = false;
+	let cachedStartupState;
+
+	/** Load startup state once from the current branch, then use the closure cache. */
+	function startupState(ctx) {
+		const manager = ctx?.sessionManager;
+		if (ctx?.agent?.kind !== "main" || typeof manager?.getSessionId !== "function") return null;
+		const sessionId = manager.getSessionId();
+		if (typeof sessionId !== "string" || !sessionId) return null;
+		if (!startupStateLoaded || startupSessionId !== sessionId) {
+			startupSessionId = sessionId;
+			cachedStartupState = readEmbarkState(ctx);
+			startupStateLoaded = true;
+		}
+		return cachedStartupState;
+	}
+
+	/** Persist only transitions and keep the active session's cache in sync. */
+	function saveStartupState(ctx, state) {
+		if (!persistEmbarkState(pi, ctx, state)) return false;
+		startupSessionId = ctx.sessionManager.getSessionId();
+		cachedStartupState = state;
+		startupStateLoaded = true;
+		return true;
+	}
+
+	function invalidateStartupState() {
+		startupStateLoaded = false;
+		startupSessionId = undefined;
+		cachedStartupState = undefined;
+	}
+
+	for (const event of ["session_switch", "session_branch", "session_tree"]) {
+		pi.on(event, invalidateStartupState);
+	}
+
+	/**
+	 * The title gate's answer for a call that needs the session titled: whether
+	 * to let it through. "Set on purpose" is a recorded title call, or a current
+	 * name already in one of `session-title`'s forms (what lets a session
+	 * `embark` created with a title claim without renaming itself). Where the
+	 * context exposes no name reader and no title call is recorded, the gate
+	 * cannot tell, and a block the model could only cure by renaming its parent
+	 * session is the worse failure, so the call is allowed and the operator told.
+	 */
+	function titleGateAllows(ctx) {
+		if (titleSet) return true;
+		const sessionManager = ctx?.sessionManager;
+		if (typeof sessionManager?.getSessionName !== "function") {
+			console.error(
+				"daily-driver: title gate could not read the session name and no " +
+					"title call is recorded; the call was allowed",
+			);
+			return true;
+		}
+		const name = sessionManager.getSessionName();
+		return typeof name === "string" && TITLE_FORMS.some((form) => form.test(name));
+	}
 
 	/** Idempotently cancel a live trigger. Clean false otherwise. */
 	function cancelTrigger(triggerId) {
@@ -2036,6 +2448,96 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		}
 		return true;
 	}
+
+	// Extension state is read from the active branch for each event. This keeps
+	// a resumed session recoverable without sharing a process-global target.
+	const pendingIssueReads = new Map();
+
+	pi.on("before_agent_start", (event, ctx) => {
+		const target = explicitEmbarkTarget(event?.prompt);
+		if (ctx?.agent?.kind === "sub") return;
+		if (ctx?.agent?.kind !== "main") {
+			if (target) {
+				console.error("daily-driver: Omp embark title enforcement unavailable; legacy title gate remains active");
+			}
+			return;
+		}
+		if (target) {
+			pendingIssueReads.clear();
+			saveStartupState(ctx, { status: "awaiting", target });
+			return;
+		}
+		if (supersedingWorkflow(event?.prompt)) {
+			pendingIssueReads.clear();
+			saveStartupState(ctx, { status: "inactive" });
+		}
+	});
+
+	pi.on("tool_result", (event, ctx) => {
+		const expected = pendingIssueReads.get(event.toolCallId);
+		if (!expected || event.toolName !== "read") return;
+		pendingIssueReads.delete(event.toolCallId);
+		if (event.input?.path !== expected.path) return;
+		if (event.isError) return;
+		const state = startupState(ctx);
+		if (!state || state.status !== "awaiting") return;
+		const text = Array.isArray(event.content)
+			? event.content.map((part) => part?.type === "text" ? part.text : "").join("\n")
+			: "";
+		if (/stale cached? (?:issue )?data|stale cache|live github refresh failed|cached and may be stale/iu.test(text)) {
+			return {
+				content: [
+					...event.content,
+					{
+						type: "text",
+						text: "\nThis cached issue result is stale and does not satisfy the required identity read. Refresh the same issue:// target and use the successful current result.",
+					},
+				],
+			};
+		}
+		const metadata = issueMetadata(event.content);
+		if (!metadata || metadata.number !== state.target.number ||
+			(state.target.repository && metadata.repository !== state.target.repository.toLowerCase())) {
+			return {
+				content: [
+					...event.content,
+					{
+						type: "text",
+						text: "\nThis result does not contain matching, complete metadata for the requested issue. Read the requested issue with the canonical issue:// URL before dispatch.",
+					},
+				],
+			};
+		}
+		if (!metadata.labels.some((label) => label.toLowerCase() === "epic")) {
+			saveStartupState(ctx, { status: "inactive" });
+			return undefined;
+		}
+		const status = matchesEpicTitle(ctx?.sessionManager?.getSessionName?.(), metadata.number)
+			? "satisfied"
+			: "required";
+		saveStartupState(ctx, {
+			status,
+			target: {
+				number: metadata.number,
+				title: metadata.title,
+				url: metadata.url,
+				repository: metadata.repository,
+				requestedRepository: state.target.repository,
+			},
+		});
+		if (status === "required") {
+			return {
+				content: [
+					...event.content,
+					{
+						type: "text",
+						text: `\nSet this session's title now to \`${EMBARK_TITLE_PREFIX}${metadata.number} <shortened epic title>\` before any unrelated tool call. Use \`session-title\`; the issue title is ${JSON.stringify(metadata.title)}.`,
+					},
+				],
+			};
+		}
+		return undefined;
+	});
 
 	// Deny preferences and repository boundaries at execution time: unlike an
 	// instruction, a blocked call cannot be ignored by a weaker model.
@@ -2070,6 +2572,50 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 			);
 			return { block: true, reason: GIT_UNAVAILABLE_BLOCK_REASON };
 		}
+		const startup = ctx?.agent?.kind === "main" ? startupState(ctx) : null;
+		if (startup?.status === "awaiting") {
+			const path = event.input?.path;
+			const target = event.toolName === "read" && typeof path === "string" &&
+				/^issue:\/\//iu.test(path)
+				? parseEmbarkReference(path)
+				: null;
+			const requestedRepository = startup.target.repository?.toLowerCase();
+			const readRepository = target?.repository?.toLowerCase();
+			if (target?.number === startup.target.number &&
+				readRepository === requestedRepository &&
+				typeof event.toolCallId === "string") {
+				pendingIssueReads.set(event.toolCallId, { path });
+				return undefined;
+			}
+			if (["read", "grep", "glob", "daily_driver_get_session"].includes(event.toolName) ||
+				(event.toolName === "bash" &&
+					typeof event.input?.command === "string" &&
+					isReadOnlyGitHubRead(event.input.command))) {
+				return undefined;
+			}
+			return { block: true, reason: embarkTitleReason(startup) };
+		}
+		if (startup?.status === "required" &&
+			event.toolName === "write" &&
+			event.input?.path === "xd://daily_driver_set_session_title") {
+			let title;
+			try {
+				title = JSON.parse(event.input.content)?.title;
+			} catch {
+				title = undefined;
+			}
+			if (!matchesEpicTitle(title, startup.target.number)) {
+				return { block: true, reason: embarkTitleReason(startup) };
+			}
+		}
+		if (startup?.status === "required" && !embarkTitleRecoveryRoute(event, startup)) {
+			return { block: true, reason: embarkTitleReason(startup) };
+		}
+		// After the worktree check: the session's first issue comment and first
+		// dispatch wait for a title that was set on purpose.
+		if (needsTitle(event) && !titleGateAllows(ctx)) {
+			return { block: true, reason: TITLE_BLOCK_REASON };
+		}
 		return undefined;
 	});
 
@@ -2083,8 +2629,28 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		parameters: z.object({
 			title: z.string().describe("The new session title"),
 		}),
-		execute: async (_toolCallId, params, _signal, _onUpdate, _ctx) => {
+		execute: async (_toolCallId, params, _signal, _onUpdate, ctx) => {
+			const startup = ctx?.agent?.kind === "main" ? startupState(ctx) : null;
+			if (startup?.status === "required" && !matchesEpicTitle(params.title, startup.target.number)) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: `Title rejected. The active epic requires \`${EMBARK_TITLE_PREFIX}${startup.target.number} <shortened epic title>\`; the session name was not changed.`,
+						},
+					],
+					details: { titled: null, rejected: true },
+					isError: true,
+				};
+			}
 			await pi.setSessionName(params.title);
+			if (startup?.status === "required") {
+				if (matchesEpicTitle(ctx?.sessionManager?.getSessionName?.(), startup.target.number)) {
+					saveStartupState(ctx, { ...startup, status: "satisfied" });
+				}
+			} else {
+				titleSet = true;
+			}
 			return {
 				content: [{ type: "text", text: `Session titled: ${params.title}` }],
 				details: { titled: params.title },

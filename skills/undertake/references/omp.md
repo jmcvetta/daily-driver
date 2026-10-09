@@ -33,22 +33,33 @@ makes further down this file.
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
 read-first and the Claude route does.
 
-For a `task`, read the `Model class` section, validated and repaired through
-[`issue-body`'s guidance](../../issue-body/references/model-classes.md) where
-its body is old or invalid, before the claim. That guidance is dispatch's —
-`embark` selects a route against it before assigning work — and nothing here
-compares the class to this session's own capability.
+For a `task`, validate its `Model class` section and rationale through
+[`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
+claim, repairing an old or invalid body where its handoff is otherwise
+grounded. A frontier task also needs explicit approval and its exact work
+envelope. A frontier `research` issue keeps that label and its narrow metadata
+exception; do not impose the task template.
+
+Use `daily_driver_get_session` to read the current model before branch creation
+or claim when needed for the frontier restriction. If its effective route is
+frontier and the issue is ordinary work, resolve a non-frontier agent using
+[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs).
+Hand off the full undertaking through `task`, or stop with the exact route gap;
+the receiving session owns its branch and claim.
 
 
 The implementor
 ===============
 
-No route, and that is the rule rather than a gap. `SKILL.md`'s `Implement`
-owns it: the session running the sequence writes the code itself, so `task`
-dispatches no implementor here. Omp has the route and it belongs to `embark`,
-which uses it to run several task issues at once. The one dispatch inside this
-sequence is `review-cycle`'s briefed subagent at `Verify the fix delta`, named
-in that skill's own reference file.
+Ordinary non-frontier implementation stays in the session running this
+sequence. The frontier-only handoff exception runs before branch creation and
+claim: resolve a supported non-frontier agent route using
+[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs),
+then use the `task` surface to dispatch a full `undertake #<issue>` to that
+agent. The receiving session owns its worktree, claim, implementation, and
+pull request. Do not dispatch if the route is unavailable or frontier; report
+the exact configuration gap. A supported model switch may continue here only
+after Omp reports a non-frontier execution identity.
 
 
 The pull request
@@ -57,6 +68,8 @@ The pull request
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Open the draft` | Open it | `pr`, which owns the call |
+| `The gate` | Read the worktree and unpushed commits | `git status --porcelain` and `git log @{upstream}..HEAD --oneline`, through `bash` in the task worktree; each prints nothing |
+| `The gate` | Read the diff against the acceptance section | `gh pr diff <number> --name-only` |
 | `The gate` | Read the branch against its base | `gh pr view <number> --json mergeStateStatus` |
 | `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
 | `The gate` | Read the review threads | `review-cycle`'s `references/omp.md` owns them |
@@ -90,6 +103,8 @@ adopted branch, which `Read the issue and its edges` took from the issue's
 record; fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for the branch
 link comes from the remote `task-worktree` resolved, never from an assumed
 `origin`.
+Omp uses one branch identity for the local task and remote push branch. The
+Claude primary-held designation exception does not apply to this route.
 
 
 The milestone
@@ -198,7 +213,7 @@ milestone still need an agent turn. Read the service state and logs with
     gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
 
 Merged and closed pull requests end continuation. Read `statusCheckRollup` and
-`review-cycle`'s check and status endpoints before a currency merge; if either
+`review-cycle`'s check, status and workflow-run reads before a currency merge; if any
 reports a run in flight, skip that merge. Otherwise `BEHIND`, `DRAFT`,
 `BLOCKED`, and `UNKNOWN` run `gh pr update-branch <number>`, whose own reply
 settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
@@ -206,7 +221,7 @@ settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
 
 **Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
-`headRefOid`; `review-cycle`'s two endpoint reads remain the CI verdict.
+`headRefOid`; `review-cycle`'s three-source read remains the CI verdict.
 Pending or unregistered checks use its persistent bounded watcher. Failed
 checks return to `Fix, answer, resolve, push`; unavailable logs are a named
 evidence blocker, not green. When CI on the current head is green and the

@@ -16,32 +16,37 @@ Write the body to a file and hand over the path.
 The required class
 ==================
 
-Task bodies use the provider-neutral `Model class` section defined in
-[`model-classes.md`](model-classes.md). An Omp task issue does not carry a
-Claude identifier or an Omp agent/model selector. Before dispatch, `embark`
-selects the implementation agent named for the required class (`mechanical`,
-`implementation`, or `reasoning`) and checks its effective route. For that agent,
-`task.agentModelOverrides[agentName]` takes precedence over its discovered
-frontmatter model, which can select a tagged role such as `@implementation`. Resolve
-configured prewalk and retry fallbacks too; they must meet the same class,
-tools, context, modality, availability, and credential requirements. A model
-name, catalog entry, effort setting, or price does not prove class suitability
-or working credentials. Omp's parent-model authentication fallback needs the
-same reassessment and cannot be assumed to satisfy the class. A missing or
-unsuitable route stops only that task with a reported configuration gap; do
-not lower its required class.
+Task bodies and the narrow frontier research exception use the
+provider-neutral `Model class` section defined in [`model-classes.md`](model-classes.md).
+An Omp task issue does not carry a Claude identifier or an Omp agent/model
+selector. Before dispatch, `embark` selects the implementation agent named for
+the required class (`mechanical`, `implementation`, `reasoning`, or `frontier`)
+and checks its effective route.
+For that agent, `task.agentModelOverrides[agentName]` takes precedence over its
+discovered frontmatter model, which can select a tagged role such as
+`@implementation` or `@frontier`. Resolve configured prewalk and retry
+fallbacks too; they must meet the same class, tools, context, modality,
+availability, and credential requirements. A model name, catalog entry, effort
+setting, or price does not prove class suitability or working credentials.
+Omp's parent-model authentication fallback needs the same reassessment and
+cannot be assumed to satisfy the class.
 
-The plugin provides runtime defaults for its three roles only when there is no
-effective assignment. A global/project setting or CLI overlay present before
-plugin startup wins over those defaults; existing explicit role assignments
-also remain authoritative. The OpenAI Codex defaults require Omp's configured
-OpenAI Codex credentials. Operators may change a role for subsequent dispatches
-through Omp's `/model` Roles UI. Clearing an assignment leaves the tagged role
-visible but unassigned, so report a gap instead of restoring a default in the
-same session. Existing `omp_configs/` overlays remain supported. A YAML or
-overlay edit after startup may stay shadowed until Omp restarts because disk
-reload preserves runtime overrides. The plugin writes no Omp configuration
-files; disabling it leaves no plugin-written assignments or tags.
+The plugin's `frontier` role currently resolves through the supported
+`openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
+assume an API route. The existing `reasoning` helper selector is also
+astra-backed; until that separate stale mapping is corrected, it is frontier
+for authorization regardless of its role name.
+
+The plugin provides runtime defaults only for roles without an effective
+assignment. A global/project setting or CLI overlay present before plugin
+startup wins; explicit role assignments remain authoritative. Operators may
+change a role for later dispatch through Omp's `/model` Roles UI. A cleared
+assignment remains unassigned, so report a gap instead of restoring a default
+in the same session. Existing `omp_configs/` overlays remain supported. A
+YAML or overlay edit after startup may stay shadowed until Omp restarts because
+disk reload preserves runtime overrides. The plugin writes no Omp
+configuration files; disabling it leaves no plugin-written assignments or
+tags.
 
 Keep the task's provider-neutral required class, the selected agent, and the
 actual model reported by Omp as separate facts. Use `unreported` when Omp
@@ -59,11 +64,17 @@ is hand-written; an `omp_configs/` overlay with no committed case for its
 settings is listed `unmeasured`, and `model-classes.md`'s `Classes` table is
 the fallback for it. A `date` is not a freshness rule -- a stale row is still
 a row, and reading it as current or not is left to the reader.
+The capability suite builds only `mechanical` and `implementation` cases.
+`reasoning` and `frontier` receive no measured class claim; route identity and
+approval policy do not imply benchmark support.
 
 <!-- measured-routes-start -->
 | Model | Settings | Class earned | Mechanical pass rate | Implementation pass rate | Cost per passed case | Run | Recorded |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | cheaper | classes-cheaper | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
+| claude-opus-5-5 | classes-opus-low | implementation | 9/9 | 9/9 | $0.53 | 2026-10-01_11-36-04 | 2026-10-01 |
+| claude-sonnet-5-5 | classes-sonnet-high | implementation | 9/9 | 9/9 | $0.34 | 2026-10-01_11-14-25 | 2026-10-01 |
+| claude-sonnet-5-5 | classes-sonnet-low | implementation | 9/9 | 9/9 | $0.27 | 2026-10-01_11-05-50 | 2026-10-01 |
 | cocktail | classes-cocktail | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | cocktail.gpts-choice | classes-cocktail-gpts-choice | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | glm | classes-glm | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |

@@ -169,11 +169,40 @@ this sequence does not open a pull request with nothing in it.
 **A `task` also carries a required model class.** Validate its one
 `## Model class` section and rationale through `issue-body` before the claim,
 repairing an old or invalid body to the current contract where the handoff is
-otherwise grounded. The class states the capability a dispatcher such as
-`embark` selects a route for; it is not a gate this sequence applies to
-itself, and a standalone undertaking does not stop over a mapping between its
-own model identity and the task's class. Concrete `Model:` lines in claim
-provenance remain actual-model records, not task metadata.
+otherwise grounded. A frontier assignment must carry explicit approval and
+its exact work envelope before execution. Frontier implementation also needs
+an explicit user exception recorded for that implementation scope.
+**Frontier research keeps the `research` label.** When a research issue opts
+into frontier, validate its one class section, rationale, explicit approval,
+and exact work envelope through `issue-body` before claim or substantive work.
+Do not impose the task template on it. A routine research issue does not gain
+frontier metadata merely from its label.
+
+
+**A frontier session does not retain ordinary implementation.** Resolve the
+effective route, including role overrides, fallbacks, and visible parent-model
+inheritance; a role label cannot disguise an astra/fable route. For an ordinary
+`mechanical`, `implementation`, or `reasoning` issue, hand implementation to an
+eligible non-frontier route using an authorized model switch or delegation. The
+frontier session may do only the bounded routing and handoff; it does not keep
+the implementation or supervise it as a substitute for handoff. If no eligible
+route is available, stop and report the configuration gap. Frontier
+implementation requires explicit user authorization of that exception and its
+bounded scope; a research approval is not enough.
+For ordinary work, a frontier session resolves an eligible non-frontier route
+before establishing the task branch or posting a claim. It may continue only
+after a supported model switch reports a non-frontier execution identity, or
+hand off the full undertaking to an eligible non-frontier session. The
+receiving session runs `undertake` and owns its branch and claim. If neither
+route is available, stop here and report the exact configuration gap.
+
+After handing off the full issue, stop this sequence; do not claim it, open a
+second branch, or continue as a frontier supervisor.
+
+A non-frontier standalone undertaking keeps its existing behavior: it does not
+gate on a mapping between its own model identity and the task class. Concrete
+`Model:` lines in claim provenance remain actual-model records, not task
+metadata.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
@@ -247,27 +276,34 @@ After `Read the issue and its edges` rather than before it, because the edges
 decide whether there is anything to claim: a blocked issue stops there, and a
 claim on work that is not starting is a false record.
 
-**Before posting the claim, verify the session title where the harness exposes it.** Use the issue number and title with `session-title`'s shortening rules. If the title step was missed or the current title is wrong, set it now; do not post the claim first. Leave an already-correct title unchanged. If the harness has no available title surface, report that limitation and continue without inventing another route, as `Title the session` requires.
+**Before posting the claim, verify the session title where the harness exposes it.** Use the issue number and title with `session-title`'s shortening rules. If the title step was missed or the current title is wrong, set it now; do not post the claim first. Leave an already-correct title unchanged. If the harness has no available title surface, report that limitation and continue without inventing another route, as `Title the session` requires. The harness denies the claim until the title is set, as `session-title`'s `When to set it` says.
 
 Beyond the claim itself the comment always carries:
 
-- **The branch** established by `task-worktree`, **linked** as
+- **The branch linked in the claim is the remote push branch** established by
+  `task-worktree`, linked as
   `[branch](https://github.com/OWNER/REPO/tree/BRANCH)`. `OWNER/REPO` is the
   repository the branch will be pushed to, which on a fork need not be the
   repository the issue is in. Read it from the harness's session call where
   that call supplies it, or from the remote `task-worktree` resolved. Built
   from the issue's repository instead, the link can point to the wrong fork.
-  Until `Open the draft` nothing else on GitHub ties the issue to this branch.
+  Until `Open the draft` nothing else on GitHub ties the claim to this branch.
   The link can return 404 until the first push; write it anyway, because the
   alternative is a branch name the reader must turn into a URL by hand.
 
-- **`provenance`'s block**, immediately after the branch: the model that
-  served the turn, the harness and its version, and the session identifier or
-  `n/a`. That skill owns the block's shape and the rules for reading each
-  field — never a name recalled instead of read, and where the model the
-  session was *set* to run disagrees with the one that served, both are
-  named. The `Model:` and lowercase `session:` line shapes are what the claim
-  lookup below and `The milestone` match on, so they are never varied here.
+  Where `task-worktree` established separate identities, add a separate line
+  naming the local execution branch. Never link the local-only execution
+  branch as the branch GitHub will carry. Ordinary and resume paths have one
+  branch identity, so the linked and local branch are the same.
+
+- **`provenance`'s block**, immediately after the branch identity lines:
+  the model that served the turn, the harness and its version, and the session
+  identifier or `n/a`. That skill owns the block's shape and the rules for
+  reading each field — never a name recalled instead of read, and where the
+  model the session was *set* to run disagrees with the one that served, both
+  are named. The `Model:` and lowercase `session:` line shapes are what the
+  claim lookup below and `The milestone` match on, so they are never varied
+  here.
 - **A brief poem, in the claiming agent's own style, placed last** — after
   the branch, the model and the session, so that a reader looking for the
   branch or the model finds them in a fixed place and is never made to read
@@ -281,11 +317,14 @@ Beyond the claim itself the comment always carries:
   work.
 
 The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. Without a resume branch, a branch designated by that call must be
+the call `session-title` documents. Without a resume or a verified
+primary-held designation exception, a branch designated by that call must be
 the branch `task-worktree` established; disagreement is a collision, not a
-choice between two branch sources. With one, the resume branch is the task
-branch and the designation differing from it is not a collision; the harness
-reference says how a push scope that names the designated branch is handled.
+choice between two branch sources. With a resume, the remote push branch is
+the adopted branch and outranks the designation. In the exception, the local
+execution branch may differ from the designation only as `task-worktree`
+verified; the designated branch remains the push/PR head. Other paths retain
+one branch identity.
 
 **The comment never goes up with the branch alone.** The branch comes from
 the task worktree's Git state, never from a fresh naming decision in this
@@ -321,19 +360,22 @@ was never posted leaves the milestone with no start to read, and
 5 — Implement
 -------------
 
-**The session running this sequence writes the code itself.** No web session,
-no implementor subagent, no second context for the body of the work. An
-undertaking is one issue, and the hand that claimed it is the hand that
-implements it: a session that dispatches another session to undertake the
-issue it has already claimed buys a handoff, a second copy of the context and
-a second claim on the same branch, and buys nothing with them.
+**The session running this sequence writes the code itself** once its effective
+route is confirmed non-frontier, or when the user explicitly authorizes the
+bounded frontier implementation exception. No implementor dispatch is used for
+ordinary undertakings.
 
-**Subagents belong to the review round, not to the body of the work.**
-`review-cycle`'s `Verify the fix delta` dispatches a briefed subagent, and
-that is where a second reader earns its cost — the author of a delta cannot
-be an independent reader of it. That is the one dispatch this sequence makes:
-`Review the head` runs on the harness's own named review surface, which
-`review-cycle` says is the only thing it runs on.
+**A frontier session is the narrow exception.** For ordinary work it hands off
+the full undertaking to an eligible non-frontier session before creating a
+branch or claim, unless a supported model switch changes the verified
+execution identity to a non-frontier route. It does not implement or supervise
+that work on frontier. The receiving session runs this sequence and owns the
+branch and claim. This is routing, not parallelism across issues; `embark` still
+owns wave dispatch.
+
+**The review round has its own dispatch.** `review-cycle`'s `Verify the fix
+delta` sends a briefed subagent because the author of a delta cannot be an
+independent reader.
 
 **Parallelism across issues is `embark`'s.** Where several task issues are
 worked at once, that skill opens a session or a subagent per task, and each of
@@ -367,12 +409,58 @@ resume. Reaching `Ready for review` changes the work being watched; it does
 not start a second watch. Only a merged or closed pull request, or an explicit
 user stop, ends this obligation.
 
-**The body is `pr-body`'s, and so are the blockers that go with a Tofu
-diff.** Where the branch's changes touch the infrastructure Tofu stack, the
-body carries that skill's human-action blocker and the pull request the
-`human` label: the changes must be applied, and the updated state committed,
-before the pull request merges. `Ready for review` is what honours the
-blocker when the round is over — the pause is stated there.
+**The body is `pr-body`'s, and so are blockers that go with a Tofu diff.**
+Where the branch changes the infrastructure Tofu stack, the body carries
+`pr-body`'s apply-and-state blocker and the pull request the `human` label
+while that action remains outstanding. A plan is a separate operation: it is
+not a human action by default, and `Implement`'s escalation gate decides
+whether its target, route and restrictions permit this session to run it.
+`issue-labels`' `human` kind remains an issue classification, not this
+temporary pull-request state.
+
+**Undertake owns operational escalation.** `pr-body` publishes the decision
+and evidence established here; it does not infer inability from a missing
+tool, credential, network route, a Tofu diff, or an old blocker. On each
+operation that might need a person, identify the exact blocked step and
+classify it: unknown route, repairable execution failure, current-session
+capability or access gap, external wait, or genuine human dependency. For an
+unknown route, inspect relevant repository instructions, documentation and
+Makefile routes, plus available tools and access without exposing secrets.
+Attempt each available, permitted route; diagnose ordinary repairable
+failures within this task's scope and the existing workflow bounds.
+Documentation alone is not evidence that a route cannot run.
+
+Capability is not authorization, and this session's capability is not the
+task's actor requirement. Describe required credentials, connectivity, tools
+and authorization directly, not as a laptop-, local-, cloud-, or human-only
+task. An authorized agent with those capabilities may continue through an
+available handoff under existing dispatch rules. If this session lacks access
+and no authorized agent route exists, report the precise environment
+prerequisite and resumption or handoff path; do not invent a dispatch
+facility, transfer secrets, or call the work human-only. If a person must
+provision access or approve an operation, isolate only that contribution from
+the work an authorized agent can do.
+
+An explicit production prohibition or required human approval is enough to
+stop without a probe. Never test a prohibited operation, access production,
+perform a dangerous action to see whether it fails, bypass authentication,
+expand privileges, or treat a binary or token as permission. For `tofu plan`,
+inspect its target, documented route and restrictions first: run an available
+permitted plan without asking the user; do not run a plan against live
+infrastructure in this task. The repository's human-only apply and
+updated-state requirement remains.
+
+Escalate only on an observed human dependency. State the blocked step, the
+attempted route and its observed failure, or the exact restriction that
+precluded an attempt, and request only the smallest contribution the person
+can supply. Evidence can be linked; do not turn every PR body into a
+transcript. Pending CI and other external waits stay with the existing
+continuation; a recoverable execution failure is not a human blocker.
+Complete independent permitted work before pausing unless a higher-priority
+safety rule requires an immediate stop. On resume, revalidate the dependency
+against current evidence, then remove satisfied or stale blocker text and the
+corresponding PR `human` label while preserving unrelated labels. Keep every
+still-valid apply, state, approval or other requirement.
 
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate
@@ -422,17 +510,31 @@ discharges the leaving-draft trigger in its description: it fires on exactly
 the moment this step occupies, and a round already run on this head is that
 trigger already answered.
 
-**A pull request that waits on a person stops here instead.** Where the body
-carries `pr-body`'s human-action blocker — a Tofu change awaiting its apply,
-or any other action only a person can take before merge — the round at
-`Review the head` still runs to its end. The round's end is then a comment
-on the pull request, not a state change: it says the review cycle is
-complete, and names the action the pull request waits on. The pull request
-stays a draft, and the sequence pauses there. What resumes it is the
-person's action landing on the branch — the Tofu applied, the updated state
-committed — after which the pull request returns through the gate below
-like any other. The person's commit is a new diff: `Review the head` runs
-over it once before the gate, the way any changed head earns a round.
+**A verified human dependency stops readiness here.** First revalidate each
+reported blocker against current evidence, including on resume. Do not treat
+the old body, label or an earlier agent claim as proof that the action remains
+outstanding. If evidence shows it is satisfied or stale, update the body and
+remove only its `human` label, preserving other labels; keep any separate,
+valid requirement. Otherwise run the review round to its end first. Its
+completion comment names the exact blocked step, the attempted permitted
+route and observed failure, or the restriction that precluded an attempt, and
+the smallest human contribution needed. The pull request stays a draft.
+Complete independent permitted work before pausing unless a safety rule
+requires an immediate stop. On resume, the person's contribution must be
+reflected in current branch evidence — for Tofu, the apply and committed
+updated state — and the changed head earns its review round before returning
+through the gate. Pending CI and other external waits are not human
+dependencies; follow their existing continuation instead.
+
+**A current-session capability gap is not a human dependency.** If a required
+verification remains unmet because this session lacks credentials,
+connectivity or another capability, use an available authorized-agent
+handoff. If none exists, keep the pull request draft and report the exact
+prerequisite and concrete handoff or resumption path; do not ask for a laptop
+or apply the PR `human` label solely because this session lacks access. Finish
+independent permitted work and the review round before pausing, unless a
+safety rule requires an immediate stop. The gate remains unmet until the
+required verification evidence is recorded.
 
 When the gate clears and the pull request is marked ready, the milestone's
 moment has arrived: the sequence publishes the first-readiness report through
@@ -585,10 +687,21 @@ One round over it, and `review-cycle` decides anything further.
 A round after ready goes back to draft
 --------------------------------------
 
-**Return the pull request to draft** before `Review the head` runs, and ready again through `The gate` below when the round closes — the
-same gate, not a second one. A pull request under review is not ready for
+**Return the pull request to draft before any push that changes
+pull-request content** — a fix, a conflict resolution, a new commit — and so
+before `Review the head` runs. Ready again through `The gate` below when the
+round closes — the same gate, not a second one. A ready pull request is liable
+to be merged without notice, and a person merging from the GitHub UI reads no
+completion notice. Pushing to it first leaves unreviewed content on a pull
+request that says it is ready. A pull request under review is not ready for
 review, and a reviewer must not be reading a branch that is changing
 underneath them.
+
+**A clean base merge at `Keep it current` is the exception.** It changes no
+pull-request content, earns no round under `After the merge`
+([`0022`](../../docs/notes/0022-the-merge-is-mechanical.md)), and does not
+return the pull request to draft. A merge resolved by hand changes content
+and is not the exception.
 
 
 The gate
@@ -604,15 +717,41 @@ Ready is a gate, not a step
 ---------------------------
 
 "After fixing, set the PR to ready" reads as unconditional. It is not. It is
-also not a judgement: **the gate is a read**. Seven conditions decide it, six
+also not a judgement: **the gate is a read**. Eight conditions decide it, seven
 reads answer them, and every read is a call the reference file for the harness
 in use names. A gate that has to be weighed is a gate that gets taken to the
 user, and the user is not the one who can answer it.
 
 Take the reads in this order. The first that does not hold is where the
-sequence stops, and the reason is stated in one line.
+sequence stops, and the reason is stated in one line. Cite a read by its
+condition, never by its position: a read inserted ahead of it moves every
+number.
 
-1. **The branch against its base**, for the condition that it is current and
+1. **The head carries the whole of the issue's work.** Four parts, each a call
+   or a comparison of two texts the session already holds:
+   - The task worktree has no uncommitted change: `git status --porcelain`
+     in the task worktree prints nothing.
+   - The branch has nothing unpushed: `git log @{upstream}..HEAD --oneline`
+     in the task worktree prints nothing.
+   - Every item in the issue's acceptance section — `issue-body`'s
+     requirement 5, the `Acceptance and verification` heading in the bodies
+     this toolkit writes — maps to a file in the pull request's diff, or is
+     answered on the pull request with a reason. Take the issue body as read
+     at `Read the issue and its edges` and the diff through the route the
+     reference file names. Name each item and the diff file that satisfies
+     it. An item with no file and no reason is unmet.
+   - The session has no further change planned for this branch. A planned
+     change is work at `Implement` now, before the gate; never after ready.
+
+   Where the read does not hold, the sequence returns to `Implement`, and
+   comes back through the push, the round and the gate. The pull request stays
+   a draft, and the reason is one line naming the unmet item. This is not a
+   stop and not a question: it is the sequence not yet at the gate. This read
+   comes first because every later read is about the head a reviewer will
+   read and a person will merge. A head that is not whole is not that head,
+   so reads taken on it answer about a commit that will not be the one
+   merged — the same reasoning the merge read gives for its own place.
+2. **The branch against its base**, for the condition that it is current and
    merges cleanly. GitHub's merge state answers it, and only three of its
    values are this read's: `behind` is a base the branch does not carry, so
    `Keep it current` runs its merge and this read is taken again; `dirty` is
@@ -690,9 +829,14 @@ somebody else to carry a claim this session is the one holding the evidence
 for.
 
 A branch behind its base, red CI, an open thread, or a human action still
-owed means it **stays a draft**, and the reason is stated in one line. A red
-pull request marked ready is a claim about the work that is not true, and so
-is a ready one that does not merge. **So is a draft that satisfies every
+owed, or an issue item the diff does not carry, means it **stays a draft**,
+and the reason is stated in one line. A red pull request marked ready is a
+claim about the work that is not true, and so is a ready one that does not
+merge. **A partial pull request marked ready is that false claim in its
+plainest form.** It says the work is done, and a person merges a ready pull
+request without reading the round's record, so the claim is acted on: #558
+passed every other read, was marked ready at 16:29 UTC on 2026-10-06 and was
+merged two minutes later without the fixture #555 required. **So is a draft that satisfies every
 condition**: it tells a reviewer there is nothing to read yet, which is the
 same false claim pointing the other way, and "left in draft to be safe" is
 the sentence it gets written in.
@@ -704,6 +848,8 @@ second round.
 
 [`0021`](../../docs/notes/0021-the-gate-is-a-read.md) is the decision, and the
 two stalls that prompted it.
+[`0031`](../../docs/notes/0031-ready-means-the-work-is-whole.md) adds the
+completeness read, and the draft before a content push.
 
 
 The milestone
@@ -845,7 +991,9 @@ In order:
 
    This session stopped at the user's instruction. The work is yours to reclaim.
 
-   - Branch: `<branch>` — <link>. Pushed head: `<sha>`.
+   - Branch: `<remote push branch>` — <link>. Local execution branch:
+     `<local branch>` (omit this line when it is the same branch). Pushed head:
+     `<sha>`.
    - Pull request: <#N and state (draft / ready), or "none open">.
    - Reached: <the last step of the sequence completed>.
    - Outstanding: <what is blocked, failing, or unverified — failed checks,
@@ -907,16 +1055,17 @@ The reference file for the harness in use names the route.
 Where it stops and waits
 ========================
 
-Autonomy is the point, so each pause has to earn itself. Thirteen stop the
+Autonomy is the point, so each pause has to earn itself. Fifteen stop the
 sequence. Eight stop it to *ask* — the ambiguous issue, the request too vague
 to write one for, an issue labelled `proposal`, an issue carrying two of the
 six labels, the failing approach, a designated branch the harness states
 ambiguously, more than one existing task branch on the issue's record, and a
 base merge whose conflict is a real one. A blocked issue,
-an epic, an issue labelled `human`, running or failed CI, a review wall, and a
-human action owed stop it to report the unfinished condition and its actual
-resume path. Where an orchestrator's address was given, every stop is also
-reported to it under `Reporting to an orchestrator`.
+an epic, an issue labelled `human`, running or failed CI, a review wall, a
+human action owed, and a current-session capability gap with no authorized
+handoff stop it to report the unfinished condition and actual resume path.
+Where an orchestrator's address was given, every stop is also reported to it
+under `Reporting to an orchestrator`.
 
 - **A blocked issue, an issue whose intent is genuinely ambiguous, or a
   request too vague to write an issue for.** The constitution forbids guessing
@@ -951,21 +1100,28 @@ reported to it under `Reporting to an orchestrator`.
   never met. Where both sides changed the same logic, picking either loses
   behaviour, and that is the constitution's rule against guessing at intent:
   name the conflicting files and wait.
-- **A human action the pull request waits on**, at `Ready for review`. The
-  human-action blocker in `Blockers` marks a Tofu change awaiting its apply — the
-  updated state committed — or any other bar only a person clears. The
-  review round runs to its end first; its end is a comment that says so and
-  names the action, the pull request stays a draft, and the sequence pauses
-  until the branch carries the result. An apply is not something CI reports,
-  and no check a session can read answers for it.
-
-**"It cannot run here" is not a stop until the docs say so.** An acceptance
-step the session believes it cannot perform in this environment — a missing
-tool, a missing credential, a run that "needs a laptop" — is not a blocker
-until the session has searched the repository's docs and Makefile for the
-route. A blocker posted to a pull request or an issue names what was searched
-and what it found. A blocker that cites no search is a guess, and the next
-session pays to disprove it.
+- **A genuine human dependency still owed**, at `Ready for review` or the
+  operation that exposes it. `undertake` owns escalation: classify the
+  blocked step, investigate unknown routes, attempt available permitted
+  routes, and repair ordinary failures within scope. Stop without an attempt
+  only where an explicit prohibition or required approval precludes it. Never
+  probe production or a dangerous operation. A genuine escalation names the
+  attempted route and observed failure, or exact restriction, and asks only
+  for the missing human contribution. Finish independent permitted work first
+  unless safety requires an immediate stop. On resume, revalidate current
+  evidence and clear satisfied or stale blocker text and its PR `human` label
+  without removing unrelated labels or valid outstanding requirements. A
+  Tofu apply and updated-state commit remain human-only.
+- **A current-session capability or access gap with no authorized-agent
+  handoff**, at `Ready for review`. This is not proof the work needs a human.
+  State the exact required credential, connectivity, tool or authorization
+  capability, and the concrete handoff or resumption path. Do not describe a
+  step as laptop-, local-, cloud- or human-only when capabilities, not device
+  or actor, are the requirement. Do not invent a dispatch facility or transfer
+  secrets. Keep the PR draft until the verification evidence exists, and do
+  not add the PR `human` label solely because this session lacks access.
+- **Pending CI and other external waits** are not human actions; retain
+  ownership and use the existing continuation rules.
 
 The round at `Review the head` and `Fix, answer, resolve, push` has three stops
 of its own — its own wait on CI, a review finding whose fix is a real

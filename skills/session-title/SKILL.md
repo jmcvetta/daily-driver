@@ -97,6 +97,13 @@ a glance. The budget counts the whole string, notice included. The epic title
 is shortened by the same cuts `Working on an issue` defines, over whatever
 room the notice leaves.
 
+On Omp, an explicit embark requires a canonical `issue://` read before
+dispatch; read-only preparation may precede it. Once the issue result confirms
+an epic, set this orchestrator form before any unrelated tool call. The
+runtime allows read-only preparation before the result and blocks unrelated
+calls after it until the active epic's title is applied. Free-form embark
+requests retain the existing title gate.
+
 
 Not working on an issue
 =======================
@@ -133,3 +140,7 @@ closed, issue #41 begun.
 
 Not on every commit, and not to record progress. A title that keeps moving is
 one nobody reads twice.
+
+**The harness denies the session's first issue comment and first dispatch
+until the title is set** — on Claude Code and Omp, where a title surface
+exists. A denied call succeeds once the title is set; the denial says how.

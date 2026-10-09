@@ -13,6 +13,11 @@ takes the row out of the named arm and leaves it in the rest. Today the
 `constitution` rows carry `skip:codex`, because `coder_eval`'s Codex agent links
 skills and installs no hooks, so no constitution reaches that arm.
 
+A row with no counterpart on another harness, because it exercises a skill that
+only one harness loads, carries `native` beside its arm tag instead of a
+`forks:` tag. The `fix-daily-driver-bugs` rows are `omp-only` and `native`: the
+skill lives in `.omp/skills/` and dispatches through Omp's `task` batch.
+
 The `review-depth` rows are tagged `claude-only` without a counterpart: they pin
 `agent.type: claude-code` and drive Claude's own settings and hooks, so they
 have no form on another harness. Untagged, they would run inside the other arms
@@ -117,6 +122,8 @@ ARMS: dict[str, dict[str, object]] = {
         "id_suffix": "-omp",
         "kinds": ("omp",),
         "ablation": True,
+        # Focused skill-behavior probes cannot produce a meaningful bare-arm control.
+        "focused_variants": {"omp-gpt-6.1-sol.yaml": "with-plugin"},
         "experiments": {
             "omp-glm-5.3.yaml": "vercel-ai-gateway/zai/glm-5.3",
             "omp-glm-5.3-flash.yaml": "vercel-ai-gateway/zai/glm-5.3-flash",
@@ -124,6 +131,7 @@ ARMS: dict[str, dict[str, object]] = {
             "omp-gpt-5.6-sol.yaml": "openai-codex/gpt-5.6-sol",
             "omp-gpt-6-sol.yaml": "openai-codex/gpt-6-sol",
             "omp-gpt-6-luna.yaml": "openai-codex/gpt-6-luna",
+            "omp-gpt-6.1-sol.yaml": "openai-codex/gpt-6.1-sol",
         },
         "run_targets": {
             "evals-run-omp-glm-5-3": "omp-glm-5.3.yaml",
@@ -132,6 +140,7 @@ ARMS: dict[str, dict[str, object]] = {
             "evals-run-omp-gpt-5-6-sol": "omp-gpt-5.6-sol.yaml",
             "evals-run-omp-gpt-6-sol": "omp-gpt-6-sol.yaml",
             "evals-run-omp-gpt-6-luna": "omp-gpt-6-luna.yaml",
+            "evals-run-omp-gpt-6-1-sol": "omp-gpt-6.1-sol.yaml",
         },
         "bundle_target": "evals-run-omp",
     },
@@ -219,6 +228,10 @@ FORK_TAG = "forks:"
 # rest. An arm tag cannot say that: it claims exactly one arm.
 SKIP_TAG = "skip:"
 
+# The bare tag that says a non-`claude` row has no Claude sibling to fork,
+# because the skill it exercises is loaded by one harness only.
+NATIVE_TAG = "native"
+
 
 class CheckFailed(Exception):
     """A failed assertion, with the detail that explains it."""
@@ -290,6 +303,13 @@ def check_arm_tags(tasks: list[tuple[Path, dict]]) -> None:
             arm_of_id[task_id] = arm
 
         declared = [tag.split(":", 1)[1] for tag in tags if tag.startswith(FORK_TAG)]
+        native = NATIVE_TAG in tags
+        if native and (arm is None or declared):
+            raise CheckFailed(
+                f"{path.relative_to(ROOT)}: a `{NATIVE_TAG}` row needs an arm tag and must not carry a `{FORK_TAG}` tag; "
+                "it has no sibling in another arm, so naming one would be false and omitting the arm "
+                "would run it everywhere"
+            )
         if declared and arm is None:
             raise CheckFailed(
                 f"{path.relative_to(ROOT)}: carries a `{FORK_TAG}` tag but no arm tag, so it would run in "
@@ -299,11 +319,10 @@ def check_arm_tags(tasks: list[tuple[Path, dict]]) -> None:
         # originals and declare nothing. A row in any other arm exists because a
         # Claude row could not be graded there, so it must say which row that
         # was -- which is also what catches the sibling losing its own tag and
-        # starting to run in every arm. A genuinely harness-native row with no
-        # Claude counterpart would need this rule revisited; there is none, and
-        # making that a deliberate decision rather than a silent gap is the
-        # point of requiring it.
-        if arm is not None and ARMS[arm]["id_suffix"] is not None and len(declared) != 1:
+        # starting to run in every arm. A harness-native row with no Claude
+        # counterpart says so with the `native` tag, which makes that a
+        # deliberate decision rather than a silent gap.
+        if arm is not None and ARMS[arm]["id_suffix"] is not None and not native and len(declared) != 1:
             raise CheckFailed(
                 f"{path.relative_to(ROOT)}: an {ARMS[arm]['tag']} row must name the row it forks, as exactly "
                 f"one `{FORK_TAG}<task_id>` tag; found {declared}"
@@ -540,6 +559,31 @@ def check_comparison_variants(path: Path, document: dict) -> None:
             "construction"
         )
 
+def check_single_arm_experiment(path: Path, document: dict, expected_variant: str) -> None:
+    """Require a focused Omp run to measure only the declared plugin variant."""
+    if expected_variant != "with-plugin":
+        raise CheckFailed(f"{path.relative_to(ROOT)}: focused Omp runs must name `with-plugin`")
+    variants = document.get("variants")
+    if not isinstance(variants, list):
+        raise CheckFailed(f"{path.relative_to(ROOT)}: focused Omp run needs one variant")
+    variants_by_id: dict[str, dict] = {}
+    for variant in variants:
+        if not isinstance(variant, dict) or not isinstance(variant.get("variant_id"), str):
+            raise CheckFailed(f"{path.relative_to(ROOT)}: focused Omp run has an invalid variant")
+        variant_id = variant["variant_id"]
+        if variant_id in variants_by_id:
+            raise CheckFailed(f"{path.relative_to(ROOT)}: duplicate variant {variant_id!r}")
+        variants_by_id[variant_id] = variant
+    if set(variants_by_id) != {expected_variant}:
+        raise CheckFailed(
+            f"{path.relative_to(ROOT)}: focused Omp run must measure only `{expected_variant}`; "
+            f"found {sorted(variants_by_id)}"
+        )
+    agent = variants_by_id[expected_variant].get("agent")
+    if not isinstance(agent, dict) or agent.get("plugins") != [{"type": "local", "path": ".."}]:
+        raise CheckFailed(f"{path.relative_to(ROOT)}: focused Omp run must load the daily-driver plugin")
+
+
 
 def check_model_class_model(path: Path, document: dict) -> None:
     """Require a usable model pin inside each model-class experiment."""
@@ -551,13 +595,17 @@ def check_model_class_model(path: Path, document: dict) -> None:
 
 
 def check_experiments() -> None:
-    """Every experiment has its own arm kind, and Omp has both measured variants."""
+    """Every experiment names its arm; Omp pairs ablations and registers focused runs."""
     variant_kinds = _load_variant_kinds()
     arm_of_experiment = {
         experiment: (name, model)
         for name, spec in ARMS.items()
         for experiment, model in arm_experiments(spec).items()
     }
+    for arm, spec in ARMS.items():
+        focused = spec.get("focused_variants", {})
+        if not isinstance(focused, dict) or set(focused) - set(arm_experiments(spec)):
+            raise CheckFailed(f"the {arm} arm has an invalid focused-experiment declaration")
 
     files = sorted(EXPERIMENTS.glob("*.yaml"))
     if not files:
@@ -623,6 +671,10 @@ def check_experiments() -> None:
             agent = defaults.get("agent") if isinstance(defaults, dict) else None
             if not isinstance(agent, dict) or agent.get("model") != model:
                 raise CheckFailed(f"{path.relative_to(ROOT)}: expected Omp model {model!r}")
+            focused_variants = ARMS[arm].get("focused_variants", {})
+            if isinstance(focused_variants, dict) and path.name in focused_variants:
+                check_single_arm_experiment(path, document, str(focused_variants[path.name]))
+                continue
             if not ARMS[arm].get("ablation"):
                 continue
             variants_by_id = {
@@ -704,6 +756,19 @@ def check_the_checks() -> None:
                 (here / "x.yaml", {"task_id": "x-codex", "tags": ["codex-only", "forks:y-codex"]}),
                 (here / "y.yaml", {"task_id": "y-codex", "tags": ["codex-only", "forks:y"]}),
                 (here / "z.yaml", {"task_id": "y", "tags": ["claude-only"]}),
+            ],
+            check_arm_tags,
+        ),
+        (
+            "a native row with no arm tag",
+            [(here / "x.yaml", {"task_id": "x", "tags": ["native"]})],
+            check_arm_tags,
+        ),
+        (
+            "a native row that also forks a sibling",
+            [
+                (here / "x.yaml", {"task_id": "x-omp", "tags": ["omp-only", "native", "forks:y"]}),
+                (here / "y.yaml", {"task_id": "y", "tags": ["claude-only"]}),
             ],
             check_arm_tags,
         ),
@@ -842,6 +907,38 @@ def check_the_checks() -> None:
         except CheckFailed:
             continue
         raise CheckFailed(f"the check for {name!r} did not fail on a document that should fail it")
+
+    focused_valid = {
+        "variants": [
+            {
+                "variant_id": "with-plugin",
+                "agent": {"plugins": [{"type": "local", "path": ".."}]},
+            }
+        ]
+    }
+    check_single_arm_experiment(synthetic, focused_valid, "with-plugin")
+    focused_invalid = [
+        ("focused Omp run with no plugin arm", {"variants": [{"variant_id": "bare", "agent": {"plugins": []}}]}),
+        (
+            "focused Omp run with an extra ablation arm",
+            {
+                "variants": [
+                    {"variant_id": "bare", "agent": {"plugins": []}},
+                    {"variant_id": "with-plugin", "agent": {"plugins": [{"type": "local", "path": ".."}]}},
+                ]
+            },
+        ),
+        (
+            "focused Omp run without the daily-driver plugin",
+            {"variants": [{"variant_id": "with-plugin", "agent": {"plugins": []}}]},
+        ),
+    ]
+    for name, document in focused_invalid:
+        try:
+            check_single_arm_experiment(synthetic, document, "with-plugin")
+        except CheckFailed:
+            continue
+        raise CheckFailed(f"the check for {name!r} did not fail")
 
 
 def main() -> None:

@@ -1,5 +1,33 @@
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575))
+
+## [0.50.0](https://github.com/jmcvetta/daily-driver/compare/v0.49.3...v0.50.0) (2026-10-08)
+
+
+### Features
+
+* add repository-local bug triage ([#558](https://github.com/jmcvetta/daily-driver/issues/558)) ([fa74689](https://github.com/jmcvetta/daily-driver/commit/fa74689339fd1aafa7c9972991801c70b3d528bb))
+* deny the claim and the dispatch until the session is titled ([#573](https://github.com/jmcvetta/daily-driver/issues/573)) ([cb51fd5](https://github.com/jmcvetta/daily-driver/commit/cb51fd544d20335cb17b6285132886d020231e9d))
+
+
+### Bug Fixes
+
+* **review-cycle:** observe workflow runs in the Omp CI wait ([#565](https://github.com/jmcvetta/daily-driver/issues/565)) ([ad922a8](https://github.com/jmcvetta/daily-driver/commit/ad922a86a679e27c91f05697496cd84cd6906eed))
+* **undertake:** read whether the head carries the whole of the issue's work ([#570](https://github.com/jmcvetta/daily-driver/issues/570)) ([532565d](https://github.com/jmcvetta/daily-driver/commit/532565da775d04a74ba558666a8ead8fd434e18d))
+
+## [0.49.3](https://github.com/jmcvetta/daily-driver/compare/v0.49.2...v0.49.3) (2026-10-06)
+
+
+### Bug Fixes
+
+* **task-worktree:** resolve Omp helper from loaded plugin ([#561](https://github.com/jmcvetta/daily-driver/issues/561)) ([68d2a4c](https://github.com/jmcvetta/daily-driver/commit/68d2a4ce149bd7db44222bf792d1b0b8a4f18129))
+* **undertake:** require evidence before human escalation ([#537](https://github.com/jmcvetta/daily-driver/issues/537)) ([8d3f9a1](https://github.com/jmcvetta/daily-driver/commit/8d3f9a168122d8d3955b6084f574b38d1f8eeed8))
+
 ## [0.49.2](https://github.com/jmcvetta/daily-driver/compare/v0.49.1...v0.49.2) (2026-10-06)
 
 
@@ -97,8 +125,11 @@
 
 ### Bug Fixes
 
+* **omp:** refresh Omp task-class role defaults ([#578](https://github.com/jmcvetta/daily-driver/issues/578))
+
 * **omp:** select harness instructions from runtime identity, not model name (#498)
 * **review-cycle:** use Omp's supervised service API for bounded CI waits (#410)
+* **undertake:** require evidence for human escalation and revalidate PR blockers ([#535](https://github.com/jmcvetta/daily-driver/issues/535))
 
 ## [0.45.0](https://github.com/jmcvetta/daily-driver/compare/v0.44.0...v0.45.0) (2026-09-28)
 

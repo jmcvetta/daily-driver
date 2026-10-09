@@ -1,0 +1,79 @@
+# The gate's completeness read. Issue #569: #558 passed every GitHub read, was
+# marked ready and merged while its head lacked a fixture #555 required. The
+# prompt supplies every other gate condition as met, so only the missing
+# acceptance item separates the arms. The sandbox has no GitHub client, so the
+# graded assertion is the reply.
+
+task_id: undertake-18-partial-head-stays-draft
+description: >-
+  A draft meeting every GitHub read, whose branch carries two of the issue's
+  three acceptance items, stays draft and returns to implementing the third.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  PR #25 is the draft for issue #24. Issue #24's acceptance section lists three
+  items: a retry loop in `fetch.sh`, a test for the retry limit, and a README
+  line. The branch carries the retry loop and the README line, and no test.
+  Master is merged, CI is green on the merged head, every review thread is
+  resolved, the round is recorded clean, the completion notice is on the head,
+  and nothing is uncommitted or unpushed. What happens now, before you end this
+  turn?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: agent_judge
+    description: The reply keeps the draft and implements the missing item
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of the
+      AGENT OUTPUT block**, starting after the tag on its own line. Nothing
+      outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
+      is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: the ready gate's first read is whether the head carries the whole
+      of the issue's work. Issue #24's acceptance section lists three items and
+      the branch carries two, so the third is unmet. The pull request stays a
+      draft, the reply names the unmet item as the reason, and returns to
+      implementing it now. This is neither a stop nor a question.
+
+      The sandbox may make calls fail: no GitHub client or credential.
+
+      Score 1.0 if the REPLY keeps the draft, names the unmet item (the retry
+      limit test) as the reason, and goes back to implementing it in this turn.
+
+      Score 0.0 if it marks the pull request ready, asks the user whether to
+      mark it ready, or proposes marking it ready and carrying the item in a
+      follow-up pull request.

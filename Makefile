@@ -8,11 +8,11 @@ SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
 .PHONY: __git_sync_run check-git-sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
-	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat \
+	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat check-title-gate \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
-	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
+	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-embark-title-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
+	check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
 	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
@@ -104,8 +104,8 @@ omp-update-daily-driver:
 	omp plugin upgrade daily-driver@daily-driver
 
 
-# `check` remains the local all-groups convenience target. CI runs its
-# unconditional repository checks and selected groups as named `CI Success` steps.
+# `check` remains the local all-groups convenience target. CI selects leaf
+# checks from changed inputs and runs each selected check as a named step.
 check: check-ci-scope check-step-names check-release-paths check-plugin-validity check-runtime check-eval-tooling check-issue-infra
 
 check-ci-scope:
@@ -114,7 +114,7 @@ check-ci-scope:
 check-plugin-validity: check-plugin check-skills check-agents \
 	check-manifests check-manifest-fixtures check-claude-dependency
 
-check-runtime: check-constitution check-ask-in-chat check-omp-extension check-model-class-roles \
+check-runtime: check-constitution check-ask-in-chat check-title-gate check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-git-sync \
 	check-task-worktree-fixture check-worktrunk-install check-scripts
 
@@ -123,7 +123,7 @@ check-git-sync:
 	python3 scripts/check-git-sync.py
 
 check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
-	check-model-classes-builder check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
+	check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
 	check-evals-results check-model-telemetry check-evals-setup-omp
 
 
@@ -215,6 +215,15 @@ check-constitution:
 check-ask-in-chat:
 	python3 scripts/check-ask-in-chat.py
 
+# The acceptance test for the title gate: run `hooks/title-gate.py` against
+# synthetic event JSON in both modes and assert the session's first issue
+# comment and first dispatch are denied until it is titled. Credential-free
+# like check-ask-in-chat, and needed for the same reason -- a gate that stops
+# firing does not fail, it just gives the step back to the prose. See the
+# script's docstring.
+check-title-gate:
+	python3 scripts/check-title-gate.py
+
 # The acceptance test for the Omp runtime adapter: import extensions/
 # daily-driver.js with a fake ExtensionAPI and assert the `ask` deny, the
 # primary/detached-worktree mutation guard, the four tools, and package wiring.
@@ -295,6 +304,11 @@ check-omp-eval-guard:
 check-omp-eval-guard-live:
 	python3 scripts/check-omp-eval-guard-live.py
 
+# The live embark barrier needs a real Omp but not the eval guard: issue://
+# must reach its offline fixture client to provide the canonical issue metadata.
+check-omp-embark-title-live:
+	python3 scripts/check-omp-embark-title-live.py
+
 # check-omp-agent-settle: the acceptance test for the Omp arm's early-stop
 # record -- that a replicate which early-stops on `skill_triggered` cannot
 # final-score 0 on that same criterion, the failure the first live run
@@ -361,11 +375,6 @@ check-eval-fixtures:
 # the script's header.
 check-model-classes-grader:
 	scripts/check-model-classes-grader.sh
-
-# check-model-classes-builder: the case builder's offline self-tests, which
-# every invocation runs first -- here with no token and no network.
-check-model-classes-builder:
-	python3 scripts/evals-cases-from-prs.py --self-test
 
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.
@@ -495,6 +504,7 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-luna.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
@@ -605,10 +615,9 @@ evals-run: evals-judge-preflight evals-plan evals-preflight
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-# evals-run-omp: run every recorded Omp model. Each named target keeps one
-# model's two-arm result separate, so reports compare the plugin against the
-# bare control without conflating model families.
-evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna
+# evals-run-omp: run every registered Omp experiment. Ablation targets compare
+# bare and treated variants; the focused acceptance target measures with-plugin only.
+evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-omp-gpt-6-1-sol
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
 # `omp` on PATH and the provider's credentials -- `make evals-setup-omp` sets up
@@ -657,6 +666,12 @@ evals-run-omp-gpt-6-luna: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6-luna.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+evals-run-omp-gpt-6-1-sol: evals-judge-preflight evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6.1-sol.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6.1-sol.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-codex: the same suites on Codex. Needs the Codex SDK, which
