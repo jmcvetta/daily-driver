@@ -34,7 +34,7 @@ const workflowToolConsumers = {
   'Ensure ShellCheck': ['check-scripts'],
   'Install Worktrunk': ['check-git-sync', 'check-task-worktree-fixture', 'check-worktrunk-install'],
   'Install uv': ['check-eval-arms', 'check-agent-judges', 'check-evals-judge', 'check-evals-preflight', 'check-evals-provenance', 'check-omp-agent-settle'],
-  'Install Omp': ['check-omp-plugin', 'check-omp-eval-guard-live', 'check-omp-agent-settle'],
+  'Install Omp': ['check-omp-plugin', 'check-omp-eval-guard-live', 'check-omp-embark-title-live', 'check-omp-agent-settle'],
 }
 
 function workflowChecks(base, head) {
