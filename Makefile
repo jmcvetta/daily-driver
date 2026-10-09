@@ -251,7 +251,7 @@ check-omp-guard-differential:
 #
 # Not part of `check`, for the reason check-infra is not: it needs a toolchain
 # -- here a whole second harness -- and `check` must not start requiring Omp on
-# a laptop that is only editing a skill. The `CI Success` job runs it when the
+# a laptop that is only editing a skill. The `Checks` job runs it when the
 # component filter selects Omp integration, so a break blocks a merge.
 #
 # No guard on `omp` either, and that is the same decision as check-infra's. A

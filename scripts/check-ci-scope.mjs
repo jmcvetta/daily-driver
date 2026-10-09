@@ -32,13 +32,13 @@ assert.deepEqual(selectChecks(['evals/coder-eval-omp/src/coder_eval_omp/rpc.py']
 ])
 
 // Without these checks, real label changes run synthetic fixtures or unrelated suites.
-assert.deepEqual(selectChecks(['infra/github/labels.tf']), ['check-labels'])
+assert.deepEqual(selectChecks(['infra/github/labels.tf']), ['check-labels', 'check-infra'])
 assert.deepEqual(selectChecks(['scripts/check-labels.py']), ['check-labels', 'check-labels-fixtures'])
 
 // Without these cases, a path outside known inputs could revive the old all-check fallback.
 assert.deepEqual(selectChecks(['scripts/unrelated.py']), [])
 // Without this scanner dependency, numbered-step references in another workflow can drift unchecked.
-assert.deepEqual(selectChecks(['.github/workflows/infra.yml']), ['check-step-names'])
+assert.deepEqual(selectChecks(['.github/workflows/release-projection.yml']), ['check-step-names'])
 assert.deepEqual(selectChecks(['CHANGELOG.md']), [])
 // Without path-local exclusions, a changelog edit can mask README changes in the same commit.
 assert.ok(selectChecks(['README.md', 'CHANGELOG.md']).includes('check-step-names'))
@@ -109,10 +109,29 @@ assert.deepEqual(selectChecks(['skills/issue-labels/SKILL.md', 'attic/issue-labe
   'check-step-names', 'check-skills', 'check-manifests', 'check-labels', 'check-omp-plugin',
 ])
 
+// Without these cases, stack, toolchain or lock edits skip validation, or unrelated edits install OpenTofu.
+assert.deepEqual(selectChecks(['infra/github/.opentofu-version']), ['check-infra'])
+assert.deepEqual(selectChecks(['infra/github/.terraform.lock.hcl']), ['check-infra'])
+assert.deepEqual(selectChecks(['infra/github/Makefile']), ['check-infra'])
+assert.ok(!selectChecks(['skills/undertake/SKILL.md', 'scripts/unrelated.py']).includes('check-infra'))
+// Without selecting the validation target, a root Makefile edit can silently skip stack validation.
+assert.deepEqual(changedMakeTargets(`${makeBefore}\ncheck-infra:\n\t$(MAKE) -C infra/github validate\n`,
+  `${makeBefore}\ncheck-infra:\n\t$(MAKE) -C infra/github check-fmt validate\n`), ['check-infra'])
+// Without mapping the infrastructure steps, a tool or lock-check edit can leave the stack unvalidated.
+const infraBefore = 'jobs:\n  ci-success:\n    steps:\n      - name: Install OpenTofu\n        uses: opentofu/setup-opentofu@v2\n      - name: Verify provider lock\n        run: git diff --quiet\n'
+assert.deepEqual(changedWorkflowChecks(infraBefore, infraBefore.replace('setup-opentofu@v2', 'setup-opentofu@v3')), ['check-infra'])
+assert.deepEqual(changedWorkflowChecks(infraBefore, infraBefore.replace('git diff --quiet', 'echo ok')), ['check-infra'])
+assert.deepEqual(changedWorkflowChecks(`${infraBefore}      - name: Validate infrastructure\n        run: make check-infra\n`,
+  `${infraBefore}      - name: Validate infrastructure\n        run: make check-infra check-ci-scope\n`), ['check-ci-scope', 'check-infra'])
+// Without keying on the internal job id, renaming the displayed check name changes selection.
+assert.deepEqual(changedWorkflowChecks(
+  'jobs:\n  ci-success:\n    name: CI Success\n    steps:\n      - name: Checks\n        run: make check-git-sync\n',
+  'jobs:\n  ci-success:\n    name: Checks\n    steps:\n      - name: Checks\n        run: make check-git-sync\n'), [])
+
 // Without this inventory comparison, a removed Make target could remain scheduled or a new one go unmapped.
 const makefile = readFileSync(resolve(root, 'Makefile'), 'utf8')
 const declared = new Set([...makefile.matchAll(/^(check-[a-z0-9-]+):/gm)].map(match => match[1]))
-const groups = new Set(['check-plugin-validity', 'check-runtime', 'check-eval-tooling', 'check-issue-infra', 'check-infra'])
+const groups = new Set(['check-plugin-validity', 'check-runtime', 'check-eval-tooling', 'check-issue-infra'])
 assert.deepEqual([...declared].filter(target => !groups.has(target)).sort(), [...targets].sort())
 // Without an explicit empty-plan line, the required job gives no visible no-work result.
 assert.equal(formatPlan([]), 'Selected CI checks: (none)')

@@ -4,28 +4,33 @@
 # configuration was modelled on. Migrating to a ruleset is a separate change
 # with its own plan.
 #
-# The required checks are the CI validation job and Release Projection. The
-# latter validates the title release-please consumes, then projects the release
+# The required checks are `Checks`, the one CI validation job, and Release
+# Projection. The latter validates the title release-please consumes, then projects the release
 # from the same runner. It reports on every pull-request head; release-please
 # pull requests skip only projection, leaving title validation as the gate.
 #
 # Adding a CI step still does not require touching this file unless it is a
 # merge gate. The contract for each gate is its job name, not its workflow.
 #
-# Three settings are deliberately loose for a solo repository: zero required
-# approving reviews, since requiring one would block every PR;
+# Two settings are deliberately loose for a solo repository: zero required
+# approving reviews, since requiring one would block every PR, and
 # `enforce_admins = false`, which leaves an escape hatch when CI itself is
-# what is broken; and `strict = false`, since requiring a branch to be up to
-# date re-invalidates every open PR each time another merges — a rebase tax
-# paid most often by the long-lived release-please PR, in exchange for little
-# on a repository where PRs rarely conflict.
+# what is broken.
+#
+# `strict = true` makes every branch meet the same gate as the base it will
+# merge into: a branch that is behind is blocked until it is updated and the
+# required checks run again on the result.
+#
+# The contexts are job display names. Renaming a job needs this file applied in
+# step with the workflow change, or pull requests wait on a check nothing
+# reports.
 resource "github_branch_protection" "master" {
   repository_id = github_repository.this.node_id
   pattern       = "master"
 
   required_status_checks {
-    strict   = false
-    contexts = ["CI Success", "Release Projection"]
+    strict   = true
+    contexts = ["Checks", "Release Projection"]
   }
 
   required_pull_request_reviews {

@@ -1,8 +1,8 @@
 # GitHub Repository Configuration
 
 Manages the configuration of the `jmcvetta/daily-driver` repository
-itself: merge strategy, branch protection, Dependabot alerts, and the issue
-labels.
+itself: merge strategy, branch protection, Dependabot alerts and security
+updates, and the issue labels.
 
 Modelled on `Green-Pagoda/pagoda`'s `infra/bootstrap/bootstrap-github`, minus
 the parts that are specific to that monorepo.
@@ -26,46 +26,47 @@ exclusion below.
 
 - **`github_repository`** — merge settings, visibility, feature toggles
 - **`github_repository_vulnerability_alerts`** — Dependabot alerts
+- **`github_repository_dependabot_security_updates`** — Dependabot pull
+  requests that fix vulnerable dependencies
 - **`github_workflow_repository_permissions`** — the default workflow token
   scope, and whether Actions may open a pull request (the release job's
   default-token fallback needs the latter)
-- **`github_branch_protection`** on `master` — required `CI Success` and
-  `Release Projection` checks, linear history, conversation resolution, no
+- **`github_branch_protection`** on `master` — required `Checks` and
+  `Release Projection` checks on an up-to-date branch, linear history, conversation resolution, no
   force pushes or deletions
 - **`github_issue_label`** ×7 — six issue kinds plus the `story` supplemental
   marker. The `issue-labels` skill defines their contract.
 
 ## Required Checks
 
-Branch protection requires two status checks: `CI Success`, the real CI job
-that runs repository checks and selected component checks, and `Release
-Projection`, which validates the Conventional Commit pull-request title
-release-please consumes and projects what release-please will ship. The
-combined job reports on every pull-request head. On release-please pull
-requests, it validates the title but skips checkout and projection; GitHub
-treats those skipped steps in an otherwise successful job as successful for
-branch protection.
+Branch protection requires two status checks: `Checks`, the one CI validation
+job, which runs the repository checks, the selected component checks and, when
+`infra/**` changes, the stack validation, and `Release Projection`, which
+validates the Conventional Commit pull-request title release-please consumes
+and projects what release-please will ship. Both report on every pull-request
+head. On release-please pull requests, `Release Projection` validates the title
+but skips checkout and projection; GitHub treats those skipped steps in an
+otherwise successful job as successful for branch protection.
 
 Adding a CI step is therefore a change to the workflow, not to this
-configuration, unless it is a merge gate. The Tofu binds to each job name, so
-the selected checks inside `CI Success` need no change to
-`branch_protection.tf`.
-`branch_protection.tf`.
+configuration, unless it is a merge gate. The Tofu binds to each job's display
+name, so the selected checks inside `Checks` need no change to
+`branch_protection.tf`. Renaming a job does: apply the new context in step
+with the workflow change, or pull requests wait on a check nothing reports.
 
-`ci.yml` carries no `paths:` filter, and must not grow one. A path-filtered
-workflow does not report a *skipped* check, it reports nothing at all, so a
-required context naming a filtered job leaves every unmatched pull request
-pending forever. `infra.yml` is filtered precisely because it is not required;
-requiring it later means dropping its filter in the same commit, and nothing
-enforces that.
+Neither workflow may carry a `paths:` filter. A path-filtered workflow does not
+report a *skipped* check, it reports nothing at all, so a required context
+naming a filtered job leaves every unmatched pull request pending forever.
+Selection happens inside `Checks`, in `scripts/ci-select.mjs`, so the job
+always reports.
 
 Three consequences worth knowing:
 
 - A pull request whose branch predates a workflow will not report its check at
-  all, and must pick up `master` before it can merge. Nothing forces that:
-  `strict = false`, for the reason `branch_protection.tf` gives — requiring
-  every branch to be up to date re-invalidates every open pull request each
-  time another merges.
+  all, and must pick up `master` before it can merge. `strict = true` forces
+  that: a branch that is behind is blocked until it is updated and the required
+  checks run again. Every merge re-invalidates the open pull requests, and the
+  update-branch button is the price.
 - `enforce_admins = false` leaves an escape hatch for the case where CI
   itself is what is broken.
 - **The release pull request no longer needs that escape hatch.**
@@ -107,7 +108,7 @@ reason it is needed, whether or not something better exists.
 
 ## The Provider Lock Has To Be What `init` Produces
 
-`.terraform.lock.hcl` is committed, and `.github/workflows/infra.yml` fails a
+`.terraform.lock.hcl` is committed, and the `Checks` job fails a
 pull request whose lock file `tofu init` would rewrite. That is stricter than
 it sounds: initialising against the registry records an `h1:` hash for every
 platform the provider publishes, so a lock file carrying fewer of them is
@@ -251,8 +252,8 @@ make check-infra
 It runs `tofu fmt -check`, then `tofu init -backend=false`, then `tofu
 validate`. The `-backend=false` is what keeps it credential-free: providers
 are installed for validation, and neither state nor the GitHub API is touched.
-`.github/workflows/infra.yml` runs it on every pull request that touches this
-directory, so a syntax error or an attribute the provider does not have fails
+`.github/workflows/ci.yml` runs it, with the lock check, inside `Checks` on
+every pull request that changes `infra/**`, so a syntax error or an attribute the provider does not have fails
 in review.
 
 It is not part of `make check`, which is what a laptop runs while editing a
