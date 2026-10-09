@@ -349,6 +349,28 @@ omp usage invalidate --provider google-antigravity
 omp usage --provider google-antigravity --json --redact --no-extensions
 ```
 
+For the trigger-only read-only probe, use its bounded limits explicitly. It
+has no semantic criteria, so no judge call is needed. Run each experiment
+separately and refresh quota between Gemini runs:
+
+```sh
+(
+  cd evals
+  TELEMETRY_ENABLED=false uv tool run --isolated --python 3.13 \
+    --from coder-eval==0.11.6 \
+    --with-editable ./coder-eval-omp --with-editable ./coder-eval-codex \
+    coder-eval run --max-parallel 1 --repeats 1 \
+    -D run_limits.max_turns=5 -D run_limits.turn_timeout=120 \
+    -D run_limits.task_timeout=300 -e experiments/omp-gemini-3.1-pro.yaml \
+    --exclude-tags claude-only,codex-only,skip:omp,model-classes \
+    tasks/task-worktree/02-neg-read-only-review.yaml
+)
+```
+
+The matching experiments are `omp-gemini-3.8-flash.yaml` and
+`omp-gpt-6.1-sol-workflow.yaml`. Record each exact run directory with its
+experiment through `scripts/evals-record.py`; never overwrite a finalized run.
+
 Keep smoke, full class, and workflow runs distinct. Record attempted,
 completed, pass, and error counts; per-case failures; elapsed time; reported
 tokens; and unavailable dollar cost. Never pool different tasks or judges,
