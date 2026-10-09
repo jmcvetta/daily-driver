@@ -1,0 +1,21 @@
+# Focused Daily Driver workflow control on GPT 6.1 Sol through OpenAI Codex.
+experiment_id: omp-gpt-6-1-sol-workflow
+description: Focused Daily Driver workflow comparison control on GPT 6.1 Sol.
+defaults:
+  repeats: 3
+  run_limits:
+    max_turns: 30
+    task_timeout: 1200
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: openai-codex/gpt-6.1-sol:high
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+variants:
+  - variant_id: with-plugin
+    description: Omp session with Daily Driver loaded for workflow behavior tests.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

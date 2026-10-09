@@ -499,6 +499,12 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-luna.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-gemini-3.8-flash.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-gemini-3.1-pro.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol-workflow.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gemini-3.8-flash.yaml tasks/model-classes/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gemini-3.1-pro.yaml tasks/model-classes/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6.1-sol.yaml tasks/model-classes/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
@@ -532,6 +538,9 @@ TASKS ?= tasks/*/*.yaml
 # container, e.g.
 #   make evals-run-omp-gpt-6-luna JOBS=12
 JOBS ?= 1
+
+# Optional replicate-count override, used to keep the two-repeat smoke distinct.
+REPEATS ?=
 
 # JUDGE= selects the judge of the semantic (`agent_judge`) criteria, apart from
 # the subject; see scripts/evals-judge.py and "Choosing the judge" in
@@ -612,7 +621,7 @@ evals-run: evals-judge-preflight evals-plan evals-preflight
 
 # evals-run-omp: run every registered Omp experiment. Ablation targets compare
 # bare and treated variants; the focused acceptance target measures with-plugin only.
-evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-omp-gpt-6-1-sol
+evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-omp-gpt-6-1-sol evals-run-omp-gemini-3-8-flash evals-run-omp-gemini-3-1-pro evals-run-omp-gpt-6-1-sol-workflow
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
 # `omp` on PATH and the provider's credentials -- `make evals-setup-omp` sets up
@@ -667,6 +676,37 @@ evals-run-omp-gpt-6-1-sol: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6.1-sol.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6.1-sol.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+WORKFLOW_TASKS = tasks/task-worktree/01-isolate-new-task-omp.yaml \
+	tasks/task-worktree/02-neg-read-only-review.yaml \
+	tasks/task-worktree/03-neg-existing-task-worktree.yaml \
+	tasks/session-title/07-one-call-sets-the-title-omp.yaml \
+	tasks/session-title/05-neg-pr-title.yaml \
+	tasks/judgement-call/01-ask-in-chat-extension-omp.yaml \
+	tasks/constitution/active-harness-is-not-model-omp.yaml \
+	tasks/undertake/17-access-gap-without-handoff.yaml \
+	tasks/undertake/17-actual-human-auth-contribution.yaml \
+	tasks/undertake/17-authorized-agent-handoff.yaml
+
+evals-run-omp-gemini-3-8-flash: TASKS = $(WORKFLOW_TASKS)
+evals-run-omp-gemini-3-8-flash: evals-judge-preflight evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) $(OMP_RUN_LIMITS) -e experiments/omp-gemini-3.8-flash.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gemini-3.8-flash.yaml JUDGE=$(JUDGE); \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+evals-run-omp-gemini-3-1-pro: TASKS = $(WORKFLOW_TASKS)
+evals-run-omp-gemini-3-1-pro: evals-judge-preflight evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) $(OMP_RUN_LIMITS) -e experiments/omp-gemini-3.1-pro.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gemini-3.1-pro.yaml JUDGE=$(JUDGE); \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+evals-run-omp-gpt-6-1-sol-workflow: TASKS = $(WORKFLOW_TASKS)
+evals-run-omp-gpt-6-1-sol-workflow: evals-judge-preflight evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6.1-sol-workflow.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6.1-sol-workflow.yaml JUDGE=$(JUDGE); \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-codex: the same suites on Codex. Needs the Codex SDK, which
@@ -724,14 +764,15 @@ evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 # repository actually runs (`claude-only`, `omp-only`, `codex-only`); the
 # suite's own rows carry no arm tag of that shape to exclude BY, only
 # `model-classes` itself, which every other arm already excludes. Still
-# overridable by a caller who wants one case: `TASKS=tasks/model-classes/career-462.yaml`.
+# `REPEATS=2` keeps the compatibility smoke separate from the three-repeat
+# full suite.
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-judge-preflight evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \
 		echo "evals-run-classes: set MODEL=<classes experiment stem>, e.g. MODEL=glm" >&2; \
 		exit 1; \
 	fi
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/classes-$(MODEL).yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) -e experiments/classes-$(MODEL).yaml \
 		--exclude-tags claude-only,omp-only,codex-only,skip:model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/classes-$(MODEL).yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status

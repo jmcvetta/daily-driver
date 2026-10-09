@@ -67,6 +67,9 @@ from them; a model and settings pair with no case row is listed `unmeasured`.
 rate, price and wall time per run. `make evals-render-results` writes it, and
 `make check` fails when it is stale.
 
+[`GEMINI-ANTIGRAVITY.md`](GEMINI-ANTIGRAVITY.md) records the bounded Gemini
+study, its quota stop, reviewed failures, and exact deferred comparison.
+
 From schema version 3, every case row carries positive `elapsed_seconds` and
 its cost evidence. `cost` is numeric where the harness reports a price
 (`cost_source: reported`) or reports token counts the recorder can price from
@@ -232,10 +235,12 @@ configured route.
 | `omp-glm-5.3` | no-tools Omp over the Vercel AI Gateway; validated, not the default | anywhere `omp` and the gateway key work |
 | `omp-gpt-6.1-sol` | no-tools Omp through `openai-codex`; validated, not the default | anywhere Omp has the OpenAI Codex provider configured |
 
-GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is an owner-approved judge choice.
-That approval is not a selectable definition or a committed calibration result.
-Issue #494 owns the runnable `omp-gpt-6.1-sol` judge definition and its
-calibration. Do not pass that judge ID to `JUDGE=` until both are available.
+GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is the calibrated semantic judge
+defined in `judges/omp-gpt-6.1-sol.yaml`. It passed the predeclared calibration
+rule on 2026-10-06: 11 of 11 labels correct, no false passes, no errors. The
+small transcript set supports this route for the rubric tested; it is not a
+general model-quality ranking
+([`observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json)).
 
 ```sh
 make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
@@ -254,6 +259,85 @@ make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol TASKS='tasks/undertake/17-*
 Both the subject and judge use `openai-codex` for this configuration. Do not
 route OpenAI models through the Vercel AI Gateway. The experiment uses one
 repeat per variant for the focused run; expand only after reviewing those results.
+
+### Gemini through Google Antigravity
+
+Run the exact Omp routes `google-antigravity/gemini-3.8-flash:high` and
+`google-antigravity/gemini-3.1-pro:high`; never substitute Vercel. The Omp
+adapter pins every chat role, including task, helper, and subagent roles, to
+the experiment's subject model. `model_served` stays `unreported` when Omp does
+not report it.
+
+Before inference, read availability and quota:
+
+```sh
+omp models google-antigravity
+omp usage --provider google-antigravity --json --redact --no-extensions
+```
+
+A listed model is not proof that inference works. Record the redacted quota
+snapshot and timestamp before each model batch, and again after it. Refresh
+the cache with `omp usage invalidate --provider google-antigravity` first.
+Do not change the user's Omp defaults, buy credits, enable overages, or retry
+authentication, transport, or quota failures through another provider. Keep
+quota exhaustion distinct from model errors and preserve partial runs.
+Antigravity has no applicable per-token price in the plan documentation, so
+`prices.yaml` records token usage and an unavailable dollar cost.
+
+The initial smoke uses two repeats on two coding cases, four replicates at
+concurrency 4, with one subject model at a time. If quota drops sharply,
+switch Gemini to `JOBS=1` and run one task and repeat at a time, checking
+quota before dispatching another. A completed eval is more useful than
+concurrent partial runs. Keep every run separate; concurrency does not reduce
+the total token use of the same work.
+
+```sh
+make evals-run-classes MODEL=gemini-3.8-flash JOBS=1 REPEATS=1 \
+  TASKS='tasks/model-classes/career-462.yaml'
+make evals-run-classes MODEL=gemini-3.1-pro JOBS=1 REPEATS=1 \
+  TASKS='tasks/model-classes/career-462.yaml'
+make evals-run-classes MODEL=gpt-6.1-sol JOBS=4 REPEATS=2 \
+  TASKS='tasks/model-classes/career-462.yaml tasks/model-classes/career-475.yaml'
+```
+
+Review the transcripts for actual read/edit/command use and executable grader
+results before expanding. When quota permits, run each full class model
+separately at three repeats; use serial Gemini execution after high consumption:
+
+```sh
+make evals-run-classes MODEL=gemini-3.8-flash JOBS=1
+make evals-run-classes MODEL=gemini-3.1-pro JOBS=1
+make evals-run-classes MODEL=gpt-6.1-sol JOBS=4
+```
+
+The full workflow comparison uses the same ten Daily Driver tasks and three
+repeats with `JUDGE=omp-gpt-6.1-sol` for Gemini and Sol. Use `JOBS=1` for
+Gemini after high quota consumption. Run one case and repeat at a time when
+quota is tight, and record incomplete coverage. Executable criteria remain
+authoritative; Sol judges only the semantic rubrics. Run the commands separately:
+
+```sh
+WORKFLOW_TASKS='tasks/task-worktree/01-isolate-new-task-omp.yaml tasks/task-worktree/02-neg-read-only-review.yaml tasks/task-worktree/03-neg-existing-task-worktree.yaml tasks/session-title/07-one-call-sets-the-title-omp.yaml tasks/session-title/05-neg-pr-title.yaml tasks/judgement-call/01-ask-in-chat-extension-omp.yaml tasks/constitution/active-harness-is-not-model-omp.yaml tasks/undertake/17-access-gap-without-handoff.yaml tasks/undertake/17-actual-human-auth-contribution.yaml tasks/undertake/17-authorized-agent-handoff.yaml'
+make evals-run-omp-gemini-3-8-flash JOBS=1 JUDGE=omp-gpt-6.1-sol TASKS="$WORKFLOW_TASKS"
+make evals-run-omp-gemini-3-1-pro JOBS=1 JUDGE=omp-gpt-6.1-sol TASKS="$WORKFLOW_TASKS"
+make evals-run-omp-gpt-6-1-sol-workflow JOBS=4 JUDGE=omp-gpt-6.1-sol TASKS="$WORKFLOW_TASKS"
+```
+
+For a single workflow eval with a quota check before the next dispatch:
+
+```sh
+make evals-run-omp-gemini-3-1-pro JOBS=1 REPEATS=1 JUDGE=omp-gpt-6.1-sol \
+  TASKS='tasks/constitution/active-harness-is-not-model-omp.yaml'
+omp usage invalidate --provider google-antigravity
+omp usage --provider google-antigravity --json --redact --no-extensions
+```
+
+Keep smoke, full class, and workflow runs distinct. Record attempted,
+completed, pass, and error counts; per-case failures; elapsed time; reported
+tokens; and unavailable dollar cost. Never pool different tasks or judges,
+remove failure rows, or infer a general main-agent or reasoning-class
+recommendation from these small samples. Link every reported figure to its
+committed provenance record.
 
 **What a non-Claude judge changes.** `make evals-judge-preflight` runs first and
 fails before any subject if `omp` is missing, Omp does not list the judge's exact

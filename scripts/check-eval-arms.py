@@ -123,7 +123,12 @@ ARMS: dict[str, dict[str, object]] = {
         "kinds": ("omp",),
         "ablation": True,
         # Focused skill-behavior probes cannot produce a meaningful bare-arm control.
-        "focused_variants": {"omp-gpt-6.1-sol.yaml": "with-plugin"},
+        "focused_variants": {
+            "omp-gpt-6.1-sol.yaml": "with-plugin",
+            "omp-gemini-3.8-flash.yaml": "with-plugin",
+            "omp-gemini-3.1-pro.yaml": "with-plugin",
+            "omp-gpt-6.1-sol-workflow.yaml": "with-plugin",
+        },
         "experiments": {
             "omp-glm-5.3.yaml": "vercel-ai-gateway/zai/glm-5.3",
             "omp-glm-5.3-flash.yaml": "vercel-ai-gateway/zai/glm-5.3-flash",
@@ -132,6 +137,9 @@ ARMS: dict[str, dict[str, object]] = {
             "omp-gpt-6-sol.yaml": "vercel-ai-gateway/openai/gpt-6-sol",
             "omp-gpt-6-luna.yaml": "vercel-ai-gateway/openai/gpt-6-luna",
             "omp-gpt-6.1-sol.yaml": "openai-codex/gpt-6.1-sol",
+            "omp-gemini-3.8-flash.yaml": "google-antigravity/gemini-3.8-flash",
+            "omp-gemini-3.1-pro.yaml": "google-antigravity/gemini-3.1-pro",
+            "omp-gpt-6.1-sol-workflow.yaml": "openai-codex/gpt-6.1-sol",
         },
         "run_targets": {
             "evals-run-omp-glm-5-3": "omp-glm-5.3.yaml",
@@ -141,6 +149,9 @@ ARMS: dict[str, dict[str, object]] = {
             "evals-run-omp-gpt-6-sol": "omp-gpt-6-sol.yaml",
             "evals-run-omp-gpt-6-luna": "omp-gpt-6-luna.yaml",
             "evals-run-omp-gpt-6-1-sol": "omp-gpt-6.1-sol.yaml",
+            "evals-run-omp-gemini-3-8-flash": "omp-gemini-3.8-flash.yaml",
+            "evals-run-omp-gemini-3-1-pro": "omp-gemini-3.1-pro.yaml",
+            "evals-run-omp-gpt-6-1-sol-workflow": "omp-gpt-6.1-sol-workflow.yaml",
         },
         "bundle_target": "evals-run-omp",
     },
