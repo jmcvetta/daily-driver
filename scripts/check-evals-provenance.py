@@ -583,6 +583,7 @@ def check_answer_key_contact() -> None:
         "views through sh -c": bash("sh -c 'gh pr view 469'"),
         "fetches through eval": bash("eval 'git fetch origin master'"),
         "treats unresolved eval input as contact evidence": bash('eval "$cmd"'),
+        "executes a variable as eval command": bash("cmd='git fetch origin master'; eval '$cmd'"),
     }
     for name, command in reaching.items():
         evidence = recorder.answer_key_contact(classes_artifact(command), root)
@@ -625,7 +626,7 @@ def check_contaminated_replicate(temp: Path) -> None:
                         "agent_cost_usd": 0.1,
                         "total_cost_usd": 0.1,
                     }
-                    for index in (0, 1, 2, 3, 4)
+                    for index in (0, 1, 2, 3, 4, 5)
                 ],
             }
         )
@@ -636,6 +637,7 @@ def check_contaminated_replicate(temp: Path) -> None:
         bash("git fetch origin master"),
         bash("bash -c 'git fetch origin master'"),
         bash("eval 'printf \"%s\" \"\\$HOME\"'"),
+        bash("cmd='git fetch origin master'; eval '$cmd'"),
     )
     for index, command in enumerate(commands):
         artifact_dir = run_dir / "default" / task_id / f"{index:02d}"
@@ -648,14 +650,14 @@ def check_contaminated_replicate(temp: Path) -> None:
             {
                 "experiment_id": "classes",
                 "variant_ids": ["default"],
-                "per_replicate_scores": {"default": {task_id: [1.0, 1.0, 1.0, 1.0, 1.0]}},
+                "per_replicate_scores": {"default": {task_id: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]}},
             }
         )
     )
     env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_SESSION_ID"}
     record_path = run_recorder(run_dir, experiment, temp / "classes-out", env)
     record = json.loads(record_path.read_text())
-    clean, quoted, reached, nested_reached, eval_clean = record["attempts"]
+    clean, quoted, reached, nested_reached, eval_clean, eval_dynamic = record["attempts"]
     require(clean["answer_key_contact"] == [] and clean["measured_score"] == 1.0, "ordinary work lost its score")
     require(
         quoted["answer_key_contact"] == [] and quoted["measured_score"] == 1.0,
@@ -666,12 +668,14 @@ def check_contaminated_replicate(temp: Path) -> None:
     require(reached["raw_weighted_score"] == 1.0, "the raw score was not kept beside the measured one")
     require(nested_reached["answer_key_contact"], "the bash -c replicate carries no evidence")
     require(nested_reached["measured_score"] == 0.0, "a nested history contact kept its score")
+    require(eval_dynamic["answer_key_contact"], "the variable eval command carries no contact evidence")
+    require(eval_dynamic["measured_score"] == 0.0, "a dynamic eval command kept its score")
     require(
         eval_clean["answer_key_contact"] == [] and eval_clean["measured_score"] == 1.0,
         "a quoted literal in static eval falsely zeroed the synthetic passing replicate",
     )
     require(
-        record["variants"][0]["per_replicate_scores"][task_id] == [1.0, 1.0, 0.0, 0.0, 1.0],
+        record["variants"][0]["per_replicate_scores"][task_id] == [1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
         "per_replicate_scores missed quoted-data preservation or a shell history contact",
     )
     reached["measured_score"] = 1.0

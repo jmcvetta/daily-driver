@@ -504,6 +504,7 @@ def _command_contacts(command: str, source: str, markers: tuple[str, ...] = ()) 
         return [f"Bash parse failure ({type(error).__name__}): {error}"]
 
     reasons = []
+    unresolved_command = False
     source_url = re.compile(
         r"(?:github\.com[/:]|githubusercontent\.com/(?:raw/)?|api\.github\.com/repos/)"
         + re.escape(source)
@@ -538,7 +539,14 @@ def _command_contacts(command: str, source: str, markers: tuple[str, ...] = ()) 
                 if node.field_name_for_child(index) == "argument"
             )
             words = [_word_value(_node_text(item, source_text)) for item in word_nodes]
-            for position in _command_positions(words):
+            positions = _command_positions(words)
+            for position in positions:
+                if any(
+                    child.type in {"simple_expansion", "expansion", "command_substitution", "process_substitution"}
+                    for child in _shell_nodes(word_nodes[position])
+                ):
+                    unresolved_command = True
+                    continue
                 word = words[position]
                 executable = word.rsplit("/", 1)[-1]
                 rest = words[position + 1 :]
@@ -575,6 +583,8 @@ def _command_contacts(command: str, source: str, markers: tuple[str, ...] = ()) 
                     network_access = True
                 if network_access and any(source_url.search(item) for item in words):
                     reasons.append(f"URL under {source}")
+    if unresolved_command and not reasons:
+        reasons.append("unresolved executable expansion")
     reasons.extend(f"names {marker}" for marker in markers if any(marker in word for word in shell_words))
     return reasons
 
