@@ -49,13 +49,15 @@ The route an implementor runs
 =============================
 
 The `task` surface selects an `agent`, not a model. Select the agent named for
-the task's required class (`mechanical`, `implementation`, or `reasoning`).
-Each batch item sets only `agent`; it carries no per-item model argument.
-Resolve the effective route under [`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
+the task's required class (`mechanical`, `implementation`, `reasoning`, or
+`frontier`). Each batch item sets only `agent`; it carries no per-item model
+argument. Resolve the effective route under [`issue-body`'s required-class
+policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
-frontmatter, including a tagged-role assignment such as `@implementation`.
-Resolve configured prewalk and retry fallbacks under the same eligibility
-requirements. Do not use `modelRoles.task` as a universal implementor route.
+frontmatter, including a tagged-role assignment such as `@implementation` or
+`@frontier`. Resolve configured prewalk and retry fallbacks under the same
+eligibility requirements. Do not use `modelRoles.task` as a universal
+implementor route.
 
 Apply [`model-classes.md`'s selection policy](../../issue-body/references/model-classes.md#selection).
 A current measured class outranks handwritten guidance, and a measured class
@@ -72,6 +74,21 @@ unsuitable effective routes stop only the affected task with a configuration
 gap; launch the other eligible tasks in the single concurrent batch. Never
 lower a class, alter shared roles, or restore a role the operator cleared to
 make a wave launch.
+Treat an effective astra/fable route as frontier, regardless of whether an
+override, retry fallback, or visible parent inheritance selects it through
+`reasoning` or another lower-class role. Classify the resolved selector rather
+than its role label: the current `reasoning` default is
+`openai-codex/gpt-6.1-sol:high`, not a frontier route.
+An issue assigned `frontier` must include its explicit approval and exact
+work envelope before dispatch. Reject an unauthorized frontier fallback
+before the assignment starts; continue other tasks and report a configuration
+gap if no eligible non-frontier route exists.
+
+A frontier implementor receiving ordinary work performs only the bounded
+routing and handoff to an eligible non-frontier class. Do not retain its
+implementation or supervise it on frontier. Frontier implementation needs
+separate, explicit user authorization for that exception and bounded scope;
+frontier research approval is not enough.
 
 Keep the required class, selected agent/effective route, and actual execution
 model distinct in the muster roll. Record `unreported` when execution identity
