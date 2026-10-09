@@ -87,9 +87,9 @@ def _case_row(
 
 
 def check_renderer() -> None:
-    """Exercise `evals-render-routes.py` on a fixture record set covering a
-    pass, a fail, an unreported served model, a stale row, and an unmeasured
-    overlay.
+    """Exercise the renderer on pass/fail records, an unreported served model,
+    a stale run, an unmeasured overlay, and an error-only run that must not hide
+    an earlier scored result.
     """
     renderer = load_renderer()
     with tempfile.TemporaryDirectory() as directory:
@@ -135,6 +135,27 @@ def check_renderer() -> None:
                             "t2", "implementation", "succeeded", 2,
                             model_requested="model-x-pinned", settings="classes-model-x", cost=0.30,
                         ),
+                    ],
+                }
+            )
+        )
+        # model-x: a later error-only run must not replace its scored results.
+        (provenance_dir / "run-unscored-errors.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "run-unscored-errors",
+                    "completed_at": "2026-01-02T00:00:00Z",
+                    "cases": [
+                        _case_row(
+                            task_id,
+                            klass,
+                            "error",
+                            index,
+                            model_requested="model-x-pinned",
+                            settings="classes-model-x",
+                        )
+                        for task_id, klass in (("t1", "mechanical"), ("t2", "implementation"))
+                        for index in range(3)
                     ],
                 }
             )
@@ -227,10 +248,11 @@ def check_renderer() -> None:
         renderer.render(provenance_dir, experiments_dir, omp_configs_dir, target)
         rendered = target.read_text()
 
-        require("| model-x-pinned | classes-model-x | mechanical |" in rendered, "the earned class was not reported")
-        require("| 2/3 | 1/3 |" in rendered, "per-class pass rates were not both reported")
-        require("$0.15" in rendered, "cost per passed case was not averaged over the earned class's passes")
-        require("2026-01-01" in rendered, "a stale row's own date was not rendered")
+        require(
+            "| model-x-pinned | classes-model-x | mechanical | 2/3 | 1/3 | $0.15 | run-old | 2026-01-01 |"
+            in rendered,
+            "a later error-only run hid or replaced the latest scored route measurement",
+        )
         require("| model-y-pinned | classes-model-y | none | 0/3 | unreported |" in rendered, "an all-fail route was not reported as earning no class")
         require("| unmeasured-overlay | classes-unmeasured-overlay | unmeasured |" in rendered, "an overlay with no case row was not listed unmeasured")
         require(
