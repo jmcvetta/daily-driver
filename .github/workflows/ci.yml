@@ -1,4 +1,5 @@
-# CI Success is the required aggregate status. Selection always runs; only selected checks install tools or run commands.
+# Checks is the required validation status, beside Release Projection. Selection always runs; only selected checks install tools or run commands.
+# The workflow has no `paths:` filter: a path-filtered required check that never reports leaves every pull request pending.
 name: CI
 
 on:
@@ -14,7 +15,7 @@ concurrency:
 
 jobs:
   ci-success:
-    name: CI Success
+    name: Checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -176,3 +177,32 @@ jobs:
       - name: Validate Omp agent settlement
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
         run: make check-omp-agent-settle
+      # The infrastructure steps run last and tolerate an earlier failed check,
+      # so an unrelated failure cannot hide a stack error and a stack error
+      # cannot stop the checks above. `!cancelled()` keeps a cancelled run from
+      # turning into a pass. Each step still requires its own prerequisite.
+      - name: Install OpenTofu
+        id: install-opentofu
+        if: ${{ !cancelled() && steps.plan.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-infra') }}
+        uses: opentofu/setup-opentofu@v2
+        with:
+          # CI and a laptop version manager read the same pin.
+          tofu_version_file: infra/github/.opentofu-version
+          # The default wrapper swallows exit codes, so a failing `fmt -check`
+          # or `validate` would report green.
+          tofu_wrapper: false
+      - name: Validate infrastructure
+        id: validate-infrastructure
+        if: ${{ !cancelled() && steps.install-opentofu.outcome == 'success' }}
+        run: make check-infra
+      # Only meaningful after the step above succeeds: `tofu init` rewrites
+      # .terraform.lock.hcl in place and this step asks git what changed. A lock
+      # file that init would rewrite is not a pin anyone is reading.
+      - name: Verify provider lock
+        if: ${{ !cancelled() && steps.validate-infrastructure.outcome == 'success' }}
+        run: |
+          if ! git diff --quiet -- infra/github/.terraform.lock.hcl; then
+            echo "::error::infra/github/.terraform.lock.hcl is stale. See the diff below." >&2
+            git diff -- infra/github/.terraform.lock.hcl >&2
+            exit 1
+          fi
