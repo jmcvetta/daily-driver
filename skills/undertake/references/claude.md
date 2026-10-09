@@ -19,7 +19,6 @@ The issue
 | `Read the issue and its edges` | Read the comments | `mcp__github__issue_read`, method `get_comments` |
 | `Read the issue and its edges` | Label an issue that carries none | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, method `update`, sending that set plus the new label |
 | `Claim the issue` | Comment on the issue | `mcp__github__add_issue_comment` |
-| `Implement` (issue-only research) | Publish the claim branch for resumption | `Bash` in the task worktree: `git push --set-upstream <remote> <branch>`, or the Claude primary-held designation refspec `git push -u <remote> <execution-branch>:<designated-branch>` |
 | `Implement` (issue-only research) | Record findings | `mcp__github__add_issue_comment` |
 | `Implement` (issue-only research) | Close completed research | `mcp__github__issue_write`, method `update`, `state: closed`, `state_reason: completed` |
 
@@ -55,14 +54,13 @@ gate. A frontier session resolves its actual route before branch creation or
 claim and must hand ordinary work to an eligible non-frontier session or stop
 with a configuration gap.
 
-**Issue-only research writes use the issue client.** Publish the remote push
-branch with the active `task-worktree` mapping. Use the local-to-designated
-refspec for the primary-held exception; otherwise push the same branch name.
-If publication fails, leave the issue open and report the failure. Post the
-complete answer with `mcp__github__add_issue_comment`, including
-`provenance`'s block; then close with `mcp__github__issue_write` only when
-`issue-body`'s research completion test holds. Failed or incomplete research
-stays open.
+**Issue-only research writes use the issue client.** With no resume branch,
+this route skips `task-worktree`; do not create or publish a branch. If a
+resume branch exists, `task-worktree` attaches it, but the research route
+leaves it unchanged. Post the complete answer with
+`mcp__github__add_issue_comment`, including `provenance`'s block; then close
+with `mcp__github__issue_write` only when `issue-body`'s research completion
+test holds. Failed or incomplete research stays open.
 
 
 The implementor
@@ -142,22 +140,25 @@ adopted remote branch is the task's push/PR head. The session's own
 instructions may still require explicit permission to push to a branch other
 than the designation. Where they do, ask the user once, in one line naming
 both branches and the resume evidence (the pull request, handoff comment or
-claim that named it), then push to the adopted branch. Never push the work to
-the designated branch instead, and never open a second pull request from it.
+claim that named it), then, for repository work, push to the adopted branch.
+Never push the work to the designated branch instead, and never open a second
+pull request from it.
 
-For the primary-held designation exception, use the designated branch for the
-claim link, pushes, existing-PR lookup and PR creation. Keep the execution
-branch local; `task-worktree`'s explicit non-force refspec sets the designated
-remote branch as its upstream. CI reads belong to the PR found on that remote
-head; never query or create CI state for the local execution name.
+For repository work in the primary-held designation exception, use the
+designated branch for the claim link, pushes, existing-PR lookup and PR
+creation. Keep the execution branch local; `task-worktree`'s explicit
+non-force refspec sets the designated remote branch as its upstream. CI reads
+belong to the PR found on that remote head; never query or create CI state for
+the local execution name.
 
 `external_metadata.current_branches` is a different field and answers a
 different question: what is checked out, not what the harness designated.
 
-Where this call is absent, read the branch from the task worktree's Git
-state, and its repository from the remote `task-worktree` resolved.
-`provenance`'s reference says what the claim's block records when the call
-itself is absent.
+For branch-free answer-only research, no task worktree exists and the claim
+uses `Branch: none`. Otherwise, where this call is absent, read the branch
+from the task worktree's Git state, and its repository from the remote
+`task-worktree` resolved. `provenance`'s reference says what the claim's block
+records when the call itself is absent.
 
 
 The milestone

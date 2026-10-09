@@ -246,21 +246,29 @@ source that names one:
    set to close it, or a pull request whose body references the issue. Its
    head branch.
 2. The `Branch:` line of a `stand-down` handoff comment.
-3. The branch in the latest claim comment — a resume branch only where the
-   user handed the issue over to continue it. Without that, a claim from
-   another session is `Claim the issue`'s collision, not a resume.
+3. The branch in the latest claim comment, only when it contains an actual
+   branch link — `Branch: none` declares no resume branch. A resume branch
+   applies only where the user handed the issue over to continue it. Without
+   that, a claim from another session is `Claim the issue`'s collision, not a
+   resume.
 
 One branch found is the **resume branch**, and the pull request it carries, if
 any, is the one to adopt. More than one distinct branch is a stop: report them
 and ask. A pull request from a fork the session cannot push to is a stop too:
-report it. Where the record names no branch, there is no resume and
-`Establish task worktree` runs as before.
+report it. Where no resume branch exists, `Establish task worktree` selects
+the read-only route for answer-only research or invokes `task-worktree` for
+repository work.
 
 3 — Establish task worktree
 ---------------------------
 
-Invoke `task-worktree`. The issue now supplies the task identity, and no
-repository research has begun. That skill owns the feature branch, its base,
+When the agreed deliverable is answer-only research, no resume branch or
+existing pull request exists, and no repository artifact is needed, this is
+repository-read-only. Do not invoke `task-worktree`, create a branch, or change
+repository content; continue from the current checkout.
+
+Otherwise invoke `task-worktree`. The issue now supplies the task identity, and
+no repository research has begun. That skill owns the feature branch, its base,
 the sibling worktree, and every later operation's root.
 
 `task-worktree` establishes the remote push branch and, only where its harness
@@ -276,9 +284,9 @@ branch.
 -------------------
 
 One comment on the issue says that this session has taken the work. It goes up
-after `Establish task worktree`, so the branch identities it names exist and
-match `task-worktree`'s route, and before `Implement`, so another session can
-see that the work has started.
+after branch selection: after `Establish task worktree` for repository work,
+or after selecting the read-only route for answer-only research. It goes up
+before `Implement`, so another session can see that the work has started.
 
 After `Read the issue and its edges` rather than before it, because the edges
 decide whether there is anything to claim: a blocked issue stops there, and a
@@ -288,7 +296,8 @@ claim on work that is not starting is a false record.
 
 Beyond the claim itself the comment always carries:
 
-- **The remote push branch** established by `task-worktree`, linked as
+- **The work identity.** For repository work, name the remote push branch
+  established by `task-worktree`, linked as
   `[branch](https://github.com/OWNER/REPO/tree/BRANCH)`. `OWNER/REPO` is the
   repository the branch will be pushed to, which on a fork need not be the
   repository the issue is in. Read it from the harness's session call where
@@ -299,45 +308,49 @@ Beyond the claim itself the comment always carries:
   anyway, because the alternative is a branch name the reader must turn into
   a URL by hand.
 
+  For branch-free answer-only research, use `Branch: none — answer-only
+  research (no repository changes)`. This is not a branch link or permission
+  to create or publish a branch.
+
   Where `task-worktree` established separate identities, add `Local execution
   branch: <name>` as a separate line. Never link the local-only execution
   branch as the branch GitHub will carry. Ordinary and resume paths have one
   branch identity, so the linked and local branch are the same.
 
-- **`provenance`'s block**, immediately after the branch identity lines:
+- **`provenance`'s block**, immediately after the work identity lines:
   the model that served the turn, the harness and its version, and the session
-  identifier or `n/a`. That skill owns the block's shape and the rules for
   reading each field — never a name recalled instead of read, and where the
   model the session was *set* to run disagrees with the one that served, both
   are named. The `Model:` and lowercase `session:` line shapes are what the
   claim lookup below and `The milestone` match on, so they are never varied
   here.
 - **A brief poem, in the claiming agent's own style, placed last** — after
-  the branch, the model and the session, so that a reader looking for the
-  branch or the model finds them in a fixed place and is never made to read
-  past verse to reach it. Each line is written in italics — wrapped in
-  asterisks, line by line, as `HAIKU.md` at the repo root shows — because
-  italics designate the verse as poetry, so a reader never mistakes a line
-  of it for part of the claim data: the branch, the model, the session.
-  The style is the agent's own, and deliberately so:
-  a pull request's salutation is classical and a task issue's opening verse
-  is a haiku, but a claim is the agent's voice at the moment it takes the
-  work.
+  the work identity, model and session, so that a reader looking for them
+  finds them in a fixed place and is never made to read past verse to reach
+  them. Each line is written in italics — wrapped in asterisks, line by line,
+  as `HAIKU.md` at the repo root shows — because italics designate the verse
+  as poetry, so a reader never mistakes a line of it for part of the claim
+  data: the work identity, model or session. The style is the agent's own,
+  and deliberately so: a pull request's salutation is classical and a task
+  issue's opening verse is a haiku, but a claim is the agent's voice at the
+  moment it takes the work.
 
 The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. Without a resume or a verified
-primary-held designation exception, a branch designated by that call must be
-the branch `task-worktree` established; disagreement is a collision, not a
-choice between two branch sources. With a resume, the remote push branch is
-the adopted branch and outranks the designation. In the exception, the local
-execution branch may differ from the designation only as `task-worktree`
-verified; the designated branch remains the push/PR head. Other paths retain
-one branch identity.
+the call `session-title` documents. In branch-free answer-only research, no
+branch is designated or established. Otherwise, without a resume or a
+verified primary-held designation exception, a branch designated by that call
+must be the branch `task-worktree` established; disagreement is a collision,
+not a choice between two branch sources. With a resume, the remote push branch
+is the adopted branch and outranks the designation. In the exception, the
+local execution branch may differ from the designation only as
+`task-worktree` verified; the designated branch remains the push/PR head.
+Other paths retain one branch identity.
 
-**The comment never goes up with the branch alone.** The branch comes from
-the task worktree's Git state, never from a fresh naming decision in this
-step; the model and session lines follow the rules above whatever the harness
-supplies.
+**The comment never goes up with the work identity alone.** For repository
+work, the branch comes from the task worktree's Git state, never from a fresh
+naming decision in this step. For branch-free research, the identity is
+explicitly `Branch: none`; the model and session lines follow the rules above
+whatever the harness supplies.
 
 **Once per session, not once per run.** A sequence re-entered — its blocker
 cleared, the issue handed over again — does not claim what it has claimed
@@ -350,9 +363,9 @@ implementation begins.
 handoff names the branch, or the user handed the issue over to continue it.
 Otherwise a prior claim from another session stays a collision, reported as
 above. On a resume this session still posts its own claim, naming the adopted
-branch; the earliest-claim rule below already keeps the clock start, so no new
-timing rule is needed. A re-entry by the same session posts nothing, as
-before.
+branch or the branch-free research route; the earliest-claim rule below
+already keeps the clock start, so no new timing rule is needed. A re-entry by
+the same session posts nothing, as before.
 
 **The claim's timestamp is the undertaking's clock start.** The comment's own
 `created_at` is what `The milestone` reads back when the pull request first
@@ -374,15 +387,12 @@ bounded frontier implementation exception. No implementor dispatch is used for
 ordinary undertakings.
 
 **Issue-only research completion.** Use this route only when the agreed
-deliverable is an answer or follow-on issue specifications, the research issue
-contains no repository changes, and no pull request exists. Otherwise use the
-normal PR route for the existing changes. Keep repository content read-only.
-Push the claimed remote branch with the exact non-force refspec from
-`task-worktree`'s active harness route before research, so another session can
-resume from the issue record; do not create an empty commit. Where the route
-assigns separate identities, the refspec maps the local execution branch to
-the designated remote push branch. Otherwise both names are the same. If the
-push fails, leave the issue open and report the failure.
+deliverable is an answer or follow-on issue specifications, no repository
+changes are needed, and no pull request exists. Otherwise use the normal PR
+route for the existing changes. Keep repository content read-only; never
+create or publish a branch. If a resume branch exists, `task-worktree` adopts
+it as usual, but this route leaves it unchanged. If no resume branch exists,
+this route skips `task-worktree` and stays in the current checkout.
 
 Gather the evidence and prepare the agreed answer. If follow-on issue
 specifications are required, create those through `issue` or `epic` under

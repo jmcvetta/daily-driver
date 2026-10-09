@@ -1,4 +1,4 @@
-# Without this case, the workflow can still open an empty PR after an answer-only research result.
+# Without this case, the workflow can create or publish a task branch, or open an empty PR, after answer-only research.
 task_id: undertake-19-answer-only-research-skips-pr
 description: >-
   Answer-only research is recorded on its issue and does not enter the PR
@@ -35,7 +35,8 @@ success_criteria:
       research completion path, explains that the complete evidence-based
       answer goes on #91 with provenance, closes #91 as completed only because
       the stated completion contract is met, and skips opening a pull request
-      and all later PR steps. It must not suggest a repository change or an
-      empty PR. It should note that no follow-on issue is required. Do not
-      reward generic statements that research is complete without naming the
-      issue-level outcome and no-PR boundary.
+      and all later PR steps. It must not suggest a task worktree, branch
+      creation or publication, repository content changes, or an empty PR. It
+      should note that no follow-on issue is required. Do not reward generic
+      statements that research is complete without naming the issue-level
+      outcome and no-PR boundary.

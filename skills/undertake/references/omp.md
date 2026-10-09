@@ -20,7 +20,6 @@ The issue
 | `Read the issue and its edges` | Read the body, the graph and the comments | `issue://<number>`, comments included |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> -b "…"` |
-| `Implement` (issue-only research) | Publish the claim branch for resumption | `git push --set-upstream <task-worktree remote> <branch>` through `bash` in the task worktree |
 | `Implement` (issue-only research) | Record findings | `gh issue comment <number> --body-file <path>` |
 | `Implement` (issue-only research) | Close completed research | `gh issue close <number> --reason completed` |
 
@@ -50,12 +49,13 @@ frontier and the issue is ordinary work, resolve a non-frontier agent using
 Hand off the full undertaking through `task`, or stop with the exact route gap;
 the receiving session owns its branch and claim.
 
-**Issue-only research writes use the issue client.** First publish the claim
-branch with the push operation above so another session can resume. If that
-push fails, leave the issue open and report the failure. Post the complete
-answer with `gh issue comment --body-file`, including `provenance`'s block;
-then close only when `issue-body`'s research completion test holds. Failed or
-incomplete research stays open.
+**Issue-only research writes use the issue client.** With no resume branch,
+this route skips `task-worktree`; do not create or publish a branch. If a
+resume branch exists, `task-worktree` attaches it, but the research route
+leaves it unchanged. Post the complete answer with `gh issue comment
+--body-file`, including `provenance`'s block; then close only when
+`issue-body`'s research completion test holds. Failed or incomplete research
+stays open.
 
 
 The implementor
@@ -107,12 +107,13 @@ The session
 `provenance`'s [`references/omp.md`](../../provenance/references/omp.md)
 names the fields it answers and how the block records them.
 
-The branch comes from the task worktree's Git state:
-`git branch --show-current` runs in that worktree. On a resume that is the
-adopted branch, which `Read the issue and its edges` took from the issue's
-record; fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for the branch
-link comes from the remote `task-worktree` resolved, never from an assumed
-`origin`.
+For branch-free answer-only research, no task worktree exists and the claim
+uses `Branch: none`. Otherwise the branch comes from the task worktree's Git
+state: `git branch --show-current` runs in that worktree. On a resume that is
+the adopted branch, which `Read the issue and its edges` took from the issue's
+record; fetch it from the remote before `task-worktree` attaches it.
+`OWNER/REPO` for the branch link comes from the remote `task-worktree`
+resolved, never from an assumed `origin`.
 Omp uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
 

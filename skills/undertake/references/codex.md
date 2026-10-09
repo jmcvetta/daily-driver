@@ -19,7 +19,6 @@ The issue
 | `Read the issue and its edges` | Read the body, the graph and the comments | `gh issue view <number> --json body,labels,comments,blockedBy,subIssues,parent` |
 | `Read the issue and its edges` | Label an issue that carries none | `gh issue edit <number> --add-label task` |
 | `Claim the issue` | Comment on the issue | `gh issue comment <number> --body-file <path>` |
-| `Implement` (issue-only research) | Publish the claim branch for resumption | `git push --set-upstream <task-worktree remote> <branch>` through the shell in the task worktree |
 | `Implement` (issue-only research) | Record findings | `gh issue comment <number> --body-file <path>` |
 | `Implement` (issue-only research) | Close completed research | `gh issue close <number> --reason completed` |
 
@@ -54,12 +53,13 @@ or claim, then hands ordinary work to an eligible non-frontier session or
 stops with a configuration gap. The unmeasured delegation surface may not be
 assumed to provide that route.
 
-**Issue-only research writes use the issue client.** First publish the claim
-branch with the push operation above so another session can resume. If that
-push fails, leave the issue open and report the failure. Post the complete
-answer with `gh issue comment --body-file`, including `provenance`'s block;
-then close only when `issue-body`'s research completion test holds. Failed or
-incomplete research stays open.
+**Issue-only research writes use the issue client.** With no resume branch,
+this route skips `task-worktree`; do not create or publish a branch. If a
+resume branch exists, `task-worktree` attaches it, but the research route
+leaves it unchanged. Post the complete answer with `gh issue comment
+--body-file`, including `provenance`'s block; then close only when
+`issue-body`'s research completion test holds. Failed or incomplete research
+stays open.
 
 
 The implementor
@@ -113,13 +113,14 @@ the missing surface. `provenance`'s
 [`references/codex.md`](../../provenance/references/codex.md) names how the
 `Model:` line is read.
 
-The branch comes from the task worktree's Git state:
-`git branch --show-current` runs in that worktree. On a resume that is the
-adopted branch, which `Read the issue and its edges` took from the issue's
+For branch-free answer-only research, no task worktree exists and the claim
+uses `Branch: none`. Otherwise the branch comes from the task worktree's Git
+state: `git branch --show-current` runs in that worktree. On a resume that is
+the adopted branch, which `Read the issue and its edges` took from the issue's
 record (`gh issue view <number> --json closedByPullRequestsReferences,comments`);
-fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for the branch
-link comes from the remote `task-worktree` resolved, never from an assumed
-`origin`.
+fetch it from the remote before `task-worktree` attaches it. `OWNER/REPO` for
+the branch link comes from the remote `task-worktree` resolved, never from an
+assumed `origin`.
 
 Codex uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
