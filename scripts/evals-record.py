@@ -827,7 +827,7 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 for field in ("judge_id", "freeze_sha", "prompt_version"):
                     if not isinstance(judge.get(field), str) or not judge[field]:
                         errors.append(f"judge.{field} must be a non-empty string")
-                if uses_omp_codex_subscription(
+                if version == 4 and uses_omp_codex_subscription(
                     "omp",
                     judge.get("route", ""),
                     judge.get("model_requested", ""),
@@ -897,8 +897,15 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                             errors.append(f"{prefix}.cost_source must be subscription for this Omp Codex model")
                         if not _number(cost) or cost < 0:
                             errors.append(f"{prefix}.cost must be a non-negative number for cost_source {source}")
+                    elif source == "unreported":
+                        if cost is not None or uses_omp_codex_subscription(
+                            record.get("client", {}).get("name", ""),
+                            "omp",
+                            case.get("model_requested", ""),
+                        ):
+                            errors.append(f"{prefix}.unreported cost requires null dollars on a non-subscription route")
                     else:
-                        errors.append(f"{prefix}.cost_source must be reported, computed or subscription")
+                        errors.append(f"{prefix}.cost_source must be reported, computed, subscription or unreported")
                     elapsed = case.get("elapsed_seconds")
                     if _number(elapsed) and elapsed <= 0:
                         errors.append(f"{prefix}.elapsed_seconds must be greater than 0 for schema version 4")

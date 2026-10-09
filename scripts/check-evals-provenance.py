@@ -321,6 +321,39 @@ def validate(record: dict[str, Any], path: Path) -> subprocess.CompletedProcess[
     )
 
 
+def check_versioned_billing_sources(record: dict[str, Any], temp: Path) -> None:
+    """Schema 4 billing must not invalidate older judges or mislabel missing costs."""
+    historical = json.loads(json.dumps(record))
+    historical["schema_version"] = 3
+    historical["judge"] = {
+        "selection": "run-selected",
+        "route": "omp",
+        "model_requested": "openai-codex/gpt-6.1-sol",
+        "models_observed": ["gpt-6.1-sol"],
+        "usage": {"input": 10, "output": 2},
+        "judge_id": "omp-gpt-6.1-sol",
+        "freeze_sha": "frozen",
+        "prompt_version": "omp-judge-v1",
+    }
+    require(
+        validate(historical, temp / "historical-judge.json").returncode == 0,
+        "a schema-3 Omp Codex judge record without cost_source was rejected",
+    )
+
+    current = json.loads(json.dumps(historical))
+    current["schema_version"] = 4
+    result = validate(current, temp / "missing-judge-cost-source.json")
+    require(
+        result.returncode != 0 and "judge.cost_source" in result.stdout,
+        "a schema-4 Omp Codex judge record without subscription billing was accepted",
+    )
+    current["judge"]["cost_source"] = "subscription"
+    require(
+        validate(current, temp / "subscription-judge.json").returncode == 0,
+        "a schema-4 Omp Codex judge subscription record was rejected",
+    )
+
+
 def check_version_3_rules(record: dict[str, Any], temp: Path) -> None:
     """Every version-3 case rule rejects a record that breaks it."""
     require(validate(record, temp / "v3.json").returncode == 0, "a valid version-3 record was rejected")
@@ -1071,6 +1104,7 @@ def main() -> int:
         legacy_v3 = json.loads(json.dumps(laptop))
         legacy_v3["schema_version"] = 3
         check_version_3_rules(legacy_v3, temp)
+        check_versioned_billing_sources(legacy_v3, temp)
     check_renderer()
     check_results_renderer()
     return 0
