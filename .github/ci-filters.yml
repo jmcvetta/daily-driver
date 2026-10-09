@@ -171,6 +171,12 @@ check-omp-plugin:
   - '.omp-plugin/plugin.json'
   - 'extensions/**'
   - 'skills/*/SKILL.md'
+check-omp-embark-title-live:
+  - 'scripts/check-omp-embark-title-live.py'
+  - 'extensions/daily-driver.js'
+  - 'skills/embark/**'
+  - 'skills/session-title/**'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/tools.py'
 check-omp-eval-guard-live:
   - 'scripts/check-omp-eval-guard-live.py'
   - 'evals/coder-eval-omp/src/coder_eval_omp/__init__.py'

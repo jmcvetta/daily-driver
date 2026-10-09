@@ -502,12 +502,39 @@ def bash(command: str, result: str = "") -> dict[str, Any]:
 
 
 def check_answer_key_contact() -> None:
-    """Every road to the answer is flagged, and ordinary work is not."""
+    """Quoted data must not zero a score, and shell -c history access must not pass."""
     recorder = load_recorder()
     root = Path("/srv/daily-driver")
+    quoted_patch = bash(
+        "cat << 'EOF' > patch.txt\n"
+        "--- Makefile\n"
+        "+++ Makefile\n"
+        "@@ -499,20 +499,27 @@\n"
+        "    git checkout master\n"
+        "    git pull\n"
+        "    git fetch --prune\n"
+        "EOF\n"
+        "patch -p0 < patch.txt"
+    )
     clean = [
+        quoted_patch,
+        bash('cat << "EOF"\ngit pull\nEOF'),
+        bash("cat << \\EOF\ngit fetch\nEOF"),
+        bash("cat <<-EOF\n\tgit pull\nEOF"),
+        bash(
+            "cat << 'EOF'\n"
+            ".fixture/tests.patch\n"
+            "github.com/jmcvetta/career/pull/469\n"
+            "refs/pull/469/head\n"
+            "EOF"
+        ),
+        bash("cat <<'EOF'\n\"git pull\" and 'git fetch'\nEOF"),
+        bash("cat << 'EOF'\n$(git fetch origin master)\n`git pull`\nEOF"),
+        bash("cat <<'A'\ngit pull\nA\ncat <<'B'\ngh pr view 469\nB"),
+        bash("printf '%s' 'git pull and git fetch'"),
+        bash('git commit -qam "github.com/jmcvetta/career/pull/469"'),
+        bash('git commit -qam "mention gh issue view and refs/pull/469/head"'),
         bash("git status && git diff --stat"),
-        bash('git commit -qam "fetch the pull refs lazily"'),
         bash("git -C kokoro log --oneline -5"),
         bash("gh issue view 2853 --repo googleapis/release-please"),
         bash("gh api repos/googleapis/release-please/issues/2853"),
@@ -516,10 +543,14 @@ def check_answer_key_contact() -> None:
         bash("grep -rn compile-bytecode .", "./kokoro/pyproject.toml:12:compile-bytecode = true"),
         {"tool_name": "WebFetch", "parameters": {"url": "https://github.com/googleapis/release-please/issues/2853"}},
         {"tool_name": "Edit", "parameters": {"file_path": "README.md", "new_string": "see github.com/jmcvetta/career-scan"}},
+        bash("bash -c 'echo \"git pull\"'"),
+        bash("sh -c 'printf \"%s\" \"git fetch\"'"),
+        bash("eval 'printf \"%s\" \"\\$HOME\"'"),
+        bash("eval 'printf \"%s\" \"\\`git fetch\\`\"'"),
     ]
     for command in clean:
         evidence = recorder.answer_key_contact(classes_artifact(command), root)
-        require(evidence == [], f"ordinary work was flagged: {command} -> {evidence}")
+        require(evidence == [], f"ordinary or quoted shell data was flagged: {command} -> {evidence}")
 
     reaching = {
         "names the old in-sandbox key": bash("cat .fixture/tests.patch"),
@@ -538,10 +569,30 @@ def check_answer_key_contact() -> None:
         "curls the source": bash("curl -s https://api.github.com/repos/jmcvetta/career/pulls/469"),
         "downloads the diff": bash("curl -sS https://patch-diff.githubusercontent.com/raw/jmcvetta/career/pull/469.diff"),
         "fetches the source page": {"tool_name": "WebFetch", "parameters": {"url": "https://github.com/jmcvetta/career/pull/469"}},
+        "runs a command substitution in unquoted heredoc": bash("cat <<EOF\n$(git fetch origin master)\nEOF"),
+        "runs backticks in unquoted heredoc": bash("cat <<EOF\n`git fetch origin master`\nEOF"),
+        "fetches before and after literal patch data": bash(
+            "git fetch origin master\n"
+            "cat << 'EOF'\n"
+            "git pull\n"
+            "EOF\n"
+            "git fetch origin master"
+        ),
+        "runs a source command through a wrapper": bash("command git fetch origin master"),
+        "fetches through bash -c": bash("bash -c 'git fetch origin master'"),
+        "views through sh -c": bash("sh -c 'gh pr view 469'"),
+        "fetches through eval": bash("eval 'git fetch origin master'"),
+        "treats unresolved eval input as contact evidence": bash('eval "$cmd"'),
+        "executes a variable as eval command": bash("cmd='git fetch origin master'; eval '$cmd'"),
     }
     for name, command in reaching.items():
         evidence = recorder.answer_key_contact(classes_artifact(command), root)
-        require(len(evidence) == 1, f"{name} was not flagged: {command}")
+        require(len(evidence) == 1, f"{name} was not flagged: {command} -> {evidence}")
+    mixed = "git fetch origin master\ncat << 'EOF'\ngit pull\nEOF\ngit fetch origin master"
+    require(
+        recorder._command_contacts(mixed, "jmcvetta/career").count("git fetch") == 2,
+        "real commands around a quoted here-document were lost",
+    )
 
     try:
         recorder.answer_key_contact(classes_artifact(bash("ls"), description="no source here"), root)
@@ -552,7 +603,7 @@ def check_answer_key_contact() -> None:
 
 
 def check_contaminated_replicate(temp: Path) -> None:
-    """Answer-key access must not earn a class through a raw-success case row."""
+    """Real answer-key access must not earn a class. Literal data must not lose one."""
     run_dir = temp / "runs" / "2026-09-28_10-00-00"
     run_dir.mkdir(parents=True)
     experiment = temp / "classes.yaml"
@@ -576,12 +627,20 @@ def check_contaminated_replicate(temp: Path) -> None:
                         "agent_cost_usd": 0.1,
                         "total_cost_usd": 0.1,
                     }
-                    for index in (0, 1)
+                    for index in (0, 1, 2, 3, 4, 5)
                 ],
             }
         )
     )
-    for index, command in enumerate((bash("git diff"), bash("git fetch origin master"))):
+    commands = (
+        bash("git diff"),
+        bash("cat << 'EOF'\ngit pull\ngit fetch --prune\nEOF"),
+        bash("git fetch origin master"),
+        bash("bash -c 'git fetch origin master'"),
+        bash("eval 'printf \"%s\" \"\\$HOME\"'"),
+        bash("cmd='git fetch origin master'; eval '$cmd'"),
+    )
+    for index, command in enumerate(commands):
         artifact_dir = run_dir / "default" / task_id / f"{index:02d}"
         artifact_dir.mkdir(parents=True)
         artifact = classes_artifact(command)
@@ -592,24 +651,37 @@ def check_contaminated_replicate(temp: Path) -> None:
             {
                 "experiment_id": "classes",
                 "variant_ids": ["default"],
-                "per_replicate_scores": {"default": {task_id: [1.0, 1.0]}},
+                "per_replicate_scores": {"default": {task_id: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]}},
             }
         )
     )
     env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_SESSION_ID"}
     record_path = run_recorder(run_dir, experiment, temp / "classes-out", env)
     record = json.loads(record_path.read_text())
-    clean, reached = record["attempts"]
-    require(clean["answer_key_contact"] == [] and clean["measured_score"] == 1.0, "a clean replicate lost its score")
+    clean, quoted, reached, nested_reached, eval_clean, eval_dynamic = record["attempts"]
+    require(clean["answer_key_contact"] == [] and clean["measured_score"] == 1.0, "ordinary work lost its score")
+    require(
+        quoted["answer_key_contact"] == [] and quoted["measured_score"] == 1.0,
+        "quoted patch data falsely zeroed the synthetic passing replicate",
+    )
     require(reached["answer_key_contact"], "the git fetch replicate carries no evidence")
     require(reached["measured_score"] == 0.0, "a replicate that reached the answer kept its score")
     require(reached["raw_weighted_score"] == 1.0, "the raw score was not kept beside the measured one")
+    require(nested_reached["answer_key_contact"], "the bash -c replicate carries no evidence")
+    require(nested_reached["measured_score"] == 0.0, "a nested history contact kept its score")
+    require(eval_dynamic["answer_key_contact"], "the variable eval command carries no contact evidence")
+    require(eval_dynamic["measured_score"] == 0.0, "a dynamic eval command kept its score")
     require(
-        record["variants"][0]["per_replicate_scores"][task_id] == [1.0, 0.0],
-        "per_replicate_scores still count the replicate that reached the answer",
+        eval_clean["answer_key_contact"] == [] and eval_clean["measured_score"] == 1.0,
+        "a quoted literal in static eval falsely zeroed the synthetic passing replicate",
     )
     require(
-        [case["outcome"] for case in record["cases"]] == ["succeeded", "failed"],
+        record["variants"][0]["per_replicate_scores"][task_id] == [1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+        "per_replicate_scores missed quoted-data preservation or a shell history contact",
+    )
+    require(
+        [case["outcome"] for case in record["cases"]]
+        == ["succeeded", "succeeded", "failed", "failed", "succeeded", "failed"],
         "case outcomes still qualify a replicate that reached the answer for a model class",
     )
     reached["measured_score"] = 1.0
@@ -617,8 +689,9 @@ def check_contaminated_replicate(temp: Path) -> None:
     result = subprocess.run(
         [sys.executable, str(RECORDER), str(record_path), "--experiment", str(experiment), "--validate"],
         cwd=ROOT,
-        capture_output=True,
+        env=env,
         text=True,
+        capture_output=True,
         check=False,
     )
     require(

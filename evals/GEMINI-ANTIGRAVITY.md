@@ -185,6 +185,12 @@ that skill and explained that the empty fixture contained no README. The case
 measures trigger behavior, not installation-review quality or general workflow
 compliance. The official scores remain unchanged.
 
+After recording this cohort, the branch integrated upstream fixes for
+[the answer-key false positive](https://github.com/jmcvetta/daily-driver/issues/590)
+and [the career-462 fixture](https://github.com/jmcvetta/daily-driver/issues/591).
+Historical measurements were not regraded. Future measurements must record
+their new source and grader revision rather than overwrite these records.
+
 ## Shared Gemini quota observations
 
 Snapshot times below are UTC `generatedAt` values. Links contain the observed
