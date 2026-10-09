@@ -231,20 +231,21 @@ Invoke `task-worktree`. The issue now supplies the task identity, and no
 repository research has begun. That skill owns the feature branch, its base,
 the sibling worktree, and every later operation's root.
 
-The branch it establishes is the branch `Claim the issue` announces. Do not
-select, create, rename, or check out a second branch here. Where `Read the
-issue and its edges` found a resume branch, hand it to `task-worktree` as the
-existing task branch: it is fetched and attached, never recreated from the
-base, and it outranks the harness's designation. Otherwise, where a harness
-already designated one branch for this task, `task-worktree` consumes it;
-then its own project-convention and task-name rules decide.
+`task-worktree` establishes the remote push branch and, only where its harness
+route permits, a separate local execution branch. `Claim the issue` names both
+identities. Do not select, create, rename, or check out another branch here.
+Where `Read the issue and its edges` found a resume branch, hand that recorded
+remote branch to `task-worktree`: it is fetched and attached, never recreated
+from the base, and it outranks the harness's designation. Otherwise, the
+harness route decides whether its designated branch is also the execution
+branch.
 
 4 — Claim the issue
 -------------------
 
 One comment on the issue says that this session has taken the work. It goes up
-after `Establish task worktree`, so the branch it names exists and is the one
-the implementation will use, and before `Implement`, so another session can
+after `Establish task worktree`, so the branch identities it names exist and
+match `task-worktree`'s route, and before `Implement`, so another session can
 see that the work has started.
 
 After `Read the issue and its edges` rather than before it, because the edges
@@ -255,24 +256,30 @@ claim on work that is not starting is a false record.
 
 Beyond the claim itself the comment always carries:
 
-- **The branch** established by `task-worktree`, **linked** as
+- **The remote push branch** established by `task-worktree`, linked as
   `[branch](https://github.com/OWNER/REPO/tree/BRANCH)`. `OWNER/REPO` is the
   repository the branch will be pushed to, which on a fork need not be the
   repository the issue is in. Read it from the harness's session call where
   that call supplies it, or from the remote `task-worktree` resolved. Built
   from the issue's repository instead, the link can point to the wrong fork.
   Until the first push or `Open the draft`, nothing else on GitHub ties the
-  issue to this branch. The link can return 404 until that push; write it
+  claim to this branch. The link can return 404 until that push; write it
   anyway, because the alternative is a branch name the reader must turn into
   a URL by hand.
 
-- **`provenance`'s block**, immediately after the branch: the model that
-  served the turn, the harness and its version, and the session identifier or
-  `n/a`. That skill owns the block's shape and the rules for reading each
-  field — never a name recalled instead of read, and where the model the
-  session was *set* to run disagrees with the one that served, both are
-  named. The `Model:` and lowercase `session:` line shapes are what the claim
-  lookup below and `The milestone` match on, so they are never varied here.
+  Where `task-worktree` established separate identities, add `Local execution
+  branch: <name>` as a separate line. Never link the local-only execution
+  branch as the branch GitHub will carry. Ordinary and resume paths have one
+  branch identity, so the linked and local branch are the same.
+
+- **`provenance`'s block**, immediately after the branch identity lines:
+  the model that served the turn, the harness and its version, and the session
+  identifier or `n/a`. That skill owns the block's shape and the rules for
+  reading each field — never a name recalled instead of read, and where the
+  model the session was *set* to run disagrees with the one that served, both
+  are named. The `Model:` and lowercase `session:` line shapes are what the
+  claim lookup below and `The milestone` match on, so they are never varied
+  here.
 - **A brief poem, in the claiming agent's own style, placed last** — after
   the branch, the model and the session, so that a reader looking for the
   branch or the model finds them in a fixed place and is never made to read
@@ -286,11 +293,14 @@ Beyond the claim itself the comment always carries:
   work.
 
 The model and session come from the harness's session call, where it has one —
-the call `session-title` documents. Without a resume branch, a branch designated by that call must be
+the call `session-title` documents. Without a resume or a verified
+primary-held designation exception, a branch designated by that call must be
 the branch `task-worktree` established; disagreement is a collision, not a
-choice between two branch sources. With one, the resume branch is the task
-branch and the designation differing from it is not a collision; the harness
-reference says how a push scope that names the designated branch is handled.
+choice between two branch sources. With a resume, the remote push branch is
+the adopted branch and outranks the designation. In the exception, the local
+execution branch may differ from the designation only as `task-worktree`
+verified; the designated branch remains the push/PR head. Other paths retain
+one branch identity.
 
 **The comment never goes up with the branch alone.** The branch comes from
 the task worktree's Git state, never from a fresh naming decision in this
@@ -335,9 +345,12 @@ implements it.
 deliverable is an answer or follow-on issue specifications, the task branch
 contains no repository changes, and no pull request exists. Otherwise use the
 normal PR route for the existing changes. Keep repository content read-only.
-Push the claimed task branch to its resolved remote before research so another
-session can resume from the issue record; do not create an empty commit. If the
-push fails, leave the issue open and report the failure.
+Push the claimed remote branch with the exact non-force refspec from
+`task-worktree`'s active harness route before research, so another session can
+resume from the issue record; do not create an empty commit. On the
+Claude-specific separate-identity route, the refspec maps the local execution
+branch to the designated remote push branch. Otherwise both names are the
+same. If the push fails, leave the issue open and report the failure.
 
 Gather the evidence and prepare the agreed answer. If follow-on issue
 specifications are required, create those through `issue` or `epic` under
@@ -982,7 +995,9 @@ In order:
 
    This session stopped at the user's instruction. The work is yours to reclaim.
 
-   - Branch: `<branch>` — <link>. Pushed head: `<sha>`.
+   - Branch: `<remote push branch>` — <link>. Local execution branch:
+     `<local branch>` (omit this line when it is the same branch). Pushed head:
+     `<sha>`.
    - Pull request: <#N and state (draft / ready), or "none open">.
    - Reached: <the last step of the sequence completed>.
    - Outstanding: <what is blocked, failing, or unverified — failed checks,

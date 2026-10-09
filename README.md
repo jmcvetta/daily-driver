@@ -239,8 +239,11 @@ provider loads the constitution from `rules/*.md` with `alwaysApply: true`.
 
 The Omp installation provides three task-class roles and matching agents:
 `mechanical`, `implementation` and `reasoning`. At session start, the extension
-adds runtime selectors for roles without an effective assignment. It adds
-visible role tags without replacing operator metadata.
+adds runtime selectors for roles without an effective assignment:
+`openai-codex/gpt-6-luna:low` for mechanical work,
+`openai-codex/gpt-6-luna:high` for implementation, and
+`openai-codex/gpt-6.1-sol:high` for ordinary reasoning. It adds visible role
+tags without replacing operator metadata.
 
 The default selectors require configured OpenAI Codex credentials. Use
 `/model` → Roles to assign models. Existing `omp_configs/` files remain process

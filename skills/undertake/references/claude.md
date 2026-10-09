@@ -19,7 +19,7 @@ The issue
 | `Read the issue and its edges` | Read the comments | `mcp__github__issue_read`, method `get_comments` |
 | `Read the issue and its edges` | Label an issue that carries none | read `labels` with `mcp__github__issue_read`, then `mcp__github__issue_write`, method `update`, sending that set plus the new label |
 | `Claim the issue` | Comment on the issue | `mcp__github__add_issue_comment` |
-| `Implement` (issue-only research) | Publish the claim branch for resumption | `Bash` in the task worktree: `git push --set-upstream <task-worktree remote> <branch>` |
+| `Implement` (issue-only research) | Publish the claim branch for resumption | `Bash` in the task worktree: `git push --set-upstream <remote> <branch>`, or the Claude primary-held designation refspec `git push -u <remote> <execution-branch>:<designated-branch>` |
 | `Implement` (issue-only research) | Record findings | `mcp__github__add_issue_comment` |
 | `Implement` (issue-only research) | Close completed research | `mcp__github__issue_write`, method `update`, `state: closed`, `state_reason: completed` |
 
@@ -49,12 +49,14 @@ its body is old or invalid, before the claim. That guidance is dispatch's —
 `embark` selects a route against it before assigning work — and nothing here
 compares the class to this session's own capability.
 
-**Issue-only research writes use the issue client.** First publish the claim
-branch with the push operation above so another session can resume. If that
-push fails, leave the issue open and report the failure. Post the complete
-answer with `mcp__github__add_issue_comment`, including `provenance`'s block;
-then close with `mcp__github__issue_write` only when `issue-body`'s research
-completion test holds. Failed or incomplete research stays open.
+**Issue-only research writes use the issue client.** Publish the remote push
+branch with the active `task-worktree` mapping. Use the local-to-designated
+refspec for the primary-held exception; otherwise push the same branch name.
+If publication fails, leave the issue open and report the failure. Post the
+complete answer with `mcp__github__add_issue_comment`, including
+`provenance`'s block; then close with `mcp__github__issue_write` only when
+`issue-body`'s research completion test holds. Failed or incomplete research
+stays open.
 
 
 The implementor
@@ -120,17 +122,26 @@ same call's model and session fields for `Claim the issue`'s block.
 
 Both branch fields are arrays. Read the outcome whose `git_info.repo` names the
 repository this work will be pushed to. Exactly one branch is a designation;
-more than one is a collision, not a pick. The branch checked out in the task
-worktree must agree before the claim is posted — the designated branch, or the
-adopted resume branch where `Read the issue and its edges` found one.
+more than one is a collision, not a pick. `task-worktree` may establish a
+different local execution branch only when this is new work and schema-2
+Worktrunk evidence confirms the designated branch is checked out in the
+primary worktree. The claim links the designated remote push branch and names
+the local execution branch separately. Otherwise the task-worktree branch
+must agree with the designation, or with the adopted resume branch.
 
-**A resume branch differing from the designated one is not a collision.** The
-adopted branch is the task branch. The session's own instructions may still
-require explicit permission to push to a branch other than the designated one.
-Where they do, ask the user once, in one line naming both branches and the
-resume evidence (the pull request, handoff comment or claim that named it),
-then push to the adopted branch. Never push the work to the designated branch
-instead, and never open a second pull request from it.
+**A resume branch differing from the designation is not a collision.** The
+adopted remote branch is the task's push/PR head. The session's own
+instructions may still require explicit permission to push to a branch other
+than the designation. Where they do, ask the user once, in one line naming
+both branches and the resume evidence (the pull request, handoff comment or
+claim that named it), then push to the adopted branch. Never push the work to
+the designated branch instead, and never open a second pull request from it.
+
+For the primary-held designation exception, use the designated branch for the
+claim link, pushes, existing-PR lookup and PR creation. Keep the execution
+branch local; `task-worktree`'s explicit non-force refspec sets the designated
+remote branch as its upstream. CI reads belong to the PR found on that remote
+head; never query or create CI state for the local execution name.
 
 `external_metadata.current_branches` is a different field and answers a
 different question: what is checked out, not what the harness designated.
