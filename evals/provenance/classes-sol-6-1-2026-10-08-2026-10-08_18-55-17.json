@@ -1,0 +1,144 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 58.68592119216919,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "openai-codex/gpt-6.1-sol",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-sol-6-1",
+      "source": "jmcvetta/career#469",
+      "task_id": "model-classes-career-469",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 53.4276385307312,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "openai-codex/gpt-6.1-sol",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "classes-sol-6-1",
+      "source": "jmcvetta/career#469",
+      "task_id": "model-classes-career-469",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 54.78606939315796,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "openai-codex/gpt-6.1-sol",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "classes-sol-6-1",
+      "source": "jmcvetta/career#469",
+      "task_id": "model-classes-career-469",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "unknown",
+    "recorded_version": "unknown",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T18:56:15.795080",
+  "experiment_id": "classes-sol-6-1",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "1b999beff78568a7831fdde0afe47d015093c01d",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-08T11:56:16.279416+00:00",
+  "run_id": "2026-10-08_18-55-17",
+  "schema_version": 4,
+  "started_at": "2026-10-08T18:55:17.106638",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "openai-codex/gpt-6.1-sol",
+      "per_replicate_scores": {
+        "model-classes-career-469": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-469"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}

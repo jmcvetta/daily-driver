@@ -43,6 +43,6 @@ success_criteria:
 
   - type: run_command
     description: The pull request's own tests pass after applying tests.patch
-    command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py::test_projected_releases_skips_release_prs
+    command: GH_CONFIG_DIR="$(mktemp -d)" GH_TOKEN= GITHUB_TOKEN= bash -c 'bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py::test_projected_releases_skips_release_prs'
     timeout: 720
     weight: 3

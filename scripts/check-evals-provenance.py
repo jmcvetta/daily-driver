@@ -87,9 +87,9 @@ def _case_row(
 
 
 def check_renderer() -> None:
-    """Exercise `evals-render-routes.py` on a fixture record set covering a
-    pass, a fail, an unreported served model, a stale row, and an unmeasured
-    overlay.
+    """Exercise the renderer on pass/fail records, an unreported served model,
+    a stale run, an unmeasured overlay, and an error-only run that must not hide
+    an earlier scored result.
     """
     renderer = load_renderer()
     with tempfile.TemporaryDirectory() as directory:
@@ -135,6 +135,27 @@ def check_renderer() -> None:
                             "t2", "implementation", "succeeded", 2,
                             model_requested="model-x-pinned", settings="classes-model-x", cost=0.30,
                         ),
+                    ],
+                }
+            )
+        )
+        # model-x: a later error-only run must not replace its scored results.
+        (provenance_dir / "run-unscored-errors.json").write_text(
+            json.dumps(
+                {
+                    "run_id": "run-unscored-errors",
+                    "completed_at": "2026-01-02T00:00:00Z",
+                    "cases": [
+                        _case_row(
+                            task_id,
+                            klass,
+                            "error",
+                            index,
+                            model_requested="model-x-pinned",
+                            settings="classes-model-x",
+                        )
+                        for task_id, klass in (("t1", "mechanical"), ("t2", "implementation"))
+                        for index in range(3)
                     ],
                 }
             )
@@ -227,10 +248,11 @@ def check_renderer() -> None:
         renderer.render(provenance_dir, experiments_dir, omp_configs_dir, target)
         rendered = target.read_text()
 
-        require("| model-x-pinned | classes-model-x | mechanical |" in rendered, "the earned class was not reported")
-        require("| 2/3 | 1/3 |" in rendered, "per-class pass rates were not both reported")
-        require("$0.15" in rendered, "cost per passed case was not averaged over the earned class's passes")
-        require("2026-01-01" in rendered, "a stale row's own date was not rendered")
+        require(
+            "| model-x-pinned | classes-model-x | mechanical | 2/3 | 1/3 | $0.15 | run-old | 2026-01-01 |"
+            in rendered,
+            "a later error-only run hid or replaced the latest scored route measurement",
+        )
         require("| model-y-pinned | classes-model-y | none | 0/3 | unreported |" in rendered, "an all-fail route was not reported as earning no class")
         require("| unmeasured-overlay | classes-unmeasured-overlay | unmeasured |" in rendered, "an overlay with no case row was not listed unmeasured")
         require(
@@ -775,6 +797,7 @@ def main() -> int:
                             "output_tokens": 10,
                             "cache_read_input_tokens": 1000,
                             "cache_creation_input_tokens": 50,
+                            "reasoning_tokens": 7,
                             "agent_cost_usd": None,
                             "judge_cost_usd": 0.5,
                             "total_cost_usd": 0.5,
@@ -836,7 +859,7 @@ def main() -> int:
         require(laptop["client"]["name"] == "claude-code", "client type was not read from agent_config")
         require(len(laptop["attempts"]) == 3, "attempt-level evidence was not recorded")
         require(laptop["attempts"][0]["criteria"][0]["criterion_type"] == "synthetic", "criterion evidence was not recorded")
-        require(laptop["schema_version"] == 3, "schema_version was not bumped to 3")
+        require(laptop["schema_version"] == 4, "schema_version was not bumped to 4")
         require(len(laptop["cases"]) == 3, "case rows were not recorded one per task result")
         passed, failed = laptop["cases"][0], laptop["cases"][1]
         require(passed["class"] == "mechanical", "class tag was not read from the row's tags")
@@ -848,7 +871,65 @@ def main() -> int:
         require(abs(failed["cost"] - 0.50037) < 1e-9, f"a token-only row was mispriced: {failed['cost']}")
         require(failed["cost_source"] == "computed", "a table-priced row was not marked computed")
         require(failed["tokens"] == "unreported", "missing total tokens were not marked unreported")
+        require(
+            passed["token_usage"]
+            == {
+                "uncached_input_tokens": 600,
+                "cache_read_input_tokens": "unreported",
+                "cache_creation_input_tokens": "unreported",
+                "output_tokens": 400,
+                "reasoning_tokens": "unreported",
+            },
+            "missing token buckets were not kept unreported",
+        )
+        require(
+            failed["token_usage"]
+            == {
+                "uncached_input_tokens": 100,
+                "cache_read_input_tokens": 1000,
+                "cache_creation_input_tokens": 50,
+                "output_tokens": 10,
+                "reasoning_tokens": 7,
+            },
+            "measured token buckets were not preserved",
+        )
         require(passed["model_served"] == "unreported", "case model_served used a different sentinel than 'unreported'")
+
+        # Regression: Omp startup failures leave agent_config null, but their
+        # ERROR attempts still need a durable provenance row.
+        errored = json.loads((run_dir / "run.json").read_text())
+        errored_row = errored["task_results"][1]
+        errored_row["status"] = "ERROR"
+        errored_row["agent_config"] = None
+        errored_row["input_tokens"] = None
+        errored_row["output_tokens"] = None
+        errored_row["cache_read_input_tokens"] = None
+        errored_row["cache_creation_input_tokens"] = None
+        errored_row["total_tokens"] = None
+        errored_row["reasoning_tokens"] = None
+        errored_row["agent_cost_usd"] = None
+        errored_row["total_cost_usd"] = None
+        errored_row["error_message"] = "model could not start"
+        (run_dir / "run.json").write_text(json.dumps(errored))
+        error_record = json.loads(
+            run_recorder(run_dir, experiment, temp / "error-record", base_env, prices).read_text()
+        )
+        require(error_record["cases"][1]["outcome"] == "error", "an ERROR row with no agent_config was not recorded")
+        require(error_record["cases"][1]["tokens"] == "unreported", "missing startup usage was recorded as zero")
+
+        # Restore the fixture before testing Omp-specific price handling.
+        errored_row["status"] = "FAILURE"
+        errored_row["agent_config"] = {"type": "claude-code", "model": "requested-model"}
+        errored_row["input_tokens"] = 100
+        errored_row["output_tokens"] = 10
+        errored_row["cache_read_input_tokens"] = 1000
+        errored_row["cache_creation_input_tokens"] = 50
+        errored_row["total_tokens"] = None
+        errored_row["agent_cost_usd"] = None
+        errored_row["total_cost_usd"] = 0.5
+        errored_row.pop("error_message", None)
+        errored_row["reasoning_tokens"] = 7
+        (run_dir / "run.json").write_text(json.dumps(errored))
         require(passed["model_requested"] == "requested-model", "case model_requested was not read from the experiment")
         require(passed["settings"] == "synthetic", "case settings did not carry the experiment_id")
         untagged = laptop["cases"][2]

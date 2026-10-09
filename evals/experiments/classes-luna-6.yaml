@@ -1,0 +1,21 @@
+# Model-class capability through the OpenAI Codex subscription, at high effort.
+experiment_id: classes-luna-6
+description: >-
+  Model-class capability on the six fixed merged-PR cases, openai-codex/gpt-6-luna at high thinking effort in the task role.
+
+defaults:
+  repeats: 3
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: openai-codex/gpt-6-luna
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+variants:
+  - variant_id: default
+    description: The model against the model-classes suite.
