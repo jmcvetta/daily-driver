@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import tree_sitter_bash
+from tree_sitter import Language, Parser
 try:
     import yaml
 except ImportError:  # pragma: no cover - the repository's uv environment has PyYAML.
@@ -337,18 +339,101 @@ _ANSWER_KEY_MARKERS = (
 )
 
 _GIT_NETWORK = {"fetch", "pull", "clone", "ls-remote"}
+_GIT_REF_COMMANDS = {
+    "branch",
+    "cat-file",
+    "checkout",
+    "diff",
+    "fetch",
+    "log",
+    "merge",
+    "pull",
+    "rev-parse",
+    "show",
+    "switch",
+    "worktree",
+}
 _GH_REPO_COMMANDS = {"pr", "issue", "repo", "browse", "run", "release", "workflow"}
 
 
-def _shell_words(command: str) -> list[str]:
-    """Split a shell command into words and operators, or on whitespace where
-    the command does not parse (an unclosed quote in a heredoc, say)."""
-    lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
-    lexer.whitespace_split = True
+_BASH_LANGUAGE = Language(tree_sitter_bash.language())
+
+
+def _shell_nodes(root: Any) -> list[Any]:
+    """Return every node below a Tree-sitter Bash node."""
+    found = []
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        found.append(node)
+        stack.extend(reversed(node.children))
+    return found
+
+
+def _node_text(node: Any, source: bytes) -> str:
+    """Return one parsed shell node's source text."""
+    return source[node.start_byte : node.end_byte].decode("utf-8", errors="replace")
+
+
+def _heredoc_expansion(body: str) -> str:
+    """Parse unquoted here-document substitutions in a double-quoted context."""
+    encoded = []
+    index = 0
+    while index < len(body):
+        char = body[index]
+        if char == "\\":
+            if index + 1 < len(body) and body[index + 1] in "$`\\\n":
+                encoded.extend(("\\", body[index + 1]))
+                index += 2
+            else:
+                encoded.append("\\\\")
+                index += 1
+        elif char == '"':
+            encoded.append('\\"')
+            index += 1
+        else:
+            encoded.append(char)
+            index += 1
+    return 'printf "%s" "' + "".join(encoded) + '"'
+
+
+def _shell_ast(command: str) -> list[tuple[Any, bytes]]:
+    """Parse shell syntax and executable here-document substitutions."""
+    source = command.encode("utf-8")
+    parser = Parser(_BASH_LANGUAGE)
+    tree = parser.parse(source)
+    trees = [(tree.root_node, source)]
+    for node in _shell_nodes(tree.root_node):
+        if node.type != "heredoc_redirect":
+            continue
+        start = next(child for child in node.children if child.type == "heredoc_start")
+        body = next((child for child in node.children if child.type == "heredoc_body"), None)
+        delimiter = _node_text(start, source)
+        if any(char in delimiter for char in ("'", '"', "\\")):
+            continue
+        body_text = _node_text(body, source) if body is not None else ""
+        expansion = _heredoc_expansion(body_text).encode("utf-8")
+        expanded_tree = parser.parse(expansion)
+        if expanded_tree.root_node.has_error:
+            raise ValueError("could not parse an unquoted here-document expansion")
+        for expanded_node in _shell_nodes(expanded_tree.root_node):
+            if expanded_node.type != "command_substitution":
+                continue
+            trees.extend(
+                (node, expansion)
+                for node in _shell_nodes(expanded_node)
+                if node.type == "command"
+            )
+    return trees
+
+
+def _word_value(word: str) -> str:
+    """Remove shell quoting from one parser-delimited command word."""
     try:
-        return list(lexer)
+        words = shlex.split(word)
     except ValueError:
-        return command.split()
+        return word
+    return words[0] if len(words) == 1 else word
 
 
 def _repo_flag(words: list[str]) -> str | None:
@@ -361,42 +446,108 @@ def _repo_flag(words: list[str]) -> str | None:
     return None
 
 
-def _command_contacts(command: str, source: str) -> list[str]:
-    """Why a shell command reaches the source repository's history, if it does.
+def _command_positions(words: list[str]) -> list[int]:
+    """Find commands after common shell utility wrappers, not ordinary arguments."""
+    index = 0
+    wrappers = {"command", "exec", "env", "nohup", "nice", "sudo", "doas", "time"}
+    options_with_values = {"-C", "-c", "-u", "-g", "-h", "-p", "-S", "--chdir"}
+    while index < len(words):
+        name = _word_value(words[index]).rsplit("/", 1)[-1]
+        if name not in wrappers:
+            return [index]
+        index += 1
+        while index < len(words) and words[index].startswith("-"):
+            option = words[index]
+            index += 1
+            if option in options_with_values and index < len(words):
+                index += 1
+        while index < len(words) and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[index]):
+            index += 1
+    return []
 
-    Every `git` network command counts, because the sandbox's clone has no
-    remote and nothing the task needs is fetched. A `gh` command counts unless
-    it names another repository: without `-R` it means the checkout's own.
-    """
+
+def _command_contacts(command: str, source: str, markers: tuple[str, ...] = ()) -> list[str]:
+    """Why parsed shell commands or their executable expansions reach source history."""
+    try:
+        parsed = _shell_ast(command)
+        if any(root.has_error for root, _ in parsed):
+            return ["Bash parse failure: unsupported or incomplete shell syntax"]
+    except Exception as error:
+        return [f"Bash parse failure ({type(error).__name__}): {error}"]
+
     reasons = []
-    words = _shell_words(command)
-    for index, word in enumerate(words):
-        if word.rsplit("/", 1)[-1] not in ("git", "gh"):
-            continue
-        rest = words[index + 1 :]
-        # Skip global options -- `git -C dir`, `git -c key=value`.
-        while rest and rest[0].startswith("-"):
-            rest = rest[2:] if rest[0] in ("-C", "-c", "-R", "--repo") else rest[1:]
-        if not rest:
-            continue
-        subcommand = rest[0]
-        if word.endswith("git"):
-            if subcommand in _GIT_NETWORK:
-                reasons.append(f"git {subcommand}")
-            elif subcommand == "remote" and len(rest) > 1 and rest[1] in ("add", "set-url"):
-                reasons.append(f"git remote {rest[1]}")
-        elif subcommand == "search":
-            reasons.append("gh search")
-        elif subcommand == "api":
-            named = [w for w in rest[1:] if "repos/" in w]
-            if not named or any(source.lower() in w.lower() for w in named):
-                reasons.append("gh api")
-        elif subcommand in _GH_REPO_COMMANDS:
-            other = _repo_flag(rest)
-            if other is None or other.lower() == source.lower():
-                reasons.append(f"gh {subcommand}")
-    if "refs/pull/" in command:
-        reasons.append("refs/pull/")
+    source_url = re.compile(
+        r"(?:github\.com[/:]|githubusercontent\.com/(?:raw/)?|api\.github\.com/repos/)"
+        + re.escape(source)
+        + r"(?![\w.-])",
+        re.IGNORECASE,
+    )
+    shell_words = []
+
+    def collect_words(node: Any, source_text: bytes) -> None:
+        if node.type == "heredoc_body":
+            for child in node.named_children:
+                if child.type in ("command_substitution", "process_substitution"):
+                    collect_words(child, source_text)
+            return
+        if node.type in ("word", "raw_string", "string", "number"):
+            shell_words.append(_node_text(node, source_text))
+        for child in node.named_children:
+            collect_words(child, source_text)
+
+    for root, source_text in parsed:
+        collect_words(root, source_text)
+        for node in _shell_nodes(root):
+            if node.type != "command":
+                continue
+            name = node.child_by_field_name("name")
+            if name is None:
+                continue
+            word_nodes = [name]
+            word_nodes.extend(
+                child
+                for index, child in enumerate(node.children)
+                if node.field_name_for_child(index) == "argument"
+            )
+            words = [_word_value(_node_text(item, source_text)) for item in word_nodes]
+            for position in _command_positions(words):
+                word = words[position]
+                executable = word.rsplit("/", 1)[-1]
+                rest = words[position + 1 :]
+                while rest and rest[0].startswith("-"):
+                    rest = rest[2:] if rest[0] in ("-C", "-c", "-R", "--repo") else rest[1:]
+                network_access = False
+                if executable in ("git", "gh") and rest:
+                    subcommand = rest[0]
+                    if executable == "git":
+                        network_access = subcommand in _GIT_NETWORK
+                        if network_access:
+                            reasons.append(f"git {subcommand}")
+                        elif subcommand == "remote" and len(rest) > 1 and rest[1] in ("add", "set-url"):
+                            network_access = True
+                            reasons.append(f"git remote {rest[1]}")
+                        if subcommand in _GIT_REF_COMMANDS and any(
+                            "refs/pull/" in item for item in rest[1:]
+                        ):
+                            reasons.append("refs/pull/")
+                    elif subcommand == "search":
+                        network_access = True
+                        reasons.append("gh search")
+                    elif subcommand == "api":
+                        network_access = True
+                        named = [item for item in rest[1:] if "repos/" in item]
+                        if not named or any(source.lower() in item.lower() for item in named):
+                            reasons.append("gh api")
+                    elif subcommand in _GH_REPO_COMMANDS:
+                        network_access = True
+                        other = _repo_flag(rest)
+                        if other is None or other.lower() == source.lower():
+                            reasons.append(f"gh {subcommand}")
+                elif executable in {"curl", "http", "wget"}:
+                    network_access = True
+                if network_access and any(source_url.search(item) for item in words):
+                    reasons.append(f"URL under {source}")
+    reasons.extend(f"names {marker}" for marker in markers if any(marker in word for word in shell_words))
     return reasons
 
 
@@ -417,7 +568,9 @@ def answer_key_contact(artifact: dict[str, Any], root: Path) -> list[str]:
         raise ValueError(f"{artifact.get('task_id')}: no source repository in description {description!r}")
     source = match.group(1)
     source_url = re.compile(
-        r"(?:github\.com[/:]|githubusercontent\.com/(?:raw/)?|api\.github\.com/repos/)" + re.escape(source) + r"(?![\w.-])",
+        r"(?:github\.com[/:]|githubusercontent\.com/(?:raw/)?|api\.github\.com/repos/)"
+        + re.escape(source)
+        + r"(?![\w.-])",
         re.IGNORECASE,
     )
     markers = (*_ANSWER_KEY_MARKERS, str(root))
@@ -426,15 +579,17 @@ def answer_key_contact(artifact: dict[str, Any], root: Path) -> list[str]:
     for iteration in artifact.get("iterations") or []:
         for command in iteration.get("commands") or []:
             tool = command.get("tool_name", "?")
-            parameters = json.dumps(command.get("parameters") or {})
+            command_parameters = command.get("parameters") or {}
+            parameters = json.dumps(command_parameters)
             result = command.get("result_summary") or ""
-            reasons = [f"names {m}" for m in markers if m in parameters]
-            reasons += [f"printed {m}" for m in markers if m in result and m not in parameters]
-            if source_url.search(parameters):
-                reasons.append(f"URL under {source}")
-            shell = (command.get("parameters") or {}).get("command")
+            shell = command_parameters.get("command")
             if tool == "Bash" and isinstance(shell, str):
-                reasons += _command_contacts(shell, source)
+                reasons = _command_contacts(shell, source, markers)
+            else:
+                reasons = [f"names {marker}" for marker in markers if marker in parameters]
+                if source_url.search(parameters):
+                    reasons.append(f"URL under {source}")
+            reasons += [f"printed {marker}" for marker in markers if marker in result and marker not in parameters]
             if reasons:
                 evidence.append(f"{tool}: {', '.join(dict.fromkeys(reasons))}: {parameters[:160]}")
     return evidence
