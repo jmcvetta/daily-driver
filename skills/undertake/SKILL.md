@@ -348,10 +348,10 @@ contains no repository changes, and no pull request exists. Otherwise use the
 normal PR route for the existing changes. Keep repository content read-only.
 Push the claimed remote branch with the exact non-force refspec from
 `task-worktree`'s active harness route before research, so another session can
-resume from the issue record; do not create an empty commit. On the
-Claude-specific separate-identity route, the refspec maps the local execution
-branch to the designated remote push branch. Otherwise both names are the
-same. If the push fails, leave the issue open and report the failure.
+resume from the issue record; do not create an empty commit. Where the route
+assigns separate identities, the refspec maps the local execution branch to
+the designated remote push branch. Otherwise both names are the same.
+If the push fails, leave the issue open and report the failure.
 
 Gather the evidence and prepare the agreed answer. If follow-on issue
 specifications are required, create those through `issue` or `epic` under
