@@ -155,6 +155,23 @@ make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
+Make eval commands use `uv tool run --isolated`, the pinned harness, and
+editable adapters from this checkout. A shared `coder-eval` installation can
+retain an older adapter, including one from another worktree. Direct CLI
+commands must select the same isolated adapters instead of trusting that
+installation. For example, this selected plan makes no inference calls:
+
+```sh
+(
+  cd evals
+  TELEMETRY_ENABLED=false uv tool run --isolated --python 3.13 \
+    --from coder-eval==0.11.6 \
+    --with-editable ./coder-eval-omp --with-editable ./coder-eval-codex \
+    coder-eval plan -e experiments/classes-gemini-3.1-pro.yaml \
+      tasks/model-classes/career-370.yaml
+)
+```
+
 The repository-local automatic-report workflow has three Omp-only behavioral
 fixtures. They use a fake `gh` that records issue reads and writes; no live
 GitHub issue is read or changed. Case 03 states in its prompt that the
@@ -292,12 +309,12 @@ concurrent partial runs. Keep every run separate; concurrency does not reduce
 the total token use of the same work.
 
 ```sh
-make evals-run-classes MODEL=gemini-3.8-flash JOBS=1 REPEATS=1 \
-  TASKS='tasks/model-classes/career-462.yaml'
 make evals-run-classes MODEL=gemini-3.1-pro JOBS=1 REPEATS=1 \
-  TASKS='tasks/model-classes/career-462.yaml'
-make evals-run-classes MODEL=gpt-6.1-sol JOBS=4 REPEATS=2 \
-  TASKS='tasks/model-classes/career-462.yaml tasks/model-classes/career-475.yaml'
+  TASKS='tasks/model-classes/career-370.yaml'
+omp usage invalidate --provider google-antigravity
+omp usage --provider google-antigravity --json --redact --no-extensions
+make evals-run-classes MODEL=gpt-6.1-sol JOBS=1 REPEATS=1 \
+  TASKS='tasks/model-classes/career-370.yaml'
 ```
 
 Review the transcripts for actual read/edit/command use and executable grader

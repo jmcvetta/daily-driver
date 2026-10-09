@@ -39,7 +39,11 @@ CODER_EVAL_VERSION := 0.11.6
 # CREDENTIALS: Claude arms and judges inherit this shell's subscription auth.
 # Never run an Anthropic model through the API or the Vercel AI Gateway, and
 # set no ANTHROPIC_* variable. See "Credentials" in evals/README.md.
-CODER_EVAL := TELEMETRY_ENABLED=false coder-eval
+# Resolve adapters from this checkout, not another worktree's shared tool install.
+CODER_EVAL := TELEMETRY_ENABLED=false uv tool run --isolated --python 3.13 \
+	--from coder-eval==$(CODER_EVAL_VERSION) \
+	--with-editable "$(CURDIR)/evals/coder-eval-omp" \
+	--with-editable "$(CURDIR)/evals/coder-eval-codex" coder-eval
 
 # The Omp arms' environment, for every target. Omp reads the Vercel AI Gateway
 # key from AI_GATEWAY_API_KEY; a Claude Code cloud container exports it as
