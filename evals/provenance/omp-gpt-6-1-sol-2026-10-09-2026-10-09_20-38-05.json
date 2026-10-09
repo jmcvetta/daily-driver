@@ -1,0 +1,155 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles a completed answer-only research issue",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The research completion route avoids an empty pull request",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The research completion route avoids an empty pull request",
+            "duration_seconds": 10.29,
+            "findings": [
+              "Names #91 as the destination for the complete answer, evidence, sources, and provenance.",
+              "Conditions closure as completed on successful answer recording and satisfaction of the research completion test.",
+              "Keeps the repository read-only and prohibits branch creation or publication and opening a PR.",
+              "Skips draft, review-cycle, push, ready-for-review, and maintenance-watch steps.",
+              "States no follow-on issues are required and that posting and closure remain pending."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "cf836e459e927196628b515e127e6d1d3550113d39fdf7f17d479b07c13f2207",
+            "rationale": "The final [RESULT - SUCCESS] explicitly selects issue-only research completion for #91, requires the complete evidence-based answer with provenance on the issue, and conditions completed closure on recording that answer and meeting the research completion test. It clearly excludes repository changes and all PR steps, notes no follow-on issue is required, and claims no external writes occurred.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1238,
+              "output": 172
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7d4b006a8a842af22526a8fc9857ccc5f714424575358775b999a671422bfaaa"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-19-answer-only-research-skips-pr",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 30.567378520965576,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-19-answer-only-research-skips-pr",
+      "tokens": 91881,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.6",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-09T20:38:36.492664",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "7d4b006a8a842af22526a8fc9857ccc5f714424575358775b999a671422bfaaa",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "medium",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 1238,
+      "output": 172
+    }
+  },
+  "plugin_revision": {
+    "commit": "f1966a65cba4d049422ff0d96b149e13025c8950",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-09T13:38:48.126107+00:00",
+  "run_id": "2026-10-09_20-38-05",
+  "schema_version": 3,
+  "started_at": "2026-10-09T20:38:05.920563",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-19-answer-only-research-skips-pr": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-19-answer-only-research-skips-pr"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

@@ -50,12 +50,15 @@ evidence; use a safe, bounded reproduction only when needed. Do not repeat an
 already-established failure or require a complete root-cause investigation.
 
 Use the title `[auto-filed] <short defect description>` and the existing `bug`
-label. Keep the body short: name the affected component, expected and observed
-behavior, and the minimal available reproduction or error evidence that
-establishes Daily Driver ownership. Include relevant version and context when
-available, redact secrets and private project data, and end with
-`provenance`'s block. Do not add task sections, a model class, a task template,
-a haiku, an implementation map, an acceptance plan, or a proposed fix.
+label. When preparing an unposted draft, state `bug` as separate issue-kind
+metadata; never put the label in the body. Keep the report brief, but include
+the bug contract's available core information: affected component, expected and
+observed behavior, minimal failure evidence, relevant version/context and
+impact when known. State material unknowns rather than filling them in. Redact
+secrets and private project data, and end with `provenance`'s block. This route
+establishes Daily Driver ownership; it does not acquire task sections, model
+class metadata, a task template, a haiku, an implementation map, an acceptance
+plan, or a proposed fix.
 
 If attribution remains uncertain, investigate only as needed to resolve it;
 do not file an asserted bug based on suspicion. Target-repository defects
