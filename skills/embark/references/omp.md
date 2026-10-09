@@ -12,9 +12,18 @@ Omp's surfaces. The absence of a session-opening client means the agent-driven
 wave needs an owner turn; it does not mean supervised processes cannot survive
 a client exit. The fallback exists for session work, not process supervision.
 
-Reading the epic is ordinary issue work and needs nothing this file adds:
-`epic`'s own [`omp.md`](../../epic/references/omp.md) has the issue reads, and
-`issue-deps` has the graph.
+For an explicit Omp embark command, the initial identity read must be the
+canonical single-issue `issue://` read. If the command supplied a GitHub URL,
+preserve its repository in that `issue://` reference.
+Read-only discovery and prerequisites may come first, but cannot certify this
+step. The result supplies the canonical title, number, URL and labels. If its
+metadata confirms the requested issue is an epic, set the orchestrator title
+in the [`session-title` epic form](../../session-title/SKILL.md) before graph
+traversal or any unrelated tool call. The extension denies dispatch and writes
+before the identity read, then denies unrelated calls after the metadata
+result; it cannot cancel calls already running in a batch. A free-form request
+that invokes `embark` without an explicit command does not activate this
+earlier barrier.
 
 
 The wave
@@ -22,6 +31,7 @@ The wave
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
+| `Read the epic` | Read its identity before the graph | `read issue://<number>`; preserve an explicitly supplied repository-qualified issue reference |
 | `Take the wave` | Read each eligible child's body and claim | `issue://<number>`, comments included |
 | `Open the sessions` | Dispatch one implementor per eligible child, concurrently | `task`, one item per child issue in a single batch |
 | `Open the sessions` | Name the implementor | the item's `name`, in `session-title`'s form |

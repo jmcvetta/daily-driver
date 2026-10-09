@@ -1361,7 +1361,12 @@ agent runs on the same host as the grader, so the suite closes each road to it:
 Hiding is not locking, so `scripts/evals-record.py` also checks every
 replicate's tool calls, and what they printed, for the answer key's paths, any
 `git` network command, a `gh` command or URL on the source repository, and a
-pull ref. A replicate that reached any of them is recorded with that evidence
+pull ref. Bash calls are parsed as shell syntax: command positions and
+executable substitutions count. Quoted arguments and here-document bodies
+are data; substitutions in unquoted here-documents still run and count. The
+recorder treats Bash syntax it cannot parse as contact rather than silently
+accepting it.
+A replicate that reached any of these is recorded with that evidence
 under `answer_key_contact` and a measured score of 0. It is scored as a
 failure, not dropped: a model that goes looking when stuck has failed the
 case.

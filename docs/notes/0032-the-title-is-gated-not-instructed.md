@@ -35,6 +35,24 @@ and its first dispatch of an implementor.
   recorded a `daily_driver_set_session_title` call, or where
   `ctx.sessionManager.getSessionName()` already reads in a form.
 
+**Omp's explicit embark startup barrier is earlier and narrower.** For a
+top-level `embark <issue>`, `/embark <issue>`, or registered
+`/skill:embark <issue>`, only a successful canonical single-issue `issue://`
+read satisfies the identity step. Read-only preparation may precede it, but
+does not satisfy it; dispatch and writes stay blocked while identity is
+awaiting. When that result confirms the requested epic, the next unrelated
+tool call is denied until this session carries `⛵ EPIC #<number> <title>`.
+The target metadata comes from the rendered response header, and state follows
+the active session branch. The barrier does not classify free-form requests,
+issue text or skill examples, and does not change the ordinary
+comment/dispatch gate above.
+
+The 2026-10-08 report behind #582 records an automatic Omp title, a later
+successful epic read, further instruction reads, and a user correction. It
+does not show whether dispatch or a comment would have happened without that
+correction. The barrier addresses the observed delay; it does not claim a
+demonstrated #573 bypass.
+
 **The denial reason is the instruction.** It says the tool is shut and a retry is
 denied the same way, names the calls that set the title, quotes both forms and
 names `session-title` as the owner of the budget and the shortening, and says the
