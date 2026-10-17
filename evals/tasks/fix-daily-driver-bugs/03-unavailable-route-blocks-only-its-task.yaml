@@ -15,6 +15,11 @@ sandbox:
       mount_point: .fixture
     - type: starter_files
       files:
+        - path: overlay.yml
+          content: |
+            task:
+              agentModelOverrides:
+                reasoning: no-such-provider/no-such-model
         - path: fixture-state.json
           content: |
             {
@@ -133,6 +138,8 @@ sandbox:
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash, Task]
   disallowed_tools: [WebFetch, WebSearch]
+  type: omp
+  extra_args: [--config, overlay.yml]
 
 run_limits:
   max_turns: 24
@@ -145,8 +152,9 @@ initial_prompt: >-
   from automatic reports, with no blockers, claims or linked pull requests. Use
   the supplied fake gh only; do not use a GitHub MCP, browser, or live client.
   In this run the `implementation` agent has an effective route, and the
-  `reasoning` agent has none: its `@reasoning` role is unassigned, with no
-  override and no fallback. Run `python3 .fixture/verify_state.py`, dispatch
+  `reasoning` agent's model override names a selector with no configured
+  provider, so it has no effective route. Run
+  `python3 .fixture/verify_state.py`, dispatch
   what is eligible, and report what was not. Do not let workers access a live
   tracker.
 
