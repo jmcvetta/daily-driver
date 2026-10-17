@@ -11,6 +11,7 @@ the `claude` binary, so there is no version to hold back.
 evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
+│   ├── with-without-haiku-5.5.yaml the same ablation, pinned to Claude Haiku 5.5
 │   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
 │   ├── omp-*.yaml                  Omp model experiments; paired ablations or focused acceptance runs
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
@@ -162,6 +163,7 @@ make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
+make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Real money.
 ```
 
 Make eval commands use `uv tool run --isolated`, the pinned harness, and
