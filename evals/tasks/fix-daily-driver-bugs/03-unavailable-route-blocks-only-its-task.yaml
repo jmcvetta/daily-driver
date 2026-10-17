@@ -131,6 +131,8 @@ sandbox:
   mock_path_dirs: [.fixture]
 
 agent:
+  type: omp
+  settle_on_async_handoff: true
   allowed_tools: [Read, Grep, Glob, Skill, Bash, Task]
   disallowed_tools: [WebFetch, WebSearch]
 

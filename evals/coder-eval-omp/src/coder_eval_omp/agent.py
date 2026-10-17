@@ -182,6 +182,17 @@ class OmpAgentConfig(BaseAgentConfig):
     captured protocol, so it fails instead of reporting zero tokens.
     """
 
+    settle_on_async_handoff: bool = False
+    """Settle the turn when Omp hands it to background workers, and cancel them.
+
+    Omp ends the orchestrator's reply with a non-terminal `agent_end` carrying
+    `awaitingAsyncWork: true` when only a background-job result can resume the
+    session. Off, the turn keeps waiting for a terminal end, which a row that
+    depends on a dispatched subagent's result needs. On, that frame settles the
+    turn as COMPLETED after `cancel_subagent` stops every running subagent, so a
+    row that grades only the orchestrator is not left to hit `turn_timeout`.
+    """
+
     extra_args: list[str] = []
     """Arguments appended to the `omp --mode rpc` command line, verbatim.
 
@@ -230,6 +241,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._linked_plugins: list[str] = []
         self._extension_errors: list[str] = []
         self._argument_keys_seen: set[str] = set()
+        self._cancelled_subagents: list[str] = []
         self._usage_keys_seen: set[str] = set()
         self._tools = ToolSelection(tools=(), read_for_skill=False, webfetch_via_read=False)
         self._state = AgentState.WORKING
@@ -369,6 +381,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
             "omp_argument_keys_seen": sorted(self._argument_keys_seen),
             "omp_usage_keys_seen": sorted(self._usage_keys_seen),
         }
+        if self._cancelled_subagents:
+            evidence["omp_cancelled_subagents"] = list(self._cancelled_subagents)
         destination = Path(self.working_directory) / PROTOCOL_EVIDENCE_FILENAME
         temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
         try:
@@ -407,6 +421,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         finalized = [False]
         max_turns_exhausted = False
         stopped_early = False
+        async_handoff = False
 
         def emit(event: StreamEvent) -> None:
             collector.on_event(event)
@@ -483,7 +498,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 lands after a stop is recorded exactly as one that lands before
                 it. Returns True only for a terminal `AgentFinished`.
                 """
-                nonlocal sequence, current_turn_id
+                nonlocal sequence, current_turn_id, async_handoff
                 if isinstance(action, Text):
                     emit(
                         TextChunkEvent(
@@ -540,6 +555,16 @@ class OmpAgent(Agent[OmpAgentConfig]):
                         f"{action.extension_path} on {action.event}: {action.error}"
                     )
                     logger.error("omp: extension error: %s", self._extension_errors[-1])
+                elif (
+                    isinstance(action, AgentFinished)
+                    and not action.terminal
+                    and action.awaiting_async_work
+                    and self.config.settle_on_async_handoff
+                ):
+                    # Opted in: the orchestrator's reply is over and only
+                    # background workers remain, so the turn settles here.
+                    async_handoff = True
+                    return True
                 elif isinstance(action, AgentFinished) and action.terminal:
                     # `isTerminal: false` means maintenance has scheduled
                     # more work and the session will resume, so only a
@@ -587,6 +612,9 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     await self._abort_and_settle(reducer, dispatch)
                     break
 
+            if async_handoff:
+                self._cancelled_subagents.extend(await self._cancel_background_subagents())
+
             self._argument_keys_seen.update(reducer.argument_keys_seen)
             self._usage_keys_seen.update(reducer.usage_keys_seen)
             self._write_protocol_evidence()
@@ -632,6 +660,33 @@ class OmpAgent(Agent[OmpAgentConfig]):
         except Exception as error:
             self._crash(finalize, collector, f"Omp turn failed: {error!s}", cause=error)
             raise  # unreachable: _crash is NoReturn. Kept so the flow is explicit.
+
+    async def _cancel_background_subagents(self) -> list[str]:
+        """Cancel every running background subagent; return the ids cancelled.
+
+        A failure is logged, not raised: the orchestrator's turn is already
+        complete and graded on its own output.
+        """
+        cancelled: list[str] = []
+        try:
+            data = await self._request("get_subagents")
+        except Exception as error:
+            logger.warning("omp: get_subagents failed: %s", error)
+            return cancelled
+        for subagent in data.get("subagents") or []:
+            if not isinstance(subagent, dict):
+                continue
+            subagent_id = subagent.get("id") or subagent.get("subagentId")
+            if not subagent_id or subagent.get("status", "running") != "running":
+                continue
+            try:
+                result = await self._request("cancel_subagent", subagentId=subagent_id)
+            except Exception as error:
+                logger.warning("omp: cancel_subagent %s failed: %s", subagent_id, error)
+                continue
+            if result.get("cancelled") is not False:
+                cancelled.append(str(subagent_id))
+        return cancelled
 
     # --- startup -----------------------------------------------------------
 
