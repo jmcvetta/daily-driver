@@ -15,7 +15,7 @@ SHELL := /bin/bash
 	check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
 	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
-	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
+	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry check-undertake-readiness \
 	evals-install evals-setup-omp evals-plan \
 	evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
@@ -128,7 +128,7 @@ check-git-sync:
 
 check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
-	check-evals-results check-model-telemetry check-evals-setup-omp
+	check-evals-results check-model-telemetry check-evals-setup-omp check-undertake-readiness
 
 
 check-issue-infra: check-labels check-labels-fixtures
@@ -360,6 +360,14 @@ check-agent-judges:
 # against a fake `omp`. No model, no credentials, no network.
 check-evals-judge:
 	uv run --frozen python3 scripts/check-evals-judge.py
+
+# check-undertake-readiness: the offline acceptance test for the fixtures behind
+# `evals/tasks/undertake` rows 08, 10 and 13 -- a stateful fake `gh`, a local
+# git repository and a harmless service stub. It asserts the verifier accepts
+# the valid ready/notice/report/service transitions and rejects the wrong ones.
+# No model, no credentials, no network. See the script's docstring.
+check-undertake-readiness:
+	python3 scripts/check-undertake-readiness.py
 
 # check-eval-fixtures: build every review-depth fixture repository and assert
 # it has the shape the `review` skill needs. Part of `check` because it needs

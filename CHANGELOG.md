@@ -20,6 +20,7 @@
 ### Bug Fixes
 
 * **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575))
+* **evals:** measure undertake readiness rows 08, 10 and 13 from offline action evidence ([#609](https://github.com/jmcvetta/daily-driver/issues/609))
 * **evals:** accept truthful mock-only disclosure in `undertake` row 17 and score row 14's resume explanation 1.0 / 0.5 / 0.0 ([#610](https://github.com/jmcvetta/daily-driver/issues/610))
 
 ## [0.50.0](https://github.com/jmcvetta/daily-driver/compare/v0.49.3...v0.50.0) (2026-10-08)
