@@ -258,7 +258,7 @@ def emit(frame):
 if sys.argv[1:2] == ["plugin"]:
     sys.exit(0)
 emit({"type": "ready"})
-refuse = "REFUSE" in sys.argv[0]
+refuse = open(sys.argv[0] + ".mode").read() == "refuse"
 while True:
     line = sys.stdin.readline()
     if not line:
@@ -295,6 +295,7 @@ async def run_provider_error_scenario() -> None:
         fake.write_text(FAKE_OMP_REFUSED)
         fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
         Path(str(fake) + ".refused.json").write_text(refused.read_text())
+        Path(str(fake) + ".mode").write_text("refuse" if refuse else "plain")
         agent = OmpAgent(OmpAgentConfig(type="omp", binary=str(fake)), task_id="refused-check")
         await agent.start(str(workdir))
         try:

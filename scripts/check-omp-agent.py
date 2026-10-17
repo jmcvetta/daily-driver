@@ -237,6 +237,16 @@ def check_provider_error() -> None:
     feed(reducer, CAPTURED_AGENT_END_FRAME)
     check(reducer.error_message is None, "a normal completed turn must carry no error")
 
+    ok = CAPTURED_AGENT_END_FRAME["messages"][1]
+    reducer = TurnReducer()
+    feed(reducer, {"type": "message_end", "message": refused["messages"][1]},
+         {"type": "message_end", "message": ok})
+    check(reducer.error_message is None, "an error superseded by a later successful message is cleared")
+
+    reducer = TurnReducer()
+    feed(reducer, {"type": "message_end", "message": dict(refused["messages"][1], stopReason="aborted")})
+    check(reducer.error_message is None, "an aborted message is not a provider error")
+
 
 def check_usage() -> None:
     """Captured Omp usage is complete, strict, and counted once per response."""

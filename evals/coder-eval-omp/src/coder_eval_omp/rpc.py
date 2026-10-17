@@ -605,14 +605,24 @@ class TurnReducer:
         (`fixtures/agent_end_provider_error.json`). The turn still ends with a
         terminal `agent_end`, so without this a refusal such as a 402 reads as
         a completed empty turn.
+
+        An abort is the harness's own doing, not the provider's, so it records
+        nothing. A later assistant message that completed without an error
+        clears what was held: Omp retries a failed call, and a turn whose retry
+        succeeded is a completed turn.
         """
-        if message.get("role") != "assistant" or self.error_message is not None:
+        if message.get("role") != "assistant":
+            return
+        stop_reason = message.get("stopReason")
+        if stop_reason == "aborted":
             return
         text = message.get("errorMessage")
-        if isinstance(text, str) and text.strip():
-            self.error_message = text.strip()
-        elif message.get("stopReason") == "error":
-            self.error_message = "omp reported stopReason error with no errorMessage"
+        has_text = isinstance(text, str) and bool(text.strip())
+        if has_text or stop_reason == "error":
+            if self.error_message is None:
+                self.error_message = text.strip() if has_text else "omp reported stopReason error with no errorMessage"
+        else:
+            self.error_message = None
 
     def _resync_texts(self) -> None:
         self.assistant_texts = ["".join(parts) for parts in self._message_texts.values()]
