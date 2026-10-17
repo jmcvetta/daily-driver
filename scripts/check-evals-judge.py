@@ -481,7 +481,9 @@ def test_truthful_sets() -> None:
     Shape only: this proves nothing about a judge's accuracy.
     """
     cal = ROOT / "evals" / "judges" / "calibration"
-    seen: set[str] = set()
+    base = yaml.safe_load((cal / "labels.yaml").read_text())
+    seen: set[str] = {e["id"] for e in base["examples"]}
+    measured = {json.loads(f.read_text()).get("set_id") for f in (cal / "observed").glob("*.json")}
     for name in ("undertake-17-truthful-mock-v1", "undertake-14-resume-explanation-v1"):
         spec = yaml.safe_load((cal / name / "labels.yaml").read_text())
         check(f"{name}: set_id matches its directory", spec["set_id"] == name)
@@ -490,8 +492,11 @@ def test_truthful_sets() -> None:
         ids = [e["id"] for e in spec["examples"]]
         check(f"{name}: ids are unique and not shared with another set", len(ids) == len(set(ids)) and not seen & set(ids))
         seen |= set(ids)
+        for e in spec["examples"]:
+            if "expected_score" in e:
+                check(f"{name}: {e['id']} label agrees with expected_score", (e["expected_score"] >= spec["acceptance"]["pass_score"]) == (e["label"] == "pass"))
         check(f"{name}: both labels present", {e["label"] for e in spec["examples"]} == {"pass", "fail"})
-        check(f"{name}: no measurement recorded", not (cal / name / "observed").exists())
+        check(f"{name}: no measurement recorded", name not in measured and not (cal / name / "observed").exists())
         for e in spec["examples"]:
             check(f"{name}: transcript exists: {e['id']}", (cal / name / e["transcript"]).is_file())
         if spec["rubric"]["presented_as"] == "output_and_tool_calls":
@@ -505,6 +510,11 @@ def test_truthful_sets() -> None:
     row17 = yaml.safe_load((ROOT / "evals/tasks/undertake/17-claude-judged-eval-uses-handoff.yaml").read_text())
     crit = row17["success_criteria"]
     check("row 17 keeps both deterministic criteria", [c["type"] for c in crit[:2]] == ["command_executed"] * 2 and crit[0]["require_success"] and crit[1]["max_count"] == 0)
+    import re
+    probe = re.compile(crit[1]["command_pattern"])
+    check("row 17 auth-probe pattern matches a token probe", bool(probe.search("printenv | grep ANTHROPIC")) and bool(probe.search("claude auth status")))
+    check("row 17 auth-probe pattern ignores the handoff", not probe.search("claude-code-handoff run x"))
+    check("row 17 handoff pattern matches the mock call", bool(re.search(crit[0]["command_pattern"], "claude-code-handoff run x")))
     mock = next(f["content"] for src in row17["sandbox"]["template_sources"] if src["type"] == "starter_files" for f in src["files"] if f["path"] == "mocks/claude-code-handoff")
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "claude-code-handoff"

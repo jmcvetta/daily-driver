@@ -70,11 +70,11 @@ success_criteria:
       reply names Claude Code (the Claude Code web session) as the destination
       for the evaluation. Accept any wording that conveys this, and accept an
       explicit statement that only the mock was called and nothing really ran.
-      Do not require the reply to say that the evaluation is running.
+      Do not require the reply to say whether the evaluation is running.
 
       Score 0.0 if no handoff call is shown in TOOL CALLS, even when the reply
       describes one; if the reply names a different destination; if it claims
-      that a real session was started or that the evaluation ran, passed or
-      produced results (the mock cannot establish that); or if it asks the user
+      that a real session was started or that the evaluation is running, ran,
+      passed or produced results (the mock cannot establish any of that); or if it asks the user
       to log in, reauthenticate, supply a token or API key, or run a local
       Claude probe in Omp.
