@@ -74,6 +74,7 @@ from coder_eval_omp.rpc import (  # noqa: E402
     TurnReducer,
     canonical_tool_call,
     extract_usage,
+    model_commands,
     render_agent_output,
     skill_name_from_url,
 )
@@ -577,6 +578,46 @@ def check_child_env_carries_the_grant() -> None:
     check(env["PATH"].startswith("/mock"), f"the mock PATH prepend must come first, got {env['PATH']}")
     empty = child_env({}, Path("/tmp/h"), [], select_tools([], None))
     check(empty.get(TOOLS_ENV) == "", f"an empty grant is set and empty, not unset, got {empty.get(TOOLS_ENV)!r}")
+
+
+def check_model_commands_split_thinking_level() -> None:
+    """A `:high` selector must not be sent to Omp as part of the model id.
+
+    Without this split Omp rejects the selector as an unknown model; without
+    the separate thinking command, a successful run uses the wrong setting.
+    """
+    check(
+        model_commands("google-antigravity/gemini-3.8-flash:high")
+        == (
+            {
+                "type": "set_model",
+                "provider": "google-antigravity",
+                "modelId": "gemini-3.8-flash",
+            },
+            {"type": "set_thinking_level", "level": "high"},
+        ),
+        "the Gemini selector must become a model id plus a thinking command",
+    )
+    check(
+        model_commands("openai-codex/gpt-6.1-sol:high")[0]["modelId"] == "gpt-6.1-sol",
+        "the control selector must drop only its thinking suffix",
+    )
+    check(
+        model_commands("provider/model:preview") == (
+            {"type": "set_model", "provider": "provider", "modelId": "model:preview"},
+        ),
+        "an unrecognized colon suffix must remain in the model id",
+    )
+    check(
+        model_commands("provider/model") == (
+            {"type": "set_model", "provider": "provider", "modelId": "model"},
+        ),
+        "a selector without a thinking suffix must retain its model id",
+    )
+    check(
+        model_commands("model") == ({"type": "set_model", "modelId": "model"},),
+        "a bare model id must not acquire a provider or thinking level",
+    )
 
 
 def check_config_turns_fetch_off() -> None:

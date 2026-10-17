@@ -1,0 +1,141 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply routes by active Omp runtime, not the model name",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply routes by active Omp runtime, not the model name",
+            "duration_seconds": 11.78,
+            "findings": [
+              "Identifies Oh My Pi (Omp) without uncertainty.",
+              "States that openai-codex/gpt-6 identifies the model, not the harness.",
+              "Does not select Codex routes.",
+              "Does not explicitly name skills/provenance/references/omp.md or skills/pr/references/omp.md."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ed8ecd384cf95a0c8c9c4980c2fb6c7901a8ad37268be639ce0259f354811265",
+            "rationale": "The reply clearly identifies Omp as the active harness and distinguishes the model identifier from the harness, but it supplies skill:// URIs instead of naming the two required skills/... paths.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 793,
+              "output": 170
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "74b8f4aac67f14e02d46a6996e6f28e3895ac3b261c72c82b648cd9cf4c5828c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-active-harness-is-not-model-omp",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 37.7040536403656,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "constitution-active-harness-is-not-model-omp",
+      "tokens": 14219,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-09T19:53:32.428406",
+  "experiment_id": "omp-gpt-6-1-sol-workflow",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "74b8f4aac67f14e02d46a6996e6f28e3895ac3b261c72c82b648cd9cf4c5828c",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "medium",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 793,
+      "output": 170
+    }
+  },
+  "plugin_revision": {
+    "commit": "73b2e7b7019a0fbf29bea2d40c53025480ac1370",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-09T12:54:25.751702+00:00",
+  "run_id": "2026-10-09_19-52-54",
+  "schema_version": 3,
+  "started_at": "2026-10-09T19:52:54.719468",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-active-harness-is-not-model-omp": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "constitution-active-harness-is-not-model-omp"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

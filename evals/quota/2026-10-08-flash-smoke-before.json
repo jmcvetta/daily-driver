@@ -1,0 +1,24 @@
+{
+  "batch": "flash-smoke-before",
+  "run_id": "2026-10-08_18-49-13",
+  "command": "omp usage --provider google-antigravity --json --redact --no-extensions",
+  "generatedAt": 1791460062129,
+  "fetchedAt": 1791459889153,
+  "provider": "google-antigravity",
+  "limit_id": "google-antigravity:google:default:gemini-weekly",
+  "window": {
+    "id": "weekly",
+    "durationMs": 604800000,
+    "resetsAt": 1791626580000
+  },
+  "amount": {
+    "unit": "percent",
+    "remainingFraction": 0.9996456,
+    "usedFraction": 0.00035439999999997696,
+    "remaining": 99.96456,
+    "used": 0.035439999999997696,
+    "limit": 100
+  },
+  "status": "ok",
+  "note": "Gemini-window excerpt of the captured redacted CLI output. The fetchedAt value shows this pre-smoke report was cached."
+}

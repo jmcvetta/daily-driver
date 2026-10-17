@@ -1,0 +1,19 @@
+# Model-class capability on Gemini 3.8 Flash through Google Antigravity.
+# The Omp adapter pins every chat role, including helper and task roles, to this subject.
+experiment_id: classes-gemini-3-8-flash
+description: >-
+  Model-class capability on real merged-pull-request cases, google-antigravity/gemini-3.8-flash:high in the `task` role.
+defaults:
+  repeats: 3
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: google-antigravity/gemini-3.8-flash:high
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+variants:
+  - variant_id: default
+    description: This model against the model-classes suite.

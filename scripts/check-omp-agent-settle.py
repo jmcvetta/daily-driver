@@ -28,12 +28,12 @@ THE INVARIANT
 
 THE ROLES PIN
 
-    An arm's `model` must reach the throwaway home's `config.yml` as Omp's
-    `modelRoles`, every chat role pinned to it, beside the launch settings,
-    and an arm without a model must get no `modelRoles` at all. Unpinned,
-    Omp's helper roles and subagents run on whatever the provider catalog
-    offers, a model the arm does not measure. Found while preparing the first
-    GPT 6 Luna run (#483).
+    An arm's `model` must reach every Omp chat role in `config.yml` as
+    `modelRoles`; its recognized `:level` suffix must also become a separate
+    `set_thinking_level` RPC command. An arm without a model gets no
+    `modelRoles` at all. Unpinned, Omp's helper roles and subagents run on
+    whatever the provider catalog offers, a model the arm does not measure.
+    Found while preparing the first GPT 6 Luna run (#483).
 
 NEEDS
 
@@ -83,6 +83,8 @@ while True:
     if not line:
         break
     command = json.loads(line)
+    with open(sys.argv[0] + ".commands", "a", encoding="utf-8") as log:
+        log.write(json.dumps(command) + "\\n")
     kind = command.get("type")
     if kind == "get_available_commands":
         emit({"id": command["id"], "type": "response", "success": True,
@@ -90,7 +92,7 @@ while True:
     elif kind == "get_state":
         emit({"id": command["id"], "type": "response", "success": True,
               "data": {"sessionId": "fake-settle-session"}})
-    elif kind == "set_model":
+    elif kind in ("set_model", "set_thinking_level"):
         emit({"id": command["id"], "type": "response", "success": True, "data": {}})
     elif kind == "prompt":
         emit({"id": command["id"], "type": "response", "command": "prompt", "success": True})
@@ -149,6 +151,7 @@ async def run_scenario() -> None:
 
     config = OmpAgentConfig(
         type="omp",
+        model="google-antigravity/gemini-3.8-flash:high",
         binary=str(fake),
         plugins=[{"type": "local", "path": str(ROOT)}],
     )
@@ -171,6 +174,24 @@ async def run_scenario() -> None:
         )
     finally:
         await agent.stop()
+
+    wire_commands = [
+        {key: value for key, value in command.items() if key != "id"}
+        for command in (json.loads(line) for line in Path(str(fake) + ".commands").read_text().splitlines())
+        if command.get("type") in ("set_model", "set_thinking_level")
+    ]
+    check(
+        wire_commands
+        == [
+            {
+                "type": "set_model",
+                "provider": "google-antigravity",
+                "modelId": "gemini-3.8-flash",
+            },
+            {"type": "set_thinking_level", "level": "high"},
+        ],
+        f"the task selector must reach RPC as model and thinking commands, got {wire_commands}",
+    )
 
     check(
         json.loads((workdir / PROTOCOL_EVIDENCE_FILENAME).read_text())
@@ -226,7 +247,7 @@ def check_roles_pin() -> None:
 
     from coder_eval_omp.agent import OMP_CHAT_ROLES, OmpAgent, OmpAgentConfig
 
-    model = "vercel-ai-gateway/openai/gpt-6-luna"
+    model = "google-antigravity/gemini-3.8-flash:high"
     check("memory" in OMP_CHAT_ROLES and "task" in OMP_CHAT_ROLES, f"chat roles incomplete: {OMP_CHAT_ROLES}")
     for given, expected in ((model, {role: model for role in OMP_CHAT_ROLES}), (None, None)):
         home = Path(tempfile.mkdtemp(prefix="omp-roles-check-"))

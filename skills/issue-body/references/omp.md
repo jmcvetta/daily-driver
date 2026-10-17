@@ -81,6 +81,8 @@ approval policy do not imply benchmark support.
 | cocktail | classes-cocktail | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | cocktail.gpts-choice | classes-cocktail-gpts-choice | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | glm | classes-glm | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
+| google-antigravity/gemini-3.1-pro:high | classes-gemini-3-1-pro | mechanical | 1/1 | 0/1 | unreported | 2026-10-09_21-01-52 | 2026-10-09 |
+| google-antigravity/gemini-3.8-flash:high | classes-gemini-3-8-flash | none | 0/2 | 0/2 | unreported | 2026-10-08_18-49-13 | 2026-10-08 |
 | gpt | classes-gpt | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | gpt.gateway | classes-gpt.gateway | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | kimi | classes-kimi | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
@@ -90,4 +92,5 @@ approval policy do not imply benchmark support.
 | openai-codex/gpt-6-luna | classes-smoke-luna-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-09_20-10-04 | 2026-10-09 |
 | openai-codex/gpt-6.1-sol | classes-smoke-sol-6-1 | mechanical | 1/1 | 0/1 | unreported | 2026-10-08_19-02-13 | 2026-10-08 |
 | openai-codex/gpt-6.1-sol | classes-sol-6-1 | mechanical | 9/9 | 6/8 | unreported | 2026-10-08_18-38-45 | 2026-10-08 |
+| openai-codex/gpt-6.1-sol:high | classes-gpt-6-1-sol | implementation | 1/1 | 2/2 | unreported | 2026-10-08_19-02-43 | 2026-10-08 |
 <!-- measured-routes-end -->

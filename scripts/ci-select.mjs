@@ -34,6 +34,8 @@ const workflowToolConsumers = {
   'Ensure ShellCheck': ['check-scripts'],
   'Install Worktrunk': ['check-git-sync', 'check-task-worktree-fixture', 'check-worktrunk-install'],
   'Install uv': ['check-eval-arms', 'check-agent-judges', 'check-evals-judge', 'check-evals-preflight', 'check-evals-provenance', 'check-omp-agent-settle'],
+  'Install OpenTofu': ['check-infra'],
+  'Verify provider lock': ['check-infra'],
   'Install Omp': ['check-omp-plugin', 'check-omp-eval-guard-live', 'check-omp-embark-title-live', 'check-omp-agent-settle'],
 }
 
@@ -167,7 +169,7 @@ export function changedMakeTargets(beforeText, afterText) {
     if (checkNames.includes(target)) changed.add(target)
     for (const consumer of aggregateConsumers[target] ?? []) changed.add(consumer)
     if (target.startsWith('check-') && !checkNames.includes(target) &&
-        !aggregateConsumers[target] && target !== 'check-infra') changed.add('check-ci-scope')
+        !aggregateConsumers[target]) changed.add('check-ci-scope')
     if (target.startsWith('evals-run-') || target === 'evals-plan' || target === 'evals-variants') {
       changed.add('check-eval-arms')
     }

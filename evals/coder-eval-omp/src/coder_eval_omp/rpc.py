@@ -1,10 +1,10 @@
 """The Omp RPC stream, reduced — with no `coder_eval` and no `omp` in sight.
 
-Everything in this module is pure: frames in, small dataclasses out. That is
-deliberate. The agent in `agent.py` cannot be exercised without a `coder_eval`
-install and an `omp` binary, so anything load-bearing that lives there is
-untested code. What is load-bearing is here instead, and
-`scripts/check-omp-agent.py` drives it against recorded frames in `make check`.
+Most of this module is pure: frames in, small dataclasses out. The model
+command builder is pure too. `agent.py` cannot be exercised without a
+`coder_eval` install and an `omp` binary, so load-bearing protocol behavior
+that can be tested without them lives here; `scripts/check-omp-agent.py`
+drives it against recorded frames and model selectors in `make check`.
 
 Three things it owns, and each one is a silent zero if it is wrong:
 
@@ -54,6 +54,30 @@ from typing import Any
 # The URL scheme Omp exposes a skill under. A `read` of it is the engagement
 # that `skill_triggered` must be able to see.
 SKILL_URL_PREFIX = "skill://"
+
+# THINKING_LEVELS contains the levels accepted by Omp's set_thinking_level RPC.
+THINKING_LEVELS = frozenset({"off", "minimal", "low", "medium", "high", "xhigh", "max", "auto"})
+
+
+def model_commands(model: str) -> tuple[dict[str, str], ...]:
+    """Build Omp RPC commands for a provider/model selector and optional thinking level."""
+    provider, separator, model_id = model.partition("/")
+    if not separator:
+        model_id = provider
+        provider = ""
+
+    base_model_id, separator, suffix = model_id.rpartition(":")
+    thinking_level = suffix if separator and suffix in THINKING_LEVELS else None
+    if thinking_level is not None:
+        model_id = base_model_id
+
+    set_model: dict[str, str] = {"type": "set_model", "modelId": model_id}
+    if provider:
+        set_model["provider"] = provider
+    commands = [set_model]
+    if thinking_level is not None:
+        commands.append({"type": "set_thinking_level", "level": thinking_level})
+    return tuple(commands)
 
 # Omp's tool names -> the canonical (Claude) vocabulary every criterion here is
 # written against. Provisional: read from Omp's `get_state` tool registry and

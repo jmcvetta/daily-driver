@@ -65,7 +65,7 @@ jobs:
       # workable identity for the one pull request whose merge cuts a
       # permanent tag. Until 2026-06-11 GitHub created no workflow runs at
       # all for pull requests that bot opened, so the release pull request
-      # arrived with no checks and required `CI Success` sat "expected"
+      # arrived with no checks and required `Checks` sat "expected"
       # forever. Since then the runs are created but held in
       # `action_required` until someone with write access clicks "Approve
       # workflows to run" — better, and still a human on every release.

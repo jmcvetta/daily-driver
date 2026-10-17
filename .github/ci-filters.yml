@@ -165,6 +165,8 @@ check-labels:
 check-labels-fixtures:
   - 'scripts/check-labels-fixtures.py'
   - 'scripts/check-labels.py'
+check-infra:
+  - 'infra/**'
 check-omp-plugin:
   - 'scripts/check-omp-plugin.py'
   - 'package.json'
