@@ -66,6 +66,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -803,58 +804,114 @@ def sidecar_path(run_dir: Path, judge: Judge, variant: str, task_id: str, replic
     return run_dir / "judge" / judge.judge_id / variant / task_id / f"{replicate:02d}.json"
 
 
-def judge_run(run_dir: Path, judge: Judge, task_files: list[Path], runner: Runner) -> dict[str, Any]:
-    """Grade every replicate of a preserved run with `judge` and write sidecars plus a manifest.
+def _write_json_atomic(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=path.parent, prefix=f".{path.name}.", suffix=".tmp", delete=False
+    ) as handle:
+        temporary = Path(handle.name)
+        json.dump(value, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+    try:
+        os.replace(temporary, path)
+    finally:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass
 
-    Reads `run.json` and each replicate's `task.json`; the subject is not run again.
-    """
+
+def judge_run(
+    run_dir: Path,
+    judge: Judge,
+    task_files: list[Path],
+    runner: Runner,
+    max_parallel: int = 1,
+    resume: bool = False,
+) -> dict[str, Any]:
+    """Grade missing preserved transcripts, optionally reusing frozen sidecars."""
     if judge.route != "omp":
         raise JudgeError("config", f"{judge.judge_id}: only the omp route is judged here; the claude-code route runs inside coder_eval")
+    if max_parallel < 1:
+        raise JudgeError("config", "max_parallel must be at least 1")
+
     run = json.loads((run_dir / "run.json").read_text())
-    index = task_index(task_files)
-    tasks = {tid: pair for tid, pair in index.items()}
+    tasks = task_index(task_files)
     rubrics = {tid: rubric_identity(task) for tid, (_, task) in tasks.items() if task_criteria(task)}
     frozen = freeze_sha(judge, rubrics)
-    errors = judged = skipped = 0
+    seen: set[tuple[str, str, int]] = set()
+    completed: list[dict[str, Any]] = []
+    pending: list[tuple[str, str, int, Path, dict[str, Any], dict[str, Any]]] = []
+    skipped = 0
+
     for row in run.get("task_results", []):
         task_id, variant = row["task_id"], row["variant_id"]
+        replicate = row.get("replicate_index", 0)
+        key = (task_id, variant, replicate)
+        if key in seen:
+            raise JudgeError("config", f"duplicate run result for {variant}/{task_id}/{replicate}")
+        seen.add(key)
         pair = tasks.get(task_id)
         if pair is None or not task_criteria(pair[1]):
             skipped += 1
             continue
-        replicate = row.get("replicate_index", 0)
+
+        path = sidecar_path(run_dir, judge, variant, task_id, replicate)
+        if resume and path.exists():
+            try:
+                sidecar = json.loads(path.read_text())
+            except (OSError, json.JSONDecodeError) as exc:
+                raise JudgeError("config", f"cannot resume invalid sidecar {path}: {exc}") from exc
+            if not isinstance(sidecar, dict) or (
+                sidecar.get("task_id") != task_id
+                or sidecar.get("variant_id") != variant
+                or sidecar.get("replicate_index") != replicate
+                or sidecar.get("freeze_sha") != frozen
+                or not isinstance(sidecar.get("criteria"), list)
+            ):
+                raise JudgeError("config", f"existing sidecar does not match the frozen run: {path}")
+            completed.append(sidecar)
+            continue
+
+        _, task = pair
         try:
             artifact = json.loads((run_dir / variant / task_id / f"{replicate:02d}" / "task.json").read_text())
         except (OSError, json.JSONDecodeError):
             artifact = {}  # no turn records: every criterion is recorded as an `unsupported` error
-        graded = judge_replicate(judge, pair[1], artifact, runner)
-        out = {
+        pending.append((task_id, variant, replicate, path, task, artifact))
+
+    def grade(item: tuple[str, str, int, Path, dict[str, Any], dict[str, Any]]) -> dict[str, Any]:
+        task_id, variant, replicate, path, task, artifact = item
+        judged = judge_replicate(judge, task, artifact, runner)
+        sidecar = {
             "schema_version": SIDECAR_SCHEMA,
             "task_id": task_id,
             "variant_id": variant,
             "replicate_index": replicate,
             "freeze_sha": frozen,
-            **graded,
-            **recompute_weighted(pair[1], artifact, graded),
+            **judged,
+            **recompute_weighted(task, artifact, judged),
         }
-        path = sidecar_path(run_dir, judge, variant, task_id, replicate)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
-        judged += 1
-        errors += sum(1 for c in graded["criteria"] if c["status"] == "error")
+        _write_json_atomic(path, sidecar)
+        return sidecar
+
+    if pending:
+        with ThreadPoolExecutor(max_workers=min(max_parallel, len(pending))) as pool:
+            futures = [pool.submit(grade, item) for item in pending]
+            completed.extend(future.result() for future in as_completed(futures))
+
+    errors = sum(1 for sidecar in completed for criterion in sidecar["criteria"] if criterion["status"] == "error")
     manifest = {
         "schema_version": SIDECAR_SCHEMA,
         "run_id": run.get("run_id"),
         "judge": judge.identity(),
         "prompt_version": PROMPT_VERSION,
         "freeze_sha": frozen,
-        "replicates_judged": judged,
+        "replicates_judged": len(completed),
         "replicates_without_judge_criteria": skipped,
         "criterion_errors": errors,
     }
-    manifest_path = run_dir / "judge" / judge.judge_id / "manifest.json"
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    _write_json_atomic(run_dir / "judge" / judge.judge_id / "manifest.json", manifest)
     return manifest
 
 
@@ -962,7 +1019,9 @@ def cmd_preflight(args: argparse.Namespace) -> int:
 def cmd_judge_run(args: argparse.Namespace) -> int:
     judge = resolve_judge(args.judge)
     files = sorted(Path(args.tasks_dir).glob("*/*.yaml"))
-    manifest = judge_run(Path(args.run), judge, files, run_omp)
+    manifest = judge_run(
+        Path(args.run), judge, files, run_omp, max_parallel=args.max_parallel, resume=args.resume
+    )
     print(json.dumps(manifest, indent=2, sort_keys=True))
     if manifest["criterion_errors"]:
         # Recorded in the sidecars and the record, not a reason to lose the paid run.
@@ -998,6 +1057,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("run")
     run.add_argument("--judge", required=True)
     run.add_argument("--tasks-dir", default=str(TASKS_DIR))
+    run.add_argument("--max-parallel", type=int, default=1)
+    run.add_argument("--resume", action="store_true", help="reuse sidecars with the same frozen judge and grade only missing replicates")
     run.set_defaults(func=cmd_judge_run)
     cal = sub.add_parser("calibrate", help="measure a judge against the committed labelled transcripts")
     cal.add_argument("--judge", required=True)

@@ -81,14 +81,16 @@ rate, price and wall time per run. `make evals-render-results` writes it, and
 study, its quota stop, reviewed failures, and exact deferred comparison.
 
 From schema version 3, every case row carries positive `elapsed_seconds` and
-its cost evidence. `cost` is numeric where the harness reports a price
+its cost evidence. `cost` is numeric when the harness reports a price
 (`cost_source: reported`) or reports token counts the recorder can price from
-[`prices.yaml`](prices.yaml) (`cost_source: computed`). When usage is missing,
-or a source documents subscription billing without an applicable per-token
-price, `cost` is null and `cost_source` is `unreported`; it is never treated
-as free. The results page shows that cost as `not recorded`. Reported tokens
-without a rate or explicit unpriced subscription entry still fail recording.
-Records at versions 1 and 2 stay as they are.
+[`prices.yaml`](prices.yaml) (`cost_source: computed`). The exact Omp Codex
+models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`, and
+`openai-codex/gpt-6.1-sol` use `cost: null` and `cost_source: subscription`;
+token usage remains recorded, but no API price is inferred. When usage is
+missing, `cost` is null and `cost_source: unreported`; it is never treated as
+free. Other token-only routes without a price-table entry or an explicit
+unpriced subscription entry fail recording. Records at versions 1 and 2 stay
+as they are.
 
 ## Running them
 
@@ -158,6 +160,7 @@ make evals-render-results # rewrite RESULTS.md from committed provenance
 
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
+
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
@@ -269,24 +272,19 @@ configured route.
 | unset | each task's pinned Claude Code `agent_judge`, run by `coder_eval` | a Claude Code web or CLI session |
 | `claude-code-sonnet-5` | the same route, named; refuses a task that pins another judge | a Claude Code web or CLI session |
 | `omp-glm-5.3` | no-tools Omp over the Vercel AI Gateway; validated, not the default | anywhere `omp` and the gateway key work |
-| `omp-gpt-6.1-sol` | no-tools Omp through `openai-codex`; validated, not the default | anywhere Omp has the OpenAI Codex provider configured |
+| `omp-gpt-6.1-sol` | no-tools Omp through `openai-codex`; validated, not the default | anywhere `omp` and the Codex login work |
 
-GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is the calibrated semantic judge
-defined in `judges/omp-gpt-6.1-sol.yaml`. It passed the predeclared calibration
-rule on 2026-10-06: 11 of 11 labels correct, no false passes, no errors. The
-small transcript set supports this route for the rubric tested; it is not a
-general model-quality ranking
-([`observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json)).
+GPT 6.1 Sol (`openai-codex/gpt-6.1-sol`) is selectable as
+`JUDGE=omp-gpt-6.1-sol`, defined in `judges/omp-gpt-6.1-sol.yaml`. It passed
+the predeclared calibration rule on 2026-10-06: 11 of 11 labels correct, no
+false passes or errors. The small transcript set supports this route for the
+rubric tested; it is not a general model-quality ranking
+([`judges/calibration/observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json)).
 
 ```sh
 make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
 make evals-run-omp-gpt-5-6-sol JUDGE=omp-glm-5.3 TASKS='tasks/undertake/09-title-before-claim-omp.yaml'
 ```
-
-`omp-gpt-6.1-sol` met the predeclared calibration rule on 2026-10-06: 11 of 11
-labels correct, no false passes, no errors. The small transcript set supports
-this route for the rubric tested; it is not a general model-quality ranking
-([`observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json)).
 
 ```sh
 make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'
@@ -408,6 +406,14 @@ operations. `make evals-record` then runs `scripts/evals-judge.py judge-run`,
 which grades each preserved transcript with the selected judge from the original
 task's rubric, verbatim, and writes a sidecar under `<run>/judge/<judge-id>/`.
 
+`evals-record` reuses matching sidecars when resuming, and refuses a sidecar
+from a different frozen judge. `JOBS` limits concurrent judge calls; its
+default is one.
+
+For an older run, point `JUDGE_TASKS_DIR` at the exact task snapshot used for
+its frozen judge. It defaults to `evals/tasks`; a different rubric freeze fails
+before another judge call.
+
 **`coder_eval`'s own scores are not the measurement for such a run.** It scores a
 disabled criterion 1.0. The recorder replaces each judged replicate's
 `measured_score` and `final_status` with ones recomputed from the deterministic
@@ -426,7 +432,8 @@ asserts the command line and the prompt, as it asserts the Claude denylist.
 anything but exactly one verdict object (`score` in [0, 1], `rationale`,
 `findings`) is an evaluation error. The sidecar records it, the replicate's score
 is null, and the case outcome is `error`; it is never a behavioural 0.0 and never
-a pass. Re-run `judge-run` on the same run directory once the judge works.
+a pass. Re-run `make evals-record RUN=<run> EXPERIMENT=<experiment> JUDGE=<judge> JOBS=8`
+on the same run directory once the judge works.
 
 **One judge, frozen, per comparison.** The sidecar and the record's `judge`
 object carry a `freeze_sha` over route, model, settings, the judge prompt and
@@ -1178,10 +1185,8 @@ pull-request lookup finds nothing and the skill assembles the diff from git.
 
 The same suites and plugin run Omp subjects with paired `bare` and
 `with-plugin` variants. GLM 5.3 Flash is the tier probe beside full GLM.
-The committed GPT 6 Sol and Luna experiment files still pin Vercel AI Gateway
-routes. They are unsupported legacy configuration, not supported subjects;
-issue #494 owns their migration. Do not run those targets until the Codex-only
-subject routes are committed. Historical run records remain unchanged.
+The committed GPT 6 Sol and Luna experiments use their Codex provider routes.
+Their historical gateway records remain unchanged.
 `docs/notes/0013-the-omp-arm.md` records the adapter decision.
 
 Only a Claude judge requires a Claude Code execution session for an Omp
@@ -1209,6 +1214,8 @@ make evals-run-omp-glm-5-3                    # GLM 5.3 only
 make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
 make evals-run-omp-deepseek-v4-pro            # DeepSeek v4 Pro only
 make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol via openai-codex
+make evals-run-omp-gpt-6-luna                 # GPT 6 Luna via openai-codex
+make evals-run-omp-gpt-6-sol                  # GPT 6 Sol via openai-codex
 make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
@@ -1222,8 +1229,8 @@ must configure it. Every GPT subject, judge, and helper call must use
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
 | `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
-| `omp-gpt-6-sol.yaml` (unsupported legacy; do not run) | `vercel-ai-gateway/openai/gpt-6-sol` |
-| `omp-gpt-6-luna.yaml` (unsupported legacy; do not run) | `vercel-ai-gateway/openai/gpt-6-luna` |
+| `omp-gpt-6-sol.yaml` | `openai-codex/gpt-6-sol` |
+| `omp-gpt-6-luna.yaml` | `openai-codex/gpt-6-luna` |
 
 For a supported non-GPT model, the experiment needs `omp` on PATH and its
 provider's credentials: the gateway key above or a login in the caller's own
@@ -1252,10 +1259,10 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
   the shell's GitHub access. A Claude Code cloud proxy grants the owner's
   access as well. Run only tasks whose tool permissions and effects you accept;
   this is a risk disclosure, not a credential-isolation gate.
-- **Run replicates in parallel.** `JOBS` sets how many run at once; the
-  default is one, and one at a time a suite takes about two hours. A replicate
-  waits on model calls, not on the container: at 12 at once, a four-core
-  container ran about 70% busy.
+- **Run replicates in parallel.** `JOBS` sets the subject or judge calls in
+  flight; the default is one. One subject at a time a suite takes about two
+  hours. A replicate waits on model calls, not on the container: at 12 subject
+  replicates in flight, a four-core container ran about 70% busy.
 - **The Omp targets raise every turn cap to 30.** `OMP_RUN_LIMITS` in the
   `Makefile` says why: caps sized for the Claude Code arm cut Omp off before
   its reply.

@@ -40,6 +40,7 @@ import os
 import stat
 import sys
 import tempfile
+import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -379,7 +380,67 @@ def test_judge_run(env: dict[str, str], root: Path) -> None:
     expect_error("claude route is not judged here", "config", ej.judge_run, run, CLAUDE_JUDGE, files, failing)
 
 
+# This prevents a stopped judge run from paying twice for completed replicates or exceeding JOBS.
+def test_judge_run_resume_and_parallelism(root: Path) -> None:
+    run = root / "resume-run"
+    task_dir = root / "resume-tasks"
+    (task_dir / "suite").mkdir(parents=True)
+    (task_dir / "suite" / "a.yaml").write_text(yaml.safe_dump(TASK, sort_keys=False))
+    rows = [
+        {"task_id": "fixture-task", "variant_id": f"variant-{index}", "replicate_index": 0}
+        for index in range(7)
+    ]
+    for row in rows:
+        rep = run / row["variant_id"] / row["task_id"] / "00"
+        rep.mkdir(parents=True)
+        (rep / "task.json").write_text(json.dumps(ARTIFACT))
+    (run / "run.json").write_text(json.dumps({"run_id": "resume", "task_results": rows[:1]}))
+    files = sorted(task_dir.glob("*/*.yaml"))
+
+    ej.judge_run(run, OMP_JUDGE, files, lambda *args: ej.RouteResult('{"score": 1, "rationale": "ok", "findings": []}'))
+    (run / "run.json").write_text(json.dumps({"run_id": "resume", "task_results": rows}))
+
+    active = 0
+    peak = 0
+    calls = 0
+    lock = threading.Lock()
+    two_active = threading.Event()
+
+    def runner(judge, system, user):  # type: ignore[no-untyped-def]
+        nonlocal active, peak, calls
+        with lock:
+            calls += 1
+            active += 1
+            peak = max(peak, active)
+            if active >= 2:
+                two_active.set()
+        try:
+            if not two_active.wait(timeout=3):
+                raise AssertionError("judge workers did not overlap")
+            return ej.RouteResult('{"score": 1, "rationale": "ok", "findings": []}', "zai/glm-5.3", "vercel-ai-gateway")
+        finally:
+            with lock:
+                active -= 1
+
+    manifest = ej.judge_run(run, OMP_JUDGE, files, runner, max_parallel=3, resume=True)
+    check("resume judges only missing replicates", calls == 6, str(calls))
+    check("resume honors JOBS and runs grades concurrently", 1 < peak <= 3, str(peak))
+    check("resume manifest includes completed and new sidecars", manifest["replicates_judged"] == 7)
+
+    def should_not_run(*args):  # type: ignore[no-untyped-def]
+        raise AssertionError("a matching sidecar was judged twice")
+
+    resumed = ej.judge_run(run, OMP_JUDGE, files, should_not_run, max_parallel=3, resume=True)
+    check("complete resume makes no duplicate judge calls", resumed["replicates_judged"] == 7)
+
+    changed = ej.Judge(OMP_JUDGE.judge_id, OMP_JUDGE.route, OMP_JUDGE.model, OMP_JUDGE.status,
+                       {**OMP_JUDGE.settings, "thinking": "low"}, OMP_JUDGE.calibration)
+    expect_error("resume rejects sidecars from another judge freeze", "config", ej.judge_run,
+                 run, changed, files, should_not_run, max_parallel=3, resume=True)
+
+
 def test_calibration(env: dict[str, str]) -> None:
+    
     labels = ROOT / "evals" / "judges" / "calibration"
     spec = yaml.safe_load((labels / "labels.yaml").read_text())
     criterion = ej.calibration_criterion(spec)
@@ -524,6 +585,8 @@ def main() -> int:
         test_materialize_and_pins(root / "mat")
         (root / "jr").mkdir()
         test_judge_run(env, root / "jr")
+        (root / "jr-resume").mkdir()
+        test_judge_run_resume_and_parallelism(root / "jr-resume")
         test_calibration(env)
         (root / "pf").mkdir()
         test_preflight_cli(env, root / "pf")
