@@ -432,6 +432,24 @@ The constitution governs, under *While you write code*, *Before you commit* and
 *When you hit a wall*. Nothing about how to write or commit the code is decided
 here.
 
+**Architecture documentation is part of implementation.** Before changing the
+system, read its relevant architecture documentation and diagrams. As the
+implementation develops, keep affected documentation current on this branch
+and in this pull request, including changes made during review or after
+integrating the base branch. Describe the system as implemented now, not an
+epic's promised future state. Update affected component responsibilities,
+interfaces, relationships and important flows, keeping prose and diagrams
+consistent; correct stale descriptions in the affected area and add the
+architectural explanations needed to understand the change. Do not audit or
+clean up unrelated areas. When the architecture is unchanged and existing
+documentation is accurate, leave it unchanged; every task need not produce a
+documentation diff.
+
+This responsibility applies to repository-changing undertakings, including
+standalone issues and epic children. The answer-only research route above
+remains read-only and does not acquire documentation changes or a pull request
+solely for this responsibility.
+
 6 — Open the draft
 ------------------
 
