@@ -31,11 +31,14 @@ setting, or price does not prove class suitability or working credentials.
 Omp's parent-model authentication fallback needs the same reassessment and
 cannot be assumed to satisfy the class.
 
-The plugin's `frontier` role currently resolves through the supported
+The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
-assume an API route. The existing `reasoning` helper selector is also
-astra-backed; until that separate stale mapping is corrected, it is frontier
-for authorization regardless of its role name.
+assume an API route. The `reasoning` role defaults to
+`openai-codex/gpt-6.1-sol:high`, not a frontier route. Classify the resolved
+selector, not the role label: an effective Astra/Fable route is frontier even
+when selected through `reasoning`, an agent override, a configured prewalk or
+retry fallback, or visible parent-model inheritance. Such a route still
+requires explicit approval and the approved work envelope.
 
 The plugin provides runtime defaults only for roles without an effective
 assignment. A global/project setting or CLI overlay present before plugin
