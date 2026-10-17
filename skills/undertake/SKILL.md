@@ -594,6 +594,16 @@ updated state — and the changed head earns its review round before returning
 through the gate. Pending CI and other external waits are not human
 dependencies; follow their existing continuation instead.
 
+**A missing tool is an unknown route, not yet a capability gap.** This holds
+whichever step the session entered at, a resume included. Before a required
+verification is called unmet for lack of a tool, apply `Open the draft`'s
+escalation rule to it: inspect the repository's setup, install and Makefile
+routes for that tool, and attempt the available, permitted ones in turn until
+one provides it. Read each result. A failed `which` or `command -v` is not
+evidence of a gap. A gap is established by an attempted route's observed
+failure, by the exact restriction that precluded an attempt, or by an
+inspection that found no documented route.
+
 **A current-session capability gap is not a human dependency.** If a required
 verification remains unmet because this session lacks credentials,
 connectivity or another capability, use an available authorized-agent
@@ -1067,6 +1077,9 @@ In order:
    - Reached: <the last step of the sequence completed>.
    - Outstanding: <what is blocked, failing, or unverified — failed checks,
      open review threads, a human action owed — or "nothing known">.
+   - Environment: <each tool or credential the outstanding work needs, with
+     the repository route that sets it up, e.g. "`omp`: `make evals-install
+     && make evals-setup-omp`" — or "the checkout alone">.
    - Resume: <the concrete next action, e.g. "run `/undertake #N`; it resumes
      on the branch above">.
    ```
@@ -1184,6 +1197,9 @@ under `Reporting to an orchestrator`.
   Tofu apply and updated-state commit remain human-only.
 - **A current-session capability or access gap with no authorized-agent
   handoff**, at `Ready for review`. This is not proof the work needs a human.
+  A missing tool is not this stop until `Open the draft`'s escalation rule
+  has run on it: its documented routes were attempted and failed, a
+  restriction precluded them, or inspection found none.
   State the exact required credential, connectivity, tool or authorization
   capability, and the concrete handoff or resumption path. Do not describe a
   step as laptop-, local-, cloud- or human-only when capabilities, not device

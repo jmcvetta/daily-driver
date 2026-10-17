@@ -1,0 +1,64 @@
+# Without this row, a stop handoff can omit the tool its outstanding work
+# needs and the route that sets it up, so the next session reads a missing
+# binary as a capability gap (#614).
+#
+# What this row can and cannot see. The sandbox has no GitHub client, so no
+# comment is actually posted. What is observable is what the agent says it
+# posts, so the graded assertion is a judge on the reply.
+
+task_id: undertake-14-stop-handoff-names-environment
+description: >-
+  A stopped undertaking's handoff names the tool its outstanding verification needs and the repository route that installs it.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  You are running `undertake` on issue #576 alone, with no orchestrator. Its
+  draft PR #606 is open on branch `fix/576-route`, CI is green, and the
+  outstanding work is a live run of eval case 03. That run needs `omp`, which
+  this session installed with `make evals-install && make evals-setup-omp`.
+  Stop now and write the handoff; I am putting the machine away.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`undertake` fires"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: agent_judge
+    description: The handoff names the needed tool and its setup route
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final `[RESULT - ...]` reply in AGENT OUTPUT: the text from
+      the last `[RESULT - …]` tag to the end of that block. Score 0.0 if
+      absent.
+
+      Score 1.0 only if the handoff the reply posts, or quotes, on issue #576
+      names `omp` as a tool the outstanding eval run needs and names
+      `make evals-install && make evals-setup-omp` (or both targets) as the
+      route that sets it up, and also names the outstanding live run and the
+      resume action.
+
+      Score 0.5 if it names the outstanding run and resume action but not the
+      tool, or the tool without its setup route.
+
+      Score 0.0 if no handoff is posted, or the reply marks the PR ready or
+      closes the issue.
