@@ -263,6 +263,79 @@ async def run_scenario() -> None:
     )
 
 
+FAKE_OMP_REFUSED = """\
+#!/usr/bin/env python3
+import json
+import sys
+
+REFUSED = json.load(open(sys.argv[0] + ".refused.json"))
+OK = {"role": "assistant", "content": [{"type": "text", "text": "ok"}], "stopReason": "stop",
+      "usage": {"input": 5, "output": 1, "cacheRead": 0, "cacheWrite": 0, "totalTokens": 6}}
+
+
+def emit(frame):
+    print(json.dumps(frame), flush=True)
+
+
+if sys.argv[1:2] == ["plugin"]:
+    sys.exit(0)
+emit({"type": "ready"})
+refuse = open(sys.argv[0] + ".mode").read() == "refuse"
+while True:
+    line = sys.stdin.readline()
+    if not line:
+        break
+    command = json.loads(line)
+    kind = command.get("type")
+    if kind == "get_available_commands":
+        emit({"id": command["id"], "type": "response", "success": True, "data": {"commands": []}})
+    elif kind == "get_state":
+        emit({"id": command["id"], "type": "response", "success": True, "data": {"sessionId": "fake"}})
+    elif kind in ("set_model", "set_thinking_level"):
+        emit({"id": command["id"], "type": "response", "success": True, "data": {}})
+    elif kind == "prompt":
+        emit({"id": command["id"], "type": "response", "command": "prompt", "success": True})
+        emit({"type": "turn_start"})
+        messages = REFUSED["messages"] if refuse else [OK]
+        emit({"type": "message_end", "message": messages[-1]})
+        emit({"type": "agent_end", "isTerminal": True, "messages": messages})
+        break
+"""
+
+
+async def run_provider_error_scenario() -> None:
+    """A refused provider call ends the attempt as a crash; a normal turn does not."""
+    from coder_eval.errors import AgentCrashError
+
+    from coder_eval_omp.agent import OmpAgent, OmpAgentConfig
+
+    refused = ROOT / "evals" / "coder-eval-omp" / "fixtures" / "agent_end_provider_error.json"
+    message = json.loads(refused.read_text())["messages"][1]["errorMessage"]
+    for name, refuse in (("REFUSE", True), ("PLAIN", False)):
+        workdir = Path(tempfile.mkdtemp(prefix="omp-refused-check-"))
+        fake = Path(tempfile.mkdtemp(prefix="fake-omp-bin-")) / f"fake-omp-{name}"
+        fake.write_text(FAKE_OMP_REFUSED)
+        fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        Path(str(fake) + ".refused.json").write_text(refused.read_text())
+        Path(str(fake) + ".mode").write_text("refuse" if refuse else "plain")
+        agent = OmpAgent(OmpAgentConfig(type="omp", binary=str(fake)), task_id="refused-check")
+        await agent.start(str(workdir))
+        try:
+            if refuse:
+                try:
+                    await agent.communicate("hi", timeout=30)
+                except AgentCrashError as crash:
+                    check(message in str(crash), f"the crash must carry the provider message, got {crash}")
+                else:
+                    check(False, "a refused provider call must end the attempt as AgentCrashError")
+            else:
+                record = await agent.communicate("hi", timeout=30)
+                check(record is not None, "a normal completed turn must still settle")
+        finally:
+            await agent.stop()
+    print("check-omp-agent-settle: a refused provider call crashes the attempt with its message; a normal turn does not")
+
+
 def check_roles_pin() -> None:
     """The arm's `model` pins every Omp chat role in config.yml, and only then."""
     import yaml
@@ -335,6 +408,7 @@ async def check_async_handoff() -> None:
 def main() -> None:
     asyncio.run(run_scenario())
     asyncio.run(check_async_handoff())
+    asyncio.run(run_provider_error_scenario())
     check_roles_pin()
 
 

@@ -629,6 +629,11 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     "omp emitted no recognized event frames; the RPC vocabulary has moved "
                     f"(saw: {sorted(reducer.unrecognized_types)})",
                 )
+            if reducer.error_message:
+                # The provider refused the turn (a 402 from an over-budget
+                # key, say). Omp still sends a terminal `agent_end`, so
+                # without this the attempt grades as a subject failure.
+                self._crash(finalize, collector, f"omp provider error: {reducer.error_message}")
             if self.config.require_token_telemetry and not reducer.usage:
                 self._crash(
                     finalize,
