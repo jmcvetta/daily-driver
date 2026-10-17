@@ -580,7 +580,8 @@ Tofu plan, an alternative route, an observed person-only authorization, a
 production prohibition with no probe, pending CI, independent work before an
 access gap and before a real human action, credentialed cloud execution, an
 available authorized-agent handoff, a missing-handoff prerequisite, stale
-versus still-outstanding Tofu apply blockers on resume, and PR-body maintenance
+versus still-outstanding Tofu apply blockers on resume, a tool missing on
+resume that the documented setup target installs, and PR-body maintenance
 from undertaking evidence.
 Run only this focused set with the documented
 `make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`

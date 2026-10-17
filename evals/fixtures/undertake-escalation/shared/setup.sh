@@ -22,6 +22,32 @@ PR-client stub in blocker-maintenance cases; it records arguments and never
 contacts GitHub. Pass a body with `--body <text>` or `--body-file <path>`.
 EOF
 
+# The verifier is absent until the documented setup target installs it, so a
+# session that stops at `command -v verify-live` never reaches the result.
+if [[ "${scenario}" == resume-missing-tool ]]; then
+cat >README.md <<'EOF'
+# Sandbox project
+
+A fresh session lacks `verify-live`. Run `make setup-verifier` once to install
+it into `.fixture/bin`, then run
+`PATH="$PWD/.fixture/bin:$PATH" verify-live --case 03`.
+EOF
+printf 'setup-verifier:\n\tbash .fixture/install-verifier.sh\n' >Makefile
+cat >.fixture/install-verifier.sh <<'EOF'
+#!/usr/bin/env bash
+set -eu
+printf 'install-verifier\n' >>.fixture/trajectory.log
+cat >.fixture/bin/verify-live <<'STUB'
+#!/usr/bin/env bash
+set -eu
+printf 'verify-live %s\n' "$*" >>.fixture/trajectory.log
+printf 'live verification case 03: 3 of 3 assertions passed\n'
+STUB
+chmod +x .fixture/bin/verify-live
+printf 'verify-live installed into .fixture/bin\n'
+EOF
+fi
+
 if [[ "${scenario}" == authorized-handoff ]]; then
 cat >.fixture/bin/handoff-smoke <<'EOF'
 #!/usr/bin/env bash
