@@ -218,6 +218,8 @@ class AgentFinished:
 
     terminal: bool
     usage: dict[str, int]
+    awaiting_async_work: bool = False
+    """Omp's `awaitingAsyncWork`: the only possible resume is a background-job result."""
 
 
 @dataclass
@@ -544,7 +546,13 @@ class TurnReducer:
                 self._note_error(message)
         terminal = frame.get("isTerminal") is not False
         self.terminal_end_seen = self.terminal_end_seen or terminal
-        return [AgentFinished(terminal=terminal, usage=dict(self.usage))]
+        return [
+            AgentFinished(
+                terminal=terminal,
+                usage=dict(self.usage),
+                awaiting_async_work=frame.get("awaitingAsyncWork") is True,
+            )
+        ]
 
     def _on_extension_error(self, frame: dict[str, Any]) -> list[Action]:
         failure = ExtensionFailed(
