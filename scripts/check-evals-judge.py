@@ -38,6 +38,7 @@ import importlib.util
 import json
 import os
 import stat
+import subprocess
 import sys
 import tempfile
 import threading
@@ -474,6 +475,58 @@ def test_calibration(env: dict[str, str]) -> None:
     check("errors are wrong answers, not agreement", result["correct"] == 0 and result["errors"] == result["total"] and not result["met_acceptance_rule"])
 
 
+def test_truthful_sets() -> None:
+    """The #610 sets resolve the real criteria, are unmeasured, and the row-17 mock is inert.
+
+    Shape only: this proves nothing about a judge's accuracy.
+    """
+    cal = ROOT / "evals" / "judges" / "calibration"
+    base = yaml.safe_load((cal / "labels.yaml").read_text())
+    seen: set[str] = {e["id"] for e in base["examples"]}
+    measured = {json.loads(f.read_text()).get("set_id") for f in (cal / "observed").glob("*.json")}
+    for name in ("undertake-17-truthful-mock-v1", "undertake-14-resume-explanation-v1"):
+        spec = yaml.safe_load((cal / name / "labels.yaml").read_text())
+        check(f"{name}: set_id matches its directory", spec["set_id"] == name)
+        criterion = ej.calibration_criterion(spec)
+        check(f"{name}: resolves an agent_judge criterion", criterion["type"] == "agent_judge")
+        ids = [e["id"] for e in spec["examples"]]
+        check(f"{name}: ids are unique and not shared with another set", len(ids) == len(set(ids)) and not seen & set(ids))
+        seen |= set(ids)
+        for e in spec["examples"]:
+            if "expected_score" in e:
+                check(f"{name}: {e['id']} label agrees with expected_score", (e["expected_score"] >= spec["acceptance"]["pass_score"]) == (e["label"] == "pass"))
+        check(f"{name}: both labels present", {e["label"] for e in spec["examples"]} == {"pass", "fail"})
+        check(f"{name}: no measurement recorded", name not in measured and not (cal / name / "observed").exists())
+        for e in spec["examples"]:
+            check(f"{name}: transcript exists: {e['id']}", (cal / name / e["transcript"]).is_file())
+        if spec["rubric"]["presented_as"] == "output_and_tool_calls":
+            check(f"{name}: criterion asks for output and tool calls", criterion["include_agent_output"] and criterion["include_tool_calls"])
+            for e in spec["examples"]:
+                text = (cal / name / e["transcript"]).read_text()
+                check(f"{name}: {e['id']} carries both blocks", "AGENT OUTPUT (UNTRUSTED" in text and "AGENT TOOL CALLS (UNTRUSTED" in text)
+    row14 = yaml.safe_load((ROOT / "evals/tasks/undertake/14-resume-adopts-branch-and-pr.yaml").read_text())
+    judge14 = row14["success_criteria"][1]
+    check("row 14 keeps semantic weight 2", judge14["weight"] == 2)
+    row17 = yaml.safe_load((ROOT / "evals/tasks/undertake/17-claude-judged-eval-uses-handoff.yaml").read_text())
+    crit = row17["success_criteria"]
+    check("row 17 keeps both deterministic criteria", [c["type"] for c in crit[:2]] == ["command_executed"] * 2 and crit[0]["require_success"] and crit[1]["max_count"] == 0)
+    import re
+    probe = re.compile(crit[1]["command_pattern"])
+    check("row 17 auth-probe pattern matches a token probe", bool(probe.search("printenv | grep ANTHROPIC")) and bool(probe.search("claude auth status")))
+    check("row 17 auth-probe pattern ignores the handoff", not probe.search("claude-code-handoff run x"))
+    check("row 17 handoff pattern matches the mock call", bool(re.search(crit[0]["command_pattern"], "claude-code-handoff run x")))
+    mock = next(f["content"] for src in row17["sandbox"]["template_sources"] if src["type"] == "starter_files" for f in src["files"] if f["path"] == "mocks/claude-code-handoff")
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "claude-code-handoff"
+        path.write_text(mock)
+        path.chmod(0o755)
+        work = Path(tmp) / "work"
+        work.mkdir()
+        run = subprocess.run([str(path), "run", "x"], cwd=work, capture_output=True, text=True, env={"PATH": "/usr/bin:/bin"})
+        check("mock exits 0 and only prints its arguments", run.returncode == 0 and run.stdout == "offline handoff mock: run x\n" and run.stderr == "")
+        check("mock leaves no side effect", not any(work.iterdir()) and sorted(p.name for p in Path(tmp).iterdir()) == ["claude-code-handoff", "work"])
+
+
 def test_record(root: Path) -> None:
     spec = importlib.util.spec_from_file_location("evals_record", ROOT / "scripts" / "evals-record.py")
     assert spec and spec.loader
@@ -588,6 +641,7 @@ def main() -> int:
         (root / "jr-resume").mkdir()
         test_judge_run_resume_and_parallelism(root / "jr-resume")
         test_calibration(env)
+        test_truthful_sets()
         (root / "pf").mkdir()
         test_preflight_cli(env, root / "pf")
         (root / "rc").mkdir()
