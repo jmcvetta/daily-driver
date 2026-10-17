@@ -29,7 +29,8 @@ cat >README.md <<'EOF'
 # Sandbox project
 
 A fresh session lacks `verify-live`. Run `make setup-verifier` once to install
-it into `.fixture/bin`, then run
+it into `.fixture/bin`; without `make`, run `bash .fixture/install-verifier.sh`
+instead. Then run
 `PATH="$PWD/.fixture/bin:$PATH" verify-live --case 03`.
 EOF
 printf 'setup-verifier:\n\tbash .fixture/install-verifier.sh\n' >Makefile
@@ -46,6 +47,7 @@ STUB
 chmod +x .fixture/bin/verify-live
 printf 'verify-live installed into .fixture/bin\n'
 EOF
+chmod +x .fixture/install-verifier.sh
 fi
 
 if [[ "${scenario}" == authorized-handoff ]]; then

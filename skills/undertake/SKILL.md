@@ -598,10 +598,11 @@ dependencies; follow their existing continuation instead.
 whichever step the session entered at, a resume included. Before a required
 verification is called unmet for lack of a tool, apply `Open the draft`'s
 escalation rule to it: inspect the repository's setup, install and Makefile
-routes for that tool, attempt each available, permitted one, and read the
-result. A failed `which` or `command -v` is not evidence of a gap. A gap is
-established only by an attempted route and its observed failure, or by the
-exact restriction that precluded an attempt.
+routes for that tool, and attempt the available, permitted ones in turn until
+one provides it. Read each result. A failed `which` or `command -v` is not
+evidence of a gap. A gap is established by an attempted route's observed
+failure, by the exact restriction that precluded an attempt, or by an
+inspection that found no documented route.
 
 **A current-session capability gap is not a human dependency.** If a required
 verification remains unmet because this session lacks credentials,
@@ -1196,8 +1197,9 @@ under `Reporting to an orchestrator`.
   Tofu apply and updated-state commit remain human-only.
 - **A current-session capability or access gap with no authorized-agent
   handoff**, at `Ready for review`. This is not proof the work needs a human.
-  A missing tool is not this stop until its documented setup route was
-  attempted and failed, or a restriction precluded the attempt.
+  A missing tool is not this stop until `Open the draft`'s escalation rule
+  has run on it: its documented routes were attempted and failed, a
+  restriction precluded them, or inspection found none.
   State the exact required credential, connectivity, tool or authorization
   capability, and the concrete handoff or resumption path. Do not describe a
   step as laptop-, local-, cloud- or human-only when capabilities, not device

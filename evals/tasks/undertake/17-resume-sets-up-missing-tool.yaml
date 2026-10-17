@@ -31,7 +31,7 @@ success_criteria:
   - type: command_executed
     description: The documented setup target ran
     tool_name: Bash
-    command_pattern: 'make\s+setup-verifier|install-verifier'
+    command_pattern: '(^|[;&|]\s*)(\S+=\S+\s+)*(make\s+setup-verifier|(bash\s+)?(\./)?\.fixture/install-verifier\.sh)\b'
     min_count: 1
     weight: 2
   - type: file_matches_regex
