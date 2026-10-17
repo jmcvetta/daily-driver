@@ -447,6 +447,7 @@ class TurnReducer:
             return []
         if frame.get("type") == "message_end" and isinstance(message, dict):
             self._accumulate_usage(message)
+            self._note_error(message)
         message_id = str(frame.get("messageId") or frame.get("messageID") or frame.get("id") or "message")
         complete = _text_of(message)
         if complete:
@@ -540,6 +541,7 @@ class TurnReducer:
         for message in frame.get("messages") or []:
             if isinstance(message, dict):
                 self._accumulate_usage(message)
+                self._note_error(message)
         terminal = frame.get("isTerminal") is not False
         self.terminal_end_seen = self.terminal_end_seen or terminal
         return [AgentFinished(terminal=terminal, usage=dict(self.usage))]
@@ -594,6 +596,23 @@ class TurnReducer:
         self.usage_keys_seen.update(seen)
         for bucket, count in found.items():
             self.usage[bucket] = self.usage.get(bucket, 0) + count
+
+    def _note_error(self, message: dict[str, Any]) -> None:
+        """Keep the first provider error an assistant message carries.
+
+        Omp marks a refused provider call on the assistant message itself:
+        `stopReason: "error"` with the provider's text in `errorMessage`
+        (`fixtures/agent_end_provider_error.json`). The turn still ends with a
+        terminal `agent_end`, so without this a refusal such as a 402 reads as
+        a completed empty turn.
+        """
+        if message.get("role") != "assistant" or self.error_message is not None:
+            return
+        text = message.get("errorMessage")
+        if isinstance(text, str) and text.strip():
+            self.error_message = text.strip()
+        elif message.get("stopReason") == "error":
+            self.error_message = "omp reported stopReason error with no errorMessage"
 
     def _resync_texts(self) -> None:
         self.assistant_texts = ["".join(parts) for parts in self._message_texts.values()]

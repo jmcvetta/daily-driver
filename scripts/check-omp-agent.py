@@ -213,6 +213,31 @@ def check_turn_settlement() -> None:
     check(ends and ends[0].terminal is True, "an agent_end with no isTerminal field is terminal")
 
 
+def check_provider_error() -> None:
+    """A refused provider call is recorded; a normal completed turn is not."""
+    refused = json.loads(
+        (ROOT / "evals" / "coder-eval-omp" / "fixtures" / "agent_end_provider_error.json").read_text(encoding="utf-8")
+    )
+    expected = refused["messages"][1]["errorMessage"]
+    reducer = TurnReducer()
+    feed(reducer, refused)
+    check(reducer.error_message == expected, f"agent_end error not captured: {reducer.error_message!r}")
+
+    reducer = TurnReducer()
+    feed(reducer, {"type": "message_end", "message": refused["messages"][1]}, refused)
+    check(reducer.error_message == expected, "message_end error must be captured and kept once")
+
+    reducer = TurnReducer()
+    first = dict(refused["messages"][1], errorMessage="402 first")
+    second = dict(refused["messages"][1], errorMessage="402 second", timestamp=1)
+    feed(reducer, {"type": "message_end", "message": first}, {"type": "message_end", "message": second})
+    check(reducer.error_message == "402 first", "the first error seen is kept")
+
+    reducer = TurnReducer()
+    feed(reducer, CAPTURED_AGENT_END_FRAME)
+    check(reducer.error_message is None, "a normal completed turn must carry no error")
+
+
 def check_usage() -> None:
     """Captured Omp usage is complete, strict, and counted once per response."""
     usage, seen = extract_usage(CAPTURED_AGENT_END_FRAME)
