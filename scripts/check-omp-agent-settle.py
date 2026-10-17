@@ -123,7 +123,9 @@ while True:
 # non-terminal `agent_end` with `awaitingAsyncWork`, then silence. It answers
 # `get_subagents` with one running and one finished subagent and logs every
 # command, so the check can see which ones were cancelled.
-FAKE_OMP_ASYNC = FAKE_OMP.split("    elif kind == \"prompt\":")[0] + """\
+FAKE_PROMPT_BRANCH = "    elif kind == \"prompt\":"
+assert FAKE_PROMPT_BRANCH in FAKE_OMP, "FAKE_OMP lost the prompt branch FAKE_OMP_ASYNC splits on"
+FAKE_OMP_ASYNC = FAKE_OMP.split(FAKE_PROMPT_BRANCH)[0] + """\
     elif kind == "get_subagents":
         emit({"id": command["id"], "type": "response", "success": True,
               "data": {"subagents": [{"id": "sub-run", "status": "running"},

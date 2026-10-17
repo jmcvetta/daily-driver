@@ -110,6 +110,9 @@ _SIGKILL: signal.Signals = getattr(signal, "SIGKILL", signal.SIGTERM)
 # that is too short is a red run nobody can reproduce.
 _STARTUP_TIMEOUT_SECONDS = 180.0
 
+# Bounds the whole post-settle subagent cancel, so a silent Omp cannot stretch a row past its budget.
+_CANCEL_TIMEOUT_SECONDS = 30.0
+
 # A single frame can carry a whole tool result, which blows past asyncio's
 # default 64 KiB line cap and raises mid-stream, killing the read loop.
 _STDOUT_LINE_LIMIT = 16 * 1024 * 1024
@@ -613,7 +616,12 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     break
 
             if async_handoff:
-                self._cancelled_subagents.extend(await self._cancel_background_subagents())
+                try:
+                    self._cancelled_subagents.extend(
+                        await asyncio.wait_for(self._cancel_background_subagents(), _CANCEL_TIMEOUT_SECONDS)
+                    )
+                except (TimeoutError, asyncio.TimeoutError):
+                    logger.warning("omp: cancelling background subagents timed out after %.0fs", _CANCEL_TIMEOUT_SECONDS)
 
             self._argument_keys_seen.update(reducer.argument_keys_seen)
             self._usage_keys_seen.update(reducer.usage_keys_seen)
