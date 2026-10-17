@@ -528,6 +528,8 @@ evals-plan: evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.gpts-choice.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-low.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-medium.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml

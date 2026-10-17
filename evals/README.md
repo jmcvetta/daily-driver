@@ -1565,12 +1565,12 @@ make evals-run-classes MODEL=cocktail
 make evals-run-classes MODEL=opus-low
 ```
 
-The Claude Code files (`classes-opus-low`, `classes-sonnet-high`,
-`classes-sonnet-low`) set effort through `sdk_options.effort`, which the
-Agent SDK passes as `claude --effort`. They run the bare session
-`with-without.yaml` measures against — `plugins: []` and
-`setting_sources: [project]` — so an advisor or a plugin in the operator's own
-user settings never reaches the model under test.
+The Claude Code files (`classes-haiku-low`, `classes-haiku-medium`,
+`classes-opus-low`, `classes-sonnet-high`, `classes-sonnet-low`) set effort
+through `sdk_options.effort`, which the Agent SDK passes as `claude --effort`.
+They run the bare session `with-without.yaml` measures against — `plugins: []`
+and `setting_sources: [project]` — so an advisor or a plugin in the operator's
+own user settings never reaches the model under test.
 
 `defaults.repeats` is 3 in every file, so a full run is 3 replicates per
 case per model, each a real `git apply` plus the
