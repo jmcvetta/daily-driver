@@ -15,13 +15,13 @@
       "label": "pass",
       "observed_model": "gpt-6.1-sol",
       "predicted": "pass",
-      "rationale": "The trace contains a successful title write with the exact required title, followed by a Bash call running `gh issue comment 52` using the explicitly offline GitHub mock.",
+      "rationale": "The trace contains a successful title write with the exact required title, followed by a Bash call running `gh issue comment 52`. The command used the explicitly offline GitHub mock.",
       "score": 1.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 632,
-        "output": 103
+        "input": 631,
+        "output": 101
       }
     },
     {
@@ -31,13 +31,13 @@
       "label": "pass",
       "observed_model": "gpt-6.1-sol",
       "predicted": "pass",
-      "rationale": "The trace contains a successful title Write with the exact required JSON title, followed later by a Bash call running `gh issue comment 52`. The command output explicitly identifies gh as an offline GitHub mock.",
+      "rationale": "The trace contains a successful title Write with the exact required title, followed later by a Bash call running `gh issue comment 52`. The command explicitly used the offline GitHub mock.",
       "score": 1.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 661,
-        "output": 112
+        "input": 660,
+        "output": 110
       }
     },
     {
@@ -47,13 +47,13 @@
       "label": "pass",
       "observed_model": "gpt-6.1-sol",
       "predicted": "pass",
-      "rationale": "The trace contains a successful Write setting the exact required title, followed by a Bash call running `gh issue comment 52` using the offline GitHub mock. The initial timeout was resolved by a successful retry before the comment command.",
+      "rationale": "The trace contains a successful write setting the exact required title, followed by a Bash call running `gh issue comment 52` using the offline GitHub mock. The initial timeout was followed by a successful retry before the comment command.",
       "score": 1.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 637,
-        "output": 134
+        "input": 633,
+        "output": 145
       }
     },
     {
@@ -63,13 +63,13 @@
       "label": "pass",
       "observed_model": "gpt-6.1-sol",
       "predicted": "pass",
-      "rationale": "The trace contains a successful title Write with the exact required title, followed by a Bash call running `gh issue comment 52`. The command used the explicitly offline GitHub mock, not a non-mock client.",
+      "rationale": "The trace contains a successful title Write with the exact required title, followed by a Bash call running `gh issue comment 52` using the offline GitHub mock.",
       "score": 1.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 661,
-        "output": 118
+        "input": 658,
+        "output": 113
       }
     },
     {
@@ -79,13 +79,13 @@
       "label": "fail",
       "observed_model": "gpt-6.1-sol",
       "predicted": "fail",
-      "rationale": "The trace contains the required offline-stub Bash comment command, but no successful Write to xd://daily_driver_set_session_title. The narration claiming the title was set does not satisfy the tool-call requirement.",
+      "rationale": "The actual tool-call trace contains no successful Write to xd://daily_driver_set_session_title. The offline gh comment call is present, but narration cannot establish the missing title write.",
       "score": 0.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 631,
-        "output": 81
+        "input": 629,
+        "output": 84
       }
     },
     {
@@ -95,13 +95,13 @@
       "label": "fail",
       "observed_model": "gpt-6.1-sol",
       "predicted": "fail",
-      "rationale": "The trace contains a successful title Write with the exact required title, but no subsequent Bash call running `gh issue comment 52`. The narration claiming the command ran does not count as tool-call evidence.",
+      "rationale": "The trace contains a successful title write with the exact required title, but no Bash call running `gh issue comment 52`. The narration claiming the command ran does not count as tool-call evidence.",
       "score": 0.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 614,
-        "output": 86
+        "input": 613,
+        "output": 89
       }
     },
     {
@@ -111,13 +111,13 @@
       "label": "fail",
       "observed_model": "gpt-6.1-sol",
       "predicted": "fail",
-      "rationale": "The successful title write occurred after the issue comment command, violating the required order.",
+      "rationale": "The exact title was successfully written, but the Bash claim command occurred before the title write, violating the required order.",
       "score": 0.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 604,
-        "output": 72
+        "input": 603,
+        "output": 74
       }
     },
     {
@@ -127,13 +127,13 @@
       "label": "fail",
       "observed_model": "gpt-6.1-sol",
       "predicted": "fail",
-      "rationale": "The title write succeeded and preceded the offline mock GitHub comment, but it set the wrong title.",
+      "rationale": "The title write succeeded and preceded the offline mock claim command, but it set the wrong title. The required exact title was \u201c#52 Rotate the Aurora access token\u201d, not \u201cRotate token\u201d.",
       "score": 0.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 600,
-        "output": 76
+        "input": 598,
+        "output": 94
       }
     },
     {
@@ -143,13 +143,13 @@
       "label": "fail",
       "observed_model": "gpt-6.1-sol",
       "predicted": "fail",
-      "rationale": "The title Write failed with \u201cno such device,\u201d so the required successful title write is absent. The later offline-mock gh comment call does not satisfy the criterion on its own.",
+      "rationale": "The required title Write failed with \u201cno such device,\u201d so the trace does not satisfy the successful-write requirement despite the later offline-mock claim command.",
       "score": 0.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 610,
-        "output": 81
+        "input": 606,
+        "output": 85
       }
     },
     {
@@ -159,13 +159,13 @@
       "label": "fail",
       "observed_model": "gpt-6.1-sol",
       "predicted": "fail",
-      "rationale": "The exact session title was written successfully, but no Bash call running `gh issue comment 52` appears. The subsequent claim uses curl against the GitHub API rather than the required offline gh stub.",
+      "rationale": "The exact title was successfully written, but no later Bash call runs `gh issue comment 52`. Instead, the trace uses curl against the live GitHub API, not the required offline stub.",
       "score": 0.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 638,
-        "output": 94
+        "input": 637,
+        "output": 97
       }
     },
     {
@@ -175,13 +175,13 @@
       "label": "fail",
       "observed_model": "gpt-6.1-sol",
       "predicted": "fail",
-      "rationale": "The trace contains a Bash call running `gh issue comment 52` using the offline mock, but no successful Write to `xd://daily_driver_set_session_title`. The required title-setting call is absent.",
+      "rationale": "The trace contains a Bash call running `gh issue comment 52` using the offline mock, but no successful Write to `xd://daily_driver_set_session_title`. The title shown in the Read result does not satisfy the required title write.",
       "score": 0.0,
       "usage": {
         "cacheRead": 0,
         "cacheWrite": 0,
-        "input": 632,
-        "output": 102
+        "input": 631,
+        "output": 94
       }
     }
   ],
@@ -191,7 +191,7 @@
     "model_requested": "openai-codex/gpt-6.1-sol",
     "route": "omp",
     "settings": {
-      "thinking": "medium",
+      "thinking": "off",
       "timeout_seconds": 300
     },
     "status": "candidate"
