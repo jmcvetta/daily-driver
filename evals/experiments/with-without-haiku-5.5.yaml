@@ -1,0 +1,73 @@
+# The `with-without` ablation on Claude Haiku 5.5: the same suites, variants
+# and limits as `with-without.yaml`, with only the model pin changed. It asks
+# whether this plugin's skills fire, and the constitution lands, when the
+# session runs on the cheapest current Claude model.
+#
+# Effort is left unset, as in `with-without.yaml`, so the session runs at
+# Claude Code's own default for the model. `make evals-run-haiku-5-5` runs it,
+# and the `-e` warning in `with-without.yaml` applies here unchanged.
+
+experiment_id: with-without-haiku-5-5
+description: >-
+  Trigger accuracy, constitution delivery and review-depth routing on
+  claude-haiku-5-5, with the daily-driver plugin loaded and without it.
+
+defaults:
+  # Their default is 1. One replicate of a non-deterministic agent is an
+  # anecdote: 3/3 — the old suites' `runs: 3` — still only supports a ~[0.37,
+  # 1.0] confidence interval on the rate. 5 is the floor at which the
+  # per-replicate scores in the report are worth reading.
+  repeats: 5
+
+  run_limits:
+    # A per-task ceiling, not a target; every task restates both timeouts with
+    # what it actually needs. They are two different clocks and must not be set
+    # equal: `turn_timeout` is the agent's budget, while `task_timeout` is a
+    # watchdog armed before the turn starts that is still running when the
+    # criteria are checked. Equal, a turn that spends its budget is SIGKILLed
+    # as a TIMEOUT before it can be graded. The 180s gap is the grading window,
+    # and it is inherited by any task that omits this block.
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+
+  agent:
+    type: claude-code
+
+    model: claude-haiku-5-5
+
+    permission_mode: acceptEdits
+
+    # Deliberately narrow, and widened per task. Trigger accuracy is about
+    # which skill loads, so `Skill` alone is the whole surface those tasks
+    # need; the review-depth tasks that must drive git and dispatch a panel
+    # restate this field with what they actually use.
+    allowed_tools: [Skill]
+
+variants:
+  # The baseline. Nothing loaded — the skills, the agents and the
+  # constitution-delivery hooks are all absent, so every positive criterion
+  # here is expected to score 0. That is the control, not a failure.
+  - variant_id: bare
+    description: A session with no plugin loaded.
+    agent:
+      plugins: []
+
+  # The treated arm. `path` must be the PLUGIN ROOT — the directory holding
+  # `skills/`, `agents/` and `hooks/` — and it is resolved against the process
+  # working directory, so **run `coder-eval` from `evals/`** (`make evals-plan`
+  # and `make evals-run` do). Pointed one level deeper the SDK loads nothing,
+  # with no error, and every positive row scores 0 exactly as if the skills
+  # never fired.
+  #
+  # Nothing catches that at `plan` time. Plugin paths are resolved in the agent,
+  # at `run` time, so `plan` neither prints the path nor checks it; the "no
+  # skills/ subdirectory" warning appears in the run log, once the money is
+  # committed. `make evals-run` is the guard, because it is the only entry point
+  # that guarantees the working directory this path is relative to.
+  - variant_id: with-plugin
+    description: The same session with the daily-driver plugin loaded.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

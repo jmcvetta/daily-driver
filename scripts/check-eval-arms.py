@@ -114,8 +114,15 @@ ARMS: dict[str, dict[str, object]] = {
         "tag": "claude-only",
         "id_suffix": None,
         "kinds": ("claude-code",),
-        "experiment": "with-without.yaml",
-        "run_target": "evals-run",
+        "ablation": True,
+        "experiments": {
+            "with-without.yaml": "claude-sonnet-5",
+            "with-without-haiku-5.5.yaml": "claude-haiku-5-5",
+        },
+        "run_targets": {
+            "evals-run": "with-without.yaml",
+            "evals-run-haiku-5-5": "with-without-haiku-5.5.yaml",
+        },
     },
     "omp": {
         "tag": "omp-only",
@@ -606,7 +613,7 @@ def check_model_class_model(path: Path, document: dict) -> None:
 
 
 def check_experiments() -> None:
-    """Every experiment names its arm; Omp pairs ablations and registers focused runs."""
+    """Every experiment names its arm; ablation arms pair variants and register focused runs."""
     variant_kinds = _load_variant_kinds()
     arm_of_experiment = {
         experiment: (name, model)
@@ -681,7 +688,7 @@ def check_experiments() -> None:
             defaults = document.get("defaults") if isinstance(document, dict) else None
             agent = defaults.get("agent") if isinstance(defaults, dict) else None
             if not isinstance(agent, dict) or agent.get("model") != model:
-                raise CheckFailed(f"{path.relative_to(ROOT)}: expected Omp model {model!r}")
+                raise CheckFailed(f"{path.relative_to(ROOT)}: expected {arm} model {model!r}")
             focused_variants = ARMS[arm].get("focused_variants", {})
             if isinstance(focused_variants, dict) and path.name in focused_variants:
                 check_single_arm_experiment(path, document, str(focused_variants[path.name]))
@@ -695,7 +702,7 @@ def check_experiments() -> None:
             }
             if set(variants_by_id) != {"bare", "with-plugin"}:
                 raise CheckFailed(
-                    f"{path.relative_to(ROOT)}: Omp must score `bare` and `with-plugin`; found "
+                    f"{path.relative_to(ROOT)}: the {arm} arm must score `bare` and `with-plugin`; found "
                     f"{sorted(str(variant_id) for variant_id in variants_by_id)}"
                 )
             bare = variants_by_id["bare"].get("agent")
