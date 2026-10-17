@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.52.0](https://github.com/jmcvetta/daily-driver/compare/v0.51.0...v0.52.0) (2026-10-17)
+
+
+### Features
+
+* **undertake:** keep architecture documentation current ([#602](https://github.com/jmcvetta/daily-driver/issues/602)) ([9345ce4](https://github.com/jmcvetta/daily-driver/commit/9345ce4f5351ed86418f448c004d9fae78d05c91))
+
+
+### Bug Fixes
+
+* **evals:** end an Omp attempt as a crash when the provider refuses the turn ([#620](https://github.com/jmcvetta/daily-driver/issues/620)) ([99a858e](https://github.com/jmcvetta/daily-driver/commit/99a858e4572580b17a2b590c10c75cae4f300741))
+* **evals:** settle Omp dispatch rows on the async handoff ([#619](https://github.com/jmcvetta/daily-driver/issues/619)) ([d7a4ab0](https://github.com/jmcvetta/daily-driver/commit/d7a4ab04acd4ac411d807e6cc4e3d8549e2ba5ac))
+* **issue-body:** correct stale Omp reasoning guidance ([#604](https://github.com/jmcvetta/daily-driver/issues/604)) ([5e0a0bd](https://github.com/jmcvetta/daily-driver/commit/5e0a0bd314f1d52adbc4ddfd31702f77ffd9e7c1))
+* **undertake:** try the setup route before reporting a missing tool as a gap ([#615](https://github.com/jmcvetta/daily-driver/issues/615)) ([a23820a](https://github.com/jmcvetta/daily-driver/commit/a23820a593657815786995a97fec8a300c019236))
+
 ## [0.51.0](https://github.com/jmcvetta/daily-driver/compare/v0.50.0...v0.51.0) (2026-10-09)
 
 
