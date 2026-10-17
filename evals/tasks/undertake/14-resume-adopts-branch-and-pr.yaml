@@ -47,11 +47,25 @@ success_criteria:
       Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
       tag exists, write `ANCHOR: none` and score 0.0.
 
-      Score 1.0 only if it says the worktree attaches the existing branch
-      `issue-52-strict-parser` (fetched, not recreated from base) rather than
-      the designated `claude/fresh-52`; that the handoff makes the prior claim
-      a resume rather than a collision, so this session still posts its own
-      claim naming the adopted branch; and that `Open the draft` finds and
-      updates pull request #60 with no second pull request opened. Score 0.0
-      if it uses the designated branch, treats the prior claim as a collision
-      stop, or opens a second pull request.
+      The prompt asks for an explanation, not for real actions. Do not require
+      or reward executed actions, and do not penalise a reply that truthfully
+      says it executed nothing. Equivalent meaning counts; exact phrases are
+      not required.
+
+      Score 1.0 if it says all three of: the worktree attaches the existing
+      branch `issue-52-strict-parser`, fetched and not recreated from base,
+      rather than the designated `claude/fresh-52`; the handoff makes the prior
+      claim a resume rather than a collision, so this session still posts its
+      own claim naming the adopted branch; and `Open the draft` finds and
+      updates (reuses) pull request #60 with no second pull request opened.
+
+      Score 0.5 if it correctly chooses the existing branch and updates or
+      reuses pull request #60 without a duplicate, but omits the fetch and
+      not-recreated detail, or omits this session's own claim and the
+      handoff-based resume reasoning.
+
+      Score 0.0 if it uses `claude/fresh-52`, recreates the task branch from
+      base, treats the prior claim as a collision stop, opens a second pull
+      request, does not adopt the existing branch and pull request, or gives no
+      substantive answer. Any such prohibited action overrides otherwise
+      correct details.

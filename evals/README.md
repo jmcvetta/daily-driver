@@ -458,6 +458,13 @@ That is a small sample of one rubric: it licenses recommending the route, not a
 ranking of models, and the default judge stays `claude-code-sonnet-5`. Change the
 labels or the rule and it is a new set with a new `set_id`.
 
+Two further sets, `undertake-17-truthful-mock-v1` and
+`undertake-14-resume-explanation-v1`, hold hand-labelled expectations for the
+corrected row-17 and row-14 rubrics (select one with `calibrate --dir`). They are
+**unmeasured**: no judge has run on them, and `check-evals-judge` verifies only their
+shape and that row 17's mock starts nothing. Measuring them needs separate
+authorization and a new measurement identity.
+
 ### `base-vs-candidate`: does a constitution change move a row
 
 `with-without.yaml` compares the plugin with no plugin, so its control carries
