@@ -86,10 +86,11 @@ def total_price(record: dict[str, Any]) -> float | None:
     Every case must carry a numeric cost; a partial sum would read as a whole
     one. Schema version 2 is trusted for Claude Code alone, the one harness
     that reported its own price before version 3 made the price required.
+    Versions 3 and 4 require prices on every case.
     """
     cases = record.get("cases") or []
     version = record.get("schema_version")
-    if not cases or version not in (2, 3):
+    if not cases or version not in (2, 3, 4):
         return None
     if version == 2 and record.get("client", {}).get("name") != "claude-code":
         return None

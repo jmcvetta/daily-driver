@@ -117,14 +117,19 @@ def group_by_route(cases: list[dict[str, Any]]) -> dict[tuple[str, str], list[di
 
 
 def class_status(cases: list[dict[str, Any]], klass: str) -> dict[str, Any] | None:
-    """Whether `klass` is earned by `cases`, judged on only the most recent run
-    that covers it. None when no case in `cases` carries this class at all.
+    """Whether `klass` is earned by its most recent run with scored results.
+    Unscored outcomes do not count as failures or replace an earlier measured
+    run. None when no case has a scored outcome for this class.
     """
-    covering = [case for case in cases if case["class"] == klass]
-    if not covering:
+    scored = [
+        case
+        for case in cases
+        if case["class"] == klass and case["outcome"] in {"succeeded", "failed"}
+    ]
+    if not scored:
         return None
-    latest_run = max(covering, key=lambda case: case["completed_at"])["run_id"]
-    latest = [case for case in covering if case["run_id"] == latest_run]
+    latest_run = max(scored, key=lambda case: case["completed_at"])["run_id"]
+    latest = [case for case in scored if case["run_id"] == latest_run]
     by_task: dict[str, list[dict[str, Any]]] = {}
     for case in latest:
         by_task.setdefault(case["task_id"], []).append(case)

@@ -45,8 +45,9 @@ REQUIRED_RECORD_FIELDS = {
 PRICE_RATE_FIELDS = ("input", "output", "cache_read", "cache_write")
 
 # The schema version `build_record` writes. Version 3 makes a numeric price
-# and a positive per-replicate wall time required on every case row.
-SCHEMA_VERSION = 3
+# and a positive per-replicate wall time required. Version 4 preserves the
+# measured token buckets and represents unavailable buckets explicitly.
+SCHEMA_VERSION = 4
 
 
 def command_version(command: str) -> str:
@@ -139,7 +140,6 @@ def run_requested_models(run: dict[str, Any], variant_id: str) -> set[str]:
         if row.get("variant_id") == variant_id and isinstance(agent_config, dict) and agent_config.get("model"):
             models.add(agent_config["model"])
     return models
-
 
 def run_task_ids(run: dict[str, Any], variant_id: str) -> list[str]:
     """Return distinct task ids in run order for one variant."""
@@ -275,6 +275,29 @@ def case_price(row: dict[str, Any], model: str, prices: dict[str, dict[str, Any]
     overhead = sum(row[field] for field in ("judge_cost_usd", "simulator_cost_usd") if _number(row.get(field)))
     return agent + overhead, "computed"
 
+TOKEN_USAGE_FIELDS = (
+    "uncached_input_tokens",
+    "cache_read_input_tokens",
+    "cache_creation_input_tokens",
+    "output_tokens",
+    "reasoning_tokens",
+)
+
+
+def token_usage(row: dict[str, Any]) -> dict[str, int | str]:
+    """Preserve measured usage buckets without turning missing values into zero."""
+    source_fields = {
+        "uncached_input_tokens": "input_tokens",
+        "cache_read_input_tokens": "cache_read_input_tokens",
+        "cache_creation_input_tokens": "cache_creation_input_tokens",
+        "output_tokens": "output_tokens",
+        "reasoning_tokens": "reasoning_tokens",
+    }
+    return {
+        field: value if isinstance(value := row.get(source), int) and not isinstance(value, bool) and value >= 0 else "unreported"
+        for field, source in source_fields.items()
+    }
+
 
 def run_cases(
     run: dict[str, Any],
@@ -315,6 +338,7 @@ def run_cases(
                 "settings": experiment_id,
                 "outcome": row_outcome(row.get("status", "")),
                 "elapsed_seconds": elapsed,
+                "token_usage": token_usage(row),
                 "tokens": tokens if isinstance(tokens, int) else "unreported",
                 "cost": cost,
                 "cost_source": cost_source,
@@ -933,8 +957,8 @@ def validate_record(record: dict[str, Any]) -> list[str]:
     """Return validation errors for one provenance record."""
     errors = sorted(REQUIRED_RECORD_FIELDS - record.keys())
     version = record.get("schema_version")
-    if version not in (1, 2, 3):
-        errors.append("schema_version must be 1, 2 or 3")
+    if version not in (1, 2, 3, 4):
+        errors.append("schema_version must be 1, 2, 3 or 4")
     for field in ("run_id", "experiment_id", "started_at", "completed_at"):
         if not isinstance(record.get(field), str) or not record[field]:
             errors.append(f"{field} must be a non-empty string")
@@ -1017,7 +1041,7 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                         errors.append(f"judge.{field} must be a non-empty string")
                 if judge.get("route") == "omp" and record.get("client", {}).get("name") == "claude-code":
                     pass  # a non-Claude judge may grade a Claude subject; they are separate measurements
-    if version in (2, 3):
+    if version in (2, 3, 4):
         if not isinstance(record.get("cases"), list) or not record["cases"]:
             errors.append(f"cases must be non-empty for schema_version {version}")
         else:
@@ -1040,18 +1064,31 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 tokens = case.get("tokens")
                 if tokens != "unreported" and not isinstance(tokens, int):
                     errors.append(f"{prefix}.tokens must be an integer or 'unreported'")
+                if version == 4:
+                    usage = case.get("token_usage")
+                    if not isinstance(usage, dict):
+                        errors.append(f"{prefix}.token_usage must be an object for schema_version 4")
+                    else:
+                        for field in TOKEN_USAGE_FIELDS:
+                            value = usage.get(field)
+                            if value != "unreported" and (
+                                not isinstance(value, int) or isinstance(value, bool) or value < 0
+                            ):
+                                errors.append(
+                                    f"{prefix}.token_usage.{field} must be a non-negative integer or 'unreported'"
+                                )
                 cost = case.get("cost")
-                if version == 3:
+                if version in (3, 4):
                     if cost is None:
                         if case.get("cost_source") != "unreported":
                             errors.append(f"{prefix}.cost_source must be 'unreported' when cost is null")
                     elif not _number(cost) or cost < 0:
-                        errors.append(f"{prefix}.cost must be a non-negative number or null for schema_version 3")
+                        errors.append(f"{prefix}.cost must be a non-negative number or null for schema_version 3 or 4")
                     elif case.get("cost_source") not in ("reported", "computed"):
                         errors.append(f"{prefix}.cost_source must be 'reported' or 'computed' when cost is numeric")
                     elapsed = case.get("elapsed_seconds")
                     if _number(elapsed) and elapsed <= 0:
-                        errors.append(f"{prefix}.elapsed_seconds must be greater than 0 for schema_version 3")
+                        errors.append(f"{prefix}.elapsed_seconds must be greater than 0 for schema_version 3 or 4")
                 elif cost != "unreported" and not isinstance(cost, (int, float)):
                     errors.append(f"{prefix}.cost must be numeric or 'unreported'")
     return errors
