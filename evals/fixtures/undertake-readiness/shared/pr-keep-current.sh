@@ -6,7 +6,7 @@
 # leaves at once with the script's conflict status, 3.
 set -u
 pr="${1:?pull request number required}"
-dir="${FIXTURE_DIR:-.fixture}"
+dir="${FIXTURE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.fixture}"
 printf 'start pr=%s pid=%s\n' "${pr}" "$$" >>"${dir}/service.log"
 printf '%s\n' "$$" >"${dir}/service.pid"
 if [[ "$(<"${dir}/scenario")" == service-exits-early ]]; then

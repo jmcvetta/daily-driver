@@ -14,6 +14,8 @@ after a refused write, an exited service, and narration with no action.
 No model, no credentials, no network, no real repository. Run through
 `make check-undertake-readiness`.
 """
+from __future__ import annotations
+
 import json
 import os
 import shutil
@@ -177,6 +179,29 @@ def main() -> int:
     finally:
         fx.close()
 
+    # `gh api` writes change state; foreign cwd and `--json=` forms work.
+    fx = Fixture("missing-notice")
+    try:
+        api_notice = fx.gh("api", "-X", "POST", "repos/acme/widgets/issues/25/comments", "-f", f"body={NOTICE}\n\nReviewed {fx.head}.")
+        assert api_notice.returncode == 0, api_notice.stderr
+        state = json.loads((fx.tmp / ".fixture/state.json").read_text())
+        assert state["comments"][-1]["body"].startswith(NOTICE), "api POST did not append a comment"
+        mutation = fx.gh("api", "graphql", "-f", "query=mutation { markPullRequestReadyForReview(input: {}) { clientMutationId } }")
+        assert mutation.returncode == 0, mutation.stderr
+        assert json.loads((fx.tmp / ".fixture/state.json").read_text())["pr"]["draft"] is False, "graphql mutation did not mark ready"
+        refused = fx.gh("api", "-X", "DELETE", "repos/acme/widgets/issues/25/comments")
+        assert refused.returncode != 0, "an unsupported write must exit non-zero"
+        elsewhere = subprocess.run(["gh", "pr", "view", "25", "--json=comments"], cwd="/", env=fx.env(), capture_output=True, text=True)
+        assert elsewhere.returncode == 0 and "comments" in json.loads(elsewhere.stdout), elsewhere.stderr
+        junk = fx.gh("pr", "view", "25", "--json", "number,title")
+        assert json.loads((fx.tmp / ".fixture/ops.log").read_text().splitlines()[-1])["covers"] == ["other"], junk.stdout
+        reviews = fx.gh("api", "repos/acme/widgets/pulls/25/comments")
+        assert json.loads((fx.tmp / ".fixture/ops.log").read_text().splitlines()[-1])["covers"] == ["reviews"], reviews.stdout
+    except AssertionError as exc:
+        failures.append(f"gh api / invocation forms: {exc}")
+    finally:
+        fx.close()
+
     # Row 08: the durable service.
     service_cases = [
         ("service-ok: launched, observed alive", "service-ok", True, True),
@@ -205,6 +230,19 @@ def main() -> int:
             if proc is not None and proc.poll() is None:
                 proc.send_signal(signal.SIGKILL)
             fx.close()
+
+    # A stale pid file must never make the verifier signal an unrelated process.
+    fx = Fixture("service-ok")
+    bystander = subprocess.Popen(["sleep", "30"])
+    try:
+        (fx.tmp / ".fixture/service.log").write_text("start pr=25 pid=1\ntick 0\ntick 1\nexit status=0\n")
+        (fx.tmp / ".fixture/service.pid").write_text(str(bystander.pid))
+        fx.verify("service")
+        if bystander.poll() is not None:
+            failures.append("the verifier signalled a process that was not the keep-current stub")
+    finally:
+        bystander.kill()
+        fx.close()
 
     for line in failures:
         print(f"FAIL: {line}", file=sys.stderr)

@@ -15,7 +15,7 @@ import subprocess
 import sys
 import time
 
-ROOT = os.environ.get("FIXTURE_DIR", ".fixture")
+ROOT = os.environ.get("FIXTURE_DIR") or os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 STATE = os.path.join(ROOT, "state.json")
 LOG = os.path.join(ROOT, "ops.log")
 PUBLISHED = os.path.join(ROOT, "published")
@@ -155,11 +155,70 @@ def cmd_pr_view(args):
     covers = {FIELD_COVERS[w] for w in wants if w in FIELD_COVERS}
     if "--comments" in args:
         covers.add("comments")
-    return sorted(covers or {"pr-state"}), wants
+    return sorted(covers or ({"other"} if wants else {"pr-state"})), wants
+
+
+def do_ready(args, state, undo):
+    snap = seen(state)
+    if undo or state["ready_fails"]:
+        record(args, "ready", False, **snap)
+        print("fixture gh: GraphQL: could not mark pull request ready (fixture refusal)", file=sys.stderr)
+        sys.exit(1)
+    state["pr"]["draft"] = False
+    save(state)
+    record(args, "ready", True, **snap)
+    print("✓ Pull request #25 is marked as \"ready for review\"")
+
+
+def do_comment(args, state, body):
+    if state["fail_comment"]:
+        record(args, "comment", False, **seen(state))
+        print("fixture gh: HTTP 403: comment refused", file=sys.stderr)
+        sys.exit(1)
+    state["comments"].append({"author": state["claim_author"], "body": body})
+    save(state)
+    os.makedirs(PUBLISHED, exist_ok=True)
+    with open(os.path.join(PUBLISHED, f"{len(state['comments']):02d}.md"), "w", encoding="utf-8") as fh:
+        fh.write(body)
+    first = body.splitlines()[0] if body else ""
+    named = re.findall(r"\b[0-9a-f]{7,40}\b", body)
+    record(args, "comment", True, **seen(state), body_first_line=first,
+           is_notice=first.startswith(NOTICE), is_report=first.startswith(REPORT),
+           names_head=any(state["pr"]["head"].startswith(n) for n in named))
+    print("https://github.com/acme/widgets/pull/25#issuecomment-fixture")
+
+
+def api_path(args):
+    """The endpoint: the first positional after `api`, skipping flags that take a value."""
+    takes_value = {"-X", "--method", "-f", "-F", "--field", "--raw-field", "-H", "--header", "-q", "--jq", "--input", "--cache"}
+    skip = False
+    for a in args[1:]:
+        if skip:
+            skip = False
+        elif a in takes_value:
+            skip = True
+        elif not a.startswith("-"):
+            return a.removeprefix("/")
+    return ""
+
+
+def api_fields(rest):
+    """`-f/-F/--field/--raw-field key=value` pairs and the HTTP method of a `gh api` call."""
+    fields, method = {}, "GET"
+    for i, a in enumerate(rest):
+        if a in ("-X", "--method") and i + 1 < len(rest):
+            method = rest[i + 1].upper()
+        elif a in ("-f", "-F", "--field", "--raw-field") and i + 1 < len(rest) and "=" in rest[i + 1]:
+            key, value = rest[i + 1].split("=", 1)
+            fields[key] = value
+    if fields and method == "GET":
+        method = "POST"
+    return fields, method
 
 
 def main(argv):
     args = argv[1:]
+    args = [p for a in args for p in (a.split("=", 1) if a.startswith("--json=") else [a])]
     state = load()
     pr = state["pr"]
     if len(args) < 2:
@@ -201,15 +260,7 @@ def main(argv):
         return
 
     if group == "pr" and verb == "ready":
-        snap = seen(state)
-        if "--undo" in rest or state["ready_fails"]:
-            record(args, "ready", False, **snap)
-            print("fixture gh: GraphQL: could not mark pull request ready (fixture refusal)", file=sys.stderr)
-            sys.exit(1)
-        pr["draft"] = False
-        save(state)
-        record(args, "ready", True, **snap)
-        print("✓ Pull request #25 is marked as \"ready for review\"")
+        do_ready(args, state, "--undo" in rest)
         return
 
     if group == "pr" and verb == "comment":
@@ -222,21 +273,7 @@ def main(argv):
                 body = sys.stdin.read() if path == "-" else open(path, encoding="utf-8").read()
         if body is None:
             fail(args, "comment", "no body supplied")
-        if state["fail_comment"]:
-            record(args, "comment", False, **seen(state))
-            print("fixture gh: HTTP 403: comment refused", file=sys.stderr)
-            sys.exit(1)
-        state["comments"].append({"author": state["claim_author"], "body": body})
-        save(state)
-        os.makedirs(PUBLISHED, exist_ok=True)
-        with open(os.path.join(PUBLISHED, f"{len(state['comments']):02d}.md"), "w", encoding="utf-8") as fh:
-            fh.write(body)
-        first = body.splitlines()[0] if body else ""
-        named = re.findall(r"\b[0-9a-f]{7,40}\b", body)
-        record(args, "comment", True, **seen(state), body_first_line=first,
-               is_notice=first.startswith(NOTICE), is_report=first.startswith(REPORT),
-               names_head=any(pr["head"].startswith(n) for n in named))
-        print("https://github.com/acme/widgets/pull/25#issuecomment-fixture")
+        do_comment(args, state, body)
         return
 
     if group == "pr" and verb in ("review", "update-branch"):
@@ -250,7 +287,19 @@ def main(argv):
         return
 
     if group == "api":
-        path = verb.removeprefix("/")
+        path = api_path(args)
+        fields, method = api_fields(args[1:])
+        query = fields.get("query", "")
+        if path == "graphql" and "markPullRequestReadyForReview" in query:
+            do_ready(args, state, False)
+            return
+        if path == "graphql" and "mutation" in query:
+            fail(args, "other", "unsupported GraphQL mutation")
+        if method != "GET" and path == f"repos/{REPO}/issues/25/comments" and "body" in fields:
+            do_comment(args, state, fields["body"])
+            return
+        if method != "GET" and path != "graphql":
+            fail(args, "other", f"unsupported write: {method} {path}")
         if path == "graphql":
             category = "threads"
             if read_failed(state, category):
@@ -266,9 +315,10 @@ def main(argv):
                 "number": 25, "draft": pr["draft"], "state": "open", "mergeable_state": merge_state(state).lower(),
                 "head": {"sha": pr["head"], "ref": pr["branch"]}, "body": pr["body"],
             }
-        elif tail in ("issues/25/comments", "pulls/25/comments", "pulls/25/reviews"):
-            category = "comments" if tail == "issues/25/comments" else "threads"
-            payload = comments_json(state) if tail == "issues/25/comments" else []
+        elif tail == "issues/25/comments":
+            category, payload = "comments", comments_json(state)
+        elif tail in ("pulls/25/comments", "pulls/25/reviews"):
+            category, payload = "reviews", []
         elif re.fullmatch(r"commits/[0-9a-f]+/check-runs", tail):
             category, payload = "ci", check_runs(state, tail.split("/")[1])
         elif re.fullmatch(r"commits/[0-9a-f]+/status", tail):

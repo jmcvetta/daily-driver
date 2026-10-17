@@ -105,11 +105,13 @@ def gate(directory):
 
 
 def alive(pid):
+    """True only while `pid` is still the keep-current stub; a reused pid is someone else's."""
     try:
         os.kill(pid, 0)
+        with open(f"/proc/{pid}/cmdline", "rb") as fh:
+            return b"pr-keep-current" in fh.read()
     except OSError:
         return False
-    return True
 
 
 def service(directory):
