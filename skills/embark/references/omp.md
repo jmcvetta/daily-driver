@@ -5,10 +5,6 @@ session running in Oh My Pi. Claude Code's routes are in
 [`claude.md`](claude.md); [`codex.md`](codex.md) carries the same fallback as
 this one, on a surface measured less.
 
-The user-words landing authorization is Claude Code's auto-mode requirement.
-Omp has no equivalent classifier, so this authorization step adds no Omp
-gate.
-
 **Omp has no session-opening client, so the web route has no calls here.** The
 wave goes out through the harness-local subagent fallback `SKILL.md`'s
 `Open the sessions` states, and the tables below are that fallback resolved to
@@ -28,6 +24,13 @@ before the identity read, then denies unrelated calls after the metadata
 result; it cannot cancel calls already running in a batch. A free-form request
 that invokes `embark` without an explicit command does not activate this
 earlier barrier.
+
+Only interactive or RPC user input activates or supersedes this barrier.
+Plain `embark`, `/embark`, and `/skill:embark` commands each start a fresh
+identity check, including a repeated command for the same issue. Timer
+reminders, background results, and extension-origin input retain the current
+state even when their text starts with `Embark #<number>`. Provider-turn
+preparation is not a new user command.
 
 
 The wave
@@ -221,10 +224,11 @@ round on the head is.
 Recovering an implementor
 =========================
 
-A correction is a message to the implementor's identifier. An implementor the
-harness reports as failed, or as finished with no pull request across two
-check-ins, is relaunched on the **same branch** — the claim comment
-`undertake` posted on the task issue records it, and the open pull request's
-head confirms it where one exists. The replacement is posted to the epic like
-any other replacement, naming the subagent retired and the one that took
-over.
+A correction is a message to the implementor's identifier. Read its lifecycle
+before recovery; never start a replacement alongside a live writer. An ended
+implementor whose open draft still has permitted work resumes on the **same
+branch**. A failed implementor, or one finished with no pull request across two
+check-ins, uses the same route. Read the claim, any handoff and the PR head to
+resolve that branch. Do not relaunch for an unchanged prerequisite when all
+permitted work is complete. The replacement is posted to the epic, naming the
+subagent retired and the one that took over.

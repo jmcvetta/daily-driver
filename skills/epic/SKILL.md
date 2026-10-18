@@ -86,10 +86,48 @@ and buys a reader nothing.
 An issue already in hand is sized the same way, and the answer is the same
 answer. Where the gates close on it, it stays one issue and nothing is opened.
 
-1 — Draft the plan
-------------------
-
 Nothing reaches GitHub here. The plan is drafted, and then it is agreed.
+
+**Name the first useful delivery before independent improvements.** Describe the
+smallest complete user outcome and the functional and safety prerequisites it
+needs. List independent improvements separately, with their own useful outcome.
+This is a scope distinction, not an automatic milestone or child issue: use the
+two existing epic gates below, and keep necessary same-PR work together.
+
+The first delivery is not a license to omit accepted requirements. Preserve
+every explicit acceptance criterion. If a later request adds scope, explain
+whether it moves the first useful delivery or adds an independently useful
+outcome. Use `Agree the plan` only for an unresolved scope choice; an explicit
+informed choice stands. Do not invent estimates, keep asking, or open follow-up
+issues automatically.
+
+**Prove the route before dependent investment.** Identify the uncertain
+integration assumption that could invalidate the implementation approach.
+Plan the smallest safe, bounded proof of the actual relevant integration and
+authentication path before dependent machinery or paid provisioning. Startup
+or health checks alone do not prove integration. The proof may be the first
+action in one task; it is not automatically a research issue. If a proof input
+is unavailable, report that exact gap and continue unrelated safe work.
+
+**Keep task boundaries outcome-based.** File groups, activity names, or
+changing from implementation to verification do not make independent tasks.
+Keep work that must land together in one issue; preserve genuinely independent
+infrastructure, documentation, research, and parallel outcomes. A verification
+checkpoint or human prerequisite is not a blocked-by edge.
+
+**For deployment work, plan continuity before provisioning.** Before the
+first paid provisioning or sensitive state commit, identify authoritative
+configuration and state locations, protection for sensitive provider-returned
+state, recovery needs, and a cross-session resume path. Preserve artifact
+identity and reusable nonsecret inputs without copying broad credential
+stores. Include the approved host lifecycle in acceptance; session shutdown
+alone does not authorize teardown. Reuse supported state/security tools. Do
+not prescribe encrypted Git state universally, add a platform, retain
+unapproved billable resources, or bypass production, destructive-operation, or
+spending approvals.
+
+These checks add no approval step or universal checklist. Scope agreement
+remains `Agree the plan`; true dependency edges remain `issue-deps`.
 
 **Each child issue records what was asked and no more**, under the body
 contract `issue-body` supplies — the way `undertake`'s `Open the issue`

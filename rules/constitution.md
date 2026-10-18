@@ -152,6 +152,7 @@ worktree.
   detail, scannable by a human. PR *titles* are Conventional Commits; that is
   the `pr-title` skill's business, not this one's.
 - **Stage named files.** Never `git add -A`, never `git add .`.
+- **Do not commit junk.** Keep agent logs, compressed log archives, scratch files, and other disposable artifacts out of Git. Compression does not make disposable output worth committing. Before committing, check that every staged file has a clear, lasting purpose in the project.
 
 ## Before you call it done
 

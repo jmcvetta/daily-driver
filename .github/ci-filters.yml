@@ -93,6 +93,7 @@ check-omp-agent:
   - 'scripts/check-omp-agent.py'
   - 'evals/coder-eval-omp/src/coder_eval_omp/__init__.py'
   - 'evals/coder-eval-omp/src/coder_eval_omp/rpc.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/dispatch.py'
   - 'evals/coder-eval-omp/src/coder_eval_omp/home.py'
   - 'evals/coder-eval-omp/src/coder_eval_omp/pricing.py'
   - 'evals/coder-eval-omp/src/coder_eval_omp/launch.py'
@@ -117,6 +118,14 @@ check-eval-fixtures:
 check-model-classes-grader:
   - 'scripts/check-model-classes-grader.sh'
   - 'evals/fixtures/model-classes/shared/**'
+check-dispatch-grader:
+  - 'scripts/check-dispatch-grader.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/__init__.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/rpc.py'
+  - 'evals/coder-eval-omp/src/coder_eval_omp/dispatch.py'
+  - 'evals/fixtures/fix-daily-driver-bugs/shared/check_dispatch.py'
+  - 'evals/fixtures/fix-daily-driver-bugs/dispatch-evidence/**'
+  - 'evals/tasks/fix-daily-driver-bugs/03-unavailable-route-blocks-only-its-task.yaml'
 check-eval-arms:
   - 'scripts/check-eval-arms.py'
   - 'scripts/evals-variants.py'

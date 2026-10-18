@@ -138,6 +138,7 @@ sandbox:
 agent:
   type: omp
   settle_on_async_handoff: true
+  record_task_dispatches: true
   allowed_tools: [Read, Grep, Glob, Skill, Bash, Task]
   disallowed_tools: [WebFetch, WebSearch]
   extra_args: [--config, overlay.yml]
@@ -179,30 +180,22 @@ success_criteria:
     pattern: '^PASS$'
     weight: 2
 
-  - type: command_executed
-    description: The routable task #990009 is dispatched with undertake exactly once
-    tool_name: Agent
-    command_pattern: 'undertake #990009\b'
-    min_count: 1
-    max_count: 1
-    require_success: true
+  - type: run_command
+    description: "The routable task #990009 is assigned to the implementation agent exactly once"
+    command: python3 .fixture/check_dispatch.py --require 990009 --agent implementation
+    timeout: 30
     weight: 1
 
-  - type: command_executed
-    description: The routable task #990011 is dispatched with undertake exactly once
-    tool_name: Agent
-    command_pattern: 'undertake #990011\b'
-    min_count: 1
-    max_count: 1
-    require_success: true
+  - type: run_command
+    description: "The routable task #990011 is assigned to the implementation agent exactly once"
+    command: python3 .fixture/check_dispatch.py --require 990011 --agent implementation
+    timeout: 30
     weight: 1
 
-  - type: command_executed
-    description: The task with no available route is not dispatched
-    tool_name: Agent
-    command_pattern: '990010'
-    min_count: 0
-    max_count: 0
+  - type: run_command
+    description: "The task with no available route, #990010, is never assigned"
+    command: python3 .fixture/check_dispatch.py --forbid 990010
+    timeout: 30
     weight: 2
 
   - type: agent_judge

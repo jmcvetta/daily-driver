@@ -32,7 +32,14 @@
 
 ## [Unreleased]
 
+
+### Features
+
+* **epic:** plan first useful delivery, early integration proof, outcome-based task boundaries, and deployment continuity ([#633](https://github.com/jmcvetta/daily-driver/issues/633))
+
 ### Tests
+
+* **evals:** add offline behavioral coverage for delivery scope, integration ordering, useful task boundaries, and deployment state continuity
 
 * **evals:** record the bounded Sol/Luna/Terra comparison, its isolation limits, and normalized resource use ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
 * **evals:** preserve both historical schema-4 formats while new records retain token buckets and subscription billing ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
@@ -40,10 +47,13 @@
 
 ### Bug Fixes
 
-* **embark:** ask for user authorization before Claude Code landing and archiving ([#621](https://github.com/jmcvetta/daily-driver/issues/621))
+* **embark:** remove the upfront landing and archive authorization question; default to orchestrator mode while preserving explicit by-hand opt-outs and real tool denials
+* **embark:** advance permitted preparation behind the draft gate without bypassing real approvals or repeating unchanged status reports ([#632](https://github.com/jmcvetta/daily-driver/issues/632))
+* **evals:** accept offline safety prose in Omp task dispatch while keeping child URI targets blocked ([#636](https://github.com/jmcvetta/daily-driver/issues/636))
 
 * **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575)) ([bb73965](https://github.com/jmcvetta/daily-driver/commit/bb73965ecbb78f2e9b3f80282d994e598a76124c))
 * **evals:** measure undertake readiness rows 08, 10 and 13 from offline action evidence ([#609](https://github.com/jmcvetta/daily-driver/issues/609))
+* **evals:** grade case 03 from structured Omp task-call evidence; guard each prompt before execution so failed writes and interrupted atomic publication cannot expose stale passing evidence; historical measurements are unchanged ([#635](https://github.com/jmcvetta/daily-driver/issues/635))
 * **evals:** accept truthful mock-only disclosure in `undertake` row 17 and score row 14's resume explanation 1.0 / 0.5 / 0.0 ([#610](https://github.com/jmcvetta/daily-driver/issues/610))
 
 ## [0.50.0](https://github.com/jmcvetta/daily-driver/compare/v0.49.3...v0.50.0) (2026-10-08)

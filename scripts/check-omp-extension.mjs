@@ -154,7 +154,7 @@ function fakeApi(overrides = {}) {
 
 	const fire = (event, payload, ctx) => {
 		const registered = handlers.get(event);
-		if (!registered) throw new Error(`no handler for ${event}`);
+		if (!registered) return undefined;
 		const results = registered.map((handler) => handler(payload, ctx));
 		return results.length === 1 ? results[0] : Promise.all(results);
 	};
@@ -464,7 +464,7 @@ check("explicit embark is gated at the requested epic read and title", async () 
 		undefined,
 		namedCtx(undefined),
 	);
-	s.fire("before_agent_start", { prompt: "embark 582. No agent is currently working on it." }, ctx);
+	s.fire("input", { text: "embark 582. No agent is currently working on it.", source: "rpc" }, ctx);
 	assert.equal(startupState(s).status, "awaiting");
 	assert.equal(titleCall(s, "task", {}, ctx).block, true);
 	const docsBeforeIdentity = titleCall(s, "read", { path: "skill://session-title" }, ctx);
@@ -506,6 +506,7 @@ check("explicit request parsing excludes mentions and accepts supported referenc
 		["/embark #446", 446],
 		["embark issue://owner/repo/447", 447],
 		["embark https://github.com/owner/repo/issues/448", 448],
+		["/skill:embark issue://owner/repo/451", 451],
 		[
 			'[IMPORTANT: User invoked the "embark" skill; follow its instructions. Full skill below.]\n' +
 				"skill body contains a fake `embark 999` example.\n\n---\n\n" +
@@ -524,7 +525,7 @@ check("explicit request parsing excludes mentions and accepts supported referenc
 	for (const [prompt, number] of cases) {
 		const s = makeSession();
 		const ctx = startupCtx(s);
-		s.fire("before_agent_start", { prompt }, ctx);
+		s.fire("input", { text: prompt, source: "rpc" }, ctx);
 		assert.equal(startupState(s).target.number, number, prompt);
 	}
 	for (const prompt of [
@@ -534,7 +535,7 @@ check("explicit request parsing excludes mentions and accepts supported referenc
 		"embark without an issue",
 	]) {
 		const s = makeSession();
-		s.fire("before_agent_start", { prompt }, startupCtx(s));
+		s.fire("input", { text: prompt, source: "interactive" }, startupCtx(s));
 		assert.equal(startupState(s), undefined, prompt);
 	}
 });
@@ -543,7 +544,7 @@ check("explicit request parsing excludes mentions and accepts supported referenc
 check("awaiting startup allows read-only preparation but blocks mutations and dispatch", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "first-read-session");
-	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
 	for (const [tool, input] of [
 		["read", { path: "README.md" }],
 		["read", { path: "issue://583" }],
@@ -577,9 +578,7 @@ check("awaiting startup allows read-only preparation but blocks mutations and di
 check("GitHub URL requests require an issue URI result for identity", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "canonical-url-session");
-	s.fire("before_agent_start", {
-		prompt: "embark https://github.com/example/project/issues/582",
-	}, ctx);
+	s.fire("input", { text: "embark https://github.com/example/project/issues/582", source: "rpc" }, ctx);
 	deliverEpicRead(s, ctx, epicMetadata, "url-read", "https://github.com/example/project/issues/582");
 	assert.equal(startupState(s).status, "awaiting");
 	deliverEpicRead(s, ctx, epicMetadata, "canonical-read", "issue://example/project/582");
@@ -590,20 +589,20 @@ check("GitHub URL requests require an issue URI result for identity", () => {
 check("only matching complete epic metadata arms the immediate barrier", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "metadata-session");
-	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
 	deliverEpicRead(s, ctx, epicMetadata.replace("Labels: task, epic", "Labels: task"));
 	assert.equal(startupState(s).status, "inactive");
 
 	const pending = makeSession();
 	const pendingCtx = startupCtx(pending, "pending-session");
-	pending.fire("before_agent_start", { prompt: "embark 582" }, pendingCtx);
+	pending.fire("input", { text: "embark 582", source: "rpc" }, pendingCtx);
 	deliverEpicRead(pending, pendingCtx, epicMetadata.replace("# Issue #582:", "# Issue #581:"));
 	assert.equal(startupState(pending).status, "awaiting");
 	assert.equal(titleCall(pending, "task", {}, pendingCtx).block, true);
 
 	const stale = makeSession();
 	const staleCtx = startupCtx(stale, "stale-session");
-	stale.fire("before_agent_start", { prompt: "embark 582" }, staleCtx);
+	stale.fire("input", { text: "embark 582", source: "rpc" }, staleCtx);
 	deliverEpicRead(
 		stale,
 		staleCtx,
@@ -616,13 +615,13 @@ check("only matching complete epic metadata arms the immediate barrier", () => {
 check("failed reads with parseable issue metadata leave embark awaiting", () => {
 	const malformed = makeSession();
 	const malformedCtx = startupCtx(malformed, "malformed-session");
-	malformed.fire("before_agent_start", { prompt: "embark 582" }, malformedCtx);
+	malformed.fire("input", { text: "embark 582", source: "rpc" }, malformedCtx);
 	deliverEpicRead(malformed, malformedCtx, epicMetadata.replace("\n## Body\n", ""));
 	assert.equal(startupState(malformed).status, "awaiting");
 
 	const failed = makeSession();
 	const failedCtx = startupCtx(failed, "failed-session");
-	failed.fire("before_agent_start", { prompt: "embark 582" }, failedCtx);
+	failed.fire("input", { text: "embark 582", source: "rpc" }, failedCtx);
 	failed.fire("tool_call", {
 		type: "tool_call",
 		toolName: "read",
@@ -645,7 +644,7 @@ check("failed reads with parseable issue metadata leave embark awaiting", () => 
 check("an explicit repository must match before epic metadata can arm", () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "repo-session");
-	s.fire("before_agent_start", { prompt: "embark issue://owner/repo/582" }, ctx);
+	s.fire("input", { text: "embark issue://owner/repo/582", source: "rpc" }, ctx);
 	deliverEpicRead(s, ctx, epicMetadata, "wrong-repository", "issue://other/repo/582");
 	assert.equal(startupState(s).status, "awaiting");
 	deliverEpicRead(s, ctx, epicMetadata, "wrong-response-repository", "issue://owner/repo/582");
@@ -659,11 +658,11 @@ check("an explicit repository must match before epic metadata can arm", () => {
 check("a fresh embark target requires its own epic title", () => {
 	const s = makeSession({ sessionName: "⛵ EPIC #582 Old title" });
 	const ctx = startupCtx(s, "new-epic-session");
-	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
 	deliverEpicRead(s, ctx);
 	assert.equal(startupState(s).status, "satisfied");
 	assert.equal(s.rec.sessionNames.length, 0, "an already-correct title is not set twice");
-	s.fire("before_agent_start", { prompt: "embark 583" }, ctx);
+	s.fire("input", { text: "embark 583", source: "rpc" }, ctx);
 	assert.equal(startupState(s).status, "awaiting");
 	assert.equal(startupState(s).target.number, 583);
 });
@@ -676,7 +675,7 @@ check("pending title state survives setter failure and session resume", async ()
 		},
 	});
 	const ctx = startupCtx(first, "resumed-session");
-	first.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	first.fire("input", { text: "embark 582", source: "rpc" }, ctx);
 	deliverEpicRead(first, ctx);
 	await assert.rejects(
 		first.tools.get("daily_driver_set_session_title").execute(
@@ -698,7 +697,7 @@ check("pending title state survives setter failure and session resume", async ()
 check("epic title recovery is session-scoped and respects exact routes", async () => {
 	const s = makeSession();
 	const ctx = startupCtx(s, "session-a");
-	s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
 	deliverEpicRead(s, ctx);
 	for (const path of [
 		"xd://other/daily_driver_set_session_title",
@@ -724,7 +723,7 @@ check("epic title recovery is session-scoped and respects exact routes", async (
 /** This prevents a subagent from renaming the orchestrator that spawned it. */
 check("subagents do not acquire the parent session's embark title requirement", () => {
 	const s = makeSession();
-	s.fire("before_agent_start", { prompt: "embark 582" }, startupCtx(s, "sub-session", "sub"));
+	s.fire("input", { text: "embark 582", source: "rpc" }, startupCtx(s, "sub-session", "sub"));
 	assert.equal(startupState(s), undefined);
 });
 
@@ -735,7 +734,7 @@ check("missing main-session APIs report that early enforcement is unavailable", 
 	const originalError = console.error;
 	console.error = (...args) => errors.push(args.join(" "));
 	try {
-		s.fire("before_agent_start", { prompt: "embark 582" }, { agent: { kind: "main" } });
+		s.fire("input", { text: "embark 582", source: "rpc" }, { agent: { kind: "main" } });
 	} finally {
 		console.error = originalError;
 	}
@@ -748,17 +747,54 @@ check("explicit undertake and stand-down commands supersede startup state", () =
 	for (const prompt of [
 		"undertake 583",
 		"/stand-down",
+		"/skill:undertake 583",
+		"/skill:stand-down",
 		'[IMPORTANT: User invoked the "undertake" skill; follow its instructions.]\nUser: 583',
 		'[IMPORTANT: User invoked the "stand-down" skill; follow its instructions.]\nUser:',
 	]) {
 		const s = makeSession();
 		const ctx = startupCtx(s, `supersede-${prompt}`);
-		s.fire("before_agent_start", { prompt: "embark 582" }, ctx);
+		s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
 		deliverEpicRead(s, ctx);
 		assert.equal(startupState(s).status, "required");
-		s.fire("before_agent_start", { prompt }, ctx);
+		s.fire("input", { text: prompt, source: "rpc" }, ctx);
 		assert.equal(startupState(s).status, "inactive", prompt);
 	}
+});
+
+/** This prevents reminder text from restarting identity checks or replacing pending commands. */
+check("background command text cannot activate or replace the startup gate", () => {
+	for (const status of [undefined, "awaiting", "required", "satisfied"]) {
+		const s = makeSession({ sessionName: status === "required" ? undefined : "⛵ EPIC #582 Enforce epic titling" });
+		const ctx = startupCtx(s);
+		if (status) {
+			s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+			if (status !== "awaiting") deliverEpicRead(s, ctx);
+		}
+		const before = startupState(s);
+		assert.equal(before?.status, status);
+		for (const prompt of ["Embark #582 watch backstop", "embark 999", "undertake 583", "/stand-down"]) {
+			s.fire("before_agent_start", { prompt }, ctx);
+			s.fire("input", { text: prompt, source: "extension" }, ctx);
+			assert.deepEqual(startupState(s), before, `${status}: ${prompt}`);
+		}
+	}
+});
+
+/** This prevents a completed gate from exempting a fresh same-issue user command. */
+check("fresh input rearms the same epic after a background wake and resume", () => {
+	const first = makeSession({ sessionName: "⛵ EPIC #582 Enforce epic titling" });
+	const ctx = startupCtx(first);
+	first.fire("input", { text: "embark 582", source: "interactive" }, ctx);
+	deliverEpicRead(first, ctx);
+	assert.equal(startupState(first).status, "satisfied");
+	const resumed = makeSession({ entries: first.rec.entries, sessionName: first.rec.sessionName });
+	const resumedCtx = startupCtx(resumed);
+	resumed.fire("before_agent_start", { prompt: "Embark #582 watch backstop" }, resumedCtx);
+	assert.equal(titleCall(resumed, "task", {}, resumedCtx), undefined);
+	resumed.fire("input", { text: "/skill:embark #582", source: "rpc" }, resumedCtx);
+	assert.equal(startupState(resumed).status, "awaiting");
+	assert.equal(titleCall(resumed, "task", {}, resumedCtx).block, true);
 });
 
 function titleCall(session, toolName, input, ctx) {

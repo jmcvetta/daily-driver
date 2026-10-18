@@ -28,7 +28,7 @@ assert.deepEqual(selectChecks(['evals/fixtures/model-classes/shared/grader.sh'])
 
 // Without this dependency, Omp RPC changes can break transcript consumers without running them.
 assert.deepEqual(selectChecks(['evals/coder-eval-omp/src/coder_eval_omp/rpc.py']), [
-  'check-constitution', 'check-omp-agent', 'check-codex-agent', 'check-omp-agent-settle',
+  'check-constitution', 'check-omp-agent', 'check-codex-agent', 'check-dispatch-grader', 'check-omp-agent-settle',
 ])
 
 // Without these checks, real label changes run synthetic fixtures or unrelated suites.

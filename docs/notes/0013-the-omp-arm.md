@@ -186,6 +186,12 @@ stays symmetric:
   `-e`. For every tool except `bash`, it refuses a call when any string in its
   input names a `<scheme>://` outside `skill`, `rule`, `xd`, `proc` and `omp`.
   It matches substrings, because Omp splits a `;` list and resolves each part.
+  The `task` tool's prose fields (`context`, and each entry's `task`,
+  `solutionSpace`, `intent`, `name` and `description`) are not scanned: they
+  instruct a worker and resolve nothing, so `Never use issue://` in a handoff
+  passes (#636). Every other field of a `task` call is still scanned, and the
+  worker's own `read`, `grep` and `glob` calls meet the same guard. Accepting
+  the text grants no access.
   Where the row's grant has no `write`, it refuses a `write` to anything but
   `xd://`. The adapter passes the grant in `CODER_EVAL_OMP_TOOLS`; unset, the
   guard refuses every `write`. `bash` is out of scope, because a row that
@@ -195,8 +201,8 @@ stays symmetric:
 bypass. CI's Omp job runs `make check-omp-eval-guard-live`, which drives a real
 `omp` with the plugin linked.
 
-The guard has a cost: it reads every string, so a granted `write`, `edit` or
-`task` whose content names `https://` is refused as well. Rows rarely write a
+The guard has a cost: it reads every string, so a granted `write` or `edit`
+whose content names `https://` is refused as well. Rows rarely write a
 URL, and a refusal is loud, so the boundary takes the false positive over the
 open path.
 
