@@ -164,6 +164,18 @@ make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
 
+Claude plugin variants also load the official Worktrunk plugin from the pinned
+Git submodule at `evals/dependencies/worktrunk`. `make evals-install` and
+`make evals-plan` initialize it; to prepare it alone, run:
+
+```sh
+make evals-setup-claude
+```
+
+Run direct `coder-eval` commands from `evals/` after this setup. Both comparison
+variants use this same dependency revision. The bare control loads no plugins.
+No user-level Claude plugin installation is required.
+
 Make eval commands use `uv tool run --isolated`, the pinned harness, and
 editable adapters from this checkout. A shared `coder-eval` installation can
 retain an older adapter, including one from another worktree. Direct CLI
