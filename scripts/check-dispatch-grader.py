@@ -181,6 +181,9 @@ def check_forbidden_assignment_always_fails() -> None:
 def check_nothing_unclear_passes() -> None:
     wrong_agent = evidence(call([entry("undertake #990009")], agent="reasoning"))
     check(not passes(wrong_agent, *REQUIRE_9), "the required agent is part of the requirement")
+    malformed_agent = evidence(call([entry("undertake #990009", agent={"name": "implementation"})]))
+    code, output = grade(malformed_agent, *REQUIRE_9)
+    check(code != 0 and "Traceback" not in output, "an unhashable agent value must fail with a grader diagnostic")
     check(not passes(evidence(call([entry("undertake #990009 and undertake #990011")])), *REQUIRE_9),
           "several targets in one entry are unclear")
     check(not passes(evidence(call([entry("undertake #990009 and undertake #990011")])), *FORBID_10),

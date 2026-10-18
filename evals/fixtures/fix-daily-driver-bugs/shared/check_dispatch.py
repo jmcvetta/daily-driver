@@ -135,18 +135,18 @@ def assignments(evidence: dict[str, Any]) -> list[dict[str, Any]]:
         if not isinstance(tasks, list):
             raise Unclear(f"{label} has no tasks list")
         call_agent = arguments.get("agent")
-        agents = {
+        agents = [
             entry.get("agent", call_agent)
             for entry in tasks
             if isinstance(entry, dict)
-        }
+        ]
         for index, entry in enumerate(tasks):
             if not isinstance(entry, dict) or not isinstance(entry.get("task"), str):
                 raise Unclear(f"{label} entry {index} is malformed")
             targets = positive_targets(entry["task"])
             if len(targets) > 1:
                 raise Unclear(f"{label} entry {index} names several targets: {sorted(targets)}")
-        agent = next(iter(agents)) if len(agents) == 1 else None
+        agent = agents[0] if agents and all(item == agents[0] for item in agents) else None
         launch = parse_launch(call, len(tasks), agent if isinstance(agent, str) else None)
         for index, entry in enumerate(tasks):
             targets = positive_targets(entry["task"])
