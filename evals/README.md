@@ -1310,6 +1310,12 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
   the shell's GitHub access. A Claude Code cloud proxy grants the owner's
   access as well. Run only tasks whose tool permissions and effects you accept;
   this is a risk disclosure, not a credential-isolation gate.
+- **File-tool reads are confined.** Omp's `read`, `grep` and `glob` accept
+  existing task inputs and explicitly declared treatment documents, not host
+  source or sibling results. Bare sessions have no treatment allowance.
+  Unsupported paths fail closed. See the [adapter README](coder-eval-omp/README.md)
+  for permitted forms. This does not isolate Bash or concurrent filesystem
+  mutation; `tempdir` is not an OS sandbox. Historical records remain unchanged.
 - **Run replicates in parallel.** `JOBS` sets the subject or judge calls in
   flight; the default is one. One subject at a time a suite takes about two
   hours. A replicate waits on model calls, not on the container: at 12 subject

@@ -78,7 +78,7 @@ from coder_eval_omp.rpc import (  # noqa: E402
     render_agent_output,
     skill_name_from_url,
 )
-from coder_eval_omp.launch import OMP_CONFIG, TOOLS_ENV, child_env, guard_path, reject_tool_flags, rpc_argv  # noqa: E402
+from coder_eval_omp.launch import OMP_CONFIG, READ_POLICY_ENV, TOOLS_ENV, child_env, guard_path, reject_tool_flags, rpc_argv  # noqa: E402
 from coder_eval_omp.tools import UnenforceableToolList, select_tools  # noqa: E402
 
 
@@ -607,12 +607,24 @@ def check_child_env_carries_the_grant() -> None:
     one, and refuses every write, so a row that grants `Write` cannot write.
     """
     selection = select_tools(["Read", "Write"], None)
-    env = child_env({"PATH": "/usr/bin", TOOLS_ENV: "stale"}, Path("/tmp/h"), ["/mock"], selection)
+    env = child_env({"PATH": "/usr/bin", TOOLS_ENV: "stale"}, Path("/tmp/h"), ["/mock"], selection, task_root=Path("/tmp/task"))
     check(env.get(TOOLS_ENV) == "read,write", f"{TOOLS_ENV} must be the row's grant, got {env.get(TOOLS_ENV)!r}")
     check(env["HOME"] == "/tmp/h", f"HOME must be the throwaway home, got {env['HOME']}")
     check(env["PATH"].startswith("/mock"), f"the mock PATH prepend must come first, got {env['PATH']}")
-    empty = child_env({}, Path("/tmp/h"), [], select_tools([], None))
+    empty = child_env({}, Path("/tmp/h"), [], select_tools([], None), task_root=Path("/tmp/task"))
     check(empty.get(TOOLS_ENV) == "", f"an empty grant is set and empty, not unset, got {empty.get(TOOLS_ENV)!r}")
+    # A stale inherited policy would let a bare replicate read the preceding
+    # treated replicate's source even though this task declares no plugin.
+    bare = child_env(
+        {READ_POLICY_ENV: '{"taskRoot":"/other","documentRoots":["/host"]}'},
+        Path("/tmp/h"), [], selection, task_root=Path("/tmp/task"),
+    )
+    check(json.loads(bare[READ_POLICY_ENV]) == {"taskRoot": "/tmp/task", "documentRoots": []},
+          "a bare task must replace inherited treatment access")
+    treated = child_env({}, Path("/tmp/h"), [], selection, task_root=Path("/tmp/task"), plugin_roots=[ROOT])
+    documents = json.loads(treated[READ_POLICY_ENV])["documentRoots"]
+    check(str(ROOT / "skills") in documents and str(ROOT) not in documents and str(ROOT / "evals") not in documents,
+          "declared treatment documents must not grant the host checkout or eval answers")
 
 
 def check_model_commands_split_thinking_level() -> None:

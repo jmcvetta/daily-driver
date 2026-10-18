@@ -9,7 +9,7 @@
  * the filesystem. `fetch.enabled: false` in the throwaway config closes
  * http(s); this guard closes the rest, and refuses before any request goes out.
  *
- * Two rules, in one `tool_call` handler:
+ * Three rules, in one `tool_call` handler:
  *
  * 1. Every tool except `bash`: any string anywhere in the input that names a
  *    `<scheme>://` outside `ALLOWED_SCHEMES` is refused. Substrings, not whole
@@ -20,9 +20,13 @@
  *    `xd://` device is refused. The adapter passes the grant in
  *    `CODER_EVAL_OMP_TOOLS`. The adapter always sets it, so a guard that finds
  *    it unset is misconfigured, and refuses every `write`, devices included.
+ * 3. File-tool targets must pass `read_boundary.js` against the adapter's
+ *    task and treatment-document policy. Missing policy fails closed.
  *
- * No dependencies, for the reason `extensions/daily-driver.js` gives.
+ * No third-party dependencies.
  */
+import { guardReadCall } from "./read_boundary.js";
+
 
 /** Schemes a row may name: Omp's local ones, none of which leaves the machine. */
 export const ALLOWED_SCHEMES = new Set(["skill", "rule", "xd", "proc", "omp"]);
@@ -68,7 +72,7 @@ export function grantedTools(env) {
 }
 
 /** The refusal for one tool call, or undefined to let it run. */
-export function guardToolCall(event, env) {
+export function guardToolCall(event, env, commands = []) {
 	if (event.toolName === "bash") return undefined;
 	const scheme = refusedScheme(event.input);
 	if (scheme !== null) {
@@ -99,10 +103,10 @@ export function guardToolCall(event, env) {
 			};
 		}
 	}
-	return undefined;
+	return guardReadCall(event, env, commands);
 }
 
 /** The extension factory Omp calls with its `ExtensionAPI`. */
 export default function evalGuardExtension(pi) {
-	pi.on("tool_call", (event) => guardToolCall(event, process.env));
+	pi.on("tool_call", (event) => guardToolCall(event, process.env, pi.getCommands()));
 }

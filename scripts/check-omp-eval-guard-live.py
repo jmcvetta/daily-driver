@@ -13,14 +13,11 @@ prompt and records what each call returned.
 
 WHAT IT ASSERTS
 
-    `read pr://...`, `grep path=issue://...` and `read https://...` return the
-    guard's refusal. `read www.example.com`, which names no scheme for the
-    guard to see, returns Omp's "URL reads are disabled by settings". The guard
-    answers `https://` before the setting can, so the bare host is the case
-    that proves the setting is on. `write <file>` under a read-only grant returns the guard's
-    device-only refusal, and the file is not written. `read inside.txt` returns
-    the file. `read xd://` lists the plugin's `daily_driver_*` devices, so the
-    plugin's extension and `-e` loaded together.
+    File tools cannot return host, sibling or provider bytes in either arm,
+    including through selectors, compound paths and symlinks. Task files and
+    treated skill/reference reads still succeed. The bare registry stays empty.
+    Existing scheme and ungranted-write refusals still hold with the plugin.
+    `read xd://` lists the plugin devices, so the extension and guard load together.
 
     Every refusal is produced before any request leaves the machine, so nothing
     here depends on a remote answer. The mock model is the only server, and it
@@ -65,8 +62,6 @@ PROBES: dict[str, tuple[str, dict, str]] = {
     "probe-pr": ("read", {"path": "pr://o/r/1"}, "pr:// is outside this eval's sandbox"),
     "probe-issue": ("grep", {"pattern": "x", "path": "issue://o/r/1"}, "issue:// is outside this eval's sandbox"),
     "probe-https": ("read", {"path": "https://example.com/"}, "https:// is outside this eval's sandbox"),
-    # No scheme, so the guard cannot see it; only `fetch.enabled: false` can.
-    "probe-host": ("read", {"path": "www.example.com"}, "URL reads are disabled by settings"),
     "probe-write": ("write", {"path": "pwned.txt", "content": "x"}, "limits `write` to xd:// devices"),
     "probe-inside": ("read", {"path": "inside.txt"}, INSIDE_TEXT),
     "probe-devices": ("read", {"path": "xd://"}, "daily_driver_set_session_title"),
@@ -164,7 +159,7 @@ def write_home(home: Path, port: int) -> None:
         f"      - id: {MODEL}\n"
         "        name: Guard probe\n"
         "        api: openai-completions\n"
-        "        contextWindow: 8192\n"
+        "        contextWindow: 1048576\n"
         "        maxTokens: 1024\n"
         "        cost:\n"
         "          input: 0\n"
@@ -189,7 +184,7 @@ def read_frames(stream, sink: queue.Queue) -> None:
 
 def run_probes(omp: str, env: dict[str, str], sandbox: Path, stderr_path: Path) -> None:
     """Send each probe as one prompt and wait for its turn to settle."""
-    argv = rpc_argv(omp, select_tools(["Read", "Grep"], None), [])
+    argv = rpc_argv(omp, select_tools(["Read", "Grep", "Glob"], None), ["--no-title"])
     with stderr_path.open("w", encoding="utf-8") as stderr_file:
         process = subprocess.Popen(
             argv,
@@ -232,6 +227,11 @@ def run_probes(omp: str, env: dict[str, str], sandbox: Path, stderr_path: Path) 
             answer = wait_for(lambda f: f.get("type") == "response" and f.get("id") == "model", "set_model")
             if not answer.get("success"):
                 raise CheckFailed(f"set_model failed: {answer.get('error')}", stderr_path.read_text(encoding="utf-8"))
+            send({"id": "commands", "type": "get_available_commands"})
+            registry = wait_for(lambda f: f.get("type") == "response" and f.get("id") == "commands", "commands")
+            skills = [entry for entry in registry.get("data", {}).get("commands", []) if entry["name"].startswith("skill:")]
+            if bool(skills) != ("probe-skill" in PROBES):
+                raise CheckFailed(f"unexpected skill registry: {skills}", stderr_path.read_text(encoding="utf-8"))
             for probe in PROBES:
                 send({"id": probe, "type": "prompt", "message": probe})
                 wait_for(lambda f: f.get("type") == "agent_end" and f.get("isTerminal", True), f"{probe} to settle")
@@ -251,46 +251,88 @@ def main() -> None:
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
         with tempfile.TemporaryDirectory(prefix="check-omp-eval-guard-") as tmp:
-            home = Path(tmp) / "home"
-            sandbox = Path(tmp) / "sandbox"
-            sandbox.mkdir()
-            (sandbox / "inside.txt").write_text(INSIDE_TEXT + "\n", encoding="utf-8")
-            write_home(home, server.server_address[1])
+            original = dict(PROBES)
+            protected = "PROTECTED-REPLICATE-AND-PROVIDER-BYTES"
+            outside = Path(tmp) / "sibling"
+            outside.mkdir()
+            (outside / "task.json").write_text(protected, encoding="utf-8")
+            (Path(tmp) / "environment.json").write_text(protected, encoding="utf-8")
+            for variant in ("bare", "with-plugin"):
+                home = Path(tmp) / variant / "home"
+                sandbox = Path(tmp) / variant / "sandbox"
+                sandbox.mkdir(parents=True)
+                (sandbox / "inside.txt").write_text(INSIDE_TEXT + "\nsecond line\n", encoding="utf-8")
+                (sandbox / "escape").symlink_to(outside, target_is_directory=True)
+                write_home(home, server.server_address[1])
+                provider = home / ".omp" / "agent" / "secrets.yml"
+                provider.write_text(protected, encoding="utf-8")
 
-            # Built from an allow-list, for check-omp-plugin's reason: an
-            # inherited provider credential decides which model Omp finds.
-            base = {name: os.environ[name] for name in ("PATH", "TMPDIR", "LANG", "LC_ALL", "TERM") if name in os.environ}
-            env = child_env(base, home, [], select_tools(["Read", "Grep"], None))
-
-            linked = subprocess.run(
-                [omp, "plugin", "link", str(ROOT)], cwd=ROOT, env=env, capture_output=True, text=True,
-                timeout=TIMEOUT_SECONDS,
-            )
-            if linked.returncode != 0:
-                raise CheckFailed(f"omp plugin link failed: {linked.stdout.strip()}", linked.stderr)
-
-            stderr_path = Path(tmp) / "omp-stderr.log"
-            run_probes(omp, env, sandbox, stderr_path)
-            stderr_text = stderr_path.read_text(encoding="utf-8")
-
-            for probe, (tool, arguments, expected) in PROBES.items():
-                got = MockModel.results.get(probe)
-                if got is None:
-                    raise CheckFailed(f"{probe}: no {tool} result reached the model", stderr_text)
-                if expected not in got:
-                    raise CheckFailed(
-                        f"{probe}: {tool} {json.dumps(arguments)} must return {expected!r}, got {got[:400]!r}",
-                        stderr_text,
+                # Never inherit a real provider credential or parent bridge.
+                base = {name: os.environ[name] for name in ("PATH", "TMPDIR", "LANG", "LC_ALL", "TERM") if name in os.environ}
+                plugins = [ROOT] if variant == "with-plugin" else []
+                env = child_env(base, home, [], select_tools(["Read", "Grep", "Glob"], None),
+                                task_root=sandbox, plugin_roots=plugins)
+                if plugins:
+                    linked = subprocess.run(
+                        [omp, "plugin", "link", str(ROOT)], cwd=ROOT, env=env, capture_output=True, text=True,
+                        timeout=TIMEOUT_SECONDS,
                     )
-            if (sandbox / "pwned.txt").exists():
-                raise CheckFailed("probe-write: the refused write still created pwned.txt", stderr_text)
+                    if linked.returncode != 0:
+                        raise CheckFailed(f"omp plugin link failed: {linked.stdout.strip()}", linked.stderr)
+
+                PROBES.clear()
+                PROBES.update(original)
+                if not plugins:
+                    del PROBES["probe-devices"]
+                    # No extension devices means Omp offers no device-only write.
+                    del PROBES["probe-write"]
+                refusal = "eval read boundary refuses"
+                # These calls previously leaked host treatment, sibling answers
+                # and provider bytes while still earning normal trigger credit.
+                for name, path in {
+                    "metadata": "../../environment.json",
+                    "sibling": str(outside / "task.json"),
+                    "selector": f"{outside}/task.json:1:raw",
+                    "compound": f"inside.txt;{outside}/task.json",
+                    "provider": str(provider),
+                    "symlink": "escape/task.json",
+                    "uritraversal": "skill://undertake/%2e%2e/%2e%2e/evals/README.md",
+                }.items():
+                    PROBES[f"probe-{name}"] = ("read", {"path": path}, refusal)
+                PROBES["probe-grep"] = ("grep", {"path": str(outside), "pattern": "PROTECTED"}, refusal)
+                PROBES["probe-glob"] = ("glob", {"path": str(outside / "*")}, refusal)
+                PROBES["probe-descendant"] = ("grep", {"path": ".", "pattern": "PROTECTED"}, refusal)
+                PROBES["probe-lines"] = ("read", {"path": "inside.txt:2:raw"}, "second line")
+                PROBES["probe-hostsource"] = (
+                    "read", {"path": str(ROOT / "skills/undertake/SKILL.md")},
+                    "name: undertake" if plugins else refusal,
+                )
+                if plugins:
+                    PROBES["probe-skill"] = ("read", {"path": "skill://undertake"}, "name: undertake")
+                    PROBES["probe-reference"] = (
+                        "read", {"path": "skill://undertake/references/omp.md:1-5"}, "Omp routes",
+                    )
+                else:
+                    PROBES["probe-bareskill"] = ("read", {"path": "skill://undertake"}, refusal)
+
+                MockModel.results.clear()
+                stderr_path = Path(tmp) / f"{variant}-omp-stderr.log"
+                run_probes(omp, env, sandbox, stderr_path)
+                stderr_text = stderr_path.read_text(encoding="utf-8")
+                for probe, (tool, arguments, expected) in PROBES.items():
+                    got = MockModel.results.get(probe)
+                    if got is None or expected not in got or protected in got:
+                        raise CheckFailed(
+                            f"{variant}/{probe}: {tool} {json.dumps(arguments)} must return {expected!r} "
+                            f"without protected bytes, got {str(got)[:400]!r}", stderr_text,
+                        )
+                if (sandbox / "pwned.txt").exists():
+                    raise CheckFailed("probe-write: the refused write still created pwned.txt", stderr_text)
+                print(f"check-omp-eval-guard-live: {variant}: {len(PROBES)} offline probes passed")
     finally:
         server.shutdown()
 
-    print(
-        f"check-omp-eval-guard-live: a real omp with the plugin linked and the eval guard loaded "
-        f"answers all {len(PROBES)} probes as the sandbox requires"
-    )
+    print("check-omp-eval-guard-live: both arms preserve legitimate reads without exposing protected bytes")
 
 
 if __name__ == "__main__":
