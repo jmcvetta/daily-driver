@@ -710,71 +710,88 @@ async def check_dispatch_evidence() -> None:
 
 
 async def check_failed_dispatch_rewrite() -> None:
-    """A failed rewrite must not let the grader reuse a previous complete artifact."""
+    """A failed update or interruption must not leave a previous passable artifact."""
     from unittest.mock import patch
 
     from coder_eval_omp.agent import DISPATCH_EVIDENCE_FILENAME, OmpAgent, OmpAgentConfig
     from coder_eval_omp.rpc import TurnReducer
 
+    prior_evidence = '{"version":1,"complete":true,"calls":[]}'
+
+    def configured_agent(workdir: Path) -> OmpAgent:
+        destination = workdir / DISPATCH_EVIDENCE_FILENAME
+        destination.write_text(prior_evidence, encoding="utf-8")
+        agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+        agent.working_directory = str(workdir)
+        return agent
+
     workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-write-failure-"))
     destination = workdir / DISPATCH_EVIDENCE_FILENAME
-    destination.write_text('{"version":1,"complete":true,"calls":[]}', encoding="utf-8")
-    agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
-    agent.working_directory = str(workdir)
+    agent = configured_agent(workdir)
     write_text = Path.write_text
+    writes = 0
 
-    def fail_temporary_write(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
+    def fail_final_write(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
+        nonlocal writes
         if path != destination:
-            raise OSError("injected temporary-file write failure")
+            writes += 1
+            if writes == 2:
+                raise OSError("injected final evidence write failure")
         return write_text(path, data, *args, **kwargs)
 
     try:
-        with patch.object(Path, "write_text", autospec=True, side_effect=fail_temporary_write):
+        with patch.object(Path, "write_text", autospec=True, side_effect=fail_final_write):
             agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
     except OSError as error:
-        check("injected temporary-file write failure" in str(error),
-              "a failed evidence write must be reported")
+        check("injected final evidence write failure" in str(error), "a failed evidence write must be reported")
     else:
-        check(False, "a failed evidence write must not return successfully")
-    check(not destination.exists(), "a failed temporary write leaves no previous passing artifact")
+        check(False, "a failed final evidence write must not return successfully")
+    incomplete = json.loads(destination.read_text(encoding="utf-8"))
+    check(incomplete["complete"] is False, "a failed update must leave explicit non-passing evidence")
 
-    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-unwritable-"))
-    fake = Path(tempfile.mkdtemp(prefix="fake-omp-bin-")) / "fake-omp-clean"
-    fake.write_text(FAKE_OMP_DISPATCH)
-    fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
-    Path(str(fake) + ".mode").write_text("clean")
+    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-interrupted-replace-"))
     destination = workdir / DISPATCH_EVIDENCE_FILENAME
-    prior_evidence = '{"version":1,"complete":true,"calls":[]}'
-    destination.write_text(prior_evidence, encoding="utf-8")
-    agent = OmpAgent(
-        OmpAgentConfig(
-            type="omp", binary=str(fake), plugins=[{"type": "local", "path": str(ROOT)}],
-            record_task_dispatches=True,
-        ),
-        task_id="dispatch-unlink-failure",
-    )
-    await agent.start(str(workdir))
+    agent = configured_agent(workdir)
+    replace = Path.replace
+    replacements = 0
+
+    def interrupt_final_replace(path: Path, target: Path) -> Path:
+        nonlocal replacements
+        replacements += 1
+        if replacements == 2:
+            raise OSError("injected final artifact replacement failure")
+        return replace(path, target)
+
+    try:
+        with patch.object(Path, "replace", autospec=True, side_effect=interrupt_final_replace):
+            agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
+    except OSError as error:
+        check("injected final artifact replacement failure" in str(error), "a failed replacement must be reported")
+    else:
+        check(False, "a failed final replacement must not return successfully")
+    incomplete = json.loads(destination.read_text(encoding="utf-8"))
+    check(incomplete["complete"] is False, "interruption between atomic replacements must leave no passable artifact")
+
+    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-no-unlink-"))
+    destination = workdir / DISPATCH_EVIDENCE_FILENAME
+    agent = configured_agent(workdir)
+    destination.write_text('{"version":1,"complete":true,"calls":[],"stale":true}', encoding="utf-8")
+    stale_evidence = json.loads(destination.read_text(encoding="utf-8"))
+    check(stale_evidence["complete"] is True, "the fixture must begin as passable evidence")
+
     unlink = Path.unlink
 
     def refuse_destination_unlink(path: Path, *args: Any, **kwargs: Any) -> None:
         if path == destination:
-            raise OSError("injected directory permission failure")
+            raise OSError("destination must be replaced atomically, not unlinked")
         unlink(path, *args, **kwargs)
 
-    try:
-        with patch.object(Path, "unlink", autospec=True, side_effect=refuse_destination_unlink):
-            try:
-                await agent.communicate("dispatch", timeout=30)
-            except OSError as error:
-                check("injected directory permission failure" in str(error),
-                      "failed stale-artifact invalidation must fail the task")
-            else:
-                check(False, "a failed stale-artifact invalidation must not return a successful turn")
-    finally:
-        await agent.stop()
-    check(destination.read_text(encoding="utf-8") == prior_evidence,
-          "the regression proves the caller fails when a prior artifact cannot be removed")
-    print("check-omp-agent-settle: failed dispatch evidence writes fail closed")
+    with patch.object(Path, "unlink", autospec=True, side_effect=refuse_destination_unlink):
+        agent._record_task_dispatches(TurnReducer(), attempt=3, iteration=1)
+    published = json.loads(destination.read_text(encoding="utf-8"))
+    check(published["complete"] is True, "an unlink failure cannot block the atomic replacement")
+    check("stale" not in published, "atomic replacement must supersede old passable evidence")
+    print("check-omp-agent-settle: failed dispatch writes and interrupted atomic replacement fail closed")
 
 
 def check_roles_pin() -> None:

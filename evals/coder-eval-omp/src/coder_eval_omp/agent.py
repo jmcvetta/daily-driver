@@ -513,9 +513,9 @@ class OmpAgent(Agent[OmpAgentConfig]):
         """Add this attempt's `task` calls and atomically rewrite their artifact.
 
         Runs from `communicate`'s `finally`, so timeouts, crashes and
-        cancellations keep calls that were really attempted. It invalidates
-        prior evidence before writing, so a failed rewrite cannot pass on stale
-        data.
+        cancellations keep calls that were really attempted. It first
+        atomically publishes an incomplete document, so a failed final write
+        or interruption cannot leave older passable evidence behind.
         """
         if not self.config.record_task_dispatches or self.working_directory is None:
             return
@@ -531,7 +531,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
         destination = Path(self.working_directory) / DISPATCH_EVIDENCE_FILENAME
         temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
         try:
-            destination.unlink(missing_ok=True)
+            temporary.write_text(error_document("task-dispatch evidence update is incomplete"), encoding="utf-8")
+            temporary.replace(destination)
             temporary.write_text(text, encoding="utf-8")
             temporary.replace(destination)
         finally:

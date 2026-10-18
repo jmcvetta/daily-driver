@@ -52,7 +52,7 @@
 
 * **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575)) ([bb73965](https://github.com/jmcvetta/daily-driver/commit/bb73965ecbb78f2e9b3f80282d994e598a76124c))
 * **evals:** measure undertake readiness rows 08, 10 and 13 from offline action evidence ([#609](https://github.com/jmcvetta/daily-driver/issues/609))
-* **evals:** grade case 03's dispatches from structured Omp task-call evidence, so long shared context, capitalised invocations and shared-context prohibitions no longer misscore launches ([#635](https://github.com/jmcvetta/daily-driver/issues/635)). Historical measurements are unchanged.
+* **evals:** grade case 03 from structured Omp task-call evidence and keep artifact rewrites fail-closed under write failures and interruption; historical measurements are unchanged ([#635](https://github.com/jmcvetta/daily-driver/issues/635))
 * **evals:** accept truthful mock-only disclosure in `undertake` row 17 and score row 14's resume explanation 1.0 / 0.5 / 0.0 ([#610](https://github.com/jmcvetta/daily-driver/issues/610))
 
 ## [0.50.0](https://github.com/jmcvetta/daily-driver/compare/v0.49.3...v0.50.0) (2026-10-08)

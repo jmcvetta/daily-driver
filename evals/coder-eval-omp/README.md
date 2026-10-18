@@ -155,15 +155,18 @@ report's Agent Settings.
 
 A row that grades which issues an orchestrator assigned sets
 `record_task_dispatches: true` (default off). After the subject stops, on every
-exit path including a timeout or crash, the adapter atomically writes
-`omp-task-dispatches.json` (`dispatch.py`, version 1). It holds one record per
-attempted `task` call, retries included: the call and attempt identity, the
-arguments after their final update (`tasks[]`, requested agent and shared
-context), the outcome, and the raw result with its structured details. An
-argument-less start followed by an update is one call. Other tools' results are
-not kept, no field is truncated, and past the 8 MiB limit the file becomes an
-explicit instrumentation error that no grader can score as a pass. The normal
-telemetry is unchanged and no `Agent` call is synthesized.
+exit path including a timeout or crash, the adapter atomically replaces
+`omp-task-dispatches.json` (`dispatch.py`, version 1). Before publishing each
+complete document, it atomically installs an incomplete marker. A write failure
+or interruption therefore cannot leave an older passing document in place.
+The artifact holds one record per attempted `task` call, retries included: the
+call and attempt identity, the arguments after their final update (`tasks[]`,
+requested agent and shared context), the outcome, and the raw result with its
+structured details. An argument-less start followed by an update is one call.
+Other tools' results are not kept, no field is truncated, and past the 8 MiB
+limit the file becomes an explicit instrumentation error that no grader can
+score as a pass. The normal telemetry is unchanged and no `Agent` call is
+synthesized.
 
 `evals/fixtures/fix-daily-driver-bugs/shared/check_dispatch.py` grades it with
 the supported `run_command` criterion, one assignment per `tasks[]` entry,
