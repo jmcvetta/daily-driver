@@ -101,6 +101,8 @@ class MockModel(BaseHTTPRequestHandler):
     results: dict[str, str] = {}
     #: What each of the task child's scripted calls returned, in order.
     child_results: list[str] = []
+    #: Probes for a run that passes its own set to `run_probes`.
+    extra_probes: dict[str, tuple[str, dict, str]] = {}
 
     def log_message(self, *args) -> None:
         pass
@@ -141,7 +143,9 @@ class MockModel(BaseHTTPRequestHandler):
             delta = {"role": "assistant", "content": "done"}
             finish = "stop"
         else:
-            tool, arguments, _ = PROBES.get(probe, ("read", {"path": "inside.txt"}, ""))
+            tool, arguments, _ = (PROBES | MockModel.extra_probes).get(
+                probe, ("read", {"path": "inside.txt"}, "")
+            )
             delta = {
                 "role": "assistant",
                 "tool_calls": [
@@ -404,6 +408,7 @@ def main() -> None:
                 }
                 MockModel.results.clear()
                 MockModel.child_results.clear()
+                MockModel.extra_probes = task_probes
                 task_stderr = Path(tmp) / f"{variant}-omp-task-stderr.log"
                 run_probes(omp, task_env, sandbox, task_stderr, task_probes, ("Read", "Grep", "Glob", "Task"),
                            ["--extension", str(sentinel)])
