@@ -116,7 +116,7 @@ class MockModel(BaseHTTPRequestHandler):
         user = next((text_of(m.get("content")) for m in reversed(messages) if m.get("role") == "user"), "")
         found = re.findall(r"probe-[a-z]+", user)
         probe = found[-1] if found else ""
-        child = any(CHILD_MARK in text_of(m.get("content")) for m in messages if m.get("role") != "tool")
+        child = any(CHILD_MARK in text_of(m.get("content")) for m in messages if m.get("role") == "user")
         if child:
             # The task child: a harmless canary first, then forbidden targets only
             # once the sentinel's refusal of the canary proves it is loaded here.
@@ -401,6 +401,9 @@ def main() -> None:
                 task_env = child_env(base, home, [], task_tools, task_root=sandbox, plugin_roots=plugins)
                 warning = f"{CHILD_MARK} Never use issue:// or pr://; do not access agent://parent."
                 task_probes = {
+                    # A resolver target in a non-prose field is still refused on the live path.
+                    "probe-taskfield": ("task", {"context": "offline", "target": "issue://o/r/1"},
+                                        "issue:// is outside this eval's sandbox"),
                     "probe-task": ("task", {
                         "context": warning,
                         "tasks": [{"id": "Probe", "description": "offline safety warning", "task": warning}],
@@ -421,6 +424,11 @@ def main() -> None:
                 run_probes(omp, task_env, sandbox, task_stderr, task_probes, ("Read", "Grep", "Glob", "Task"),
                            ["--extension", str(sentinel)])
                 task_text = task_stderr.read_text(encoding="utf-8")
+                MockModel.extra_probes = {}
+                if "issue:// is outside this eval's sandbox" not in MockModel.results.get("probe-taskfield", ""):
+                    raise CheckFailed(
+                        f"{variant}/probe-taskfield: a task with a resolver target outside the prose fields must be "
+                        f"refused, got {MockModel.results.get('probe-taskfield')!r}", task_text)
                 child = MockModel.child_results
                 if len(child) < 3:
                     raise CheckFailed(
