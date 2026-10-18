@@ -513,8 +513,9 @@ class OmpAgent(Agent[OmpAgentConfig]):
         """Add this attempt's `task` calls and atomically rewrite their artifact.
 
         Runs from `communicate`'s `finally`, so timeouts, crashes and
-        cancellations keep calls that were really attempted. A failed rewrite
-        leaves no prior artifact for the grader to accept.
+        cancellations keep calls that were really attempted. It invalidates
+        prior evidence before writing, so a failed rewrite cannot pass on stale
+        data.
         """
         if not self.config.record_task_dispatches or self.working_directory is None:
             return
@@ -530,7 +531,10 @@ class OmpAgent(Agent[OmpAgentConfig]):
         destination = Path(self.working_directory) / DISPATCH_EVIDENCE_FILENAME
         temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
         try:
-            destination.unlink(missing_ok=True)
+            try:
+                destination.write_text("", encoding="utf-8")
+            except FileNotFoundError:
+                pass
             temporary.write_text(text, encoding="utf-8")
             temporary.replace(destination)
         except OSError as error:

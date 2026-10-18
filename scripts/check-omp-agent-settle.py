@@ -721,10 +721,27 @@ def check_failed_dispatch_rewrite() -> None:
     destination.write_text('{"version":1,"complete":true,"calls":[]}', encoding="utf-8")
     agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
     agent.working_directory = str(workdir)
-    with patch.object(Path, "write_text", side_effect=OSError("injected write failure")):
+    write_text = Path.write_text
+    unlink = Path.unlink
+
+    def fail_temporary_write(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
+        if path != destination:
+            raise OSError("injected temporary-file write failure")
+        return write_text(path, data, *args, **kwargs)
+
+    def refuse_destination_unlink(path: Path, *args: Any, **kwargs: Any) -> None:
+        if path == destination:
+            raise OSError("injected directory permission failure")
+        unlink(path, *args, **kwargs)
+
+    with (
+        patch.object(Path, "write_text", autospec=True, side_effect=fail_temporary_write),
+        patch.object(Path, "unlink", autospec=True, side_effect=refuse_destination_unlink),
+    ):
         agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
-    check(not destination.exists(), "a failed rewrite removes prior passing evidence")
-    print("check-omp-agent-settle: failed dispatch rewrite removes stale evidence")
+    check(destination.exists() and destination.read_text() == "",
+          "a failed rewrite invalidates prior passing evidence even if unlink is forbidden")
+    print("check-omp-agent-settle: failed dispatch rewrite invalidates stale evidence")
 
 
 def check_roles_pin() -> None:
