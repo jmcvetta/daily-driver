@@ -1,0 +1,17 @@
+experiment_id: classes-smoke-sol-6-1
+description: One-repeat route smoke for GPT-6.1 Sol at high effort.
+defaults:
+  repeats: 1
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: openai-codex/gpt-6.1-sol
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+variants:
+  - variant_id: default
+    description: The model against the smoke-tagged model-class cases.
