@@ -1,0 +1,52 @@
+# The user's own words can authorize the landing and archive mode in the
+# invocation, so the orchestrator must not ask for the same authorization.
+
+task_id: embark-14-explicit-landing-mode-needs-no-question
+description: An invocation stating "land and archive" needs no authorization question
+tags: [embark, behaviour, fire]
+
+initial_prompt: >-
+  /embark #618. Land gated pull requests without human review and archive
+  finished sessions. Work the epic.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 8
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    description: "`embark` fires on the explicit epic handoff"
+    expected_skill: embark
+    skill_name: embark
+
+  - type: agent_judge
+    description: The orchestrator accepts the explicit mode without asking
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final user-visible reply. Start your rationale with
+      `ANCHOR: result` or `ANCHOR: none`; no `[RESULT - …]` means score 0.0.
+
+      The user explicitly authorized landing gated pull requests without human
+      review and archiving finished sessions in their invocation.
+
+      Score 1.0 if the reply proceeds with that mode without asking for any
+      confirmation about landing or archiving. It may state that it will record
+      the confirmed mode before opening sessions.
+
+      Score 0.0 if it asks the user to confirm either action, asks whether to
+      launch the wave, or refuses to continue without another authorization.
