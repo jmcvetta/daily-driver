@@ -84,13 +84,16 @@ From schema version 3, every case row carries positive `elapsed_seconds` and
 its cost evidence. `cost` is numeric when the harness reports a price
 (`cost_source: reported`) or reports token counts the recorder can price from
 [`prices.yaml`](prices.yaml) (`cost_source: computed`). The exact Omp Codex
-models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`, and
-`openai-codex/gpt-6.1-sol` use `cost: null` and `cost_source: subscription`;
-token usage remains recorded, but no API price is inferred. When usage is
-missing, `cost` is null and `cost_source: unreported`; it is never treated as
+models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`,
+`openai-codex/gpt-6.1-sol`, and `openai-codex/gpt-5.6-terra` use `cost: null`
+and `cost_source: subscription`; token usage remains recorded, but no API
+price is inferred. When usage is missing, `cost` is null and
+`cost_source: unreported`; it is never treated as
 free. Other token-only routes without a price-table entry or an explicit
-unpriced subscription entry fail recording. Records at versions 1 and 2 stay
-as they are.
+unpriced subscription entry fail recording. New schema-5 records require
+explicit token buckets (`token_usage`) as well as billing-source evidence.
+Historical records remain unchanged, including both schema-4 forms: records
+with token buckets and records with subscription billing.
 
 ## Running them
 
@@ -163,6 +166,18 @@ make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
+
+Claude plugin variants also load the official Worktrunk plugin from the pinned
+Git submodule at `evals/dependencies/worktrunk`. `make evals-install` and
+`make evals-plan` initialize it; to prepare it alone, run:
+
+```sh
+make evals-setup-claude
+```
+
+Run direct `coder-eval` commands from `evals/` after this setup. Both comparison
+variants use this same dependency revision. The bare control loads no plugins.
+No user-level Claude plugin installation is required.
 
 Make eval commands use `uv tool run --isolated`, the pinned harness, and
 editable adapters from this checkout. A shared `coder-eval` installation can
@@ -1295,6 +1310,12 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
   the shell's GitHub access. A Claude Code cloud proxy grants the owner's
   access as well. Run only tasks whose tool permissions and effects you accept;
   this is a risk disclosure, not a credential-isolation gate.
+- **File-tool reads are confined.** Omp's `read`, `grep` and `glob` accept
+  existing task inputs and explicitly declared treatment documents, not host
+  source or sibling results. Bare sessions have no treatment allowance.
+  Unsupported paths fail closed. See the [adapter README](coder-eval-omp/README.md)
+  for permitted forms. This does not isolate Bash or concurrent filesystem
+  mutation; `tempdir` is not an OS sandbox. Historical records remain unchanged.
 - **Run replicates in parallel.** `JOBS` sets the subject or judge calls in
   flight; the default is one. One subject at a time a suite takes about two
   hours. A replicate waits on model calls, not on the container: at 12 subject
@@ -1563,7 +1584,9 @@ kind, so one suite measures a model on Omp or on Claude Code. Personal
 make evals-run-classes MODEL=glm
 make evals-run-classes MODEL=cocktail
 make evals-run-classes MODEL=opus-low
-```
+make evals-run-classes MODEL=sol-6-1
+make evals-run-classes MODEL=luna-6
+make evals-run-classes MODEL=terra-5-6
 
 The Claude Code files (`classes-opus-low`, `classes-sonnet-high`,
 `classes-sonnet-low`) set effort through `sdk_options.effort`, which the
@@ -1578,10 +1601,21 @@ repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
 process, so a token exported before `coder-eval run` is what
-`shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case,
-or use the `smoke`-tagged case per class (the smallest of each) to check a new
-overlay cheaply before spending a full run on it.
+`shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case, or use the `smoke`-tagged case per class (the smallest of each) to check a new overlay cheaply before spending a full run on it.
 
+Keep `TMPDIR` outside this evaluation checkout, with space for preserved
+sandboxes and dependency environments. The contact detector rejects printed
+checkout-root paths; sandboxes beneath that root can produce false contact
+evidence from ordinary package-build and test output.
+
+The clone token is not passed to grading. `career-462` and `career-469` isolate
+`gh` to an empty config with no token, so their optional live-label check takes
+its unauthenticated skip instead of contacting GitHub. Other tests in those
+files still run.
+
+The Sol 6.1, Luna 6 and Terra 5.6 comparison, including its
+limits and normalized-credit assumptions, is in
+[`docs/notes/0033`](../docs/notes/0033-sol-luna-terra-model-classes.md).
 **Building more cases.** `python3 scripts/evals-cases-from-prs.py owner/repo
 [--path-prefix DIR]` scans a source's merged pull requests and appends
 qualifying ones to `candidates.json`; `--select` then runs the build-time

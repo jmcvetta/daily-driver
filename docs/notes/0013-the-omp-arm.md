@@ -200,6 +200,35 @@ The guard has a cost: it reads every string, so a granted `write`, `edit` or
 URL, and a refusal is loud, so the boundary takes the false positive over the
 open path.
 
+**File-tool reads also have a per-task input boundary (#629).** `launch.child_env`
+overwrites `CODER_EVAL_OMP_READ_POLICY` with the task root and document roots
+from successfully linked local treatments. The allowed treatment paths are
+`skills/`, `rules/`, `docs/`, `HAIKU.md` and `README.md`, not the plugin checkout
+as a whole. Bare sessions receive no treatment roots.
+
+The same pre-execution handler calls `read_boundary.js` for `read`, `grep`
+and `glob`. It checks canonical targets, including symlinks and descendants
+of directory/search roots. `skill://` targets must also match the runtime's
+loaded command metadata. Thus a known host skill filename does not confer
+treatment access on a bare subject. Every target in a semicolon list must pass.
+Missing or malformed policy refuses file-tool calls.
+
+The guard accepts existing literal files, line selectors and simple `*`/`?`
+search paths. It refuses unresolved or ambiguous forms before runtime fuzzy
+path recovery. Brace and character-class glob expansion is refused because
+it can manufacture escaping path segments. A tree containing an escaping
+symlink is refused as a whole, even if a particular search might ignore it.
+These conservative refusals remain visible in ordinary tool telemetry.
+Requested reads and trigger credit are unchanged; a denied request is not a
+successful read, and historical contaminated results are not repaired.
+
+This guard is not an OS sandbox. Bash, extension execution and concurrent
+filesystem mutation are not isolated. The pre-execution canonical check does
+not provide an atomic open against a process that swaps symlinks concurrently.
+Rows granting shell or mutation tools must not be treated as contained by it.
+The offline live probe runs both arms against a scripted loopback model.
+
+
 **The extension tools stay on, on purpose.** They act on the session alone: its
 title, its timers, and its id. Four Omp-only rows grade them, and
 `undertake/09-title-before-claim-omp` grades a `Write` call carrying

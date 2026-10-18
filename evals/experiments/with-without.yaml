@@ -75,9 +75,13 @@ variants:
   # skills/ subdirectory" warning appears in the run log, once the money is
   # committed. `make evals-run` is the guard, because it is the only entry point
   # that guarantees the working directory this path is relative to.
+  # Local loading does not install manifest dependencies. The pinned submodule
+  # is initialized by `make evals-setup-claude`; bare remains plugin-free.
   - variant_id: with-plugin
     description: The same session with the daily-driver plugin loaded.
     agent:
       plugins:
         - type: local
           path: ".."
+        - type: local
+          path: "dependencies/worktrunk/plugins/worktrunk"
