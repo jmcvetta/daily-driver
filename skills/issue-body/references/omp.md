@@ -31,11 +31,14 @@ setting, or price does not prove class suitability or working credentials.
 Omp's parent-model authentication fallback needs the same reassessment and
 cannot be assumed to satisfy the class.
 
-The plugin's `frontier` role currently resolves through the supported
+The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
-assume an API route. The existing `reasoning` helper selector is also
-astra-backed; until that separate stale mapping is corrected, it is frontier
-for authorization regardless of its role name.
+assume an API route. The `reasoning` role defaults to
+`openai-codex/gpt-6.1-sol:high`, not a frontier route. Classify the resolved
+selector, not the role label: an effective Astra/Fable route is frontier even
+when selected through `reasoning`, an agent override, a configured prewalk or
+retry fallback, or visible parent-model inheritance. Such a route still
+requires explicit approval and the approved work envelope.
 
 The plugin provides runtime defaults only for roles without an effective
 assignment. A global/project setting or CLI overlay present before plugin
@@ -87,7 +90,8 @@ approval policy do not imply benchmark support.
 | gpt.gateway | classes-gpt.gateway | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | kimi | classes-kimi | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | minimax | classes-minimax | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
-| openai-codex/gpt-5.6-terra | classes-smoke-terra-5-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-08_18-29-58 | 2026-10-08 |
+| openai-codex/gpt-5.6-terra | classes-smoke-terra-5-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-17_17-50-08 | 2026-10-17 |
+| openai-codex/gpt-5.6-terra | classes-terra-5-6 | none | 3/7 | 0/5 | unreported | 2026-10-09_21-43-57 | 2026-10-09 |
 | openai-codex/gpt-6-luna | classes-luna-6 | implementation | 9/9 | 7/7 | unreported | 2026-10-09_19-52-53 | 2026-10-09 |
 | openai-codex/gpt-6-luna | classes-smoke-luna-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-09_20-10-04 | 2026-10-09 |
 | openai-codex/gpt-6.1-sol | classes-smoke-sol-6-1 | mechanical | 1/1 | 0/1 | unreported | 2026-10-08_19-02-13 | 2026-10-08 |

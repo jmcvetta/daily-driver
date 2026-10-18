@@ -15,7 +15,7 @@ SHELL := /bin/bash
 	check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
 	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
-	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry \
+	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry check-undertake-readiness \
 	evals-install evals-setup-omp evals-plan \
 	evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
@@ -128,7 +128,7 @@ check-git-sync:
 
 check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
 	check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
-	check-evals-results check-model-telemetry check-evals-setup-omp
+	check-evals-results check-model-telemetry check-evals-setup-omp check-undertake-readiness
 
 
 check-issue-infra: check-labels check-labels-fixtures
@@ -361,6 +361,14 @@ check-agent-judges:
 check-evals-judge:
 	uv run --frozen python3 scripts/check-evals-judge.py
 
+# check-undertake-readiness: the offline acceptance test for the fixtures behind
+# `evals/tasks/undertake` rows 08, 10 and 13 -- a stateful fake `gh`, a local
+# git repository and a harmless service stub. It asserts the verifier accepts
+# the valid ready/notice/report/service transitions and rejects the wrong ones.
+# No model, no credentials, no network. See the script's docstring.
+check-undertake-readiness:
+	python3 scripts/check-undertake-readiness.py
+
 # check-eval-fixtures: build every review-depth fixture repository and assert
 # it has the shape the `review` skill needs. Part of `check` because it needs
 # only git and bash -- no model, no credentials -- and because a fixture that
@@ -542,10 +550,8 @@ evals-variants:
 #   make evals-run TASKS='tasks/pr/*.yaml'
 TASKS ?= tasks/*/*.yaml
 
-# JOBS: how many replicates a run target executes at once (`coder-eval run
-# --max-parallel`). One by default. Runs are bound by model calls, not by the
-# container, e.g.
-#   make evals-run-omp-gpt-6-luna JOBS=12
+# JOBS: max concurrent subject or judge replicates. Subject runs use `coder-eval
+# --max-parallel`; `evals-record` passes this to `judge-run`. Defaults to one.
 JOBS ?= 1
 
 # Optional replicate-count override, used to keep the two-repeat smoke distinct.
@@ -597,9 +603,10 @@ evals-preflight:
 # evals-record: commit provenance for an existing run. Pass its experiment
 # explicitly so a record cannot pair one run's scores with another model pin.
 RUN ?= evals/runs/latest
+JUDGE_TASKS_DIR ?= evals/tasks
 evals-record:
 	test -n "$(EXPERIMENT)"
-	$(if $(filter omp,$(JUDGE_ROUTE)),uv run --frozen python3 scripts/evals-judge.py judge-run "$(RUN)" --judge $(JUDGE))
+	$(if $(filter omp,$(JUDGE_ROUTE)),uv run --frozen python3 scripts/evals-judge.py judge-run "$(RUN)" --judge $(JUDGE) --tasks-dir "$(JUDGE_TASKS_DIR)" --max-parallel $(JOBS) --resume)
 	uv run --frozen python3 scripts/evals-record.py "$(RUN)" \
 		--experiment "$(EXPERIMENT)" --output evals/provenance \
 		$(if $(filter 1,$(POST_COMMENTS)),--post-comments)

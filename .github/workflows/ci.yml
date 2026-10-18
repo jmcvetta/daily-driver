@@ -159,6 +159,9 @@ jobs:
       - name: Validate Omp eval setup
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-setup-omp')
         run: make check-evals-setup-omp
+      - name: Validate undertake readiness fixtures
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-undertake-readiness')
+        run: make check-undertake-readiness
       - name: Validate issue labels
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-labels')
         run: make check-labels

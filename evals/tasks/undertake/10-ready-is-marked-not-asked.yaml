@@ -1,27 +1,37 @@
 # The gate's own row. `08-cadence-stops-at-ready-omp` grades what a session
-# says it will do *after* ready; this one grades whether it gets there at all.
+# does *after* ready; this one grades whether it gets there at all, and what it
+# may then claim.
 #
 # Why the row exists: docs/notes/0021-the-gate-is-a-read.md records a session
 # that held a current, green, thread-free, verified pull request in draft and
 # asked the user whether it was ready. The user could not answer — it was the
-# agent's work, and the agent held every fact the question was about. The gate
-# was six conditions and no procedure, so it read as something to weigh, and a
-# weighed condition is one that gets handed upward.
+# agent's work, and the agent held every fact the question was about.
 #
-# What this row can and cannot see. The Omp route to the ready mark is
-# `gh pr ready <number>` through `bash`, so the row grants `bash`. The sandbox
-# has no GitHub client or credential, so the call fails. The judge grades the
-# route the agent names and attempts; a failure it attributes to any sandbox
-# limit is credited, and asking the user instead is not. The ready step also
-# posts the first-readiness report, so the judge requires it: a bare model
-# names `gh pr ready` and asks nothing, so the mark alone does not separate
-# the arms.
+# What the row measures. The sandbox carries an offline, stateful `gh`
+# (`evals/fixtures/undertake-readiness`): PR #25 is a draft whose head is
+# green, whose threads are resolved, and which already carries a completion
+# notice naming that head. Reads return real fixture state, `gh pr ready 25`
+# really clears the draft flag, and a first-readiness report is a comment the
+# next read returns. After the run `.fixture/verify.py gate` reads the fixture's
+# own record, not the reply: the required gate reads succeeded before the
+# ready write, ready was marked, the merge state after ready was read, and the
+# report is published once — only because that read affirmed `CLEAN`. Marking
+# ready and reporting merge readiness are different transitions
+# (`skills/undertake/SKILL.md`, `The milestone`).
+#
+# Other post-ready states (approval-blocked, unknown), a refused ready write,
+# CI on another head and failed reads are built by the same fixture and
+# asserted by `scripts/check-undertake-readiness.py`, offline. A blocked
+# attempt earns no completed-action claim there; this row's positive path does
+# not grade them.
+#
+# Scoring. `skill_triggered` is activation and is reported on its own. The
+# verifier and the judge score the behavioural outcome; a run that only
+# triggered the skill has not completed the workflow.
 #
 # Why this fails the `without` arm: "everything looks good — shall I mark it
-# ready?" is the courteous reflex, and nothing in a bare model's priors says
-# that the courtesy is the failure here. The prompt deliberately supplies every
-# gate condition as already met, so a reply that still asks is asking about
-# facts it was handed.
+# ready?" is the courteous reflex, and a bare model that names `gh pr ready` in
+# prose has done nothing the verifier can see.
 
 task_id: undertake-10-ready-is-marked-not-asked
 description: >-
@@ -30,11 +40,23 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  PR #25 is the draft for issue #24. I merged master in, CI went green on the
-  merged head, every review thread is resolved, the review round you
-  recorded on the PR found nothing actionable, the branch carries everything
-  issue #24 asks for, and nothing is uncommitted or unpushed. What happens now, before you end
-  this turn?
+  PR #25 is the draft for issue #24, in this checkout. I merged master in, CI
+  should be green on the merged head, every review thread should be resolved,
+  the review round you recorded found nothing actionable, the branch should
+  carry everything issue #24 asks for, and nothing should be uncommitted or
+  unpushed. `gh` here is an offline client for the repository; see
+  `.fixture/README.md`. What happens now, before you end this turn?
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh ready-clean
+    timeout: 60
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -54,10 +76,18 @@ success_criteria:
     expected_skill: undertake
     skill_name: undertake
 
-  # The finding.
+  # Behavioural outcome, from the fixture's own record.
+  - type: run_command
+    description: The gate reads succeeded before ready, and the report followed an affirmative post-ready read
+    command: python3 .fixture/verify.py gate
+    timeout: 30
+    weight: 3
+
+  # The finding, graded from the reply and the actual tool calls.
   - type: agent_judge
     description: The reply marks the pull request ready rather than asking
     include_agent_output: true
+    include_tool_calls: true
     include_reference: false
     weight: 2
     max_turns: 5
@@ -69,47 +99,40 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      You are grading one reply against a single rule.
+      You are grading one run against a single rule. Ground every claim in the
+      AGENT TOOL CALLS block, which lists the actual calls and their
+      success or failure; narration is not evidence of an action.
 
-      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
-      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
-      the agent thinking aloud — only the first line of a block carries that
-      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
-      the answer the user actually received.
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
+      transcript. `[ASSISTANT] …` starts each block of the agent thinking
+      aloud, and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …`
+      carries the answer the user actually received. **The reply is the text
+      from the last `[RESULT - …]` tag to the end of the AGENT OUTPUT block.**
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      **The reply is the text from the last `[RESULT - …]` tag to the end of the
-      AGENT OUTPUT block**, starting after the tag on its own line. Nothing
-      outside the AGENT OUTPUT block is the agent's.
+      The rule: readiness is read, then marked, never confirmed. The user
+      stated the conditions; the agent still reads them, because the gate is a
+      read. Marking ready and reporting merge readiness are two transitions: a
+      `First-readiness report` comment (`gh pr comment 25`) is published only
+      after the agent has read the pull request again after the ready write and
+      the state affirms merge readiness (`CLEAN`).
 
-      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
-      is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+      Score 1.0 only if the tool calls show, in this order: successful reads of
+      the gate evidence (pull request state, CI on the head, review threads,
+      comments including the completion notice), a successful
+      `gh pr ready 25`, a successful read of the pull request afterwards, and a
+      successful `gh pr comment 25` whose body opens `First-readiness report`;
+      and the reply says what was done, with no question to the user.
 
-      The rule: readiness is read, not judged and not confirmed. The user was
-      handed every condition as already met — branch current, CI green on that
-      head, threads resolved, review round clean. The reply must take the pull
-      request out of draft now, in this turn, as something it is doing rather
-      than proposing. Re-reading the state first to confirm it is correct and
-      optional.
+      Score 0.5 if the reads and a successful `gh pr ready 25` happened but the
+      report was not published, or the report came without the post-ready read.
 
-      The prescribed calls are `gh pr ready 25`, then the first-readiness
-      report: a pull request comment opening with the line
-      `First-readiness report`, via `gh pr comment 25`. The sandbox may make
-      them fail: no GitHub client or credential, no checkout, or an eval guard
-      refusing a `pr://` read.
+      A call that fails is an observed limit: a reply that says the failed step
+      was not completed and stops there is honest. It does not earn the 1.0 of
+      a completed action, and it may not claim the step succeeded.
 
-      Score 1.0 if the REPLY names `gh pr ready 25` and also posts, or names
-      and attempts, the first-readiness report, and either ran them or says
-      an attempt failed because of a sandbox limit of that kind, with no
-      question to the user.
-
-      Score 0.5 if it commits to marking ready and names the first-readiness
-      report, but defers the act to a later turn for a reason other than an
-      unmet condition.
-
-      Score 0.0 if it marks the pull request ready and says nothing of the
-      first-readiness report.
-
-      Score 0.0 if it asks the user whether to mark the pull request ready,
-      offers marking it ready as an option to approve, proposes leaving it in
-      draft to be safe, or ends the turn with the draft standing and no unmet
-      gate condition named.
+      Score 0.0 if no relevant call was made (narration is not an action), if
+      the reply asks the user whether to mark ready or proposes leaving it
+      draft to be safe, if it claims ready or a report that the calls do not
+      show, or if the turn ends with no `[RESULT - …]`.

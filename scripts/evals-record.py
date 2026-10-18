@@ -21,6 +21,9 @@ from typing import Any
 
 import tree_sitter_bash
 from tree_sitter import Language, Parser
+
+from evals_costs import uses_omp_codex_subscription
+
 try:
     import yaml
 except ImportError:  # pragma: no cover - the repository's uv environment has PyYAML.
@@ -41,13 +44,13 @@ REQUIRED_RECORD_FIELDS = {
     "attempts",
 }
 
-# The per-token rates every `evals/prices.yaml` entry gives, in USD.
+# Per-token rates in `evals/prices.yaml` are in USD. Subscription-backed Codex
+# routes below are deliberately not priced from these API rates.
 PRICE_RATE_FIELDS = ("input", "output", "cache_read", "cache_write")
 
-# The schema version `build_record` writes. Version 3 makes a numeric price
-# and a positive per-replicate wall time required. Version 4 preserves the
-# measured token buckets and represents unavailable buckets explicitly.
-SCHEMA_VERSION = 4
+# Schema 4 was published independently with subscription billing and with
+# token buckets. Keep both historical forms valid; schema 5 requires both.
+SCHEMA_VERSION = 5
 
 
 def command_version(command: str) -> str:
@@ -241,19 +244,27 @@ def row_label(row: dict[str, Any]) -> str:
     return f"{label}, error: {error}" if error else label
 
 
-def case_price(row: dict[str, Any], model: str, prices: dict[str, dict[str, Any]]) -> tuple[float | None, str]:
-    """The USD price of one task result, and whether it was `reported`, `computed`
-    or `unreported`.
+def case_price(
+    row: dict[str, Any],
+    model: str,
+    prices: dict[str, dict[str, Any]],
+    client_name: str,
+) -> tuple[float | None, str]:
+    """The USD price of one task result and its source.
 
     The harness's own figure wins where the subject agent was priced: the row's
     `total_cost_usd` is then the whole bill, judge included. A row whose agent
     spend is unpriced -- a token-only harness -- prices the agent's tokens from
     `prices` and adds whatever judge and simulator spend was reported. Its
     `total_cost_usd` is not used, because there it holds the judge alone.
-    Missing token counts and no reported price leave the cost unreported; they
-    are never treated as zero or reconstructed from the configured model.
+    The exact Omp Codex subscription routes retain usage but have no measured
+    dollar charge. Missing token counts and no reported price leave cost
+    unreported, never zero. Other token-only routes without a price-table entry
+    fail closed.
     """
     task = row_label(row)
+    if uses_omp_codex_subscription(client_name, "omp", model):
+        return None, "subscription"
     if _number(row.get("agent_cost_usd")):
         total = row.get("total_cost_usd")
         return (float(total) if _number(total) else float(row["agent_cost_usd"])), "reported"
@@ -318,7 +329,7 @@ def run_cases(
         model_served = "unreported" if client_name == "omp" else (row.get("model_used") or "unreported")
         tokens = row.get("total_tokens")
         model_requested = requested.get(variant_id, "unknown")
-        cost, cost_source = case_price(row, model_requested, prices)
+        cost, cost_source = case_price(row, model_requested, prices, client_name)
         elapsed = row.get("duration")
         if not _number(elapsed) or elapsed <= 0:
             raise ValueError(
@@ -809,7 +820,12 @@ def apply_judge(
                     values[index] = attempt["measured_score"]
 
 
-def judge_block(manifest: dict[str, Any] | None, sidecars: dict[tuple[str, str, int], dict[str, Any]], attempts: list[dict[str, Any]], root: Path) -> dict[str, Any] | None:
+def judge_block(
+    manifest: dict[str, Any] | None,
+    sidecars: dict[tuple[str, str, int], dict[str, Any]],
+    attempts: list[dict[str, Any]],
+    root: Path,
+) -> dict[str, Any] | None:
     """The judge's identity for a record, apart from the subject's.
 
     Run-selected: from the manifest and sidecars -- the requested judge, the
@@ -832,7 +848,7 @@ def judge_block(manifest: dict[str, Any] | None, sidecars: dict[tuple[str, str, 
                         usage[key] += int(criterion["usage"].get(key, 0))
                 else:
                     usage_known = False
-        return {
+        judge = {
             "selection": "run-selected",
             **manifest["judge"],
             "prompt_version": manifest["prompt_version"],
@@ -842,6 +858,13 @@ def judge_block(manifest: dict[str, Any] | None, sidecars: dict[tuple[str, str, 
             "criterion_errors": manifest["criterion_errors"],
             "price_included_in_cases": False,
         }
+        if uses_omp_codex_subscription(
+            "omp",
+            manifest["judge"].get("route", ""),
+            manifest["judge"].get("model_requested", ""),
+        ):
+            judge["cost_source"] = "subscription"
+        return judge
     if not any(c.get("criterion_type") == "agent_judge" for a in attempts for c in a["criteria"]):
         return None
     pins: set[tuple[str, str]] = set()
@@ -957,8 +980,8 @@ def validate_record(record: dict[str, Any]) -> list[str]:
     """Return validation errors for one provenance record."""
     errors = sorted(REQUIRED_RECORD_FIELDS - record.keys())
     version = record.get("schema_version")
-    if version not in (1, 2, 3, 4):
-        errors.append("schema_version must be 1, 2, 3 or 4")
+    if version not in (1, 2, 3, 4, 5):
+        errors.append("schema_version must be 1, 2, 3, 4 or 5")
     for field in ("run_id", "experiment_id", "started_at", "completed_at"):
         if not isinstance(record.get(field), str) or not record[field]:
             errors.append(f"{field} must be a non-empty string")
@@ -1039,9 +1062,22 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 for field in ("judge_id", "freeze_sha", "prompt_version"):
                     if not isinstance(judge.get(field), str) or not judge[field]:
                         errors.append(f"judge.{field} must be a non-empty string")
-                if judge.get("route") == "omp" and record.get("client", {}).get("name") == "claude-code":
-                    pass  # a non-Claude judge may grade a Claude subject; they are separate measurements
-    if version in (2, 3, 4):
+                if version in (4, 5) and uses_omp_codex_subscription(
+                    "omp",
+                    judge.get("route", ""),
+                    judge.get("model_requested", ""),
+                ) and judge.get("cost_source") != "subscription":
+                    errors.append("judge.cost_source must be subscription for an approved Omp Codex route")
+                elif judge.get("cost_source") is not None and (
+                    judge.get("cost_source") != "subscription"
+                    or not uses_omp_codex_subscription(
+                        "omp",
+                        judge.get("route", ""),
+                        judge.get("model_requested", ""),
+                    )
+                ):
+                    errors.append("judge.cost_source must be subscription for an approved Omp Codex route")
+    if version in (2, 3, 4, 5):
         if not isinstance(record.get("cases"), list) or not record["cases"]:
             errors.append(f"cases must be non-empty for schema_version {version}")
         else:
@@ -1064,10 +1100,10 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                 tokens = case.get("tokens")
                 if tokens != "unreported" and not isinstance(tokens, int):
                     errors.append(f"{prefix}.tokens must be an integer or 'unreported'")
-                if version == 4:
+                if version == 5 or (version == 4 and "token_usage" in case):
                     usage = case.get("token_usage")
                     if not isinstance(usage, dict):
-                        errors.append(f"{prefix}.token_usage must be an object for schema_version 4")
+                        errors.append(f"{prefix}.token_usage must be an object for schema_version {version}")
                     else:
                         for field in TOKEN_USAGE_FIELDS:
                             value = usage.get(field)
@@ -1078,7 +1114,7 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                                     f"{prefix}.token_usage.{field} must be a non-negative integer or 'unreported'"
                                 )
                 cost = case.get("cost")
-                if version in (3, 4):
+                if version == 3 or (version == 4 and "token_usage" in case and case.get("cost_source") != "subscription"):
                     if cost is None:
                         if case.get("cost_source") != "unreported":
                             errors.append(f"{prefix}.cost_source must be 'unreported' when cost is null")
@@ -1088,7 +1124,39 @@ def validate_record(record: dict[str, Any]) -> list[str]:
                         errors.append(f"{prefix}.cost_source must be 'reported' or 'computed' when cost is numeric")
                     elapsed = case.get("elapsed_seconds")
                     if _number(elapsed) and elapsed <= 0:
-                        errors.append(f"{prefix}.elapsed_seconds must be greater than 0 for schema_version 3 or 4")
+                        errors.append(f"{prefix}.elapsed_seconds must be greater than 0 for schema_version 3")
+                elif version in (4, 5):
+                    source = case.get("cost_source")
+                    if source == "subscription":
+                        if cost is not None or not uses_omp_codex_subscription(
+                            record.get("client", {}).get("name", ""),
+                            "omp",
+                            case.get("model_requested", ""),
+                        ):
+                            errors.append(
+                                f"{prefix}.subscription cost requires null dollars and an approved Omp Codex model"
+                            )
+                    elif source in ("reported", "computed"):
+                        if uses_omp_codex_subscription(
+                            record.get("client", {}).get("name", ""),
+                            "omp",
+                            case.get("model_requested", ""),
+                        ):
+                            errors.append(f"{prefix}.cost_source must be subscription for this Omp Codex model")
+                        if not _number(cost) or cost < 0:
+                            errors.append(f"{prefix}.cost must be a non-negative number for cost_source {source}")
+                    elif source == "unreported":
+                        if cost is not None or uses_omp_codex_subscription(
+                            record.get("client", {}).get("name", ""),
+                            "omp",
+                            case.get("model_requested", ""),
+                        ):
+                            errors.append(f"{prefix}.unreported cost requires null dollars on a non-subscription route")
+                    else:
+                        errors.append(f"{prefix}.cost_source must be reported, computed, subscription or unreported")
+                    elapsed = case.get("elapsed_seconds")
+                    if _number(elapsed) and elapsed <= 0:
+                        errors.append(f"{prefix}.elapsed_seconds must be greater than 0 for schema version {version}")
                 elif cost != "unreported" and not isinstance(cost, (int, float)):
                     errors.append(f"{prefix}.cost must be numeric or 'unreported'")
     return errors

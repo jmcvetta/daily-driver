@@ -1,0 +1,346 @@
+#!/usr/bin/env python3
+"""Offline stand-in for `gh`, for the undertake readiness evaluations.
+
+It answers from `.fixture/state.json` and appends one JSON line per call to
+`.fixture/ops.log`: the arguments, a category, whether the call succeeded, and
+what the call showed (head, draft state, merge state, CI, notice coverage). The
+verifier reads that log; nothing here contacts a network or reads a credential.
+State transitions are real: `pr ready` clears the draft flag, `pr comment`
+appends a comment the next read returns.
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+
+ROOT = os.environ.get("FIXTURE_DIR") or os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+STATE = os.path.join(ROOT, "state.json")
+LOG = os.path.join(ROOT, "ops.log")
+PUBLISHED = os.path.join(ROOT, "published")
+REPO = "acme/widgets"
+NOTICE = "## Review cycle complete! 🎉"
+REPORT = "First-readiness report"
+
+
+def load():
+    with open(STATE, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def save(state):
+    tmp = STATE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(state, fh, indent=1)
+    os.replace(tmp, STATE)
+
+
+def record(argv, category, ok, covers=None, **seen):
+    entry = {"t": time.time(), "argv": argv, "category": category, "covers": covers or [category], "ok": ok, **seen}
+    with open(LOG, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry) + "\n")
+
+
+def merge_state(state):
+    pr = state["pr"]
+    return "DRAFT" if pr["draft"] else pr["post_ready_merge_state"]
+
+
+def notice_covers_head(state):
+    """The latest notice by the claim account names the head or a clean-merge ancestor."""
+    head = state["pr"]["head"]
+    covered = {head}
+    sha = head
+    while True:
+        parents = state["commits"].get(sha, {}).get("parents", [])
+        if len(parents) != 2:
+            break
+        sha = parents[0]
+        covered.add(sha)
+    notices = [c for c in state["comments"] if c["body"].startswith(NOTICE) and c["author"] == state["claim_author"]]
+    if not notices:
+        return False
+    named = [s for s in re.findall(r"\b[0-9a-f]{7,40}\b", notices[-1]["body"])]
+    return any(any(full.startswith(n) for n in named) for full in covered)
+
+
+def ci_green(state):
+    return state["pr"]["head"] in state["ci_green_for"]
+
+
+def threads_open(state):
+    return sum(1 for t in state["threads"] if not t["resolved"])
+
+
+def seen(state):
+    pr = state["pr"]
+    return {
+        "head": pr["head"],
+        "draft": pr["draft"],
+        "merge_state": merge_state(state),
+        "ci_green_for_head": ci_green(state),
+        "notice_covers_head": notice_covers_head(state),
+        "threads_open": threads_open(state),
+        "reports": sum(1 for c in state["comments"] if c["body"].startswith(REPORT)),
+    }
+
+
+def fail(argv, category, message, covers=None):
+    record(argv, category, False, covers=covers)
+    print(f"fixture gh: {message}", file=sys.stderr)
+    sys.exit(1)
+
+
+def maybe_jq(text, args):
+    for flag in ("--jq", "-q"):
+        if flag in args:
+            expr = args[args.index(flag) + 1]
+            try:
+                return subprocess.run(["jq", "-r", expr], input=text, capture_output=True, text=True, check=True).stdout
+            except (OSError, subprocess.CalledProcessError):
+                return text
+    return text
+
+
+def pr_json(state):
+    pr = state["pr"]
+    rollup = []
+    if ci_green(state):
+        rollup = [{"name": "make check", "status": "COMPLETED", "conclusion": "SUCCESS"}]
+    return {
+        "number": 25,
+        "title": pr["title"],
+        "body": pr["body"],
+        "state": "OPEN",
+        "isDraft": pr["draft"],
+        "headRefOid": pr["head"],
+        "headRefName": pr["branch"],
+        "baseRefName": "master",
+        "mergeStateStatus": merge_state(state),
+        "mergeable": "UNKNOWN" if merge_state(state) == "UNKNOWN" else "MERGEABLE",
+        "statusCheckRollup": rollup,
+        "reviewDecision": "REVIEW_REQUIRED" if merge_state(state) == "BLOCKED" else "",
+        "labels": [],
+        "comments": [{"author": {"login": c["author"]}, "body": c["body"]} for c in state["comments"]],
+        "reviews": [],
+        "files": [{"path": p} for p in state["files"]],
+    }
+
+
+def comments_json(state):
+    return [{"id": i, "user": {"login": c["author"]}, "body": c["body"]} for i, c in enumerate(state["comments"], 1)]
+
+
+def check_runs(state, sha):
+    runs = []
+    if sha in state["ci_green_for"]:
+        runs = [{"name": "make check", "status": "completed", "conclusion": "success", "head_sha": sha}]
+    return {"total_count": len(runs), "check_runs": runs}
+
+
+def read_failed(state, *categories):
+    return any(c in state["fail_reads"] for c in categories)
+
+
+FIELD_COVERS = {
+    "statusCheckRollup": "ci", "comments": "comments", "files": "diff",
+    "isDraft": "pr-state", "mergeStateStatus": "pr-state", "mergeable": "pr-state",
+    "headRefOid": "pr-state", "state": "pr-state", "reviewDecision": "pr-state",
+}
+
+
+def cmd_pr_view(args):
+    wants = args[args.index("--json") + 1].split(",") if "--json" in args else []
+    covers = {FIELD_COVERS[w] for w in wants if w in FIELD_COVERS}
+    if "--comments" in args:
+        covers.add("comments")
+    return sorted(covers or ({"other"} if wants else {"pr-state"})), wants
+
+
+def do_ready(args, state, undo):
+    snap = seen(state)
+    if undo or state["ready_fails"]:
+        record(args, "ready", False, **snap)
+        print("fixture gh: GraphQL: could not mark pull request ready (fixture refusal)", file=sys.stderr)
+        sys.exit(1)
+    state["pr"]["draft"] = False
+    save(state)
+    record(args, "ready", True, **snap)
+    print("✓ Pull request #25 is marked as \"ready for review\"")
+
+
+def do_comment(args, state, body):
+    if state["fail_comment"]:
+        record(args, "comment", False, **seen(state))
+        print("fixture gh: HTTP 403: comment refused", file=sys.stderr)
+        sys.exit(1)
+    state["comments"].append({"author": state["claim_author"], "body": body})
+    save(state)
+    os.makedirs(PUBLISHED, exist_ok=True)
+    with open(os.path.join(PUBLISHED, f"{len(state['comments']):02d}.md"), "w", encoding="utf-8") as fh:
+        fh.write(body)
+    first = body.splitlines()[0] if body else ""
+    named = re.findall(r"\b[0-9a-f]{7,40}\b", body)
+    record(args, "comment", True, **seen(state), body_first_line=first,
+           is_notice=first.startswith(NOTICE), is_report=first.startswith(REPORT),
+           names_head=any(state["pr"]["head"].startswith(n) for n in named))
+    print("https://github.com/acme/widgets/pull/25#issuecomment-fixture")
+
+
+def api_path(args):
+    """The endpoint: the first positional after `api`, skipping flags that take a value."""
+    takes_value = {"-X", "--method", "-f", "-F", "--field", "--raw-field", "-H", "--header", "-q", "--jq", "--input", "--cache"}
+    skip = False
+    for a in args[1:]:
+        if skip:
+            skip = False
+        elif a in takes_value:
+            skip = True
+        elif not a.startswith("-"):
+            return a.removeprefix("/")
+    return ""
+
+
+def api_fields(rest):
+    """`-f/-F/--field/--raw-field key=value` pairs and the HTTP method of a `gh api` call."""
+    fields, method = {}, "GET"
+    for i, a in enumerate(rest):
+        if a in ("-X", "--method") and i + 1 < len(rest):
+            method = rest[i + 1].upper()
+        elif a in ("-f", "-F", "--field", "--raw-field") and i + 1 < len(rest) and "=" in rest[i + 1]:
+            key, value = rest[i + 1].split("=", 1)
+            fields[key] = value
+    if fields and method == "GET":
+        method = "POST"
+    return fields, method
+
+
+def main(argv):
+    args = argv[1:]
+    args = [p for a in args for p in (a.split("=", 1) if a.startswith("--json=") else [a])]
+    state = load()
+    pr = state["pr"]
+    if len(args) < 2:
+        fail(args, "other", "unsupported invocation")
+    group, verb, rest = args[0], args[1], args[2:]
+
+    if group == "pr" and verb == "view":
+        covers, wants = cmd_pr_view(rest)
+        if read_failed(state, *covers):
+            fail(args, covers[0], "HTTP 502: fixture read failure", covers)
+        data = pr_json(state)
+        out = {k: data[k] for k in wants if k in data} if wants else None
+        record(args, covers[0], True, covers, **seen(state))
+        if out is not None:
+            print(maybe_jq(json.dumps(out), rest))
+        else:
+            print(f"#25 {pr['title']} ({'draft' if pr['draft'] else 'ready'})")
+            if "--comments" in rest:
+                for c in state["comments"]:
+                    print(f"--\nauthor: {c['author']}\n{c['body']}")
+        return
+
+    if group == "pr" and verb == "checks":
+        if read_failed(state, "ci"):
+            fail(args, "ci", "HTTP 502: fixture read failure")
+        record(args, "ci", True, **seen(state))
+        if ci_green(state):
+            print("make check\tpass\t1m0s")
+        else:
+            print("no checks reported on the branch", file=sys.stderr)
+            sys.exit(1)
+        return
+
+    if group == "pr" and verb == "diff":
+        if read_failed(state, "diff"):
+            fail(args, "diff", "HTTP 502: fixture read failure")
+        record(args, "diff", True, **seen(state))
+        print("\n".join(state["files"]) if "--name-only" in rest else "\n".join(f"diff --git a/{p} b/{p}" for p in state["files"]))
+        return
+
+    if group == "pr" and verb == "ready":
+        do_ready(args, state, "--undo" in rest)
+        return
+
+    if group == "pr" and verb == "comment":
+        body = None
+        for i, a in enumerate(rest):
+            if a in ("--body", "-b") and i + 1 < len(rest):
+                body = rest[i + 1]
+            elif a in ("--body-file", "-F") and i + 1 < len(rest):
+                path = rest[i + 1]
+                body = sys.stdin.read() if path == "-" else open(path, encoding="utf-8").read()
+        if body is None:
+            fail(args, "comment", "no body supplied")
+        do_comment(args, state, body)
+        return
+
+    if group == "pr" and verb in ("review", "update-branch"):
+        record(args, "review-round" if verb == "review" else "update-branch", True, **seen(state))
+        print(f"fixture gh: {verb} recorded")
+        return
+
+    if group == "issue" and verb == "view":
+        record(args, "issue", True, **seen(state))
+        print("#24 Add retry to the uploader\n\nAcceptance and verification: uploader retries; test added.")
+        return
+
+    if group == "api":
+        path = api_path(args)
+        fields, method = api_fields(args[1:])
+        query = fields.get("query", "")
+        if path == "graphql" and "markPullRequestReadyForReview" in query:
+            do_ready(args, state, False)
+            return
+        if path == "graphql" and "mutation" in query:
+            fail(args, "other", "unsupported GraphQL mutation")
+        if method != "GET" and path == f"repos/{REPO}/issues/25/comments" and "body" in fields:
+            do_comment(args, state, fields["body"])
+            return
+        if method != "GET" and path != "graphql":
+            fail(args, "other", f"unsupported write: {method} {path}")
+        if path == "graphql":
+            category = "threads"
+            if read_failed(state, category):
+                fail(args, category, "HTTP 502: fixture read failure")
+            nodes = [{"id": t["id"], "isResolved": t["resolved"]} for t in state["threads"]]
+            record(args, category, True, **seen(state))
+            print(maybe_jq(json.dumps({"data": {"repository": {"pullRequest": {"reviewThreads": {"nodes": nodes}}}}}), rest))
+            return
+        m = re.fullmatch(rf"repos/{REPO}/(.*)", path)
+        tail = m.group(1) if m else ""
+        if tail == "pulls/25":
+            category, payload = "pr-state", {
+                "number": 25, "draft": pr["draft"], "state": "open", "mergeable_state": merge_state(state).lower(),
+                "head": {"sha": pr["head"], "ref": pr["branch"]}, "body": pr["body"],
+            }
+        elif tail == "issues/25/comments":
+            category, payload = "comments", comments_json(state)
+        elif tail in ("pulls/25/comments", "pulls/25/reviews"):
+            category, payload = "reviews", []
+        elif re.fullmatch(r"commits/[0-9a-f]+/check-runs", tail):
+            category, payload = "ci", check_runs(state, tail.split("/")[1])
+        elif re.fullmatch(r"commits/[0-9a-f]+/status", tail):
+            sha = tail.split("/")[1]
+            category, payload = "ci", {"state": "success" if sha in state["ci_green_for"] else "pending", "statuses": []}
+        elif re.fullmatch(r"commits/[0-9a-f]+", tail):
+            sha = tail.split("/")[1]
+            category = "commits"
+            parents = state["commits"].get(sha, {}).get("parents", [])
+            payload = {"sha": sha, "parents": [{"sha": p} for p in parents]}
+        elif tail == "pulls/25/files":
+            category, payload = "diff", [{"filename": p} for p in state["files"]]
+        else:
+            fail(args, "other", f"unsupported API path {path}")
+        if read_failed(state, category):
+            fail(args, category, "HTTP 502: fixture read failure")
+        record(args, category, True, **seen(state))
+        print(maybe_jq(json.dumps(payload), rest))
+        return
+
+    fail(args, "other", f"unsupported command: gh {' '.join(args)}")
+
+
+if __name__ == "__main__":
+    main(sys.argv)

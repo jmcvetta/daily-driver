@@ -158,6 +158,9 @@ check-model-telemetry:
 check-evals-setup-omp:
   - 'scripts/check-evals-setup-omp.sh'
   - 'scripts/evals-setup-omp.sh'
+check-undertake-readiness:
+  - 'scripts/check-undertake-readiness.py'
+  - 'evals/fixtures/undertake-readiness/**'
 check-labels:
   - 'scripts/check-labels.py'
   - 'skills/issue-labels/SKILL.md'
