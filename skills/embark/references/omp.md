@@ -25,6 +25,13 @@ result; it cannot cancel calls already running in a batch. A free-form request
 that invokes `embark` without an explicit command does not activate this
 earlier barrier.
 
+Only interactive or RPC user input activates or supersedes this barrier.
+Plain `embark`, `/embark`, and `/skill:embark` commands each start a fresh
+identity check, including a repeated command for the same issue. Timer
+reminders, background results, and extension-origin input retain the current
+state even when their text starts with `Embark #<number>`. Provider-turn
+preparation is not a new user command.
+
 
 The wave
 ========
