@@ -149,6 +149,7 @@ EXIT_REASONS = (
     "no_usage",
     "exception",
     "cancelled",
+    "evidence_write_failed",
 )
 
 
@@ -491,7 +492,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
 
     def _set_exit_reason(self, reason: str) -> None:
         """Record why the current attempt ended; the first reason given wins."""
-        assert reason in EXIT_REASONS, reason
+        if reason not in EXIT_REASONS:
+            raise ValueError(f"unknown exit reason {reason!r}")
         if self._attempt is not None and self._attempt["exit_reason"] is None:
             self._attempt["exit_reason"] = reason
 
@@ -720,10 +722,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
 
             if async_handoff:
                 try:
-                    self._cancelled_subagents.extend(
-                        await asyncio.wait_for(
-                            self._cancel_background_subagents(attempt["cancellation"]), _CANCEL_TIMEOUT_SECONDS
-                        )
+                    await asyncio.wait_for(
+                        self._cancel_background_subagents(attempt["cancellation"]), _CANCEL_TIMEOUT_SECONDS
                     )
                 except (TimeoutError, asyncio.TimeoutError):
                     attempt["cancellation"]["timed_out"] += 1
@@ -770,7 +770,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 # Nothing else is failing here, so the missing evidence is the
                 # failure: a turn that claims evidence it did not write is the
                 # silence this artifact exists to rule out.
-                attempt["exit_reason"] = "exception"
+                attempt["exit_reason"] = "evidence_write_failed"
+                evidence_written[0] = True  # the write was tried; the finally block does not repeat it
                 self._crash(finalize, collector, f"omp protocol evidence could not be written: {error!s}", cause=error)
             evidence_written[0] = True
             finalize(status)
@@ -804,6 +805,9 @@ class OmpAgent(Agent[OmpAgentConfig]):
     async def _cancel_background_subagents(self, counts: dict[str, int]) -> list[str]:
         """Cancel every running background subagent; return the ids cancelled.
 
+        Each id is recorded in `_cancelled_subagents` as it is cancelled, so a
+        timeout partway through keeps the ones already stopped.
+
         A failure is logged, not raised: the orchestrator's turn is already
         complete and graded on its own output.
         """
@@ -829,6 +833,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             if result.get("cancelled") is not False:
                 counts["succeeded"] += 1
                 cancelled.append(str(subagent_id))
+                self._cancelled_subagents.append(str(subagent_id))
             else:
                 counts["failed"] += 1
         return cancelled

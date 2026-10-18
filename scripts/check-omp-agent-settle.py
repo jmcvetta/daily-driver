@@ -145,8 +145,8 @@ FAKE_OMP_ASYNC = FAKE_OMP.split(FAKE_PROMPT_BRANCH)[0] + """\
 
 # A fake `omp` driven by `<fake>.script.json`: a list with one entry per `prompt`
 # command, in order. An entry's `frames` are emitted as written; its `then` is
-# `silence` (keep answering commands, emit nothing more), `exit` (die) or `end`
-# (the frames were the whole turn). `get_subagents` reports one finished and two
+# `silence` (keep answering commands, emit nothing more; also the default) or
+# `exit` (die). `get_subagents` reports one finished and two
 # running subagents, of which `sub-fail` refuses its cancel.
 FAKE_OMP_SCRIPTED = """\
 #!/usr/bin/env python3
