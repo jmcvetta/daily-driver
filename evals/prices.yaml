@@ -33,3 +33,14 @@ models:
     unpriced_reason: Antigravity quota is a subscription allowance with no applicable per-token USD rate.
     source: https://antigravity.google/docs/plans
     read_on: 2026-10-08
+  # Claude Code prices its own rows. This entry prices only a row it left
+  # unpriced, such as an early-stopped Haiku turn. The rates are the tier for
+  # prompts up to 100,000 tokens, and `cache_write` is the 5-minute rate; a
+  # longer prompt or a 1-hour cache write would be priced low.
+  claude-haiku-5-5:
+    input: 0.0000001
+    output: 0.0000005
+    cache_read: 0.00000001
+    cache_write: 0.000000125
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    read_on: 2026-10-18
