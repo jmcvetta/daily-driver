@@ -709,6 +709,24 @@ async def check_dispatch_evidence() -> None:
           "through a normal end and a crash; off writes nothing")
 
 
+def check_failed_dispatch_rewrite() -> None:
+    """A failed rewrite must not let the grader reuse a previous complete artifact."""
+    from unittest.mock import patch
+
+    from coder_eval_omp.agent import DISPATCH_EVIDENCE_FILENAME, OmpAgent, OmpAgentConfig
+    from coder_eval_omp.rpc import TurnReducer
+
+    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-write-failure-"))
+    destination = workdir / DISPATCH_EVIDENCE_FILENAME
+    destination.write_text('{"version":1,"complete":true,"calls":[]}', encoding="utf-8")
+    agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+    agent.working_directory = str(workdir)
+    with patch.object(Path, "write_text", side_effect=OSError("injected write failure")):
+        agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
+    check(not destination.exists(), "a failed rewrite removes prior passing evidence")
+    print("check-omp-agent-settle: failed dispatch rewrite removes stale evidence")
+
+
 def check_roles_pin() -> None:
     """The arm's `model` pins every Omp chat role in config.yml, and only then."""
     import yaml
@@ -782,10 +800,10 @@ def main() -> None:
     asyncio.run(run_scenario())
     asyncio.run(check_async_handoff())
     asyncio.run(check_dispatch_evidence())
+    check_failed_dispatch_rewrite()
     asyncio.run(run_provider_error_scenario())
     asyncio.run(check_settlement_evidence())
     check_roles_pin()
-
 
 if __name__ == "__main__":
     try:
