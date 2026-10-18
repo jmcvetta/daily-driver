@@ -1585,6 +1585,11 @@ shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 process, so a token exported before `coder-eval run` is what
 `shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case, or use the `smoke`-tagged case per class (the smallest of each) to check a new overlay cheaply before spending a full run on it.
 
+Keep `TMPDIR` outside this evaluation checkout, with space for preserved
+sandboxes and dependency environments. The contact detector rejects printed
+checkout-root paths; sandboxes beneath that root can produce false contact
+evidence from ordinary package-build and test output.
+
 The clone token is not passed to grading. `career-462` and `career-469` isolate
 `gh` to an empty config with no token, so their optional live-label check takes
 its unauthenticated skip instead of contacting GitHub. Other tests in those

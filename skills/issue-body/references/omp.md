@@ -91,7 +91,7 @@ approval policy do not imply benchmark support.
 | kimi | classes-kimi | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | minimax | classes-minimax | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | openai-codex/gpt-5.6-terra | classes-smoke-terra-5-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-17_17-50-08 | 2026-10-17 |
-| openai-codex/gpt-5.6-terra | classes-terra-5-6 | none | 3/7 | 0/5 | unreported | 2026-10-09_21-43-57 | 2026-10-09 |
+| openai-codex/gpt-5.6-terra | classes-terra-5-6 | none | 6/9 | 1/9 | subscription | 2026-10-17_17-56-32 | 2026-10-18 |
 | openai-codex/gpt-6-luna | classes-luna-6 | implementation | 9/9 | 7/7 | unreported | 2026-10-09_19-52-53 | 2026-10-09 |
 | openai-codex/gpt-6-luna | classes-smoke-luna-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-09_20-10-04 | 2026-10-09 |
 | openai-codex/gpt-6.1-sol | classes-smoke-sol-6-1 | mechanical | 1/1 | 0/1 | unreported | 2026-10-08_19-02-13 | 2026-10-08 |

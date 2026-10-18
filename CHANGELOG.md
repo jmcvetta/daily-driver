@@ -32,9 +32,12 @@
 
 ## [Unreleased]
 
-### Bug Fixes
+### Tests
 
+* **evals:** record the bounded Sol/Luna/Terra comparison, its isolation limits, and normalized resource use ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
 * **evals:** preserve both historical schema-4 formats while new records retain token buckets and subscription billing ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
+
+### Bug Fixes
 
 * **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575))
 * **evals:** measure undertake readiness rows 08, 10 and 13 from offline action evidence ([#609](https://github.com/jmcvetta/daily-driver/issues/609))
