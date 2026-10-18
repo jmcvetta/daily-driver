@@ -57,8 +57,12 @@ boundaries: settled versus unresolved task intent, bounded research and
 evidenced negative/inconclusive outcomes, bugs without task metadata,
 non-executable proposals, safe human handoffs, automatic bug reports, and
 effective-kind edits that preserve evidence and provenance. `tasks/epic/`
-includes mixed-kind children and epic outcome completion. These are behavioral
-cases: graders assess decisions and evidence, not a fixed heading list.
+includes mixed-kind children and epic outcome completion, first-delivery scope,
+outcome-based task boundaries, and deployment continuity. The undertaking
+integration-proof case uses a local authenticated request/response fixture to
+assert that proof precedes dependent work; it makes no network or cloud calls.
+These are behavioral cases: graders assess decisions and evidence, not a fixed
+heading list.
 
 `tasks/embark/16`–`18` cover unfinished-work supervision: a green draft still
 needs authorized preparation, a real execution approval does not block
@@ -215,6 +219,17 @@ case results. For example, the Omp GPT 6.1 Sol route is:
 make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
   TASKS='tasks/issue/05-bug-body-gets-no-task-contract.yaml tasks/issue/07-research-contract-draft.yaml'
 ```
+
+Issue #633's focused run completed all four behavioral cases successfully:
+first-delivery scope, outcome-based issue boundaries, deployment continuity,
+and authenticated integration proof before dependent work. Run
+[`2026-10-18_16-07-29`](provenance/omp-gpt-6-1-sol-2026-10-18-2026-10-18_16-07-29.json)
+used Omp 18.12.1 with the requested `openai-codex/gpt-6.1-sol` subject and
+validated `omp-gpt-6.1-sol` judge. It used one replicate per case; the subject
+execution identity and subscription cost were unreported. The integration
+fixture records only local stub calls and makes no live service, cloud, or
+credential requests. This bounded run does not establish broad model
+reliability.
 
 The paired Omp ablation remains available as `make evals-run-omp`; focused
 runs name one arm.

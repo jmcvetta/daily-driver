@@ -211,7 +211,7 @@ subagent. It defines the following requirements:
 | Non-negotiables | Do not access production systems. Isolate repository changes, test application code and fix failures rather than hide them. |
 | While you write code | Read the manual first, prefer simple designs and existing libraries, and prioritize correctness. |
 | When you hit a wall | Stop on errors, reassess failing approaches, clarify intent and report confirmed Daily Driver defects. |
-| Before you commit | Document new exported symbols, make focused commits and stage named files. |
+| Before you commit | Keep logs and disposable artifacts out of Git; document new exported symbols, make focused commits and stage named files. |
 | Before you call it done | Use the project's CI gates to verify completion. |
 | Dependencies | Add and pin dependencies through the package manager. |
 | Delegation | Plan before delegating and run independent work in parallel. |

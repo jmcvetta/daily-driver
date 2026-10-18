@@ -94,3 +94,4 @@ One row per committed record, oldest first.
 | 2026-10-17 | classes-smoke-terra-5-6 | omp | openai-codex/gpt-5.6-terra (requested) | not recorded | 2 | 2/2 | not recorded | not recorded | 5m 12s |
 | 2026-10-18 | classes-terra-5-6 | omp | openai-codex/gpt-5.6-terra (requested) | not recorded | 18 | 7/18 | subscription | subscription | 35m 08s |
 | 2026-10-18 | omp-gpt-6-1-sol-workflow | omp | openai-codex/gpt-6.1-sol:high (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | not recorded | not recorded | 0m 58s |
+| 2026-10-18 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 2m 13s |

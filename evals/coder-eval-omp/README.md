@@ -119,8 +119,29 @@ totals and price.
 
 Tool-call argument keys remain unsettled. The reducer keeps its compatible
 spellings and records the one a run sees; this capture made no tool call.
-After each completed turn, the adapter atomically writes the observed key
-union to `omp-protocol-observations.json` in the task sandbox.
+On every exit of an attempt, the adapter atomically writes the observed key
+union to `omp-protocol-observations.json` in the task sandbox. The exits are a
+completed turn, an async handoff, an early stop, maximum turns, a timeout, a
+provider failure, EOF, an unexpected exception and an external cancellation.
+
+The same file carries `omp_settlement_evidence` (version 1): one bounded record
+per attempt in the agent session, so a failed retry keeps the earlier record.
+Each record holds the attempt ordinal and iteration, the recognized-frame count
+and last recognized frame kind, elapsed monotonic seconds, the tool calls still
+pending when the attempt ended, counts of terminal, non-terminal and
+async-awaiting `agent_end` frames, the last 16 of them with an offset and the
+raw `isTerminal` and `awaitingAsyncWork` flags (`null` where the frame omitted
+the field), an overflow count, whether async settlement was enabled and taken,
+cancellation success, failure and timeout counts, and a fixed `exit_reason`.
+It never holds RPC messages, prompts, tool arguments or error text.
+
+This tells a missing handoff from an adapter failure: no `agent_end` observed
+means Omp never sent one, while an observed non-terminal end with
+`awaiting_async_work` true under `settle_on_async_handoff: false` means the
+adapter chose to wait. It does not hold full RPC frames, so a run without this
+record cannot be diagnosed after the fact. A write failure never replaces an
+attempt's timeout, crash or cancellation. On an otherwise normal attempt it
+fails the attempt as a crash.
 
 `omp-glm-5.3.yaml` reads that file through its experiment-default `post_run`
 command. Its stdout is each task's durable `post_run_results` evidence. A task

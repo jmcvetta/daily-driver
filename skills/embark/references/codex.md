@@ -5,10 +5,6 @@ session running in Codex. Claude Code's routes are in [`claude.md`](claude.md);
 Omp's — the same fallback, on a surface measured further — is
 [`omp.md`](omp.md).
 
-The user-words landing authorization is Claude Code's auto-mode requirement.
-Codex has no equivalent classifier, so this authorization step adds no Codex
-gate.
-
 
 Why the web route has no calls here
 ===================================
