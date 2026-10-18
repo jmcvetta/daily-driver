@@ -70,20 +70,17 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
       is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The issue's landing mode is not stated. The rule permits one first-reply
-      question asking the user to authorize landing without human review and
-      archiving finished sessions in their own words. That question must not ask
-      whether to launch the already-agreed wave. If instead the user has already
-      confirmed the landing mode, the wave launches without asking again. One
-      eligible implementor is opened per task issue. A muster roll records each
-      task's required class, selected route, and actual model (or `unreported`),
-      instead of conflating them. Saying the tools are unavailable and stating what
-      would happen counts as launching.
+      The issue's landing mode is not stated. The orchestrator defaults to
+      landing gated pull requests and archiving finished sessions, without an
+      authorization question. The already-agreed wave launches without asking.
+      One eligible implementor is opened per task issue. A muster roll records
+      each task's required class, selected route, and actual model (or
+      `unreported`), instead of conflating them. Saying the tools are unavailable
+      and stating what would happen counts as launching.
 
       Score 1.0 if the REPLY launches unasked and names the class-separated muster
-      roll, or if it asks only for the landing-and-archive authorization in the
-      user's own words. Score 0.5 if it launches unasked but records nothing.
+      roll. Score 0.5 if it launches unasked but records nothing.
 
-      Score 0.0 if the reply asks whether to launch or confirm the launch, offers a
-      menu of waves or tasks to choose from, or proposes working the task issues one
-      after another in this session.
+      Score 0.0 if the reply asks for landing or archive authorization, asks whether
+      to launch or confirm the launch, offers a menu of waves or tasks to choose
+      from, or proposes working the task issues one after another in this session.

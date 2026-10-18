@@ -75,9 +75,6 @@ because the graph moved while the fleet was out, and what it finds decides
 whether the next wave sails, the watch resumes, or the epic closes.
 `Land the pull request` and `Recover a session` are reached from `Watch the
 wave`, and each returns there.
-Where the harness requires user authorization for landing and archiving, this
-preflight runs before the numbered sequence. If the mode is absent, the first
-reply asks and ends before any tool call. `Post the muster roll` records it.
 On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
 `/skill:embark <issue>` first reads that single issue through `issue://`.
 After matching epic metadata succeeds, title this session before reading its
@@ -278,7 +275,7 @@ one row per task:
 ```markdown
 ### Wave 2 — after #143 · in progress
 
-Landing: orchestrator — confirmed by the owner in chat
+Landing: orchestrator
 
 | Task | Implementor | Required class | Selected route | Actual model |
 | ---- | ----------- | -------------- | -------------- | ------------ |
@@ -288,28 +285,11 @@ Landing: orchestrator — confirmed by the owner in chat
 | #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — | — |
 ```
 
-**Where the harness classifier requires the user's words for landing and
-archiving**, do this before any tool call. If the invocation does not state a
-mode — authorize Embark to land gated pull requests and archive finished
-sessions, or say the user will handle both by hand — ask once in chat and end
-the turn. Ask: “Should I merge gated pull requests without human review and
-archive finished sessions, or should I leave both landing and archiving to
-you? Reply in your own words.” Use chat prose, not an interactive question
-widget. A reply that already states a mode needs no question. In particular,
-“leave the merges to me” selects by-hand mode and authorizes neither automatic
-landing nor archiving. A resumed invocation keeps the mode only when the
-latest muster roll, already available in conversation context, records the
-owner's confirmation; an agent-written roll alone is not confirmation.
-
-For a harness with that classifier, the muster roll records `Landing:
-orchestrator — confirmed by the owner in chat` or `Landing: by hand —
-confirmed by the owner in chat`. Orchestrator mode authorizes both landing
-and archiving; by-hand mode authorizes neither. Never default to orchestrator
-landing or archiving without that confirmation. Later invocations keep the
-latest confirmed mode. The Omp and Codex references define their routes
-without this authorization gate. The authorization covers only landing and
-archiving; waves still launch without confirmation.
-
+**Landing defaults to the orchestrator.** Record `Landing: orchestrator`
+without asking for permission to land gated pull requests or archive finished
+sessions. If the user says they will handle landing by hand, record
+`Landing: by hand`; that opt-out disables automatic landing and archiving.
+Later invocations keep the latest recorded mode unless the user changes it.
 
 
 The roll distinguishes required class, selected route, and actual model. A
@@ -415,10 +395,10 @@ So on every wake:
   evidence satisfies its kind contract.** Mark the wave `done` in the epic's
   body, and go back to `Take the wave`, which routes what happens next — the
   following wave, or `Close the epic`.
-- **A completed child has no session left to run, archived once.** Archive its
-  session only after the issue's completion evidence is read and, where the
-  harness requires it, the user's confirmed mode authorizes archiving. For a
-  pull request child, do not archive while its PR is green but waiting on review;
+- **A completed child has no session left to run, archived once.** Unless
+  landing is by hand, archive its session after reading the issue's completion
+  evidence. For a pull request child, do not archive while its PR is green but
+  waiting on review;
   it still holds `undertake`'s cadence and must answer the next review comment.
   For a no-PR research result or bug disposition, the verified issue outcome is
   the completion record. **Once per child, not once per wake**: read the muster

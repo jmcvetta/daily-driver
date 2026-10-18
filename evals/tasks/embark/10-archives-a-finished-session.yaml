@@ -1,9 +1,6 @@
-# The behaviour row for `Watch the wave`'s rule that a task coming home
-# archives the session that carried it — issue #322. The timing cuts both
-# ways: a session archived while its pull request still waits on a reviewer
-# stops answering review comments and stops keeping its branch current, with
-# nobody else holding the branch. The row has to discriminate on exactly
-# that, because both directions are wrong in a way that looks like caution.
+# Without this row, a watcher could ask for permission before archiving a
+# completed child's session, or archive a session that still needs to answer
+# review comments and keep its branch current.
 #
 # What this row can and cannot see. The sandbox has no session client and no
 # GitHub MCP, so no session can actually be archived. What is observable is
@@ -12,14 +9,13 @@
 
 task_id: embark-10-archives-a-finished-session
 description: >-
-  In by-hand mode, a task whose pull request merged and issue closed has its
-  session archived; a task whose pull request is only green and waiting on a
-  reviewer keeps its session running.
+  Without a recorded landing mode, a task whose pull request merged and issue
+  closed has its session archived; a task still waiting on a reviewer keeps
+  its session running.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Epic #210 is at sea, and its latest muster roll says `Landing: orchestrator —
-  confirmed by the owner in chat`.
+  Epic #210 is at sea, and its latest muster roll has no landing-mode entry.
   Its wave is #211 and #212. #211's pull request has merged and its task issue
   is closed. #212's pull request is green, ready for review, and still waiting
   on its reviewer — its task issue is open. Check on the wave.
@@ -86,10 +82,10 @@ success_criteria:
       would otherwise happen, counts as archiving.
 
       Score 1.0 if the REPLY archives, or says it would archive, #211's
-      session, and explicitly leaves #212's session running because its
-      pull request is still waiting on a reviewer.
+      session without asking for permission, and explicitly leaves #212's
+      session running because its pull request is still waiting on a reviewer.
 
-      Score 0.5 if the reply archives neither session.
+      Score 0.5 if the reply archives neither session without asking permission.
 
-      Score 0.0 if the reply archives, or says it would archive, #212's
-      session — whether or not it also archives #211's.
+      Score 0.0 if the reply asks for landing or archive authorization, or archives
+      or says it would archive #212's session, whether or not it archives #211's.
