@@ -32,7 +32,14 @@
 
 ## [Unreleased]
 
+
+### Features
+
+* **epic:** plan first useful delivery, early integration proof, outcome-based task boundaries, and deployment continuity ([#633](https://github.com/jmcvetta/daily-driver/issues/633))
+
 ### Tests
+
+* **evals:** add offline behavioral coverage for delivery scope, integration ordering, useful task boundaries, and deployment state continuity
 
 * **evals:** record the bounded Sol/Luna/Terra comparison, its isolation limits, and normalized resource use ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
 * **evals:** preserve both historical schema-4 formats while new records retain token buckets and subscription billing ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
