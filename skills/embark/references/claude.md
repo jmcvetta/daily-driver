@@ -9,8 +9,10 @@ Claude Code's auto-mode classifier requires the user's own words to authorize
 landing without human review and archiving finished sessions. If neither the
 invocation nor already-available conversation context establishes the
 user-confirmed mode, ask in the first reply and end the turn before any tool
-call. A denial names the denied action and classifier reason; after the user's
-explicit confirmation, retry that action once. Do not seek a different route.
+call. The by-hand mode authorizes neither action; in particular, “leave the
+merges to me” does not authorize archival. A denial names the denied action
+and classifier reason; after the user's explicit confirmation, retry that
+action once. Do not seek a different route.
 
 
 The epic

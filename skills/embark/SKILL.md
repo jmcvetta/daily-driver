@@ -291,22 +291,24 @@ Landing: orchestrator — confirmed by the owner in chat
 **Where the harness classifier requires the user's words for landing and
 archiving**, do this before any tool call. If the invocation does not state a
 mode — authorize Embark to land gated pull requests and archive finished
-sessions, or say the user will land them by hand — ask once in chat and end
+sessions, or say the user will handle both by hand — ask once in chat and end
 the turn. Ask: “Should I merge gated pull requests without human review and
-archive finished sessions, or will you land them by hand? Reply in your own
-words.” Use chat prose, not an interactive question widget. A reply that
-already states a mode needs no question. A resumed invocation keeps the mode
-only when the latest muster roll, already available in conversation context,
-records the owner's confirmation; an agent-written roll alone is not
-confirmation.
+archive finished sessions, or should I leave both landing and archiving to
+you? Reply in your own words.” Use chat prose, not an interactive question
+widget. A reply that already states a mode needs no question. In particular,
+“leave the merges to me” selects by-hand mode and authorizes neither automatic
+landing nor archiving. A resumed invocation keeps the mode only when the
+latest muster roll, already available in conversation context, records the
+owner's confirmation; an agent-written roll alone is not confirmation.
 
 For a harness with that classifier, the muster roll records `Landing:
 orchestrator — confirmed by the owner in chat` or `Landing: by hand —
-confirmed by the owner in chat`. Never default to orchestrator landing
-without that confirmation. Later invocations keep the latest confirmed mode.
-The Omp and Codex references define their routes without this authorization
-gate. The authorization covers only landing and archiving; waves still launch
-without confirmation.
+confirmed by the owner in chat`. Orchestrator mode authorizes both landing
+and archiving; by-hand mode authorizes neither. Never default to orchestrator
+landing or archiving without that confirmation. Later invocations keep the
+latest confirmed mode. The Omp and Codex references define their routes
+without this authorization gate. The authorization covers only landing and
+archiving; waves still launch without confirmation.
 
 
 
