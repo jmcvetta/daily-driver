@@ -18,7 +18,8 @@ description: >-
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Epic #210 is at sea, and its latest muster roll says `Landing: by hand`.
+  Epic #210 is at sea, and its latest muster roll says `Landing: orchestrator —
+  confirmed by the owner in chat`.
   Its wave is #211 and #212. #211's pull request has merged and its task issue
   is closed. #212's pull request is green, ready for review, and still waiting
   on its reviewer — its task issue is open. Check on the wave.
