@@ -710,7 +710,7 @@ async def check_dispatch_evidence() -> None:
 
 
 async def check_failed_dispatch_rewrite() -> None:
-    """A failed update or interruption must not leave a previous passable artifact."""
+    """A failed initial marker write, later write, or interrupted replace cannot leave prior passable evidence."""
     from unittest.mock import patch
 
     from coder_eval_omp.agent import DISPATCH_EVIDENCE_FILENAME, OmpAgent, OmpAgentConfig
@@ -724,6 +724,33 @@ async def check_failed_dispatch_rewrite() -> None:
         agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
         agent.working_directory = str(workdir)
         return agent
+
+    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-first-marker-failure-"))
+    destination = workdir / DISPATCH_EVIDENCE_FILENAME
+    agent = configured_agent(workdir)
+    write_text = Path.write_text
+    writes = 0
+
+    def fail_first_marker(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
+        nonlocal writes
+        if path != destination:
+            writes += 1
+            if writes == 1:
+                raise OSError("injected first incomplete-marker write failure")
+        return write_text(path, data, *args, **kwargs)
+
+    try:
+        with patch.object(Path, "write_text", autospec=True, side_effect=fail_first_marker):
+            agent._record_task_dispatches(TurnReducer(), attempt=1, iteration=1)
+    except OSError as error:
+        check("injected first incomplete-marker write failure" in str(error),
+              "the initial marker-write failure must be reported")
+    else:
+        check(False, "a failed initial marker write must not return successfully")
+    incomplete = json.loads(destination.read_text(encoding="utf-8"))
+    check(incomplete["complete"] is False, "a failed initial marker write must atomically replace prior passable evidence")
+    check("first incomplete-marker write failure" in incomplete["error"],
+          "the non-passing artifact must explain the initial marker-write failure")
 
     workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-write-failure-"))
     destination = workdir / DISPATCH_EVIDENCE_FILENAME

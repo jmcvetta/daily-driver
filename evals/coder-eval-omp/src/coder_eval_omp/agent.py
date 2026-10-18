@@ -530,14 +530,29 @@ class OmpAgent(Agent[OmpAgentConfig]):
             text = error_document(str(error))
         destination = Path(self.working_directory) / DISPATCH_EVIDENCE_FILENAME
         temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+        marker_failure = destination.with_name(f".{destination.name}.{os.getpid()}.failed.tmp")
         try:
-            temporary.write_text(error_document("task-dispatch evidence update is incomplete"), encoding="utf-8")
-            temporary.replace(destination)
+            try:
+                temporary.write_text(error_document("task-dispatch evidence update is incomplete"), encoding="utf-8")
+                temporary.replace(destination)
+            except OSError as error:
+                # A failed marker write leaves the old artifact in place. Publish
+                # a non-passing marker through a separate atomic replacement.
+                with contextlib.suppress(FileNotFoundError):
+                    temporary.unlink()
+                try:
+                    marker_failure.write_text(error_document(f"could not publish incomplete marker: {error}"), encoding="utf-8")
+                    marker_failure.replace(destination)
+                except OSError as marker_error:
+                    raise error from marker_error
+                raise
             temporary.write_text(text, encoding="utf-8")
             temporary.replace(destination)
         finally:
             with contextlib.suppress(FileNotFoundError):
                 temporary.unlink()
+            with contextlib.suppress(FileNotFoundError):
+                marker_failure.unlink()
     # --- the turn ----------------------------------------------------------
 
     async def communicate(
