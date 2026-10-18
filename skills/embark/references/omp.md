@@ -5,6 +5,10 @@ session running in Oh My Pi. Claude Code's routes are in
 [`claude.md`](claude.md); [`codex.md`](codex.md) carries the same fallback as
 this one, on a surface measured less.
 
+The user-words landing authorization is Claude Code's auto-mode requirement.
+Omp has no equivalent classifier, so this authorization step adds no Omp
+gate.
+
 **Omp has no session-opening client, so the web route has no calls here.** The
 wave goes out through the harness-local subagent fallback `SKILL.md`'s
 `Open the sessions` states, and the tables below are that fallback resolved to

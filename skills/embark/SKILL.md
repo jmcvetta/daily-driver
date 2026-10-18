@@ -75,6 +75,9 @@ because the graph moved while the fleet was out, and what it finds decides
 whether the next wave sails, the watch resumes, or the epic closes.
 `Land the pull request` and `Recover a session` are reached from `Watch the
 wave`, and each returns there.
+Where the harness requires user authorization for landing and archiving, this
+preflight runs before the numbered sequence. If the mode is absent, the first
+reply asks and ends before any tool call. `Post the muster roll` records it.
 On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
 `/skill:embark <issue>` first reads that single issue through `issue://`.
 After matching epic metadata succeeds, title this session before reading its
@@ -275,7 +278,7 @@ one row per task:
 ```markdown
 ### Wave 2 — after #143 · in progress
 
-Landing: orchestrator
+Landing: orchestrator — confirmed by the owner in chat
 
 | Task | Implementor | Required class | Selected route | Actual model |
 | ---- | ----------- | -------------- | -------------- | ------------ |
@@ -285,11 +288,29 @@ Landing: orchestrator
 | #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — | — |
 ```
 
-**Landing is read once from the invocation and written into the roll.** The
-default is `Landing: orchestrator`. An explicit request such as "leave the
-merges to me" writes `Landing: by hand` instead. `judgement-call` does not
-fire: the user's words decide who lands the pull requests. Every later
-invocation reads the latest roll and keeps that mode.
+**Where the harness classifier requires the user's words for landing and
+archiving**, do this before any tool call. If the invocation does not state a
+mode — authorize Embark to land gated pull requests and archive finished
+sessions, or say the user will handle both by hand — ask once in chat and end
+the turn. Ask: “Should I merge gated pull requests without human review and
+archive finished sessions, or should I leave both landing and archiving to
+you? Reply in your own words.” Use chat prose, not an interactive question
+widget. A reply that already states a mode needs no question. In particular,
+“leave the merges to me” selects by-hand mode and authorizes neither automatic
+landing nor archiving. A resumed invocation keeps the mode only when the
+latest muster roll, already available in conversation context, records the
+owner's confirmation; an agent-written roll alone is not confirmation.
+
+For a harness with that classifier, the muster roll records `Landing:
+orchestrator — confirmed by the owner in chat` or `Landing: by hand —
+confirmed by the owner in chat`. Orchestrator mode authorizes both landing
+and archiving; by-hand mode authorizes neither. Never default to orchestrator
+landing or archiving without that confirmation. Later invocations keep the
+latest confirmed mode. The Omp and Codex references define their routes
+without this authorization gate. The authorization covers only landing and
+archiving; waves still launch without confirmation.
+
+
 
 The roll distinguishes required class, selected route, and actual model. A
 `human` task gets a row and no implementor. A fallback roll names the subagent
@@ -376,15 +397,16 @@ So on every wake:
   body, and go back to `Take the wave`, which routes what happens next — the
   following wave, or `Close the epic`.
 - **A completed child has no session left to run, archived once.** Archive its
-  session only after the issue's completion evidence is read. For a pull
-  request child, do not archive while its PR is green but waiting on review;
+  session only after the issue's completion evidence is read and, where the
+  harness requires it, the user's confirmed mode authorizes archiving. For a
+  pull request child, do not archive while its PR is green but waiting on review;
   it still holds `undertake`'s cadence and must answer the next review comment.
-  For a no-PR research result or bug disposition, the verified issue outcome
-  is the completion record. **Once per child, not once per wake**: read the
-  muster roll's archive record before archiving again. In the fallback the
-  ship is a subagent that has already ended, so there is no session to archive.
-  **The muster roll records the archive**: one comment naming the child and the
-  session retired.
+  For a no-PR research result or bug disposition, the verified issue outcome is
+  the completion record. **Once per child, not once per wake**: read the muster
+  roll's archive record before archiving again. In the fallback the ship is a
+  subagent that has already ended, so there is no session to archive. **Post the
+  muster-roll archive record only after the archive call returns success**; never
+  claim an archive that was denied or failed.
 **A pull request closed without merging is somebody's decision.** Its task or
 corrected bug issue stays open and its session is spent, so nothing here
 re-dispatches it: say which child it was, and leave it to the person who
@@ -487,6 +509,9 @@ the reads again.
 The merge is conditional on the recorded head SHA. If the head moves after
 the read, the merge call fails closed and the next wake repeats the whole gate.
 
+If a landing record is written, post it only after the conditional merge call
+returns success. A denied or failed merge must not be recorded as landed.
+
 
 When all five reads hold and the roll says `Landing: by hand`, report the
 merge-ready pull request once and return without merging. That is the whole
@@ -586,11 +611,14 @@ decomposition — the tasks, the edges, and therefore the waves. Asking again
 before each wave asks the same question a second time, and a plan that has to
 be re-agreed wave by wave was not agreed.
 
-So the first wave and every wave after it launches unasked. `Post the muster
-roll` is what goes up instead: the user sees five sessions start without having
-been asked to approve them starting, and sees on the epic which task each is
-on, which session is which, and what each is running. A record written as the
-thing happens is worth more than a question answered before it.
+Landing and archiving are separate from launching. Where the harness
+classifier applies, the first reply asks only for the user's authorization of
+those two actions; it never asks whether to open sessions or launch a wave.
+The prompt asks for the decision in the user's own words because the
+classifier weighs user text over skill instructions. Once the mode is stated
+or confirmed, the first wave and every wave after it launch unasked. `Post the
+muster roll` records the confirmed landing mode and each task's implementor,
+required class, selected route, and actual model (or `unreported`).
 
 This does not relax anything else. The stops below still stop, and nothing here
 touches the constitution's own gates.
@@ -599,7 +627,7 @@ touches the constitution's own gates.
 Where it stops and waits
 ========================
 
-Six, and four of them are reports rather than questions.
+Seven, and four of them are reports rather than questions.
 
 - **An issue that is not an epic**, at `Read the epic`. A report: say which
   issue it is and which skill takes it — `undertake` for a task issue, `epic`
@@ -625,11 +653,18 @@ Six, and four of them are reports rather than questions.
 - **A `Summary` claim that no merged task pull request delivers**, at `Close
   the epic`. Name the claim, leave the epic open, cancel the watch, and wait
   for a person to resolve the mismatch.
+- **Landing or archive is denied by the auto-mode classifier.** Do not post a
+  record that claims the action happened, and do not seek another route to the
+  same effect. Tell the user once which action was denied and the classifier's
+  reason. Ask for authorization in the user's own words; after that
+  confirmation, retry the denied action once. If denied again, stop without a
+  false landing or archive record.
 
 Everything else runs through. No permission is asked to open a session, to
-comment on the epic, to subscribe to a pull request, to launch the next wave,
-to merge a pull request whose landing gate holds, or to close an epic whose
-`Summary` is delivered.
+comment on the epic, to subscribe to a pull request, or to launch the next
+wave. Where the harness classifier applies, a gated merge and session archive
+require the user's recorded authorization; closing an epic whose `Summary` is
+delivered needs no separate confirmation.
 
 
 Non-goals
