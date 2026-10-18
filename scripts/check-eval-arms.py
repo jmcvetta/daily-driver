@@ -114,7 +114,6 @@ ARMS: dict[str, dict[str, object]] = {
         "tag": "claude-only",
         "id_suffix": None,
         "kinds": ("claude-code",),
-        "ablation": True,
         "experiments": {
             "with-without.yaml": "claude-sonnet-5",
             "with-without-haiku-5.5.yaml": "claude-haiku-5-5",
@@ -645,7 +644,7 @@ def check_model_class_model(path: Path, document: dict) -> None:
 
 
 def check_experiments() -> None:
-    """Every experiment names its arm; ablation arms pair variants and register focused runs."""
+    """Every experiment names its arm; Omp pairs ablations and registers focused runs."""
     variant_kinds = _load_variant_kinds()
     arm_of_experiment = {
         experiment: (name, model)
@@ -736,7 +735,7 @@ def check_experiments() -> None:
             }
             if set(variants_by_id) != {"bare", "with-plugin"}:
                 raise CheckFailed(
-                    f"{path.relative_to(ROOT)}: the {arm} arm must score `bare` and `with-plugin`; found "
+                    f"{path.relative_to(ROOT)}: Omp must score `bare` and `with-plugin`; found "
                     f"{sorted(str(variant_id) for variant_id in variants_by_id)}"
                 )
             bare = variants_by_id["bare"].get("agent")

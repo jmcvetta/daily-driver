@@ -71,3 +71,5 @@ variants:
       plugins:
         - type: local
           path: ".."
+        - type: local
+          path: "dependencies/worktrunk/plugins/worktrunk"
