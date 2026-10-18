@@ -220,6 +220,10 @@ class AgentFinished:
     usage: dict[str, int]
     awaiting_async_work: bool = False
     """Omp's `awaitingAsyncWork`: the only possible resume is a background-job result."""
+    is_terminal_field: bool | None = None
+    """The frame's own `isTerminal`, or None where it was absent or not a boolean."""
+    awaiting_async_work_field: bool | None = None
+    """The frame's own `awaitingAsyncWork`, or None where it was absent or not a boolean."""
 
 
 @dataclass
@@ -343,6 +347,11 @@ def render_agent_output(assistant_texts: list[str], *, is_error: bool = False) -
     return "\n".join(parts)
 
 
+def _bool_or_none(value: Any) -> bool | None:
+    """A frame field kept as a boolean, so absent and false stay distinguishable."""
+    return value if isinstance(value, bool) else None
+
+
 class TurnReducer:
     """One `prompt` command's worth of Omp frames, reduced to actions.
 
@@ -361,6 +370,7 @@ class TurnReducer:
         self.open_tools: dict[str, ToolStarted] = {}
         self.tool_calls: list[ToolStarted] = []
         self.recognized = 0
+        self.last_recognized_kind: str | None = None
         self.unrecognized_types: set[str] = set()
         self.argument_keys_seen: set[str] = set()
         self.usage_keys_seen: set[str] = set()
@@ -386,6 +396,7 @@ class TurnReducer:
         kind = str(frame.get("type") or "")
         if kind in RECOGNIZED_FRAMES:
             self.recognized += 1
+            self.last_recognized_kind = kind
 
         handler = {
             "turn_start": self._on_turn_start,
@@ -551,6 +562,8 @@ class TurnReducer:
                 terminal=terminal,
                 usage=dict(self.usage),
                 awaiting_async_work=frame.get("awaitingAsyncWork") is True,
+                is_terminal_field=_bool_or_none(frame.get("isTerminal")),
+                awaiting_async_work_field=_bool_or_none(frame.get("awaitingAsyncWork")),
             )
         ]
 

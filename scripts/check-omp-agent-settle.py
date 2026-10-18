@@ -143,6 +143,294 @@ FAKE_OMP_ASYNC = FAKE_OMP.split(FAKE_PROMPT_BRANCH)[0] + """\
 """
 
 
+# A fake `omp` driven by `<fake>.script.json`: a list with one entry per `prompt`
+# command, in order. An entry's `frames` are emitted as written; its `then` is
+# `silence` (keep answering commands, emit nothing more), `exit` (die) or `end`
+# (the frames were the whole turn). `get_subagents` reports one finished and two
+# running subagents, of which `sub-fail` refuses its cancel.
+FAKE_OMP_SCRIPTED = """\
+#!/usr/bin/env python3
+import json
+import sys
+
+
+def emit(frame):
+    print(json.dumps(frame), flush=True)
+
+
+if sys.argv[1:2] == ["plugin"]:
+    sys.exit(0)
+SCRIPT = json.load(open(sys.argv[0] + ".script.json"))
+prompts = 0
+emit({"type": "ready"})
+while True:
+    line = sys.stdin.readline()
+    if not line:
+        break
+    command = json.loads(line)
+    with open(sys.argv[0] + ".commands", "a", encoding="utf-8") as log:
+        log.write(json.dumps(command) + "\\n")
+    kind = command.get("type")
+    ok = {"id": command["id"], "type": "response", "success": True}
+    if kind == "get_available_commands":
+        emit({**ok, "data": {"commands": [{"name": "skill:deps"}]}})
+    elif kind == "get_state":
+        emit({**ok, "data": {"sessionId": "fake-scripted"}})
+    elif kind in ("set_model", "set_thinking_level", "abort"):
+        emit({**ok, "data": {}})
+    elif kind == "get_subagents":
+        emit({**ok, "data": {"subagents": [{"id": "sub-run", "status": "running"},
+                                            {"id": "sub-fail", "status": "running"},
+                                            {"id": "sub-done", "status": "completed"}]}})
+    elif kind == "cancel_subagent":
+        if command.get("subagentId") == "sub-fail":
+            emit({"id": command["id"], "type": "response", "success": False, "error": "refused"})
+        else:
+            emit({**ok, "data": {"cancelled": True}})
+    elif kind == "prompt":
+        step = SCRIPT[min(prompts, len(SCRIPT) - 1)]
+        prompts += 1
+        emit({**ok, "command": "prompt"})
+        for frame in step["frames"]:
+            emit(frame)
+        if step.get("then") == "exit":
+            sys.exit(0)
+"""
+
+USAGE = {"input": 4, "output": 2, "cacheRead": 0, "cacheWrite": 0, "totalTokens": 6}
+TURN_START = {"type": "turn_start"}
+SECRET = "SECRET-TOOL-ARGUMENT"
+
+
+def tool_frames(call_id: str = "t1") -> list[dict[str, Any]]:
+    """A completed `task` call whose arguments must never reach the diagnostic file."""
+    return [
+        {"type": "tool_execution_start", "toolCallId": call_id, "toolName": "task", "args": {"prompt": SECRET}},
+        {"type": "tool_execution_end", "toolCallId": call_id, "toolName": "task",
+         "result": {"content": [{"type": "text", "text": "spawned"}]}},
+    ]
+
+
+def agent_end(**fields: Any) -> dict[str, Any]:
+    return {"type": "agent_end", "messages": [{"role": "assistant", "usage": USAGE}], **fields}
+
+
+class EventCounter:
+    """A StreamCallback that counts the terminal events and the tool dispatches."""
+
+    def __init__(self) -> None:
+        self.ends = 0
+        self.tools = 0
+
+    def on_event(self, event: Any) -> None:
+        from coder_eval.streaming.events import AgentEndEvent, ToolStartEvent
+
+        if isinstance(event, AgentEndEvent):
+            self.ends += 1
+        elif isinstance(event, ToolStartEvent):
+            self.tools += 1
+
+
+async def launch_scripted(script: list[dict[str, Any]], *, settle: bool = False, workdir: Path | None = None):
+    """A started agent over the scripted fake, and the paths a check inspects."""
+    from coder_eval_omp.agent import OmpAgent, OmpAgentConfig
+
+    workdir = workdir or Path(tempfile.mkdtemp(prefix="omp-evidence-check-"))
+    fake = Path(tempfile.mkdtemp(prefix="fake-omp-bin-")) / "fake-omp"
+    fake.write_text(FAKE_OMP_SCRIPTED)
+    fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+    Path(str(fake) + ".script.json").write_text(json.dumps(script))
+    config = OmpAgentConfig(
+        type="omp", binary=str(fake), plugins=[{"type": "local", "path": str(ROOT)}],
+        settle_on_async_handoff=settle,
+    )
+    agent = OmpAgent(config, task_id="evidence-check")
+    await agent.start(str(workdir))
+    return agent, workdir, fake
+
+
+def read_attempts(workdir: Path) -> list[dict[str, Any]]:
+    from coder_eval_omp.agent import PROTOCOL_EVIDENCE_FILENAME, SETTLEMENT_EVIDENCE_VERSION
+
+    text = (workdir / PROTOCOL_EVIDENCE_FILENAME).read_text()
+    check(SECRET not in text, "the diagnostic file must not carry tool arguments")
+    block = json.loads(text)["omp_settlement_evidence"]
+    check(block["version"] == SETTLEMENT_EVIDENCE_VERSION, f"unexpected evidence version {block['version']}")
+    return block["attempts"]
+
+
+async def attempt_outcome(agent: Any, *, timeout: float, counter: EventCounter | None = None, prompt: str = "go"):
+    """Run one turn and return the exception it ended in, or the record."""
+    try:
+        return await agent.communicate(prompt, timeout=timeout, stream_callback=counter)
+    except BaseException as error:  # noqa: BLE001 - the check inspects every exit class
+        return error
+
+
+async def check_settlement_evidence() -> None:
+    """Every exit of an attempt leaves its settlement evidence in the artifact."""
+    from coder_eval.errors import AgentCrashError, TurnTimeoutError
+
+    # A launched worker followed by silence: the timeout leaves the call and no end.
+    agent, workdir, fake = await launch_scripted([{"frames": [TURN_START, *tool_frames()], "then": "silence"}])
+    counter = EventCounter()
+    try:
+        outcome = await attempt_outcome(agent, timeout=2, counter=counter)
+        check(isinstance(outcome, TurnTimeoutError), f"silence must time out, got {outcome!r}")
+        check(counter.ends == 1, f"the timed-out turn must finalize exactly once, got {counter.ends}")
+        check(
+            agent.pending_turn is not None and len(agent.pending_turn.commands) == 1,
+            "the timeout must keep the worker launch in the partial record",
+        )
+        (attempt,) = read_attempts(workdir)
+        check(attempt["exit_reason"] == "timeout", f"exit reason must be timeout, got {attempt}")
+        check(attempt["agent_end"]["total"] == 0 and attempt["agent_end"]["recent"] == [],
+              f"no end was observed, got {attempt['agent_end']}")
+        check(attempt["last_recognized_frame"] == "tool_execution_end" and attempt["recognized_frames"] >= 3,
+              f"the last recognized frame must be kept, got {attempt}")
+        check(attempt["pending_tools_at_exit"] == 0 and attempt["attempt"] == 1, f"unexpected attempt {attempt}")
+        check(attempt["async_settlement"] == {"enabled": False, "taken": False}, f"async flags: {attempt}")
+    finally:
+        await agent.stop()
+
+    # A non-terminal end that is not awaiting async work does not settle; flags survive.
+    agent, workdir, fake = await launch_scripted(
+        [{"frames": [TURN_START, agent_end(isTerminal=False, awaitingAsyncWork=False)], "then": "silence"}],
+        settle=True,
+    )
+    try:
+        outcome = await attempt_outcome(agent, timeout=2)
+        check(isinstance(outcome, TurnTimeoutError), f"a plain non-terminal end must not settle, got {outcome!r}")
+        (attempt,) = read_attempts(workdir)
+        check(attempt["agent_end"]["nonterminal"] == 1 and attempt["agent_end"]["awaiting_async_work"] == 0,
+              f"counts: {attempt['agent_end']}")
+        check(attempt["agent_end"]["recent"][0]["is_terminal"] is False
+              and attempt["agent_end"]["recent"][0]["awaiting_async_work"] is False,
+              f"flags must survive the timeout, got {attempt['agent_end']}")
+    finally:
+        await agent.stop()
+
+    # Missing fields stay distinguishable from false ones.
+    agent, workdir, fake = await launch_scripted([{"frames": [TURN_START, agent_end()]}])
+    try:
+        await agent.communicate("go", timeout=10)
+        (attempt,) = read_attempts(workdir)
+        check(attempt["exit_reason"] == "completed", f"a terminal end completes the attempt, got {attempt}")
+        check(attempt["agent_end"]["recent"][0]["is_terminal"] is None
+              and attempt["agent_end"]["recent"][0]["awaiting_async_work"] is None,
+              f"absent fields must read null, got {attempt['agent_end']}")
+    finally:
+        await agent.stop()
+
+    # Async-awaiting end: opted in it settles and cancels only running workers; off it waits.
+    handoff = {"frames": [TURN_START, *tool_frames(), agent_end(isTerminal=False, awaitingAsyncWork=True)],
+               "then": "silence"}
+    agent, workdir, fake = await launch_scripted([handoff], settle=True)
+    try:
+        await agent.communicate("go", timeout=10)
+        cancelled = [json.loads(l).get("subagentId") for l in Path(str(fake) + ".commands").read_text().splitlines()
+                     if json.loads(l).get("type") == "cancel_subagent"]
+        check(cancelled == ["sub-run", "sub-fail"], f"only running workers are cancelled, got {cancelled}")
+        (attempt,) = read_attempts(workdir)
+        check(attempt["exit_reason"] == "async_handoff" and attempt["async_settlement"] == {"enabled": True, "taken": True},
+              f"async settlement must be recorded, got {attempt}")
+        check(attempt["cancellation"] == {"succeeded": 1, "failed": 1, "timed_out": 0},
+              f"cancellation counts: {attempt['cancellation']}")
+        check(json.loads((workdir / "omp-protocol-observations.json").read_text())["omp_cancelled_subagents"] == ["sub-run"],
+              "cancelled ids stay in the artifact")
+    finally:
+        await agent.stop()
+    agent, workdir, fake = await launch_scripted([handoff], settle=False)
+    try:
+        outcome = await attempt_outcome(agent, timeout=2)
+        check(isinstance(outcome, TurnTimeoutError), f"with the option off the turn waits, got {outcome!r}")
+        commands = [json.loads(l)["type"] for l in Path(str(fake) + ".commands").read_text().splitlines()]
+        check("cancel_subagent" not in commands, "workers must not be cancelled with the option off")
+        (attempt,) = read_attempts(workdir)
+        check(attempt["agent_end"]["awaiting_async_work"] == 1
+              and attempt["agent_end"]["recent"][0]["awaiting_async_work"] is True
+              and attempt["async_settlement"] == {"enabled": False, "taken": False},
+              f"the observation must survive the timeout, got {attempt}")
+    finally:
+        await agent.stop()
+
+    # Provider failure and EOF keep their failure class and their observations.
+    refused = json.loads((ROOT / "evals" / "coder-eval-omp" / "fixtures" / "agent_end_provider_error.json").read_text())
+    for name, step, reason in (
+        ("provider failure", {"frames": [TURN_START, {"type": "agent_end", **refused}]}, "provider_error"),
+        ("EOF", {"frames": [TURN_START, *tool_frames()], "then": "exit"}, "eof"),
+    ):
+        agent, workdir, fake = await launch_scripted([step])
+        counter = EventCounter()
+        try:
+            outcome = await attempt_outcome(agent, timeout=10, counter=counter)
+            check(isinstance(outcome, AgentCrashError), f"{name} must stay an AgentCrashError, got {outcome!r}")
+            check(counter.ends == 1, f"{name} must finalize exactly once, got {counter.ends}")
+            (attempt,) = read_attempts(workdir)
+            check(attempt["exit_reason"] == reason, f"{name} exit reason, got {attempt}")
+        finally:
+            await agent.stop()
+
+    # External cancellation.
+    agent, workdir, fake = await launch_scripted([{"frames": [TURN_START, *tool_frames()], "then": "silence"}])
+    counter = EventCounter()
+    try:
+        task = asyncio.ensure_future(attempt_outcome(agent, timeout=60, counter=counter))
+        for _ in range(100):
+            if counter.tools:
+                break
+            await asyncio.sleep(0.1)
+        check(counter.tools == 1, "the scripted tool call must have been dispatched before the cancel")
+        await asyncio.sleep(0.3)
+        task.cancel()
+        outcome = await asyncio.gather(task, return_exceptions=True)
+        check(isinstance(outcome[0], asyncio.CancelledError), f"cancellation must propagate, got {outcome!r}")
+        check(counter.ends == 1, f"a cancelled turn must finalize exactly once, got {counter.ends}")
+        (attempt,) = read_attempts(workdir)
+        check(attempt["exit_reason"] == "cancelled", f"cancel exit reason, got {attempt}")
+    finally:
+        await agent.stop()
+
+    # A second attempt keeps the first's record and starts with fresh flags; the
+    # retained agent_end observations are bounded with the overflow counted.
+    agent, workdir, fake = await launch_scripted([
+        {"frames": [TURN_START, agent_end(isTerminal=False, awaitingAsyncWork=False)], "then": "silence"},
+        {"frames": [TURN_START, *[agent_end(isTerminal=False) for _ in range(20)], agent_end(isTerminal=True)]},
+    ])
+    try:
+        first = await attempt_outcome(agent, timeout=2)
+        check(isinstance(first, TurnTimeoutError), f"the first attempt times out, got {first!r}")
+        await agent.discard_pending_turn()
+        await agent.communicate("again", timeout=10)
+        first_attempt, second = read_attempts(workdir)
+        check(first_attempt["exit_reason"] == "timeout" and first_attempt["agent_end"]["nonterminal"] == 1,
+              f"the first attempt record must survive a later attempt, got {first_attempt}")
+        check(second["attempt"] == 2 and second["exit_reason"] == "completed", f"second attempt: {second}")
+        ends = second["agent_end"]
+        check(ends["total"] == 21 and ends["nonterminal"] == 20 and ends["terminal"] == 1,
+              f"second attempt must not reuse earlier flags, got {ends}")
+        check(len(ends["recent"]) == 16 and ends["overflow"] == 5, f"bounded retention, got {ends['overflow']}")
+    finally:
+        await agent.stop()
+
+    # An evidence write that fails must not mask a timeout, and must not hide itself on success.
+    for script, expected, name in (
+        ([{"frames": [TURN_START, *tool_frames()], "then": "silence"}], TurnTimeoutError, "timeout"),
+        ([{"frames": [TURN_START, agent_end()]}], AgentCrashError, "normal completion"),
+    ):
+        blocked = Path(tempfile.mkdtemp(prefix="omp-evidence-blocked-"))
+        (blocked / "omp-protocol-observations.json").mkdir()
+        agent, _, _ = await launch_scripted(script, workdir=blocked)
+        try:
+            outcome = await attempt_outcome(agent, timeout=2)
+            check(isinstance(outcome, expected), f"a failed write on {name} must end as {expected.__name__}, got {outcome!r}")
+        finally:
+            await agent.stop()
+
+    print("check-omp-agent-settle: every exit of an attempt (timeout, async handoff, provider failure, EOF, "
+          "cancellation, retry) leaves bounded settlement evidence; a failed write masks nothing")
+
+
 def check(condition: bool, message: str) -> None:
     """Fail the whole script on a false condition, naming what was expected."""
     if not condition:
@@ -217,13 +505,18 @@ async def run_scenario() -> None:
         f"the task selector must reach RPC as model and thinking commands, got {wire_commands}",
     )
 
+    observed = json.loads((workdir / PROTOCOL_EVIDENCE_FILENAME).read_text())
     check(
-        json.loads((workdir / PROTOCOL_EVIDENCE_FILENAME).read_text())
+        {key: observed[key] for key in ("omp_argument_keys_seen", "omp_usage_keys_seen")}
         == {
             "omp_argument_keys_seen": ["args"],
             "omp_usage_keys_seen": ["cacheRead", "cacheWrite", "input", "output"],
         },
         "post-turn protocol evidence must contain the exact observed key union",
+    )
+    check(
+        [a["exit_reason"] for a in observed["omp_settlement_evidence"]["attempts"]] == ["stopped_early"],
+        f"an early stop must be recorded as its own exit reason, got {observed['omp_settlement_evidence']}",
     )
 
     check(
@@ -411,6 +704,7 @@ def main() -> None:
     asyncio.run(run_scenario())
     asyncio.run(check_async_handoff())
     asyncio.run(run_provider_error_scenario())
+    asyncio.run(check_settlement_evidence())
     check_roles_pin()
 
 
