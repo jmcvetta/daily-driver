@@ -2,8 +2,8 @@
 """Exercise the explicit embark title barrier through a linked real Omp.
 
 The scripted local model drives the issue read, blocked unrelated read, exact
-`xd://` title write, and resumed read. A fake `gh` supplies issue fixtures; no
-GitHub service or paid model is contacted.
+`xd://` title write, and resumed read. A command-like scheduled reminder must
+not restart that gate. A fake `gh` supplies fixtures; no live service is used.
 
 This proves event delivery, denial and title application. It does not prove
 that a live model chooses the right title wording without the denial guidance.
@@ -39,6 +39,7 @@ TARGETS = {
 }
 RESULTS: dict[tuple[int, int], str] = {}
 RPC_EVENTS: list[dict] = []
+REMINDER_QUEUED = threading.Event()
 
 
 class CheckFailed(Exception):
@@ -86,11 +87,16 @@ def tool_call(number: int, index: int, repository_qualified: bool) -> tuple[str,
         return "read", {"path": "prep.md"}
     if index == 5:
         return "daily_driver_get_session", {}
+    if index == 6 and number == 582:
+        return "daily_driver_schedule", {
+            "delaySeconds": 1,
+            "message": "Embark #582 watch backstop. Verify the completed gate survives.",
+        }
     raise CheckFailed(f"unexpected scripted tool-call index {index}")
 
 
 class MockModel(BaseHTTPRequestHandler):
-    """An OpenAI-compatible local endpoint that scripts six calls per request."""
+    """Prevent command-like timer deliveries from silently reinstating the startup gate."""
 
     def log_message(self, *_args) -> None:
         pass
@@ -101,6 +107,7 @@ class MockModel(BaseHTTPRequestHandler):
         number = target_from(messages)
         latest_user = next((m for m in reversed(messages) if m.get("role") == "user"), {})
         user_text = text_of(latest_user.get("content"))
+        reminder = "watch backstop" in user_text
         repository_qualified = bool(
             re.search(rf"\nUser:\s*issue://example/project/{number}\b", user_text)
         )
@@ -111,18 +118,24 @@ class MockModel(BaseHTTPRequestHandler):
             if message.get("role") == "assistant"
         )
         last = messages[-1] if messages else {}
-        if last.get("role") == "tool":
+        if not reminder and last.get("role") == "tool":
             RESULTS[(number, index - 1)] = text_of(last.get("content"))
-        if index >= 6:
+        if not reminder and number == 582 and index == 7:
+            if not REMINDER_QUEUED.wait(timeout=15):
+                raise CheckFailed("scheduled reminder did not enter the live follow-up queue")
+        if (reminder and index >= 1) or (not reminder and index >= (7 if number == 582 else 6)):
             delta = {"role": "assistant", "content": "Startup title verified."}
             finish = "stop"
         else:
-            name, arguments = tool_call(number, index, repository_qualified)
+            if reminder:
+                name, arguments = "write", {"path": "wake-proof.txt", "content": "gate preserved\n"}
+            else:
+                name, arguments = tool_call(number, index, repository_qualified)
             delta = {
                 "role": "assistant",
                 "tool_calls": [{
                     "index": 0,
-                    "id": f"embark-{number}-{index}",
+                    "id": f"{'wake' if reminder else 'embark'}-{number}-{index}",
                     "type": "function",
                     "function": {"name": name, "arguments": json.dumps(arguments)},
                 }],
@@ -206,12 +219,16 @@ def write_fake_gh(bin_dir: Path) -> None:
 
 
 def read_frames(stream, sink: queue.Queue) -> None:
-    """Queue parsed RPC frames until Omp closes stdout."""
+    """Release the provider only after the real timer queues its reminder."""
     for line in stream:
         line = line.strip()
         if line:
             try:
-                sink.put(json.loads(line))
+                frame = json.loads(line)
+                if (frame.get("type") == "queue_update"
+                        and any("watch backstop" in text for text in frame.get("followUp", []))):
+                    REMINDER_QUEUED.set()
+                sink.put(frame)
             except json.JSONDecodeError:
                 continue
     sink.put(None)
@@ -261,6 +278,14 @@ def run(omp: str, env: dict[str, str], cwd: Path, stderr_path: Path) -> None:
                 (583, "/skill:embark issue://example/project/583"),
             ):
                 send({"id": f"scenario-{number}", "type": "prompt", "message": prompt})
+                if number == 582:
+                    wake = wait_for(
+                        lambda frame: frame.get("type") == "tool_execution_end"
+                        and frame.get("toolCallId") == "wake-582-0",
+                        "the scheduled reminder's guarded write",
+                    )
+                    if wake.get("isError") or (cwd / "wake-proof.txt").read_text() != "gate preserved\n":
+                        raise CheckFailed(f"the reminder reset the gate: {wake!r}", stderr_path.read_text())
                 wait_for(
                     lambda frame: frame.get("type") == "agent_end" and frame.get("isTerminal", True),
                     f"scenario {number} to settle",
@@ -344,7 +369,7 @@ def main() -> None:
                     raise CheckFailed(f"issue {number}: session name does not carry the requested epic title: {session[:500]!r}", stderr)
     finally:
         server.shutdown()
-    print("check-omp-embark-title-live: linked Omp enforced the first-read deadline, applied both epic titles, and resumed the blocked reads")
+    print("check-omp-embark-title-live: linked Omp enforced both fresh-command gates and preserved the completed gate across an actual timer wake")
 
 
 if __name__ == "__main__":

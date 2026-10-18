@@ -2172,7 +2172,7 @@ function explicitEmbarkTarget(prompt) {
 		const skillArgument = /^(?:(?:\/)?embark\s+)?(\S+)/iu.exec(command);
 		return skillArgument ? parseEmbarkReference(skillArgument[1]) : null;
 	}
-	const match = /^(?:\/)?embark\s+(\S+)/iu.exec(command);
+	const match = /^(?:\/skill:|\/)?embark\s+(\S+)/iu.exec(command);
 	return match ? parseEmbarkReference(match[1]) : null;
 }
 
@@ -2273,7 +2273,7 @@ function supersedingWorkflow(prompt) {
 	if (typeof prompt !== "string") return false;
 	const text = prompt.trim();
 	if (/^\[IMPORTANT: User invoked the "(?:undertake|stand-down)" skill;/iu.test(text)) return true;
-	return /^(?:\/)?(?:undertake|stand-down)(?:\s|$)/iu.test(text);
+	return /^(?:\/skill:|\/)?(?:undertake|stand-down)(?:\s|$)/iu.test(text);
 }
 
 /** Read the latest extension state from this session's active branch. */
@@ -2453,8 +2453,11 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	// a resumed session recoverable without sharing a process-global target.
 	const pendingIssueReads = new Map();
 
-	pi.on("before_agent_start", (event, ctx) => {
-		const target = explicitEmbarkTarget(event?.prompt);
+	// Provider preparation also sees queued reminders. Only external command
+	// input may restart the gate; command-like reminder text is not an order.
+	pi.on("input", (event, ctx) => {
+		if (event?.source !== "interactive" && event?.source !== "rpc") return;
+		const target = explicitEmbarkTarget(event.text);
 		if (ctx?.agent?.kind === "sub") return;
 		if (ctx?.agent?.kind !== "main") {
 			if (target) {
@@ -2467,7 +2470,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 			saveStartupState(ctx, { status: "awaiting", target });
 			return;
 		}
-		if (supersedingWorkflow(event?.prompt)) {
+		if (supersedingWorkflow(event.text)) {
 			pendingIssueReads.clear();
 			saveStartupState(ctx, { status: "inactive" });
 		}
