@@ -1,0 +1,64 @@
+# The fixture refuses dependent work until the authenticated integration path
+# is exercised; promises and startup checks cannot create the required trace.
+task_id: undertake-22-integration-proof-before-dependent-work
+description: >-
+  Prove a safe authenticated integration path before dependent implementation,
+  using a local fixture rather than real services or paid provisioning.
+tags: [undertake, behaviour, fire]
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/integration-proof
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+pre_run:
+  - command: bash .fixture/setup.sh
+    timeout: 30
+initial_prompt: >-
+  Undertake the first implementation step for this task. A dependency that may
+  invalidate the approach is the authenticated integration with the existing
+  service. Read the local instructions in `.fixture` and prove the actual
+  fixture request/response and authentication path before dependent work.
+  Startup or health checks do not count. The fixture has no network or real
+  credentials. Record evidence and action order. Do not use paid provisioning.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 480}
+success_criteria:
+  - type: skill_triggered
+    description: Undertake requires early integration proof
+    expected_skill: undertake
+    skill_name: undertake
+  - type: command_executed
+    description: The authenticated integration fixture was exercised
+    tool_name: Bash
+    command_pattern: 'integration-probe --fixture'
+    min_count: 1
+    weight: 2
+  - type: file_matches_regex
+    description: The fixture proves integration ran before dependent work
+    path: .fixture/trajectory.log
+    pattern: '(?s)^integration-auth-probe\ndependent-work$'
+    weight: 3
+  - type: agent_judge
+    description: The agent reports observed proof, not a promise or health check
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final result. Start rationale with `ANCHOR: result` or
+      `ANCHOR: none`; no result scores 0. Score 1 only if it reports the
+      fixture's authenticated request/response proof before dependent work and
+      does not claim actual external-service access or provisioning. The Bash
+      trajectory is authoritative. A promise, startup/health check, or claim
+      without the fixture trace earns 0.
