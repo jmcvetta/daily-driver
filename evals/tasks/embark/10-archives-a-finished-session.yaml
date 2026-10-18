@@ -19,6 +19,9 @@ initial_prompt: >-
   Its wave is #211 and #212. #211's pull request has merged and its task issue
   is closed. #212's pull request is green, ready for review, and still waiting
   on its reviewer — its task issue is open. Check on the wave.
+  The completion evidence has been read, and #211 has no archive record yet.
+  This isolated exercise has no GitHub or session client. Describe the intended
+  session operations without claiming they ran.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]

@@ -398,8 +398,8 @@ So on every wake:
 - **A completed child has no session left to run, archived once.** Unless
   landing is by hand, archive its session after reading the issue's completion
   evidence. For a pull request child, do not archive while its PR is green but
-  waiting on review;
-  it still holds `undertake`'s cadence and must answer the next review comment.
+  waiting on review; it still holds `undertake`'s cadence and must answer the
+  next review comment.
   For a no-PR research result or bug disposition, the verified issue outcome is
   the completion record. **Once per child, not once per wake**: read the muster
   roll's archive record before archiving again. In the fallback the ship is a

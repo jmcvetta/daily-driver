@@ -17,8 +17,9 @@ initial_prompt: >-
   Task #201 has pull request #301. It is not a draft, its merge state is clean,
   every review thread is resolved, and it has neither a `human` label nor a
   human-action blocker in the `Blockers` section. Its latest conversation
-  comment starts with `## Review cycle complete! 🎉` and names the current
-  head SHA. Check on the wave.
+  comment starts with `## Review cycle complete! 🎉`, was posted by the same
+  account as task #201's undertake claim, and names the current head SHA.
+  Check on the wave.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]

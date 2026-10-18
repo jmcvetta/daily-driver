@@ -20,6 +20,8 @@ tags: [embark, behaviour, fire]
 initial_prompt: >-
   Epic #142 is planned and agreed, and its first wave is #143, #144 and #147 —
   none of them blocked by anything open. Work the epic. What do you do next?
+  This isolated exercise has no GitHub or session client. Describe the next
+  actions and the muster roll you would post, without claiming actual dispatch.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
