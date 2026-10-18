@@ -13,9 +13,8 @@ description: >-
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Epic #200 is at sea, and its latest muster roll says `Landing: by hand —
-  confirmed by the owner in chat`. Task #201 has pull request #301. It is not
-  a draft, its merge state is clean,
+  Epic #200 is at sea, and its latest muster roll says `Landing: by hand`.
+  Task #201 has pull request #301. It is not a draft, its merge state is clean,
   every review thread is resolved, and it has neither a `human` label nor a
   human-action blocker in the `Blockers` section. Its latest conversation
   comment starts with `## Review cycle complete! 🎉` and names the current
