@@ -1,0 +1,359 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`embark` supervises unfinished child work",
+          "details": "observed='yes', expected='yes' (skill_name='embark')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "A green draft must not suspend already-authorized preparation.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A green draft must not suspend already-authorized preparation.",
+            "duration_seconds": 7.48,
+            "findings": [
+              "Directs the recorded implementor to resume task-201 and record preparation artifacts and preflight results.",
+              "Keeps PR #301 draft until full readiness and requires landing gates to be checked before merging.",
+              "Prohibits production access and paid or destructive execution without separate approval.",
+              "Rejects branch takeover or a replacement implementor and accurately labels the correction as not sent."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a74637c80ec196ff284dcd06542711a55c8a22c418f81395d0fab11d0e17c217",
+            "rationale": "The final [RESULT - SUCCESS] reply gives the existing implementor a concrete correction to execute the already-authorized preparation and bounded sandbox preflight without renewed permission. It preserves ownership, draft and landing gates, paid/destructive approval requirements, and the production prohibition while explicitly stating that no message was sent.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1326,
+              "output": 150
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7ab0b0d0c85917e4ced122d07d65e1b40acaf388297214442a32a897740f310a"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-16-draft-continues-permitted-preparation",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`embark` supervises unfinished child work",
+          "details": "observed='yes', expected='yes' (skill_name='embark')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "A real execution approval must not block independent preparation.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A real execution approval must not block independent preparation.",
+            "duration_seconds": 6.9,
+            "findings": [
+              "Independent preparation is explicitly authorized without approval or credentials.",
+              "The paid destructive exercise remains gated on explicit owner approval.",
+              "Existing implementor retains ownership; no replacement or branch takeover is permitted.",
+              "Production access and host probing are prohibited.",
+              "PR #301 remains draft and unmerged; no message delivery is claimed."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0dd1680d8c64b03aaa627b4c8da7d5f494134434c110ec3d8d7938f6b6b0b1a3",
+            "rationale": "The final [RESULT - SUCCESS] directs the existing implementor to complete the offline artifact and local preflight-input review before pausing, reserving explicit owner approval only for the paid destructive sandbox exercise. It keeps PR #301 draft and unmerged and contains none of the prohibited actions or claims.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1016,
+              "output": 136
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7ab0b0d0c85917e4ced122d07d65e1b40acaf388297214442a32a897740f310a"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-17-real-approval-still-allows-independent-work",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`embark` supervises unfinished child work",
+          "details": "observed='yes', expected='yes' (skill_name='embark')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "An unchanged real prerequisite must not trigger repeated reports or relaunch.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "An unchanged real prerequisite must not trigger repeated reports or relaunch.",
+            "duration_seconds": 7.17,
+            "findings": [
+              "No duplicate outward update or approval request is called for.",
+              "No replacement implementor is dispatched for the unchanged prerequisite.",
+              "PR #301 remains draft, and issue #201 and epic #200 remain open.",
+              "Existing continuation and explicit approval requirements are retained."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "e166238c268c8da6f694b5b36078c9c0b5b33a36c16bea8eb15b41e18a39e6f7",
+            "rationale": "The final [RESULT - SUCCESS] reply explicitly rejects repeated outward reports or approval requests, implementor relaunch, and merge/readiness transitions. It preserves the explicit approval boundary and existing continuation while keeping the undertaking open, without claiming timer-based resumption or inventing delivered messages.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1016,
+              "output": 122
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "7ab0b0d0c85917e4ced122d07d65e1b40acaf388297214442a32a897740f310a"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-18-unchanged-real-prerequisite-stays-quiet",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 24.670052766799927,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "embark-16-draft-continues-permitted-preparation",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 21888,
+        "output_tokens": 620,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 28995
+      },
+      "tokens": 51503,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 17.35043430328369,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "embark-17-real-approval-still-allows-independent-work",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 21888,
+        "output_tokens": 407,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 29044
+      },
+      "tokens": 51339,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 15.986688613891602,
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol-workflow",
+      "task_id": "embark-18-unchanged-real-prerequisite-stays-quiet",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 21888,
+        "output_tokens": 289,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 19460
+      },
+      "tokens": 41637,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.12.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-18T15:46:39.292070",
+  "experiment_id": "omp-gpt-6-1-sol-workflow",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "7ab0b0d0c85917e4ced122d07d65e1b40acaf388297214442a32a897740f310a",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3358,
+      "output": 408
+    }
+  },
+  "plugin_revision": {
+    "commit": "2cc61ad04c6f6a250fe829d5f89d607d5441a236",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-18T08:47:02.831368+00:00",
+  "run_id": "2026-10-18_15-45-41",
+  "schema_version": 5,
+  "started_at": "2026-10-18T15:45:41.277655",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "embark-16-draft-continues-permitted-preparation": [
+          1.0
+        ],
+        "embark-17-real-approval-still-allows-independent-work": [
+          1.0
+        ],
+        "embark-18-unchanged-real-prerequisite-stays-quiet": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "embark-16-draft-continues-permitted-preparation",
+        "embark-17-real-approval-still-allows-independent-work",
+        "embark-18-unchanged-real-prerequisite-stays-quiet"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
