@@ -406,6 +406,14 @@ def main() -> None:
                         "tasks": [{"id": "Probe", "description": "offline safety warning", "task": warning}],
                     }, ""),
                 }
+                if plugins:
+                    # The plugin shuts `task` until the session is titled, as a
+                    # real undertaking titles it first.
+                    task_probes = {"probe-title": (
+                        "write",
+                        {"path": "xd://daily_driver_set_session_title", "content": '{"title":"#636 guard probe"}'},
+                        "",
+                    ), **task_probes}
                 MockModel.results.clear()
                 MockModel.child_results.clear()
                 MockModel.extra_probes = task_probes
