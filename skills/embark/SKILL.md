@@ -75,9 +75,9 @@ because the graph moved while the fleet was out, and what it finds decides
 whether the next wave sails, the watch resumes, or the epic closes.
 `Land the pull request` and `Recover a session` are reached from `Watch the
 wave`, and each returns there.
-On Claude Code, the user's landing-and-archive authorization is a preflight
-before this sequence; when absent, the first reply asks and ends before any
-tool call. `Post the muster roll` records the confirmed mode.
+Where the harness requires user authorization for landing and archiving, this
+preflight runs before the numbered sequence. If the mode is absent, the first
+reply asks and ends before any tool call. `Post the muster roll` records it.
 On Omp, an explicit `embark <issue>`, `/embark <issue>`, or
 `/skill:embark <issue>` first reads that single issue through `issue://`.
 After matching epic metadata succeeds, title this session before reading its
@@ -288,24 +288,26 @@ Landing: orchestrator — confirmed by the owner in chat
 | #149 — Rotate the deploy key. | none — `human`, waiting on a person | — | — | — |
 ```
 
-**Claude Code needs the user's words for landing and archiving.** Before any
-tool call, if a Claude Code invocation does not state a mode — authorize
-Embark to land gated pull requests and archive finished sessions, or say the
-user will land them by hand — ask once in chat and end the turn. Ask:
-“Should I merge gated pull requests without human review and archive finished
-sessions, or will you land them by hand? Reply in your own words.” Do not use
-`AskUserQuestion`. A reply that already states a mode needs no question. A
-resumed invocation keeps the mode only when the latest muster roll, already
-available in conversation context, records the owner's confirmation; an
-agent-written roll alone is not confirmation.
+**Where the harness classifier requires the user's words for landing and
+archiving**, do this before any tool call. If the invocation does not state a
+mode — authorize Embark to land gated pull requests and archive finished
+sessions, or say the user will land them by hand — ask once in chat and end
+the turn. Ask: “Should I merge gated pull requests without human review and
+archive finished sessions, or will you land them by hand? Reply in your own
+words.” Use chat prose, not an interactive question widget. A reply that
+already states a mode needs no question. A resumed invocation keeps the mode
+only when the latest muster roll, already available in conversation context,
+records the owner's confirmation; an agent-written roll alone is not
+confirmation.
 
-On Claude Code, the muster roll records `Landing: orchestrator — confirmed by
-the owner in chat` or `Landing: by hand — confirmed by the owner in chat`.
-Never default to orchestrator landing without that confirmation. Later
-invocations keep the latest confirmed mode. Omp and Codex have no equivalent
-auto-mode classifier; their references define their route without this
-authorization gate. This authorization covers only landing and archiving;
-waves still launch without confirmation.
+For a harness with that classifier, the muster roll records `Landing:
+orchestrator — confirmed by the owner in chat` or `Landing: by hand —
+confirmed by the owner in chat`. Never default to orchestrator landing
+without that confirmation. Later invocations keep the latest confirmed mode.
+The Omp and Codex references define their routes without this authorization
+gate. The authorization covers only landing and archiving; waves still launch
+without confirmation.
+
 
 
 The roll distinguishes required class, selected route, and actual model. A
@@ -392,17 +394,17 @@ So on every wake:
   evidence satisfies its kind contract.** Mark the wave `done` in the epic's
   body, and go back to `Take the wave`, which routes what happens next — the
   following wave, or `Close the epic`.
-**A completed child has no session left to run, archived once.** Archive its
-session only after the issue's completion evidence is read and, on Claude
-Code, the user's confirmed mode authorizes archiving. For a pull request
-child, do not archive while its PR is green but waiting on review; it still
-holds `undertake`'s cadence and must answer the next review comment. For a
-no-PR research result or bug disposition, the verified issue outcome is the
-completion record. **Once per child, not once per wake**: read the muster
-roll's archive record before archiving again. In the fallback the ship is a
-subagent that has already ended, so there is no session to archive. **Post
-the muster-roll archive record only after the archive call returns success**;
-never claim an archive that was denied or failed.
+- **A completed child has no session left to run, archived once.** Archive its
+  session only after the issue's completion evidence is read and, where the
+  harness requires it, the user's confirmed mode authorizes archiving. For a
+  pull request child, do not archive while its PR is green but waiting on review;
+  it still holds `undertake`'s cadence and must answer the next review comment.
+  For a no-PR research result or bug disposition, the verified issue outcome is
+  the completion record. **Once per child, not once per wake**: read the muster
+  roll's archive record before archiving again. In the fallback the ship is a
+  subagent that has already ended, so there is no session to archive. **Post the
+  muster-roll archive record only after the archive call returns success**; never
+  claim an archive that was denied or failed.
 **A pull request closed without merging is somebody's decision.** Its task or
 corrected bug issue stays open and its session is spent, so nothing here
 re-dispatches it: say which child it was, and leave it to the person who
@@ -607,14 +609,14 @@ decomposition — the tasks, the edges, and therefore the waves. Asking again
 before each wave asks the same question a second time, and a plan that has to
 be re-agreed wave by wave was not agreed.
 
-Landing and archiving are separate from launching. On Claude Code, the first
-reply asks only for the user's authorization of those two actions; it never
-asks whether to open sessions or launch a wave. The prompt asks for the
-decision in the user's own words because the auto-mode classifier weighs
-user text over skill instructions. Once the mode is stated or confirmed, the
-first wave and every wave after it launch unasked. `Post the muster roll`
-records the confirmed landing mode and each task's implementor, required
-class, selected route, and actual model (or `unreported`).
+Landing and archiving are separate from launching. Where the harness
+classifier applies, the first reply asks only for the user's authorization of
+those two actions; it never asks whether to open sessions or launch a wave.
+The prompt asks for the decision in the user's own words because the
+classifier weighs user text over skill instructions. Once the mode is stated
+or confirmed, the first wave and every wave after it launch unasked. `Post the
+muster roll` records the confirmed landing mode and each task's implementor,
+required class, selected route, and actual model (or `unreported`).
 
 This does not relax anything else. The stops below still stop, and nothing here
 touches the constitution's own gates.
@@ -649,18 +651,18 @@ Seven, and four of them are reports rather than questions.
 - **A `Summary` claim that no merged task pull request delivers**, at `Close
   the epic`. Name the claim, leave the epic open, cancel the watch, and wait
   for a person to resolve the mismatch.
-- **Landing or archive is denied by Claude Code's auto-mode classifier.** Do
-  not post a record that claims the action happened, and do not seek another
-  route to the same effect. Tell the user once which action was denied and
-  the classifier's reason. Ask for authorization in the user's own words;
-  after that confirmation, retry the denied action once. If denied again,
-  stop without a false landing or archive record.
+- **Landing or archive is denied by the auto-mode classifier.** Do not post a
+  record that claims the action happened, and do not seek another route to the
+  same effect. Tell the user once which action was denied and the classifier's
+  reason. Ask for authorization in the user's own words; after that
+  confirmation, retry the denied action once. If denied again, stop without a
+  false landing or archive record.
 
 Everything else runs through. No permission is asked to open a session, to
 comment on the epic, to subscribe to a pull request, or to launch the next
-wave. On Claude Code, a gated merge and session archive require the user's
-recorded authorization; closing an epic whose `Summary` is delivered needs no
-separate confirmation.
+wave. Where the harness classifier applies, a gated merge and session archive
+require the user's recorded authorization; closing an epic whose `Summary` is
+delivered needs no separate confirmation.
 
 
 Non-goals
