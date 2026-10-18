@@ -76,6 +76,8 @@ from coder_eval.streaming.events import (
     TurnStartEvent,
 )
 
+from .dispatch import EVIDENCE_FILENAME as DISPATCH_EVIDENCE_FILENAME
+from .dispatch import EvidenceTooLarge, error_document, evidence_document, task_call_records
 from .pricing import UNREPORTED, cost_usd
 from .home import inherited_files
 from .rpc import (
@@ -221,6 +223,15 @@ class OmpAgentConfig(BaseAgentConfig):
     row that grades only the orchestrator is not left to hit `turn_timeout`.
     """
 
+    record_task_dispatches: bool = False
+    """Write `omp-task-dispatches.json`, the evidence a dispatch grader reads.
+
+    Off by default. On, every attempted `task` call is kept whole — arguments
+    after their final update, outcome and raw result, retries included — and
+    persisted atomically after the subject stops on every exit path. The normal
+    telemetry is untouched.
+    """
+
     extra_args: list[str] = []
     """Arguments appended to the `omp --mode rpc` command line, verbatim.
 
@@ -270,6 +281,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._extension_errors: list[str] = []
         self._argument_keys_seen: set[str] = set()
         self._cancelled_subagents: list[str] = []
+        self._dispatch_calls: list[dict[str, Any]] = []
+        self._dispatch_guard: Path | None = None
         self._attempts: list[dict[str, Any]] = []
         self._attempt_overflow = 0
         self._attempt: dict[str, Any] | None = None
@@ -497,6 +510,50 @@ class OmpAgent(Agent[OmpAgentConfig]):
         if self._attempt is not None and self._attempt["exit_reason"] is None:
             self._attempt["exit_reason"] = reason
 
+    def _begin_dispatch_evidence(self) -> None:
+        """Block grading before the subject can produce unrecorded task calls."""
+        if not self.config.record_task_dispatches or self.working_directory is None:
+            return
+        if self._dispatch_guard is not None:
+            raise RuntimeError("a previous task-dispatch evidence update did not finish")
+        guard = Path(self.working_directory) / f"{DISPATCH_EVIDENCE_FILENAME}.pending"
+        # Exclusive creation also rejects an interrupted prior adapter. Its
+        # calls may be lost, so a fresh adapter must not seal over that gap.
+        guard.mkdir()
+        self._dispatch_guard = guard
+
+    def _record_task_dispatches(self, reducer: TurnReducer, attempt: int, iteration: int) -> None:
+        """Publish all attempted calls atomically, then allow grading.
+
+        The guard was created before the prompt. Any failure or interruption
+        leaves it in place, even if writing a diagnostic is impossible.
+        """
+        if not self.config.record_task_dispatches or self.working_directory is None:
+            return
+        if self._dispatch_guard is None:
+            raise RuntimeError("task-dispatch evidence was not guarded before the prompt")
+        reducer.close_open_tools()
+        self._dispatch_calls.extend(
+            task_call_records(reducer.tool_calls, attempt=attempt, iteration=iteration)
+        )
+        try:
+            text = evidence_document(self._dispatch_calls)
+        except EvidenceTooLarge as error:
+            logger.error("omp: %s", error)
+            text = error_document(str(error))
+        destination = Path(self.working_directory) / DISPATCH_EVIDENCE_FILENAME
+        temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+        try:
+            temporary.write_text(text, encoding="utf-8")
+            temporary.replace(destination)
+        finally:
+            with contextlib.suppress(FileNotFoundError):
+                temporary.unlink()
+        # This is the commit point. Failure keeps even a complete artifact
+        # non-passing; no fallback write is needed.
+        self._dispatch_guard.rmdir()
+        self._dispatch_guard = None
+
     # --- the turn ----------------------------------------------------------
 
     async def communicate(
@@ -512,6 +569,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         if proc is None or self.working_directory is None:
             raise RuntimeError("OmpAgent.start() must be called before communicate()")
 
+        self._begin_dispatch_evidence()
         self._begin_turn()
         collector = EventCollector()
         reducer = TurnReducer()
@@ -801,6 +859,11 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     self._persist_attempt(attempt, reducer)
                 except Exception as error:
                     logger.error("omp: could not write %s: %s", PROTOCOL_EVIDENCE_FILENAME, error)
+            try:
+                self._record_task_dispatches(reducer, attempt["attempt"], attempt["iteration"])
+            except Exception as error:
+                logger.error("omp: could not write %s: %s", DISPATCH_EVIDENCE_FILENAME, error)
+                raise
 
     async def _cancel_background_subagents(self, counts: dict[str, int]) -> list[str]:
         """Cancel every running background subagent; return the ids cancelled.

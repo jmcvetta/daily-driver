@@ -151,6 +151,36 @@ that object before the first turn. `get_sdk_options` is not a workaround:
 `resolve_agent_settings` prefers it over `agent_config` and would blank the
 report's Agent Settings.
 
+## Task-dispatch evidence
+
+A row that grades which issues an orchestrator assigned sets
+`record_task_dispatches: true` (default off). After the subject stops, on every
+exit path including a timeout or crash, the adapter atomically replaces
+`omp-task-dispatches.json` (`dispatch.py`, version 1). Before sending each
+prompt, it exclusively creates an `omp-task-dispatches.json.pending` directory.
+The grader rejects evidence while that guard exists. The adapter removes it
+only after successful atomic publication and temporary-file cleanup. Failed
+writes, replacement, cleanup or process interruption leave the guard in place;
+no diagnostic write is needed. If the guard cannot be created, the prompt
+does not run. An existing guard blocks retries, including a fresh adapter
+that cannot recover the interrupted attempt's calls. Keep failed sandboxes
+for audit; use a fresh sandbox for a new run, not manual guard removal.
+The artifact holds one record per attempted `task` call, retries included: the
+call and attempt identity, the arguments after their final update (`tasks[]`,
+requested agent and shared context), the outcome, and the raw result with its
+structured details. An argument-less start followed by an update is one call.
+Other tools' results are not kept, no field is truncated, and past the 8 MiB
+limit the file becomes an explicit instrumentation error that no grader can
+score as a pass. The normal telemetry is unchanged and no `Agent` call is
+synthesized.
+
+`evals/fixtures/fix-daily-driver-bugs/shared/check_dispatch.py` grades it with
+the supported `run_command` criterion, one assignment per `tasks[]` entry,
+using only each entry's `task` text. `make check-dispatch-grader` covers the
+parsing rules, the observed `Spawned N background agents using <agent>.` result
+format and the committed excerpts under `fixtures/fix-daily-driver-bugs/
+dispatch-evidence/`; `make check-omp-agent-settle` drives the adapter itself.
+
 ## Cost
 
 `pricing.py` prices a run from `prices.json`, a hand-maintained table of USD

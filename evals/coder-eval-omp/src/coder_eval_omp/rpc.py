@@ -196,6 +196,9 @@ class ToolStarted:
     tool_name: str
     parameters: dict[str, Any]
     raw_tool_name: str
+    finished: ToolFinished | None = None
+    """The call's end, once seen. Set on the call itself, so a reused call id
+    cannot attach one call's result to another."""
 
 
 @dataclass
@@ -206,6 +209,8 @@ class ToolFinished:
     status: str
     summary: str | None = None
     error: str | None = None
+    result: Any = None
+    """The frame's `result` exactly as it arrived, structured details included."""
 
 
 @dataclass
@@ -527,21 +532,23 @@ class TurnReducer:
     def _on_tool_end(self, frame: dict[str, Any]) -> list[Action]:
         call_id = self._call_id(frame)
         self._on_tool_update(frame)
-        self.open_tools.pop(call_id, None)
+        started = self.open_tools.pop(call_id, None)
         error = frame.get("error")
         result = frame.get("result")
         summary = result if isinstance(result, str) else None
         if summary is None and isinstance(result, dict):
             summary = _text_of(result)
         is_error = bool(error) or bool(frame.get("isError"))
-        return [
-            ToolFinished(
-                call_id=call_id,
-                status="error" if is_error else "ok",
-                summary=summary,
-                error=str(error) if error else None,
-            )
-        ]
+        finished = ToolFinished(
+            call_id=call_id,
+            status="error" if is_error else "ok",
+            summary=summary,
+            error=str(error) if error else None,
+            result=result,
+        )
+        if started is not None:
+            started.finished = finished
+        return [finished]
 
     def _on_agent_end(self, frame: dict[str, Any]) -> list[Action]:
         """Settle the turn and account for its terminal messages.
@@ -584,10 +591,11 @@ class TurnReducer:
         A turn that died mid-flight leaves tools open, and the event protocol
         requires every start to be closed.
         """
-        closed = [
-            ToolFinished(call_id=call_id, status="unresolved", error="no result observed")
-            for call_id in list(self.open_tools)
-        ]
+        closed = []
+        for call_id, started in list(self.open_tools.items()):
+            finished = ToolFinished(call_id=call_id, status="unresolved", error="no result observed")
+            started.finished = finished
+            closed.append(finished)
         self.open_tools.clear()
         return closed
 

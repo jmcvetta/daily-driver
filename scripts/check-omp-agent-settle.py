@@ -46,8 +46,10 @@ NEEDS
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import stat
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -140,6 +142,41 @@ FAKE_OMP_ASYNC = FAKE_OMP.split(FAKE_PROMPT_BRANCH)[0] + """\
               "messages": [{"role": "assistant",
                             "usage": {"input": 10, "output": 5, "cacheRead": 0,
                                       "cacheWrite": 0, "totalTokens": 15}}]})
+"""
+
+
+# A fake `omp` whose orchestrator dispatches workers: a `task` call that starts
+# with no arguments and gets them in a later update, a call the runtime rejects,
+# and then either a normal end or a dead process holding a third call open.
+# `.mode` picks which, so one script covers the clean and the exceptional exit.
+FAKE_OMP_DISPATCH = FAKE_OMP.split(FAKE_PROMPT_BRANCH)[0] + """\
+    elif kind == "prompt":
+        emit({"id": command["id"], "type": "response", "command": "prompt", "success": True})
+        emit({"type": "turn_start"})
+        tasks = [{"id": "a", "description": "d", "task": "undertake #990009"},
+                 {"id": "b", "description": "d", "task": "undertake #990011"}]
+        emit({"type": "tool_execution_start", "toolCallId": "d1", "toolName": "task"})
+        emit({"type": "tool_execution_update", "toolCallId": "d1", "toolName": "task",
+              "args": {"agent": "implementation", "tasks": tasks[:1]}})
+        emit({"type": "tool_execution_update", "toolCallId": "d1", "toolName": "task",
+              "args": {"agent": "implementation", "context": "c" * 3000, "tasks": tasks}})
+        text = "Spawned 2 background agents using implementation.\\n- w1\\n- w2"
+        emit({"type": "tool_execution_end", "toolCallId": "d1", "toolName": "task",
+              "result": {"content": [{"type": "text", "text": text}], "details": {"jobs": 2}}})
+        emit({"type": "tool_execution_start", "toolCallId": "d2", "toolName": "task",
+              "args": {"agent": "reasoning", "tasks": [{"task": "undertake #990010"}]}})
+        emit({"type": "tool_execution_end", "toolCallId": "d2", "toolName": "task",
+              "isError": True, "error": "no route for reasoning"})
+        emit({"type": "tool_execution_start", "toolCallId": "d3", "toolName": "task",
+              "args": {"agent": "implementation", "tasks": [{"task": "undertake #990009"}]}})
+        if open(sys.argv[0] + ".mode").read() == "crash":
+            sys.exit(3)  # the process dies with d3 still open
+        emit({"type": "tool_execution_end", "toolCallId": "d3", "toolName": "task", "result": "nope"})
+        emit({"type": "agent_end", "isTerminal": True,
+              "messages": [{"role": "assistant",
+                            "usage": {"input": 10, "output": 5, "cacheRead": 0,
+                                      "cacheWrite": 0, "totalTokens": 15}}]})
+        break
 """
 
 
@@ -430,7 +467,6 @@ async def check_settlement_evidence() -> None:
     print("check-omp-agent-settle: every exit of an attempt (timeout, async handoff, provider failure, EOF, "
           "cancellation, retry) leaves bounded settlement evidence; a failed write masks nothing")
 
-
 def check(condition: bool, message: str) -> None:
     """Fail the whole script on a false condition, naming what was expected."""
     if not condition:
@@ -631,6 +667,241 @@ async def run_provider_error_scenario() -> None:
     print("check-omp-agent-settle: a refused provider call crashes the attempt with its message; a normal turn does not")
 
 
+async def check_dispatch_evidence() -> None:
+    """`record_task_dispatches` keeps every attempted task call, even through a crash."""
+    from coder_eval.errors import AgentCrashError
+    from coder_eval_omp.agent import DISPATCH_EVIDENCE_FILENAME, OmpAgent, OmpAgentConfig
+
+    async def run(mode: str, record: bool = True) -> Path:
+        workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-check-"))
+        fake = Path(tempfile.mkdtemp(prefix="fake-omp-bin-")) / f"fake-omp-{mode}"
+        fake.write_text(FAKE_OMP_DISPATCH)
+        fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        Path(str(fake) + ".mode").write_text(mode)
+        config = OmpAgentConfig(
+            type="omp", binary=str(fake), plugins=[{"type": "local", "path": str(ROOT)}],
+            record_task_dispatches=record,
+        )
+        agent = OmpAgent(config, task_id="dispatch-check")
+        await agent.start(str(workdir))
+        try:
+            await agent.communicate("dispatch", timeout=30)
+        except AgentCrashError:
+            check(mode == "crash", "only the crashing scenario may crash")
+        finally:
+            await agent.stop()
+        return workdir / DISPATCH_EVIDENCE_FILENAME
+
+    for mode in ("clean", "crash"):
+        document = json.loads((await run(mode)).read_text())
+        check(document["version"] == 1 and document["complete"] is True, f"{mode}: versioned, complete document")
+        calls = document["calls"]
+        check([c["call_id"] for c in calls] == ["d1", "d2", "d3"], f"{mode}: every attempted call is kept, got {calls}")
+        first = calls[0]
+        check([t["task"] for t in first["arguments"]["tasks"]] == ["undertake #990009", "undertake #990011"],
+              f"{mode}: the final argument update wins")
+        check(len(first["arguments"]["context"]) == 3000, f"{mode}: no field is truncated")
+        check(first["result"]["details"] == {"jobs": 2} and first["status"] == "ok", f"{mode}: raw result kept")
+        check(calls[1]["status"] == "error", f"{mode}: the rejected call is kept")
+        check(calls[2]["status"] == ("ok" if mode == "clean" else "unresolved"), f"{mode}: the open call's outcome")
+        check(all(c["attempt"] == 1 for c in calls), f"{mode}: attempt identity")
+    off = await run("clean", record=False)
+    check(not off.exists(), "the artifact is opt-in; off writes nothing")
+    print("check-omp-agent-settle: task dispatches are kept whole, rejected and unresolved ones included, "
+          "through a normal end and a crash; off writes nothing")
+
+
+async def check_failed_dispatch_rewrite() -> None:
+    """Stale complete JSON must not pass when every diagnostic write is unavailable."""
+    from unittest.mock import patch
+
+    from coder_eval_omp.agent import DISPATCH_EVIDENCE_FILENAME, OmpAgent, OmpAgentConfig
+    from coder_eval_omp.rpc import TurnReducer
+
+    fixtures = ROOT / "evals/fixtures/fix-daily-driver-bugs"
+    grader = fixtures / "shared/check_dispatch.py"
+    prior_evidence = (fixtures / "dispatch-evidence/with-plugin-04.json").read_text()
+    criteria = (
+        ("--require", "990009", "--agent", "implementation"),
+        ("--require", "990011", "--agent", "implementation"),
+        ("--forbid", "990010"),
+    )
+
+    def assert_grade(destination: Path, passing: bool) -> None:
+        for flags in criteria:
+            result = subprocess.run(
+                [sys.executable, str(grader), "--evidence", str(destination), *flags],
+                capture_output=True, text=True,
+            )
+            check((result.returncode == 0) == passing,
+                  f"{flags}: unexpected grader result: {result.stdout}{result.stderr}")
+            if not passing:
+                check("pending or failed" in result.stderr, "the guard must explain the failure")
+
+    class Interrupted(BaseException):
+        """Model process death without running an exception fallback."""
+
+    for failure in ("write", "partial_write", "replace", "cleanup", "commit",
+                    "serialize", "interrupt_write", "interrupt_after_replace"):
+        with tempfile.TemporaryDirectory(prefix=f"omp-dispatch-{failure}-") as directory:
+            workdir = Path(directory)
+            destination = workdir / DISPATCH_EVIDENCE_FILENAME
+            guard = destination.with_name(f"{destination.name}.pending")
+            destination.write_text(prior_evidence)
+            assert_grade(destination, True)
+            agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+            agent.working_directory = directory
+            agent._begin_dispatch_evidence()
+            check(destination.read_text() == prior_evidence, "guarding must not mutate published JSON")
+            assert_grade(destination, False)
+
+            # Each injected operation fails every time, including any attempted
+            # diagnostic fallback. No successful second write can hide the bug.
+            write_text, replace, unlink, rmdir = Path.write_text, Path.replace, Path.unlink, Path.rmdir
+
+            def write(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
+                assert_grade(destination, False)
+                if failure in ("write", "partial_write", "interrupt_write"):
+                    if failure == "partial_write":
+                        write_text(path, data[:8], *args, **kwargs)
+                    if failure == "interrupt_write":
+                        raise Interrupted()
+                    raise OSError("injected write failure")
+                return write_text(path, data, *args, **kwargs)
+
+            def publish(path: Path, target: Path) -> Path:
+                check(destination.read_text() == prior_evidence, "old JSON stays whole until replacement")
+                assert_grade(destination, False)
+                if failure == "replace":
+                    raise OSError("injected replace failure")
+                result = replace(path, target)
+                assert_grade(destination, False)
+                if failure == "interrupt_after_replace":
+                    raise Interrupted()
+                return result
+
+            def cleanup(path: Path, *args: Any, **kwargs: Any) -> None:
+                check(path != destination, "published JSON must never be unlinked")
+                if failure == "cleanup":
+                    raise OSError("injected cleanup failure")
+                unlink(path, *args, **kwargs)
+
+            def commit(path: Path) -> None:
+                assert_grade(destination, False)
+                if failure == "commit":
+                    raise OSError("injected commit failure")
+                rmdir(path)
+
+            def serialize(calls: list[dict[str, Any]]) -> str:
+                raise ValueError("injected serialization failure")
+
+            with contextlib.ExitStack() as patches:
+                patches.enter_context(patch.object(Path, "write_text", autospec=True, side_effect=write))
+                patches.enter_context(patch.object(Path, "replace", autospec=True, side_effect=publish))
+                patches.enter_context(patch.object(Path, "unlink", autospec=True, side_effect=cleanup))
+                patches.enter_context(patch.object(Path, "rmdir", autospec=True, side_effect=commit))
+                if failure == "serialize":
+                    patches.enter_context(patch("coder_eval_omp.agent.evidence_document", side_effect=serialize))
+                try:
+                    agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
+                except (OSError, ValueError, Interrupted):
+                    pass
+                else:
+                    check(False, f"{failure}: the persistence error must propagate")
+            check(guard.is_dir(), f"{failure}: the persistent guard must survive")
+            json.loads(destination.read_text())  # replacement never publishes partial JSON
+            assert_grade(destination, False)
+            for retry in (agent, OmpAgent(agent.config)):
+                retry.working_directory = directory
+                try:
+                    retry._begin_dispatch_evidence()
+                except (RuntimeError, FileExistsError):
+                    pass
+                else:
+                    check(False, "neither a retry nor a fresh adapter may seal over missing history")
+            assert_grade(destination, False)
+
+    # Failure to arm the guard is a precondition failure, not an accepted
+    # attempt: the subject must receive no prompt and produce no new calls.
+    with tempfile.TemporaryDirectory(prefix="omp-dispatch-guard-failure-") as directory:
+        destination = Path(directory) / DISPATCH_EVIDENCE_FILENAME
+        destination.write_text(prior_evidence)
+        agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+        agent.working_directory = directory
+        agent._process = object()
+        with patch.object(Path, "mkdir", side_effect=OSError("cannot arm guard")), \
+                patch.object(agent, "_begin_turn") as begin_turn:
+            try:
+                await agent.communicate("must not reach subject")
+            except OSError:
+                pass
+            else:
+                check(False, "failure to arm the guard must abort before subject execution")
+            begin_turn.assert_not_called()
+        check(agent._request_id == 0 and not agent._attempts, "no prompt or attempt may start unguarded")
+        check(destination.read_text() == prior_evidence, "precondition failure must not mutate prior JSON")
+
+    # os._exit bypasses finally blocks, unlike an injected Python exception.
+    for phase in ("before_write", "during_write", "after_replace"):
+        with tempfile.TemporaryDirectory(prefix=f"omp-dispatch-death-{phase}-") as directory:
+            destination = Path(directory) / DISPATCH_EVIDENCE_FILENAME
+            destination.write_text(prior_evidence)
+            script = Path(directory) / "interrupt-dispatch.py"
+            script.write_text("""
+import os
+import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from coder_eval_omp.agent import OmpAgent, OmpAgentConfig
+from coder_eval_omp.rpc import TurnReducer
+agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+agent.working_directory = sys.argv[2]
+agent._begin_dispatch_evidence()
+phase = sys.argv[3]
+if phase == "before_write":
+    os._exit(73)
+write_text, replace = Path.write_text, Path.replace
+def die_writing(path, data, *args, **kwargs):
+    write_text(path, data[:8], *args, **kwargs)
+    os._exit(73)
+def die_after_replace(path, target):
+    replace(path, target)
+    os._exit(73)
+if phase == "during_write":
+    Path.write_text = die_writing
+else:
+    Path.replace = die_after_replace
+agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
+""")
+            process = subprocess.run([
+                sys.executable, str(script), str(ROOT / "evals/coder-eval-omp/src"), directory, phase,
+            ], capture_output=True, text=True)
+            check(process.returncode == 73, f"{phase}: process must die at the injection: {process.stderr}")
+            json.loads(destination.read_text())
+            if phase != "after_replace":
+                check(destination.read_text() == prior_evidence, "death must not expose partial JSON")
+            assert_grade(destination, False)
+
+    with tempfile.TemporaryDirectory(prefix="omp-dispatch-atomic-success-") as directory:
+        destination = Path(directory) / DISPATCH_EVIDENCE_FILENAME
+        destination.write_text(prior_evidence)
+        agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+        agent.working_directory = directory
+        for attempt in (1, 2):
+            agent._begin_dispatch_evidence()
+            reducer = TurnReducer()
+            reducer.feed({
+                "type": "tool_execution_start", "toolName": "task", "toolCallId": f"d{attempt}",
+                "args": {"agent": "implementation", "tasks": [{"task": "undertake #990010"}]},
+            })
+            agent._record_task_dispatches(reducer, attempt=attempt, iteration=1)
+            check(not destination.with_name(f"{destination.name}.pending").exists(), "commit removes the guard")
+        document = json.loads(destination.read_text())
+        check([call["attempt"] for call in document["calls"]] == [1, 2], "successful retries retain prior calls")
+        check(document["complete"] is True, "successful replacement publishes complete JSON")
+    print("check-omp-agent-settle: guarded atomic dispatch publication fails closed without fallback writes")
+
+
 def check_roles_pin() -> None:
     """The arm's `model` pins every Omp chat role in config.yml, and only then."""
     import yaml
@@ -703,10 +974,11 @@ async def check_async_handoff() -> None:
 def main() -> None:
     asyncio.run(run_scenario())
     asyncio.run(check_async_handoff())
+    asyncio.run(check_dispatch_evidence())
+    asyncio.run(check_failed_dispatch_rewrite())
     asyncio.run(run_provider_error_scenario())
     asyncio.run(check_settlement_evidence())
     check_roles_pin()
-
 
 if __name__ == "__main__":
     try:
