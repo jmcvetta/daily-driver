@@ -23,6 +23,9 @@
 # RECORD BOTH REVISIONS WITH THE RESULTS. The candidate is this checkout's
 # `git rev-parse HEAD`; the base is the sibling's. Neither is recoverable from
 # the report afterwards, and a comparison whose arms are unnamed is not one.
+#
+# Both arms load the same pinned Worktrunk dependency from this checkout.
+# Initialize it with `make evals-setup-claude` before a direct harness run.
 
 experiment_id: base-vs-candidate
 description: >-
@@ -52,6 +55,8 @@ variants:
       plugins:
         - type: local
           path: "../../daily-driver-base"
+        - type: local
+          path: "dependencies/worktrunk/plugins/worktrunk"
 
   - variant_id: candidate
     description: The daily-driver plugin at this checkout; the changed constitution.
@@ -59,3 +64,5 @@ variants:
       plugins:
         - type: local
           path: ".."
+        - type: local
+          path: "dependencies/worktrunk/plugins/worktrunk"

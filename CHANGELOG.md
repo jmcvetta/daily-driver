@@ -32,6 +32,10 @@
 
 ## [Unreleased]
 
+### Tests
+
+* **evals:** load the pinned official Worktrunk dependency in treated Claude variants and both comparison variants ([#626](https://github.com/jmcvetta/daily-driver/issues/626)). Earlier Claude runs that omitted it did not measure Daily Driver skills; historical records remain unchanged.
+
 ### Bug Fixes
 
 * **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575))

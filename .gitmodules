@@ -1,0 +1,3 @@
+[submodule "evals/dependencies/worktrunk"]
+	path = evals/dependencies/worktrunk
+	url = https://github.com/max-sixty/worktrunk.git
