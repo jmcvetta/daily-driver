@@ -67,6 +67,9 @@ is hand-written; an `omp_configs/` overlay with no committed case for its
 settings is listed `unmeasured`, and `model-classes.md`'s `Classes` table is
 the fallback for it. A `date` is not a freshness rule -- a stale row is still
 a row, and reading it as current or not is left to the reader.
+Pass rates use the latest run with scored outcomes for each class. `error` and
+unrecognized outcomes are unscored, not model failures; an error-only run does
+not displace the prior scored measurement.
 The capability suite builds only `mechanical` and `implementation` cases.
 `reasoning` and `frontier` receive no measured class claim; route identity and
 approval policy do not imply benchmark support.
@@ -87,5 +90,11 @@ approval policy do not imply benchmark support.
 | gpt.gateway | classes-gpt.gateway | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | kimi | classes-kimi | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | minimax | classes-minimax | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
+| openai-codex/gpt-5.6-terra | classes-smoke-terra-5-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-17_17-50-08 | 2026-10-17 |
+| openai-codex/gpt-5.6-terra | classes-terra-5-6 | none | 6/9 | 1/9 | subscription | 2026-10-17_17-56-32 | 2026-10-18 |
+| openai-codex/gpt-6-luna | classes-luna-6 | implementation | 9/9 | 7/7 | unreported | 2026-10-09_19-52-53 | 2026-10-09 |
+| openai-codex/gpt-6-luna | classes-smoke-luna-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-09_20-10-04 | 2026-10-09 |
+| openai-codex/gpt-6.1-sol | classes-smoke-sol-6-1 | mechanical | 1/1 | 0/1 | unreported | 2026-10-08_19-02-13 | 2026-10-08 |
+| openai-codex/gpt-6.1-sol | classes-sol-6-1 | mechanical | 9/9 | 6/8 | unreported | 2026-10-08_18-38-45 | 2026-10-08 |
 | openai-codex/gpt-6.1-sol:high | classes-gpt-6-1-sol | implementation | 1/1 | 2/2 | unreported | 2026-10-08_19-02-43 | 2026-10-08 |
 <!-- measured-routes-end -->

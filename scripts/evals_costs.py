@@ -6,6 +6,7 @@ OMP_CODEX_SUBSCRIPTION_MODELS = frozenset(
         "openai-codex/gpt-6-luna",
         "openai-codex/gpt-6-sol",
         "openai-codex/gpt-6.1-sol",
+        "openai-codex/gpt-5.6-terra",
     }
 )
 

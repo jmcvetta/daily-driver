@@ -92,11 +92,11 @@ def total_price(record: dict[str, Any]) -> float | str | None:
     """
     cases = record.get("cases") or []
     version = record.get("schema_version")
-    if not cases or version not in (2, 3, 4):
+    if not cases or version not in (2, 3, 4, 5):
         return None
     if version == 2 and record.get("client", {}).get("name") != "claude-code":
         return None
-    if version == 4:
+    if version in (4, 5):
         sources = [case.get("cost_source") for case in cases]
         costs = [case.get("cost") for case in cases]
         if (
