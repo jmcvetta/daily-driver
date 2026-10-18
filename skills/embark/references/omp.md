@@ -221,10 +221,11 @@ round on the head is.
 Recovering an implementor
 =========================
 
-A correction is a message to the implementor's identifier. An implementor the
-harness reports as failed, or as finished with no pull request across two
-check-ins, is relaunched on the **same branch** — the claim comment
-`undertake` posted on the task issue records it, and the open pull request's
-head confirms it where one exists. The replacement is posted to the epic like
-any other replacement, naming the subagent retired and the one that took
-over.
+A correction is a message to the implementor's identifier. Read its lifecycle
+before recovery; never start a replacement alongside a live writer. An ended
+implementor whose open draft still has permitted work resumes on the **same
+branch**. A failed implementor, or one finished with no pull request across two
+check-ins, uses the same route. Read the claim, any handoff and the PR head to
+resolve that branch. Do not relaunch for an unchanged prerequisite when all
+permitted work is complete. The replacement is posted to the epic, naming the
+subagent retired and the one that took over.

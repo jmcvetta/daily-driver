@@ -64,6 +64,15 @@ assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
 heading list.
 
+`tasks/embark/16`–`18` cover unfinished-work supervision: a green draft still
+needs authorized preparation, a real execution approval does not block
+independent work, and an unchanged real prerequisite earns no duplicate update
+or recovery. These client-less cases grade proposed corrections and gate
+decisions, not actual message delivery, scheduling or infrastructure execution.
+The bounded one-repeat smoke passed all three cases in
+[`omp-gpt-6-1-sol-workflow-2026-10-18-2026-10-18_15-45-41`](provenance/omp-gpt-6-1-sol-workflow-2026-10-18-2026-10-18_15-45-41.json).
+It is a treated-only smoke, not an ablation or an estimate of fleet reliability.
+
 ## Provenance
 
 Every measured figure must cite a committed record under
