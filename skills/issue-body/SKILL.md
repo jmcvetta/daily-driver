@@ -82,6 +82,12 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    with the implementer.
 5. **Acceptance and verification.** State observable pass/fail conditions,
    existing coverage, plausible regressions, and relevant project gates.
+   Where integration uncertainty could invalidate the implementation route,
+   name the bounded proof and the evidence that counts. For deployment work,
+   record authoritative state and configuration, sensitive returned-state
+   protection, recovery and resume requirements, and the approved resource
+   lifecycle where they apply. Do not add mandatory headings or impose these
+   details on unrelated work.
 6. **Model class.** Choose the lowest class in
    [`references/model-classes.md`](references/model-classes.md) that can
    reliably implement the settled work. Improve the specification before

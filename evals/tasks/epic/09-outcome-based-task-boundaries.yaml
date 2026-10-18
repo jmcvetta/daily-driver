@@ -1,0 +1,46 @@
+# Without this case, one necessary same-PR outcome can be split by activity
+# labels, or genuinely independent deliverables can be forced together.
+task_id: epic-09-outcome-based-task-boundaries
+description: >-
+  Keep implementation, configuration, and verification together when they must
+  land as one useful outcome, while preserving independently useful work.
+tags: [epic, behaviour, fire]
+initial_prompt: |
+  Decompose a workspace delivery. One core workspace outcome requires a small
+  implementation change, its configuration, and a verification command; none
+  is useful or green alone, so all three must land together. Separately, the
+  repository needs a reusable deployment guide that is useful on its own and a
+  policy research answer that can proceed independently. The work can run in
+  parallel where there is no actual code dependency. Give the plan and explain
+  which parts are child issues. Do not create a blocked-by edge for a review
+  checkpoint or a person who must approve later deployment.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 480}
+success_criteria:
+  - type: skill_triggered
+    description: Epic uses independently mergeable outcomes, not activity labels
+    expected_skill: epic
+    skill_name: epic
+  - type: agent_judge
+    description: Necessary same-delivery work stays together and independent outcomes remain separable
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply. Start rationale with `ANCHOR: result` or `ANCHOR:
+      none`; no result scores 0. Score 1 only if implementation,
+      configuration, and verification remain one issue because they are not
+      independently useful or green, while the standalone guide and research
+      answer remain separable and parallel absent a real dependency. A
+      verification checkpoint or human approval is not a blocked-by edge. Score
+      0.5 for one boundary error and 0 if activities alone define the split.
