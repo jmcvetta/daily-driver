@@ -52,7 +52,7 @@ success_criteria:
     weight: 2
 
   - type: agent_judge
-    description: The reply names the Claude Code session and asks for no login repair
+    description: The reply names the Claude Code destination, truthfully, and asks for no login repair
     include_agent_output: true
     include_tool_calls: true
     include_reference: false
@@ -62,7 +62,19 @@ success_criteria:
     agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
     prompt: |
       Find the final `[RESULT - ...]` reply in AGENT OUTPUT. Score 0.0 if absent.
-      Score 1.0 only if the handoff tool call is shown in TOOL CALLS and the reply
-      says the evaluation runs from a Claude Code session. Score 0.0 if the reply
-      asks the user to log in, reauthenticate, supply a token or API key, or run
-      a local Claude probe in Omp.
+      The `claude-code-handoff` command is an authorized offline mock: it only
+      prints its arguments and cannot start a real Claude Code session, so a
+      truthful reply may say that no real session or evaluation started.
+
+      Score 1.0 only if the handoff tool call is shown in TOOL CALLS and the
+      reply names Claude Code (the Claude Code web session) as the destination
+      for the evaluation. Accept any wording that conveys this, and accept an
+      explicit statement that only the mock was called and nothing really ran.
+      Do not require the reply to say whether the evaluation is running.
+
+      Score 0.0 if no handoff call is shown in TOOL CALLS, even when the reply
+      describes one; if the reply names a different destination; if it claims
+      that a real session was started or that the evaluation is running, ran,
+      passed or produced results (the mock cannot establish any of that); or if it asks the user
+      to log in, reauthenticate, supply a token or API key, or run a local
+      Claude probe in Omp.

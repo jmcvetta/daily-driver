@@ -458,6 +458,13 @@ That is a small sample of one rubric: it licenses recommending the route, not a
 ranking of models, and the default judge stays `claude-code-sonnet-5`. Change the
 labels or the rule and it is a new set with a new `set_id`.
 
+Two further sets, `undertake-17-truthful-mock-v1` and
+`undertake-14-resume-explanation-v1`, hold hand-labelled expectations for the
+corrected row-17 and row-14 rubrics (select one with `calibrate --dir`). They are
+**unmeasured**: no judge has run on them, and `check-evals-judge` verifies only their
+shape and that row 17's mock starts nothing. Measuring them needs separate
+authorization and a new measurement identity.
+
 ### `base-vs-candidate`: does a constitution change move a row
 
 `with-without.yaml` compares the plugin with no plugin, so its control carries
@@ -573,11 +580,40 @@ Tofu plan, an alternative route, an observed person-only authorization, a
 production prohibition with no probe, pending CI, independent work before an
 access gap and before a real human action, credentialed cloud execution, an
 available authorized-agent handoff, a missing-handoff prerequisite, stale
-versus still-outstanding Tofu apply blockers on resume, and PR-body maintenance
+versus still-outstanding Tofu apply blockers on resume, a tool missing on
+resume that the documented setup target installs, and PR-body maintenance
 from undertaking evidence.
 Run only this focused set with the documented
 `make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
 route after its `evals-plan`; the normal project checks remain CI's gate.
+
+The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
+`10-ready-is-marked-not-asked.yaml` and `13-gate-reads-the-completion-notice.yaml`
+measure actions, not narration. `fixtures/undertake-readiness/shared` supplies a
+stateful offline `gh` for pull request #25 (reads return fixture state, `gh pr
+ready` clears the draft flag, a comment is returned by the next read), a
+temporary git repository with a local bare remote, and a harmless
+`pr-keep-current.sh` stub. Each call is logged to `.fixture/ops.log`;
+`verify.py gate` and `verify.py service` read that record after the run. The
+gate verifier requires the gate reads to succeed first, with CI observed on the
+current head, before a ready write counts; it publishes a `First-readiness
+report` only when a read after the ready write affirms `CLEAN`; and it rejects a
+`Review record` in place of the notice, a notice written before the reads, a
+missing re-read, a new review round for a clean merge, and a duplicate or
+premature report. The service verifier needs a launch observed alive and stops
+whatever the run left behind. The judges now receive the tool calls
+(`include_tool_calls`) and score a failed call as an observed limit that earns
+no completed-action credit. `skill_triggered` remains the activation
+criterion; read it separately from the behavioural criteria, because a run that
+only triggered the skill has not completed the workflow. Weights are kept.
+`scripts/check-undertake-readiness.py` (`make check-undertake-readiness`, part
+of `check-eval-tooling`) asserts offline that every valid transition passes and
+every invalid one — including approval-blocked and unknown post-ready states, a
+refused ready write, failed reads, CI on another head, a pre-merge notice that
+still covers a clean merge and one that does not cover a content change, and an
+exited service — fails. It does not test model judgment. These rows are a new,
+unmeasured instrument: no subject, judge or calibration run has recorded them,
+and the committed results for the previous rows are untouched.
 
 One collision is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
 `undertake` distractor, because "get it to a pull request" is in `undertake`'s

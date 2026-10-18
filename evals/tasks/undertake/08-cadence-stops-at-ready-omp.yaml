@@ -14,12 +14,21 @@
 # The Claude sibling could not be reused because its rule is the wake slot's:
 # an Omp run here arms a process instead, and the slot rule stays Claude's.
 #
-# What this row can and cannot see. The route needs `bash` (the named service)
-# and `write` (`proc://<name>/mode`), so the row grants both, as
-# `review-cycle/08-run-watch-then-statuses-omp` does. The sandbox has no GitHub
-# client and no checkout of the plugin's scripts, so the service may fail to
-# start. The judge therefore grades the route the agent names and attempts,
-# not a running process; a failure it attributes to the sandbox is credited.
+# What this row measures. The route needs `bash` (the named service) and
+# `write` (`proc://<name>/mode`), so the row grants both, as
+# `review-cycle/08-run-watch-then-statuses-omp` does. The sandbox carries a
+# harmless local `scripts/pr-keep-current.sh` stub (`evals/fixtures/
+# undertake-readiness`): it contacts no client, logs a start and a heartbeat
+# per second to `.fixture/service.log`, and ends itself after about 45
+# seconds. The success path can therefore reach the immediate inspection, the
+# `detached` mode write and its confirmation while the process is alive.
+# After the run `.fixture/verify.py service` checks the fixture's record —
+# launched for pull request 25, observed alive, started once — and then stops
+# any process the run left, so nothing task-owned outlives the row.
+#
+# A launch that exited, a failed mode write, or a detached state nobody
+# confirmed is not durable; the judge credits an honest report of that, not a
+# claim of durability. A session timer is never a substitute.
 #
 # Why this fails the `without` arm: "I'll keep an eye on it and come back
 # when CI reports" is the reflex answer, and an in-session timer is the
@@ -37,7 +46,19 @@ tags: [undertake, behaviour, fire, omp-only, forks:undertake-08-wake-slot-is-ref
 initial_prompt: >-
   PR #25 is open and ready for review on issue #24. I merged master into it a
   few minutes ago and the checks on the merged head have all reported green.
-  Nothing is left to fix. What happens now, before you end this turn?
+  Nothing is left to fix. This directory is the plugin checkout; its
+  `scripts/pr-keep-current.sh` is an offline stub that touches no GitHub.
+  What happens now, before you end this turn?
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+
+pre_run:
+  - command: bash .fixture/setup.sh service-ok
+    timeout: 60
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash, Write]
@@ -61,10 +82,18 @@ success_criteria:
     expected_skill: undertake
     skill_name: undertake
 
-  # The finding.
+  # Behavioural outcome, from the fixture's own record. Stops the service.
+  - type: run_command
+    description: The keep-current service was launched for PR 25 and observed alive
+    command: python3 .fixture/verify.py service
+    timeout: 30
+    weight: 2
+
+  # The finding, graded from the reply and the actual tool calls.
   - type: agent_judge
-    description: The reply arms a watch that survives the session
+    description: A watch that survives the session is armed and its detachment is confirmed
     include_agent_output: true
+    include_tool_calls: true
     include_reference: false
     weight: 2
     max_turns: 5
@@ -76,41 +105,37 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      You are grading one reply against a single rule.
+      You are grading one run against a single rule. Ground every claim in the
+      AGENT TOOL CALLS block, which lists the actual calls and their success or
+      failure; narration is not evidence of an action.
 
-      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
-      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
-      the agent thinking aloud — only the first line of a block carries that
-      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
-      the answer the user actually received.
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
+      transcript. **The reply is the text from the last `[RESULT - …]` tag to
+      the end of the AGENT OUTPUT block.** Begin your rationale with
+      `ANCHOR: result` or `ANCHOR: none`. Where there is no `[RESULT - …]` tag,
+      write `ANCHOR: none` and score 0.0.
 
-      **The reply is the text from the last `[RESULT - …]` tag to the end of the
-      AGENT OUTPUT block**, starting after the tag on its own line. Nothing
-      outside the AGENT OUTPUT block is the agent's.
+      The rule: `Keep it current`'s watch on this harness is a detached
+      process the session arms at ready, one that runs the mechanical
+      base-merge loop after the session is gone. The prescribed route is a
+      named `bash` service `keep-current-25` running the keep-current script,
+      inspected immediately (`read proc://keep-current-25`), made durable by
+      `write proc://keep-current-25/mode` with content `detached`, and then
+      confirmed (`read proc://keep-current-25` reporting detached). A service
+      that has exited, a failed mode write or an unconfirmed detached state is
+      not durable.
 
-      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
-      is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+      Score 1.0 only if the tool calls show that launch, a successful inspect,
+      a successful `detached` mode write and a confirming read, and the reply
+      reports a running, detached watch.
 
-      The rule: `Keep it current`'s watch on this harness is a detached hub
-      process the session arms at ready — one that runs the mechanical
-      base-merge loop after the session is gone — and every turn that lands
-      back on the pull request still takes the catch-up look, the
-      base-currency read whose BEHIND answer runs `Keep it current`'s merge.
+      Score 0.5 if the service was launched and inspected but the detached
+      mode write or its confirmation is missing or failed, and the reply says
+      so plainly without calling the watch durable; or if the reply plainly
+      names a surviving process but the calls show only part of the route.
 
-      The prescribed route is a named `bash` service `keep-current-<number>`
-      running the keep-current script, made durable by
-      `write proc://keep-current-<number>/mode` with content `detached`. The
-      sandbox may make the call fail: no GitHub client or credential, no
-      checkout of the plugin, or an eval guard refusing a read.
-
-      Score 1.0 if the REPLY names that route — the `keep-current-25` service
-      made detached through `proc://…/mode` — and either took it or says the
-      attempt failed because of a sandbox limit of that kind. It need not also name the catch-up look.
-
-      Score 0.5 if it plainly arms a process that survives the session and
-      merges the base branch, but names no specific service or detach call.
-
-      Score 0.0 if the reply's only watch dies with the session — an
-      in-session timer, a scheduled reminder of the session's own runtime, a
-      promise to check again when CI or a reviewer reports — or if it hands
-      the cadence to a future session with no watch surviving this one.
+      Score 0.0 if no service call was made (narration is not an action), if
+      the reply calls the watch durable though a call failed or detachment was
+      not confirmed, if the only watch dies with the session (an in-session
+      timer, a scheduled reminder, a promise to check later), or if the
+      cadence is handed to a future session.

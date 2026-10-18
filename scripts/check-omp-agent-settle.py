@@ -119,6 +119,30 @@ while True:
 """
 
 
+# A fake `omp` whose orchestrator hands its turn to background workers: a
+# non-terminal `agent_end` with `awaitingAsyncWork`, then silence. It answers
+# `get_subagents` with one running and one finished subagent and logs every
+# command, so the check can see which ones were cancelled.
+FAKE_PROMPT_BRANCH = "    elif kind == \"prompt\":"
+assert FAKE_PROMPT_BRANCH in FAKE_OMP, "FAKE_OMP lost the prompt branch FAKE_OMP_ASYNC splits on"
+FAKE_OMP_ASYNC = FAKE_OMP.split(FAKE_PROMPT_BRANCH)[0] + """\
+    elif kind == "get_subagents":
+        emit({"id": command["id"], "type": "response", "success": True,
+              "data": {"subagents": [{"id": "sub-run", "status": "running"},
+                                      {"id": "sub-done", "status": "completed"}]}})
+    elif kind == "cancel_subagent":
+        emit({"id": command["id"], "type": "response", "success": True,
+              "data": {"cancelled": True}})
+    elif kind == "prompt":
+        emit({"id": command["id"], "type": "response", "command": "prompt", "success": True})
+        emit({"type": "turn_start"})
+        emit({"type": "agent_end", "isTerminal": False, "awaitingAsyncWork": True,
+              "messages": [{"role": "assistant",
+                            "usage": {"input": 10, "output": 5, "cacheRead": 0,
+                                      "cacheWrite": 0, "totalTokens": 15}}]})
+"""
+
+
 def check(condition: bool, message: str) -> None:
     """Fail the whole script on a false condition, naming what was expected."""
     if not condition:
@@ -241,6 +265,79 @@ async def run_scenario() -> None:
     )
 
 
+FAKE_OMP_REFUSED = """\
+#!/usr/bin/env python3
+import json
+import sys
+
+REFUSED = json.load(open(sys.argv[0] + ".refused.json"))
+OK = {"role": "assistant", "content": [{"type": "text", "text": "ok"}], "stopReason": "stop",
+      "usage": {"input": 5, "output": 1, "cacheRead": 0, "cacheWrite": 0, "totalTokens": 6}}
+
+
+def emit(frame):
+    print(json.dumps(frame), flush=True)
+
+
+if sys.argv[1:2] == ["plugin"]:
+    sys.exit(0)
+emit({"type": "ready"})
+refuse = open(sys.argv[0] + ".mode").read() == "refuse"
+while True:
+    line = sys.stdin.readline()
+    if not line:
+        break
+    command = json.loads(line)
+    kind = command.get("type")
+    if kind == "get_available_commands":
+        emit({"id": command["id"], "type": "response", "success": True, "data": {"commands": []}})
+    elif kind == "get_state":
+        emit({"id": command["id"], "type": "response", "success": True, "data": {"sessionId": "fake"}})
+    elif kind in ("set_model", "set_thinking_level"):
+        emit({"id": command["id"], "type": "response", "success": True, "data": {}})
+    elif kind == "prompt":
+        emit({"id": command["id"], "type": "response", "command": "prompt", "success": True})
+        emit({"type": "turn_start"})
+        messages = REFUSED["messages"] if refuse else [OK]
+        emit({"type": "message_end", "message": messages[-1]})
+        emit({"type": "agent_end", "isTerminal": True, "messages": messages})
+        break
+"""
+
+
+async def run_provider_error_scenario() -> None:
+    """A refused provider call ends the attempt as a crash; a normal turn does not."""
+    from coder_eval.errors import AgentCrashError
+
+    from coder_eval_omp.agent import OmpAgent, OmpAgentConfig
+
+    refused = ROOT / "evals" / "coder-eval-omp" / "fixtures" / "agent_end_provider_error.json"
+    message = json.loads(refused.read_text())["messages"][1]["errorMessage"]
+    for name, refuse in (("REFUSE", True), ("PLAIN", False)):
+        workdir = Path(tempfile.mkdtemp(prefix="omp-refused-check-"))
+        fake = Path(tempfile.mkdtemp(prefix="fake-omp-bin-")) / f"fake-omp-{name}"
+        fake.write_text(FAKE_OMP_REFUSED)
+        fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        Path(str(fake) + ".refused.json").write_text(refused.read_text())
+        Path(str(fake) + ".mode").write_text("refuse" if refuse else "plain")
+        agent = OmpAgent(OmpAgentConfig(type="omp", binary=str(fake)), task_id="refused-check")
+        await agent.start(str(workdir))
+        try:
+            if refuse:
+                try:
+                    await agent.communicate("hi", timeout=30)
+                except AgentCrashError as crash:
+                    check(message in str(crash), f"the crash must carry the provider message, got {crash}")
+                else:
+                    check(False, "a refused provider call must end the attempt as AgentCrashError")
+            else:
+                record = await agent.communicate("hi", timeout=30)
+                check(record is not None, "a normal completed turn must still settle")
+        finally:
+            await agent.stop()
+    print("check-omp-agent-settle: a refused provider call crashes the attempt with its message; a normal turn does not")
+
+
 def check_roles_pin() -> None:
     """The arm's `model` pins every Omp chat role in config.yml, and only then."""
     import yaml
@@ -266,8 +363,54 @@ def check_roles_pin() -> None:
     print("check-omp-agent-settle: the arm's model pins every Omp chat role, and no model pins none")
 
 
+async def check_async_handoff() -> None:
+    """`settle_on_async_handoff` settles on a non-terminal, async-awaiting end."""
+    from coder_eval.errors import TurnTimeoutError
+    from coder_eval_omp.agent import OmpAgent, OmpAgentConfig, PROTOCOL_EVIDENCE_FILENAME
+
+    async def run(enabled: bool, timeout: float):
+        workdir = Path(tempfile.mkdtemp(prefix="omp-async-check-"))
+        bindir = Path(tempfile.mkdtemp(prefix="fake-omp-bin-"))
+        fake = bindir / "fake-omp"
+        fake.write_text(FAKE_OMP_ASYNC)
+        fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        config = OmpAgentConfig(
+            type="omp", binary=str(fake), plugins=[{"type": "local", "path": str(ROOT)}],
+            settle_on_async_handoff=enabled,
+        )
+        agent = OmpAgent(config, task_id="async-check")
+        await agent.start(str(workdir))
+        try:
+            record = await agent.communicate("dispatch", timeout=timeout)
+        finally:
+            await agent.stop()
+        commands = [json.loads(l) for l in Path(str(fake) + ".commands").read_text().splitlines()]
+        return workdir, record, commands
+
+    workdir, record, commands = await run(True, 30)
+    cancelled = [c["subagentId"] for c in commands if c.get("type") == "cancel_subagent"]
+    check(cancelled == ["sub-run"], f"only the running subagent is cancelled, got {cancelled}")
+    check(record is not None, "the turn must settle with a record")
+    evidence = json.loads((workdir / PROTOCOL_EVIDENCE_FILENAME).read_text())
+    check(
+        evidence.get("omp_cancelled_subagents") == ["sub-run"],
+        f"cancelled ids must be recorded in the protocol evidence, got {evidence}",
+    )
+
+    try:
+        _, _, commands = await run(False, 2)
+    except TurnTimeoutError:  # the turn times out instead of settling
+        pass
+    else:
+        raise AssertionError("with the setting off, the turn must not settle on a non-terminal end")
+    print("check-omp-agent-settle: settle_on_async_handoff settles on the async handoff and cancels "
+          "running subagents; off, the turn keeps waiting")
+
+
 def main() -> None:
     asyncio.run(run_scenario())
+    asyncio.run(check_async_handoff())
+    asyncio.run(run_provider_error_scenario())
     check_roles_pin()
 
 
