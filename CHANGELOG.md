@@ -32,6 +32,10 @@
 
 ## [Unreleased]
 
+### Features
+
+* **embark:** require user authorization for Claude Code landing and archiving ([#621](https://github.com/jmcvetta/daily-driver/issues/621))
+
 ### Tests
 
 * **evals:** record the bounded Sol/Luna/Terra comparison, its isolation limits, and normalized resource use ([#579](https://github.com/jmcvetta/daily-driver/issues/579))

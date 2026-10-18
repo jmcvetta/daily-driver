@@ -5,6 +5,13 @@ session running in Claude Code. Omp's routes are in [`omp.md`](omp.md) and
 Codex's in [`codex.md`](codex.md); both carry the harness-local subagent
 fallback rather than web-session tables, for different reasons each states.
 
+Claude Code's auto-mode classifier requires the user's own words to authorize
+landing without human review and archiving finished sessions. If neither the
+invocation nor already-available conversation context establishes the
+user-confirmed mode, ask in the first reply and end the turn before any tool
+call. A denial names the denied action and classifier reason; after the user's
+explicit confirmation, retry that action once. Do not seek a different route.
+
 
 The epic
 ========
@@ -174,6 +181,7 @@ The watch
 | `Watch the wave` | Read a pull request's state and checks | `mcp__github__pull_request_read` |
 | `Watch the wave` | Arm the backstop | `mcp__Claude_Code_Remote__send_later`, ten minutes out |
 | `Watch the wave` | Archive a finished session | `mcp__Claude_Code_Remote__archive_session` |
+| `Watch the wave` | Post the archive record after successful archival | `mcp__github__add_issue_comment` |
 | `Land the pull request` | Read a task/bug PR draft, merge state, head SHA, labels, and body | `mcp__github__pull_request_read`, method `get` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
 | `Land the pull request` | Read the review-cycle completion notice | `mcp__github__pull_request_read`, method `get_comments`, every page — `user.login` |
@@ -183,6 +191,11 @@ The watch
 | `Close the epic` | Close as completed | `mcp__github__issue_write`, `method: update`, `state: closed`, `state_reason: completed` |
 | `Close the epic` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger` |
 | `Close the epic` | Drop each subscription | `mcp__github__unsubscribe_pr_activity` |
+
+Post the archive record to the epic only after `archive_session` returns
+success. If a landing record is written, post it only after
+`merge_pull_request` returns success. A denied or failed call must not be
+recorded as completed.
 
 Landing and close
 -----------------
