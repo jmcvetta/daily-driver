@@ -529,6 +529,48 @@ def check_makefile_routing() -> None:
                 "both arms and measures plugin-versus-nothing"
             )
 
+# This dependency is identical in both comparison arms and absent from bare controls.
+WORKTRUNK_PLUGIN = {"type": "local", "path": "dependencies/worktrunk/plugins/worktrunk"}
+
+
+def _claude_plugin_root(path: Path, plugins: object) -> str:
+    """Reject sessions that silently disable Daily Driver or vary its dependency."""
+    if (
+        not isinstance(plugins, list)
+        or len(plugins) != 2
+        or plugins[1] != WORKTRUNK_PLUGIN
+        or not isinstance(plugins[0], dict)
+        or plugins[0].get("type") != "local"
+        or not isinstance(plugins[0].get("path"), str)
+        or not plugins[0]["path"]
+        or plugins[0] == WORKTRUNK_PLUGIN
+    ):
+        raise CheckFailed(
+            f"{path.relative_to(ROOT)}: load one local Daily Driver root followed by "
+            "the pinned Worktrunk plugin"
+        )
+    return plugins[0]["path"]
+
+
+def _check_claude_ablation(path: Path, document: dict) -> None:
+    """Reject an untreated Claude session reported as a plugin measurement."""
+    variants = document.get("variants", [])
+    if not isinstance(variants, list) or len(variants) != 2:
+        raise CheckFailed(f"{path.relative_to(ROOT)}: Claude ablation needs two variants")
+    by_id = {
+        variant.get("variant_id"): variant
+        for variant in variants if isinstance(variant, dict)
+    }
+    if set(by_id) != {"bare", "with-plugin"}:
+        raise CheckFailed(f"{path.relative_to(ROOT)}: Claude must score `bare` and `with-plugin`")
+    bare = by_id["bare"].get("agent")
+    treated = by_id["with-plugin"].get("agent")
+    if not isinstance(bare, dict) or bare.get("plugins") != []:
+        raise CheckFailed(f"{path.relative_to(ROOT)}: `bare` must load no plugins")
+    plugins = treated.get("plugins") if isinstance(treated, dict) else None
+    if _claude_plugin_root(path, plugins) != "..":
+        raise CheckFailed(f"{path.relative_to(ROOT)}: `with-plugin` must load this checkout")
+
 
 def check_comparison_variants(path: Path, document: dict) -> None:
     """A comparison's arms load different plugin roots, or it measures nothing.
@@ -559,17 +601,7 @@ def check_comparison_variants(path: Path, document: dict) -> None:
             )
         agent = variant.get("agent")
         plugins = agent.get("plugins") if isinstance(agent, dict) else None
-        if not isinstance(plugins, list) or len(plugins) != 1 or not isinstance(plugins[0], dict):
-            raise CheckFailed(
-                f"{path.relative_to(ROOT)}: variant {variant_id!r} must load exactly one local plugin; a "
-                "comparison varies the revision, so an arm loading none is the ablation and not this"
-            )
-        entry = plugins[0]
-        if entry.get("type") != "local" or not entry.get("path"):
-            raise CheckFailed(
-                f"{path.relative_to(ROOT)}: variant {variant_id!r} must load a local plugin with a path"
-            )
-        roots[variant_id] = str(entry["path"])
+        roots[variant_id] = _claude_plugin_root(path, plugins)
     if len(set(roots.values())) != len(roots):
         raise CheckFailed(
             f"{path.relative_to(ROOT)}: the variants load the same plugin root {sorted(set(roots.values()))}; "
@@ -684,6 +716,8 @@ def check_experiments() -> None:
             check_model_class_model(path, document)
         if comparison is not None:
             check_comparison_variants(path, document)
+        elif arm == "claude":
+            _check_claude_ablation(path, document)
         if model is not None:
             defaults = document.get("defaults") if isinstance(document, dict) else None
             agent = defaults.get("agent") if isinstance(defaults, dict) else None
@@ -880,14 +914,14 @@ def check_the_checks() -> None:
     documents: list[tuple[str, dict]] = [
         (
             "a comparison with one variant",
-            {"variants": [{"variant_id": "only", "agent": {"plugins": [one]}}]},
+            {"variants": [{"variant_id": "only", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}}]},
         ),
         (
             "a comparison whose arms load the same root",
             {
                 "variants": [
-                    {"variant_id": "base", "agent": {"plugins": [one]}},
-                    {"variant_id": "candidate", "agent": {"plugins": [one]}},
+                    {"variant_id": "base", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}},
+                    {"variant_id": "candidate", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}},
                 ]
             },
         ),
@@ -896,7 +930,7 @@ def check_the_checks() -> None:
             {
                 "variants": [
                     {"variant_id": "base", "agent": {"plugins": []}},
-                    {"variant_id": "candidate", "agent": {"plugins": [one]}},
+                    {"variant_id": "candidate", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}},
                 ]
             },
         ),
@@ -904,8 +938,8 @@ def check_the_checks() -> None:
             "a comparison whose variants share an id",
             {
                 "variants": [
-                    {"variant_id": "base", "agent": {"plugins": [one]}},
-                    {"variant_id": "base", "agent": {"plugins": [one]}},
+                    {"variant_id": "base", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}},
+                    {"variant_id": "base", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}},
                 ]
             },
         ),
@@ -913,8 +947,8 @@ def check_the_checks() -> None:
             "a comparison arm loading a plugin with no path",
             {
                 "variants": [
-                    {"variant_id": "base", "agent": {"plugins": [{"type": "local"}]}},
-                    {"variant_id": "candidate", "agent": {"plugins": [one]}},
+                    {"variant_id": "base", "agent": {"plugins": [{"type": "local"}, WORKTRUNK_PLUGIN]}},
+                    {"variant_id": "candidate", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}},
                 ]
             },
         ),
@@ -925,6 +959,39 @@ def check_the_checks() -> None:
         except CheckFailed:
             continue
         raise CheckFailed(f"the check for {name!r} did not fail on a document that should fail it")
+
+    # Missing or different dependencies disable the plugin or confound the revision comparison.
+    base = {"type": "local", "path": "../../daily-driver-base"}
+    for dependency in (None, {"type": "local", "path": "other-worktrunk"}):
+        plugins = [base] if dependency is None else [base, dependency]
+        document = {"variants": [
+            {"variant_id": "base", "agent": {"plugins": plugins}},
+            {"variant_id": "candidate", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}},
+        ]}
+        try:
+            check_comparison_variants(synthetic, document)
+        except CheckFailed:
+            continue
+        raise CheckFailed("a comparison accepted a missing or different Worktrunk dependency")
+    check_comparison_variants(synthetic, {"variants": [
+        {"variant_id": "base", "agent": {"plugins": [base, WORKTRUNK_PLUGIN]}},
+        {"variant_id": "candidate", "agent": {"plugins": [one, WORKTRUNK_PLUGIN]}},
+    ]})
+
+    # A treated session without its dependency would silently measure a bare session.
+    for plugins in ([one], [one, WORKTRUNK_PLUGIN]):
+        document = {"variants": [
+            {"variant_id": "bare", "agent": {"plugins": []}},
+            {"variant_id": "with-plugin", "agent": {"plugins": plugins}},
+        ]}
+        try:
+            _check_claude_ablation(synthetic, document)
+        except CheckFailed:
+            if len(plugins) == 1:
+                continue
+            raise
+        if len(plugins) == 1:
+            raise CheckFailed("Claude treated arm accepted a missing Worktrunk dependency")
 
     focused_valid = {
         "variants": [

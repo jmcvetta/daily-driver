@@ -16,7 +16,7 @@ SHELL := /bin/bash
 	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
 	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry check-undertake-readiness \
-	evals-install evals-setup-omp evals-plan \
+	evals-install evals-setup-claude evals-setup-omp evals-plan \
 	evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
@@ -479,12 +479,17 @@ check-infra:
 # Both local agents keep one version, so uv would reuse its cached build and an
 # edit to either would never reach the harness. `--reinstall-package` rebuilds
 # them from the working tree every time.
-evals-install:
+evals-install: evals-setup-claude
 	uv tool install --python 3.13 coder-eval==$(CODER_EVAL_VERSION) \
 		--with ./evals/coder-eval-omp \
 		--with ./evals/coder-eval-codex \
 		--reinstall-package coder-eval-omp \
 		--reinstall-package coder-eval-codex
+
+# Explicit local plugins do not resolve marketplace dependencies. Initialize the
+# recorded revision, never the dependency's moving default branch.
+evals-setup-claude:
+	git submodule update --init -- evals/dependencies/worktrunk
 
 # evals-setup-omp: everything a gateway-routed `evals-run-omp-*` target needs
 # beyond evals-install -- `omp` installed with CI's command when missing, the
@@ -508,7 +513,7 @@ evals-setup-omp:
 #
 # Laptop-only, unlike check-git-sync: the cases need a live model, and this
 # repository's CI is deliberately credential-free.
-evals-plan: evals-variants
+evals-plan: evals-setup-claude evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/with-without-haiku-5.5.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3.yaml tasks/*/*.yaml
