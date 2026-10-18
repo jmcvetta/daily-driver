@@ -709,7 +709,7 @@ async def check_dispatch_evidence() -> None:
           "through a normal end and a crash; off writes nothing")
 
 
-def check_failed_dispatch_rewrite() -> None:
+async def check_failed_dispatch_rewrite() -> None:
     """A failed rewrite must not let the grader reuse a previous complete artifact."""
     from unittest.mock import patch
 
@@ -722,26 +722,59 @@ def check_failed_dispatch_rewrite() -> None:
     agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
     agent.working_directory = str(workdir)
     write_text = Path.write_text
-    unlink = Path.unlink
 
     def fail_temporary_write(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
         if path != destination:
             raise OSError("injected temporary-file write failure")
         return write_text(path, data, *args, **kwargs)
 
+    try:
+        with patch.object(Path, "write_text", autospec=True, side_effect=fail_temporary_write):
+            agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
+    except OSError as error:
+        check("injected temporary-file write failure" in str(error),
+              "a failed evidence write must be reported")
+    else:
+        check(False, "a failed evidence write must not return successfully")
+    check(not destination.exists(), "a failed temporary write leaves no previous passing artifact")
+
+    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-unwritable-"))
+    fake = Path(tempfile.mkdtemp(prefix="fake-omp-bin-")) / "fake-omp-clean"
+    fake.write_text(FAKE_OMP_DISPATCH)
+    fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+    Path(str(fake) + ".mode").write_text("clean")
+    destination = workdir / DISPATCH_EVIDENCE_FILENAME
+    prior_evidence = '{"version":1,"complete":true,"calls":[]}'
+    destination.write_text(prior_evidence, encoding="utf-8")
+    agent = OmpAgent(
+        OmpAgentConfig(
+            type="omp", binary=str(fake), plugins=[{"type": "local", "path": str(ROOT)}],
+            record_task_dispatches=True,
+        ),
+        task_id="dispatch-unlink-failure",
+    )
+    await agent.start(str(workdir))
+    unlink = Path.unlink
+
     def refuse_destination_unlink(path: Path, *args: Any, **kwargs: Any) -> None:
         if path == destination:
             raise OSError("injected directory permission failure")
         unlink(path, *args, **kwargs)
 
-    with (
-        patch.object(Path, "write_text", autospec=True, side_effect=fail_temporary_write),
-        patch.object(Path, "unlink", autospec=True, side_effect=refuse_destination_unlink),
-    ):
-        agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
-    check(destination.exists() and destination.read_text() == "",
-          "a failed rewrite invalidates prior passing evidence even if unlink is forbidden")
-    print("check-omp-agent-settle: failed dispatch rewrite invalidates stale evidence")
+    try:
+        with patch.object(Path, "unlink", autospec=True, side_effect=refuse_destination_unlink):
+            try:
+                await agent.communicate("dispatch", timeout=30)
+            except OSError as error:
+                check("injected directory permission failure" in str(error),
+                      "failed stale-artifact invalidation must fail the task")
+            else:
+                check(False, "a failed stale-artifact invalidation must not return a successful turn")
+    finally:
+        await agent.stop()
+    check(destination.read_text(encoding="utf-8") == prior_evidence,
+          "the regression proves the caller fails when a prior artifact cannot be removed")
+    print("check-omp-agent-settle: failed dispatch evidence writes fail closed")
 
 
 def check_roles_pin() -> None:
@@ -817,7 +850,7 @@ def main() -> None:
     asyncio.run(run_scenario())
     asyncio.run(check_async_handoff())
     asyncio.run(check_dispatch_evidence())
-    check_failed_dispatch_rewrite()
+    asyncio.run(check_failed_dispatch_rewrite())
     asyncio.run(run_provider_error_scenario())
     asyncio.run(check_settlement_evidence())
     check_roles_pin()

@@ -531,14 +531,9 @@ class OmpAgent(Agent[OmpAgentConfig]):
         destination = Path(self.working_directory) / DISPATCH_EVIDENCE_FILENAME
         temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
         try:
-            try:
-                destination.write_text("", encoding="utf-8")
-            except FileNotFoundError:
-                pass
+            destination.unlink(missing_ok=True)
             temporary.write_text(text, encoding="utf-8")
             temporary.replace(destination)
-        except OSError as error:
-            logger.error("omp: could not write %s: %s", destination.name, error)
         finally:
             with contextlib.suppress(FileNotFoundError):
                 temporary.unlink()
@@ -850,6 +845,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 self._record_task_dispatches(reducer, attempt["attempt"], attempt["iteration"])
             except Exception as error:
                 logger.error("omp: could not write %s: %s", DISPATCH_EVIDENCE_FILENAME, error)
+                raise
 
     async def _cancel_background_subagents(self, counts: dict[str, int]) -> list[str]:
         """Cancel every running background subagent; return the ids cancelled.
