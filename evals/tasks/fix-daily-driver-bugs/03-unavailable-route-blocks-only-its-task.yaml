@@ -140,7 +140,6 @@ agent:
   settle_on_async_handoff: true
   allowed_tools: [Read, Grep, Glob, Skill, Bash, Task]
   disallowed_tools: [WebFetch, WebSearch]
-  type: omp
   extra_args: [--config, overlay.yml]
 
 run_limits:

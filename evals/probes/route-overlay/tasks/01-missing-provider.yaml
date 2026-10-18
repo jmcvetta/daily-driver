@@ -18,11 +18,12 @@ agent:
   extra_args: [--config, overlay.yml]
 
 initial_prompt: >-
-  Call the `task` tool exactly once. Use the agent `reasoning` and this
-  assignment: "Reply with the single word PONG and nothing else." When the
-  task result is delivered, write it verbatim, error text included, to
-  `result.txt` with the write tool. Call no other tool, and do not retry the
-  task.
+  First call `write xd://daily_driver_set_session_title` with title
+  `Case 03 unavailable-route probe`. Then call the `task` tool exactly once.
+  Use the agent `reasoning` and this assignment: "Reply with the single word
+  PONG and nothing else." When the task result is delivered, write it verbatim,
+  error text included, to `result.txt` with the write tool. Call no other tool,
+  and do not retry the task.
 
 success_criteria:
   - type: command_executed
