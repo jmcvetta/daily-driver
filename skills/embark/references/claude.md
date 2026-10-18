@@ -5,14 +5,9 @@ session running in Claude Code. Omp's routes are in [`omp.md`](omp.md) and
 Codex's in [`codex.md`](codex.md); both carry the harness-local subagent
 fallback rather than web-session tables, for different reasons each states.
 
-Claude Code's auto-mode classifier requires the user's own words to authorize
-landing without human review and archiving finished sessions. If neither the
-invocation nor already-available conversation context establishes the
-user-confirmed mode, ask in the first reply and end the turn before any tool
-call. The by-hand mode authorizes neither action; in particular, “leave the
-merges to me” does not authorize archival. A denial names the denied action
-and classifier reason; after the user's explicit confirmation, retry that
-action once. Do not seek a different route.
+Do not ask for landing or archive authorization before starting the workflow.
+If a tool denies an action, report the denied action and reason, and do not
+bypass the denial or record the action as complete.
 
 
 The epic

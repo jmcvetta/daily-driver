@@ -129,6 +129,31 @@ _RESULT_STATUS: dict[ToolEndStatus, str] = {
 #: File in each task sandbox that persists post-turn Omp protocol observations.
 PROTOCOL_EVIDENCE_FILENAME = "omp-protocol-observations.json"
 
+#: Version of the `omp_settlement_evidence` block in that file.
+SETTLEMENT_EVIDENCE_VERSION = 1
+
+#: Most `agent_end` observations kept per attempt; the rest only count as overflow.
+MAX_AGENT_END_OBSERVATIONS = 16
+
+#: Most attempt records kept per agent session; the rest only count as overflow.
+MAX_ATTEMPT_RECORDS = 32
+
+#: The fixed vocabulary of an attempt's `exit_reason`.
+EXIT_REASONS = (
+    "completed",
+    "async_handoff",
+    "stopped_early",
+    "max_turns",
+    "timeout",
+    "eof",
+    "no_recognized_frames",
+    "provider_error",
+    "no_usage",
+    "exception",
+    "cancelled",
+    "evidence_write_failed",
+)
+
 
 #: Omp's chat model roles: the `section: "chat"` entries of `MODEL_ROLES` in
 #: Omp's `src/config/model-roles.ts` (18.4.9). Each one left unset falls to
@@ -257,7 +282,10 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._argument_keys_seen: set[str] = set()
         self._cancelled_subagents: list[str] = []
         self._dispatch_calls: list[dict[str, Any]] = []
-        self._attempts = 0
+        self._attempts: list[dict[str, Any]] = []
+        self._attempt_overflow = 0
+        self._attempt: dict[str, Any] | None = None
+        self._attempt_started_at = 0.0
         self._usage_keys_seen: set[str] = set()
         self._tools = ToolSelection(tools=(), read_for_skill=False, webfetch_via_read=False)
         self._state = AgentState.WORKING
@@ -389,13 +417,18 @@ class OmpAgent(Agent[OmpAgentConfig]):
         return info
 
     def _write_protocol_evidence(self) -> None:
-        """Atomically persist the observed RPC keys for post-run collection."""
+        """Atomically persist the observed RPC keys and settlement summaries."""
         if self.working_directory is None:
             raise RuntimeError("OmpAgent.start() must be called before recording protocol evidence")
 
-        evidence = {
+        evidence: dict[str, Any] = {
             "omp_argument_keys_seen": sorted(self._argument_keys_seen),
             "omp_usage_keys_seen": sorted(self._usage_keys_seen),
+            "omp_settlement_evidence": {
+                "version": SETTLEMENT_EVIDENCE_VERSION,
+                "attempts": [dict(attempt) for attempt in self._attempts],
+                "attempts_overflow": self._attempt_overflow,
+            },
         }
         if self._cancelled_subagents:
             evidence["omp_cancelled_subagents"] = list(self._cancelled_subagents)
@@ -411,19 +444,83 @@ class OmpAgent(Agent[OmpAgentConfig]):
             with contextlib.suppress(FileNotFoundError):
                 temporary.unlink()
 
-    def _record_task_dispatches(self, reducer: TurnReducer) -> None:
-        """Add this turn's `task` calls and atomically rewrite the artifact.
+    def _open_attempt(self, started_at: float) -> dict[str, Any]:
+        """Start this attempt's settlement summary; earlier attempts stay as they were."""
+        attempt: dict[str, Any] = {
+            "attempt": len(self._attempts) + self._attempt_overflow + 1,
+            "iteration": self._iteration,
+            "exit_reason": None,
+            "elapsed_seconds": None,
+            "recognized_frames": 0,
+            "last_recognized_frame": None,
+            "pending_tools_at_exit": None,
+            "agent_end": {
+                "total": 0,
+                "terminal": 0,
+                "nonterminal": 0,
+                "awaiting_async_work": 0,
+                "overflow": 0,
+                "recent": [],
+            },
+            "async_settlement": {"enabled": self.config.settle_on_async_handoff, "taken": False},
+            "cancellation": {"succeeded": 0, "failed": 0, "timed_out": 0},
+        }
+        if len(self._attempts) >= MAX_ATTEMPT_RECORDS:
+            self._attempts.pop(0)
+            self._attempt_overflow += 1
+        self._attempts.append(attempt)
+        self._attempt = attempt
+        self._attempt_started_at = started_at
+        return attempt
 
-        Runs from `communicate`'s `finally`, so a timeout, a crash and a
-        cancellation keep the assignments that were really attempted. A write
-        failure is logged and leaves no artifact, which the grader reads as
-        missing evidence rather than as a pass.
+    def _persist_attempt(self, attempt: dict[str, Any], reducer: TurnReducer) -> None:
+        """Fold the reducer's state into the attempt and the session unions, then write."""
+        self._argument_keys_seen.update(reducer.argument_keys_seen)
+        self._usage_keys_seen.update(reducer.usage_keys_seen)
+        attempt["recognized_frames"] = reducer.recognized
+        attempt["last_recognized_frame"] = reducer.last_recognized_kind
+        attempt["elapsed_seconds"] = round(time.monotonic() - self._attempt_started_at, 3)
+        if attempt["exit_reason"] is None:
+            attempt["exit_reason"] = "exception"
+        self._write_protocol_evidence()
+
+    def _note_agent_end(self, attempt: dict[str, Any], action: AgentFinished) -> None:
+        """Count one `agent_end`, keeping only the most recent observations."""
+        ends = attempt["agent_end"]
+        ends["total"] += 1
+        ends["terminal" if action.terminal else "nonterminal"] += 1
+        if action.awaiting_async_work:
+            ends["awaiting_async_work"] += 1
+        if len(ends["recent"]) >= MAX_AGENT_END_OBSERVATIONS:
+            ends["recent"].pop(0)
+            ends["overflow"] += 1
+        ends["recent"].append(
+            {
+                "offset_seconds": round(time.monotonic() - self._attempt_started_at, 3),
+                "is_terminal": action.is_terminal_field,
+                "awaiting_async_work": action.awaiting_async_work_field,
+            }
+        )
+
+    def _set_exit_reason(self, reason: str) -> None:
+        """Record why the current attempt ended; the first reason given wins."""
+        if reason not in EXIT_REASONS:
+            raise ValueError(f"unknown exit reason {reason!r}")
+        if self._attempt is not None and self._attempt["exit_reason"] is None:
+            self._attempt["exit_reason"] = reason
+
+    def _record_task_dispatches(self, reducer: TurnReducer, attempt: int, iteration: int) -> None:
+        """Add this attempt's `task` calls and atomically rewrite their artifact.
+
+        Runs from `communicate`'s `finally`, so timeouts, crashes and
+        cancellations keep calls that were really attempted. A write failure
+        is logged and leaves no artifact, which the grader cannot pass.
         """
         if not self.config.record_task_dispatches or self.working_directory is None:
             return
         reducer.close_open_tools()
         self._dispatch_calls.extend(
-            task_call_records(reducer.tool_calls, attempt=self._attempts, iteration=self._iteration)
+            task_call_records(reducer.tool_calls, attempt=attempt, iteration=iteration)
         )
         try:
             text = evidence_document(self._dispatch_calls)
@@ -457,14 +554,15 @@ class OmpAgent(Agent[OmpAgentConfig]):
             raise RuntimeError("OmpAgent.start() must be called before communicate()")
 
         self._begin_turn()
-        self._attempts += 1
         collector = EventCollector()
         reducer = TurnReducer()
         started_at = time.monotonic()
+        attempt = self._open_attempt(started_at)
         open_tools: dict[str, CommandTelemetry] = {}
         sequence = 0
         current_turn_id = ""
         finalized = [False]
+        evidence_written = [False]
         max_turns_exhausted = False
         stopped_early = False
         async_handoff = False
@@ -488,6 +586,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             if finalized[0]:
                 return
             finalized[0] = True
+            attempt["pending_tools_at_exit"] = len(reducer.open_tools)
             for closed in reducer.close_open_tools():
                 _emit_tool_end(emit, self.task_id, current_turn_id, open_tools, closed)
             if current_turn_id:
@@ -545,6 +644,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 it. Returns True only for a terminal `AgentFinished`.
                 """
                 nonlocal sequence, current_turn_id, async_handoff
+                if isinstance(action, AgentFinished):
+                    self._note_agent_end(attempt, action)
                 if isinstance(action, Text):
                     emit(
                         TextChunkEvent(
@@ -610,6 +711,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     # Opted in: the orchestrator's reply is over and only
                     # background workers remain, so the turn settles here.
                     async_handoff = True
+                    attempt["async_settlement"]["taken"] = True
                     return True
                 elif isinstance(action, AgentFinished) and action.terminal:
                     # `isTerminal: false` means maintenance has scheduled
@@ -637,6 +739,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                         collector,
                         f"omp closed its stream after {reducer.recognized} recognized frame(s) "
                         "without a terminal agent_end",
+                        kind="eof",
                     )
 
                 frame = _parse(line)
@@ -660,15 +763,12 @@ class OmpAgent(Agent[OmpAgentConfig]):
 
             if async_handoff:
                 try:
-                    self._cancelled_subagents.extend(
-                        await asyncio.wait_for(self._cancel_background_subagents(), _CANCEL_TIMEOUT_SECONDS)
+                    await asyncio.wait_for(
+                        self._cancel_background_subagents(attempt["cancellation"]), _CANCEL_TIMEOUT_SECONDS
                     )
                 except (TimeoutError, asyncio.TimeoutError):
+                    attempt["cancellation"]["timed_out"] += 1
                     logger.warning("omp: cancelling background subagents timed out after %.0fs", _CANCEL_TIMEOUT_SECONDS)
-
-            self._argument_keys_seen.update(reducer.argument_keys_seen)
-            self._usage_keys_seen.update(reducer.usage_keys_seen)
-            self._write_protocol_evidence()
 
             if reducer.recognized == 0:
                 # The vocabulary moved. A turn that recognized nothing captured
@@ -679,26 +779,42 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     collector,
                     "omp emitted no recognized event frames; the RPC vocabulary has moved "
                     f"(saw: {sorted(reducer.unrecognized_types)})",
+                    kind="no_recognized_frames",
                 )
             if reducer.error_message:
                 # The provider refused the turn (a 402 from an over-budget
                 # key, say). Omp still sends a terminal `agent_end`, so
                 # without this the attempt grades as a subject failure.
-                self._crash(finalize, collector, f"omp provider error: {reducer.error_message}")
+                self._crash(finalize, collector, f"omp provider error: {reducer.error_message}", kind="provider_error")
             if self.config.require_token_telemetry and not reducer.usage:
                 self._crash(
                     finalize,
                     collector,
                     "omp reported no usage on any assistant message this turn; "
                     "the AssistantMessage usage field has moved",
+                    kind="no_usage",
                 )
 
             status = AgentEndStatus.MAX_TURNS_EXHAUSTED if max_turns_exhausted else AgentEndStatus.COMPLETED
+            exit_reason = "max_turns" if max_turns_exhausted else "async_handoff" if async_handoff else "completed"
             if stopped_early:
                 # Its own status, not COMPLETED: a run cut by `stop_early` read
                 # a truncated trajectory, and reporting it as a full one would
                 # make the same event read differently per harness.
                 status = AgentEndStatus.STOPPED_EARLY
+                exit_reason = "stopped_early"
+            self._set_exit_reason(exit_reason)
+            attempt["pending_tools_at_exit"] = len(reducer.open_tools)
+            try:
+                self._persist_attempt(attempt, reducer)
+            except Exception as error:
+                # Nothing else is failing here, so the missing evidence is the
+                # failure: a turn that claims evidence it did not write is the
+                # silence this artifact exists to rule out.
+                attempt["exit_reason"] = "evidence_write_failed"
+                evidence_written[0] = True  # the write was tried; the finally block does not repeat it
+                self._crash(finalize, collector, f"omp protocol evidence could not be written: {error!s}", cause=error)
+            evidence_written[0] = True
             finalize(status)
             # Built before the turn is marked clean: a failure in the reduction
             # is a failed turn, and `_end_turn_ok` would clear the rollback flag
@@ -710,6 +826,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         except (AgentCrashError, TurnTimeoutError):
             raise
         except asyncio.CancelledError:
+            self._set_exit_reason("cancelled")
             self._finalize_external_cancel(finalize)
             self._capture_partial_turn(collector)
             raise
@@ -717,10 +834,24 @@ class OmpAgent(Agent[OmpAgentConfig]):
             self._crash(finalize, collector, f"Omp turn failed: {error!s}", cause=error)
             raise  # unreachable: _crash is NoReturn. Kept so the flow is explicit.
         finally:
-            self._record_task_dispatches(reducer)
+            if not evidence_written[0]:
+                # Every exit that did not write on the normal path writes here.
+                # A failure is logged and swallowed: the timeout, crash or
+                # cancellation already in flight is the truth of the attempt.
+                try:
+                    self._persist_attempt(attempt, reducer)
+                except Exception as error:
+                    logger.error("omp: could not write %s: %s", PROTOCOL_EVIDENCE_FILENAME, error)
+            try:
+                self._record_task_dispatches(reducer, attempt["attempt"], attempt["iteration"])
+            except Exception as error:
+                logger.error("omp: could not write %s: %s", DISPATCH_EVIDENCE_FILENAME, error)
 
-    async def _cancel_background_subagents(self) -> list[str]:
+    async def _cancel_background_subagents(self, counts: dict[str, int]) -> list[str]:
         """Cancel every running background subagent; return the ids cancelled.
+
+        Each id is recorded in `_cancelled_subagents` as it is cancelled, so a
+        timeout partway through keeps the ones already stopped.
 
         A failure is logged, not raised: the orchestrator's turn is already
         complete and graded on its own output.
@@ -729,6 +860,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         try:
             data = await self._request("get_subagents")
         except Exception as error:
+            counts["failed"] += 1
             logger.warning("omp: get_subagents failed: %s", error)
             return cancelled
         for subagent in data.get("subagents") or []:
@@ -740,10 +872,15 @@ class OmpAgent(Agent[OmpAgentConfig]):
             try:
                 result = await self._request("cancel_subagent", subagentId=subagent_id)
             except Exception as error:
+                counts["failed"] += 1
                 logger.warning("omp: cancel_subagent %s failed: %s", subagent_id, error)
                 continue
             if result.get("cancelled") is not False:
+                counts["succeeded"] += 1
                 cancelled.append(str(subagent_id))
+                self._cancelled_subagents.append(str(subagent_id))
+            else:
+                counts["failed"] += 1
         return cancelled
 
     # --- startup -----------------------------------------------------------
@@ -965,6 +1102,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         every tool call the turn made, and a row whose skill fired scores 0.0
         for want of the record rather than for want of the engagement.
         """
+        self._set_exit_reason("timeout")
         with contextlib.suppress(Exception):
             await self._send({"id": self._next_request_id(), "type": "abort"})
         try:
@@ -1019,8 +1157,10 @@ class OmpAgent(Agent[OmpAgentConfig]):
         message: str,
         *,
         cause: BaseException | None = None,
+        kind: str = "exception",
     ) -> NoReturn:
         """Finalize the turn as crashed, park its telemetry, and raise."""
+        self._set_exit_reason(kind)
         self._capture_partial_turn(collector)
         self._finalize_and_raise_crash(finalize, message, cause=cause)
 
