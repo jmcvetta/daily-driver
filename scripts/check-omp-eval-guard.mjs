@@ -105,6 +105,32 @@ refuses("write proc:// under read", "write", { path: "proc://svc/mode", content:
 // devices, or of anything else.
 refuses("write xd:// with the grant unset", "write", { path: "xd://x", content: "{}" }, undefined);
 
+// #636: a handoff that warns its worker off a scheme was refused before the
+// worker could start. Prose fields are instructions, not resolver targets.
+passes(
+	"task prose warnings",
+	"task",
+	{
+		context: "Never use issue:// or a live tracker. Report to the parent through agent://parent.",
+		tasks: [
+			{ id: "a", description: "do not access pr://", task: "Do not read pr://o/r/1 or agent://all." },
+			{ id: "b", intent: "avoid https://example.com", name: "no issue://", solutionSpace: "never agent://parent" },
+		],
+	},
+	"read",
+);
+
+// The same strings in a target position must still be refused: only prose is
+// exempt, so a worker cannot be pointed at a live resolver through `task`.
+refuses("task unknown field", "task", { context: "ok", target: "issue://o/r/1" }, "read", "issue");
+refuses("task entry unknown field", "task", { tasks: [{ task: "ok", path: "pr://o/r/1" }] }, "read", "pr");
+refuses("task nested non-string prose", "task", { context: { path: "agent://all" } }, "read", "agent");
+for (const tool of ["read", "grep", "glob", "write"]) {
+	refuses(`${tool} keeps context scan`, tool, { context: "never issue://", path: "inside.txt" }, "read,write", "issue");
+}
+refuses("read agent://", "read", { path: "agent://parent" }, "read", "agent");
+refuses("read compound agent://", "read", { path: "inside.txt;agent://all" }, "read", "agent");
+
 // The ordinary file read every row makes.
 passes("read inside.txt", "read", { path: "inside.txt" }, "read");
 
