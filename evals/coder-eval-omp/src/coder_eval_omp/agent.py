@@ -76,6 +76,8 @@ from coder_eval.streaming.events import (
     TurnStartEvent,
 )
 
+from .dispatch import EVIDENCE_FILENAME as DISPATCH_EVIDENCE_FILENAME
+from .dispatch import EvidenceTooLarge, error_document, evidence_document, task_call_records
 from .pricing import UNREPORTED, cost_usd
 from .home import inherited_files
 from .rpc import (
@@ -196,6 +198,15 @@ class OmpAgentConfig(BaseAgentConfig):
     row that grades only the orchestrator is not left to hit `turn_timeout`.
     """
 
+    record_task_dispatches: bool = False
+    """Write `omp-task-dispatches.json`, the evidence a dispatch grader reads.
+
+    Off by default. On, every attempted `task` call is kept whole — arguments
+    after their final update, outcome and raw result, retries included — and
+    persisted atomically after the subject stops on every exit path. The normal
+    telemetry is untouched.
+    """
+
     extra_args: list[str] = []
     """Arguments appended to the `omp --mode rpc` command line, verbatim.
 
@@ -245,6 +256,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._extension_errors: list[str] = []
         self._argument_keys_seen: set[str] = set()
         self._cancelled_subagents: list[str] = []
+        self._dispatch_calls: list[dict[str, Any]] = []
+        self._attempts = 0
         self._usage_keys_seen: set[str] = set()
         self._tools = ToolSelection(tools=(), read_for_skill=False, webfetch_via_read=False)
         self._state = AgentState.WORKING
@@ -398,6 +411,35 @@ class OmpAgent(Agent[OmpAgentConfig]):
             with contextlib.suppress(FileNotFoundError):
                 temporary.unlink()
 
+    def _record_task_dispatches(self, reducer: TurnReducer) -> None:
+        """Add this turn's `task` calls and atomically rewrite the artifact.
+
+        Runs from `communicate`'s `finally`, so a timeout, a crash and a
+        cancellation keep the assignments that were really attempted. A write
+        failure is logged and leaves no artifact, which the grader reads as
+        missing evidence rather than as a pass.
+        """
+        if not self.config.record_task_dispatches or self.working_directory is None:
+            return
+        reducer.close_open_tools()
+        self._dispatch_calls.extend(
+            task_call_records(reducer.tool_calls, attempt=self._attempts, iteration=self._iteration)
+        )
+        try:
+            text = evidence_document(self._dispatch_calls)
+        except EvidenceTooLarge as error:
+            logger.error("omp: %s", error)
+            text = error_document(str(error))
+        destination = Path(self.working_directory) / DISPATCH_EVIDENCE_FILENAME
+        temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+        try:
+            temporary.write_text(text, encoding="utf-8")
+            temporary.replace(destination)
+        except OSError as error:
+            logger.error("omp: could not write %s: %s", destination.name, error)
+        finally:
+            with contextlib.suppress(FileNotFoundError):
+                temporary.unlink()
 
     # --- the turn ----------------------------------------------------------
 
@@ -415,6 +457,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             raise RuntimeError("OmpAgent.start() must be called before communicate()")
 
         self._begin_turn()
+        self._attempts += 1
         collector = EventCollector()
         reducer = TurnReducer()
         started_at = time.monotonic()
@@ -673,6 +716,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
         except Exception as error:
             self._crash(finalize, collector, f"Omp turn failed: {error!s}", cause=error)
             raise  # unreachable: _crash is NoReturn. Kept so the flow is explicit.
+        finally:
+            self._record_task_dispatches(reducer)
 
     async def _cancel_background_subagents(self) -> list[str]:
         """Cancel every running background subagent; return the ids cancelled.

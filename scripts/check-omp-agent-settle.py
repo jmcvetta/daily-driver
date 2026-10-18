@@ -143,6 +143,41 @@ FAKE_OMP_ASYNC = FAKE_OMP.split(FAKE_PROMPT_BRANCH)[0] + """\
 """
 
 
+# A fake `omp` whose orchestrator dispatches workers: a `task` call that starts
+# with no arguments and gets them in a later update, a call the runtime rejects,
+# and then either a normal end or a dead process holding a third call open.
+# `.mode` picks which, so one script covers the clean and the exceptional exit.
+FAKE_OMP_DISPATCH = FAKE_OMP.split(FAKE_PROMPT_BRANCH)[0] + """\
+    elif kind == "prompt":
+        emit({"id": command["id"], "type": "response", "command": "prompt", "success": True})
+        emit({"type": "turn_start"})
+        tasks = [{"id": "a", "description": "d", "task": "undertake #990009"},
+                 {"id": "b", "description": "d", "task": "undertake #990011"}]
+        emit({"type": "tool_execution_start", "toolCallId": "d1", "toolName": "task"})
+        emit({"type": "tool_execution_update", "toolCallId": "d1", "toolName": "task",
+              "args": {"agent": "implementation", "tasks": tasks[:1]}})
+        emit({"type": "tool_execution_update", "toolCallId": "d1", "toolName": "task",
+              "args": {"agent": "implementation", "context": "c" * 3000, "tasks": tasks}})
+        text = "Spawned 2 background agents using implementation.\\n- w1\\n- w2"
+        emit({"type": "tool_execution_end", "toolCallId": "d1", "toolName": "task",
+              "result": {"content": [{"type": "text", "text": text}], "details": {"jobs": 2}}})
+        emit({"type": "tool_execution_start", "toolCallId": "d2", "toolName": "task",
+              "args": {"agent": "reasoning", "tasks": [{"task": "undertake #990010"}]}})
+        emit({"type": "tool_execution_end", "toolCallId": "d2", "toolName": "task",
+              "isError": True, "error": "no route for reasoning"})
+        emit({"type": "tool_execution_start", "toolCallId": "d3", "toolName": "task",
+              "args": {"agent": "implementation", "tasks": [{"task": "undertake #990009"}]}})
+        if open(sys.argv[0] + ".mode").read() == "crash":
+            sys.exit(3)  # the process dies with d3 still open
+        emit({"type": "tool_execution_end", "toolCallId": "d3", "toolName": "task", "result": "nope"})
+        emit({"type": "agent_end", "isTerminal": True,
+              "messages": [{"role": "assistant",
+                            "usage": {"input": 10, "output": 5, "cacheRead": 0,
+                                      "cacheWrite": 0, "totalTokens": 15}}]})
+        break
+"""
+
+
 def check(condition: bool, message: str) -> None:
     """Fail the whole script on a false condition, naming what was expected."""
     if not condition:
@@ -338,6 +373,50 @@ async def run_provider_error_scenario() -> None:
     print("check-omp-agent-settle: a refused provider call crashes the attempt with its message; a normal turn does not")
 
 
+async def check_dispatch_evidence() -> None:
+    """`record_task_dispatches` keeps every attempted task call, even through a crash."""
+    from coder_eval.errors import AgentCrashError
+    from coder_eval_omp.agent import DISPATCH_EVIDENCE_FILENAME, OmpAgent, OmpAgentConfig
+
+    async def run(mode: str, record: bool = True) -> Path:
+        workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-check-"))
+        fake = Path(tempfile.mkdtemp(prefix="fake-omp-bin-")) / f"fake-omp-{mode}"
+        fake.write_text(FAKE_OMP_DISPATCH)
+        fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        Path(str(fake) + ".mode").write_text(mode)
+        config = OmpAgentConfig(
+            type="omp", binary=str(fake), plugins=[{"type": "local", "path": str(ROOT)}],
+            record_task_dispatches=record,
+        )
+        agent = OmpAgent(config, task_id="dispatch-check")
+        await agent.start(str(workdir))
+        try:
+            await agent.communicate("dispatch", timeout=30)
+        except AgentCrashError:
+            check(mode == "crash", "only the crashing scenario may crash")
+        finally:
+            await agent.stop()
+        return workdir / DISPATCH_EVIDENCE_FILENAME
+
+    for mode in ("clean", "crash"):
+        document = json.loads((await run(mode)).read_text())
+        check(document["version"] == 1 and document["complete"] is True, f"{mode}: versioned, complete document")
+        calls = document["calls"]
+        check([c["call_id"] for c in calls] == ["d1", "d2", "d3"], f"{mode}: every attempted call is kept, got {calls}")
+        first = calls[0]
+        check([t["task"] for t in first["arguments"]["tasks"]] == ["undertake #990009", "undertake #990011"],
+              f"{mode}: the final argument update wins")
+        check(len(first["arguments"]["context"]) == 3000, f"{mode}: no field is truncated")
+        check(first["result"]["details"] == {"jobs": 2} and first["status"] == "ok", f"{mode}: raw result kept")
+        check(calls[1]["status"] == "error", f"{mode}: the rejected call is kept")
+        check(calls[2]["status"] == ("ok" if mode == "clean" else "unresolved"), f"{mode}: the open call's outcome")
+        check(all(c["attempt"] == 1 for c in calls), f"{mode}: attempt identity")
+    off = await run("clean", record=False)
+    check(not off.exists(), "the artifact is opt-in; off writes nothing")
+    print("check-omp-agent-settle: task dispatches are kept whole, rejected and unresolved ones included, "
+          "through a normal end and a crash; off writes nothing")
+
+
 def check_roles_pin() -> None:
     """The arm's `model` pins every Omp chat role in config.yml, and only then."""
     import yaml
@@ -410,6 +489,7 @@ async def check_async_handoff() -> None:
 def main() -> None:
     asyncio.run(run_scenario())
     asyncio.run(check_async_handoff())
+    asyncio.run(check_dispatch_evidence())
     asyncio.run(run_provider_error_scenario())
     check_roles_pin()
 

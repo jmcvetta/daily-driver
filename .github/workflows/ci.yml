@@ -135,6 +135,9 @@ jobs:
       - name: Validate model classes grader
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-classes-grader')
         run: make check-model-classes-grader
+      - name: Validate dispatch grader
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-dispatch-grader')
+        run: make check-dispatch-grader
       - name: Validate eval arms
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-eval-arms')
         run: make check-eval-arms
