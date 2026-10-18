@@ -19,9 +19,11 @@ without adding a decision.
 
 **`embark` lands each merge-ready task pull request by default.** The landing
 gate is an ordered read. The pull request must not be a draft. Its merge state
-must be clean. Every review thread must be resolved. It must carry no `human`
-label and no human-action notice. The first failed read stops that pull request
-and names the reason in one line.
+must be clean. Every review thread must be resolved. The implementor's
+review-cycle completion notice must cover the head under `embark`'s notice
+rule. It must carry no `human` label and no human-action notice. The first
+failed read stops landing and names the reason once; unchanged reads stay
+silent. It does not stop permitted work.
 
 When the reads hold, the orchestrator squash-merges in the same turn,
 conditional on the head SHA read by the gate. A task-session push makes that
@@ -32,9 +34,13 @@ auto-merge could land a head that the orchestrator did not read.
 
 **Landing is not driving the pull request.** The task session still fixes a
 check, answers a review, resolves a conflict, and keeps its branch current.
-The orchestrator performs one read-only gate and one merge call. Landing one
-sibling can move the base for another; each sibling's `undertake` cadence
-handles that movement without serialising the fleet.
+The orchestrator steers unfinished work through the implementor under
+`undertake`'s operational escalation contract, then reads the landing gate and
+merges only when it holds. A real prerequisite pauses the affected operation
+after independent permitted preparation is complete, unless safety requires
+an immediate stop. Draft status and green checks do not replace that
+assessment. Landing one sibling can move the base for another; each sibling's
+`undertake` cadence handles that movement without serialising the fleet.
 
 **The user can keep landing by hand.** The invocation is read once. An
 explicit opt-out writes `Landing: by hand` into the muster roll. The default
@@ -50,5 +56,8 @@ completed. A missing claim is named and the epic stays open. By-hand mode also
 leaves the epic open.
 
 The backstop carries this split in its own prompt. Task sessions drive their
-pull requests. The orchestrator lands merge-ready pull requests, marks waves
-done, and closes a delivered epic.
+pull requests. The orchestrator checks unfinished work and steers authorized
+continuation without taking over the branch or asking again for existing
+permission. It lands merge-ready pull requests, marks waves done, and closes
+a delivered epic. An ended implementor with permitted work resumes only
+through same-branch recovery after checking that no writer remains active.
