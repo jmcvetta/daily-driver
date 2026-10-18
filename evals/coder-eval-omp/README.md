@@ -156,9 +156,15 @@ report's Agent Settings.
 A row that grades which issues an orchestrator assigned sets
 `record_task_dispatches: true` (default off). After the subject stops, on every
 exit path including a timeout or crash, the adapter atomically replaces
-`omp-task-dispatches.json` (`dispatch.py`, version 1). Before publishing each
-complete document, it atomically installs an incomplete marker. A write failure
-or interruption therefore cannot leave an older passing document in place.
+`omp-task-dispatches.json` (`dispatch.py`, version 1). Before sending each
+prompt, it exclusively creates an `omp-task-dispatches.json.pending` directory.
+The grader rejects evidence while that guard exists. The adapter removes it
+only after successful atomic publication and temporary-file cleanup. Failed
+writes, replacement, cleanup or process interruption leave the guard in place;
+no diagnostic write is needed. If the guard cannot be created, the prompt
+does not run. An existing guard blocks retries, including a fresh adapter
+that cannot recover the interrupted attempt's calls. Keep failed sandboxes
+for audit; use a fresh sandbox for a new run, not manual guard removal.
 The artifact holds one record per attempted `task` call, retries included: the
 call and attempt identity, the arguments after their final update (`tasks[]`,
 requested agent and shared context), the outcome, and the raw result with its

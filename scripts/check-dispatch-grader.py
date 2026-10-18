@@ -83,12 +83,19 @@ def evidence(*calls, complete=True):
     return {"version": 1, "complete": complete, "calls": list(calls)}
 
 
-def grade(document, *args) -> tuple[int, str]:
+def grade(document, *args, pending: str | None = None) -> tuple[int, str]:
     """Run the real CLI against `document`, as the case's criteria do."""
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / dispatch.EVIDENCE_FILENAME
         if document is not None:
             path.write_text(document if isinstance(document, str) else json.dumps(document), encoding="utf-8")
+        guard = path.with_name(f"{path.name}.pending")
+        if pending == "directory":
+            guard.mkdir()
+        elif pending == "file":
+            guard.write_text("")
+        elif pending == "dangling_link":
+            guard.symlink_to("missing-target")
         done = subprocess.run(
             [sys.executable, str(GRADER_PATH), "--evidence", str(path), *args],
             capture_output=True,
@@ -109,6 +116,16 @@ def passes(document, *args) -> bool:
 def check_filenames_agree() -> None:
     check(grader.EVIDENCE_FILENAME == dispatch.EVIDENCE_FILENAME, "grader and writer disagree on the artifact name")
     check(grader.EVIDENCE_VERSION == dispatch.EVIDENCE_VERSION, "grader and writer disagree on the version")
+
+
+def check_pending_updates_reject_stale_evidence() -> None:
+    """An atomic old artifact can still pass unless the grader checks its persistent guard."""
+    document = json.loads((EXCERPTS / "with-plugin-04.json").read_text())
+    for pending in ("directory", "file", "dangling_link"):
+        for flags in (REQUIRE_9, REQUIRE_11, FORBID_10):
+            code, output = grade(document, *flags, pending=pending)
+            check(code != 0 and "pending or failed" in output,
+                  f"{pending}: a pending update must block every criterion")
 
 
 def check_excerpts_reproduce_and_correct_the_defects() -> None:

@@ -46,8 +46,10 @@ NEEDS
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import stat
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -710,115 +712,194 @@ async def check_dispatch_evidence() -> None:
 
 
 async def check_failed_dispatch_rewrite() -> None:
-    """A failed initial marker write, later write, or interrupted replace cannot leave prior passable evidence."""
+    """Stale complete JSON must not pass when every diagnostic write is unavailable."""
     from unittest.mock import patch
 
     from coder_eval_omp.agent import DISPATCH_EVIDENCE_FILENAME, OmpAgent, OmpAgentConfig
     from coder_eval_omp.rpc import TurnReducer
 
-    prior_evidence = '{"version":1,"complete":true,"calls":[]}'
+    fixtures = ROOT / "evals/fixtures/fix-daily-driver-bugs"
+    grader = fixtures / "shared/check_dispatch.py"
+    prior_evidence = (fixtures / "dispatch-evidence/with-plugin-04.json").read_text()
+    criteria = (
+        ("--require", "990009", "--agent", "implementation"),
+        ("--require", "990011", "--agent", "implementation"),
+        ("--forbid", "990010"),
+    )
 
-    def configured_agent(workdir: Path) -> OmpAgent:
-        destination = workdir / DISPATCH_EVIDENCE_FILENAME
-        destination.write_text(prior_evidence, encoding="utf-8")
+    def assert_grade(destination: Path, passing: bool) -> None:
+        for flags in criteria:
+            result = subprocess.run(
+                [sys.executable, str(grader), "--evidence", str(destination), *flags],
+                capture_output=True, text=True,
+            )
+            check((result.returncode == 0) == passing,
+                  f"{flags}: unexpected grader result: {result.stdout}{result.stderr}")
+            if not passing:
+                check("pending or failed" in result.stderr, "the guard must explain the failure")
+
+    class Interrupted(BaseException):
+        """Model process death without running an exception fallback."""
+
+    for failure in ("write", "partial_write", "replace", "cleanup", "commit",
+                    "serialize", "interrupt_write", "interrupt_after_replace"):
+        with tempfile.TemporaryDirectory(prefix=f"omp-dispatch-{failure}-") as directory:
+            workdir = Path(directory)
+            destination = workdir / DISPATCH_EVIDENCE_FILENAME
+            guard = destination.with_name(f"{destination.name}.pending")
+            destination.write_text(prior_evidence)
+            assert_grade(destination, True)
+            agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+            agent.working_directory = directory
+            agent._begin_dispatch_evidence()
+            check(destination.read_text() == prior_evidence, "guarding must not mutate published JSON")
+            assert_grade(destination, False)
+
+            # Each injected operation fails every time, including any attempted
+            # diagnostic fallback. No successful second write can hide the bug.
+            write_text, replace, unlink, rmdir = Path.write_text, Path.replace, Path.unlink, Path.rmdir
+
+            def write(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
+                assert_grade(destination, False)
+                if failure in ("write", "partial_write", "interrupt_write"):
+                    if failure == "partial_write":
+                        write_text(path, data[:8], *args, **kwargs)
+                    if failure == "interrupt_write":
+                        raise Interrupted()
+                    raise OSError("injected write failure")
+                return write_text(path, data, *args, **kwargs)
+
+            def publish(path: Path, target: Path) -> Path:
+                check(destination.read_text() == prior_evidence, "old JSON stays whole until replacement")
+                assert_grade(destination, False)
+                if failure == "replace":
+                    raise OSError("injected replace failure")
+                result = replace(path, target)
+                assert_grade(destination, False)
+                if failure == "interrupt_after_replace":
+                    raise Interrupted()
+                return result
+
+            def cleanup(path: Path, *args: Any, **kwargs: Any) -> None:
+                check(path != destination, "published JSON must never be unlinked")
+                if failure == "cleanup":
+                    raise OSError("injected cleanup failure")
+                unlink(path, *args, **kwargs)
+
+            def commit(path: Path) -> None:
+                assert_grade(destination, False)
+                if failure == "commit":
+                    raise OSError("injected commit failure")
+                rmdir(path)
+
+            def serialize(calls: list[dict[str, Any]]) -> str:
+                raise ValueError("injected serialization failure")
+
+            with contextlib.ExitStack() as patches:
+                patches.enter_context(patch.object(Path, "write_text", autospec=True, side_effect=write))
+                patches.enter_context(patch.object(Path, "replace", autospec=True, side_effect=publish))
+                patches.enter_context(patch.object(Path, "unlink", autospec=True, side_effect=cleanup))
+                patches.enter_context(patch.object(Path, "rmdir", autospec=True, side_effect=commit))
+                if failure == "serialize":
+                    patches.enter_context(patch("coder_eval_omp.agent.evidence_document", side_effect=serialize))
+                try:
+                    agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
+                except (OSError, ValueError, Interrupted):
+                    pass
+                else:
+                    check(False, f"{failure}: the persistence error must propagate")
+            check(guard.is_dir(), f"{failure}: the persistent guard must survive")
+            json.loads(destination.read_text())  # replacement never publishes partial JSON
+            assert_grade(destination, False)
+            for retry in (agent, OmpAgent(agent.config)):
+                retry.working_directory = directory
+                try:
+                    retry._begin_dispatch_evidence()
+                except (RuntimeError, FileExistsError):
+                    pass
+                else:
+                    check(False, "neither a retry nor a fresh adapter may seal over missing history")
+            assert_grade(destination, False)
+
+    # Failure to arm the guard is a precondition failure, not an accepted
+    # attempt: the subject must receive no prompt and produce no new calls.
+    with tempfile.TemporaryDirectory(prefix="omp-dispatch-guard-failure-") as directory:
+        destination = Path(directory) / DISPATCH_EVIDENCE_FILENAME
+        destination.write_text(prior_evidence)
         agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
-        agent.working_directory = str(workdir)
-        return agent
+        agent.working_directory = directory
+        agent._process = object()
+        with patch.object(Path, "mkdir", side_effect=OSError("cannot arm guard")), \
+                patch.object(agent, "_begin_turn") as begin_turn:
+            try:
+                await agent.communicate("must not reach subject")
+            except OSError:
+                pass
+            else:
+                check(False, "failure to arm the guard must abort before subject execution")
+            begin_turn.assert_not_called()
+        check(agent._request_id == 0 and not agent._attempts, "no prompt or attempt may start unguarded")
+        check(destination.read_text() == prior_evidence, "precondition failure must not mutate prior JSON")
 
-    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-first-marker-failure-"))
-    destination = workdir / DISPATCH_EVIDENCE_FILENAME
-    agent = configured_agent(workdir)
-    write_text = Path.write_text
-    writes = 0
+    # os._exit bypasses finally blocks, unlike an injected Python exception.
+    for phase in ("before_write", "during_write", "after_replace"):
+        with tempfile.TemporaryDirectory(prefix=f"omp-dispatch-death-{phase}-") as directory:
+            destination = Path(directory) / DISPATCH_EVIDENCE_FILENAME
+            destination.write_text(prior_evidence)
+            script = Path(directory) / "interrupt-dispatch.py"
+            script.write_text("""
+import os
+import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from coder_eval_omp.agent import OmpAgent, OmpAgentConfig
+from coder_eval_omp.rpc import TurnReducer
+agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+agent.working_directory = sys.argv[2]
+agent._begin_dispatch_evidence()
+phase = sys.argv[3]
+if phase == "before_write":
+    os._exit(73)
+write_text, replace = Path.write_text, Path.replace
+def die_writing(path, data, *args, **kwargs):
+    write_text(path, data[:8], *args, **kwargs)
+    os._exit(73)
+def die_after_replace(path, target):
+    replace(path, target)
+    os._exit(73)
+if phase == "during_write":
+    Path.write_text = die_writing
+else:
+    Path.replace = die_after_replace
+agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
+""")
+            process = subprocess.run([
+                sys.executable, str(script), str(ROOT / "evals/coder-eval-omp/src"), directory, phase,
+            ], capture_output=True, text=True)
+            check(process.returncode == 73, f"{phase}: process must die at the injection: {process.stderr}")
+            json.loads(destination.read_text())
+            if phase != "after_replace":
+                check(destination.read_text() == prior_evidence, "death must not expose partial JSON")
+            assert_grade(destination, False)
 
-    def fail_first_marker(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
-        nonlocal writes
-        if path != destination:
-            writes += 1
-            if writes == 1:
-                raise OSError("injected first incomplete-marker write failure")
-        return write_text(path, data, *args, **kwargs)
-
-    try:
-        with patch.object(Path, "write_text", autospec=True, side_effect=fail_first_marker):
-            agent._record_task_dispatches(TurnReducer(), attempt=1, iteration=1)
-    except OSError as error:
-        check("injected first incomplete-marker write failure" in str(error),
-              "the initial marker-write failure must be reported")
-    else:
-        check(False, "a failed initial marker write must not return successfully")
-    incomplete = json.loads(destination.read_text(encoding="utf-8"))
-    check(incomplete["complete"] is False, "a failed initial marker write must atomically replace prior passable evidence")
-    check("first incomplete-marker write failure" in incomplete["error"],
-          "the non-passing artifact must explain the initial marker-write failure")
-
-    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-write-failure-"))
-    destination = workdir / DISPATCH_EVIDENCE_FILENAME
-    agent = configured_agent(workdir)
-    write_text = Path.write_text
-    writes = 0
-
-    def fail_final_write(path: Path, data: str, *args: Any, **kwargs: Any) -> int:
-        nonlocal writes
-        if path != destination:
-            writes += 1
-            if writes == 2:
-                raise OSError("injected final evidence write failure")
-        return write_text(path, data, *args, **kwargs)
-
-    try:
-        with patch.object(Path, "write_text", autospec=True, side_effect=fail_final_write):
-            agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
-    except OSError as error:
-        check("injected final evidence write failure" in str(error), "a failed evidence write must be reported")
-    else:
-        check(False, "a failed final evidence write must not return successfully")
-    incomplete = json.loads(destination.read_text(encoding="utf-8"))
-    check(incomplete["complete"] is False, "a failed update must leave explicit non-passing evidence")
-
-    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-interrupted-replace-"))
-    destination = workdir / DISPATCH_EVIDENCE_FILENAME
-    agent = configured_agent(workdir)
-    replace = Path.replace
-    replacements = 0
-
-    def interrupt_final_replace(path: Path, target: Path) -> Path:
-        nonlocal replacements
-        replacements += 1
-        if replacements == 2:
-            raise OSError("injected final artifact replacement failure")
-        return replace(path, target)
-
-    try:
-        with patch.object(Path, "replace", autospec=True, side_effect=interrupt_final_replace):
-            agent._record_task_dispatches(TurnReducer(), attempt=2, iteration=1)
-    except OSError as error:
-        check("injected final artifact replacement failure" in str(error), "a failed replacement must be reported")
-    else:
-        check(False, "a failed final replacement must not return successfully")
-    incomplete = json.loads(destination.read_text(encoding="utf-8"))
-    check(incomplete["complete"] is False, "interruption between atomic replacements must leave no passable artifact")
-
-    workdir = Path(tempfile.mkdtemp(prefix="omp-dispatch-no-unlink-"))
-    destination = workdir / DISPATCH_EVIDENCE_FILENAME
-    agent = configured_agent(workdir)
-    destination.write_text('{"version":1,"complete":true,"calls":[],"stale":true}', encoding="utf-8")
-    stale_evidence = json.loads(destination.read_text(encoding="utf-8"))
-    check(stale_evidence["complete"] is True, "the fixture must begin as passable evidence")
-
-    unlink = Path.unlink
-
-    def refuse_destination_unlink(path: Path, *args: Any, **kwargs: Any) -> None:
-        if path == destination:
-            raise OSError("destination must be replaced atomically, not unlinked")
-        unlink(path, *args, **kwargs)
-
-    with patch.object(Path, "unlink", autospec=True, side_effect=refuse_destination_unlink):
-        agent._record_task_dispatches(TurnReducer(), attempt=3, iteration=1)
-    published = json.loads(destination.read_text(encoding="utf-8"))
-    check(published["complete"] is True, "an unlink failure cannot block the atomic replacement")
-    check("stale" not in published, "atomic replacement must supersede old passable evidence")
-    print("check-omp-agent-settle: failed dispatch writes and interrupted atomic replacement fail closed")
+    with tempfile.TemporaryDirectory(prefix="omp-dispatch-atomic-success-") as directory:
+        destination = Path(directory) / DISPATCH_EVIDENCE_FILENAME
+        destination.write_text(prior_evidence)
+        agent = OmpAgent(OmpAgentConfig(type="omp", record_task_dispatches=True))
+        agent.working_directory = directory
+        for attempt in (1, 2):
+            agent._begin_dispatch_evidence()
+            reducer = TurnReducer()
+            reducer.feed({
+                "type": "tool_execution_start", "toolName": "task", "toolCallId": f"d{attempt}",
+                "args": {"agent": "implementation", "tasks": [{"task": "undertake #990010"}]},
+            })
+            agent._record_task_dispatches(reducer, attempt=attempt, iteration=1)
+            check(not destination.with_name(f"{destination.name}.pending").exists(), "commit removes the guard")
+        document = json.loads(destination.read_text())
+        check([call["attempt"] for call in document["calls"]] == [1, 2], "successful retries retain prior calls")
+        check(document["complete"] is True, "successful replacement publishes complete JSON")
+    print("check-omp-agent-settle: guarded atomic dispatch publication fails closed without fallback writes")
 
 
 def check_roles_pin() -> None:

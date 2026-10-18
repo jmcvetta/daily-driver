@@ -202,6 +202,15 @@ def main(argv: list[str] | None = None) -> int:
 
     path = Path(args.evidence)
     try:
+        guard = path.with_name(f"{path.name}.pending")
+        # lstat detects a directory, file, or dangling link. Only absence
+        # proves that the adapter committed the current attempt.
+        try:
+            guard.lstat()
+        except FileNotFoundError:
+            pass
+        else:
+            raise Unclear("task-dispatch evidence update is pending or failed")
         evidence = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(evidence, dict):
             raise Unclear("evidence is not a JSON object")

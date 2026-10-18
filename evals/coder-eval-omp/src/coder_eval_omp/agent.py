@@ -282,6 +282,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._argument_keys_seen: set[str] = set()
         self._cancelled_subagents: list[str] = []
         self._dispatch_calls: list[dict[str, Any]] = []
+        self._dispatch_guard: Path | None = None
         self._attempts: list[dict[str, Any]] = []
         self._attempt_overflow = 0
         self._attempt: dict[str, Any] | None = None
@@ -509,16 +510,28 @@ class OmpAgent(Agent[OmpAgentConfig]):
         if self._attempt is not None and self._attempt["exit_reason"] is None:
             self._attempt["exit_reason"] = reason
 
-    def _record_task_dispatches(self, reducer: TurnReducer, attempt: int, iteration: int) -> None:
-        """Add this attempt's `task` calls and atomically rewrite their artifact.
+    def _begin_dispatch_evidence(self) -> None:
+        """Block grading before the subject can produce unrecorded task calls."""
+        if not self.config.record_task_dispatches or self.working_directory is None:
+            return
+        if self._dispatch_guard is not None:
+            raise RuntimeError("a previous task-dispatch evidence update did not finish")
+        guard = Path(self.working_directory) / f"{DISPATCH_EVIDENCE_FILENAME}.pending"
+        # Exclusive creation also rejects an interrupted prior adapter. Its
+        # calls may be lost, so a fresh adapter must not seal over that gap.
+        guard.mkdir()
+        self._dispatch_guard = guard
 
-        Runs from `communicate`'s `finally`, so timeouts, crashes and
-        cancellations keep calls that were really attempted. It first
-        atomically publishes an incomplete document, so a failed final write
-        or interruption cannot leave older passable evidence behind.
+    def _record_task_dispatches(self, reducer: TurnReducer, attempt: int, iteration: int) -> None:
+        """Publish all attempted calls atomically, then allow grading.
+
+        The guard was created before the prompt. Any failure or interruption
+        leaves it in place, even if writing a diagnostic is impossible.
         """
         if not self.config.record_task_dispatches or self.working_directory is None:
             return
+        if self._dispatch_guard is None:
+            raise RuntimeError("task-dispatch evidence was not guarded before the prompt")
         reducer.close_open_tools()
         self._dispatch_calls.extend(
             task_call_records(reducer.tool_calls, attempt=attempt, iteration=iteration)
@@ -530,29 +543,17 @@ class OmpAgent(Agent[OmpAgentConfig]):
             text = error_document(str(error))
         destination = Path(self.working_directory) / DISPATCH_EVIDENCE_FILENAME
         temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
-        marker_failure = destination.with_name(f".{destination.name}.{os.getpid()}.failed.tmp")
         try:
-            try:
-                temporary.write_text(error_document("task-dispatch evidence update is incomplete"), encoding="utf-8")
-                temporary.replace(destination)
-            except OSError as error:
-                # A failed marker write leaves the old artifact in place. Publish
-                # a non-passing marker through a separate atomic replacement.
-                with contextlib.suppress(FileNotFoundError):
-                    temporary.unlink()
-                try:
-                    marker_failure.write_text(error_document(f"could not publish incomplete marker: {error}"), encoding="utf-8")
-                    marker_failure.replace(destination)
-                except OSError as marker_error:
-                    raise error from marker_error
-                raise
             temporary.write_text(text, encoding="utf-8")
             temporary.replace(destination)
         finally:
             with contextlib.suppress(FileNotFoundError):
                 temporary.unlink()
-            with contextlib.suppress(FileNotFoundError):
-                marker_failure.unlink()
+        # This is the commit point. Failure keeps even a complete artifact
+        # non-passing; no fallback write is needed.
+        self._dispatch_guard.rmdir()
+        self._dispatch_guard = None
+
     # --- the turn ----------------------------------------------------------
 
     async def communicate(
@@ -568,6 +569,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         if proc is None or self.working_directory is None:
             raise RuntimeError("OmpAgent.start() must be called before communicate()")
 
+        self._begin_dispatch_evidence()
         self._begin_turn()
         collector = EventCollector()
         reducer = TurnReducer()
