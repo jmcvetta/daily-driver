@@ -9,6 +9,7 @@ where it can be asserted rather than inline in `agent.py`.
 from __future__ import annotations
 
 import os
+import json
 from collections.abc import Mapping, Sequence
 from importlib.resources import files
 from pathlib import Path
@@ -28,6 +29,9 @@ OMP_CONFIG = "skills:\n  enableSkillCommands: true\nfetch:\n  enabled: false\n"
 
 #: The child environment variable `eval_guard.js` reads the row's grant from.
 TOOLS_ENV = "CODER_EVAL_OMP_TOOLS"
+
+#: JSON read boundary consumed by the eval guard in each RPC child.
+READ_POLICY_ENV = "CODER_EVAL_OMP_READ_POLICY"
 
 
 def guard_path() -> Path:
@@ -66,13 +70,18 @@ def child_env(
     home: Path,
     path_prepend: Sequence[str],
     tools: ToolSelection,
+    *,
+    task_root: Path,
+    plugin_roots: Sequence[Path] = (),
 ) -> dict[str, str]:
     """The child's environment: `base`, pointed at the throwaway home.
 
     The PATH prepend is `Agent.start`'s mock-shadowing contract: the sandbox's
     mock CLI directories must resolve before the real binaries, or a task
     grading a mocked CLI silently exercises the real one. `TOOLS_ENV` tells the
-    guard which tools the row granted.
+    guard which tools the row granted. `READ_POLICY_ENV` replaces any inherited
+    policy with this task and its linked treatment documents, never provider
+    storage or the whole host checkout.
     """
     env = dict(base)
     if path_prepend:
@@ -81,4 +90,13 @@ def child_env(
     for name in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
         env[name] = str(home / name.lower())
     env[TOOLS_ENV] = ",".join(tools.tools)
+    documents = [
+        str(candidate.resolve())
+        for root in plugin_roots
+        for name in ("skills", "rules", "docs", "HAIKU.md", "README.md")
+        if (candidate := root / name).exists()
+    ]
+    env[READ_POLICY_ENV] = json.dumps(
+        {"taskRoot": str(task_root.resolve()), "documentRoots": documents}
+    )
     return env

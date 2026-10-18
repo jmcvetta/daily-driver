@@ -849,7 +849,13 @@ class OmpAgent(Agent[OmpAgentConfig]):
 
     def _child_env(self, home: Path) -> dict[str, str]:
         """The child's environment: the caller's, as `launch.child_env` builds it."""
-        return child_env(os.environ, home, self._env_path_prepend, self._tools)
+        if self.working_directory is None:
+            raise RuntimeError("A task directory is required for the read boundary")
+        return child_env(
+            os.environ, home, self._env_path_prepend, self._tools,
+            task_root=Path(self.working_directory),
+            plugin_roots=[Path(root) for root in self._linked_plugins],
+        )
 
     def _next_request_id(self) -> str:
         self._request_id += 1
