@@ -56,6 +56,11 @@ TIMEOUT_SECONDS = 180.0
 PROVIDER = "guard-probe"
 MODEL = "guard-probe-model"
 INSIDE_TEXT = "inside the sandbox"
+CANARY_FILE = "canary-636.txt"
+#: Marks a request as the task child's. The parent prompt never contains it.
+CHILD_MARK = "child-seq"
+#: The child's scripted calls after the canary: forbidden targets, one per step.
+CHILD_FORBIDDEN = (("read", {"path": "issue://o/r/1"}), ("read", {"path": "agent://all"}))
 
 #: Prompt -> (the tool call the mock makes, what its result must contain).
 PROBES: dict[str, tuple[str, dict, str]] = {
@@ -94,6 +99,10 @@ class MockModel(BaseHTTPRequestHandler):
     """
 
     results: dict[str, str] = {}
+    #: What each of the task child's scripted calls returned, in order.
+    child_results: list[str] = []
+    #: Probes for a run that passes its own set to `run_probes`.
+    extra_probes: dict[str, tuple[str, dict, str]] = {}
 
     def log_message(self, *args) -> None:
         pass
@@ -107,12 +116,36 @@ class MockModel(BaseHTTPRequestHandler):
         user = next((text_of(m.get("content")) for m in reversed(messages) if m.get("role") == "user"), "")
         found = re.findall(r"probe-[a-z]+", user)
         probe = found[-1] if found else ""
-        if last.get("role") == "tool":
+        child = any(CHILD_MARK in text_of(m.get("content")) for m in messages if m.get("role") == "user")
+        if child:
+            # The task child: a harmless canary first, then forbidden targets only
+            # once the sentinel's refusal of the canary proves it is loaded here.
+            tools_seen = [text_of(m.get("content")) for m in messages if m.get("role") == "tool"]
+            MockModel.child_results[:] = tools_seen
+            step = len(tools_seen)
+            if step == 0:
+                call = ("read", {"path": CANARY_FILE})
+            elif step == 1 and "SENTINEL" not in tools_seen[0]:
+                call = None  # the sentinel is not active in the child: issue nothing forbidden
+            elif step - 1 < len(CHILD_FORBIDDEN):
+                call = CHILD_FORBIDDEN[step - 1]
+            else:
+                call = None
+            if call is None:
+                delta = {"role": "assistant", "content": "done"}
+                finish = "stop"
+            else:
+                delta = {"role": "assistant", "tool_calls": [{"index": 0, "id": f"call-child-{step}", "type": "function",
+                         "function": {"name": call[0], "arguments": json.dumps(call[1])}}]}
+                finish = "tool_calls"
+        elif last.get("role") == "tool":
             MockModel.results[probe] = text_of(last.get("content"))
             delta = {"role": "assistant", "content": "done"}
             finish = "stop"
         else:
-            tool, arguments, _ = PROBES.get(probe, ("read", {"path": "inside.txt"}, ""))
+            tool, arguments, _ = (PROBES | MockModel.extra_probes).get(
+                probe, ("read", {"path": "inside.txt"}, "")
+            )
             delta = {
                 "role": "assistant",
                 "tool_calls": [
@@ -182,9 +215,36 @@ def read_frames(stream, sink: queue.Queue) -> None:
     sink.put(None)
 
 
-def run_probes(omp: str, env: dict[str, str], sandbox: Path, stderr_path: Path) -> None:
+SENTINEL_EXTENSION = """\
+// Test-only fallback, loaded after the real guard. It blocks a harmless canary
+// and the forbidden URIs with a distinct reason, so the harness can tell a child
+// that lost the real guard (SENTINEL) from one that kept it.
+export default function sentinel(pi) {
+	pi.on("tool_call", (event) => {
+		// The dispatch itself carries warning prose; only the real guard rules on it.
+		if (event.toolName === "task") return undefined;
+		const text = JSON.stringify(event.input ?? {});
+		if (text.includes("%s") || /(issue|pr|agent):\\/\\//.test(text)) {
+			return { block: true, reason: "SENTINEL: the real eval guard did not refuse this first" };
+		}
+		return undefined;
+	});
+}
+""" % CANARY_FILE
+
+
+def run_probes(
+    omp: str,
+    env: dict[str, str],
+    sandbox: Path,
+    stderr_path: Path,
+    probes=None,
+    tools=("Read", "Grep", "Glob"),
+    extra=(),
+) -> None:
     """Send each probe as one prompt and wait for its turn to settle."""
-    argv = rpc_argv(omp, select_tools(["Read", "Grep", "Glob"], None), ["--no-title"])
+    probes = PROBES if probes is None else probes
+    argv = rpc_argv(omp, select_tools(list(tools), None), ["--no-title", *extra])
     with stderr_path.open("w", encoding="utf-8") as stderr_file:
         process = subprocess.Popen(
             argv,
@@ -230,9 +290,9 @@ def run_probes(omp: str, env: dict[str, str], sandbox: Path, stderr_path: Path) 
             send({"id": "commands", "type": "get_available_commands"})
             registry = wait_for(lambda f: f.get("type") == "response" and f.get("id") == "commands", "commands")
             skills = [entry for entry in registry.get("data", {}).get("commands", []) if entry["name"].startswith("skill:")]
-            if bool(skills) != ("probe-skill" in PROBES):
+            if probes is PROBES and bool(skills) != ("probe-skill" in PROBES):
                 raise CheckFailed(f"unexpected skill registry: {skills}", stderr_path.read_text(encoding="utf-8"))
-            for probe in PROBES:
+            for probe in probes:
                 send({"id": probe, "type": "prompt", "message": probe})
                 wait_for(lambda f: f.get("type") == "agent_end" and f.get("isTerminal", True), f"{probe} to settle")
             process.stdin.close()
@@ -329,6 +389,59 @@ def main() -> None:
                 if (sandbox / "pwned.txt").exists():
                     raise CheckFailed("probe-write: the refused write still created pwned.txt", stderr_text)
                 print(f"check-omp-eval-guard-live: {variant}: {len(PROBES)} offline probes passed")
+
+                # #636: a task whose prose warns off issue://, pr:// and agent://
+                # must start its worker, and that worker's own forbidden reads must
+                # still meet the real guard. A fresh session keeps the first run's
+                # state out of it; the grant adds Task.
+                (sandbox / CANARY_FILE).write_text("canary", encoding="utf-8")
+                sentinel = Path(tmp) / variant / "sentinel.js"
+                sentinel.write_text(SENTINEL_EXTENSION, encoding="utf-8")
+                task_tools = select_tools(["Read", "Grep", "Glob", "Task"], None)
+                task_env = child_env(base, home, [], task_tools, task_root=sandbox, plugin_roots=plugins)
+                warning = f"{CHILD_MARK} Never use issue:// or pr://; do not access agent://parent."
+                task_probes = {
+                    # A resolver target in a non-prose field is still refused on the live path.
+                    "probe-taskfield": ("task", {"context": "offline", "target": "issue://o/r/1"},
+                                        "issue:// is outside this eval's sandbox"),
+                    "probe-task": ("task", {
+                        "context": warning,
+                        "tasks": [{"id": "Probe", "description": "offline safety warning", "task": warning}],
+                    }, ""),
+                }
+                if plugins:
+                    # The plugin shuts `task` until the session is titled, as a
+                    # real undertaking titles it first.
+                    task_probes = {"probe-title": (
+                        "write",
+                        {"path": "xd://daily_driver_set_session_title", "content": '{"title":"#636 guard probe"}'},
+                        "",
+                    ), **task_probes}
+                MockModel.results.clear()
+                MockModel.child_results.clear()
+                MockModel.extra_probes = task_probes
+                task_stderr = Path(tmp) / f"{variant}-omp-task-stderr.log"
+                run_probes(omp, task_env, sandbox, task_stderr, task_probes, ("Read", "Grep", "Glob", "Task"),
+                           ["--extension", str(sentinel)])
+                task_text = task_stderr.read_text(encoding="utf-8")
+                MockModel.extra_probes = {}
+                if "issue:// is outside this eval's sandbox" not in MockModel.results.get("probe-taskfield", ""):
+                    raise CheckFailed(
+                        f"{variant}/probe-taskfield: a task with a resolver target outside the prose fields must be "
+                        f"refused, got {MockModel.results.get('probe-taskfield')!r}", task_text)
+                child = MockModel.child_results
+                if len(child) < 3:
+                    raise CheckFailed(
+                        f"{variant}/probe-task: the task was refused or its child never ran the forbidden probes: "
+                        f"parent result {MockModel.results.get('probe-task')!r}, child results {child!r}", task_text)
+                if "SENTINEL" not in child[0]:
+                    raise CheckFailed(f"{variant}/probe-task: the sentinel did not intercept the canary in the child: {child[0]!r}", task_text)
+                for scheme, got in zip(("issue", "agent"), child[1:3]):
+                    if f"{scheme}:// is outside this eval's sandbox" not in got or "SENTINEL" in got:
+                        raise CheckFailed(
+                            f"{variant}/probe-task: the child's {scheme}:// read must meet the real guard, got {got[:300]!r}",
+                            task_text)
+                print(f"check-omp-eval-guard-live: {variant}: task prose accepted; child forbidden reads refused by the real guard")
     finally:
         server.shutdown()
 

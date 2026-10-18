@@ -15,7 +15,12 @@
  *    `<scheme>://` outside `ALLOWED_SCHEMES` is refused. Substrings, not whole
  *    strings, because Omp splits a `;` list and resolves each part; Omp's own
  *    `readTier` takes the same fail-closed approach. `bash` is out of scope: a
- *    row that allows `Bash` has the network on both harnesses.
+ *    row that allows `Bash` has the network on both harnesses. The one
+ *    exception is the `task` tool's documented prose fields (`context`, each
+ *    entry's `task`, `solutionSpace`, `intent`, `name`, `description`): they
+ *    instruct a worker and resolve nothing, so a warning such as `Never use
+ *    issue://` passes. Every other field of a `task` call is still scanned, and
+ *    the worker's own tool calls reach this handler too.
  * 2. Where the row's grant has no `write`, a `write` whose path is not an
  *    `xd://` device is refused. The adapter passes the grant in
  *    `CODER_EVAL_OMP_TOOLS`. The adapter always sets it, so a guard that finds
@@ -48,6 +53,31 @@ function* strings(value) {
 	}
 }
 
+/**
+ * The `task` tool's documented prose fields: instructions and labels for the
+ * worker, never resolver targets. Text such as `Never use issue://` there is a
+ * warning, and refusing it stops a handoff from starting its worker.
+ */
+const TASK_PROSE_FIELDS = new Set(["context", "task", "solutionSpace", "intent", "name", "description"]);
+
+/**
+ * `input` without the `task` tool's prose fields, at the top level and in each
+ * entry of `tasks`. Any other field, known or not, stays and is still scanned,
+ * so a target hidden in an unexpected position fails closed.
+ */
+function withoutTaskProse(input) {
+	if (input === null || typeof input !== "object" || Array.isArray(input)) return input;
+	const kept = {};
+	for (const [key, value] of Object.entries(input)) {
+		if (TASK_PROSE_FIELDS.has(key) && typeof value === "string") continue;
+		kept[key] =
+			key === "tasks" && Array.isArray(value)
+				? value.map((entry) => (Array.isArray(entry) ? entry : withoutTaskProse(entry)))
+				: value;
+	}
+	return kept;
+}
+
 /** The first scheme in `input` outside the allow list, lowercased, or null. */
 export function refusedScheme(input) {
 	for (const text of strings(input)) {
@@ -74,7 +104,7 @@ export function grantedTools(env) {
 /** The refusal for one tool call, or undefined to let it run. */
 export function guardToolCall(event, env, commands = []) {
 	if (event.toolName === "bash") return undefined;
-	const scheme = refusedScheme(event.input);
+	const scheme = refusedScheme(event.toolName === "task" ? withoutTaskProse(event.input) : event.input);
 	if (scheme !== null) {
 		return {
 			block: true,
