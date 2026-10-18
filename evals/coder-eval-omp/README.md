@@ -74,6 +74,21 @@ map fails the task before Omp starts. One exception: an allowed `Skill` keeps
 reading `skill://<name>`. The agent logs it for each task.
 `docs/notes/0013-the-omp-arm.md` records what `--tools` does not restrict.
 
+**File tools stay within declared inputs.** `read`, `grep` and `glob` can read
+the task root and the linked treatment's `skills/`, `rules/`, `docs/`,
+`HAIKU.md` and `README.md`. A bare session gets only the task root.
+`skill://` access also requires a skill in the running session's registry.
+Canonical paths and descendant symlinks are checked before execution. A tree
+with an escaping symlink is refused as a whole.
+
+Use existing files, line selectors and `;`-joined targets. Searches support
+ordinary `*` and `?` globs. Missing targets, ambiguous forms and brace or
+character-class globs fail closed instead of reaching runtime path recovery.
+Provider files, sibling results and host evaluation definitions are not inputs.
+The adapter sets `CODER_EVAL_OMP_READ_POLICY`; do not supply it from an experiment.
+This is a file-tool guard, not OS isolation. A row granting Bash can still read
+the host through the shell. Concurrent filesystem mutation is not isolated.
+
 **A thinking suffix is a separate RPC setting.** Experiments name a model as
 `provider/model:level`, but Omp's `set_model` accepts only the provider and
 model id. `rpc.model_commands` strips a recognized level such as `:high` and
