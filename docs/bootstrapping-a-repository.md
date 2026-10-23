@@ -16,13 +16,6 @@ performed from outside.
 Each harness stores and loads its own installation. Add the marketplace and
 install the plugin in the environment where you use that harness:
 
-**Claude Code**
-
-```sh
-claude plugin marketplace add jmcvetta/daily-driver
-claude plugin install daily-driver@daily-driver
-```
-
 **Omp**
 
 ```sh
@@ -32,6 +25,12 @@ omp plugin install daily-driver@daily-driver
 
 Run `omp plugin list` to confirm installation.
 
+**Claude Code**
+
+```sh
+claude plugin marketplace add jmcvetta/daily-driver
+claude plugin install daily-driver@daily-driver
+```
 **Codex**
 
 ```sh

@@ -15,18 +15,18 @@ Install the plugin in the environment where you use it. Detailed setup,
 migration, cloud configuration and compatibility limits are in
 [Repository setup](docs/bootstrapping-a-repository.md).
 
-### Claude Code
-
-```sh
-claude plugin marketplace add jmcvetta/daily-driver
-claude plugin install daily-driver@daily-driver
-```
-
 ### Omp
 
 ```sh
 omp plugin marketplace add jmcvetta/daily-driver
 omp plugin install daily-driver@daily-driver
+```
+
+### Claude Code
+
+```sh
+claude plugin marketplace add jmcvetta/daily-driver
+claude plugin install daily-driver@daily-driver
 ```
 
 ### Codex
