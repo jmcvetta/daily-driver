@@ -4,11 +4,15 @@ Daily Driver shares skill instructions and a marketplace catalog across Claude C
 
 ## Runtime integration
 
-Claude Code and Codex use hooks to load the constitution and direct questions to chat rather than a multiple-choice widget:
+Claude Code and Codex use hooks for the constitution and chat-based question
+routing. Codex subagent injection is not verified: its configured
+`SubagentStart` event was not observed, as the [Codex integration
+note](notes/0016-three-harnesses-one-skill-tree.md#known-limits-recorded-rather-than-fixed)
+records.
 
 | Hook | Event | Purpose |
 | ---- | ----- | ------- |
-| `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers `rules/constitution.md` to the session and its subagents. |
+| `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers the constitution at session start; Codex subagent delivery is unverified. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the question widget and directs questions to chat. |
 | `title-gate.py` | Issue-comment and session-creation events | On Claude Code cloud sessions, holds the first issue comment and dispatch until the session is titled. |
 
