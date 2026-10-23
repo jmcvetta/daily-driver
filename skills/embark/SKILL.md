@@ -486,8 +486,15 @@ pull request.
 2. **Its merge state is `clean`.** This is the value `undertake`'s `The
    milestone` reads, and only `clean` is a yes here. `behind`, `dirty`,
    `unstable`, and `unknown` belong to the task session or to a wait.
-   `blocked` after the draft is clear means a required approval only a person
-   can give; record that once on the epic in the task's muster-roll entry.
+   `blocked` means an unresolved merge gate, not proof that a person must
+   approve. Read current-head CI through `review-cycle`'s checks and status
+   routes (and workflow runs where supported), review requirements/decision,
+   unresolved threads, and explicit human blockers through the active harness
+   reference. Pending CI is an external wait; failed checks remain implementor
+   work. Name a required human contribution only when that evidence establishes
+   it. If the cause is unknown or a read is unavailable, record an unresolved
+   merge gate, not an approval requirement. Keep the existing continuation
+   while the gate is unresolved; do not merge or abandon the watch.
 3. **No review thread is unresolved.** Use the thread read named by
    `review-cycle`'s reference for the active harness.
 4. **The implementor marked the review cycle complete for this head.** Read

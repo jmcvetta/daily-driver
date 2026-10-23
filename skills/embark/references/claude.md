@@ -180,6 +180,8 @@ The watch
 | `Watch the wave` | Archive a finished session | `mcp__Claude_Code_Remote__archive_session` |
 | `Watch the wave` | Post the archive record after successful archival | `mcp__github__add_issue_comment` |
 | `Land the pull request` | Read a task/bug PR draft, merge state, head SHA, labels, and body | `mcp__github__pull_request_read`, method `get` |
+| `Land the pull request` | Diagnose blocked CI | `review-cycle`'s `references/claude.md` checks and status reads |
+| `Land the pull request` | Read the aggregate review decision when available | Authenticated `gh pr view <number> --repo <owner>/<repo> --json headRefOid,reviewDecision`; if unavailable, report that evidence gap |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
 | `Land the pull request` | Read the review-cycle completion notice | `mcp__github__pull_request_read`, method `get_comments`, every page — `user.login` |
 | `Land the pull request` | Read the commits after the notice's SHA | `mcp__github__get_commit`, from `head.sha` back along first parents — `parents` |
@@ -203,6 +205,15 @@ to. The same `get` call supplies the labels and body for the human-action read.
 The complete thread read is the one `review-cycle`'s `Review history,
 publication, and threads` names; a partial review-comments page does not
 answer the gate.
+
+`blocked` alone does not identify a required approval. The aggregate
+`reviewDecision: REVIEW_REQUIRED` establishes an outstanding review
+requirement; a missing or empty decision does not prove that all requirements
+are satisfied. Individual review comments do not establish repository review
+requirements. Combine this evidence with current-head CI, complete threads,
+and explicit blockers. Pending CI retains the existing continuation. Missing
+access or inconclusive evidence leaves the cause unresolved, not human-only.
+Only `clean` can pass the merge-state read.
 
 The completion read is the conversation-comment read `review-cycle`'s
 `Review-cycle completion notice` names, read to the last page: the latest
