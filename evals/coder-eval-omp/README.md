@@ -176,10 +176,14 @@ synthesized.
 
 `evals/fixtures/fix-daily-driver-bugs/shared/check_dispatch.py` grades it with
 the supported `run_command` criterion, one assignment per `tasks[]` entry,
-using only each entry's `task` text. `make check-dispatch-grader` covers the
-parsing rules, the observed `Spawned N background agents using <agent>.` result
-format and the committed excerpts under `fixtures/fix-daily-driver-bugs/
-dispatch-evidence/`; `make check-omp-agent-settle` drives the adapter itself.
+using only each entry's `task` text. It requires a complete list of distinct
+jobs after the successful `Spawned N background agents using <agent>.` header.
+It accepts the observed Omp `Coordinate` paragraph only in its captured form
+and with a count matching the launch. Other suffixes, or extra launch-like
+lines after it, stay unknown and cannot pass.
+`make check-dispatch-grader` covers these parsing rules and the committed
+excerpts under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`;
+`make check-omp-agent-settle` drives the adapter itself.
 
 ## Cost
 

@@ -96,3 +96,5 @@ One row per committed record, oldest first.
 | 2026-10-18 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | omp-gpt-6.1-sol (run-selected) | 10 | 0/10 | $2.16 | no task completed | 1h 17m 21s |
 | 2026-10-18 | omp-gpt-6-1-sol-workflow | omp | openai-codex/gpt-6.1-sol:high (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | not recorded | not recorded | 0m 58s |
 | 2026-10-18 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 2m 13s |
+| 2026-10-23 | case03-unavailable-route-acceptance | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 0/1 | $0.13 | no task completed | 6m 18s |
+| 2026-10-23 | probe-route-overlay | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | not recorded | 1 | 1/1 | $0.01 | $0.01 | 1m 04s |

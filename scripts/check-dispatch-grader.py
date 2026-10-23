@@ -16,6 +16,10 @@ tasks beyond its 2000-character window, a capitalised `Undertake`, and a
 shared-context prohibition counted as a dispatch. They are rebuilt from the
 offsets and texts the issue (#635) preserved, because the run directory they
 came from is local and ignored. The historical records are untouched.
+
+The observed 2026-10-23 case-03 launch also includes Omp's trailing
+`Coordinate:` paragraph. Its exact dispatch call is preserved as a focused
+fixture so the real result is graded offline without rewriting the live run.
 """
 
 from __future__ import annotations
@@ -230,9 +234,12 @@ def check_launch_results() -> None:
                  "Spawned 1 background agents using implementation.\n- one",
                  "Spawned 2 background agents using implementation.",
                  "Spawned 2 background agents using implementation.\n- same\n- same",
+                 "Spawned 2 background agents using implementation.\n- \n- worker-2",
+                 "Spawned 2 background agents using implementation.\n- worker-1\n- worker-2\n- worker-3",
                  "Spawned 2 background agents using reasoning.\n- a\n- b",
                  "Started two agents",
                  "Spawned 2 background agents using implementation.\nsurprise\n- a\n- b",
+                 "Spawned 2 background agents using implementation.\n- worker-1\n- worker-2\nsurprise",
                  ""):
         document = required(result=text, result_text=text)
         check(not passes(document, *REQUIRE_9) and not passes(document, *REQUIRE_11), f"unproven launch {text!r}")
@@ -240,6 +247,28 @@ def check_launch_results() -> None:
     check(not passes(required(result_text=None), *REQUIRE_9), "no result text, no launch")
     solo = evidence(call([entry("undertake #990009")], text="Spawned 1 background agent using implementation.\n- w"))
     check(passes(solo, *REQUIRE_9), "the singular header is the same format")
+
+
+def check_observed_coordinate_result_is_scoped() -> None:
+    """Catch false negatives for the captured launch and false passes for malformed or arbitrary suffixes."""
+    observed = json.loads((EXCERPTS / "with-plugin-coordinate.json").read_text())
+    check(passes(observed, *REQUIRE_9) and passes(observed, *REQUIRE_11),
+          "the preserved Omp launch with its Coordinate paragraph must pass")
+
+    call_record = observed["calls"][0]
+    original = call_record["result_text"]
+    for text in (
+        original + "\narbitrary trailing note",
+        original.replace("Coordinate: 2 siblings", "Coordinate: 1 siblings", 1),
+        original.replace("before editing shared files.", "before changing files.", 1),
+        original + "\n- late-job (job_003)",
+        original.replace("\nCoordinate:", "\nunexpected\nCoordinate:", 1),
+        original + "\nCoordinate: 2 siblings are running together.",
+    ):
+        invalid = copy.deepcopy(observed)
+        invalid["calls"][0]["result_text"] = text
+        check(not passes(invalid, *REQUIRE_9) and not passes(invalid, *REQUIRE_11),
+              f"malformed launch suffix must remain unknown: {text!r}")
 
 
 def frame(kind, call_id, **fields):

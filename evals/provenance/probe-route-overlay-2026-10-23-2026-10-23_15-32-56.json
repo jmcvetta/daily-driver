@@ -1,0 +1,97 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "The reasoning agent is dispatched exactly once",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/\"agent\":\\s*\"reasoning\"/)\nExamples: ['Agent({\"context\": \"# Goal\\\\nProbe task delegation with an unavailable agent route.\", \"t)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The spawn fails for want of a model",
+          "details": "Pattern 'No model selected' found in file (matched: 'No model selected')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "probe-route-overlay-01-missing-provider",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.0134556,
+      "cost_source": "reported",
+      "elapsed_seconds": 64.06121635437012,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "probe-route-overlay",
+      "task_id": "probe-route-overlay-01-missing-provider",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 26432,
+        "output_tokens": 673,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7496
+      },
+      "tokens": 34601,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.12.6",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-23T15:34:00.216009",
+  "experiment_id": "probe-route-overlay",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "ec2d19e519fd5f8ce5cd918ba409cc1f478f0c87",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-23T08:34:22.528329+00:00",
+  "run_id": "2026-10-23_15-32-56",
+  "schema_version": 5,
+  "started_at": "2026-10-23T15:32:56.151072",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "probe-route-overlay-01-missing-provider": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "probe-route-overlay-01-missing-provider"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

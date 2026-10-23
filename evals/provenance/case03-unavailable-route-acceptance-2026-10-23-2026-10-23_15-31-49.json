@@ -1,0 +1,217 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 2/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['cd /tmp/coder_eval_fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp_om318xy0 && git rev-parse --is-in', 'cd /tmp/coder_eval_fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp_om318xy0 && python3 .fixture/veri']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The routable task #990009 is assigned to the implementation agent exactly once",
+          "details": "Command: python3 .fixture/check_dispatch.py --require 990009 --agent implementation\nExit code: 1 (expected: 0)\nStdout: (empty)\nStderr:\nFAIL: #990009: launch state unknown at call 'chatcmpl-tool-076e809fb94e40359d5c6ed95c05d52a' (attempt 1) entry 0\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The routable task #990011 is assigned to the implementation agent exactly once",
+          "details": "Command: python3 .fixture/check_dispatch.py --require 990011 --agent implementation\nExit code: 1 (expected: 0)\nStdout: (empty)\nStderr:\nFAIL: #990011: launch state unknown at call 'chatcmpl-tool-076e809fb94e40359d5c6ed95c05d52a' (attempt 1) entry 1\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The task with no available route, #990010, is never assigned",
+          "details": "Command: python3 .fixture/check_dispatch.py --forbid 990010\nExit code: 0 (expected: 0)\nStdout:\nPASS: #990010 not assigned\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 10.3,
+            "findings": [
+              "#990010 retains required class reasoning with no fallback dispatch.",
+              "Missing provider for the reasoning model override is identified as the configuration problem.",
+              "#990009 and #990011 are reported as dispatched; their later stops are due to missing Git metadata, not #990010.",
+              "No bug is claimed fixed or review-ready."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result The reply reports #990010 as not dispatched because its preserved reasoning class has no available provider route, identifying the missing provider configuration and its remedy. It reports #990009 and #990011 as dispatched and explicitly denies that either bug is fixed.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 4286,
+              "output": 172
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "239c8c3b4b011ae81d1f13301b22dabad93553b6d62fcb0a8526e20dd7bf8909"
+      },
+      "measured_score": 0.818182,
+      "raw_weighted_score": 0.8181818181818182,
+      "replicate_index": 0,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.13098579999999999,
+      "cost_source": "reported",
+      "elapsed_seconds": 378.1587915420532,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "case03-unavailable-route-acceptance",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 611648,
+        "output_tokens": 12343,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 54769
+      },
+      "tokens": 678760,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.12.6",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-23T15:38:07.661765",
+  "experiment_id": "case03-unavailable-route-acceptance",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "239c8c3b4b011ae81d1f13301b22dabad93553b6d62fcb0a8526e20dd7bf8909",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 4286,
+      "output": 172
+    }
+  },
+  "plugin_revision": {
+    "commit": "ec2d19e519fd5f8ce5cd918ba409cc1f478f0c87",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-23T08:39:07.790487+00:00",
+  "run_id": "2026-10-23_15-31-49",
+  "schema_version": 5,
+  "started_at": "2026-10-23T15:31:49.493135",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp": [
+          0.818182
+        ]
+      },
+      "task_ids": [
+        "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
