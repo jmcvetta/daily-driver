@@ -231,6 +231,16 @@ fixture records only local stub calls and makes no live service, cloud, or
 credential requests. This bounded run does not establish broad model
 reliability.
 
+Issue #650's focused run passed all three blocked-merge cases: pending CI
+without a required approval, confirmed owner review with independent work
+remaining, and unavailable review evidence. Run
+[`2026-10-23_18-05-26`](provenance/omp-gpt-6-1-sol-2026-10-23-2026-10-23_18-05-26.json)
+used one replicate per case with Omp 18.12.6 and the requested
+`openai-codex/gpt-6.1-sol` subject and validated `omp-gpt-6.1-sol` judge.
+These read-only scenarios grade the landing decision and continuation plan,
+not live GitHub writes or timer delivery. Subject execution identity and
+subscription cost were unreported.
+
 The paired Omp ablation remains available as `make evals-run-omp`; focused
 runs name one arm.
 The repository-local automatic-report workflow has three Omp-only behavioral
