@@ -1,0 +1,46 @@
+# Without this case, removing the BLOCKED inference can also erase a real approval gate.
+task_id: embark-20-blocked-confirmed-review-required
+description: A confirmed required review still blocks landing without stopping independent work.
+tags: [embark, behaviour, fire]
+initial_prompt: >-
+  Check epic #200's wave, Landing: orchestrator. Current complete reads show
+  ready PR #301 for task #201 at abc123 has mergeStateStatus BLOCKED. All CI
+  sources are terminal and successful. Repository review policy requires one
+  owner approval and reviewDecision is REVIEW_REQUIRED; that approval has not
+  been given. All review threads are resolved and the review-cycle completion
+  notice covers abc123. No human label or other human-action blocker exists.
+  Its implementor is active and still has already-authorized documentation
+  work it can complete without that approval. The prior muster roll has no
+  approval entry. This isolated exercise has no GitHub or messaging client.
+  State the landing decision, muster-roll line, and continuation. Do not write.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`embark` handles the active wave"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: Evidence establishes the real approval gate and independent work continues.
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the last final `[RESULT - ...]` reply in AGENT OUTPUT; score 0 if absent.
+      Score 1 only if it leaves #301 unmerged, names the required owner review
+      from the supplied policy / REVIEW_REQUIRED evidence (not BLOCKED alone),
+      records one muster-roll line, retains observation, and lets the active
+      implementor finish the already-authorized documentation work. It must not
+      bypass approval, enable auto-merge, relaunch the active implementor,
+      stop all work until approval, or claim delivered writes in this exercise.
+      Otherwise score 0.

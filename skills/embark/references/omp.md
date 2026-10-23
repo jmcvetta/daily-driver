@@ -145,6 +145,7 @@ The watch
 | `Watch the wave` | Find a pull request for an issue when one exists | `issue://<number>` — `closed_by_pull_requests` |
 | `Watch the wave` | Read a child issue's body and comments | `issue://<number>` |
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
+| `Land the pull request` | Diagnose a blocked gate | `gh pr view <number> --json headRefOid,reviewDecision,statusCheckRollup`; current-head checks, statuses, and workflow runs through `review-cycle`'s `references/omp.md` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/omp.md` thread read |
 | `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
 | `Land the pull request` | Read the commits after the notice's SHA | `git rev-list --first-parent --no-merges <sha>..<headRefOid>` after `git fetch` of the head |
@@ -157,6 +158,14 @@ milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
 `headRefOid` is the head the merge binds to. The labels and body answer the
 human-action read in the same call. The complete thread graph is the paginated
 GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
+
+`BLOCKED` alone does not identify a required approval. `reviewDecision`
+`REVIEW_REQUIRED` is evidence of an outstanding review requirement; a missing
+or empty decision does not prove that every merge requirement is satisfied.
+Use the CI reads above, the complete thread read, and the labels/body to
+identify the actual gate. Pending CI retains the existing continuation; an
+unavailable or inconclusive read leaves the cause unresolved. Only `CLEAN`
+can pass the merge-state read.
 
 The completion read is the conversation-comment read `review-cycle`'s
 `Review-cycle completion notice` names, read to the last page: the latest

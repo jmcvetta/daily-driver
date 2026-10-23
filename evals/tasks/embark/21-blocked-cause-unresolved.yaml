@@ -1,0 +1,46 @@
+# Without this case, missing review evidence can become fabricated human-only work or readiness.
+task_id: embark-21-blocked-cause-unresolved
+description: Missing review-policy evidence keeps a blocked gate unresolved and observed.
+tags: [embark, behaviour, fire]
+initial_prompt: >-
+  Check epic #200's wave, Landing: orchestrator. Current complete CI reads for
+  ready PR #301 (task #201, head abc123) are terminal and successful. Its
+  mergeStateStatus is BLOCKED. All review threads are resolved and a current
+  review-cycle completion notice exists. No human label or human-action blocker
+  exists. The aggregate reviewDecision and repository review-policy reads are
+  unavailable to this session. Nothing else establishes why GitHub blocks it.
+  The active implementor has no failure to repair from the evidence supplied.
+  The prior muster roll has no entry for this gate. This isolated exercise has
+  no GitHub or messaging client. State the landing decision, muster-roll line,
+  and continuation. Do not perform writes or invent missing evidence.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`embark` handles the active wave"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: Unknown evidence does not imply human approval or permit merge.
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the last final `[RESULT - ...]` reply in AGENT OUTPUT; score 0 if absent.
+      Score 1 only if it leaves #301 unmerged, records one muster-roll line
+      naming an unresolved merge gate / unavailable review evidence, and retains
+      observation or a concrete read-again continuation for the missing evidence.
+      It must not assert required human approval from BLOCKED, claim readiness
+      from passing CI, add a human label, demand a person approve, enable
+      auto-merge, abandon the watch, or claim delivered writes in this exercise.
+      Otherwise score 0.

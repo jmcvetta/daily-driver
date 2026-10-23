@@ -870,11 +870,12 @@ number.
    stops is what jams it shut.** A draft reports `draft` or, where the
    repository requires a review, `blocked` — measured on a draft of this
    toolkit with every check green and the branch current, 2026-09-18, which
-   answered `blocked`. Neither describes the work: `draft` is the state this
-   gate exists to change, and `blocked` is the approval that marking ready is
-   what asks for. Treating either as a no is the stall in its purest form —
-   a pull request held draft until it is approved, and unapprovable until it
-   is out of draft. `has_hooks` is a passing state with a hook configured.
+   answered `blocked`. Neither establishes a branch-currency failure:
+   `draft` is the state this gate exists to change, and `blocked` does not
+   identify its cause. Read CI and actual review requirements separately;
+   do not infer required approval from the enum. Holding a draft until approval
+   can stall the transition that requests that review. `has_hooks` is a
+   passing state with a hook configured.
    **`clean` is the yes only after the draft is cleared**, which is why
    `The milestone` reads this same field again and this gate does not wait
    for that value.
