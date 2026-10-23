@@ -235,17 +235,28 @@ The paired Omp ablation remains available as `make evals-run-omp`; focused
 runs name one arm.
 The repository-local automatic-report workflow has three Omp-only behavioral
 fixtures. They use a fake `gh` that records issue reads and writes; no live
-GitHub issue is read or changed. Case 03 states in its prompt that the
+GitHub issue is read or changed. All three cases require the exact coordinator
+title call before the first `gh` action. Cases 01 and 02 cover default
+selection, including a run with no eligible dispatch; case 03 covers explicit
+issue selection. The sandbox records the setter call and its order but cannot
+change a real Omp session name; a real Omp session smoke must verify the
+applied name. The deterministic command filter matches stable ASCII title text
+because serialized tool parameters escape the emoji; the trace judge checks
+the exact Unicode title and call order. Case 03 states in its prompt that the
 `reasoning` agent has no route; the sandbox does not remove that route from the
-Omp configuration. No criterion checks which agent each batch item selects:
-the judge sees only reply text, and `command_executed` sees a truncated
-serialisation (see the `subagent_type` note below). Run them with an available
-Omp model and judge:
+Omp configuration. Case 01 combines one successful `Agent` call with
+structured per-issue dispatch checks to prove one batch; it does not parse the
+serialized task arguments, which `command_executed` truncates. No criterion
+checks which agent each batch item selects: the judge sees only reply text, and
+the command trace cannot reliably expose each task's subagent type (see the
+`subagent_type` note below). Run the three named cases with an available Omp
+model and judge:
 
 ```sh
-make evals-run-omp-glm-5-3 JUDGE=omp-glm-5.3 \
-  TASKS='tasks/fix-daily-driver-bugs/*.yaml'
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+  TASKS='tasks/fix-daily-driver-bugs/01-promotes-independent-reports.yaml tasks/fix-daily-driver-bugs/02-no-duplicate-or-blocked-dispatch.yaml tasks/fix-daily-driver-bugs/03-unavailable-route-blocks-only-its-task.yaml'
 ```
+
 
 `make evals-record ... POST_COMMENTS=1` also posts one comment per run on each
 pull request a case was built from (model-classes cases, whose description

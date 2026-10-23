@@ -19,6 +19,20 @@ This project-local skill is intentionally outside the published plugin skill
 set. It does not change how consumer reports are filed. The `issue` skill
 continues to create short `[auto-filed]` reports labelled `bug`.
 
+## Session title
+
+At the start of every invocation, invoke `session-title` and set the current
+session title to exactly `🐛 Daily Driver bug fixes` before reading backlog
+issues, writing issue data, or dispatching workers. Do this for default
+selection, explicit issue-number selection, and an empty or fully ineligible
+selection. Keep this fixed title while coordinating multiple reports; do not
+add issue numbers, counts, or status.
+
+When this workflow continues directly as a single issue through `undertake`,
+`undertake` owns the subject change and sets its issue-based title. Dispatched
+implementors also retain `undertake`'s issue-based title.
+
+
 ## Scope and selection
 
 An invocation authorizes triage and dispatch only in `jmcvetta/daily-driver`.

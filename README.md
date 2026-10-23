@@ -196,8 +196,10 @@ or update a README. Each skill's `SKILL.md` describes its activation rules.
 ## Local maintenance
 
 In this repository, ask Omp to `fix-daily-driver-bugs` to triage open automatic
-reports and dispatch eligible fixes. Include issue numbers to limit triage.
-This repository-local skill is not part of the published plugin.
+reports and dispatch eligible fixes. While coordinating, the session title is
+`🐛 Daily Driver bug fixes`; issue implementors keep their issue-based titles.
+Include issue numbers to limit triage. This repository-local skill is not part
+of the published plugin.
 
 ## Development rules
 
