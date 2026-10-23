@@ -1,9 +1,8 @@
 # Bootstrapping a repository
 
 Installing this plugin is **per-machine — or, in the cloud, per-environment**.
-[The README](../README.md#installation) has the steps; this page has the
-mechanism under them, the measurements they rest on, and how to tell whether
-the plugin actually loaded.
+The [README](../README.md#installation) has concise entry commands. This page
+covers detailed setup, migration, configuration and verification.
 
 It gets a page at all because of the failure mode. There is no error, no
 warning and no missing file — a session without the plugin behaves exactly
@@ -11,6 +10,133 @@ like a session ignoring its rules. And **nothing inside the plugin can report
 its own absence**: a skill that would say so ships inside the plugin, so in
 the one session that needs it, it is not there to run. Checking is an act
 performed from outside.
+
+## Install the plugin
+
+Each harness stores and loads its own installation. Add the marketplace and
+install the plugin in the environment where you use that harness:
+
+**Omp**
+
+```sh
+omp plugin marketplace add jmcvetta/daily-driver
+omp plugin install daily-driver@daily-driver
+```
+
+Run `omp plugin list` to confirm installation.
+
+**Claude Code**
+
+```sh
+claude plugin marketplace add jmcvetta/daily-driver
+claude plugin install daily-driver@daily-driver
+```
+**Codex**
+
+```sh
+codex plugin marketplace add jmcvetta/daily-driver
+codex plugin add daily-driver@daily-driver
+```
+
+Run `codex plugin list` to confirm installation. Codex writes registration to
+`$CODEX_HOME/config.toml`; preserve its plugin tables when editing the file.
+See [Codex setup](#codex-has-no-stanza-at-all) for the tested configuration
+limits.
+
+Claude Code's marketplace installation also enables the official Worktrunk
+plugin as `worktrunk@daily-driver`; it does not install the separate `wt` CLI.
+On desktop, `task-worktree` installs `wt` on demand when repository changes
+need isolation. It uses Homebrew or Cargo in user scope and verifies the binary.
+You can install it ahead of time with Worktrunk's documented
+[Homebrew or Cargo installation][worktrunk-install]:
+
+```sh
+brew install worktrunk
+# or: cargo install --locked worktrunk
+```
+
+[worktrunk-install]: https://worktrunk.dev/#install
+
+If you already installed `worktrunk@worktrunk`, migrate it before installing
+or updating Daily Driver. Disable and uninstall it at every scope where it is
+installed or enabled, then install Daily Driver at that same scope. For a
+user-scope installation:
+
+```sh
+claude plugin disable worktrunk@worktrunk --scope user
+claude plugin uninstall worktrunk@worktrunk --scope user
+claude plugin install daily-driver@daily-driver --scope user
+```
+
+Repeat the disable and uninstall commands with `--scope project` or
+`--scope local` where the legacy identity exists. A managed installation must
+be migrated by its administrator. Restart or reload Claude Code after the
+migration, then confirm `claude plugin list` shows `worktrunk@daily-driver`
+enabled and no `worktrunk@worktrunk` identity enabled.
+
+To synchronize this repository from a linked worktree, install Worktrunk's
+shell integration and run `wt sync`. It switches the calling shell to the
+primary worktree, pulls `master`, and uses Worktrunk to offer safe cleanup of
+branches deleted upstream:
+
+```sh
+wt config shell install
+wt sync
+```
+
+## Claude Code cloud setup script
+
+The environment's **Setup script** runs before Claude Code launches and is
+therefore the only writer that beats the plugin scan. The complete recipe is
+here so readers can inspect and copy it in one place.
+
+```bash
+#!/bin/bash
+set -euo pipefail
+# CACHEBUST: 1
+# Setup is cached by script text; bump CACHEBUST only to force a rerun.
+# Each Setup run installs current Cargo; new releases do not trigger a rerun.
+cargo install --locked --root /usr/local worktrunk
+wt --version
+
+claude plugin marketplace add jmcvetta/daily-driver
+claude plugin install --yes daily-driver@daily-driver
+
+# Verify each plugin is cached at a version and registered as enabled.
+for plugin in daily-driver worktrunk; do
+  grep -qF "\"${plugin}@daily-driver\"" "$HOME/.claude/plugins/installed_plugins.json"
+  compgen -G "$HOME/.claude/plugins/cache/daily-driver/${plugin}/*/.claude-plugin/plugin.json" >/dev/null
+done
+claude plugin list --json | python3 -c '
+import json, sys
+enabled = {plugin["id"] for plugin in json.load(sys.stdin) if plugin.get("enabled")}
+expected = {"daily-driver@daily-driver", "worktrunk@daily-driver"}
+missing = expected - enabled
+if missing:
+    raise SystemExit(f"plugins not enabled: {sorted(missing)}")
+'
+```
+
+Keep installation failures fatal: a setup script that exits successfully after
+a failed installation caches that failure. Each setup run builds the latest
+published Worktrunk release through Cargo. A reused environment keeps its
+installed binary and does not update it when a session resumes. Change
+`CACHEBUST` only when you need setup to run again.
+
+After setup, start a session and verify that the plugins loaded:
+
+> Without reading any file, say what the constitution tells you about
+> production systems. Then list the skills available to you whose names begin
+> `daily-driver:`. Then list the enabled plugins `daily-driver@daily-driver`
+> and `worktrunk@daily-driver`, and run `ls
+> ~/.claude/plugins/cache/daily-driver/`.
+
+Installation alone does not prove that a plugin loaded. Use the session's
+response to check that the rules and skills are available.
+
+See [The per-repository stanza](#the-per-repository-stanza-and-what-it-buys)
+for configuration that enables the plugin for a repository.
+
 
 ## Where an install puts its state
 
@@ -132,7 +258,7 @@ is the documented escape hatch for automation that has already vetted its
 sources. [`notes/0016`](notes/0016-three-harnesses-one-skill-tree.md) is where
 that and the rest of the third harness's decisions are recorded.
 
-## Cloud environments: the Setup script
+## Cloud environment behavior
 
 Nothing in the container fills the cache on its own. Granted a registered
 marketplace, `installed_plugins.json` stays `{"version": 2, "plugins": {}}`
@@ -147,9 +273,8 @@ Upstream: [anthropics/claude-code#88214][88214], and [#78119][78119],
 [83422]: https://github.com/anthropics/claude-code/issues/83422
 [88248]: https://github.com/anthropics/claude-code/issues/88248
 
-The environment's **Setup script** runs before Claude Code launches and is
-therefore the only writer that beats the plugin scan. The README carries the
-script; four things about it are worth stating once, here:
+The Setup script above runs before Claude Code launches and is the only writer
+that beats the plugin scan. Four things about it are worth stating once, here:
 
 **The verification is load-bearing.** `claude plugin marketplace add` and
 `claude plugin install` can return 0 while leaving plugins uncached. The Setup
