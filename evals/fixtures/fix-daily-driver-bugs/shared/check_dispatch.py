@@ -33,10 +33,12 @@ A positive launch needs a successful tool result in the observed format
     - <job two>
 
 with the reported count equal to the entries requested and a complete list of
-distinct jobs. Any other success text, a mismatched count, or an agent that
-differs from the one requested leaves the launch state unknown, which never
-passes a `--require`. A failed or unresolved call launched nothing, but the
-assignment it carried still fails a `--forbid`.
+distinct jobs. The runtime may then append its standard `Coordinate: N siblings
+are running together.` paragraph; this is outside the launch list and is
+accepted only when `N` matches the reported count. Any other success text, a
+mismatched count, or an agent that differs from the one requested leaves the
+launch state unknown, which never passes a `--require`. A failed or unresolved
+call launched nothing, but the assignment it carried still fails a `--forbid`.
 """
 
 from __future__ import annotations
@@ -60,6 +62,12 @@ _NEGATION = re.compile(
 )
 _SPAWNED = re.compile(r"^Spawned (\d+) background agents? using ([^\s.]+)\.\s*$")
 _BULLET = re.compile(r"^\s*(?:[-*•])\s+(\S.*?)\s*$")
+_COORDINATE = re.compile(
+    r"^Coordinate: (\d+) siblings are running together\. "
+    r"If their work overlaps, have them message each other via "
+    r"`write agent://<id>` \(`agent://all` broadcasts\) before editing "
+    r"shared files\. `read proc://` shows running jobs and agents\.$"
+)
 
 
 class Unclear(Exception):
@@ -100,13 +108,18 @@ def parse_launch(call: dict[str, Any], entry_count: int, agent: str | None) -> s
     if agent is not None and header.group(2) != agent:
         return "unknown"
     jobs = []
-    for line in lines[1:]:
+    for line in lines[1 : 1 + reported]:
         bullet = _BULLET.match(line)
         if bullet is None:
             return "unknown"
         jobs.append(bullet.group(1))
-    if len(jobs) != reported or len(set(jobs)) != len(jobs):
+    if len(set(jobs)) != reported:
         return "unknown"
+    trailing = lines[1 + reported :]
+    if trailing:
+        coordinate = _COORDINATE.fullmatch(trailing[0])
+        if len(trailing) != 1 or coordinate is None or int(coordinate.group(1)) != reported:
+            return "unknown"
     return "launched"
 
 
