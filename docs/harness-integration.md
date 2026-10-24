@@ -14,6 +14,12 @@ routing. Codex subagent injection is not verified: its configured
 note](notes/0016-three-harnesses-one-skill-tree.md#known-limits-recorded-rather-than-fixed)
 records.
 
+The constitution source is `rules/constitution.md`. Both the hooks and Omp's
+rule provider deliver its complete Markdown body after removing the
+`alwaysApply: true` frontmatter; they do not select individual sections.
+The hook table below describes the hook routes. Omp loads the file directly
+as a rule, as described below.
+
 | Hook | Event | Purpose |
 | ---- | ----- | ------- |
 | `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers the constitution at session start; Codex subagent delivery is unverified. |

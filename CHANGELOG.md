@@ -37,6 +37,7 @@
 
 * **epic:** plan first useful delivery, early integration proof, outcome-based task boundaries, and deployment continuity ([#633](https://github.com/jmcvetta/daily-driver/issues/633))
 
+
 ### Tests
 
 * **evals:** add offline behavioral coverage for delivery scope, integration ordering, useful task boundaries, and deployment state continuity
@@ -50,6 +51,7 @@
 * **embark:** remove the upfront landing and archive authorization question; default to orchestrator mode while preserving explicit by-hand opt-outs and real tool denials
 * **embark:** advance permitted preparation behind the draft gate without bypassing real approvals or repeating unchanged status reports ([#632](https://github.com/jmcvetta/daily-driver/issues/632))
 * **evals:** accept offline safety prose in Omp task dispatch while keeping child URI targets blocked ([#636](https://github.com/jmcvetta/daily-driver/issues/636))
+* **constitution:** remove delivery and maintenance text from injected rules ([#656](https://github.com/jmcvetta/daily-driver/issues/656))
 
 * **claude-code:** keep repository context loadable while preserving strict plugin validation ([#657](https://github.com/jmcvetta/daily-driver/issues/657))
 
