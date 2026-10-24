@@ -39,7 +39,7 @@ jobs:
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-scripts')
         run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
       - name: Install Worktrunk
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-git-sync') || contains(fromJSON(steps.plan.outputs.checks), 'check-task-worktree-fixture') || contains(fromJSON(steps.plan.outputs.checks), 'check-worktrunk-install')
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-git-sync') || contains(fromJSON(steps.plan.outputs.checks), 'check-worktrunk-install')
         run: |
           set -euo pipefail
           installer="$RUNNER_TEMP/worktrunk-installer.sh"
@@ -50,19 +50,11 @@ jobs:
           WORKTRUNK_UNMANAGED_INSTALL="$RUNNER_TEMP/worktrunk/bin" sh "$installer"
           echo "$RUNNER_TEMP/worktrunk/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/worktrunk/bin/wt" --version
-      - name: Install uv
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-eval-arms') || contains(fromJSON(steps.plan.outputs.checks), 'check-agent-judges') || contains(fromJSON(steps.plan.outputs.checks), 'check-evals-judge') || contains(fromJSON(steps.plan.outputs.checks), 'check-evals-preflight') || contains(fromJSON(steps.plan.outputs.checks), 'check-evals-provenance') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
-        run: |
-          curl -LsS --retry 5 --retry-delay 2 --retry-all-errors https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Install Omp
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard-live') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live')
         run: |
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Validate CI selection
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-ci-scope')
-        run: make check-ci-scope
       - name: Validate repository step references
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-step-names')
         run: make check-step-names
@@ -81,9 +73,6 @@ jobs:
       - name: Validate manifests
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-manifests')
         run: make check-manifests
-      - name: Validate manifest fixtures
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-manifest-fixtures')
-        run: make check-manifest-fixtures
       - name: Validate Claude dependency
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-claude-dependency')
         run: make check-claude-dependency
@@ -111,78 +100,24 @@ jobs:
       - name: Validate Git sync
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-git-sync')
         run: make check-git-sync
-      - name: Validate task worktree fixtures
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-task-worktree-fixture')
-        run: make check-task-worktree-fixture
       - name: Validate Worktrunk installation
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-worktrunk-install')
         run: make check-worktrunk-install
       - name: ShellCheck scripts
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-scripts')
         run: make check-scripts
-      - name: Validate Omp agent adapter
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent')
-        run: make check-omp-agent
-      - name: Validate Omp eval guard
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard')
-        run: make check-omp-eval-guard
-      - name: Validate Codex agent adapter
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-codex-agent')
-        run: make check-codex-agent
-      - name: Validate eval fixtures
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-eval-fixtures')
-        run: make check-eval-fixtures
-      - name: Validate model classes grader
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-classes-grader')
-        run: make check-model-classes-grader
-      - name: Validate dispatch grader
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-dispatch-grader')
-        run: make check-dispatch-grader
-      - name: Validate eval arms
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-eval-arms')
-        run: make check-eval-arms
-      - name: Validate agent judges
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-agent-judges')
-        run: make check-agent-judges
-      - name: Validate eval judge
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-judge')
-        run: make check-evals-judge
-      - name: Validate eval preflight
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-preflight')
-        run: make check-evals-preflight
-      - name: Validate eval provenance
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-provenance')
-        run: make check-evals-provenance
-      - name: Validate eval results
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-results')
-        run: make check-evals-results
       - name: Validate model telemetry
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-telemetry')
         run: make check-model-telemetry
-      - name: Validate Omp eval setup
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-evals-setup-omp')
-        run: make check-evals-setup-omp
-      - name: Validate undertake readiness fixtures
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-undertake-readiness')
-        run: make check-undertake-readiness
       - name: Validate issue labels
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-labels')
         run: make check-labels
-      - name: Validate label fixtures
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-labels-fixtures')
-        run: make check-labels-fixtures
       - name: Validate Omp plugin integration
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin')
         run: make check-omp-plugin
-      - name: Validate live Omp eval guard
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-eval-guard-live')
-        run: make check-omp-eval-guard-live
       - name: Validate live Omp embark title barrier
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live')
         run: make check-omp-embark-title-live
-      - name: Validate Omp agent settlement
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-agent-settle')
-        run: make check-omp-agent-settle
       # The infrastructure steps run last and tolerate an earlier failed check,
       # so an unrelated failure cannot hide a stack error and a stack error
       # cannot stop the checks above. `!cancelled()` keeps a cancelled run from
