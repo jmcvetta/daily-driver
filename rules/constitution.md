@@ -64,8 +64,14 @@ work the project exists to do. It does not cover tests, which need no tests of
 their own. It does not cover infrastructure declared in OpenTofu or its kind,
 which its own offline `validate` already checks. Where production
 infrastructure does need a test, write the test with infrastructure tooling,
-never as an ad hoc script. A test outside the rule's scope earns nothing and
-bills every CI run, but do not delete an existing test on that ground alone.
+never as an ad hoc script.
+A test whose subject is a test or another part of the testing machinery is
+not application code. Do not write one. This includes tests of check scripts,
+lint or static-analysis rules, CI workflows, change selectors or filters,
+fixtures, fakes or helpers, eval harnesses, graders or judges, and rendered
+eval results. Remove such tests when you find them; their subjects need no
+tests. A project tests testing machinery only when that machinery is its
+shipped product, such as an action whose job is a CI check.
 A manual spot-check is not a test: a test asserts, fails
 loudly, and is committed. It ships in the same commit as the code it covers
 and runs offline against fixtures, never against a live third-party service.
