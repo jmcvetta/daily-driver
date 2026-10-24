@@ -21,6 +21,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "Issue-body constrains approved frontier research"
     expected_skill: issue-body
     skill_name: issue-body

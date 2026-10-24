@@ -74,7 +74,7 @@ success_criteria:
   # criterion in the watcher's pass-capable set, which is what defers the
   # revert guard's fail-stop until the skill has had its chance to fire.
   - type: skill_triggered
+    weight: 0
     description: "`conventional-commits-type` fires on a moved type"
     expected_skill: conventional-commits-type
     skill_name: conventional-commits-type
-    stop_early: {}

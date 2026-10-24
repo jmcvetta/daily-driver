@@ -60,7 +60,7 @@ success_criteria:
   # pass-capable armed criterion fail-stops on the first `sleep` — freezing
   # this one at 0 on a trajectory that ended before the skill could fire.
   - type: skill_triggered
+    weight: 0
     description: "`review-cycle` fires on a pull request whose head needs reviewing"
     expected_skill: review-cycle
     skill_name: review-cycle
-    stop_early: {}

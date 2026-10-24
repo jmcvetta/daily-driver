@@ -35,6 +35,7 @@ agent:
 run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 480}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`pr-body` maintains a PR blocker from undertaking evidence"
     expected_skill: pr-body
     skill_name: pr-body

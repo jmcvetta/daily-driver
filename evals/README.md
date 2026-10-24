@@ -814,6 +814,10 @@ Such a row also has nothing pass-capable beside it, so its `stop_early: {}` is
 armed for the other reason — a misfire has already lost the row, and there is
 no recall decision left for a fail-stop to pre-empt.
 
+Behaviour rows grade the reply, so their `skill_triggered` criterion is
+informational: give it `weight: 0`. Trigger-accuracy rows grade whether the
+skill fired, so that criterion remains gating.
+
 ## Both arms, every criterion
 
 Every criterion is scored under both variants: `bare` (nothing loaded) and
@@ -821,7 +825,10 @@ Every criterion is scored under both variants: `bare` (nothing loaded) and
 with the plugin, 0 without it, because without it there is no skill to fire —
 and a number reported for the treated arm alone has nothing to compare itself
 to. In the old format this took an explicit `arm: both` on every grader;
-`coder_eval` does it by construction.
+`coder_eval` does it by construction. On behaviour rows, `skill_triggered`
+records whether the skill fired but does not gate the result (`weight: 0`).
+On trigger-accuracy rows it keeps its default positive weight and gates. The
+two tags can coexist when both behaviours matter.
 
 `repeats` is **5**, set explicitly, because `coder_eval` defaults it to 1. One
 replicate of a non-deterministic agent is an anecdote. Even 3-of-3 — what the
