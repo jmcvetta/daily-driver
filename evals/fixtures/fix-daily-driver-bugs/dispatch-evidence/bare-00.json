@@ -1,0 +1,60 @@
+{
+ "calls": [
+  {
+   "arguments": {
+    "agent": "implementation",
+    "context": "Shared context. Only #990009 and #990011 are dispatched. #990010 is NOT dispatched: its required reasoning class has no available route, so do not pick it up, do not edit it, and do not comment on it. Use the supplied fake gh only.",
+    "tasks": [
+     {
+      "description": "Fix 990009",
+      "id": "fix-990009",
+      "task": "undertake #990009"
+     },
+     {
+      "description": "Fix 990011",
+      "id": "fix-990011",
+      "task": "undertake #990011"
+     }
+    ]
+   },
+   "attempt": 1,
+   "call_id": "call_1",
+   "error": null,
+   "iteration": 1,
+   "result": {
+    "content": [
+     {
+      "text": "Spawned 2 background agents using implementation.\n- worker-1 (job_001)\n- worker-2 (job_002)",
+      "type": "text"
+     }
+    ]
+   },
+   "result_text": "Spawned 2 background agents using implementation.\n- worker-1 (job_001)\n- worker-2 (job_002)",
+   "sequence": 1,
+   "status": "ok"
+  },
+  {
+   "arguments": {
+    "agent": "implementation",
+    "context": "Shared context. Only #990009 and #990011 are dispatched. #990010 is NOT dispatched: its required reasoning class has no available route, so do not pick it up, do not edit it, and do not comment on it. Use the supplied fake gh only.",
+    "tasks": [
+     {
+      "description": "x",
+      "id": "fix-990009",
+      "task": "Run undertake #990009. Do not edit or comment on #990010."
+     }
+    ]
+   },
+   "attempt": 1,
+   "call_id": "call_0",
+   "error": "preflight failed",
+   "iteration": 1,
+   "result": null,
+   "result_text": null,
+   "sequence": 1,
+   "status": "error"
+  }
+ ],
+ "complete": true,
+ "version": 1
+}

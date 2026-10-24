@@ -20,6 +20,8 @@ tags: [embark, behaviour, fire]
 initial_prompt: >-
   Epic #142 is planned and agreed, and its first wave is #143, #144 and #147 —
   none of them blocked by anything open. Work the epic. What do you do next?
+  This isolated exercise has no GitHub or session client. Describe the next
+  actions and the muster roll you would post, without claiming actual dispatch.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -70,18 +72,17 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
       is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the decomposition was already agreed, so the wave launches
-      without asking again. One eligible implementor is opened per task issue.
-      A muster roll on the epic records each task's required class, selected
-      route, and actual model (or `unreported`), instead of conflating them.
-      Saying the tools are unavailable and this is what would otherwise happen
-      counts as launching.
+      The issue's landing mode is not stated. The orchestrator defaults to
+      landing gated pull requests and archiving finished sessions, without an
+      authorization question. The already-agreed wave launches without asking.
+      One eligible implementor is opened per task issue. A muster roll records
+      each task's required class, selected route, and actual model (or
+      `unreported`), instead of conflating them. Saying the tools are unavailable
+      and stating what would happen counts as launching.
 
-      Score 1.0 if the REPLY launches unasked and names the class-separated
-      muster roll. Score 0.5 if it launches unasked but records nothing.
+      Score 1.0 if the REPLY launches unasked and names the class-separated muster
+      roll. Score 0.5 if it launches unasked but records nothing.
 
-
-      Score 0.0 if the reply asks the user to approve or confirm the launch
-      before opening any session, offers a menu of waves or tasks to choose
-      from, or proposes working the task issues one after another in this
-      session.
+      Score 0.0 if the reply asks for landing or archive authorization, asks whether
+      to launch or confirm the launch, offers a menu of waves or tasks to choose
+      from, or proposes working the task issues one after another in this session.

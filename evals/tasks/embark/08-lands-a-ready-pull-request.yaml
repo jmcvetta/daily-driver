@@ -1,7 +1,5 @@
-# The fire row for `Land the pull request`. The landing gate has no judgement
-# in it: once every read holds, the orchestrator merges in the same turn. The
-# pressure this row guards against is the old rule, where a green ready pull
-# request was reported and left for a person.
+# Without this row, a watcher could require a saved permission confirmation
+# before landing a pull request whose complete landing gate holds.
 #
 # What this row can and cannot see. The sandbox has no GitHub write client, so
 # no pull request can actually be merged. What is observable is what the agent
@@ -10,17 +8,18 @@
 
 task_id: embark-08-lands-a-ready-pull-request
 description: >-
-  In orchestrator landing mode, a pull request whose complete landing gate
-  holds is squash-merged without a question.
+  A pull request whose complete landing gate holds is squash-merged without
+  a question, even when no landing mode was recorded.
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Epic #200 is at sea, and its latest muster roll says `Landing: orchestrator`.
+  Epic #200 is at sea. Its latest muster roll has no landing-mode entry.
   Task #201 has pull request #301. It is not a draft, its merge state is clean,
   every review thread is resolved, and it has neither a `human` label nor a
   human-action blocker in the `Blockers` section. Its latest conversation
-  comment starts with `## Review cycle complete! 🎉` and names the current
-  head SHA. Check on the wave.
+  comment starts with `## Review cycle complete! 🎉`, was posted by the same
+  account as task #201's undertake claim, and names the current head SHA.
+  Check on the wave.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -68,9 +67,9 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the latest muster roll gives landing to the orchestrator, and
-      all five ordered reads hold. It therefore squash-merges pull request
-      #301 in this turn. It does not ask permission, post a summary first,
+      The rule: no landing mode was recorded, so landing defaults to the
+      orchestrator. All five ordered reads hold. It therefore squash-merges
+      pull request #301 in this turn. It does not ask permission, post a summary first,
       wait for a person, or enable GitHub auto-merge. Saying the merge tool is
       unavailable in the environment, and stating that this is what would
       otherwise happen now, counts as merging.

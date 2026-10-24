@@ -386,6 +386,33 @@ route is confirmed non-frontier, or when the user explicitly authorizes the
 bounded frontier implementation exception. No implementor dispatch is used for
 ordinary undertakings.
 
+**Start with the smallest proof that can invalidate the route.** Before
+investing in implementation that depends on an uncertain integration, identify
+and exercise the actual relevant integration and authentication path. Startup
+or health checks alone do not count. Use the smallest safe local proof that
+answers the question; it may be the first action in this task, not a separate
+research issue by default. Record observed evidence before dependent work.
+When a required input or capability is unavailable, state exactly what is
+missing and continue unrelated safe work. Never report a promised test as a
+completed proof.
+
+**For deployment work, settle continuity before provisioning.** Before the
+first paid provisioning or sensitive provider-returned state commit, establish
+the authoritative state and configuration locations, protection for sensitive
+state, recovery needs, and how another session can resume. Preserve artifact
+identity and reusable nonsecret inputs without copying broad credential
+stores. Include the approved host lifecycle in acceptance; session shutdown
+does not itself authorize teardown. Reuse supported state/security tools and
+honor all production, destructive-operation, spending, and approval limits.
+Do not prescribe encrypted Git state universally or add an unapproved platform.
+
+**Keep the agreed first useful outcome visible.** An independent improvement
+does not become a prerequisite just because it is requested later. Explain
+when added scope moves the first delivery; preserve every explicit acceptance
+criterion. Use `judgement-call` only for an unresolved scope decision. An
+informed explicit choice stands, and does not automatically open a follow-up
+issue.
+
 **Issue-only research completion.** Use this route only when the agreed
 deliverable is an answer or follow-on issue specifications, no repository
 changes are needed, and no pull request exists. Otherwise use the normal PR
@@ -843,11 +870,12 @@ number.
    stops is what jams it shut.** A draft reports `draft` or, where the
    repository requires a review, `blocked` — measured on a draft of this
    toolkit with every check green and the branch current, 2026-09-18, which
-   answered `blocked`. Neither describes the work: `draft` is the state this
-   gate exists to change, and `blocked` is the approval that marking ready is
-   what asks for. Treating either as a no is the stall in its purest form —
-   a pull request held draft until it is approved, and unapprovable until it
-   is out of draft. `has_hooks` is a passing state with a hook configured.
+   answered `blocked`. Neither establishes a branch-currency failure:
+   `draft` is the state this gate exists to change, and `blocked` does not
+   identify its cause. Read CI and actual review requirements separately;
+   do not infer required approval from the enum. Holding a draft until approval
+   can stall the transition that requests that review. `has_hooks` is a
+   passing state with a hook configured.
    **`clean` is the yes only after the draft is cleared**, which is why
    `The milestone` reads this same field again and this gate does not wait
    for that value.

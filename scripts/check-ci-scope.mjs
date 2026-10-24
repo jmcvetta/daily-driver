@@ -18,6 +18,15 @@ for (const [target, patterns] of Object.entries(filters)) {
     `${target} must sleep for an unrelated root file`)
 }
 
+// Without these paths, a Claude context change can skip strict plugin validation.
+const contextChecks = ['check-step-names', 'check-plugin']
+assert.deepEqual(selectChecks(['CLAUDE.md']), contextChecks)
+assert.deepEqual(selectChecks(['.claude/CLAUDE.md']), contextChecks)
+
+// Without retaining both rename paths, moving the project context can skip plugin validation.
+const renamedClaudeContext = parseNameStatus(Buffer.from('R100\0CLAUDE.md\0.claude/CLAUDE.md\0'))
+assert.deepEqual(selectChecks(renamedClaudeContext), contextChecks)
+
 // Without these exclusions, review-depth edits can wake unrelated fixture and adapter suites.
 assert.deepEqual(selectChecks(['evals/fixtures/review-depth/shared/review.sh']), [
   'check-constitution', 'check-scripts', 'check-eval-fixtures',
@@ -28,7 +37,7 @@ assert.deepEqual(selectChecks(['evals/fixtures/model-classes/shared/grader.sh'])
 
 // Without this dependency, Omp RPC changes can break transcript consumers without running them.
 assert.deepEqual(selectChecks(['evals/coder-eval-omp/src/coder_eval_omp/rpc.py']), [
-  'check-constitution', 'check-omp-agent', 'check-codex-agent', 'check-omp-agent-settle',
+  'check-constitution', 'check-omp-agent', 'check-codex-agent', 'check-dispatch-grader', 'check-omp-agent-settle',
 ])
 
 // Without these checks, real label changes run synthetic fixtures or unrelated suites.

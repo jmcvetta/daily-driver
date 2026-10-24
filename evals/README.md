@@ -58,8 +58,21 @@ boundaries: settled versus unresolved task intent, bounded research and
 evidenced negative/inconclusive outcomes, bugs without task metadata,
 non-executable proposals, safe human handoffs, automatic bug reports, and
 effective-kind edits that preserve evidence and provenance. `tasks/epic/`
-includes mixed-kind children and epic outcome completion. These are behavioral
-cases: graders assess decisions and evidence, not a fixed heading list.
+includes mixed-kind children and epic outcome completion, first-delivery scope,
+outcome-based task boundaries, and deployment continuity. The undertaking
+integration-proof case uses a local authenticated request/response fixture to
+assert that proof precedes dependent work; it makes no network or cloud calls.
+These are behavioral cases: graders assess decisions and evidence, not a fixed
+heading list.
+
+`tasks/embark/16`–`18` cover unfinished-work supervision: a green draft still
+needs authorized preparation, a real execution approval does not block
+independent work, and an unchanged real prerequisite earns no duplicate update
+or recovery. These client-less cases grade proposed corrections and gate
+decisions, not actual message delivery, scheduling or infrastructure execution.
+The bounded one-repeat smoke passed all three cases in
+[`omp-gpt-6-1-sol-workflow-2026-10-18-2026-10-18_15-45-41`](provenance/omp-gpt-6-1-sol-workflow-2026-10-18-2026-10-18_15-45-41.json).
+It is a treated-only smoke, not an ablation or an estimate of fleet reliability.
 
 ## Provenance
 
@@ -209,21 +222,61 @@ make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
   TASKS='tasks/issue/05-bug-body-gets-no-task-contract.yaml tasks/issue/07-research-contract-draft.yaml'
 ```
 
+Issue #633's focused run completed all four behavioral cases successfully:
+first-delivery scope, outcome-based issue boundaries, deployment continuity,
+and authenticated integration proof before dependent work. Run
+[`2026-10-18_16-07-29`](provenance/omp-gpt-6-1-sol-2026-10-18-2026-10-18_16-07-29.json)
+used Omp 18.12.1 with the requested `openai-codex/gpt-6.1-sol` subject and
+validated `omp-gpt-6.1-sol` judge. It used one replicate per case; the subject
+execution identity and subscription cost were unreported. The integration
+fixture records only local stub calls and makes no live service, cloud, or
+credential requests. This bounded run does not establish broad model
+reliability.
+
+Issue #650's focused run passed all three blocked-merge cases: pending CI
+without a required approval, confirmed owner review with independent work
+remaining, and unavailable review evidence. Run
+[`2026-10-23_18-05-26`](provenance/omp-gpt-6-1-sol-2026-10-23-2026-10-23_18-05-26.json)
+used one replicate per case with Omp 18.12.6 and the requested
+`openai-codex/gpt-6.1-sol` subject and validated `omp-gpt-6.1-sol` judge.
+These read-only scenarios grade the landing decision and continuation plan,
+not live GitHub writes or timer delivery. Subject execution identity and
+subscription cost were unreported.
+
 The paired Omp ablation remains available as `make evals-run-omp`; focused
 runs name one arm.
 The repository-local automatic-report workflow has three Omp-only behavioral
 fixtures. They use a fake `gh` that records issue reads and writes; no live
-GitHub issue is read or changed. Case 03 states in its prompt that the
-`reasoning` agent has no route; the sandbox does not remove that route from the
-Omp configuration. No criterion checks which agent each batch item selects:
-the judge sees only reply text, and `command_executed` sees a truncated
-serialisation (see the `subagent_type` note below). Run them with an available
-Omp model and judge:
+GitHub issue is read or changed. All three cases require the exact coordinator
+title call before the first `gh` action. Cases 01 and 02 cover default
+selection, including a run with no eligible dispatch; case 03 covers explicit
+selection. The sandbox records the setter call and its order but cannot
+change a real Omp session name; a separate smoke verifies the applied name.
+The deterministic command filter matches stable ASCII title text because
+serialized tool parameters escape the emoji; the trace judge checks the exact
+Unicode title and call order. A separate `skill_triggered` criterion
+checks policy invocation because Skill tool paths can be truncated in the trace.
+Case 03 states that the `reasoning` agent has no route; the sandbox does not
+remove that route from the Omp configuration. Case 01 combines one successful
+`Agent` call with structured per-issue dispatch checks to prove one batch; it
+does not parse the serialized task arguments, which `command_executed`
+truncates. No criterion checks which agent each batch item selects: the judge
+sees only reply text, and the command trace cannot reliably expose each task's
+subagent type (see the `subagent_type` note below). Run the three named cases
+with an available Omp model and judge:
 
 ```sh
-make evals-run-omp-glm-5-3 JUDGE=omp-glm-5.3 \
-  TASKS='tasks/fix-daily-driver-bugs/*.yaml'
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+  TASKS='tasks/fix-daily-driver-bugs/01-promotes-independent-reports.yaml tasks/fix-daily-driver-bugs/02-no-duplicate-or-blocked-dispatch.yaml tasks/fix-daily-driver-bugs/03-unavailable-route-blocks-only-its-task.yaml'
 ```
+
+Case 01 enables structured Omp dispatch recording and checks each issue
+assignment. The final 2026-10-24 focused run passed all three cases (9/9, 7/7
+and 10/10 criteria); its provenance is
+[`omp-gpt-6-1-sol-2026-10-24-2026-10-24_16-02-12.json`](provenance/omp-gpt-6-1-sol-2026-10-24-2026-10-24_16-02-12.json).
+An isolated `omp --no-session` smoke reported the exact session name
+`🐛 Daily Driver bug fixes`.
+
 
 `make evals-record ... POST_COMMENTS=1` also posts one comment per run on each
 pull request a case was built from (model-classes cases, whose description
@@ -1312,6 +1365,12 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
   the shell's GitHub access. A Claude Code cloud proxy grants the owner's
   access as well. Run only tasks whose tool permissions and effects you accept;
   this is a risk disclosure, not a credential-isolation gate.
+- **File-tool reads are confined.** Omp's `read`, `grep` and `glob` accept
+  existing task inputs and explicitly declared treatment documents, not host
+  source or sibling results. Bare sessions have no treatment allowance.
+  Unsupported paths fail closed. See the [adapter README](coder-eval-omp/README.md)
+  for permitted forms. This does not isolate Bash or concurrent filesystem
+  mutation; `tempdir` is not an OS sandbox. Historical records remain unchanged.
 - **Run replicates in parallel.** `JOBS` sets the subject or judge calls in
   flight; the default is one. One subject at a time a suite takes about two
   hours. A replicate waits on model calls, not on the container: at 12 subject

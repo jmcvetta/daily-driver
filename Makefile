@@ -11,7 +11,7 @@ SHELL := /bin/bash
 	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat check-title-gate \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean \
-	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-embark-title-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader \
+	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-embark-title-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader check-dispatch-grader \
 	check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
 	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
 	check-infra check-plugin-validity check-runtime \
@@ -126,7 +126,7 @@ check-runtime: check-constitution check-ask-in-chat check-title-gate check-omp-e
 check-git-sync:
 	python3 scripts/check-git-sync.py
 
-check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader \
+check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader check-dispatch-grader \
 	check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
 	check-evals-results check-model-telemetry check-evals-setup-omp check-undertake-readiness
 
@@ -138,8 +138,10 @@ check-issue-infra: check-labels check-labels-fixtures
 # separately. --strict is what turns its warnings — unrecognized fields, a
 # marketplace entry whose version disagrees with plugin.json — into failures.
 check-plugin:
+	claude --version
 	claude plugin validate --strict .
 	claude plugin validate --strict .claude-plugin/plugin.json
+	@echo 'Strict plugin and marketplace validation passed'
 
 check-skills:
 	claude plugin validate --strict skills
@@ -387,6 +389,14 @@ check-eval-fixtures:
 # the script's header.
 check-model-classes-grader:
 	scripts/check-model-classes-grader.sh
+
+# check-dispatch-grader: case 03 grades task assignments from structured Omp
+# evidence -- one per `tasks[]` entry, retries kept, prohibitions in shared
+# context ignored -- instead of a regex over the first 2000 characters of the
+# serialized call. Pure stdlib, no coder-eval and no network. See the script's
+# header.
+check-dispatch-grader:
+	python3 scripts/check-dispatch-grader.py
 
 # check-task-worktree-fixture: prove the linked and detached repositories used
 # by the task-worktree behavior rows can satisfy every invariant they grade.

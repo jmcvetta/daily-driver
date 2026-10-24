@@ -5,6 +5,10 @@ session running in Claude Code. Omp's routes are in [`omp.md`](omp.md) and
 Codex's in [`codex.md`](codex.md); both carry the harness-local subagent
 fallback rather than web-session tables, for different reasons each states.
 
+Do not ask for landing or archive authorization before starting the workflow.
+If a tool denies an action, report the denied action and reason, and do not
+bypass the denial or record the action as complete.
+
 
 The epic
 ========
@@ -174,7 +178,10 @@ The watch
 | `Watch the wave` | Read a pull request's state and checks | `mcp__github__pull_request_read` |
 | `Watch the wave` | Arm the backstop | `mcp__Claude_Code_Remote__send_later`, ten minutes out |
 | `Watch the wave` | Archive a finished session | `mcp__Claude_Code_Remote__archive_session` |
+| `Watch the wave` | Post the archive record after successful archival | `mcp__github__add_issue_comment` |
 | `Land the pull request` | Read a task/bug PR draft, merge state, head SHA, labels, and body | `mcp__github__pull_request_read`, method `get` |
+| `Land the pull request` | Diagnose blocked CI | `review-cycle`'s `references/claude.md` checks and status reads |
+| `Land the pull request` | Read the aggregate review decision when available | Authenticated `gh pr view <number> --repo <owner>/<repo> --json headRefOid,reviewDecision`; if unavailable, report that evidence gap |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
 | `Land the pull request` | Read the review-cycle completion notice | `mcp__github__pull_request_read`, method `get_comments`, every page — `user.login` |
 | `Land the pull request` | Read the commits after the notice's SHA | `mcp__github__get_commit`, from `head.sha` back along first parents — `parents` |
@@ -183,6 +190,11 @@ The watch
 | `Close the epic` | Close as completed | `mcp__github__issue_write`, `method: update`, `state: closed`, `state_reason: completed` |
 | `Close the epic` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger` |
 | `Close the epic` | Drop each subscription | `mcp__github__unsubscribe_pr_activity` |
+
+Post the archive record to the epic only after `archive_session` returns
+success. If a landing record is written, post it only after
+`merge_pull_request` returns success. A denied or failed call must not be
+recorded as completed.
 
 Landing and close
 -----------------
@@ -193,6 +205,15 @@ to. The same `get` call supplies the labels and body for the human-action read.
 The complete thread read is the one `review-cycle`'s `Review history,
 publication, and threads` names; a partial review-comments page does not
 answer the gate.
+
+`blocked` alone does not identify a required approval. The aggregate
+`reviewDecision: REVIEW_REQUIRED` establishes an outstanding review
+requirement; a missing or empty decision does not prove that all requirements
+are satisfied. Individual review comments do not establish repository review
+requirements. Combine this evidence with current-head CI, complete threads,
+and explicit blockers. Pending CI retains the existing continuation. Missing
+access or inconclusive evidence leaves the cause unresolved, not human-only.
+Only `clean` can pass the merge-state read.
 
 The completion read is the conversation-comment read `review-cycle`'s
 `Review-cycle completion notice` names, read to the last page: the latest

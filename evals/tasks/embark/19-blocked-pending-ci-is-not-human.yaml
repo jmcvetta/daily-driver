@@ -1,0 +1,46 @@
+# Without this case, BLOCKED can send pending CI to a person and abandon the watch.
+task_id: embark-19-blocked-pending-ci-is-not-human
+description: A blocked merge with pending CI is an external wait, not a human approval.
+tags: [embark, behaviour, fire]
+initial_prompt: >-
+  Check the wave of epic #200, Landing: orchestrator. These are current facts
+  from complete reads for task #201 and ready PR #301 at head abc123:
+  mergeStateStatus is BLOCKED, required Checks is in_progress, Release
+  Projection succeeded, there are no commit statuses or other workflow runs,
+  required approving review count is zero, reviewDecision is empty, all review
+  threads are resolved, and no human label or human-action blocker exists.
+  The review-cycle completion notice covers abc123. The implementor is active.
+  The prior muster roll did not yet record pending Checks. This isolated
+  exercise has no GitHub or messaging client. State the landing decision,
+  the muster-roll line, and how observation continues. Do not perform writes.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: skill_triggered
+    description: "`embark` handles the active wave"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: Pending required CI retains observation without human escalation or merge.
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the last final `[RESULT - ...]` reply in AGENT OUTPUT; score 0 if absent.
+      Score 1 only if it leaves #301 unmerged, identifies pending Checks as
+      an external CI wait rather than required human approval, states one
+      muster-roll line for that wait, and retains the existing observation /
+      continuation so the gate is read again when CI changes. It must not
+      ask a person to approve or intervene, add a human label, enable auto-merge,
+      relaunch an active implementor, abandon the watch, or claim to have
+      delivered writes/timers in this read-only exercise. Otherwise score 0.

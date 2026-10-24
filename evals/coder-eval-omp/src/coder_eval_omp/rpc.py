@@ -196,6 +196,9 @@ class ToolStarted:
     tool_name: str
     parameters: dict[str, Any]
     raw_tool_name: str
+    finished: ToolFinished | None = None
+    """The call's end, once seen. Set on the call itself, so a reused call id
+    cannot attach one call's result to another."""
 
 
 @dataclass
@@ -206,6 +209,8 @@ class ToolFinished:
     status: str
     summary: str | None = None
     error: str | None = None
+    result: Any = None
+    """The frame's `result` exactly as it arrived, structured details included."""
 
 
 @dataclass
@@ -220,6 +225,10 @@ class AgentFinished:
     usage: dict[str, int]
     awaiting_async_work: bool = False
     """Omp's `awaitingAsyncWork`: the only possible resume is a background-job result."""
+    is_terminal_field: bool | None = None
+    """The frame's own `isTerminal`, or None where it was absent or not a boolean."""
+    awaiting_async_work_field: bool | None = None
+    """The frame's own `awaitingAsyncWork`, or None where it was absent or not a boolean."""
 
 
 @dataclass
@@ -343,6 +352,11 @@ def render_agent_output(assistant_texts: list[str], *, is_error: bool = False) -
     return "\n".join(parts)
 
 
+def _bool_or_none(value: Any) -> bool | None:
+    """A frame field kept as a boolean, so absent and false stay distinguishable."""
+    return value if isinstance(value, bool) else None
+
+
 class TurnReducer:
     """One `prompt` command's worth of Omp frames, reduced to actions.
 
@@ -361,6 +375,7 @@ class TurnReducer:
         self.open_tools: dict[str, ToolStarted] = {}
         self.tool_calls: list[ToolStarted] = []
         self.recognized = 0
+        self.last_recognized_kind: str | None = None
         self.unrecognized_types: set[str] = set()
         self.argument_keys_seen: set[str] = set()
         self.usage_keys_seen: set[str] = set()
@@ -386,6 +401,7 @@ class TurnReducer:
         kind = str(frame.get("type") or "")
         if kind in RECOGNIZED_FRAMES:
             self.recognized += 1
+            self.last_recognized_kind = kind
 
         handler = {
             "turn_start": self._on_turn_start,
@@ -516,21 +532,23 @@ class TurnReducer:
     def _on_tool_end(self, frame: dict[str, Any]) -> list[Action]:
         call_id = self._call_id(frame)
         self._on_tool_update(frame)
-        self.open_tools.pop(call_id, None)
+        started = self.open_tools.pop(call_id, None)
         error = frame.get("error")
         result = frame.get("result")
         summary = result if isinstance(result, str) else None
         if summary is None and isinstance(result, dict):
             summary = _text_of(result)
         is_error = bool(error) or bool(frame.get("isError"))
-        return [
-            ToolFinished(
-                call_id=call_id,
-                status="error" if is_error else "ok",
-                summary=summary,
-                error=str(error) if error else None,
-            )
-        ]
+        finished = ToolFinished(
+            call_id=call_id,
+            status="error" if is_error else "ok",
+            summary=summary,
+            error=str(error) if error else None,
+            result=result,
+        )
+        if started is not None:
+            started.finished = finished
+        return [finished]
 
     def _on_agent_end(self, frame: dict[str, Any]) -> list[Action]:
         """Settle the turn and account for its terminal messages.
@@ -551,6 +569,8 @@ class TurnReducer:
                 terminal=terminal,
                 usage=dict(self.usage),
                 awaiting_async_work=frame.get("awaitingAsyncWork") is True,
+                is_terminal_field=_bool_or_none(frame.get("isTerminal")),
+                awaiting_async_work_field=_bool_or_none(frame.get("awaitingAsyncWork")),
             )
         ]
 
@@ -571,10 +591,11 @@ class TurnReducer:
         A turn that died mid-flight leaves tools open, and the event protocol
         requires every start to be closed.
         """
-        closed = [
-            ToolFinished(call_id=call_id, status="unresolved", error="no result observed")
-            for call_id in list(self.open_tools)
-        ]
+        closed = []
+        for call_id, started in list(self.open_tools.items()):
+            finished = ToolFinished(call_id=call_id, status="unresolved", error="no result observed")
+            started.finished = finished
+            closed.append(finished)
         self.open_tools.clear()
         return closed
 

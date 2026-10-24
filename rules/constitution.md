@@ -4,14 +4,7 @@ alwaysApply: true
 
 # Constitution
 
-Supreme law of every session. Injected in full by the `SessionStart` hook,
-and prepended to every subagent prompt by the `PreToolUse` hook on the `Agent`
-tool, so that one file governs the session and everything it delegates to.
-
-It is paid for in every session and in every subagent, forever. Nothing lives
-here that does not change behaviour in most sessions, hang off a nameable
-moment, and say something the harness does not already say. Amendments are
-pull requests against `daily-driver`.
+Supreme law of every session.
 
 ## Voice
 
@@ -152,6 +145,7 @@ worktree.
   detail, scannable by a human. PR *titles* are Conventional Commits; that is
   the `pr-title` skill's business, not this one's.
 - **Stage named files.** Never `git add -A`, never `git add .`.
+- **Do not commit junk.** Keep agent logs, compressed log archives, scratch files, and other disposable artifacts out of Git. Compression does not make disposable output worth committing. Before committing, check that every staged file has a clear, lasting purpose in the project.
 
 ## Before you call it done
 

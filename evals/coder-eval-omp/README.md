@@ -74,6 +74,21 @@ map fails the task before Omp starts. One exception: an allowed `Skill` keeps
 reading `skill://<name>`. The agent logs it for each task.
 `docs/notes/0013-the-omp-arm.md` records what `--tools` does not restrict.
 
+**File tools stay within declared inputs.** `read`, `grep` and `glob` can read
+the task root and the linked treatment's `skills/`, `rules/`, `docs/`,
+`HAIKU.md` and `README.md`. A bare session gets only the task root.
+`skill://` access also requires a skill in the running session's registry.
+Canonical paths and descendant symlinks are checked before execution. A tree
+with an escaping symlink is refused as a whole.
+
+Use existing files, line selectors and `;`-joined targets. Searches support
+ordinary `*` and `?` globs. Missing targets, ambiguous forms and brace or
+character-class globs fail closed instead of reaching runtime path recovery.
+Provider files, sibling results and host evaluation definitions are not inputs.
+The adapter sets `CODER_EVAL_OMP_READ_POLICY`; do not supply it from an experiment.
+This is a file-tool guard, not OS isolation. A row granting Bash can still read
+the host through the shell. Concurrent filesystem mutation is not isolated.
+
 **A thinking suffix is a separate RPC setting.** Experiments name a model as
 `provider/model:level`, but Omp's `set_model` accepts only the provider and
 model id. `rpc.model_commands` strips a recognized level such as `:high` and
@@ -104,8 +119,29 @@ totals and price.
 
 Tool-call argument keys remain unsettled. The reducer keeps its compatible
 spellings and records the one a run sees; this capture made no tool call.
-After each completed turn, the adapter atomically writes the observed key
-union to `omp-protocol-observations.json` in the task sandbox.
+On every exit of an attempt, the adapter atomically writes the observed key
+union to `omp-protocol-observations.json` in the task sandbox. The exits are a
+completed turn, an async handoff, an early stop, maximum turns, a timeout, a
+provider failure, EOF, an unexpected exception and an external cancellation.
+
+The same file carries `omp_settlement_evidence` (version 1): one bounded record
+per attempt in the agent session, so a failed retry keeps the earlier record.
+Each record holds the attempt ordinal and iteration, the recognized-frame count
+and last recognized frame kind, elapsed monotonic seconds, the tool calls still
+pending when the attempt ended, counts of terminal, non-terminal and
+async-awaiting `agent_end` frames, the last 16 of them with an offset and the
+raw `isTerminal` and `awaitingAsyncWork` flags (`null` where the frame omitted
+the field), an overflow count, whether async settlement was enabled and taken,
+cancellation success, failure and timeout counts, and a fixed `exit_reason`.
+It never holds RPC messages, prompts, tool arguments or error text.
+
+This tells a missing handoff from an adapter failure: no `agent_end` observed
+means Omp never sent one, while an observed non-terminal end with
+`awaiting_async_work` true under `settle_on_async_handoff: false` means the
+adapter chose to wait. It does not hold full RPC frames, so a run without this
+record cannot be diagnosed after the fact. A write failure never replaces an
+attempt's timeout, crash or cancellation. On an otherwise normal attempt it
+fails the attempt as a crash.
 
 `omp-glm-5.3.yaml` reads that file through its experiment-default `post_run`
 command. Its stdout is each task's durable `post_run_results` evidence. A task
@@ -114,6 +150,40 @@ fields do not appear in `environment_info`, because `coder_eval` snapshots
 that object before the first turn. `get_sdk_options` is not a workaround:
 `resolve_agent_settings` prefers it over `agent_config` and would blank the
 report's Agent Settings.
+
+## Task-dispatch evidence
+
+A row that grades which issues an orchestrator assigned sets
+`record_task_dispatches: true` (default off). After the subject stops, on every
+exit path including a timeout or crash, the adapter atomically replaces
+`omp-task-dispatches.json` (`dispatch.py`, version 1). Before sending each
+prompt, it exclusively creates an `omp-task-dispatches.json.pending` directory.
+The grader rejects evidence while that guard exists. The adapter removes it
+only after successful atomic publication and temporary-file cleanup. Failed
+writes, replacement, cleanup or process interruption leave the guard in place;
+no diagnostic write is needed. If the guard cannot be created, the prompt
+does not run. An existing guard blocks retries, including a fresh adapter
+that cannot recover the interrupted attempt's calls. Keep failed sandboxes
+for audit; use a fresh sandbox for a new run, not manual guard removal.
+The artifact holds one record per attempted `task` call, retries included: the
+call and attempt identity, the arguments after their final update (`tasks[]`,
+requested agent and shared context), the outcome, and the raw result with its
+structured details. An argument-less start followed by an update is one call.
+Other tools' results are not kept, no field is truncated, and past the 8 MiB
+limit the file becomes an explicit instrumentation error that no grader can
+score as a pass. The normal telemetry is unchanged and no `Agent` call is
+synthesized.
+
+`evals/fixtures/fix-daily-driver-bugs/shared/check_dispatch.py` grades it with
+the supported `run_command` criterion, one assignment per `tasks[]` entry,
+using only each entry's `task` text. It requires a complete list of distinct
+jobs after the successful `Spawned N background agents using <agent>.` header.
+It accepts the observed Omp `Coordinate` paragraph only in its captured form
+and with a count matching the launch. Other suffixes, or extra launch-like
+lines after it, stay unknown and cannot pass.
+`make check-dispatch-grader` covers these parsing rules and the committed
+excerpts under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`;
+`make check-omp-agent-settle` drives the adapter itself.
 
 ## Cost
 

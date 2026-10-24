@@ -25,6 +25,13 @@ result; it cannot cancel calls already running in a batch. A free-form request
 that invokes `embark` without an explicit command does not activate this
 earlier barrier.
 
+Only interactive or RPC user input activates or supersedes this barrier.
+Plain `embark`, `/embark`, and `/skill:embark` commands each start a fresh
+identity check, including a repeated command for the same issue. Timer
+reminders, background results, and extension-origin input retain the current
+state even when their text starts with `Embark #<number>`. Provider-turn
+preparation is not a new user command.
+
 
 The wave
 ========
@@ -138,6 +145,7 @@ The watch
 | `Watch the wave` | Find a pull request for an issue when one exists | `issue://<number>` — `closed_by_pull_requests` |
 | `Watch the wave` | Read a child issue's body and comments | `issue://<number>` |
 | `Land the pull request` | Read draft, merge state, head SHA, labels, and body | `gh pr view <number> --json isDraft,mergeStateStatus,headRefOid,labels,body` |
+| `Land the pull request` | Diagnose a blocked gate | `gh pr view <number> --json headRefOid,reviewDecision,statusCheckRollup`; current-head checks, statuses, and workflow runs through `review-cycle`'s `references/omp.md` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/omp.md` thread read |
 | `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
 | `Land the pull request` | Read the commits after the notice's SHA | `git rev-list --first-parent --no-merges <sha>..<headRefOid>` after `git fetch` of the head |
@@ -150,6 +158,14 @@ milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
 `headRefOid` is the head the merge binds to. The labels and body answer the
 human-action read in the same call. The complete thread graph is the paginated
 GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
+
+`BLOCKED` alone does not identify a required approval. `reviewDecision`
+`REVIEW_REQUIRED` is evidence of an outstanding review requirement; a missing
+or empty decision does not prove that every merge requirement is satisfied.
+Use the CI reads above, the complete thread read, and the labels/body to
+identify the actual gate. Pending CI retains the existing continuation; an
+unavailable or inconclusive read leaves the cause unresolved. Only `CLEAN`
+can pass the merge-state read.
 
 The completion read is the conversation-comment read `review-cycle`'s
 `Review-cycle completion notice` names, read to the last page: the latest
@@ -217,10 +233,11 @@ round on the head is.
 Recovering an implementor
 =========================
 
-A correction is a message to the implementor's identifier. An implementor the
-harness reports as failed, or as finished with no pull request across two
-check-ins, is relaunched on the **same branch** — the claim comment
-`undertake` posted on the task issue records it, and the open pull request's
-head confirms it where one exists. The replacement is posted to the epic like
-any other replacement, naming the subagent retired and the one that took
-over.
+A correction is a message to the implementor's identifier. Read its lifecycle
+before recovery; never start a replacement alongside a live writer. An ended
+implementor whose open draft still has permitted work resumes on the **same
+branch**. A failed implementor, or one finished with no pull request across two
+check-ins, uses the same route. Read the claim, any handoff and the PR head to
+resolve that branch. Do not relaunch for an unchanged prerequisite when all
+permitted work is complete. The replacement is posted to the epic, naming the
+subagent retired and the one that took over.

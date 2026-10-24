@@ -1,0 +1,52 @@
+# Without this case, optional App auth can be made a prerequisite or an
+# explicitly approved comparison expansion can be silently dropped.
+task_id: epic-08-first-delivery-scope
+description: >-
+  Plan a first complete user outcome without treating optional authentication or
+  product comparison as prerequisites, while preserving truly required auth
+  and an explicitly approved expanded outcome.
+tags: [epic, behaviour, fire]
+
+initial_prompt: |
+  Help plan an agreed deployment for a small team. The first use case needs only
+  a scoped project token; the platform also offers optional GitHub App login.
+  Security policy separately requires SSO for accounts that access customer
+  records. A product comparison was suggested as a later independent improvement
+  but is not accepted as a prerequisite. Do not remove that suggestion; state
+  where it belongs relative to first delivery.
+
+  Now consider a second variant: the operator explicitly chooses to include
+  product comparison in the first delivery after you explain that it expands
+  the agreed outcome. Preserve that informed choice. Do not keep asking, invent
+  time estimates, or automatically open follow-up issues. Give a concise plan
+  for both variants and distinguish necessary prerequisites from independent
+  improvements.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 480}
+success_criteria:
+  - type: agent_judge
+    description: First delivery is complete and optional scope remains optional
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply. Start rationale with `ANCHOR: result` or `ANCHOR:
+      none`; score 0 if no final result exists. Score 1 only if both variants
+      distinguish the smallest complete useful outcome from independent
+      comparison work, do not make optional GitHub App authentication a
+      prerequisite when the scoped token suffices, preserve SSO for customer
+      record access as mandatory, and preserve comparison in the second variant
+      after the informed explicit choice. Do not demand repeated approval,
+      invented estimates, or automatic follow-up issues. Score 0.5 for one
+      material omission and 0 for scope deletion or optional prerequisites.

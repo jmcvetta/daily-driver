@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.53.0](https://github.com/jmcvetta/daily-driver/compare/v0.52.0...v0.53.0) (2026-10-24)
+
+
+### Features
+
+* **constitution:** prevent committing disposable artifacts ([#646](https://github.com/jmcvetta/daily-driver/issues/646)) ([13965b2](https://github.com/jmcvetta/daily-driver/commit/13965b28c9cca386da446678d17cebcd0bbafd6b))
+* **fix-daily-driver-bugs:** set a fixed coordinator title ([#655](https://github.com/jmcvetta/daily-driver/issues/655)) ([a4d0b1d](https://github.com/jmcvetta/daily-driver/commit/a4d0b1db42d290956ae3e341f830975eb91f2ace))
+* plan first delivery before optional expansion ([#638](https://github.com/jmcvetta/daily-driver/issues/638)) ([f3c2d58](https://github.com/jmcvetta/daily-driver/commit/f3c2d58362c0c59aa5578fd3d19feb03fe943994))
+
+
+### Bug Fixes
+
+* **claude-code:** preserve project context under strict validation ([#659](https://github.com/jmcvetta/daily-driver/issues/659)) ([1a0c658](https://github.com/jmcvetta/daily-driver/commit/1a0c65824c0b6c8e846fdfe2c52658288912b60e))
+* **constitution:** keep documentation out of injected rules ([#658](https://github.com/jmcvetta/daily-driver/issues/658)) ([044ff72](https://github.com/jmcvetta/daily-driver/commit/044ff723d34ae95705e537b7e2c531f4f7634e56))
+* **embark:** advance permitted work behind the draft gate ([#634](https://github.com/jmcvetta/daily-driver/issues/634)) ([9b60b95](https://github.com/jmcvetta/daily-driver/commit/9b60b95d71c84ddb51d38f3bc4a76dfc2925d533))
+* **embark:** diagnose blocked merge gates before human escalation ([#653](https://github.com/jmcvetta/daily-driver/issues/653)) ([05d8f4d](https://github.com/jmcvetta/daily-driver/commit/05d8f4dd0a1e13d15dc951bf8a49030b49944f78))
+* **embark:** preserve the startup gate across reminder wakes ([#647](https://github.com/jmcvetta/daily-driver/issues/647)) ([7f61321](https://github.com/jmcvetta/daily-driver/commit/7f6132172fc8e6c2b26d0475a26986b4401e3957))
+* **embark:** remove upfront landing authorization gate ([#644](https://github.com/jmcvetta/daily-driver/issues/644)) ([5e5a5ce](https://github.com/jmcvetta/daily-driver/commit/5e5a5ce22b034f358e32377e1c764cd04b75cec1))
+* **embark:** request landing authorization before actions ([#628](https://github.com/jmcvetta/daily-driver/issues/628)) ([ec90477](https://github.com/jmcvetta/daily-driver/commit/ec90477c68189677bfdd0fd876badd822d74cdbe))
+* **evals:** accept offline safety prose in Omp task dispatch ([#641](https://github.com/jmcvetta/daily-driver/issues/641)) ([a72fb28](https://github.com/jmcvetta/daily-driver/commit/a72fb283e0946e72db61d3f3cf5ece9b8e028ab2))
+* **evals:** grade case 03 dispatches from structured task evidence ([#643](https://github.com/jmcvetta/daily-driver/issues/643)) ([07ac7ca](https://github.com/jmcvetta/daily-driver/commit/07ac7ca7e3c7e0df80699fe3840e62d96c51fa9c))
+* **evals:** preserve Omp settlement evidence on every attempt exit ([#642](https://github.com/jmcvetta/daily-driver/issues/642)) ([c18d18d](https://github.com/jmcvetta/daily-driver/commit/c18d18d116f610370860dcba9338a324d11e0e8a))
+
 ## [0.52.0](https://github.com/jmcvetta/daily-driver/compare/v0.51.0...v0.52.0) (2026-10-18)
 
 
@@ -32,15 +55,32 @@
 
 ## [Unreleased]
 
+
+### Features
+
+* **epic:** plan first useful delivery, early integration proof, outcome-based task boundaries, and deployment continuity ([#633](https://github.com/jmcvetta/daily-driver/issues/633))
+
+
 ### Tests
+
+* **evals:** add offline behavioral coverage for delivery scope, integration ordering, useful task boundaries, and deployment state continuity
 
 * **evals:** record the bounded Sol/Luna/Terra comparison, its isolation limits, and normalized resource use ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
 * **evals:** preserve both historical schema-4 formats while new records retain token buckets and subscription billing ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
 * **evals:** load the pinned official Worktrunk dependency in treated Claude variants and both comparison variants ([#626](https://github.com/jmcvetta/daily-driver/issues/626)). Earlier Claude runs that omitted it did not measure Daily Driver skills; historical records remain unchanged.
+
 ### Bug Fixes
 
-* **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575))
+* **embark:** remove the upfront landing and archive authorization question; default to orchestrator mode while preserving explicit by-hand opt-outs and real tool denials
+* **embark:** advance permitted preparation behind the draft gate without bypassing real approvals or repeating unchanged status reports ([#632](https://github.com/jmcvetta/daily-driver/issues/632))
+* **evals:** accept offline safety prose in Omp task dispatch while keeping child URI targets blocked ([#636](https://github.com/jmcvetta/daily-driver/issues/636))
+* **constitution:** remove delivery and maintenance text from injected rules ([#656](https://github.com/jmcvetta/daily-driver/issues/656))
+
+* **claude-code:** keep repository context loadable while preserving strict plugin validation ([#657](https://github.com/jmcvetta/daily-driver/issues/657))
+
+* **task-worktree:** map a primary-held Claude designation to a sibling execution branch ([#575](https://github.com/jmcvetta/daily-driver/issues/575)) ([bb73965](https://github.com/jmcvetta/daily-driver/commit/bb73965ecbb78f2e9b3f80282d994e598a76124c))
 * **evals:** measure undertake readiness rows 08, 10 and 13 from offline action evidence ([#609](https://github.com/jmcvetta/daily-driver/issues/609))
+* **evals:** grade case 03 from structured Omp task-call evidence; guard each prompt before execution so failed writes and interrupted atomic publication cannot expose stale passing evidence; historical measurements are unchanged ([#635](https://github.com/jmcvetta/daily-driver/issues/635))
 * **evals:** accept truthful mock-only disclosure in `undertake` row 17 and score row 14's resume explanation 1.0 / 0.5 / 0.0 ([#610](https://github.com/jmcvetta/daily-driver/issues/610))
 
 ## [0.50.0](https://github.com/jmcvetta/daily-driver/compare/v0.49.3...v0.50.0) (2026-10-08)
