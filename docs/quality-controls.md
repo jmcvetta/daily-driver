@@ -35,7 +35,6 @@ To compare two repositories, compare their rows for one control ID.
 | Status | Meaning |
 | --- | --- |
 | `gate` | Runs in CI on every relevant pull request, and a failure blocks the merge. |
-| `ci` | Runs in CI, but no required check carries it, so a failure does not block the merge. |
 | `local` | Configured in the repository, but run only by hand. |
 | `none` | No implementation exists yet for this ecosystem. |
 
@@ -81,7 +80,7 @@ is declared in version-controlled configuration.
 | CA | `Checks`, `Release Projection` | `gate` |
 | PG | `Checks`, `Release Projection` | `gate` |
 | CMWB | `Checks`, `Release Projection` | `gate` |
-| PRA | `validate-title` only; the projection, `test` and `infra` run as separate workflows (`test` and `infra` path-filtered) | `gate` for the title, `ci` for the rest |
+| PRA | `Checks`, `Release Projection` | `gate` |
 
 ### QC-PR-TITLE — Conventional Commits title
 
@@ -100,7 +99,7 @@ cut.
 
 - `jmcvetta/projected-releases-action`, as a sticky comment.
 - Status: `gate` in DD, CA, PG and CMWB (inside the `Release Projection` job);
-  `ci` in PRA, which runs its own action.
+  `gate` in PRA, which runs its own action.
 
 ### QC-RELEASE-CONFIG — release configuration is valid
 
@@ -140,7 +139,7 @@ difference fails the check.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
-| `npm run build`, then `git diff --quiet -- dist` (bundled action) | PRA | `ci` |
+| `npm run build`, then `git diff --quiet -- dist` (bundled action) | PRA | `gate` |
 | `terramate generate`, then `git diff --exit-code` (`make -C infra check-generated-code`) | PG | `gate` |
 | `scripts/evals-render-results.py --check` fails when the committed `evals/RESULTS.md` differs from a fresh render (`make check-evals-results`) | DD | `gate` |
 | The `Measured routes` table that `scripts/evals-render-routes.py` writes into `skills/issue-body/references/omp.md` has no freshness check | DD | `none` |
@@ -192,7 +191,7 @@ difference and never rewrites in CI.
 | Python | Black, zero configuration (`black --check`) | CA | `gate` |
 | Ruby | StandardRB | PG | `gate` |
 | OpenTofu / HCL | `tofu fmt -check -recursive` | DD, CA, PG, CMWB | `gate` |
-| OpenTofu / HCL | `tofu fmt -check -recursive` | PRA | `ci` |
+| OpenTofu / HCL | `tofu fmt -check -recursive` | PRA | `gate` |
 | Terramate | `terramate fmt --check` | PG | `gate` |
 | Shell | — | — | `none` |
 
@@ -220,7 +219,7 @@ too.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | TypeScript | `tsc --noEmit`, `strict: true`; only `packages/gold-prices` has a separate test tsconfig | PG | `gate` |
-| TypeScript | `tsc --noEmit` plus `tsc -p tsconfig.test.json` | PRA | `ci` |
+| TypeScript | `tsc --noEmit` plus `tsc -p tsconfig.test.json` | PRA | `gate` |
 | JavaScript (repository scripts) | — | DD | `none` |
 | Python | pyright, `typeCheckingMode = "strict"` | CA | `gate` |
 | Python (repository scripts) | — | DD | `none` |
@@ -270,7 +269,7 @@ Application code has committed tests that assert and run in CI.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | TypeScript | vitest | PG | `gate` |
-| TypeScript | vitest | PRA | `ci` |
+| TypeScript | vitest | PRA | `gate` |
 | Python | pytest, with pytest-impacted selection and pytest-xdist | CA | `gate` |
 | Python | pytest (`tests/test_git_sync.py`) | CMWB | `gate` |
 | Python | `unittest` (`apps/omp-web/scripts`) | PG | `gate` |
@@ -285,7 +284,7 @@ request or fails it.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | pytest-cov with branch coverage; per-package line and branch floors in `kokoro/coverage-baseline.json`, enforced on full runs | CA | `gate` |
-| TypeScript | vitest v8 coverage, with a diff-aware sticky comment (`davelosert/vitest-coverage-report-action`); no threshold | PRA | `ci` |
+| TypeScript | vitest v8 coverage, with a diff-aware sticky comment (`davelosert/vitest-coverage-report-action`); no threshold | PRA | `gate` |
 | TypeScript | — | PG | `none` |
 
 ### QC-MUTATION — test strength
@@ -307,11 +306,11 @@ changing it.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | TypeScript (pnpm) | `pnpm install --frozen-lockfile` | PG | `gate` |
-| TypeScript (npm) | `npm ci` | PRA | `ci` |
+| TypeScript (npm) | `npm ci` | PRA | `gate` |
 | JavaScript (npm) | `npm ci` (CI-selector dependencies) | DD | `gate` |
 | Python (uv) | `uv lock --check --offline` | CA | `gate` |
 | OpenTofu providers | `tofu init`, then `git diff --quiet` on `.terraform.lock.hcl` | DD | `gate` |
-| OpenTofu providers | the same | PRA | `ci` |
+| OpenTofu providers | the same | PRA | `gate` |
 | OpenTofu providers | — | CA, PG, CMWB | `none` |
 
 ### QC-VULN-AUDIT — known-vulnerable dependencies
@@ -333,7 +332,7 @@ started.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | TypeScript | package `build` (`tsc`, `astro build`) inside each package's `make test` | PG | `gate` |
-| TypeScript (bundled action) | esbuild bundle, then `node dist/index.mjs` must reach its own input checks | PRA | `ci` |
+| TypeScript (bundled action) | esbuild bundle, then `node dist/index.mjs` must reach its own input checks | PRA | `gate` |
 | Containers | image build plus a verification script (`apps/omp-web`, `apps/paseo`) | PG | `gate` |
 
 ### QC-IAC-VALIDATE — infrastructure configuration is valid
@@ -344,7 +343,7 @@ including configurations applied by hand.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | OpenTofu | `tofu init -backend=false && tofu validate` on `infra/github` | DD, CA, CMWB | `gate` |
-| OpenTofu | the same | PRA | `ci` |
+| OpenTofu | the same | PRA | `gate` |
 | OpenTofu | the same on every hand-applied configuration (`make check-manual-validate`) | PG | `gate` |
 | OpenTofu | offline `tofu plan` with fixture credentials (`apps/omp-web`) | PG | `gate` |
 
@@ -362,7 +361,7 @@ a reason.
 
 ## Adoption matrix
 
-`gate`, `ci`, `local` and `none` as above. Two more values appear in the
+`gate`, `local` and `none` as above. Two more values appear in the
 matrix only:
 
 - `on` means a bot is configured (`QC-DEPENDENCY-UPDATES` is not a check).
@@ -376,30 +375,30 @@ control covers.
 
 | Control | DD | CA | PG | PRA | CMWB |
 | --- | --- | --- | --- | --- | --- |
-| QC-REQUIRED-CHECKS | gate | gate | gate | gate (title only) | gate |
+| QC-REQUIRED-CHECKS | gate | gate | gate | gate | gate |
 | QC-PR-TITLE | gate | gate | gate | gate | gate |
-| QC-RELEASE-PROJECTION | gate | gate | gate | ci | gate |
+| QC-RELEASE-PROJECTION | gate | gate | gate | gate | gate |
 | QC-RELEASE-CONFIG | none | gate | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate | none | none |
-| QC-GENERATED-FRESH | gate (partial) | local (TypeScript) | gate | ci | none |
+| QC-GENERATED-FRESH | gate (partial) | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none | on | none |
 | QC-TESTS-OFFLINE | none | gate | none | none | none |
-| QC-FORMAT | gate (HCL) | gate | gate | ci (HCL) | gate (HCL) |
+| QC-FORMAT | gate (HCL) | gate | gate | gate (HCL) | gate (HCL) |
 | QC-LINT | gate (shell, plugin) | gate (Python) | gate | none | none |
-| QC-TYPECHECK | none | gate (Python) | gate | ci | none |
+| QC-TYPECHECK | none | gate (Python) | gate | gate | none |
 | QC-COMPLEXITY | none | gate (Python) | none | none | none |
 | QC-FILE-SIZE | none | gate (Python) | none | none | none |
 | QC-MODULE-BOUNDARIES | n/a | gate (Python) | none | n/a | n/a |
 | QC-DOC-COMMENTS | none | gate (Python) | none | none | none |
-| QC-UNIT-TESTS | gate | gate | gate | ci | gate |
-| QC-COVERAGE | none | gate (Python) | none | ci | none |
+| QC-UNIT-TESTS | gate | gate | gate | gate | gate |
+| QC-COVERAGE | none | gate (Python) | none | gate | none |
 | QC-MUTATION | none | none | local | none | none |
-| QC-LOCKFILE | gate (npm, HCL) | gate (Python) | gate (pnpm) | ci | none |
+| QC-LOCKFILE | gate (npm, HCL) | gate (Python) | gate (pnpm) | gate | none |
 | QC-VULN-AUDIT | none | gate (Python) | none | none | n/a |
-| QC-BUILD | n/a | none | gate | ci | n/a |
-| QC-IAC-VALIDATE | gate | gate | gate | ci | gate |
+| QC-BUILD | n/a | none | gate | gate | n/a |
+| QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
 | QC-IAC-POLICY | none | none | gate | none | none |
 
 CA also holds a TypeScript tree (`agent-cli`, `core`, `cflow`, `viewer`,
