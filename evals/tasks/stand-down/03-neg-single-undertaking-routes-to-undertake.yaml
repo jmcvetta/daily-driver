@@ -26,12 +26,11 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`stand-down` does not fire on a single undertaking"
     expected_skill: none
     skill_name: stand-down
-    # A misfire has already lost the row, so there is nothing left to pay for.
-    stop_early: {}
-
+  # Informational firing score; the behaviour judge determines the result.
   - type: agent_judge
     description: >-
       The reply follows undertake's stop route and runs no fleet stand-down

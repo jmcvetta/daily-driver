@@ -63,6 +63,7 @@ success_criteria:
   # `01` gives: there is no fail-stopping criterion here for a bare arm to
   # defer.
   - type: skill_triggered
+    weight: 0
     description: "`issue-deps` fires on a dependency discovered while planning"
     expected_skill: issue-deps
     skill_name: issue-deps

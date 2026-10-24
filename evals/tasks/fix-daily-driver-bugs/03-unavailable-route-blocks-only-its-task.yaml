@@ -162,11 +162,13 @@ initial_prompt: >-
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: The repository-local bug triage skill is loaded
     expected_skill: fix-daily-driver-bugs
     skill_name: fix-daily-driver-bugs
 
   - type: skill_triggered
+    weight: 0
     description: The existing session-title policy is invoked
     expected_skill: session-title
     skill_name: session-title
