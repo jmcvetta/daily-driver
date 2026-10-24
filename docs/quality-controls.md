@@ -393,7 +393,7 @@ control covers.
 | QC-FILE-SIZE | none | gate (Python) | none | none | none |
 | QC-MODULE-BOUNDARIES | n/a | gate (Python) | none | n/a | n/a |
 | QC-DOC-COMMENTS | none | gate (Python) | none | none | none |
-| QC-UNIT-TESTS | gate | gate | gate | gate | gate |
+| QC-UNIT-TESTS | none | gate | gate | gate | gate |
 | QC-COVERAGE | none | gate (Python) | none | gate | none |
 | QC-MUTATION | none | none | local | none | none |
 | QC-LOCKFILE | gate (npm, HCL) | gate (Python) | gate (pnpm) | gate | none |
