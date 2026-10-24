@@ -62,8 +62,8 @@ retry count is zero.
 **It is registered as a new kind, not as a replacement for `codex`.** The
 registry rejects two implementations claiming one kind, so shadowing the
 built-in would change what every other `coder_eval` user's `codex` means. The
-distinct kind also makes the routing readable: `scripts/check-eval-arms.py` maps
-a pinned `agent.type` to the arm tag it must carry.
+distinct kind also makes the routing readable: each experiment's `agent.type`
+must match its arm tag.
 
 ## The normalisation that is not here
 
@@ -116,12 +116,8 @@ transcript itself and this package is a no-op worth deleting.
 ## What is tested, and what is not
 
 `transcript.py` and `plugins.py` import nothing — not `coder_eval`, not the
-Codex SDK — and `scripts/check-codex-agent.py` drives both in `make check`. That
-leg asserts the rendered shape is byte-identical to
-`coder_eval_omp.rpc.render_agent_output` for one block, which is what keeps one
-rubric readable on both harnesses without either package depending on the other;
-and it builds the self-referential symlink a relative root produces, so the
-assertion is the failure itself rather than a description of it.
+Codex SDK — so their transcript normalization and plugin-root resolution are
+independent of those runtime dependencies.
 
 `agent.py` cannot be reached without a `coder-eval` install and the Codex SDK,
 and CI here has neither. What it holds is the subclass: two overrides, a

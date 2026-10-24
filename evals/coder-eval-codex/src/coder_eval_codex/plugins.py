@@ -1,8 +1,7 @@
 """Plugin roots, resolved — with no `coder_eval` in sight.
 
 Pure, for the reason `transcript.py` is: the agent cannot be exercised without a
-`coder_eval` install and the Codex SDK, so what is load-bearing lives here and
-`scripts/check-codex-agent.py` drives it in `make check`.
+`coder_eval` install and the Codex SDK. The plugin-root resolution lives here.
 
 **What it is for.** `CodexAgent._setup_skills` links a plugin root's skills into
 `<task cwd>/.agents/skills/<name>` with `target.symlink_to(skill_dir)`, and
@@ -33,9 +32,8 @@ from typing import Any, Mapping
 class PluginPathError(RuntimeError):
     """A `plugins:` entry that cannot be turned into a usable root.
 
-    A plain `RuntimeError` subclass, because this module imports nothing — that
-    is what lets `scripts/check-codex-agent.py` drive it with no `coder_eval`
-    installed. It is NOT the exception the agent raises: `coder_eval`
+    A plain `RuntimeError` subclass, because this module imports nothing. It is
+    NOT the exception the agent raises: `coder_eval`
     categorises a bare `RuntimeError` as the retryable `AGENT_API_ERROR`, so a
     deterministic path failure would be retried three times with backoff, the
     Codex client re-spawned each time, and finally reported as a network

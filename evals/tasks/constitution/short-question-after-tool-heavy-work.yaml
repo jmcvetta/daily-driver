@@ -180,8 +180,6 @@ sandbox:
             lint                     success
             check-step-names         success
             check-plugin-validity    success
-            check-eval-tooling       success
-            check-ci-scope           success
             evals-plan               success
 
         - path: tracker/checks/318.txt
@@ -189,7 +187,6 @@ sandbox:
             PR #318, head 90be2d1
 
             lint                     success
-            check-ci-scope           success
 
 initial_prompt: |
   Read the tracker export under `tracker/` — issue 457, its pull request, and

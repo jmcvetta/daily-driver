@@ -1,7 +1,7 @@
 """A row's tool lists, turned into the `omp` flag that enforces them.
 
-Pure, for the reason `rpc.py` is: `scripts/check-omp-agent.py` runs it in
-`make check` with no `coder_eval` and no `omp` installed.
+Pure, for the reason `rpc.py` is: it has no `coder_eval` or `omp` import at
+module scope, so the adapter functions can be imported directly.
 
 Omp's `--tools=<list>` names the built-in tools a session gets, and works with
 `--mode rpc`. A row writes its lists in Claude Code's vocabulary, so this

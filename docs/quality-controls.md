@@ -120,7 +120,7 @@ with fixtures, not only a sentence in a document.
 | Implementation | Repository | Status |
 | --- | --- | --- |
 | Opengrep rules with fixtures in `.opengrep/rules/` (for example no `npx`, no `git add -A`, no `terraform_remote_state`) | PG | `gate` |
-| Repository check scripts under `scripts/` (for example `check-step-names.py`, `check-manifests.py`, `check-labels.py`, `check-release-paths.py`) | DD | `gate` |
+| Repository checks under `scripts/` (for example `check-step-names.py`, `check-manifests.py`, `check-labels.py`, `check-release-paths.py`, and `check-constitution.py`) | DD | `gate` |
 | Boundary sweep and Nx-input lint (`make test-python-boundary`, `make test-python-nx-inputs`) | CA | `gate` |
 
 ### QC-SAST — static analysis for defects and security
@@ -144,6 +144,7 @@ difference fails the check.
 | --- | --- | --- |
 | `npm run build`, then `git diff --quiet -- dist` (bundled action) | PRA | `gate` |
 | `terramate generate`, then `git diff --exit-code` (`make -C infra check-generated-code`) | PG | `gate` |
+| `scripts/evals-render-results.py` rewrites the committed `evals/RESULTS.md`; there is no freshness check | DD | `none` |
 | The `Measured routes` table that `scripts/evals-render-routes.py` writes into `skills/issue-body/references/omp.md` has no freshness check | DD | `none` |
 | `cflow/src/artifact.test.ts` byte-compares the committed workflow artifact with a fresh build, in the TypeScript suite that runs only locally | CA | `local` |
 
@@ -275,6 +276,7 @@ Application code has committed tests that assert and run in CI.
 | Python | pytest, with pytest-impacted selection and pytest-xdist | CA | `gate` |
 | Python | pytest (`tests/test_git_sync.py`) | CMWB | `gate` |
 | Python | `unittest` (`apps/omp-web/scripts`) | PG | `gate` |
+| Python / shell | No automated unit-test suite; `make check` runs product and convention checks | DD | `none` |
 | OpenTofu | `tofu test` for each module with a `tests/` directory | PG | `gate` |
 
 ### QC-COVERAGE — measured test coverage

@@ -51,7 +51,7 @@ agent:
               # cwd-relative path that ever stopped resolving would not lose
               # the roster, it would veto every dispatch in both arms and
               # report a routing table that dispatched nobody.
-              # `check-eval-fixtures.sh` asserts the recorder still runs.
+              # The recorder lets the evaluator observe whether dispatch occurred.
               command: python3 "$CLAUDE_PROJECT_DIR/.fixture/record-dispatch.py" || true
               timeout: 10
 
