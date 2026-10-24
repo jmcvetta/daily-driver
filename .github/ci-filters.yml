@@ -18,6 +18,8 @@ check-release-paths:
   - 'release-please-config.json'
 check-plugin:
   - '.claude-plugin/**'
+  - 'CLAUDE.md'
+  - '.claude/CLAUDE.md'
 check-skills:
   - 'skills/**'
 check-agents:

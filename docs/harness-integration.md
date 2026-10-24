@@ -2,6 +2,10 @@
 
 Daily Driver shares skill instructions and a marketplace catalog across Omp, Claude Code and Codex. Tool calls live in each skill's `references/` directory. Runtime adapters handle the differences between harnesses.
 
+Claude Code repository instructions live in `.claude/CLAUDE.md`, which imports
+the root `AGENTS.md`. This project context is distinct from plugin-delivered
+skills and the constitution injected by runtime hooks.
+
 ## Runtime integration
 
 Claude Code and Codex use hooks for the constitution and chat-based question
