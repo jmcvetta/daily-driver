@@ -106,8 +106,9 @@ cut.
 The release-please configuration validates against the upstream schema.
 
 - `uvx check-jsonschema` with release-please's `schemas/config.json`.
-- Status: `gate` in CA (`make check-release-config`); `local` in PG (a
-  documented command); `none` in DD, PRA and CMWB.
+- Status: `gate` in CA (`make check-release-config`, selected only when
+  `release-please-config.json` changes); `local` in PG (a documented
+  command); `none` in DD, PRA and CMWB.
 
 ### QC-CONVENTION-RULES — conventions as executable rules
 
