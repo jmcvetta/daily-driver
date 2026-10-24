@@ -118,7 +118,7 @@ with fixtures, not only a sentence in a document.
 | --- | --- | --- |
 | Opengrep rules with fixtures in `.opengrep/rules/` (for example no `npx`, no `git add -A`, no `terraform_remote_state`) | PG | `gate` |
 | Repository checks under `scripts/` (for example `check-step-names.py`, `check-manifests.py`, `check-labels.py`, `check-release-paths.py`, and `check-constitution.py`) | DD | `gate` |
-| Boundary sweep and Nx-input lint (`make test-python-boundary`, `make test-python-nx-inputs`) | CA | `gate` |
+| Boundary sweep (`make test-python-boundary`) | CA | `gate` |
 
 ### QC-SAST — static analysis for defects and security
 
