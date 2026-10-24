@@ -142,6 +142,7 @@ difference fails the check.
 | --- | --- | --- |
 | `npm run build`, then `git diff --quiet -- dist` (bundled action) | PRA | `ci` |
 | `terramate generate`, then `git diff --exit-code` (`make -C infra check-generated-code`) | PG | `gate` |
+| `scripts/evals-render-results.py --check` fails when the committed `evals/RESULTS.md` differs from a fresh render (`make check-evals-results`) | DD | `gate` |
 | `cflow/src/artifact.test.ts` byte-compares the committed workflow artifact with a fresh build, in the TypeScript suite that runs only locally | CA | `local` |
 
 ### QC-SUPPLY-CHAIN — controlled installation
@@ -364,8 +365,9 @@ a reason.
 matrix only:
 
 - `on` means a bot is configured (`QC-DEPENDENCY-UPDATES` is not a check).
-- `n/a` means the control has nothing to act on: the ecosystem is absent,
-  or, for `QC-GENERATED-FRESH`, no generated file is committed.
+- `n/a` means the control has nothing to act on in that repository: the
+  ecosystem is absent, nothing is built, the code is one package with no
+  internal import graph, or there are no third-party dependencies.
 
 A qualifier in parentheses names the part of the repository that the
 control covers.
@@ -378,7 +380,7 @@ control covers.
 | QC-RELEASE-CONFIG | none | gate | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate | none | none |
-| QC-GENERATED-FRESH | none | local | gate | ci | n/a |
+| QC-GENERATED-FRESH | gate | local (TypeScript) | gate | ci | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none | on | none |
 | QC-TESTS-OFFLINE | none | gate | none | none | none |
@@ -401,7 +403,8 @@ control covers.
 CA also holds a TypeScript tree (`agent-cli`, `core`, `cflow`, `viewer`,
 `polite-pace`). Its vitest and `tsc` legs run only locally (`make
 test-current`), because that code is aborted. This matrix reports CA's
-Python workspace and repository tooling.
+Python workspace and repository tooling; a cell that refers to the
+TypeScript tree says `(TypeScript)`.
 
 
 ## Candidates to explore
