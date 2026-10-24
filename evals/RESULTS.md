@@ -101,3 +101,5 @@ One row per committed record, oldest first.
 | 2026-10-23 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 0m 24s |
 | 2026-10-23 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 0/3 | subscription | subscription | 8m 11s |
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 8m 37s |
+| 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 1/3 | subscription | subscription | 9m 03s |
+| 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 7m 17s |

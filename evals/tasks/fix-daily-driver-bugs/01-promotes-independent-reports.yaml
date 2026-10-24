@@ -115,6 +115,7 @@ sandbox:
 agent:
   type: omp
   settle_on_async_handoff: true
+  record_task_dispatches: true
   allowed_tools: [Read, Grep, Glob, Skill, Bash, Write, Task]
   disallowed_tools: [WebFetch, WebSearch]
 
@@ -198,3 +199,14 @@ success_criteria:
     max_count: 1
     require_success: true
     weight: 2
+
+  - type: run_command
+    description: Issue #990001 is assigned to implementation exactly once
+    command: python3 .fixture/check_dispatch.py --require 990001 --agent implementation
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: Issue #990002 is assigned to implementation exactly once
+    command: python3 .fixture/check_dispatch.py --require 990002 --agent implementation
+    timeout: 30

@@ -268,9 +268,10 @@ make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
   TASKS='tasks/fix-daily-driver-bugs/01-promotes-independent-reports.yaml tasks/fix-daily-driver-bugs/02-no-duplicate-or-blocked-dispatch.yaml tasks/fix-daily-driver-bugs/03-unavailable-route-blocks-only-its-task.yaml'
 ```
 
-The 2026-10-24 focused run passed all three cases (7/7, 7/7 and 10/10
-criteria); its provenance is
-[`omp-gpt-6-1-sol-2026-10-24-2026-10-24_15-33-54.json`](provenance/omp-gpt-6-1-sol-2026-10-24-2026-10-24_15-33-54.json).
+Case 01 enables structured Omp dispatch recording and checks each issue
+assignment. The final 2026-10-24 focused run passed all three cases (9/9, 7/7
+and 10/10 criteria); its provenance is
+[`omp-gpt-6-1-sol-2026-10-24-2026-10-24_16-02-12.json`](provenance/omp-gpt-6-1-sol-2026-10-24-2026-10-24_16-02-12.json).
 An isolated `omp --no-session` smoke reported the exact session name
 `🐛 Daily Driver bug fixes`.
 
