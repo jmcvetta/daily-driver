@@ -31,6 +31,10 @@ success_criteria:
     skill_name: issue
     stop_early:
       on_pass: stop
+
+  # Unarmed: a second fire assertion cannot also carry the pass-stop, and a
+  # misfire here is already caught by the judge below reading a body that
+  # arrived without its contract.
   - type: skill_triggered
     description: "`issue-body` fires on the body being written"
     expected_skill: issue-body
