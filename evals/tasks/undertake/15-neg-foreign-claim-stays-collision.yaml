@@ -6,11 +6,9 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  Undertake task #52. Its comments hold a claim from a different session naming
+  Undertake task #52. Its comments hold a claim from a different session on
   branch issue-52-strict-parser, posted an hour ago. There is no stand-down
-  handoff comment, no open pull request, and nothing in this request says to
-  continue that session's work. Explain what the session does about the
-  existing claim before it implements anything.
+  handoff comment and no open pull request. Where do you start?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]

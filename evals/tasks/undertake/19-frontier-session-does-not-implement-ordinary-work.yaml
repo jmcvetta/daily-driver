@@ -9,7 +9,7 @@ initial_prompt: >-
   approval. This session is executing through Omp's `@reasoning` role, whose
   effective selector is the astra-backed `openai-codex/gpt-6-astra:high`.
   There is no configured non-frontier model-switch or delegation route in this
-  session. What do you do before implementation?
+  session.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
