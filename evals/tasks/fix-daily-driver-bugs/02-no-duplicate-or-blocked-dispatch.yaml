@@ -165,7 +165,7 @@ sandbox:
 agent:
   type: omp
   settle_on_async_handoff: true
-  allowed_tools: [Read, Grep, Glob, Skill, Bash, Task]
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write, Task]
   disallowed_tools: [WebFetch, WebSearch]
 
 run_limits:
@@ -186,6 +186,42 @@ success_criteria:
     description: The repository-local bug triage skill is loaded
     expected_skill: fix-daily-driver-bugs
     skill_name: fix-daily-driver-bugs
+
+  - type: skill_triggered
+    description: The existing session-title policy is invoked
+    expected_skill: session-title
+    skill_name: session-title
+
+  - type: command_executed
+    description: The fixed coordinator title is applied exactly once
+    tool_name: Write
+    command_pattern: 'daily_driver_set_session_title.*Daily Driver bug fixes'
+    min_count: 1
+    max_count: 1
+    require_success: true
+    weight: 2
+
+  - type: agent_judge
+    description: The session-title policy and fixed title precede backlog reads and dispatch
+    include_agent_output: false
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      The separate skill-triggered criterion checks policy use. Inspect the
+      actual tool-call trace, not assistant narration. Score 1.0 only if
+      exactly one successful Write call sets xd://daily_driver_set_session_title
+      to the exact JSON title "🐛 Daily Driver bug fixes", and that Write occurs
+      before the first GitHub `gh` read, write, or dispatch. Score 0.0 if the
+      Write is absent, late, repeated, failed, or uses any other title.
 
   - type: command_executed
     description: The verifier confirms preserved reports and no unsafe edits

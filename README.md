@@ -53,6 +53,14 @@ implement the issue, gather verification evidence, and open a pull request for
 review. Results depend on the task and the active harness; a request does not
 guarantee success or a merge.
 
+## Local maintenance
+
+In this repository, ask Omp to `fix-daily-driver-bugs` to triage open automatic
+reports and dispatch eligible fixes. While coordinating, the session title is
+`🐛 Daily Driver bug fixes`; issue implementors keep their issue-based titles.
+Include issue numbers to limit triage. This repository-local skill is not part
+of the published plugin.
+
 ## Skills
 
 Skills are instructions for recurring engineering tasks. Ask in plain language
