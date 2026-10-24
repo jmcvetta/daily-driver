@@ -93,3 +93,4 @@ One row per committed record, oldest first.
 | 2026-10-09 | classes-terra-5-6 | omp | openai-codex/gpt-5.6-terra (requested) | not recorded | 12 | 3/12 | not recorded | not recorded | 12m 00s |
 | 2026-10-17 | classes-smoke-terra-5-6 | omp | openai-codex/gpt-5.6-terra (requested) | not recorded | 2 | 2/2 | not recorded | not recorded | 5m 12s |
 | 2026-10-18 | classes-terra-5-6 | omp | openai-codex/gpt-5.6-terra (requested) | not recorded | 18 | 7/18 | subscription | subscription | 35m 08s |
+| 2026-10-24 | with-without-haiku-5-5 | claude-code | claude-haiku-5-5 | claude-code claude-sonnet-5 (task-pinned) | 1880 | 571/1880 | $70.62 | $0.12 | 13m 35s |
