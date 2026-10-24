@@ -31,11 +31,11 @@ description: >-
 tags: [conventional-commits-type, behaviour, fire]
 
 initial_prompt: >-
-  PR #387 bumps Stryker to the 10.x line in all four mutation projects, and
-  that is all it does. I pushed the branch with the title `chore(deps):
-  upgrade Stryker to the 10.x line in all four mutation projects`. The title
-  on it now reads `test: upgrade Stryker to the 10.x line in all four
-  mutation projects`. Is that type right, and sort the title out for me.
+  PR #387 bumps Stryker to the 10.x line in all four mutation projects and
+  does nothing else. I pushed the branch with the title `chore(deps):
+  upgrade Stryker to the 10.x line in all four mutation projects`, and the
+  title on it now reads `test: upgrade Stryker to the 10.x line in all four
+  mutation projects`. Is that type right? Sort the title out for me.
 
 agent:
   allowed_tools: [Bash, Read, Grep, Glob, Skill, Agent, Task]

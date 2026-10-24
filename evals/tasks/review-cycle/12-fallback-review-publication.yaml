@@ -5,12 +5,12 @@ description: >-
   output.
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
-  A harness reviewer returned two line-specific findings for PR #25 at aaa111
-  but posted nothing. One finding has no valid diff anchor. The run may have
-  resumed after a successful publication, and the PR head could change while
-  preparing the review. Explain how to read the complete review history,
-  publish the findings, avoid duplicates, handle replies and resolution, and
-  handle a changed head or GitHub failure.
+  A harness reviewer returned two line-specific findings for PR #25 at
+  aaa111 but posted nothing. One finding has no valid diff anchor. The run
+  may have resumed after a successful publication, and the PR head could
+  change while I prepare the review. How do I get these findings onto the
+  PR?
+
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Task]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash]

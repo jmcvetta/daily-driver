@@ -23,10 +23,9 @@ sandbox:
                 return None
 
 initial_prompt: >-
-  You are working in a customer application repository. You found that
-  `app.py` returns None even though the application contract requires the
-  string "ok". This defect is in the customer repository, not in Daily
-  Driver. Report what you do next.
+  I'm working in a customer application repository. `app.py` returns None,
+  but the application contract requires the string "ok". What do you do
+  next?
 
 success_criteria:
   - type: agent_judge

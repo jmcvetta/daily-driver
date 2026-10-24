@@ -5,24 +5,24 @@ description: >-
 tags: [issue, behaviour, fire]
 
 initial_prompt: |
-  Change this issue's kind from `proposal` to `research` and revise its body.
-  Its current body says: "We need to decide whether the nightly report should
-  include archived accounts. Support asked for this twice. The report is used
-  for monthly reconciliation. The data retention policy may constrain this,
-  but nobody has checked it." The issue also has the supplemental `story`
-  label and an unrelated `customer-visible` label. The user now specifies the
-  research purpose: decide whether archived rows belong in the report before
-  changing it. The bounded work is to inspect the report query and retention
-  policy, compare inclusion and exclusion against the reconciliation use, and
-  record a recommendation with evidence. Do not access production or change
-  code. The existing body ends with this provenance block; preserve it exactly:
+  Change this issue's kind from `proposal` to `research` and revise its
+  body. Its current body says: "We need to decide whether the nightly report
+  should include archived accounts. Support asked for this twice. The report
+  is used for monthly reconciliation. The data retention policy may
+  constrain this, but nobody has checked it." The issue also has the
+  supplemental `story` label and an unrelated `customer-visible` label. The
+  research purpose is to decide whether archived rows belong in the report
+  before changing it. The bounded work is to inspect the report query and
+  retention policy, compare inclusion and exclusion against the
+  reconciliation use, and record a recommendation with evidence. The
+  existing body ends with this provenance block:
 
   ---
   Model: fixture-model
   Harness: Omp 18.8.4
   session: fixture-session
 
-  Show the revised body; do not post.
+  Show me the revised body; don't post it.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]

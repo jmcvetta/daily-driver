@@ -5,12 +5,13 @@ description: >-
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
   A PR has a clean full review at aaa111, but after the fixes were pushed at
-  bbb222 the independent fix-delta reviewer is unavailable. CI is still green
-  and the threads are resolved. Explain whether to post a review-cycle completion
-  comment and what happens next. Also state the answer if CI were pending, the
-  three-defect non-convergence wall had been reached, or `Does it go again?`
-  found a material scope change requiring a new full review. Finally, explain
-  the publication decision for a clean standalone review.
+  bbb222 the independent fix-delta reviewer is unavailable. CI is still
+  green and the threads are resolved. Can I post the review-cycle completion
+  comment? What happens next, and would the answer change if CI were
+  pending, the three-defect non-convergence wall had been reached, or the
+  fixes were a material scope change needing a new full review? And what
+  about a clean standalone review?
+
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Task]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash]
