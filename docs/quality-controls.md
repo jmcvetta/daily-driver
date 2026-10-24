@@ -145,7 +145,6 @@ difference fails the check.
 | --- | --- | --- |
 | `npm run build`, then `git diff --quiet -- dist` (bundled action) | PRA | `ci` |
 | `terramate generate`, then `git diff --exit-code` (`make -C infra check-generated-code`) | PG | `gate` |
-| `scripts/evals-render-results.py --check` fails when the committed `evals/RESULTS.md` differs from a fresh render (`make check-evals-results`) | DD | `gate` |
 | The `Measured routes` table that `scripts/evals-render-routes.py` writes into `skills/issue-body/references/omp.md` has no freshness check | DD | `none` |
 | `cflow/src/artifact.test.ts` byte-compares the committed workflow artifact with a fresh build, in the TypeScript suite that runs only locally | CA | `local` |
 
@@ -277,7 +276,6 @@ Application code has committed tests that assert and run in CI.
 | Python | pytest, with pytest-impacted selection and pytest-xdist | CA | `gate` |
 | Python | pytest (`tests/test_git_sync.py`) | CMWB | `gate` |
 | Python | `unittest` (`apps/omp-web/scripts`) | PG | `gate` |
-| Python / shell | check scripts with fixture suites (`make check-*`) | DD | `gate` |
 | OpenTofu | `tofu test` for each module with a `tests/` directory | PG | `gate` |
 
 ### QC-COVERAGE — measured test coverage
