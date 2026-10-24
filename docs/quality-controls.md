@@ -382,7 +382,7 @@ control covers.
 | QC-RELEASE-CONFIG | none | gate | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate | none | none |
-| QC-GENERATED-FRESH | gate (partial) | local (TypeScript) | gate | gate | none |
+| QC-GENERATED-FRESH | none | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none | on | none |
 | QC-TESTS-OFFLINE | none | gate | none | none | none |
