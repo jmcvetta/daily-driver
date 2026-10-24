@@ -14,7 +14,7 @@ SHELL := /bin/bash
 	check-worktrunk-install check-labels check-infra check-plugin-validity check-runtime \
 	check-issue-infra check-model-telemetry model-telemetry \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
-	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
+	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
 	check-claude-dependency evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna \
 	evals-run-codex evals-run-comparison evals-run-classes mcp-usage
@@ -470,6 +470,14 @@ evals-render-routes:
 # record under evals/provenance/. Reads no run directory.
 evals-render-results:
 	python3 scripts/evals-render-results.py
+
+# evals-leaks: report behavior leaks and failures from every committed record.
+evals-leaks:
+	python3 scripts/check-evals-leaks.py
+
+# check-evals-leaks: exercise the leak classifier; #662 wires it into `check`.
+check-evals-leaks:
+	python3 scripts/check-evals-leaks.py --selftest
 
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tags on eval tasks and each runner's exclusion list
