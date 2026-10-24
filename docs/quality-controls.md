@@ -143,6 +143,7 @@ difference fails the check.
 | `npm run build`, then `git diff --quiet -- dist` (bundled action) | PRA | `ci` |
 | `terramate generate`, then `git diff --exit-code` (`make -C infra check-generated-code`) | PG | `gate` |
 | `scripts/evals-render-results.py --check` fails when the committed `evals/RESULTS.md` differs from a fresh render (`make check-evals-results`) | DD | `gate` |
+| The `Measured routes` table that `scripts/evals-render-routes.py` writes into `skills/issue-body/references/omp.md` has no freshness check | DD | `none` |
 | `cflow/src/artifact.test.ts` byte-compares the committed workflow artifact with a fresh build, in the TypeScript suite that runs only locally | CA | `local` |
 
 ### QC-SUPPLY-CHAIN — controlled installation
@@ -366,8 +367,9 @@ matrix only:
 
 - `on` means a bot is configured (`QC-DEPENDENCY-UPDATES` is not a check).
 - `n/a` means the control has nothing to act on in that repository: the
-  ecosystem is absent, nothing is built, the code is one package with no
-  internal import graph, or there are no third-party dependencies.
+  ecosystem is absent, nothing is built, the code is a single package (so
+  there is no boundary between packages to enforce), or there are no
+  third-party dependencies.
 
 A qualifier in parentheses names the part of the repository that the
 control covers.
@@ -380,7 +382,7 @@ control covers.
 | QC-RELEASE-CONFIG | none | gate | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate | none | none |
-| QC-GENERATED-FRESH | gate | local (TypeScript) | gate | ci | none |
+| QC-GENERATED-FRESH | gate (partial) | local (TypeScript) | gate | ci | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none | on | none |
 | QC-TESTS-OFFLINE | none | gate | none | none | none |
