@@ -138,8 +138,10 @@ check-issue-infra: check-labels check-labels-fixtures
 # separately. --strict is what turns its warnings — unrecognized fields, a
 # marketplace entry whose version disagrees with plugin.json — into failures.
 check-plugin:
+	claude --version
 	claude plugin validate --strict .
 	claude plugin validate --strict .claude-plugin/plugin.json
+	@echo 'Strict plugin and marketplace validation passed'
 
 check-skills:
 	claude plugin validate --strict skills
