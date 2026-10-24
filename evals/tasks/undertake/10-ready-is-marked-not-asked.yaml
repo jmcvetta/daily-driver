@@ -20,10 +20,8 @@
 # (`skills/undertake/SKILL.md`, `The milestone`).
 #
 # Other post-ready states (approval-blocked, unknown), a refused ready write,
-# CI on another head and failed reads are built by the same fixture and
-# asserted by `scripts/check-undertake-readiness.py`, offline. A blocked
-# attempt earns no completed-action claim there; this row's positive path does
-# not grade them.
+# CI on another head and failed reads are separate fixture scenarios. This
+# row covers the positive path only.
 #
 # Scoring. `skill_triggered` is activation and is reported on its own. The
 # verifier and the judge score the behavioural outcome; a run that only

@@ -1,7 +1,6 @@
 """Which files of a real Omp home the throwaway home may borrow.
 
-Pure on purpose, like `rpc`: `scripts/check-omp-agent.py` drives it with
-nothing installed.
+Pure on purpose, like `rpc`; it imports no `coder_eval` dependency.
 
 A run needs a model, and Omp keeps the model and its credentials in the real
 `~/.omp/agent/`. Everything else in that directory is a person's own setup, and

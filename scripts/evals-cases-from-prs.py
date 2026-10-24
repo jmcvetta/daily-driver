@@ -55,10 +55,9 @@ SELF-TESTS
     Every invocation runs `_run_self_tests()` first, offline, against inline
     JSON-shaped fixtures modelled on the GitHub REST responses this script
     reads: the qualifying filter, the test-file split, the class token read,
-    the elapsed read, `task_timeout` derivation, and rejection reasons. See
-    `check-eval-arms.py` for the precedent -- a check that cannot fail is a
-    check that passes for ever, silently, so each assertion here pairs with a
-    case that must fail it.
+    the elapsed read, `task_timeout` derivation, and rejection reasons.
+    Each assertion has a paired case that must fail it; a check that cannot
+    fail is not evidence.
 """
 
 from __future__ import annotations

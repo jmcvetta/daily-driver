@@ -158,7 +158,7 @@ no metered Anthropic key, and none is acquired. So no `ANTHROPIC_API_KEY`, no
 `AWS_BEARER_TOKEN_BEDROCK`, and no new `llm_judge` criterion: `llm_judge`
 calls the API directly and cannot run here. Write judges as `agent_judge`, with
 `allowed_tools: []`, `permission_mode: default` and the `disallowed_tools`
-list that `scripts/check-agent-judges.py` enforces. `allowed_tools: []` alone
+list of denied tools. `allowed_tools: []` alone
 hides nothing: a judge without the list reads the sandbox, times out, and
 scores 0.0 with no verdict.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
@@ -294,8 +294,8 @@ being asked is about collisions rather than about the no-fire cases as such.
 
 Not part of `make check`. The cases need a live model and this repository's CI
 is deliberately credential-free. What *is* part of `make check` is
-`check-eval-fixtures`, which builds every review-depth fixture repository with
-nothing but git — see "The git problem" below for why that leg exists.
+no test tooling target covering this fixture-build leg; see "The git problem"
+below for why the fixtures are built from nothing but git.
 
 **`llm_judge` is not an alternate credential route.** It calls Anthropic's
 metered API, which this project does not use. `make evals-run` rejects every
@@ -493,8 +493,8 @@ for (`include_agent_output`, `include_tool_calls`, `include_dialog`), marked
 untrusted, and nothing else: `omp --no-tools` with every discovery switch off, in
 an empty directory, in a throwaway home that borrows only the provider files
 `coder_eval_omp.home` lists. A criterion that attaches `files:` or the reference
-cannot be judged that way and is refused, not degraded. `make check-agent-judges`
-asserts the command line and the prompt, as it asserts the Claude denylist.
+cannot be judged that way and is refused, not degraded. The judge's command line
+and prompt must preserve this boundary, as must the Claude denylist.
 
 **Errors are not scores.** A judge that is unreachable, times out, or returns
 anything but exactly one verdict object (`score` in [0, 1], `rationale`,
@@ -529,8 +529,8 @@ labels or the rule and it is a new set with a new `set_id`.
 Two further sets, `undertake-17-truthful-mock-v1` and
 `undertake-14-resume-explanation-v1`, hold hand-labelled expectations for the
 corrected row-17 and row-14 rubrics (select one with `calibrate --dir`). They are
-**unmeasured**: no judge has run on them, and `check-evals-judge` verifies only their
-shape and that row 17's mock starts nothing. Measuring them needs separate
+**unmeasured**: no judge has run on them, and their schema and row-17 mock
+behavior are documented here. Measuring them needs separate
 authorization and a new measurement identity.
 
 ### `base-vs-candidate`: does a constitution change move a row
@@ -668,28 +668,21 @@ current head, before a ready write counts; it publishes a `First-readiness
 report` only when a read after the ready write affirms `CLEAN`; and it rejects a
 `Review record` in place of the notice, a notice written before the reads, a
 missing re-read, a new review round for a clean merge, and a duplicate or
-premature report. The service verifier needs a launch observed alive and stops
-whatever the run left behind. The judges now receive the tool calls
+premature report. Every valid transition and invalid case described here is an
+offline fixture scenario. The service verifier needs a launch observed alive and
+stops whatever the run left behind. The judges now receive the tool calls
 (`include_tool_calls`) and score a failed call as an observed limit that earns
-no completed-action credit. `skill_triggered` remains the activation
-criterion; read it separately from the behavioural criteria, because a run that
-only triggered the skill has not completed the workflow. Weights are kept.
-`scripts/check-undertake-readiness.py` (`make check-undertake-readiness`, part
-of `check-eval-tooling`) asserts offline that every valid transition passes and
-every invalid one — including approval-blocked and unknown post-ready states, a
-refused ready write, failed reads, CI on another head, a pre-merge notice that
-still covers a clean merge and one that does not cover a content change, and an
-exited service — fails. It does not test model judgment. These rows are a new,
-unmeasured instrument: no subject, judge or calibration run has recorded them,
-and the committed results for the previous rows are untouched.
-
+no completed-action credit. `skill_triggered` remains the activation criterion;
+read it separately from the behavioural criteria, because a run that only
+triggered the skill has not completed the workflow. Weights are kept. These rows
+are a new, unmeasured instrument: no subject, judge or calibration run has
+recorded them, and the committed results for the previous rows are untouched.
 One collision is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
 `undertake` distractor, because "get it to a pull request" is in `undertake`'s
 register too and the only thing separating them is that the prompt has no issue
 to undertake. Its `pr` criterion is armed bare rather than
 pass-stopped for that reason: a pass-stop there would end the run the moment
 `pr` fires and the distractor would pass vacuously, while the bare arm keeps
-that criterion pass-capable so the distractor's fail-stop stays deferred. The reverse assertion is absent on purpose — `undertake` invokes
 `pr` at `Open the draft`, so `pr` firing on an undertake prompt is correct.
 
 `deps/` asks where the line falls between a bulk upgrade and one dependency.
@@ -1193,10 +1186,9 @@ prose. A `PreToolUse` hook that exits non-zero *blocks* the tool call, so a
 recorder that failed would not merely lose the roster — it would veto every
 dispatch, in both arms, and report a routing table that dispatched nobody. The
 hook command is therefore absolute (via `$CLAUDE_PROJECT_DIR`, which Claude Code
-puts in every hook's environment) and ends in `|| true`. And because `|| true`
-would then hide a genuinely broken recorder behind an empty roster,
-`scripts/check-eval-fixtures.sh` runs the recorder against the copy the sandbox
-would get and fails `make check` if it does not record.
+puts in every hook's environment) and ends in `|| true`. Because that can hide a
+broken recorder behind an empty roster, keep its expected output visible in
+fixture review.
 
 The hook also writes nothing to stdout, so it cannot contest the `updatedInput`
 returned by the plugin's own `PreToolUse` hook on the same event.
@@ -1216,11 +1208,9 @@ enforced rather than asked for:
   and `sensitive-tiny.sh` names the routing rule being graded as loudly as any
   comment would.
 - **No fixture file contains the substring `skills/`.**
-  `scripts/check-eval-fixtures.sh` greps for it, because `skill_triggered`
+  Fixture review must preserve this rule because `skill_triggered`
   counts such a path in any tool parameter as engaging that skill — so a fixture
   carrying one would score as a skill firing the moment the agent read the file.
-  (The check found its first offender immediately: a comment explaining the
-  rule.)
 
 **None of this is a boundary, and it should not be described as one.** The suite
 runs on the default `driver: tempdir`, where `coder_eval`'s own note is that
@@ -1251,7 +1241,7 @@ does not fail — it re-routes, and then measures a depth it was not written for
 `01`, `02` and `03` are over ~50 on purpose (under it they route to Skim on size
 alone, whatever bucket their paths land in); `04` is over ~800; `05` and `06`
 are deliberately under ~50, because "tiny and still reviewed" is the whole
-claim. `scripts/check-eval-fixtures.sh` holds those bounds and fails on drift.
+claim. Keep those bounds when changing fixtures.
 
 ### The git problem
 
@@ -1278,9 +1268,8 @@ suite measures), commit a base tree, publish it to a bare `origin` under
 `review` stops at "Local changes not pushed" when the branch is ahead of its
 remote, and would never reach the routing decision under test.
 
-`scripts/check-eval-fixtures.sh` builds all six and asserts that shape. It runs
-in `make check` because it needs only git and bash — and because a fixture that
-stops building does not turn the suite red, it turns every case into a silent 0.
+The six fixture scripts build that shape from git. A fixture that stops building
+does not turn the suite red; it turns every case into a silent 0.
 
 These cases run in **Local mode**: there is no GitHub MCP in the sandbox, so the
 pull-request lookup finds nothing and the skill assembles the diff from git.
@@ -1399,8 +1388,8 @@ rows cannot be graded identically on Claude Code and Oh My Pi, so each is two
 files tagged `claude-only` and `omp-only`, with `-omp` on the second's
 `task_id`. `make evals-run` excludes `omp-only`; every `make evals-run-omp-*`
 target excludes `claude-only` and `codex-only`; and with the Codex arm each
-also excludes `codex-only`. `make check-eval-arms` holds the sets, model files,
-variant pair and Make targets in step.
+also excludes `codex-only`. Keep these sets, model files, variant pairs and
+Make targets in step.
 
 | Suite | Claude-only row | Omp counterpart |
 | --- | --- | --- |
@@ -1417,9 +1406,9 @@ variant pair and Make targets in step.
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-session-id-omp` |
 | `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-omp` |
 
-Each Omp row names its sibling with a `forks:<task_id>` tag, which is what
-`check-eval-arms` pairs. The seven `review-depth` rows remain `claude-only`
-because they drive Claude's settings and dispatch hook.
+Each Omp row names its sibling with a `forks:<task_id>` tag. The seven
+`review-depth` rows remain `claude-only` because they drive Claude's settings
+and dispatch hook.
 
 **`plan` does not fail on a broken arm.** With no plugin installed,
 `coder-eval plan` prints a resolution failure and exits 0. `make evals-plan`
@@ -1456,8 +1445,8 @@ into `<cwd>/.agents/skills/`, and records `commandExecution` as `Bash` with its
 command string. What it does not do is build the `[RESULT - …]` transcript, and
 every rubric here anchors on that tag and scores 0.0 without it. Point the
 experiment at `codex` and the suite runs, costs money, and reports zeros that
-read exactly like a plugin that never loaded — so `make check-eval-arms` reads
-each experiment's variants against the arm table and refuses that spelling.
+read exactly like a plugin that never loaded. Keep each experiment's variants
+consistent with the arm tags.
 `coder-eval-codex/` is the built-in subclassed; its README says what it adds and
 why.
 
@@ -1706,12 +1695,6 @@ split, the class and elapsed reads, and `task_timeout` derivation. No
 standalone CI check repeats them: the builder runs them before every
 invocation, so a defect in it surfaces on its next run.
 
-`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm that
-owns both the `omp` and `claude-code` kinds — it measures a model, not a
-harness — so the agent kind alone cannot say which arm a row belongs to; the
-`model-classes` tag is what does. The checker discovers
-`classes-*.yaml` experiments inside the eval suite and requires each to pin
-its model. Personal Omp configuration is not an input to this check.
 
 ## Two defaults, decided on purpose
 

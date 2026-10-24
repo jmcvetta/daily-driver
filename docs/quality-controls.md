@@ -117,7 +117,7 @@ with fixtures, not only a sentence in a document.
 | Implementation | Repository | Status |
 | --- | --- | --- |
 | Opengrep rules with fixtures in `.opengrep/rules/` (for example no `npx`, no `git add -A`, no `terraform_remote_state`) | PG | `gate` |
-| Repository check scripts under `scripts/` (for example `check-step-names.py`, `check-manifests.py`, `check-labels.py`, `check-release-paths.py`) | DD | `gate` |
+| Repository checks under `scripts/` (for example `check-step-names.py`, `check-manifests.py`, `check-labels.py`, `check-release-paths.py`, and `check-constitution.py`) | DD | `gate` |
 | Boundary sweep and Nx-input lint (`make test-python-boundary`, `make test-python-nx-inputs`) | CA | `gate` |
 
 ### QC-SAST — static analysis for defects and security
@@ -141,7 +141,7 @@ difference fails the check.
 | --- | --- | --- |
 | `npm run build`, then `git diff --quiet -- dist` (bundled action) | PRA | `gate` |
 | `terramate generate`, then `git diff --exit-code` (`make -C infra check-generated-code`) | PG | `gate` |
-| `scripts/evals-render-results.py --check` fails when the committed `evals/RESULTS.md` differs from a fresh render (`make check-evals-results`) | DD | `gate` |
+| `scripts/evals-render-results.py` rewrites the committed `evals/RESULTS.md`; there is no freshness check | DD | `none` |
 | The `Measured routes` table that `scripts/evals-render-routes.py` writes into `skills/issue-body/references/omp.md` has no freshness check | DD | `none` |
 | `cflow/src/artifact.test.ts` byte-compares the committed workflow artifact with a fresh build, in the TypeScript suite that runs only locally | CA | `local` |
 
@@ -273,7 +273,7 @@ Application code has committed tests that assert and run in CI.
 | Python | pytest, with pytest-impacted selection and pytest-xdist | CA | `gate` |
 | Python | pytest (`tests/test_git_sync.py`) | CMWB | `gate` |
 | Python | `unittest` (`apps/omp-web/scripts`) | PG | `gate` |
-| Python / shell | check scripts with fixture suites (`make check-*`) | DD | `gate` |
+| Python / shell | No automated unit-test suite; `make check` runs product and convention checks | DD | `none` |
 | OpenTofu | `tofu test` for each module with a `tests/` directory | PG | `gate` |
 
 ### QC-COVERAGE — measured test coverage
@@ -381,7 +381,7 @@ control covers.
 | QC-RELEASE-CONFIG | none | gate | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate | none | none |
-| QC-GENERATED-FRESH | gate (partial) | local (TypeScript) | gate | gate | none |
+| QC-GENERATED-FRESH | none | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none | on | none |
 | QC-TESTS-OFFLINE | none | gate | none | none | none |
@@ -392,7 +392,7 @@ control covers.
 | QC-FILE-SIZE | none | gate (Python) | none | none | none |
 | QC-MODULE-BOUNDARIES | n/a | gate (Python) | none | n/a | n/a |
 | QC-DOC-COMMENTS | none | gate (Python) | none | none | none |
-| QC-UNIT-TESTS | gate | gate | gate | gate | gate |
+| QC-UNIT-TESTS | none | gate | gate | gate | gate |
 | QC-COVERAGE | none | gate (Python) | none | gate | none |
 | QC-MUTATION | none | none | local | none | none |
 | QC-LOCKFILE | gate (npm, HCL) | gate (Python) | gate (pnpm) | gate | none |
