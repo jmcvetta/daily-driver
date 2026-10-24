@@ -14,11 +14,8 @@ pre_run:
   - command: bash .fixture/setup.sh independent-human-dependency
     timeout: 30
 initial_prompt: >-
-  Undertake PR #25. Two independent steps remain: a documented sandbox-only
-  Tofu plan and a disposable-host smoke test. Inspect `.fixture/README.md` and
-  run the permitted sandbox plan. Then attempt the isolated smoke route; its
-  fixture will report whether a person-only contribution is actually needed.
-  Finish all permitted work before pausing, and do not request secrets in chat.
+  Undertake PR #25. Two steps remain: a sandbox-only Tofu plan and a
+  disposable-host smoke test. `.fixture/README.md` describes both.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
