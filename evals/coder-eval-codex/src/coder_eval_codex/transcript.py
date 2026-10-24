@@ -74,7 +74,6 @@ def render_agent_output(text: str, *, is_error: bool = False) -> str:
     for byte with what `coder_eval_omp.rpc.render_agent_output` emits for a
     single block, which keeps one rubric readable across harnesses without
     either package depending on the other.
-    harnesses without either package depending on the other.
 
     An empty turn renders `EMPTY_OUTPUT`, and an already-rendered transcript is
     returned unchanged.
