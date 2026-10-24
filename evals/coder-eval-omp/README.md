@@ -181,8 +181,8 @@ using only each entry's `task` text. It requires a complete list of distinct
 jobs after the successful `Spawned N background agents using <agent>.` header.
 It accepts the observed Omp `Coordinate` paragraph only in its captured form
 and with a count matching the launch. Other suffixes, or extra launch-like
-lines after it, stay unknown and cannot pass.
-The captured dispatch examples live under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`. The adapter also records task-dispatch evidence in the run artifact.
+lines after it, stay unknown and cannot pass. Captured dispatch examples live
+under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`.
 
 ## Cost
 

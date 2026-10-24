@@ -7,7 +7,6 @@ by hand, keyed by the model identifier exactly as `omp_configs/*.yml` and an
 experiment's `agent.model` spell it (`<gateway>/<provider>/<model>`, for
 example `vercel-ai-gateway/zai/glm-5.3`).
 
-Pure — no `coder_eval` import, same reasoning as `rpc.py` — so
 Pure — no `coder_eval` import, same reasoning as `rpc.py`.
 """
 
@@ -26,7 +25,6 @@ def _default_prices_path() -> Path:
     build time, so an installed package finds it as this module's own
     sibling. Running from source in this repo never runs that build step, so
     the committed path is tried first and this checkout's is the fallback.
-    tried first and this checkout's is the fallback.
     """
     installed = Path(__file__).parent / "prices.json"
     if installed.is_file():

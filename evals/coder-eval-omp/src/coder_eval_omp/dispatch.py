@@ -20,7 +20,7 @@ from typing import Any
 
 from .rpc import ToolStarted
 
-﻿#: File in the task sandbox. `evals/fixtures/fix-daily-driver-bugs/shared/
+#: File in the task sandbox. `evals/fixtures/fix-daily-driver-bugs/shared/
 #: check_dispatch.py` reads the same name.
 EVIDENCE_FILENAME = "omp-task-dispatches.json"
 
