@@ -36,6 +36,8 @@
 ### Features
 
 * **epic:** plan first useful delivery, early integration proof, outcome-based task boundaries, and deployment continuity ([#633](https://github.com/jmcvetta/daily-driver/issues/633))
+* **docs:** separate constitution rules from delivery and maintenance guidance ([#656](https://github.com/jmcvetta/daily-driver/issues/656))
+
 
 ### Tests
 
