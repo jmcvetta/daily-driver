@@ -114,8 +114,14 @@ ARMS: dict[str, dict[str, object]] = {
         "tag": "claude-only",
         "id_suffix": None,
         "kinds": ("claude-code",),
-        "experiment": "with-without.yaml",
-        "run_target": "evals-run",
+        "experiments": {
+            "with-without.yaml": "claude-sonnet-5",
+            "with-without-haiku-5.5.yaml": "claude-haiku-5-5",
+        },
+        "run_targets": {
+            "evals-run": "with-without.yaml",
+            "evals-run-haiku-5-5": "with-without-haiku-5.5.yaml",
+        },
     },
     "omp": {
         "tag": "omp-only",
@@ -715,7 +721,7 @@ def check_experiments() -> None:
             defaults = document.get("defaults") if isinstance(document, dict) else None
             agent = defaults.get("agent") if isinstance(defaults, dict) else None
             if not isinstance(agent, dict) or agent.get("model") != model:
-                raise CheckFailed(f"{path.relative_to(ROOT)}: expected Omp model {model!r}")
+                raise CheckFailed(f"{path.relative_to(ROOT)}: expected {arm} model {model!r}")
             focused_variants = ARMS[arm].get("focused_variants", {})
             if isinstance(focused_variants, dict) and path.name in focused_variants:
                 check_single_arm_experiment(path, document, str(focused_variants[path.name]))
