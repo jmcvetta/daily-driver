@@ -40,6 +40,9 @@ To compare two repositories, compare their rows for one control ID.
 | `none` | No implementation exists yet for this ecosystem. |
 
 A `none` row is part of the baseline. It is not an error in this document.
+Tests of tests and other testing machinery are not quality controls. Do not
+list them as implementations of a control.
+
 
 **Two layers.** Universal controls apply to every repository. Ecosystem
 controls apply to a repository that contains that ecosystem. The ecosystems
