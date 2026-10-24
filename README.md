@@ -101,6 +101,8 @@ already supply. Amend it through a pull request against Daily Driver.
   design decisions and harness behavior.
 - [Runtime integration and compatibility](docs/harness-integration.md):
   hooks, the Omp extension, worktree behavior and harness limits.
+- [Quality controls](docs/quality-controls.md): the deterministic checks every
+  repository runs, by control and by language.
 - [Evaluation guide](evals/README.md) and [measured results](evals/RESULTS.md):
   evaluation method and recorded runs.
 - [License status](ANTI-LICENSE.md): the project's no-license notice.
