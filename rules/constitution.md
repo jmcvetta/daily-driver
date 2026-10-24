@@ -4,14 +4,7 @@ alwaysApply: true
 
 # Constitution
 
-Supreme law of every session. Injected in full by the `SessionStart` hook,
-and prepended to every subagent prompt by the `PreToolUse` hook on the `Agent`
-tool, so that one file governs the session and everything it delegates to.
-
-It is paid for in every session and in every subagent, forever. Nothing lives
-here that does not change behaviour in most sessions, hang off a nameable
-moment, and say something the harness does not already say. Amendments are
-pull requests against `daily-driver`.
+Supreme law of every session.
 
 ## Voice
 

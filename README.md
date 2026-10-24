@@ -77,6 +77,11 @@ verification, focused commits, and concise communication. The
 [runtime integrations](docs/harness-integration.md) load these instructions;
 their enforcement and subagent coverage vary by harness.
 
+The constitution consumes context in every session and delivered subagent, so
+keep this document focused: include rules that change behavior in most
+sessions, address a nameable moment, and add something the harness does not
+already supply. Amend it through a pull request against Daily Driver.
+
 ## Links
 
 - [Repository setup](docs/bootstrapping-a-repository.md): detailed installation,
