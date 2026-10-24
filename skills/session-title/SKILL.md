@@ -113,8 +113,11 @@ A short noun phrase naming what the session is actually doing.
 - **Nouns, not narration.** `Flaky auth test triage`, not
   `Working on fixing the flaky auth test`.
 - **Specific over generic.** `Postgres pool leak`, not `Debugging`.
-- **No repository name.** The session records its own source; spending a
-  quarter of the budget restating it buys nothing.
+- **No repository name**, except when a repository-local workflow explicitly
+  owns its coordinator title. The local `fix-daily-driver-bugs` workflow in
+  this repository owns that narrow exception; other sessions keep this rule.
+  `undertake` still owns issue-based titles for implementors and single-issue
+  work.
 
 
 Setting it
