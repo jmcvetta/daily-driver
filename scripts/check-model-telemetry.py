@@ -21,9 +21,8 @@ WHAT IT ASSERTS
     naming none reads back `unlabelled`. A `Closes #N` line in a pull
     request's body reads back the issue number it names.
 
-Loads `scripts/model-telemetry.py` the way `scripts/check-labels-fixtures.py`
-loads `scripts/check-labels.py` -- `importlib`, because a hyphenated filename
-is not an importable module name.
+Loads `scripts/model-telemetry.py` with `importlib`, because its hyphenated
+filename is not an importable module name.
 """
 
 from __future__ import annotations
@@ -181,7 +180,7 @@ def main() -> int:
             {"name": "check-runtime"},
             {"name": "check-runtime"},
             {"name": "check-runtime"},
-            {"name": "check-eval-tooling"},
+            {"name": "check-model-telemetry"},
         ]
     )
     check("count_check_reruns: two extra runs of the same name is two reruns", reruns == 2)

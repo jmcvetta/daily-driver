@@ -190,9 +190,8 @@ description: >-
 # Codex agent links skills and installs no hooks, so no constitution reaches
 # that arm and a zero there would mean nothing about compliance. The tag takes
 # the row out of one arm and leaves it in the rest, which an arm tag cannot
-# express — and an arm tag plus a skip is a contradiction
-# `scripts/check-eval-arms.py` refuses. No other routing is needed: these three
-# tags are what claim the row.
+# express — and an arm tag plus a skip contradict each other. These three tags
+# route the row to the intended arms.
 tags: [constitution, compliance, "skip:codex"]
 
 # UNLIKE the answer rows, the write tools stay OPEN. Those close

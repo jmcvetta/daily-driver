@@ -15,8 +15,7 @@
 #
 # The covered-ancestor case (a notice naming A still covers B through the clean
 # merge) and the non-merge content change (a notice for A does not cover it)
-# are separate scenarios of the same fixture, asserted offline by
-# `scripts/check-undertake-readiness.py`.
+# are separate scenarios.
 #
 # `skill_triggered` is activation, reported on its own; the verifier and the
 # judge score the behavioural outcome.

@@ -93,7 +93,8 @@ the host through the shell. Concurrent filesystem mutation is not isolated.
 `provider/model:level`, but Omp's `set_model` accepts only the provider and
 model id. `rpc.model_commands` strips a recognized level such as `:high` and
 sends it with `set_thinking_level`; an unknown suffix stays in the model id.
-`scripts/check-omp-agent.py` tests the RPC commands without a model call.
+The RPC commands keep the model selection and thinking-level settings separate,
+without requiring a model call.
 
 ## What it records
 
@@ -181,9 +182,8 @@ jobs after the successful `Spawned N background agents using <agent>.` header.
 It accepts the observed Omp `Coordinate` paragraph only in its captured form
 and with a count matching the launch. Other suffixes, or extra launch-like
 lines after it, stay unknown and cannot pass.
-`make check-dispatch-grader` covers these parsing rules and the committed
-excerpts under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`;
-`make check-omp-agent-settle` drives the adapter itself.
+under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`. The adapter also
+records task-dispatch evidence in the run artifact.
 
 ## Cost
 
@@ -196,31 +196,24 @@ price at run time: the table is a dated snapshot, sourced from
 current `evals/experiments/omp-*.yaml` files actually run. A model with no row
 prices `total_cost_usd` as `None` (`coder_eval`'s own "unreported", not
 `0.0`) — adding a new Omp model to an experiment means adding its row here
-too. `pricing.py` is pure, like `rpc.py`, so `scripts/check-omp-agent.py`
-drives it in `make check` without a `coder_eval` install.
+too. `pricing.py` is pure, like `rpc.py`; it prices recorded token usage without
+a `coder_eval` install.
 
 ## What is tested, and what is not
 
 `rpc.py`, `pricing.py` and `tools.py` import nothing — not `coder_eval`, not
-`omp` — and `scripts/check-omp-agent.py` drives them in `make check`, `rpc.py`
-against recorded frames and `pricing.py` against a test price table. That is
-where the four things above, and the token-usage and cost math, live, and it is
-why they live there.
+`omp`. They hold the protocol, pricing and tool-list behavior described above,
+including token-usage and cost math.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the
 event protocol, both copied from `coder_eval`'s OpenCode agent and from
 `scripts/check-omp-plugin.py`, which drives a real `omp --mode rpc` today.
 
-One part of that lifecycle carries its own acceptance test:
-`scripts/check-omp-agent-settle.py` (`make check-omp-agent-settle`) drives the
-real `communicate` against a fake `omp --mode rpc` and asserts the
-early-stop invariant the first live run violated — a replicate that
-early-stops on `skill_triggered` cannot final-score 0 on that same criterion,
-because the abort settle emitted the frames it had been swallowing. It needs
-the `coder-eval` install (`make evals-install`), so it is not a `make check`
-leg, and it needs no network, so it is cheap to run whenever `agent.py`
-changes.
+The agent lifecycle includes an early-stop settle path: a replicate that
+early-stops on `skill_triggered` must not final-score 0 on that same criterion,
+because the abort settle emits frames it had been swallowing. The lifecycle
+depends on `coder-eval` and the real `omp --mode rpc` interface.
 
 ## Installing it
 

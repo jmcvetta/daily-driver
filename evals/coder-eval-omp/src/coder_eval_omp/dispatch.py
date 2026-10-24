@@ -20,9 +20,8 @@ from typing import Any
 
 from .rpc import ToolStarted
 
-#: File in the task sandbox. `evals/fixtures/fix-daily-driver-bugs/shared/
-#: check_dispatch.py` reads the same name; `scripts/check-dispatch-grader.py`
-#: asserts the two agree.
+﻿#: File in the task sandbox. `evals/fixtures/fix-daily-driver-bugs/shared/
+#: check_dispatch.py` reads the same name.
 EVIDENCE_FILENAME = "omp-task-dispatches.json"
 
 #: Bumped when the shape changes; the grader rejects any other value.

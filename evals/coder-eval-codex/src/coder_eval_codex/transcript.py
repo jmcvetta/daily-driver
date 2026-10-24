@@ -4,7 +4,7 @@ Everything in this module is pure: a string in, a string out. That is
 deliberate, and it is the same split `coder_eval_omp/rpc.py` makes. The agent in
 `agent.py` cannot be exercised without a `coder_eval` install and the Codex SDK,
 so anything load-bearing that lives there is untested code. What is load-bearing
-is here instead, and `scripts/check-codex-agent.py` drives it in `make check`.
+is here instead.
 
 One thing it owns, and it is a silent zero if it is wrong.
 
@@ -72,8 +72,8 @@ def render_agent_output(text: str, *, is_error: bool = False) -> str:
     appears twice. `CodexAgent` has one block to render — `result_text`, the
     turn's assistant deltas joined — and this emits that same shape for it, byte
     for byte with what `coder_eval_omp.rpc.render_agent_output` emits for a
-    single block. `scripts/check-codex-agent.py` asserts that equality against
-    the Omp module itself, which is what keeps one rubric readable on all three
+    single block, which keeps one rubric readable across harnesses without
+    either package depending on the other.
     harnesses without either package depending on the other.
 
     An empty turn renders `EMPTY_OUTPUT`, and an already-rendered transcript is
