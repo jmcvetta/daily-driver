@@ -161,7 +161,7 @@ the normal CI gate checks it.
 
 | Repository | Dependabot ecosystems |
 | --- | --- |
-| DD | `github-actions`, `terraform` |
+| DD | `github-actions`, `terraform`; not `npm`, although `package-lock.json` pins the CI-selector dependencies |
 | CA | `github-actions` |
 | PRA | `npm`, `github-actions` |
 | PG | none |
