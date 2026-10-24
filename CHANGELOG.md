@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.54.0](https://github.com/jmcvetta/daily-driver/compare/v0.53.0...v0.54.0) (2026-10-24)
+
+
+### Features
+
+* **evals:** flag behaviour cases the bare variant passes ([#678](https://github.com/jmcvetta/daily-driver/issues/678)) ([57adcf6](https://github.com/jmcvetta/daily-driver/commit/57adcf67d3c48f041fe06dbe9790d0ab214b4291))
+
 ## [0.53.0](https://github.com/jmcvetta/daily-driver/compare/v0.52.0...v0.53.0) (2026-10-24)
 
 
