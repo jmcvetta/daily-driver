@@ -39,13 +39,15 @@ def load_records(provenance_dir: Path) -> list[dict[str, Any]]:
 
 def task_directories(tasks_dir: Path) -> tuple[dict[str, str], list[str]]:
     """Map task IDs to their directories and return directory names, deepest first."""
+    if not tasks_dir.is_dir():
+        return {}, []
     task_ids: dict[str, str] = {}
     directories = sorted(
         (path.name for path in tasks_dir.iterdir() if path.is_dir()),
         key=len,
         reverse=True,
-    ) if tasks_dir.is_dir() else []
-    for path in tasks_dir.rglob("*.yaml") if tasks_dir.is_dir() else ():
+    )
+    for path in tasks_dir.rglob("*.yaml"):
         for line in path.read_text().splitlines():
             match = re.match(r"^\s*task_id:\s*([^\s#]+)", line)
             if match:
@@ -101,7 +103,7 @@ def classify_record(record: dict[str, Any], active_task_ids: set[str] | None = N
     by_case: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for attempt in attempts:
         task_id = attempt.get("task_id")
-        if not task_id or (active_task_ids is not None and task_id not in active_task_ids):
+        if not task_id or not attempt.get("variant_id") or (active_task_ids is not None and task_id not in active_task_ids):
             continue
         if behavior_criteria(attempt):
             by_case[task_id].append(attempt)
@@ -126,8 +128,10 @@ def classify_record(record: dict[str, Any], active_task_ids: set[str] | None = N
             if treated_attempts
             else 0.0
         )
-        both_fail = bool(bare_attempts and treated_attempts) and bare_rate <= FAIL_THRESHOLD and all(
-            rate <= FAIL_THRESHOLD for variant, rate in rates.items() if variant != "bare"
+        both_fail = (
+            bool(bare_attempts and treated_attempts)
+            and bare_rate <= FAIL_THRESHOLD
+            and treated_rate <= FAIL_THRESHOLD
         )
         cases.append(
             {
@@ -171,8 +175,8 @@ def render_report(
     task_ids: dict[str, str],
     directories: list[str],
     active_task_ids: set[str] | None = None,
-) -> tuple[str, bool, list[str]]:
-    """Render the report, return whether any leak exists, and skipped record names."""
+) -> tuple[str, bool, int]:
+    """Render the report; return it, whether any leak exists, and the behavior case count."""
     output = ["Eval behavior leak report"]
     has_leaks = False
     skipped: list[str] = []
@@ -185,6 +189,7 @@ def render_report(
             output.append(f"\n{ name }: skipped ({classification['reason']})")
             continue
         cases = classification["cases"]
+        has_leaks = has_leaks or any(case["leak"] for case in cases)
         leaks = sum(case["leak"] for case in cases)
         both_failures = sum(case["both_fail"] for case in cases)
         helped = sum(case["helped"] for case in cases)
@@ -210,12 +215,10 @@ def render_report(
                         for variant, rate in sorted(case["rates"].items())
                     )
                     output.append(f"      {case['task_id']}: {rates}")
-                    if case["leak"]:
-                        has_leaks = True
     output.insert(1, f"Behavior cases: {behavior_case_count}")
     if skipped:
         output.append("\nSkipped records: " + ", ".join(skipped))
-    return "\n".join(output), has_leaks, skipped
+    return "\n".join(output), has_leaks, behavior_case_count
 
 
 def selftest() -> bool:
@@ -249,15 +252,32 @@ def selftest() -> bool:
             for variant in ("bare", "with-plugin")
         ),
     ]
+    # Boundaries: two bare passes are too few to call a leak, errored attempts count as non-passes,
+    # and a missing variant_id must be skipped instead of crashing.
+    attempts += [
+        *(attempt("tasks/pr/few.yaml", "bare", "SUCCESS", 1.0) for _ in range(2)),
+        *(attempt("tasks/pr/few.yaml", "with-plugin", "SUCCESS", 0.0) for _ in range(2)),
+        *(attempt("tasks/pr/errored.yaml", "bare", "SUCCESS", 1.0) for _ in range(4)),
+        attempt("tasks/pr/errored.yaml", "bare", "ERROR", 1.0),
+        *(attempt("tasks/pr/errored.yaml", "with-plugin", "SUCCESS", 0.0) for _ in range(5)),
+        {"task_id": "tasks/pr/novariant.yaml", "criteria": [{"criterion_type": "behavior", "gating": True, "score": 1.0, "pass_threshold": 0.8}]},
+    ]
     result = classify_record({"attempts": attempts})
     observed = {case["task_id"]: (case["leak"], case["both_fail"], case["helped"]) for case in result["cases"]}
     expected = {
         "tasks/undertake/leak.yaml": (True, False, False),
         "tasks/undertake/both-fail.yaml": (False, True, False),
         "tasks/issue/helped.yaml": (False, False, True),
+        "tasks/pr/few.yaml": (False, False, False),
+        "tasks/pr/errored.yaml": (True, False, False),
     }
     if observed != expected:
         print(f"selftest failed: expected {expected!r}, got {observed!r}", file=sys.stderr)
+        return False
+    old = {"experiment_id": "e", "recorded_at": "2026-10-01T00:00:00Z", "attempts": []}
+    new = {"experiment_id": "e", "recorded_at": "2026-10-02T00:00:00Z", "attempts": []}
+    if newest_records([new, old]) != [new] or classify_record({"attempts": [attempts[0]]})["skipped"] is not True:
+        print("selftest failed: newest_records or skipped-record handling", file=sys.stderr)
         return False
     return True
 
@@ -293,8 +313,11 @@ def main() -> int:
     if args.check and args.record is None:
         records = newest_records(records)
     active_ids = set(task_ids) if args.check else None
-    report, has_leaks, _ = render_report(records, task_ids, directories, active_ids)
+    report, has_leaks, case_count = render_report(records, task_ids, directories, active_ids)
     print(report)
+    if args.check and case_count == 0:
+        print("--check evaluated no behavior cases", file=sys.stderr)
+        return 1
     return 1 if args.check and has_leaks else 0
 
 
