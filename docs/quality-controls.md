@@ -52,7 +52,9 @@ Actions, Ansible, containers and Claude Code plugins.
 2. List the ecosystems the repository contains.
 3. For each ecosystem control, implement the row for each of those
    ecosystems. Where the row is `none`, record the gap.
-4. Make each control a step of the required `Checks` job (`QC-REQUIRED-CHECKS`).
+4. Make each gate control part of a required check (`QC-REQUIRED-CHECKS`):
+   a step of `Checks`, or of `Release Projection` for the title and the
+   projection, which must run on every pull request.
 
 
 ## Universal controls
@@ -79,7 +81,7 @@ is declared in version-controlled configuration.
 | CA | `Checks`, `Release Projection` | `gate` |
 | PG | `Checks`, `Release Projection` | `gate` |
 | CMWB | `Checks`, `Release Projection` | `gate` |
-| PRA | `validate-title` only; `test`, `infra` and the projection run as separate path-filtered workflows | `gate` for the title, `ci` for the rest |
+| PRA | `validate-title` only; the projection, `test` and `infra` run as separate workflows (`test` and `infra` path-filtered) | `gate` for the title, `ci` for the rest |
 
 ### QC-PR-TITLE — Conventional Commits title
 
@@ -140,6 +142,7 @@ difference fails the check.
 | --- | --- | --- |
 | `npm run build`, then `git diff --quiet -- dist` (bundled action) | PRA | `ci` |
 | `terramate generate`, then `git diff --exit-code` (`make -C infra check-generated-code`) | PG | `gate` |
+| `cflow/src/artifact.test.ts` byte-compares the committed workflow artifact with a fresh build, in the TypeScript suite that runs only locally | CA | `local` |
 
 ### QC-SUPPLY-CHAIN — controlled installation
 
@@ -150,7 +153,6 @@ code runs only where it is named.
 | --- | --- | --- |
 | pnpm `allowBuilds` (install scripts deny-by-default) and `minimumReleaseAge` (24-hour cooldown) in `pnpm-workspace.yaml` | PG | `gate` |
 | CI tool downloads verified by checksum or signature (Worktrunk SHA-256 in DD, CA, PG and CMWB; Opengrep cosign in PG) | DD, CA, PG, CMWB | `gate` |
-| GitHub Actions pinned to major-version tags, kept current by Dependabot (`QC-DEPENDENCY-UPDATES`) | all | policy |
 
 ### QC-DEPENDENCY-UPDATES — automated update pull requests
 
@@ -215,8 +217,9 @@ too.
 
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
-| TypeScript | `tsc --noEmit`, `strict: true`, with a separate test tsconfig | PG | `gate` |
-| TypeScript | the same | PRA | `ci` |
+| TypeScript | `tsc --noEmit`, `strict: true`; only `packages/gold-prices` has a separate test tsconfig | PG | `gate` |
+| TypeScript | `tsc --noEmit` plus `tsc -p tsconfig.test.json` | PRA | `ci` |
+| JavaScript (repository scripts) | — | DD | `none` |
 | Python | pyright, `typeCheckingMode = "strict"` | CA | `gate` |
 | Python (repository scripts) | — | DD | `none` |
 
@@ -303,6 +306,7 @@ changing it.
 | --- | --- | --- | --- |
 | TypeScript (pnpm) | `pnpm install --frozen-lockfile` | PG | `gate` |
 | TypeScript (npm) | `npm ci` | PRA | `ci` |
+| JavaScript (npm) | `npm ci` (CI-selector dependencies) | DD | `gate` |
 | Python (uv) | `uv lock --check --offline` | CA | `gate` |
 | OpenTofu providers | `tofu init`, then `git diff --quiet` on `.terraform.lock.hcl` | DD | `gate` |
 | OpenTofu providers | the same | PRA | `ci` |
@@ -316,7 +320,8 @@ fails the check.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | pip-audit over the `uv export` of the lockfile | CA | `gate` |
-| TypeScript | — (`npm ci`'s built-in audit always exits zero, and PRA turns it off) | PG, PRA | `none` |
+| TypeScript (pnpm) | — | PG | `none` |
+| TypeScript (npm) | — (`npm ci`'s built-in audit always exits zero, and PRA turns it off) | PRA, DD | `none` |
 
 ### QC-BUILD — the shipped artifact builds and loads
 
@@ -355,8 +360,15 @@ a reason.
 
 ## Adoption matrix
 
-`gate`, `ci` and `local` as above. A dash means the ecosystem is absent.
-"Partial" means the control covers part of the repository.
+`gate`, `ci`, `local` and `none` as above. Two more values appear in the
+matrix only:
+
+- `on` means a bot is configured (`QC-DEPENDENCY-UPDATES` is not a check).
+- `n/a` means the control has nothing to act on: the ecosystem is absent,
+  or, for `QC-GENERATED-FRESH`, no generated file is committed.
+
+A qualifier in parentheses names the part of the repository that the
+control covers.
 
 | Control | DD | CA | PG | PRA | CMWB |
 | --- | --- | --- | --- | --- | --- |
@@ -366,23 +378,23 @@ a reason.
 | QC-RELEASE-CONFIG | none | gate | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate | none | none |
-| QC-GENERATED-FRESH | — | — | gate | ci | — |
+| QC-GENERATED-FRESH | none | local | gate | ci | n/a |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none | on | none |
 | QC-TESTS-OFFLINE | none | gate | none | none | none |
 | QC-FORMAT | gate (HCL) | gate | gate | ci (HCL) | gate (HCL) |
-| QC-LINT | gate | gate | gate | none | none |
-| QC-TYPECHECK | none | gate | gate | ci | — |
-| QC-COMPLEXITY | none | gate (Python) | none | none | — |
-| QC-FILE-SIZE | none | gate (Python) | none | none | — |
-| QC-MODULE-BOUNDARIES | — | gate (Python) | none | — | — |
+| QC-LINT | gate (shell, plugin) | gate (Python) | gate | none | none |
+| QC-TYPECHECK | none | gate (Python) | gate | ci | none |
+| QC-COMPLEXITY | none | gate (Python) | none | none | none |
+| QC-FILE-SIZE | none | gate (Python) | none | none | none |
+| QC-MODULE-BOUNDARIES | n/a | gate (Python) | none | n/a | n/a |
 | QC-DOC-COMMENTS | none | gate (Python) | none | none | none |
 | QC-UNIT-TESTS | gate | gate | gate | ci | gate |
 | QC-COVERAGE | none | gate (Python) | none | ci | none |
-| QC-MUTATION | — | none | local | none | — |
-| QC-LOCKFILE | gate (HCL) | gate (Python) | gate (pnpm) | ci | none |
-| QC-VULN-AUDIT | — | gate (Python) | none | none | — |
-| QC-BUILD | — | — | gate | ci | — |
+| QC-MUTATION | none | none | local | none | none |
+| QC-LOCKFILE | gate (npm, HCL) | gate (Python) | gate (pnpm) | ci | none |
+| QC-VULN-AUDIT | none | gate (Python) | none | none | n/a |
+| QC-BUILD | n/a | none | gate | ci | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | ci | gate |
 | QC-IAC-POLICY | none | none | gate | none | none |
 
