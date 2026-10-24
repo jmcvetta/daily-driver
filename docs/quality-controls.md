@@ -41,10 +41,6 @@ To compare two repositories, compare their rows for one control ID.
 
 A `none` row is part of the baseline. It is not an error in this document.
 
-Tests of tests are not quality controls and are not listed as implementations
-of any control. A project tests testing machinery only when that machinery is
-its shipped product.
-
 **Two layers.** Universal controls apply to every repository. Ecosystem
 controls apply to a repository that contains that ecosystem. The ecosystems
 in use are TypeScript/JavaScript, Python, Ruby, OpenTofu/HCL, shell, GitHub
