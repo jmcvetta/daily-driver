@@ -216,13 +216,12 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      Inspect the actual tool-call trace, not assistant narration. Score 1.0
-      only if a successful Skill call loads `session-title` before exactly one
-      successful Write call to xd://daily_driver_set_session_title with the exact
-      JSON title "🐛 Daily Driver bug fixes", and that Write occurs before the
-      first GitHub `gh` read, write, or dispatch. Score 0.0 if the skill call
-      is absent or late, the Write is absent, late, repeated, failed, or uses
-      any other title.
+      The separate skill-triggered criterion checks policy use. Inspect the
+      actual tool-call trace, not assistant narration. Score 1.0 only if
+      exactly one successful Write call sets xd://daily_driver_set_session_title
+      to the exact JSON title "🐛 Daily Driver bug fixes", and that Write occurs
+      before the first GitHub `gh` read, write, or dispatch. Score 0.0 if the
+      Write is absent, late, repeated, failed, or uses any other title.
 
   - type: command_executed
     description: The verifier confirms preserved reports and no unsafe edits
