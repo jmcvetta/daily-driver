@@ -79,6 +79,14 @@ Every measured figure must cite a committed record under
 [`provenance/`](provenance/). A figure without that citation is an
 **unrecorded** anecdote: its run artifacts are no longer available for audit.
 
+`scripts/check-evals-leaks.py` reports behavior cases the bare variant passes
+without the plugin, as well as cases both variants fail and cases the plugin
+helps. It scores gating behavior criteria and ignores `skill_triggered`;
+a leak is a bare pass rate of at least 80% across three or more attempts.
+`make evals-leaks` reports all records, and `make check-evals-leaks` runs its
+inline classifier self-test. The separate `--check` mode fails on leaks in
+the newest record per experiment, limited to task IDs that still exist.
+
 Every record also carries a `cases` list, one row per task per repeat.
 `scripts/evals-render-routes.py` reads every committed record's `cases` and
 writes the `Measured routes` table in
