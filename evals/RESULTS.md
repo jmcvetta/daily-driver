@@ -100,6 +100,7 @@ One row per committed record, oldest first.
 | 2026-10-23 | probe-route-overlay | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | not recorded | 1 | 1/1 | $0.01 | $0.01 | 1m 04s |
 | 2026-10-23 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 0m 24s |
 | 2026-10-23 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 0/3 | subscription | subscription | 8m 11s |
+| 2026-10-24 | with-without | claude-code | claude-sonnet-5 | claude-code claude-sonnet-5 (task-pinned) | 170 | 52/170 | $38.83 | $0.75 | 24m 16s |
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 8m 37s |
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 1/3 | subscription | subscription | 9m 03s |
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 7m 17s |

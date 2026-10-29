@@ -14,13 +14,8 @@ pre_run:
   - command: bash .fixture/setup.sh no-handoff-capability
     timeout: 30
 initial_prompt: >-
-  Undertake PR #25's disposable-host smoke gate. The current session may lack
-  Vultr credentials and Tailscale connectivity. Read `.fixture/README.md` and
-  attempt the documented isolated route to observe the actual access state.
-  There is no authorized-agent handoff route in this environment. Keep the PR
-  incomplete without smoke evidence, and report exactly what capability is
-  needed and how the work can resume. Do not call it human-only solely because
-  this session lacks access.
+  Undertake PR #25's disposable-host smoke gate. `.fixture/README.md`
+  describes the route.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
