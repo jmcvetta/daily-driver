@@ -64,7 +64,7 @@ success_criteria:
     # A sleep has already lost the row, so ending the run on it costs nothing.
     stop_early: {}
 
-  # The firing score is informational; the armed sleep guard remains separate.
+  # Informational firing score; the behaviour judge grades the wait behaviour.
   - type: skill_triggered
     weight: 0
     description: "`review-cycle` fires on a pull request whose head needs reviewing"

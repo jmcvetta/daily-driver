@@ -598,8 +598,8 @@ It also carries one of the two rows here that grade behaviour rather than
 triggering: `07-wait-for-ci-is-not-a-sleep`, which enters the round with CI
 still running and asserts that no shell `sleep` was run. `Bash` is open on
 purpose — a negative control on a tool the model was never offered passes
-vacuously — and both criteria are armed bare, the positive included, for the
-reason the arming paragraph below gives. What the row cannot grade is the
+vacuously — and only the negative command criterion is armed: the firing
+criterion is informational (`weight: 0`). What the row cannot grade is the
 loop `How to wait` prescribes in the sleep's place: reading the checks needs
 the GitHub MCP and waking needs a surface that can wake itself, and the
 sandbox is neither. It grades the failure, not the fix.
@@ -614,6 +614,13 @@ arm that reasons from the description reverts, and the ablation has somewhere
 to show. The same half is ungradeable: that the disagreement is raised and
 waited on needs a live pull request and someone to answer. It grades the
 revert, not the asking.
+
+The informational firing criterion also means these cases can receive their
+remaining weighted score on a no-op trajectory: the negative command checks in
+`conventional-commits-type/07` and `review-cycle/07` do not require a positive
+action, and `stand-down/03`'s judge does not require one when no disallowed
+action occurs. They remain an observed limitation of this change; their firing
+gate is not restored here.
 
 `undertake/` asks the same question of a skill with two ways in. `Open the
 issue` opens one for work that has none, so an issue reference no longer has
@@ -674,16 +681,16 @@ stops whatever the run left behind. The judges now receive the tool calls
 (`include_tool_calls`) and score a failed call as an observed limit that earns
 no completed-action credit. `skill_triggered` remains the activation criterion;
 read it separately from the behavioural criteria, because a run that only
-triggered the skill has not completed the workflow. Weights are kept. These rows
-are a new, unmeasured instrument: no subject, judge or calibration run has
-recorded them, and the committed results for the previous rows are untouched.
-One collision is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
+triggered the skill has not completed the workflow. These rows are a new,
+unmeasured instrument: no subject, judge or calibration run has recorded them,
+and the committed results for the previous rows are untouched. One collision
+is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
 `undertake` distractor, because "get it to a pull request" is in `undertake`'s
 register too and the only thing separating them is that the prompt has no issue
-to undertake. Its `pr` criterion is armed bare rather than
-pass-stopped for that reason: a pass-stop there would end the run the moment
-`pr` fires and the distractor would pass vacuously, while the bare arm keeps
-`pr` at `Open the draft`, so `pr` firing on an undertake prompt is correct.
+to undertake. Its `pr` criterion is armed bare rather than pass-stopped for
+that reason: a pass-stop there would end the run the moment `pr` fires and the
+distractor would pass vacuously, while the bare arm keeps `pr` at `Open the
+draft`, so `pr` firing on an undertake prompt is correct.
 
 `deps/` asks where the line falls between a bulk upgrade and one dependency.
 `01` is the slash command and `02` is the register the skill was written for —
@@ -816,7 +823,8 @@ no recall decision left for a fail-stop to pre-empt.
 
 Behaviour rows grade the reply, so their `skill_triggered` criterion is
 informational: give it `weight: 0`. Trigger-accuracy rows grade whether the
-skill fired, so that criterion remains gating.
+skill fired, so that criterion remains gating. When both tags are present, the
+trigger-accuracy tag takes precedence and keeps the firing criterion gating.
 
 ## Both arms, every criterion
 
@@ -827,8 +835,9 @@ and a number reported for the treated arm alone has nothing to compare itself
 to. In the old format this took an explicit `arm: both` on every grader;
 `coder_eval` does it by construction. On behaviour rows, `skill_triggered`
 records whether the skill fired but does not gate the result (`weight: 0`).
-On trigger-accuracy rows it keeps its default positive weight and gates. The
-two tags can coexist when both behaviours matter.
+On trigger-accuracy rows it keeps its default positive weight and gates. When
+both tags are present, trigger-accuracy takes precedence, so the firing
+criterion keeps its gate.
 
 `repeats` is **5**, set explicitly, because `coder_eval` defaults it to 1. One
 replicate of a non-deterministic agent is an anecdote. Even 3-of-3 — what the
@@ -912,6 +921,12 @@ actually reading; not worth doing to make a sentence in this file true.
 distractor is armed bare (`stop_early: {}`) — a misfire has already lost the
 row, so there is nothing left to pay for — **and so is the positive criterion
 beside it**, which is the part that is easy to get backwards.
+
+On behaviour rows, `skill_triggered` is informational and is not armed as a
+gate; this keeps a missing skill from making an otherwise correct behaviour
+fail. Trigger-accuracy rows keep the firing criterion armed. When a row has
+both tags, trigger-accuracy takes precedence and the firing criterion remains
+gating.
 
 On the trigger suites this is free. On `review-depth`'s no-fire row it is not,
 and that row says so: the fail-stop is deferred while the pass-capable `pr`

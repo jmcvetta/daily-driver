@@ -30,7 +30,7 @@ success_criteria:
     description: "`stand-down` does not fire on a single undertaking"
     expected_skill: none
     skill_name: stand-down
-  # Informational firing score; the behaviour judge determines the result.
+  # Informational firing score; the judge grades the reply's stop behavior.
   - type: agent_judge
     description: >-
       The reply follows undertake's stop route and runs no fleet stand-down
