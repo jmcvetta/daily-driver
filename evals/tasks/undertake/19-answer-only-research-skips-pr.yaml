@@ -17,6 +17,7 @@ agent:
 run_limits: {max_turns: 6, turn_timeout: 180, task_timeout: 300}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` handles a completed answer-only research issue"
     expected_skill: undertake
     skill_name: undertake

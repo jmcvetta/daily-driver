@@ -13,6 +13,7 @@ agent:
 run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires on a capped draft wait"
     expected_skill: undertake
     skill_name: undertake

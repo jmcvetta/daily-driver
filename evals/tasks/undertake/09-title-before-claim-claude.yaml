@@ -46,6 +46,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires for assigned task work"
     expected_skill: undertake
     skill_name: undertake
