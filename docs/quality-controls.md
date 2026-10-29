@@ -109,8 +109,9 @@ cut.
 The release-please configuration validates against the upstream schema.
 
 - `uvx check-jsonschema` with release-please's `schemas/config.json`.
-- Status: `gate` in CA (`make check-release-config`); `local` in PG (a
-  documented command); `none` in DD, PRA and CMWB.
+- Status: `gate` in CA (`make check-release-config`, selected only when
+  `release-please-config.json` changes); `local` in PG (a documented
+  command); `none` in DD, PRA and CMWB.
 
 ### QC-CONVENTION-RULES — conventions as executable rules
 
@@ -420,6 +421,7 @@ this standard. Each needs an evaluation before it can become a control.
 | --- | --- | --- | --- |
 | [knip](https://knip.dev/) | Finds unused files, exports and dependencies in JavaScript and TypeScript projects. | A new control for dead code and unused dependencies; no current control covers it. | Its behaviour on the pnpm workspaces in PG and on PRA's bundled action. |
 | [jscpd](https://github.com/kucherenko/jscpd) | Detects copy-pasted code blocks across many languages. | A new control for duplicated code; it is multi-language, so one tool could serve several ecosystem rows. | A threshold, and how it treats fixtures and generated files. |
+| [zizmor](https://github.com/zizmorcore/zizmor) | Static analysis for GitHub Actions workflows: template injection from untrusted event fields, over-broad token permissions, dangerous triggers such as `pull_request_target`, credentials left in the checkout, and cache poisoning. | A new universal control for workflow security; `QC-SAST` and actionlint do not cover it. It matters most for PRA, a public action that reads untrusted pull request text with a write token. | Its finding rate on these workflows; how its pinning audit is set to accept major-version tags, which is this repository family's decision. |
 | archlint | Unclear. Several unrelated tools use this name or a close variant (for .NET, Go, Dart and a Tree-sitter variant), and the one recommended has not been identified. | Probably `QC-MODULE-BOUNDARIES` for an ecosystem with a `none` row, such as TypeScript. | Which project was meant. Identify it before evaluating it. |
 
 Two tools in the baseline also have room to grow: TFLint (`local` in PG) and
