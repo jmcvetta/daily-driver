@@ -36,6 +36,7 @@ agent:
 run_limits: {max_turns: 14, turn_timeout: 300, task_timeout: 480}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` revalidates an existing human blocker on resume"
     expected_skill: undertake
     skill_name: undertake

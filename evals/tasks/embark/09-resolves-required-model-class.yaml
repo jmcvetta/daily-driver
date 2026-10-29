@@ -23,6 +23,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`embark` fires on the agreed wave"
     expected_skill: embark
     skill_name: embark

@@ -21,6 +21,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`epic` fires for multi-issue planning"
     expected_skill: epic
     skill_name: epic

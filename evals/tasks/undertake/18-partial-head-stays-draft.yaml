@@ -30,6 +30,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires"
     expected_skill: undertake
     skill_name: undertake

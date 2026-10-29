@@ -20,6 +20,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "Issue authoring respects a frontier denial"
     expected_skill: issue
     skill_name: issue

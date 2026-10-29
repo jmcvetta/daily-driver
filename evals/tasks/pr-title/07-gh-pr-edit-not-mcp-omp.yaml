@@ -49,6 +49,7 @@ success_criteria:
   # a plausible-sounding reply. Left unarmed for the reason `undertake/08`
   # gives: there is no fail-stopping criterion here for a bare arm to defer.
   - type: skill_triggered
+    weight: 0
     description: "`pr-title` fires on correcting the title of an existing pull request"
     expected_skill: pr-title
     skill_name: pr-title
