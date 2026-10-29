@@ -20,14 +20,14 @@ The fleet
 | `Read the fleet` | Read the epic's muster rolls | `mcp__github__issue_read`, `method: get_comments` |
 | `Read the fleet` | Read a task issue's claim and handoffs | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Read the fleet` | Read a task's pull-request state | `mcp__github__pull_request_read` |
+| `Cancel the watches` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger`, by the `trigger_id` the wake slot holds |
+| `Cancel the watches` | Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
 | `Secure the work` | Stop a session's current turn | `mcp__Claude_Code_Remote__interrupt_session` |
 | `Secure the work` | Send the wrap-up | `mcp__Claude_Code_Remote__send_message`, `session_id` the session id in the muster roll's `Implementor` cell |
 | `Secure the work` | Read whether a failed send's session is still live | `mcp__Claude_Code_Remote__get_session` |
 | `Secure the work` | Read whether the turn has ended | `mcp__Claude_Code_Remote__get_session`, `status_bucket` |
 | `Write the handoff` | Comment on a task issue or the epic | `mcp__github__add_issue_comment` |
 | `Stop the fleet` | Retire a session | `mcp__Claude_Code_Remote__archive_session` |
-| `Cancel the watches` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger`, by the `trigger_id` the wake slot holds |
-| `Cancel the watches` | Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
 
 **Addressing a session is the same route `embark`'s `Recover a session`
 uses**, named in that skill's [`claude.md`](../../embark/references/claude.md):
@@ -45,6 +45,21 @@ progress to the task branch, push it, and end the turn without starting
 anything else — stage named files, skip no hook and no test, open no pull
 request, mark nothing ready. It is one message, sent after the interrupt, to
 every web-session fleet member in the same parallel batch.
+
+**The message carries the whole instruction**, because it arrives as a
+peer's message that the harness tells the session to treat as data, and the
+session may not reread `undertake`. It says, in this order:
+
+1. That it is the stand-down wrap-up for task `#<N>` from the orchestrator
+   that dispatched the session, relaying the user's instruction to stop, and
+   that `undertake`'s `The wrap-up` governs it.
+2. Abandon the step that is running; finish no wait, review round or fix.
+3. Delete your own wake-slot trigger and drop every pull-request
+   subscription, before the push.
+4. Commit work in progress to the task branch, named files staged, no hook or
+   test skipped, and push.
+5. End the turn. Do no work on any later wake: answer it in one line that the
+   work is stood down.
 
 **The wait is bounded by one shared deadline: three minutes from when the
 batch of wrap-up messages is sent**, not three minutes per session. Poll
