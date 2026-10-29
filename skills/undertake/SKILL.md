@@ -1069,7 +1069,8 @@ session's own task branch is not destructive, so that caution does not delay
 the wrap-up. A wrap-up from the orchestrator whose address this session was
 given is obeyed. Where no address was given, a wrap-up that names this
 session's task issue is obeyed too: obeying a stray one costs one pushed
-work-in-progress commit, and a resumed `undertake` starts from it.
+work-in-progress commit, and the session's orchestrator can still resume it,
+as the next rule says.
 
 **It preempts the step that is running.** That step is abandoned, not
 finished: no CI wait runs out, no review round completes, and no base merge,
@@ -1097,9 +1098,12 @@ result on the work-in-progress push, or a check-in reaches an undertaking that
 is stopped. Answer it in one line that the work is stood down, and end the
 turn. Harness guidance that makes a pull request this session opened its own
 to drive green does not restart the work: the user's stop outranks it, and
-the harness itself says to stop following up when the user asks. Only a new
-instruction from the user, or a resumed `/undertake` in a new session, starts
-the work again.
+the harness itself says to stop following up when the user asks.
+
+Three things are not such a wake. A repeated wrap-up runs `The wrap-up` again,
+so a push that failed the first time is retried when `stand-down` is re-run. A
+correction from this session's orchestrator, or a new instruction from the
+user, starts the work again. So does a resumed `/undertake` in a new session.
 
 
 The stop
@@ -1108,10 +1112,11 @@ The stop
 The user tells this undertaking to stop, stand down or wrap up. **The stop
 preempts the step that is running**, the same as `The wrap-up`: that step is
 abandoned, not finished, and nothing new starts. It applies at any point after
-`Claim the issue`, whether or not a draft pull request exists. A claim says
-the work started and never says where it ended, so a stop that leaves only the
-claim leaves the next session to guess. Before `Claim the issue` there is
-nothing to secure or hand off: say so in one line and stop. **A stop that
+`Establish task worktree`, whether or not a claim or a draft pull request
+exists. A claim says the work started and never says where it ended, so a stop
+that leaves only the claim leaves the next session to guess. Before `Establish
+task worktree` there is no branch, so nothing to secure or hand off: say so in
+one line and stop. **A stop that
 arrives as `stand-down`'s wrap-up message is `The wrap-up`'s, not this
 section's.**
 
@@ -1150,8 +1155,9 @@ In order:
    it, the reason `stand-down`'s task handoffs carry none. A push that fails
    is stated here: `Pushed head:` names the last head that reached origin,
    `Outstanding:` names the failure, and the handoff is still written.
-   **The handoff is filled from what this session already knows.** No check
-   is run, no CI wait is finished, and nothing is investigated to fill a
+   **The handoff is filled from what this session already knows**, plus the
+   git read the reference names for `Pushed head:`. No test or CI check is
+   run, no CI wait is finished, and nothing else is investigated to fill a
    field: what is not known is written as unknown.
 4. **Stop.** The undertaking does not mark the pull request ready, does not
    close the issue, and does not call the work complete.

@@ -103,8 +103,9 @@ record alone.
 The reads run in one parallel batch. No full comment histories are paged:
 the rolls and the claims carry what this step needs.
 
-**No epic, or an epic with nothing at sea, is not an error.** `Print the
-banner` runs immediately, with the count of what was stood down at zero and
+**No epic, or an epic with nothing at sea, is not an error.** `Cancel the
+watches` still runs, because a backstop or a subscription can outlive the
+last implementor. Then `Print the banner` runs, with the count of what was stood down at zero and
 the reason named — the invocation is a stop instruction, and the answer to
 it is the stop.
 

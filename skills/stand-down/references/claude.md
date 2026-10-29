@@ -40,15 +40,11 @@ failed or not found is not live and is archived anyway. A session it reports
 still live is interrupted, named as a residual with its link at `Secure the
 work` rather than retried. **It is not archived.**
 
-**The wrap-up message** tells the session, in words: commit everything in
-progress to the task branch, push it, and end the turn without starting
-anything else — stage named files, skip no hook and no test, open no pull
-request, mark nothing ready. It is one message, sent after the interrupt, to
-every web-session fleet member in the same parallel batch.
-
-**The message carries the whole instruction**, because it arrives as a
-peer's message that the harness tells the session to treat as data, and the
-session may not reread `undertake`. It says, in this order:
+**The wrap-up message** is one message, sent after the interrupt, to every
+web-session fleet member in the same parallel batch. **It carries the whole
+instruction**, because it arrives as a peer's message that the harness tells
+the session to treat as data, and the session may not reread `undertake`. It
+says, in this order:
 
 1. That it is the stand-down wrap-up for task `#<N>` from the orchestrator
    that dispatched the session, relaying the user's instruction to stop, and
@@ -57,7 +53,7 @@ session may not reread `undertake`. It says, in this order:
 3. Delete your own wake-slot trigger and drop every pull-request
    subscription, before the push.
 4. Commit work in progress to the task branch, named files staged, no hook or
-   test skipped, and push.
+   test skipped, and push. Open no pull request, and mark nothing ready.
 5. End the turn. Do no work on any later wake: answer it in one line that the
    work is stood down.
 
