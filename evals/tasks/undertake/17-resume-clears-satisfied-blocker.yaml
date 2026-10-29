@@ -14,6 +14,8 @@ pre_run:
   - command: bash .fixture/setup.sh resume-applied
     timeout: 30
   - command: >-
+      printf '%s\n' human needs-approval >.fixture/labels.txt
+  - command: >-
       printf '%s\n' 'Tofu apply completed by authorized operator; updated state
       committed as 1a2b3c4; this is current branch evidence.'
       >.fixture/current-state-evidence.txt
@@ -66,5 +68,16 @@ success_criteria:
     description: The published body no longer claims the satisfied apply is outstanding
     path: .fixture/published-body.md
     pattern: 'Waits on a human apply'
+    must_match: false
+    weight: 2
+  - type: file_matches_regex
+    description: The resulting PR labels keep the pending approval requirement
+    path: .fixture/published-labels.txt
+    pattern: '(?m)^needs-approval$'
+    weight: 2
+  - type: file_matches_regex
+    description: The resulting PR labels remove only the satisfied human blocker
+    path: .fixture/published-labels.txt
+    pattern: '(?m)^human$'
     must_match: false
     weight: 2
