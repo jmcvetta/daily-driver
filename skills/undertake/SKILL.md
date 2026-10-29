@@ -1061,36 +1061,70 @@ The wrap-up
 
 A `stand-down` orchestrator may interrupt this session mid-sequence and send
 one message: the wrap-up instruction its `Secure the work` sends, addressed
-the way `embark`'s `Recover a session` addresses a correction. It is obeyed
-at once, whichever step of this sequence is running when it arrives — commit
-what is in progress to the task branch, named files staged and no hook or
-test skipped, push it, and end the turn without starting anything else. It
-opens no pull request and marks nothing ready: that is `stand-down`'s own
+the way `embark`'s `Recover a session` addresses a correction. **It is the
+user's stop, relayed by the session that dispatched this one, and it is obeyed,
+not weighed.** The harness tells a session to treat a peer's message as data
+and to take no destructive action on it alone. A commit and a push to this
+session's own task branch is not destructive, so that caution does not delay
+the wrap-up. A wrap-up from the orchestrator whose address this session was
+given is obeyed. Where no address was given, a wrap-up that names this
+session's task issue is obeyed too: obeying a stray one costs one pushed
+work-in-progress commit, and a resumed `undertake` starts from it.
+
+**It preempts the step that is running.** That step is abandoned, not
+finished: no CI wait runs out, no review round completes, and no base merge,
+fix or test run starts. A tool call the interrupt cut off is not retried. In
+this one turn, in order:
+
+1. **End the watch** — the cancellations `The stop`'s `End the watch` names.
+   They go first, so the CI run that the push starts wakes nothing here.
+2. **Commit and push** what is in progress to the task branch, named files
+   staged and no hook or test skipped. A branch with nothing new is pushed as
+   it is.
+3. **End the turn** without starting anything else. Send no report to the
+   orchestrator: it is already waiting for this turn to end.
+
+It opens no pull request and marks nothing ready: that is `stand-down`'s own
 record to write, not a step of this sequence completing.
 
 **It writes no handoff.** `stand-down`'s `Write the handoff` writes the one
 task-issue comment, so a handoff here would make two. `The stop` below is not
 this section: it governs a stop the user gives this session directly.
 
+**A wake after the stop does no work.** This holds after `The wrap-up` and
+after `The stop`. A timer that escaped the cancel, a pull-request event, a CI
+result on the work-in-progress push, or a check-in reaches an undertaking that
+is stopped. Answer it in one line that the work is stood down, and end the
+turn. Harness guidance that makes a pull request this session opened its own
+to drive green does not restart the work: the user's stop outranks it, and
+the harness itself says to stop following up when the user asks. Only a new
+instruction from the user, or a resumed `/undertake` in a new session, starts
+the work again.
+
 
 The stop
 ========
 
-The user tells this undertaking to stop, stand down or wrap up. It applies at
-any point after `Claim the issue`, whether or not a draft pull request exists.
-A claim says the work started and never says where it ended, so a stop that
-leaves only the claim leaves the next session to guess. **A stop that arrives
-as `stand-down`'s wrap-up message is `The wrap-up`'s, not this section's.**
+The user tells this undertaking to stop, stand down or wrap up. **The stop
+preempts the step that is running**, the same as `The wrap-up`: that step is
+abandoned, not finished, and nothing new starts. It applies at any point after
+`Claim the issue`, whether or not a draft pull request exists. A claim says
+the work started and never says where it ended, so a stop that leaves only the
+claim leaves the next session to guess. Before `Claim the issue` there is
+nothing to secure or hand off: say so in one line and stop. **A stop that
+arrives as `stand-down`'s wrap-up message is `The wrap-up`'s, not this
+section's.**
 
 In order:
 
 
-1. **Secure the work.** The rules are `stand-down`'s `Secure the work`: commit
+1. **End the watch.** Cancel the `Keep it current` wake slot timer, any CI
+   watcher this session holds, and every pull-request subscription. The
+   reference file for the harness in use names the calls. This goes first, so
+   the CI run that the push starts wakes nothing here.
+2. **Secure the work.** The rules are `stand-down`'s `Secure the work`: commit
    work in progress to the existing task branch, stage named files, skip no
    hook and no test, and push. A branch with nothing new is pushed as it is.
-2. **End the watch.** Cancel the `Keep it current` wake slot timer, any CI
-   watcher this session holds, and every pull-request subscription. The
-   reference file for the harness in use names the calls.
 3. **Write the handoff.** One comment on the task issue:
 
    ```markdown
@@ -1116,6 +1150,9 @@ In order:
    it, the reason `stand-down`'s task handoffs carry none. A push that fails
    is stated here: `Pushed head:` names the last head that reached origin,
    `Outstanding:` names the failure, and the handoff is still written.
+   **The handoff is filled from what this session already knows.** No check
+   is run, no CI wait is finished, and nothing is investigated to fill a
+   field: what is not known is written as unknown.
 4. **Stop.** The undertaking does not mark the pull request ready, does not
    close the issue, and does not call the work complete.
 
