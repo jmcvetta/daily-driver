@@ -6,9 +6,9 @@ input and fails loudly. It is the discipline an agent cannot talk its way past.
 
 This version records the **decided standard** on 2026-10-29: where each
 control is in use on that date, and the changes decided since the 2026-10-24
-baseline. A decided change that has not landed is marked with an arrow (see
+baseline. A decided change that has not landed is marked as decided (see
 *How to read this standard*). A companion issue in each repository lands the
-change, and its pull request removes the arrow.
+change, and its pull request removes the mark.
 
 The survey covered five repositories:
 
@@ -41,14 +41,16 @@ To compare two repositories, compare their rows for one control ID.
 | `none` | No implementation exists for this ecosystem. |
 
 A `none` row records a gap. It is not an error in this document.
-
-**A status is the current state, and an arrow marks a decided change.** Where
-a change is decided but has not landed, the status reads `current → decided`:
-`none → gate` is a gate that is decided but not yet wired, and `gate → none`
-is a gate that is decided for removal but still runs. The companion issue's
-pull request replaces the arrow with the new status.
 Tests of tests and other testing machinery are not quality controls. Do not
 list them as implementations of a control.
+
+**A status is the current state, and a decided change is marked.** Where a
+change is decided but has not landed, a status reads `current → decided`:
+`none → gate` is a gate that is decided but not yet wired, and `gate → none`
+is a gate that is decided for removal but still runs. A decided change that
+is not a status change is named as decided in the control's text or table,
+such as Dependabot's "Decided, not yet landed" column and CA's unpinned
+release-config schema. The companion issue's pull request removes the mark.
 
 
 **Two layers.** Universal controls apply to every repository. Ecosystem
@@ -406,11 +408,10 @@ a reason.
 
 ## Adoption matrix
 
-`gate`, `local` and `none` as above. Two more values appear in the
-matrix only:
+`gate`, `local`, `none` and the `current → decided` arrow as above. Two
+more values appear in the matrix only:
 
 - `on` means a bot is configured (`QC-DEPENDENCY-UPDATES` is not a check).
-- `a → b` is a decided change that has not landed, as in the tables above.
 - `n/a` means the control has nothing to act on in that repository: the
   ecosystem is absent, nothing is built, the code is a single package (so
   there is no boundary between packages to enforce), or there are no
