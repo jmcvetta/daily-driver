@@ -8,7 +8,7 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task, WebFetch, WebSearch]
 
 run_limits:
-  max_turns: 6
+  max_turns: 14
   turn_timeout: 300
   task_timeout: 600
 

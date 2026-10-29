@@ -17,7 +17,7 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 
 run_limits:
-  max_turns: 10
+  max_turns: 14
   turn_timeout: 300
   task_timeout: 600
 
