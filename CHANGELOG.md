@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.54.0](https://github.com/jmcvetta/daily-driver/compare/v0.53.0...v0.54.0) (2026-10-29)
+
+
+### Features
+
+* **evals:** flag behaviour cases the bare variant passes ([#678](https://github.com/jmcvetta/daily-driver/issues/678)) ([57adcf6](https://github.com/jmcvetta/daily-driver/commit/57adcf67d3c48f041fe06dbe9790d0ab214b4291))
+
+
+### Bug Fixes
+
+* **pr-title:** classify evals-only changes as tests ([#687](https://github.com/jmcvetta/daily-driver/issues/687)) ([9bf4690](https://github.com/jmcvetta/daily-driver/commit/9bf4690530d869ba38958931aa36b038f734e2b4))
+* **pr:** keep Omp PR branches current ([#704](https://github.com/jmcvetta/daily-driver/issues/704)) ([7e9a51d](https://github.com/jmcvetta/daily-driver/commit/7e9a51d0ebee3b9b4fa08fea4b66409de8babb65))
+
 ## [0.53.0](https://github.com/jmcvetta/daily-driver/compare/v0.52.0...v0.53.0) (2026-10-24)
 
 
