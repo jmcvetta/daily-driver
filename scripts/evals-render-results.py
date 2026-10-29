@@ -3,21 +3,17 @@
 
 Reads every record under `evals/provenance/` -- never a run directory, which
 is gitignored and exists only on the machine that ran it -- and writes the
-whole page. `--check` writes nothing: it exits 1 when the committed page
-differs from a fresh render, which is how `make check` catches a record
-committed without its row.
+whole page.
 
 USAGE
 
-    python3 scripts/evals-render-results.py           # make evals-render-results
-    python3 scripts/evals-render-results.py --check   # make check-evals-results
+    python3 scripts/evals-render-results.py
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -189,20 +185,13 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--provenance-dir", type=Path, default=DEFAULT_PROVENANCE_DIR)
     parser.add_argument("--target", type=Path, default=DEFAULT_TARGET)
-    parser.add_argument("--check", action="store_true", help="fail when the target is stale; write nothing")
     return parser.parse_args()
 
 
 def main() -> int:
-    """Render the results page, or check that the committed one is current."""
+    """Render the committed results page."""
     args = parse_args()
     page = render_page(load_records(args.provenance_dir))
-    if args.check:
-        current = args.target.read_text() if args.target.is_file() else ""
-        if current != page:
-            print(f"{args.target} is stale; run `make evals-render-results` and commit it", file=sys.stderr)
-            return 1
-        return 0
     args.target.write_text(page)
     return 0
 

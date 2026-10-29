@@ -1,9 +1,8 @@
 """How the `omp` agent kind starts Omp: the config, the argv and the environment.
 
-Pure, for the reason `tools.py` is: `scripts/check-omp-agent.py` runs it in
-`make check` with no `coder_eval` and no `omp` installed. What it builds is the
-sandbox boundary `docs/notes/0013-the-omp-arm.md` records, so it is built here
-where it can be asserted rather than inline in `agent.py`.
+Pure, for the reason `tools.py` is: it builds the sandbox boundary documented
+in `docs/notes/0013-the-omp-arm.md` for direct use by `agent.py`, rather than
+inlining it there.
 """
 
 from __future__ import annotations

@@ -3,8 +3,8 @@
 Most of this module is pure: frames in, small dataclasses out. The model
 command builder is pure too. `agent.py` cannot be exercised without a
 `coder_eval` install and an `omp` binary, so load-bearing protocol behavior
-that can be tested without them lives here; `scripts/check-omp-agent.py`
-drives it against recorded frames and model selectors in `make check`.
+that can be exercised without them lives here. It uses recorded frames and
+model selectors.
 
 Three things it owns, and each one is a silent zero if it is wrong:
 

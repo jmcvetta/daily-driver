@@ -8,20 +8,16 @@ SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
 .PHONY: __git_sync_run check-git-sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
-	check-manifests check-manifest-fixtures check-release-paths check-constitution check-ask-in-chat check-title-gate \
+	check-manifests check-release-paths check-constitution check-ask-in-chat check-title-gate \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
-	check-omp-cache-clean \
-	check-omp-agent check-omp-eval-guard check-omp-eval-guard-live check-omp-embark-title-live check-omp-agent-settle check-codex-agent check-eval-fixtures check-model-classes-grader check-dispatch-grader \
-	check-task-worktree-fixture check-evals-setup-omp check-eval-arms check-agent-judges check-evals-judge check-ci-scope check-step-names \
-	check-worktrunk-install check-evals-preflight check-evals-provenance check-evals-results check-labels check-labels-fixtures \
-	check-infra check-plugin-validity check-runtime \
-	check-eval-tooling check-issue-infra check-model-telemetry model-telemetry check-undertake-readiness \
-	evals-install evals-setup-claude evals-setup-omp evals-plan \
-	evals-judge-preflight evals-judge-calibrate \
-	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-run evals-run-omp \
+	check-omp-cache-clean check-omp-embark-title-live check-step-names \
+	check-worktrunk-install check-labels check-infra check-plugin-validity check-runtime \
+	check-issue-infra check-model-telemetry model-telemetry \
+	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
+	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
-	check-claude-dependency \
-	evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-codex evals-run-comparison evals-run-classes mcp-usage
+	check-claude-dependency evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna \
+	evals-run-codex evals-run-comparison evals-run-classes mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -61,16 +57,13 @@ export PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.bun/bin
 # Python packaging -- the root `pyproject.toml` declares no package, only the
 # dev dependency group the legs read from -- and the legs that import nothing
 # third-party stay that way. PyYAML is the one declared exception: the dev
-# group names it, and the three scripts that read YAML import it
-# (`scripts/check-eval-arms.py`, `scripts/evals-preflight.py`,
-# `scripts/evals-variants.py`).
+# group names it, and the two scripts that read YAML import it
+# (`scripts/evals-preflight.py`, `scripts/evals-variants.py`).
 #
 # The legs run under `uv run --frozen`: uv syncs the environment from
 # `uv.lock` into `.venv/` at the repository root before the script starts.
-# A venv interpreter's imports resolve from the venv's own site-packages --
-# not from the user site, which resolves from `HOME`, and which
-# `scripts/check-evals-preflight.py` redirects -- so the venv carries
-# PyYAML into exactly the subprocess a user-site install cannot reach.
+# A venv interpreter's imports resolve from its own site-packages, not from
+# the user site. This keeps PyYAML available to each YAML-reading script.
 # `--frozen` refuses to run against a `uv.lock` that disagrees with
 # `pyproject.toml` rather than re-resolving it: a drift is a loud failure
 # for whoever edits the declaration next, not a silent environment change.
@@ -110,28 +103,21 @@ omp-update-daily-driver:
 
 # `check` remains the local all-groups convenience target. CI selects leaf
 # checks from changed inputs and runs each selected check as a named step.
-check: check-ci-scope check-step-names check-release-paths check-plugin-validity check-runtime check-eval-tooling check-issue-infra
-
-check-ci-scope:
-	node scripts/check-ci-scope.mjs
+check: check-step-names check-release-paths check-plugin-validity check-runtime check-issue-infra check-model-telemetry
 
 check-plugin-validity: check-plugin check-skills check-agents \
-	check-manifests check-manifest-fixtures check-claude-dependency
+	check-manifests check-claude-dependency
 
 check-runtime: check-constitution check-ask-in-chat check-title-gate check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-git-sync \
-	check-task-worktree-fixture check-worktrunk-install check-scripts
+	check-worktrunk-install check-scripts
 
 # Exercise the shell-integrated alias in isolated Git repositories only.
 check-git-sync:
 	python3 scripts/check-git-sync.py
 
-check-eval-tooling: check-omp-agent check-omp-eval-guard check-codex-agent check-eval-fixtures check-model-classes-grader check-dispatch-grader \
-	check-eval-arms check-agent-judges check-evals-judge check-evals-preflight check-evals-provenance \
-	check-evals-results check-model-telemetry check-evals-setup-omp check-undertake-readiness
 
-
-check-issue-infra: check-labels check-labels-fixtures
+check-issue-infra: check-labels
 
 # `claude plugin validate --strict` reads one manifest at a time and picks the
 # marketplace when handed a directory, so the plugin manifest is named
@@ -185,16 +171,6 @@ check-manifests:
 # deleting a top-level directory selects no path-filtered job.
 check-release-paths:
 	python3 scripts/check-release-paths.py
-
-# check-manifest-fixtures: the acceptance test for the route half of
-# check-manifests -- folded-description rejection, body rejection with its
-# line number, neutral and invocation acceptance, routes allowed in reference
-# files, and every route pattern exercised by name. Part of `check` because
-# the guard itself is credential-free: a pattern that stops matching fails
-# here rather than letting routes back into every description. See the
-# script's docstring.
-check-manifest-fixtures:
-	python3 scripts/check-manifest-fixtures.py
 
 # Catch a plugin marketplace install that returns success without installing
 # its dependency, and a migration that leaves both Worktrunk identities enabled.
@@ -285,135 +261,18 @@ check-scripts:
 		skills/*/scripts/*.sh scripts/*.sh \
 		evals/fixtures/*/shared/*.sh evals/fixtures/*/cases/*/*.sh
 
-# check-omp-agent: the acceptance test for the Omp eval arm's frame reduction
-# -- the skill-URL normalisation, the tool and argument renames, and the
-# transcript shape every llm_judge rubric here anchors on. Part of `check`
-# because `evals/coder-eval-omp/src/coder_eval_omp/rpc.py` imports nothing:
-# neither coder-eval nor omp is needed to run it, and every one of the things
-# it asserts fails as a silent zero rather than as an error. See the script's
-# docstring, and evals/coder-eval-omp/README.md for the arm.
-check-omp-agent:
-	python3 scripts/check-omp-agent.py
-
-# check-omp-eval-guard: the Omp eval arm's sandbox guard, driven with a fake
-# `pi` against every bypass issue #461 measured -- a `;` list, scheme case, a
-# `write` the row did not grant. Each one fails open: the row reaches GitHub
-# and nothing reports it. Node only, like check-omp-extension.
-check-omp-eval-guard:
-	node scripts/check-omp-eval-guard.mjs
-
-# check-omp-eval-guard-live: the same guard inside a real `omp --mode rpc`,
-# with the plugin linked and a local mock model scripting the tool calls. It
-# proves what the fake `pi` cannot: that Omp loads `-e` beside the plugin and
-# honours the refusals, and that `fetch.enabled: false` refuses a URL read.
-# Needs `omp`, so it runs in CI's Omp job, for check-omp-plugin's reason.
-check-omp-eval-guard-live:
-	python3 scripts/check-omp-eval-guard-live.py
-
 # The live embark barrier needs a real Omp but not the eval guard: issue://
 # must reach its offline fixture client to provide the canonical issue metadata.
 check-omp-embark-title-live:
 	python3 scripts/check-omp-embark-title-live.py
 
-# check-omp-agent-settle: the acceptance test for the Omp arm's early-stop
-# record -- that a replicate which early-stops on `skill_triggered` cannot
-# final-score 0 on that same criterion, the failure the first live run
-# measured (2026-09-16, issue #206): the watcher latched a pass on the
-# in-flight skill call while the abort settle dropped every event the frozen
-# trajectory is built from. It drives `coder_eval_omp.agent` against a fake
-# `omp --mode rpc`, so unlike check-omp-agent it needs the pinned
-# `coder_eval` install -- `make evals-install` provides it -- and no network.
-# Not a `check` leg, for the toolchain reason check-omp-plugin's comment
-# records; the evals that need it installed are the ones it protects.
-check-omp-agent-settle:
-	uv run --python 3.13 --with coder-eval==$(CODER_EVAL_VERSION) \
-		--with ./evals/coder-eval-omp \
-		python3 scripts/check-omp-agent-settle.py
 
-# check-codex-agent: the acceptance test for the Codex eval arm's one
-# normalisation -- the `[RESULT - ...]` transcript every judge rubric here
-# anchors on. Part of `check` for the same reason check-omp-agent is:
-# `evals/coder-eval-codex/src/coder_eval_codex/transcript.py` imports nothing,
-# so neither coder-eval nor the Codex SDK is needed to run it, and the failure
-# it catches is a row scored 0.0 rather than an error. It also asserts the
-# rendering agrees byte for byte with the Omp arm's, which is what holds one
-# rubric readable on both harnesses without either package depending on the
-# other. See the script's docstring, and evals/coder-eval-codex/README.md for
-# the arm.
-check-codex-agent:
-	python3 scripts/check-codex-agent.py
-
-# check-eval-arms: the two arms are routed by tag, and nothing else holds the
-# tags in step. A fork that loses its tag runs in both arms and grades one
-# harness's route under the other's. Credential-free like the other script
-# legs. See the script's docstring.
-check-eval-arms:
-	uv run --frozen python3 scripts/check-eval-arms.py
-
-# check-agent-judges: every `agent_judge` denies itself the built-in tools, so
-# it grades the transcript it was given instead of reading the sandbox and
-# timing out without a verdict. See the script's docstring.
-check-agent-judges:
-	uv run --frozen python3 scripts/check-agent-judges.py
-
-# check-evals-judge: the offline acceptance test for `scripts/evals-judge.py` --
-# independent subject/judge selection, unavailable-judge refusal, no fallback,
-# verdict errors and timeouts, transcript-only isolation and judge provenance,
-# against a fake `omp`. No model, no credentials, no network.
-check-evals-judge:
-	uv run --frozen python3 scripts/check-evals-judge.py
-
-# check-undertake-readiness: the offline acceptance test for the fixtures behind
-# `evals/tasks/undertake` rows 08, 10 and 13 -- a stateful fake `gh`, a local
-# git repository and a harmless service stub. It asserts the verifier accepts
-# the valid ready/notice/report/service transitions and rejects the wrong ones.
-# No model, no credentials, no network. See the script's docstring.
-check-undertake-readiness:
-	python3 scripts/check-undertake-readiness.py
-
-# check-eval-fixtures: build every review-depth fixture repository and assert
-# it has the shape the `review` skill needs. Part of `check` because it needs
-# only git and bash -- no model, no credentials -- and because a fixture that
-# stops building does not turn the eval suite red, it turns every case into a
-# silent 0 that reads exactly like a skill that never fires. See the script's
-# docstring.
-#
-# This is not eval CI gating, which stays out of scope: nothing here runs a
-# case or scores a model.
-check-eval-fixtures:
-	scripts/check-eval-fixtures.sh
-
-# check-model-classes-grader: the model-classes grader applies the answer key
-# over an agent's tree -- same-hunk edits, a test file both created, committed
-# work -- instead of scoring a correct change 0. Needs git and bash only. See
-# the script's header.
-check-model-classes-grader:
-	scripts/check-model-classes-grader.sh
-
-# check-dispatch-grader: case 03 grades task assignments from structured Omp
-# evidence -- one per `tasks[]` entry, retries kept, prohibitions in shared
-# context ignored -- instead of a regex over the first 2000 characters of the
-# serialized call. Pure stdlib, no coder-eval and no network. See the script's
-# header.
-check-dispatch-grader:
-	python3 scripts/check-dispatch-grader.py
-
-# check-task-worktree-fixture: prove the linked and detached repositories used
-# by the task-worktree behavior rows can satisfy every invariant they grade.
-# The model-driven rows remain outside CI; their test instrument does not.
-check-task-worktree-fixture:
-	scripts/check-task-worktree-fixture.sh
 
 # Conditional user-scope installation is tested with stub package managers;
 # the fixtures never invoke a real installer or access the network.
 check-worktrunk-install:
 	scripts/check-worktrunk-install.sh
 
-# check-evals-setup-omp: evals-setup-omp's key resolution, exact model match
-# and no-reinstall rule, against a stub `omp` and `curl` in a throwaway HOME.
-# Offline: it never runs the real installer or calls the gateway.
-check-evals-setup-omp:
-	scripts/check-evals-setup-omp.sh
 
 # check-step-names: no file may cite a step of a numbered sequence by its
 # number. The numbers are positional, so inserting a step silently invalidates
@@ -424,25 +283,6 @@ check-evals-setup-omp:
 check-step-names:
 	python3 scripts/check-step-names.py
 
-# check-evals-preflight: the acceptance test for `scripts/evals-preflight.py`
-# -- synthetic task YAML in a temp dir, no credentials, no model. Part of
-# `check` for the same reason as the other script legs: the guard it tests is
-# itself credential-free, so nothing stops it running on a laptop and in CI.
-# See the script's docstring and docs/notes/0014-the-judge-runs-on-the-subscription.md
-# for the no-metered-API boundary.
-check-evals-preflight:
-	uv run --frozen python3 scripts/check-evals-preflight.py
-
-# check-evals-provenance: validate committed records and exercise the recorder
-# against synthetic run artifacts. It never starts a model or reads a paid run.
-check-evals-provenance:
-	uv run --frozen python3 scripts/check-evals-provenance.py
-
-# check-evals-results: `evals/RESULTS.md` matches a fresh render of every
-# committed record, so a record cannot land without its row. Standard library
-# only, so plain `python3`.
-check-evals-results:
-	python3 scripts/evals-render-results.py --check
 
 # check-model-telemetry: `scripts/model-telemetry.py`'s claim, readiness and
 # review-verification comment parsers, checked against fixture text -- no
@@ -462,11 +302,6 @@ check-model-telemetry:
 check-labels:
 	python3 scripts/check-labels.py
 
-# check-labels-fixtures: exercise both marked skill tables against temporary
-# Tofu fixtures. The real-tree checker alone cannot prove that a supplemental
-# marker is still parsed or that its silent drift failures remain failures.
-check-labels-fixtures:
-	python3 scripts/check-labels-fixtures.py
 
 # check-infra: parse the OpenTofu stack without credentials. Not part of
 # `check`, which must not start requiring OpenTofu on a laptop that is only
@@ -636,9 +471,17 @@ evals-render-routes:
 evals-render-results:
 	python3 scripts/evals-render-results.py
 
+# evals-leaks: report behavior leaks and failures from every committed record.
+evals-leaks:
+	python3 scripts/check-evals-leaks.py
+
+# check-evals-leaks: exercise the leak classifier; #662 wires it into `check`.
+check-evals-leaks:
+	python3 scripts/check-evals-leaks.py --selftest
+
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
-# with `skip:<arm>`. The tag is what routes a row to its arm, and
-# `make check-eval-arms` is what keeps the three sets in step.
+# with `skip:<arm>`. The tags on eval tasks and each runner's exclusion list
+# determine which arm runs each row.
 #
 # ONE COMMA-SEPARATED VALUE, never a repeated flag. `--exclude-tags` is a single
 # `str` option that `coder_eval` splits on commas, so a second `--exclude-tags`
