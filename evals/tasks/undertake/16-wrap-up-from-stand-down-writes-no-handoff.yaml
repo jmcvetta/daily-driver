@@ -30,6 +30,7 @@ success_criteria:
   # Unarmed: an on-fail stop would truncate the trajectory before the
   # `[RESULT - …]` reply the judge below needs.
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires"
     expected_skill: undertake
     skill_name: undertake

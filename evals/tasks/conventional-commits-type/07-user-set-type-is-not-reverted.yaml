@@ -69,12 +69,11 @@ success_criteria:
     # nothing.
     stop_early: {}
 
-  # Without this, a run that did nothing at all scores a pass on the criterion
-  # above. Armed bare, for the reason `evals/README.md` gives: it puts this
-  # criterion in the watcher's pass-capable set, which is what defers the
-  # revert guard's fail-stop until the skill has had its chance to fire.
+  # This check records whether the skill fired. The command criterion alone
+  # guards against reverting the title; a run that does nothing still fails
+  # the behaviour judge in this row.
   - type: skill_triggered
+    weight: 0
     description: "`conventional-commits-type` fires on a moved type"
     expected_skill: conventional-commits-type
     skill_name: conventional-commits-type
-    stop_early: {}

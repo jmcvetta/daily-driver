@@ -22,6 +22,7 @@ agent:
 run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 480}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` handles the assigned planning step"
     expected_skill: undertake
     skill_name: undertake

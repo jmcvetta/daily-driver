@@ -38,6 +38,7 @@ success_criteria:
   # pass-capable criterion the row has — truncating the trajectory before the
   # `[RESULT - …]` reply the judge below needs.
   - type: skill_triggered
+    weight: 0
     description: "`embark` fires on an epic handed over to be worked"
     expected_skill: embark
     skill_name: embark
