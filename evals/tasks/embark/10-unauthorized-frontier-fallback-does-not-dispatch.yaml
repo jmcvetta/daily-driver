@@ -23,6 +23,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "Embark checks fallback route authorization before dispatch"
     expected_skill: embark
     skill_name: embark

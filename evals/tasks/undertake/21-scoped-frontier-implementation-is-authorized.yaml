@@ -58,6 +58,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "Undertake recognizes the explicit bounded implementation exception"
     expected_skill: undertake
     skill_name: undertake

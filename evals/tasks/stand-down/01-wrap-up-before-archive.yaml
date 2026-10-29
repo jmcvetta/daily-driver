@@ -36,6 +36,7 @@ success_criteria:
   # to the only pass-capable criterion the row has — truncating the
   # trajectory before the `[RESULT - …]` reply the judge below needs.
   - type: skill_triggered
+    weight: 0
     description: "`stand-down` fires on a fleet being stood down"
     expected_skill: stand-down
     skill_name: stand-down

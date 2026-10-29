@@ -70,6 +70,7 @@ success_criteria:
   # stop here would truncate the trajectory before the `[RESULT - …]` reply the
   # judge below needs, and grade a 0 the row does not intend.
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires on a draft that has met its gate"
     expected_skill: undertake
     skill_name: undertake

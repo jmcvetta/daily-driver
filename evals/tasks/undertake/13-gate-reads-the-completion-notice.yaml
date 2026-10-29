@@ -59,6 +59,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires on a draft that has met every read but the notice"
     expected_skill: undertake
     skill_name: undertake
