@@ -88,6 +88,24 @@ therefore always `chore:`, even when an overlay changes which model Omp uses.
 If a pull request also changes shipped files, type the whole pull request from
 the shipped effect under the rules below.
 
+Evals are tests
+---------------
+
+**An evals-only pull request MUST use `test`, NEVER `feat` or `fix`.** Apply
+this boundary before asking whether a capability is new or broken. New eval
+cases, datasets, fixtures, scorers, judges, runners, adapters, model routes,
+and result reporting still verify the product. A new capability in that
+tooling is not a new capability in the shipped product; correcting it is not
+a product bug fix. For example, use `test(evals): add a model comparison
+runner`, not `feat(evals): …`.
+
+Read the whole diff to establish that it is evals-only. The word `evals` in a
+scope or path is not proof. A change confined to a CI workflow definition or
+packaging/build tooling still uses `ci` or `build` under gate 3; it does not
+become a feature because it supports evals. A mixed pull request that changes
+shipped behavior and adds evals takes its type from the shipped effect.
+Neither the number of eval files nor their novelty overrides that effect.
+
 
 The tests
 =========
