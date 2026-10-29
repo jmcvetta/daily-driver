@@ -34,10 +34,12 @@ the harness in use before the first call.
 The type
 --------
 
-Follow `conventional-commits-type`. It decides the type from what the change
-**does** — the two gates and the one test that settle it are its business,
-and they are not guessed at here from the branch name, the issue label, or
-the shape of the diff.
+Before proposing or writing a title, read the whole diff and follow
+`conventional-commits-type`. Apply its **Evals are tests** boundary before
+considering `feat` or `fix`; adding an eval capability is not adding a product
+capability. The type comes from what the change **does**, not the branch name,
+issue label, scope, or shape of the diff. The classification rules stay in
+that skill.
 
 It also decides when the type is decided already: a type on the pull request
 that this session did not write is settled — whoever set it — and a

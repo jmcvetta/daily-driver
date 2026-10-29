@@ -623,6 +623,16 @@ to show. The same half is ungradeable: that the disagreement is raised and
 waited on needs a live pull request and someone to answer. It grades the
 revert, not the asking.
 
+Run the evals-only title regression through both title skills with:
+
+```sh
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+  TASKS='tasks/pr-title/09-evals-only-are-tests.yaml'
+```
+
+It checks new and corrected eval tooling, mixed product-and-eval changes,
+CI/build-only changes, and an existing title written by another actor.
+
 `undertake/` asks the same question of a skill with two ways in. `Open the
 issue` opens one for work that has none, so an issue reference no longer has
 to be present for the skill to fire — and what fires it is now either an issue
