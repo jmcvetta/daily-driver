@@ -275,8 +275,9 @@ at-sea status from.
 re-run, not duplicated, and the writes are idempotent one by one: a handoff
 comment already on a task issue is not posted twice, and a stand-down
 comment already on the epic is not posted again. A `## Handoff —` comment
-that `undertake`'s `The stop` posted, after the latest claim and naming the
-current pushed head, counts as the handoff already present. `Write the handoff` writes
+that `undertake`'s `The stop` posted, after the latest claim (or anywhere, when
+the issue has no claim comment) and naming the current pushed head, counts as
+the handoff already present. `Write the handoff` writes
 only what is missing, and a record that is complete sends this step
 straight to the stops.
 

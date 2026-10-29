@@ -1069,8 +1069,8 @@ session's own task branch is not destructive, so that caution does not delay
 the wrap-up. A wrap-up from the orchestrator whose address this session was
 given is obeyed. Where no address was given, a wrap-up that names this
 session's task issue is obeyed too: obeying a stray one costs one pushed
-work-in-progress commit, and the session's orchestrator can still resume it,
-as `A wake after the stop does no work` says.
+work-in-progress commit, and the user can still resume the work, as `A wake
+after the stop does no work` says.
 
 **It preempts the step that is running.** That step is abandoned, not
 finished: no CI wait runs out, no review round completes, and no base merge,
@@ -1104,8 +1104,7 @@ Three things are not such a wake. A repeated wrap-up runs `The wrap-up` again,
 so a push that failed the first time is retried when `stand-down` is re-run. A
 correction from this session's orchestrator, or a new instruction from the
 user, starts the work again. The orchestrator is the session whose address
-this session was given; where none was given, it is the session that sent the
-wrap-up. So does a resumed `/undertake` in a new session.
+this session was given; where none was given, only the user restarts it. So does a resumed `/undertake` in a new session.
 
 
 The stop
@@ -1167,7 +1166,7 @@ In order:
 
 **Idempotent.** Read the issue's comments before posting. A `## Handoff —`
 comment that names the same pushed head, posted after the latest claim comment
-or anywhere on an issue this session has not yet claimed, is an equivalent
+— or anywhere, when the issue has no claim comment — is an equivalent
 handoff: post nothing. One that names an older head is not
 equivalent, so post a new one. This is `stand-down`'s `Idempotent re-entry`.
 
