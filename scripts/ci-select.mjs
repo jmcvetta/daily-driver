@@ -34,6 +34,8 @@ const workflowToolConsumers = {
   'Ensure ShellCheck': ['check-scripts'],
   'Install Worktrunk': ['check-git-sync', 'check-worktrunk-install'],
   'Install OpenTofu': ['check-infra'],
+  'Install Checkov': ['check-checkov'],
+  'Install uv': ['check-checkov'],
   'Verify provider lock': ['check-infra'],
   'Install Omp': ['check-omp-plugin', 'check-omp-embark-title-live'],
 }

@@ -359,8 +359,9 @@ a reason.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | OpenTofu | Checkov, `.checkov.yaml` (skips carry a comment; an Opengrep rule enforces that) | PG | `gate` |
+| OpenTofu | Checkov 3.2.472, `.checkov.yaml` (five skips carry reasons) | DD | `gate` |
 | OpenTofu, Dockerfile, secrets | Checkov, pinned, frameworks `terraform dockerfile secrets` (`apps/omp-web`) | PG | `gate` |
-| OpenTofu | — | DD, CA, PRA, CMWB | `none` |
+| OpenTofu | — | CA, PRA, CMWB | `none` |
 
 
 ## Adoption matrix
@@ -403,7 +404,7 @@ control covers.
 | QC-VULN-AUDIT | none | gate (Python) | none | none | n/a |
 | QC-BUILD | n/a | none | gate | gate | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
-| QC-IAC-POLICY | none | none | gate | none | none |
+| QC-IAC-POLICY | gate | none | gate | none | none |
 
 CA also holds a TypeScript tree (`agent-cli`, `core`, `cflow`, `viewer`,
 `polite-pace`). Its vitest and `tsc` legs run only locally (`make

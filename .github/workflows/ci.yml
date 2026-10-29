@@ -147,3 +147,14 @@ jobs:
             git diff -- infra/github/.terraform.lock.hcl >&2
             exit 1
           fi
+      - name: Install uv
+        id: install-uv
+        if: ${{ !cancelled() && steps.plan.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') }}
+        uses: astral-sh/setup-uv@v6
+      - name: Install Checkov
+        id: install-checkov
+        if: ${{ !cancelled() && steps.install-uv.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') }}
+        run: uv tool install checkov==3.2.472
+      - name: Validate infrastructure policy
+        if: ${{ !cancelled() && steps.install-checkov.outcome == 'success' }}
+        run: make check-checkov
