@@ -8,10 +8,7 @@ description: >-
 tags: [undertake, evals, behaviour]
 
 initial_prompt: >-
-  On Omp, run the `undertake-12-draft-handoff-omp` evaluation, which is judged
-  by `agent_judge` on Claude. `evals/README.md` is the entry point. No
-  facility exists in this environment for starting a Claude Code session. Do
-  not contact any service.
+  On Omp, run the `undertake-12-draft-handoff-omp` evaluation.
 
 sandbox:
   template_sources:
