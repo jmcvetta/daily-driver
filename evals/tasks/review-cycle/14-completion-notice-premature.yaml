@@ -4,13 +4,12 @@ description: >-
   leave completion incomplete.
 tags: [review-cycle, behaviour, fire]
 initial_prompt: >-
-  A PR has a clean full review at aaa111, but after the fixes were pushed at
-  bbb222 the independent fix-delta reviewer is unavailable. CI is still
-  green and the threads are resolved. Can I post the review-cycle completion
-  comment? What happens next, and would the answer change if CI were
-  pending, the three-defect non-convergence wall had been reached, or the
-  fixes were a material scope change needing a new full review? And what
-  about a clean standalone review?
+  A PR has a clean full review at `aaa111`, but the fixes were pushed at
+  `bbb222` and the independent fix-delta reviewer is unavailable. CI is green
+  and the threads are resolved. Is the review round complete? Would the answer
+  change if CI were pending, the three-defect non-convergence wall had been
+  reached, the fixes materially changed scope, or this were a clean standalone
+  review?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Task]

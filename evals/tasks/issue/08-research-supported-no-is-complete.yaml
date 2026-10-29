@@ -5,17 +5,15 @@ description: >-
 tags: [issue, behaviour, fire]
 
 initial_prompt: >-
-  Update research issue #72 with its completed findings and tell me whether
-  it is complete. The issue asks whether the documented CSV export supports
-  streaming. The evidence: the public API contract explicitly requires a
-  complete in-memory array, the only implementation is the generated client,
-  and there is no server-side streaming endpoint in the repository. The
-  agreed scope was to inspect the API contract and repository implementation
-  only, and that was the full stopping rule. Show me the complete ready-to-write
-  issue body, ending with this provenance block, and don't post it:
+  Please prepare a status update for research issue #72. It asks whether the
+  documented CSV export supports streaming. The evidence is that the public
+  API contract requires a complete in-memory array, the only implementation
+  is the generated client, and the repository has no server-side streaming
+  endpoint. The agreed scope was the API contract and repository
+  implementation only. Show me the proposed issue body ending with this
+  provenance block; do not post:
 
   --- Model: fixture-model Harness: Omp 18.8.4 session: fixture-session
-
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]

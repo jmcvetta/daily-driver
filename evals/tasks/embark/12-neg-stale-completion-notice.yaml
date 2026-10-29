@@ -12,14 +12,13 @@ description: >-
 tags: [embark, behaviour, fire]
 
 initial_prompt: >-
-  Epic #200 is at sea, and its latest muster roll says `Landing:
+  Please check the wave for epic #200. Its latest muster roll says `Landing:
   orchestrator`. Task #201 has pull request #301. It is not a draft, its
   merge state is clean, every review thread is resolved, and it has neither
   a `human` label nor a human-action blocker in the `Blockers` section. The
   latest conversation comment that starts with `## Review cycle complete! 🎉`
   names SHA `aaa1111`. The head is `bbb2222`, and its only parent is
-  `aaa1111`; it is an ordinary commit, not a merge. Check on the wave and
-  land what is ready.
+  `aaa1111`; it is an ordinary commit, not a merge. Is the task ready to land?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]

@@ -18,14 +18,13 @@ pre_run:
     timeout: 60
 
 initial_prompt: >-
-  Work on issue #52; there is no existing task branch or pull request for
-  it. Claude's session designates `claude/designated-52` in the repository
-  `https://github.com/acme/widgets`, and `wt list` schema 2 shows that
-  branch checked out in the primary worktree, which I'm using for other
-  work. Name your local branch `issue-52-designated-route`, add a line
-  containing exactly `STRICT_MODE = True` to src/parser.py, commit it, and
-  publish it to the `upstream` remote under the designated branch name. Run
-  `bash .fixture/verify.sh designated` when you're done.
+  I need a strict parser change for issue #52. There is no existing task
+  branch or pull request. This Claude session designates
+  `claude/designated-52` in `https://github.com/acme/widgets`, and `wt list`
+  schema 2 shows that branch checked out in the primary worktree, which is in
+  use for other work. Please add a line containing exactly
+  `STRICT_MODE = True` to `src/parser.py`, finish the change, and run
+  `bash .fixture/verify.sh designated`.
 
 agent:
   allowed_tools: [Read, Write, Edit, Grep, Glob, Skill, Bash]

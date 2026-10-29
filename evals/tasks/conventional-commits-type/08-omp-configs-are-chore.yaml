@@ -5,9 +5,9 @@ description: >-
 tags: [conventional-commits-type, behaviour, fire]
 
 initial_prompt: >-
-  What Conventional Commits type should this pull request use? It only
-  changes omp_configs/cocktail.yml, replacing Mercury with DeepSeek for the
-  tiny role.
+  I'm changing the active model for the tiny role in my repository-local
+  `omp_configs/cocktail.yml`, from Mercury to DeepSeek. What Conventional
+  Commits type fits this change?
 
 agent:
   disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]

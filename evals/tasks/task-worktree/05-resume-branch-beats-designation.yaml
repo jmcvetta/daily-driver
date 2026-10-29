@@ -16,11 +16,11 @@ pre_run:
     timeout: 60
 
 initial_prompt: >-
-  Resume issue #52. Its draft pull request already carries the branch
-  issue-52-strict-parser on the `upstream` remote, though this session's
-  harness designated a different branch, claude/fresh-52, for it. Add a line
-  containing exactly `STRICT_MODE = True` to src/parser.py, and run `bash
-  .fixture/verify.sh resume` when you're finished.
+  I need to continue work on issue #52. A draft pull request already uses
+  branch `issue-52-strict-parser` on the `upstream` remote, while this
+  session designates `claude/fresh-52`. Please add a line containing exactly
+  `STRICT_MODE = True` to `src/parser.py` and run `bash
+  .fixture/verify.sh resume` when you finish.
 
 agent:
   allowed_tools: [Read, Write, Edit, Grep, Glob, Skill, Bash]

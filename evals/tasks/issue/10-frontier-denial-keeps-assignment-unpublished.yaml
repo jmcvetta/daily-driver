@@ -5,9 +5,9 @@ description: >-
 tags: [issue, issue-body, behaviour, fire]
 
 initial_prompt: >-
-  The bounded frontier proposal is to compare the two named database
+  I am considering a frontier assignment to compare two named database
   migration plans in one pass and deliver a recommendation. I do not approve
-  spending frontier on this. What do you do with the issue?
+  frontier use for this work. How should I proceed with the issue?
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]

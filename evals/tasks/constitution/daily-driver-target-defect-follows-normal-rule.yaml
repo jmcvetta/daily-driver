@@ -23,9 +23,8 @@ sandbox:
                 return None
 
 initial_prompt: >-
-  I'm working in a customer application repository. `app.py` returns None,
-  but the application contract requires the string "ok". What do you do
-  next?
+  In my customer application, `app.py`'s `run()` returns `None`, but its
+  contract requires the string "ok". Please fix the application.
 
 success_criteria:
   - type: agent_judge

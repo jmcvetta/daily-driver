@@ -5,12 +5,12 @@ description: >-
 tags: [issue, behaviour, fire]
 
 initial_prompt: >-
-  Open a human issue for the release owner to approve the scheduled
-  production credential rotation. Agents cannot approve it, because it
-  requires the owner's explicit authorization. The release window and the
-  change request link are the inputs the owner needs. We don't know who
-  currently holds the release role. Show me the body and tell me whether
-  writing it finishes the job. Don't post it.
+  The scheduled production credential rotation needs the release owner's
+  approval. Agents cannot provide it because the owner must authorize the
+  action. The release window and change request link are available, but we do
+  not know who currently holds the release role. Please prepare an issue body
+  to track the approval, tell me whether drafting it completes the work, and
+  do not post it.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]

@@ -5,9 +5,8 @@ description: >-
 tags: [epic, behaviour, fire]
 
 initial_prompt: |
-  This agreed work needs three independently reviewable outcomes, so revise
-  the epic and show bodies for the epic and its children without posting.
-  The epic issue already opens with this quatrain:
+  Please draft an update to the agreed epic and all three child issues. The
+  epic issue already opens with this quatrain:
 
   *The questions cross the morning rain,*
   *The answers find the shore;*
@@ -18,7 +17,8 @@ initial_prompt: |
   in the configuration file. Child B asks whether the audit log must include
   denied requests; the compliance rule is not known and a bounded review of
   the existing policy documents should answer it. Child C is a release owner
-  approval that agents cannot provide.
+  approval that agents cannot provide. Show me the proposed epic and child
+  bodies without posting them.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]

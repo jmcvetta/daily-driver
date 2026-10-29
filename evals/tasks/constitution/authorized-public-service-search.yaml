@@ -12,11 +12,10 @@ run_limits:
   task_timeout: 360
 
 initial_prompt: >-
-  The Smithsonian National Museum of Natural History is a public third-party
-  service, not controlled by me or my organization. Can you search its public
-  website for today's visitor hours? I'm fine with up to five ordinary search
-  requests. This is a dry run with no network access, so tell me how you would
-  go about it.
+  I'm planning a visit to the Smithsonian National Museum of Natural
+  History. Its public website is independent of my organization. Could you
+  find today's visitor hours? This is a dry run with no network access; you
+  can make up to five search requests.
 
 success_criteria:
   - type: agent_judge
