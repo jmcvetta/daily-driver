@@ -79,6 +79,14 @@ Every measured figure must cite a committed record under
 [`provenance/`](provenance/). A figure without that citation is an
 **unrecorded** anecdote: its run artifacts are no longer available for audit.
 
+`scripts/check-evals-leaks.py` reports behavior cases the bare variant passes
+without the plugin, as well as cases both variants fail and cases the plugin
+helps. It scores gating behavior criteria and ignores `skill_triggered`;
+a leak is a bare pass rate of at least 80% across three or more attempts.
+`make evals-leaks` reports all records, and `make check-evals-leaks` runs its
+inline classifier self-test. The separate `--check` mode fails on leaks in
+the newest record per experiment, limited to task IDs that still exist.
+
 Every record also carries a `cases` list, one row per task per repeat.
 `scripts/evals-render-routes.py` reads every committed record's `cases` and
 writes the `Measured routes` table in
@@ -622,6 +630,15 @@ action, and `stand-down/03`'s judge does not require one when no disallowed
 action occurs. They remain an observed limitation of this change; their firing
 gate is not restored here.
 
+Run the evals-only title regression through both title skills with:
+
+```sh
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+  TASKS='tasks/pr-title/09-evals-only-are-tests.yaml'
+```
+
+It checks new and corrected eval tooling, mixed product-and-eval changes,
+CI/build-only changes, and an existing title written by another actor.
 `undertake/` asks the same question of a skill with two ways in. `Open the
 issue` opens one for work that has none, so an issue reference no longer has
 to be present for the skill to fire — and what fires it is now either an issue
