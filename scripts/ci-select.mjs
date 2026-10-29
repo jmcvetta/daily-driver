@@ -150,9 +150,9 @@ function makeTargetBlocks(contents) {
 }
 
 const aggregateConsumers = {
-  'check': ['check-step-names', 'check-release-paths', 'check-plugin', 'check-skills', 'check-agents', 'check-manifests', 'check-claude-dependency', 'check-constitution', 'check-ask-in-chat', 'check-title-gate', 'check-omp-extension', 'check-model-class-roles', 'check-omp-guard-differential', 'check-omp-cache-clean', 'check-git-sync', 'check-worktrunk-install', 'check-scripts', 'check-labels', 'check-model-telemetry'],
+  'check': ['check-step-names', 'check-release-paths', 'check-plugin', 'check-skills', 'check-agents', 'check-manifests', 'check-claude-dependency', 'check-constitution', 'check-ask-in-chat', 'check-title-gate', 'check-omp-extension', 'check-model-class-roles', 'check-omp-guard-differential', 'check-omp-cache-clean', 'check-git-sync', 'check-worktrunk-install', 'check-scripts', 'check-pr-keep-current', 'check-labels', 'check-model-telemetry'],
   'check-plugin-validity': ['check-plugin', 'check-skills', 'check-agents', 'check-manifests', 'check-claude-dependency'],
-  'check-runtime': ['check-constitution', 'check-ask-in-chat', 'check-title-gate', 'check-omp-extension', 'check-model-class-roles', 'check-omp-guard-differential', 'check-omp-cache-clean', 'check-git-sync', 'check-worktrunk-install', 'check-scripts'],
+  'check-runtime': ['check-constitution', 'check-ask-in-chat', 'check-title-gate', 'check-omp-extension', 'check-model-class-roles', 'check-omp-guard-differential', 'check-omp-cache-clean', 'check-git-sync', 'check-worktrunk-install', 'check-scripts', 'check-pr-keep-current'],
   'check-issue-infra': ['check-labels'],
   '__git_sync_run': ['check-git-sync'],
   'omp-update-daily-driver': ['check-omp-cache-clean'],

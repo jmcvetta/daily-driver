@@ -11,7 +11,7 @@ SHELL := /bin/bash
 	check-manifests check-release-paths check-constitution check-ask-in-chat check-title-gate \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-embark-title-live check-step-names \
-	check-worktrunk-install check-labels check-infra check-plugin-validity check-runtime \
+	check-worktrunk-install check-labels check-infra check-plugin-validity check-runtime check-pr-keep-current \
 	check-issue-infra check-model-telemetry model-telemetry \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
@@ -110,7 +110,7 @@ check-plugin-validity: check-plugin check-skills check-agents \
 
 check-runtime: check-constitution check-ask-in-chat check-title-gate check-omp-extension check-model-class-roles \
 	check-omp-guard-differential check-omp-cache-clean check-git-sync \
-	check-worktrunk-install check-scripts
+	check-worktrunk-install check-scripts check-pr-keep-current
 
 # Exercise the shell-integrated alias in isolated Git repositories only.
 check-git-sync:
@@ -260,6 +260,10 @@ check-scripts:
 	shellcheck -x --source-path=SCRIPTDIR \
 		skills/*/scripts/*.sh scripts/*.sh \
 		evals/fixtures/*/shared/*.sh evals/fixtures/*/cases/*/*.sh
+
+# Exercise the real Omp keep-current loop against an offline GitHub client.
+check-pr-keep-current:
+	python3 scripts/test-pr-keep-current.py
 
 # The live embark barrier needs a real Omp but not the eval guard: issue://
 # must reach its offline fixture client to provide the canonical issue metadata.
@@ -541,7 +545,7 @@ evals-run-omp-gpt-6-sol: evals-judge-preflight evals-plan evals-preflight
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-gpt-6-luna: evals-judge-preflight evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6-luna.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) $(OMP_RUN_LIMITS) -e experiments/omp-gpt-6-luna.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-gpt-6-luna.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status

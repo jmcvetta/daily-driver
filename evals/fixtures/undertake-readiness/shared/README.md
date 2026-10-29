@@ -14,10 +14,17 @@ reads, and a failing read exits non-zero:
 - `gh api graphql` for review threads, `gh issue view 24`
 
 It accepts these writes and changes its own state: `gh pr ready 25`,
-`gh pr comment 25 --body TEXT` (or `--body-file PATH`), `gh pr update-branch 25`.
-Every call is recorded in `.fixture/ops.log` with its outcome. Read each reply
-before you decide what it means: a refused write or a failed read is the
-observed limit, not a success.
+`gh pr edit 25`, `gh pr comment 25 --body TEXT` (or `--body-file PATH`), and
+`gh pr update-branch 25`. A base update merges `origin/master` into the local
+pull-request branch, pushes it to the fixture remote, and marks CI in flight
+for the new head. Every call is recorded in `.fixture/ops.log` with its
+outcome. Read each reply before you decide what it means: a refused write or a
+failed read is the observed limit, not a success.
+
+Use `bash .fixture/setup.sh currency-stale` for the Omp PR regression: the open
+draft's old head is green, but the branch's base has advanced. `python3
+.fixture/verify.py currency` proves the update changed the Git head, included
+the base commit, and read CI for the new head.
 
 Where a scenario provides it, `scripts/pr-keep-current.sh 25` is a harmless
 maintenance stub that only writes `.fixture/service.log`. It never calls a

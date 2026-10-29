@@ -64,6 +64,24 @@ assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
 heading list.
 
+`tasks/pr/08-omp-draft-currency.yaml` and `09-omp-resumed-pr-currency.yaml`
+are action-based Omp regressions for ordinary and resumed PR updates. Their
+offline `gh` updates a real local Git branch and fails the case unless the
+agent attempts the update against the PR's base, the resulting head contains
+that base, and all three CI sources are read for the new head rather than
+trusting old-head green evidence. Neither task supplies the update command.
+
+The Omp PR base-currency smoke used `openai-codex/gpt-6-luna` with the
+`omp-gpt-6.1-sol` judge, one replicate per case. The ordinary and resumed PR
+cases each passed both behavior criteria in
+[`17-55-48`](provenance/omp-gpt-6-luna-2026-10-29-2026-10-29_17-55-48.json):
+the actual local branch incorporated its base, and the agent read all three
+CI sources for the new head. The service case passed all three criteria in
+[`18-06-27`](provenance/omp-gpt-6-luna-2026-10-29-2026-10-29_18-06-27.json),
+including starting the keep-current watch after readiness. The bare service
+control did not trigger `undertake`, as expected. These bounded runs test
+workflow behavior; they do not estimate fleet reliability.
+
 `tasks/embark/16`–`18` cover unfinished-work supervision: a green draft still
 needs authorized preparation, a real execution approval does not block
 independent work, and an unchanged real prerequisite earns no duplicate update
@@ -695,6 +713,13 @@ read it separately from the behavioural criteria, because a run that only
 triggered the skill has not completed the workflow. Weights are kept. These rows
 are a new, unmeasured instrument: no subject, judge or calibration run has
 recorded them, and the committed results for the previous rows are untouched.
+
+The Omp PR currency case uses `currency-stale`: the draft's base has advanced,
+the old head is green, and the verifier requires `gh pr update-branch` to merge
+the base into the actual local Git head before CI is read for the new head.
+`scripts/test-pr-keep-current.py` separately runs the real two-minute watch
+against an offline `gh` client, covering updates, the in-flight floor, conflicts,
+update failures, current branches, and merged or closed PRs.
 One collision is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
 `undertake` distractor, because "get it to a pull request" is in `undertake`'s
 register too and the only thing separating them is that the prompt has no issue

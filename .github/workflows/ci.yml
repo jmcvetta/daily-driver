@@ -106,6 +106,9 @@ jobs:
       - name: ShellCheck scripts
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-scripts')
         run: make check-scripts
+      - name: Test Omp branch maintenance
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-pr-keep-current')
+        run: make check-pr-keep-current
       - name: Validate model telemetry
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-telemetry')
         run: make check-model-telemetry
