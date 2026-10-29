@@ -4,9 +4,11 @@ This standard names the deterministic quality controls that our repositories
 run. A deterministic control is a tool that gives the same answer on the same
 input and fails loudly. It is the discipline an agent cannot talk its way past.
 
-This version records the **current baseline**: the controls in use on
-2026-10-24, and where each is in use. It adds no new check. Gaps are recorded
-so that a later revision can close them.
+This version records the **decided standard** on 2026-10-29: where each
+control is in use, and the changes decided since the 2026-10-24 baseline.
+Changes that add or remove a gate are landed through companion issues; where a
+row names a tool and is still `none`, the issue that wires it flips the
+status.
 
 The survey covered five repositories:
 
@@ -106,35 +108,51 @@ cut.
 
 ### QC-RELEASE-CONFIG — release configuration is valid
 
-The release-please configuration validates against the upstream schema.
+The release-please configuration validates against the upstream schema, run
+only when that configuration changes, against a schema pinned to a release
+tag rather than `main`.
 
 - `uvx check-jsonschema` with release-please's `schemas/config.json`.
 - Status: `gate` in CA (`make check-release-config`, selected only when
   `release-please-config.json` changes); `local` in PG (a documented
   command); `none` in DD, PRA and CMWB.
 
-### QC-CONVENTION-RULES — conventions as executable rules
+### QC-CONVENTION-RULES — repository rules as executable checks
 
-A repository convention that a pattern or a script can detect is an executable
-check, not only a sentence in a document.
+A repository rule that a pattern or a script can detect is an executable
+check with a failing test, not only a sentence in a document. Conventions are
+one source of such rules; config consistency and domain invariants are
+others. The rest stay review-only.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
 | Opengrep rules in `.opengrep/rules/` (for example no `npx`, no `git add -A`, no `terraform_remote_state`) | PG | `gate` |
 | Repository checks under `scripts/` (for example `check-step-names.py`, `check-manifests.py`, `check-labels.py`, `check-release-paths.py`, and `check-constitution.py`) | DD | `gate` |
-| Boundary sweep (`make test-python-boundary`) | CA | `gate` |
+| Candidate-boundary sweep (`make test-python-boundary`): candidate-owned values stay out of shipped sources and prose, and `CLAUDE.md`'s budget and links stay consistent | CA | `gate` |
 
 ### QC-SAST — static analysis for defects and security
 
-Source code is scanned for known bug and vulnerability patterns by a pinned
-rule set.
+Source code is scanned for known bug and vulnerability patterns. A pattern
+corpus earns its place only by finding defects: PG's Opengrep community corpus
+measured 215 findings and no defect on 2026-09-09, so it is retired rather
+than kept as a gate.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
-| Opengrep, pinned engine (`.opengrep-version`, cosign-verified) and pinned community corpus (`.opengrep/community-rules.pin`), with each excluded rule given a reason in `.opengrep/excluded-rules.txt` | PG | `gate` |
 | Ruff `S` rules (Python only; see `QC-LINT`) | CA | `gate` |
 
-`none` in DD, PRA and CMWB.
+`none` in DD, PRA and CMWB. PG's Opengrep corpus is removed by a companion
+issue; its custom `.opengrep/rules/` stay under `QC-CONVENTION-RULES`.
+
+### QC-WORKFLOW-SECURITY — workflows are safe against untrusted input
+
+GitHub Actions workflows are scanned for template injection from untrusted
+event fields, over-broad token permissions, dangerous triggers such as
+`pull_request_target`, credentials left in the checkout, and cache poisoning.
+
+- zizmor, promoted from the candidates list. It matters most for PRA, a
+  public action that reads untrusted pull-request text with a write token.
+- Status: `none` in all five repositories; adoption is a companion issue.
 
 ### QC-GENERATED-FRESH — generated files match their source
 
@@ -166,11 +184,15 @@ the normal CI gate checks it.
 
 | Repository | Dependabot ecosystems |
 | --- | --- |
-| DD | `github-actions`, `terraform`; not `npm`, although `package-lock.json` pins the CI-selector dependencies |
-| CA | `github-actions` |
+| DD | `github-actions`, `terraform`, `npm` |
+| CA | `github-actions` (Python is `uv.lock`, which Dependabot has no ecosystem for) |
 | PRA | `npm`, `github-actions` |
-| PG | none |
-| CMWB | none |
+| PG | `github-actions` |
+| CMWB | `github-actions`, `terraform` |
+
+Every repository with pinned third-party dependencies has Dependabot on for
+the matching ecosystems. The added rows for DD (`npm`), PG and CMWB are landed
+by companion issues.
 
 ### QC-TESTS-OFFLINE — tests do not touch the network
 
@@ -235,7 +257,7 @@ No function exceeds the complexity thresholds of the linter's defaults.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | Ruff `C901`, `PLR0911`, `PLR0912`, `PLR0915` at default thresholds | CA | `gate` |
-| TypeScript | Biome `complexity/noExcessiveCognitiveComplexity` exists, but the `recommended` preset does not enable it | — | `none` |
+| TypeScript | Biome `complexity/noExcessiveCognitiveComplexity`, enabled beyond the `recommended` preset | PG | `none` |
 
 ### QC-FILE-SIZE — bounded file length
 
@@ -244,7 +266,7 @@ No production source file exceeds a counted-line limit.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | `kokoro/core/scripts/check_file_size.py`: 500 lines, not counting docstrings, comments or blank lines | CA | `gate` |
-| TypeScript | — | — | `none` |
+| TypeScript | a script mirroring CA's `check_file_size.py` at 500 lines, not counting comments or blank lines (Biome has no file-length rule) | PG | `none` |
 
 ### QC-MODULE-BOUNDARIES — enforced dependency direction
 
@@ -254,7 +276,7 @@ undeclared import fails.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | tach (`kokoro/tach.toml`) | CA | `gate` |
-| TypeScript | — (no hoisting in pnpm limits imports to declared dependencies, but no tool checks the graph) | PG | `none` |
+| TypeScript | dependency-cruiser (standalone CLI, no ESLint): cycles and declared direction. pnpm no-hoisting already blocks undeclared imports, so the remaining gap is cycles and direction, which an evaluation issue settles | PG | `none` |
 
 ### QC-DOC-COMMENTS — documented public symbols
 
@@ -289,7 +311,8 @@ request or fails it.
 | --- | --- | --- | --- |
 | Python | pytest-cov with branch coverage; per-package line and branch floors in `kokoro/coverage-baseline.json`, enforced on full runs | CA | `gate` |
 | TypeScript | vitest v8 coverage, with a diff-aware sticky comment (`davelosert/vitest-coverage-report-action`); no threshold | PRA | `gate` |
-| TypeScript | — | PG | `none` |
+| TypeScript | vitest v8 coverage, same diff-aware comment as PRA | PG | `none` |
+| Python | pytest-cov, mirroring CA without floors until a baseline exists | CMWB | `none` |
 
 ### QC-MUTATION — test strength
 
@@ -313,20 +336,24 @@ changing it.
 | TypeScript (npm) | `npm ci` | PRA | `gate` |
 | JavaScript (npm) | `npm ci` (CI-selector dependencies) | DD | `gate` |
 | Python (uv) | `uv lock --check --offline` | CA | `gate` |
-| OpenTofu providers | `tofu init`, then `git diff --quiet` on `.terraform.lock.hcl` | DD | `gate` |
-| OpenTofu providers | the same | PRA | `gate` |
-| OpenTofu providers | — | CA, PG, CMWB | `none` |
+
+OpenTofu provider lockfiles (`.terraform.lock.hcl`) stay committed for
+hash-pinning when a configuration is applied by hand, but no CI gate checks
+their drift: every configuration is applied by one operator by hand or by
+Spacelift with major-version-pinned providers, so the reproducibility a drift
+gate buys is not worth the check.
 
 ### QC-VULN-AUDIT — known-vulnerable dependencies
 
-Locked dependencies are checked against an advisory database, and a finding
-fails the check.
+Locked dependencies are checked against an advisory database at its latest
+data, and any finding fails the check. The scan scopes to production
+dependencies; dev-only advisories are not a gate.
 
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | pip-audit over the `uv export` of the lockfile | CA | `gate` |
-| TypeScript (pnpm) | — | PG | `none` |
-| TypeScript (npm) | — (`npm ci`'s built-in audit always exits zero, and PRA turns it off) | PRA, DD | `none` |
+| TypeScript (pnpm) | `pnpm audit --prod` (fails on any finding; no severity floor) | PG | `none` |
+| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | `none` |
 
 ### QC-BUILD — the shipped artifact builds and loads
 
@@ -361,7 +388,7 @@ a reason.
 | OpenTofu | Checkov, `.checkov.yaml` (skips carry a comment; an Opengrep rule enforces that) | PG | `gate` |
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml` (five skips carry reasons) | DD | `gate` |
 | OpenTofu, Dockerfile, secrets | Checkov, pinned, frameworks `terraform dockerfile secrets` (`apps/omp-web`) | PG | `gate` |
-| OpenTofu | — | CA, PRA, CMWB | `none` |
+| OpenTofu | Checkov, `.checkov.yaml`, selected only when Tofu changes | CA, PRA, CMWB | `none` |
 
 
 ## Adoption matrix
@@ -385,10 +412,11 @@ control covers.
 | QC-RELEASE-PROJECTION | gate | gate | gate | gate | gate |
 | QC-RELEASE-CONFIG | none | gate | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
-| QC-SAST | none | gate (Python) | gate | none | none |
+| QC-SAST | none | gate (Python) | none | none | none |
+| QC-WORKFLOW-SECURITY | none | none | none | none | none |
 | QC-GENERATED-FRESH | none | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
-| QC-DEPENDENCY-UPDATES | on | on | none | on | none |
+| QC-DEPENDENCY-UPDATES | on | on | on | on | on |
 | QC-TESTS-OFFLINE | none | gate | none | none | none |
 | QC-FORMAT | gate (HCL) | gate | gate | gate (HCL) | gate (HCL) |
 | QC-LINT | gate (shell, plugin) | gate (Python) | gate | none | none |
@@ -400,7 +428,7 @@ control covers.
 | QC-UNIT-TESTS | none | gate | gate | gate | gate |
 | QC-COVERAGE | none | gate (Python) | none | gate | none |
 | QC-MUTATION | none | none | local | none | none |
-| QC-LOCKFILE | gate (npm, HCL) | gate (Python) | gate (pnpm) | gate | none |
+| QC-LOCKFILE | gate (npm) | gate (Python) | gate (pnpm) | gate (npm) | none |
 | QC-VULN-AUDIT | none | gate (Python) | none | none | n/a |
 | QC-BUILD | n/a | none | gate | gate | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
@@ -422,8 +450,7 @@ this standard. Each needs an evaluation before it can become a control.
 | --- | --- | --- | --- |
 | [knip](https://knip.dev/) | Finds unused files, exports and dependencies in JavaScript and TypeScript projects. | A new control for dead code and unused dependencies; no current control covers it. | Its behaviour on the pnpm workspaces in PG and on PRA's bundled action. |
 | [jscpd](https://github.com/kucherenko/jscpd) | Detects copy-pasted code blocks across many languages. | A new control for duplicated code; it is multi-language, so one tool could serve several ecosystem rows. | A threshold, and how it treats fixtures and generated files. |
-| [zizmor](https://github.com/zizmorcore/zizmor) | Static analysis for GitHub Actions workflows: template injection from untrusted event fields, over-broad token permissions, dangerous triggers such as `pull_request_target`, credentials left in the checkout, and cache poisoning. | A new universal control for workflow security; `QC-SAST` and actionlint do not cover it. It matters most for PRA, a public action that reads untrusted pull request text with a write token. | Its finding rate on these workflows; how its pinning audit is set to accept major-version tags, which is this repository family's decision. |
-| archlint | Unclear. Several unrelated tools use this name or a close variant (for .NET, Go, Dart and a Tree-sitter variant), and the one recommended has not been identified. | Probably `QC-MODULE-BOUNDARIES` for an ecosystem with a `none` row, such as TypeScript. | Which project was meant. Identify it before evaluating it. |
+| [dependency-cruiser](https://github.com/sverweij/dependency-cruiser) | Standalone dependency-graph validation for JavaScript and TypeScript: cycles, orphan dependencies, and declared direction rules, without ESLint. | `QC-MODULE-BOUNDARIES` for the TypeScript row. | Whether it surfaces real violations in PG beyond what pnpm no-hoisting already blocks, and what the declared boundary policy should be. |
 
 Two tools in the baseline also have room to grow: TFLint (`local` in PG) and
 actionlint (one workflow in PG). Making either a `gate` is a change to this
