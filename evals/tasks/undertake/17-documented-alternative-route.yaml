@@ -14,10 +14,8 @@ pre_run:
   - command: bash .fixture/setup.sh alternative-route
     timeout: 30
 initial_prompt: >-
-  Undertake the sandbox plan for PR #25. The preferred binary is absent, but
-  `.fixture/README.md` documents an available alternative route. Inspect the
-  instructions, use the route and report its observed result. Do not ask me to
-  run the plan.
+  Undertake the sandbox plan for PR #25. `.fixture/README.md` has the
+  instructions.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
