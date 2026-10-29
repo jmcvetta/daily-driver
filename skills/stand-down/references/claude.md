@@ -55,7 +55,9 @@ says, in this order:
 4. Commit work in progress to the task branch, named files staged, no hook or
    test skipped, and push. Open no pull request, and mark nothing ready.
 5. End the turn. Do no work on any later wake: answer it in one line that the
-   work is stood down.
+   work is stood down. A repeated wrap-up is not such a wake: run it again. A
+   correction from this orchestrator, or a new instruction from the user,
+   starts the work again.
 
 **The wait is bounded by one shared deadline: three minutes from when the
 batch of wrap-up messages is sent**, not three minutes per session. Poll
