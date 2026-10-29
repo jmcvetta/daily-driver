@@ -12,7 +12,7 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-embark-title-live check-step-names \
 	check-worktrunk-install check-labels check-infra check-plugin-validity check-runtime \
-	check-issue-infra check-model-telemetry model-telemetry \
+	check-issue-infra check-model-telemetry model-telemetry check-checkov \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
@@ -308,6 +308,11 @@ check-labels:
 # editing a skill.
 check-infra:
 	$(MAKE) -C infra/github check-fmt validate
+
+# check-checkov: policy scan of the OpenTofu stack. Not part of `check`, which
+# must not require Checkov on a laptop that is only editing unrelated files.
+check-checkov:
+	checkov --config-file .checkov.yaml
 
 # evals-install: the pinned harness, from PyPI. `uv` fetches Python 3.13 itself,
 # so this is the whole setup.
