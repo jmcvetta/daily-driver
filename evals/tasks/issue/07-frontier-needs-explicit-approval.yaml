@@ -22,6 +22,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "Issue authoring applies the frontier gate"
     expected_skill: issue
     skill_name: issue

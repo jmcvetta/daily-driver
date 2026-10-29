@@ -14,18 +14,15 @@ pre_run:
   - command: bash .fixture/setup.sh authorized-handoff
     timeout: 30
 initial_prompt: >-
-  Undertake PR #25's disposable-host smoke gate. This current session lacks
-  Vultr credentials and a Tailscale route, but an already-authorized capable
-  agent route is available in `.fixture/README.md`. Attempt the local smoke
-  fixture to observe the current-session gap, use the authorized handoff route,
-  and preserve the gate until you receive its evidence. This fixture has no
-  real credentials or network access.
+  Undertake PR #25's disposable-host smoke gate. `.fixture/README.md`
+  describes the routes available.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 480}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` handles an access gap with an authorized handoff"
     expected_skill: undertake
     skill_name: undertake

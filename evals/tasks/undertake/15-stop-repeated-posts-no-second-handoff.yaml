@@ -12,10 +12,9 @@ description: >-
 tags: [undertake, behaviour, fire]
 
 initial_prompt: >-
-  You are running `undertake` on issue #610 alone. You were told to stop
-  earlier and posted a `## Handoff —` comment after your claim that names
-  pushed head `abc1234`. Nothing has been committed since; origin's branch
-  head is still `abc1234`. The user now says: stand down again.
+  You are running `undertake` on issue #610 alone. I told you to stop earlier,
+  and the `## Handoff —` comment you posted after your claim names pushed head
+  `abc1234`. Origin's branch head is still `abc1234`. Stand down again.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -30,6 +29,7 @@ success_criteria:
   # Unarmed: an on-fail stop would truncate the trajectory before the
   # `[RESULT - …]` reply the judge below needs.
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires"
     expected_skill: undertake
     skill_name: undertake

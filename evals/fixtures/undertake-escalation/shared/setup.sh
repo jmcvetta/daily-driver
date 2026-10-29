@@ -120,6 +120,33 @@ for ((i = 0; i < ${#args[@]}; i++)); do
     printf '%s' "${args[i + 1]}" >.fixture/published-body.md
   fi
 done
+if [[ -f .fixture/labels.txt ]]; then
+  if [[ -f .fixture/published-labels.txt ]]; then
+    mapfile -t labels <.fixture/published-labels.txt
+  else
+    mapfile -t labels <.fixture/labels.txt
+  fi
+  for ((i = 0; i < ${#args[@]}; i++)); do
+    if [[ "${args[i]}" == --remove-label && $((i + 1)) -lt ${#args[@]} ]]; then
+      IFS=, read -ra removed <<<"${args[i + 1]}"
+      kept=()
+      for label in "${labels[@]}"; do
+        remove=false
+        for removed_label in "${removed[@]}"; do
+          if [[ "${label}" == "${removed_label}" ]]; then
+            remove=true
+            break
+          fi
+        done
+        if [[ "${remove}" == false ]]; then
+          kept+=("${label}")
+        fi
+      done
+      labels=("${kept[@]}")
+    fi
+  done
+  printf '%s\n' "${labels[@]}" >.fixture/published-labels.txt
+fi
 printf 'fixture PR update recorded; no network request made\n'
 EOF
 chmod +x .fixture/bin/gh

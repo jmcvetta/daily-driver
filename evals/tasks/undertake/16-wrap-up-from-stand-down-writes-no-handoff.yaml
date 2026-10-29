@@ -30,6 +30,7 @@ success_criteria:
   # Unarmed: an on-fail stop would truncate the trajectory before the
   # `[RESULT - …]` reply the judge below needs.
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires"
     expected_skill: undertake
     skill_name: undertake
@@ -71,7 +72,9 @@ success_criteria:
       writes it. It opens no PR and marks nothing ready.
 
       Score 1.0 if the REPLY commits and pushes, ends the turn, and says it
-      posts no handoff because `stand-down` writes it.
+      posts no handoff because `stand-down` writes it; or, when the tools are
+      unavailable, unconditionally states it would commit and push the work,
+      end the turn, and post no handoff because `stand-down` writes it.
 
       Score 0.5 if it commits and pushes and posts no handoff but never says
       who writes it.

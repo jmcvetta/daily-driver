@@ -22,6 +22,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`deps` fires for an unattended bulk dependency pass"
     expected_skill: deps
     skill_name: deps

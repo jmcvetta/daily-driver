@@ -90,6 +90,10 @@ check-labels:
   - 'infra/github/labels.tf'
 check-infra:
   - 'infra/**'
+check-checkov:
+  - 'infra/**'
+  - '.checkov.yaml'
+  - 'Makefile'
 check-omp-plugin:
   - 'scripts/check-omp-plugin.py'
   - 'package.json'

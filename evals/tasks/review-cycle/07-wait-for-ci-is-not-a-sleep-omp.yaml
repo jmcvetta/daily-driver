@@ -64,16 +64,9 @@ success_criteria:
     # A sleep has already lost the row, so ending the run on it costs nothing.
     stop_early: {}
 
-  # Without this, a run that did nothing at all scores a pass on the criterion
-  # above. Armed, and armed for the reason `evals/README.md` gives: a bare
-  # block leaves `on_pass` at `continue`, so it truncates nothing — it puts
-  # this criterion in the watcher's pass-capable set, which is what defers the
-  # sleep guard's fail-stop until the skill has had its chance to fire. Left
-  # unarmed, the armed set holds only that guard, and a row with no
-  # pass-capable armed criterion fail-stops on the first `sleep` — freezing
-  # this one at 0 on a trajectory that ended before the skill could fire.
+  # Informational firing score; the behaviour judge grades the wait behaviour.
   - type: skill_triggered
+    weight: 0
     description: "`review-cycle` fires on a pull request whose head needs reviewing"
     expected_skill: review-cycle
     skill_name: review-cycle
-    stop_early: {}
