@@ -21,6 +21,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`review-cycle` fires for content-based review decisions"
     expected_skill: review-cycle
     skill_name: review-cycle

@@ -29,6 +29,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`stand-down` fires on a fleet being stood down"
     expected_skill: stand-down
     skill_name: stand-down

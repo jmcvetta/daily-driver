@@ -21,6 +21,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "Epic planning applies issue-body's frontier confirmation gate"
     expected_skill: epic
     skill_name: epic

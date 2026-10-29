@@ -58,6 +58,7 @@ success_criteria:
   # a plausible-sounding reply. Left unarmed for the reason `undertake/08`
   # gives: there is no fail-stopping criterion here for a bare arm to defer.
   - type: skill_triggered
+    weight: 0
     description: "`judgement-call` fires at the moment a genuine trade-off is put to the user"
     expected_skill: judgement-call
     skill_name: judgement-call
