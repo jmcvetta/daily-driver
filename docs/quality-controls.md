@@ -115,12 +115,12 @@ The release-please configuration validates against the upstream schema.
 
 ### QC-CONVENTION-RULES — conventions as executable rules
 
-A repository convention that a pattern or a script can detect is a check
-with fixtures, not only a sentence in a document.
+A repository convention that a pattern or a script can detect is an executable
+check, not only a sentence in a document.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
-| Opengrep rules with fixtures in `.opengrep/rules/` (for example no `npx`, no `git add -A`, no `terraform_remote_state`) | PG | `gate` |
+| Opengrep rules in `.opengrep/rules/` (for example no `npx`, no `git add -A`, no `terraform_remote_state`) | PG | `gate` |
 | Repository checks under `scripts/` (for example `check-step-names.py`, `check-manifests.py`, `check-labels.py`, `check-release-paths.py`, and `check-constitution.py`) | DD | `gate` |
 | Boundary sweep (`make test-python-boundary`) | CA | `gate` |
 
