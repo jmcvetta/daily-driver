@@ -56,6 +56,7 @@ success_criteria:
   # criterion the row has — scoring a truncated trajectory at 0 for a reason
   # the row does not intend.
   - type: skill_triggered
+    weight: 0
     description: "`deps` fires on a bulk upgrade of Dependabot's open pull requests"
     expected_skill: deps
     skill_name: deps

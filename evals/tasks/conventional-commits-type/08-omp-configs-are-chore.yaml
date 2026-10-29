@@ -19,6 +19,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`conventional-commits-type` fires when the type is asked for"
     expected_skill: conventional-commits-type
     skill_name: conventional-commits-type

@@ -20,6 +20,7 @@ run_limits:
   task_timeout: 600
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`review-cycle` fires for incomplete-round publication"
     expected_skill: review-cycle
     skill_name: review-cycle

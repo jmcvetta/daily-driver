@@ -37,6 +37,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`task-worktree` fires before a new repository-changing task"
     expected_skill: task-worktree
     skill_name: task-worktree

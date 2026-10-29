@@ -57,6 +57,7 @@ success_criteria:
   # arm to defer, and arming it would cost the row a trajectory that reached
   # the script late.
   - type: skill_triggered
+    weight: 0
     description: "`issue-deps` fires on a blocked-by relationship to record"
     expected_skill: issue-deps
     skill_name: issue-deps

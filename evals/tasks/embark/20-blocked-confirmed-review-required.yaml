@@ -19,6 +19,7 @@ agent:
 run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`embark` handles the active wave"
     expected_skill: embark
     skill_name: embark

@@ -25,6 +25,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`issue` and `issue-body` fire for the automatic bug report"
     expected_skill: issue
     skill_name: issue

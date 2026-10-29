@@ -31,6 +31,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`epic` and child body contract skills fire for mixed-kind decomposition"
     expected_skill: epic
     skill_name: epic

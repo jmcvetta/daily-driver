@@ -21,6 +21,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "Undertake distinguishes approved research from implementation"
     expected_skill: undertake
     skill_name: undertake

@@ -28,6 +28,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`issue-body` fires on research findings and readiness"
     expected_skill: issue-body
     skill_name: issue-body

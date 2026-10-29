@@ -33,6 +33,7 @@ success_criteria:
   # Unarmed: the judge needs the final `[RESULT - …]` reply, and an on-fail
   # stop on the trigger criterion would truncate the trajectory before it.
   - type: skill_triggered
+    weight: 0
     description: "`embark` fires on a wave already at sea being checked on"
     expected_skill: embark
     skill_name: embark

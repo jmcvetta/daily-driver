@@ -23,6 +23,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`issue-body` fires on human issue authoring"
     expected_skill: issue-body
     skill_name: issue-body

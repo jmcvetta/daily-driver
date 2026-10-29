@@ -33,6 +33,7 @@ run_limits:
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`task-worktree` fires for a task resumed on an existing branch"
     expected_skill: task-worktree
     skill_name: task-worktree

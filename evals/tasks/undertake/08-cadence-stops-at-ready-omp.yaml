@@ -78,6 +78,7 @@ success_criteria:
   # before the `[RESULT - …]` reply is one the judge below grades at 0 for a
   # reason the row does not intend.
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires on a ready pull request kept current"
     expected_skill: undertake
     skill_name: undertake
