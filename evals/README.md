@@ -674,7 +674,9 @@ access gap and before a real human action, credentialed cloud execution, an
 available authorized-agent handoff, a missing-handoff prerequisite, stale
 versus still-outstanding Tofu apply blockers on resume, a tool missing on
 resume that the documented setup target installs, and PR-body maintenance
-from undertaking evidence.
+from undertaking evidence. Their prompts are the request a user would make,
+naming the situation and pointing at the fixture; the expected handling lives
+in the criteria, so a bare run does not pass them by following the prompt.
 Run only this focused set with the documented
 `make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
 route after its `evals-plan`; the normal project checks remain CI's gate.
