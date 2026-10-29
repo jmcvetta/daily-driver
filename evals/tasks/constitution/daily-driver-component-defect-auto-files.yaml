@@ -30,6 +30,7 @@ sandbox:
           content: |
             #!/bin/sh
             printf "%s\n" "daily-driver: unknown configuration key 'checks'"
+            exit 1
         - path: fake-bin/gh
           content: |
             #!/bin/sh
