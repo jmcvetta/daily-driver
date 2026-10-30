@@ -36,6 +36,10 @@ field is available, a task opened at `Open the issues` arrives parented and
 write response is the issue you modified and `issue-deps` requires the read
 from the other end regardless of which call made the edge.
 
+Apply `issue-deps`' pre-link task-readiness gate before the create call when it
+sets `parent_issue_number`. Apply the same gate before linking an existing
+issue through either parent or sub-issue writes.
+
 **It is not available everywhere.** `issue-deps` records two generations of
 the GitHub MCP server, and the older one has no sub-issue write at all: there,
 `Write the graph` has no parent route and says so rather than reporting a
@@ -58,8 +62,8 @@ Read that skill's routes before `Write the graph`.
 The required class
 ==================
 
-`issue-body` owns the kind-specific body contracts and shared routing guidance
-in [`model-classes.md`](../../issue-body/references/model-classes.md). Child
-bodies are written under the selected-kind contract at `Open the issues`; only
-task bodies carry a model class. This skill neither duplicates the taxonomy nor
-records a concrete model.
+`issue-body` owns the task body contract and shared routing guidance in
+[`model-classes.md`](../../issue-body/references/model-classes.md). Every story
+uses that task contract and required model class at `Open the issues`, whether
+new or reused. This skill neither duplicates the taxonomy nor records a
+concrete model.
