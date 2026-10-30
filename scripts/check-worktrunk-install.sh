@@ -30,6 +30,35 @@ run_failure() {
 	esac
 }
 
+make_retry_fixture() {
+	local fixture="$1"
+	mkdir -p "${fixture}/bin"
+	cat >"${fixture}/cargo" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >>"${CARGO_LOG}"
+count=0
+[ ! -e "${CARGO_COUNT}" ] || count="$(cat "${CARGO_COUNT}")"
+count=$((count + 1))
+printf '%s\n' "${count}" >"${CARGO_COUNT}"
+if [ "${count}" -eq 1 ] && [ "${FAIL_FIRST:-0}" -eq 1 ]; then
+	exit 17
+fi
+if [ "$*" = "+stable install --locked worktrunk" ] && [ "${FAIL_RETRY:-0}" -eq 1 ]; then
+	exit 18
+fi
+[ "$*" = "install --locked worktrunk" ] || [ "$*" = "+stable install --locked worktrunk" ] || exit 32
+printf '#!/bin/sh\nprintf "wt vtest\\n"\n' >"${CARGO_HOME}/bin/wt"
+/bin/chmod +x "${CARGO_HOME}/bin/wt"
+EOF
+	cat >"${fixture}/rustup" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >>"${RUSTUP_LOG}"
+[ "$*" = "update stable" ] || exit 33
+exit "${RUSTUP_STATUS:-0}"
+EOF
+	chmod +x "${fixture}/cargo" "${fixture}/rustup"
+}
+
 # Existing wt is verified, but must not trigger package installation.
 EXISTING="${TEMP}/existing"
 mkdir -p "${EXISTING}"
@@ -75,6 +104,41 @@ HOME="${TEMP}" CARGO_HOME="${CARGO}" FAKE_LOG="${TEMP}/cargo-called" FAKE_PREFIX
 HOME="${TEMP}" CARGO_HOME="${CARGO}" FAKE_LOG="${TEMP}/cargo-called" FAKE_PREFIX="${CARGO}" run_success "${CARGO}:/usr/bin:/bin"
 [ "$(cat "${TEMP}/cargo-called")" = installed ]
 [ -e "${TEMP}/cargo-called" ]
+
+# A failed Cargo install updates stable once and retries through that toolchain.
+RETRY="${TEMP}/retry"
+make_retry_fixture "${RETRY}"
+HOME="${TEMP}" CARGO_HOME="${RETRY}" CARGO_LOG="${TEMP}/retry-cargo" CARGO_COUNT="${TEMP}/retry-count" RUSTUP_LOG="${TEMP}/retry-rustup" FAIL_FIRST=1 run_success "${RETRY}:/usr/bin:/bin"
+[ "$(cat "${TEMP}/retry-cargo")" = "$(printf 'install --locked worktrunk\n+stable install --locked worktrunk')" ]
+[ "$(cat "${TEMP}/retry-rustup")" = "update stable" ]
+[ "$(cat "${TEMP}/retry-count")" = 2 ]
+
+# A failed Cargo install without rustup keeps the original failure.
+NO_RUSTUP="${TEMP}/no-rustup"
+mkdir -p "${NO_RUSTUP}/bin"
+cat >"${NO_RUSTUP}/cargo" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >>"${CARGO_LOG}"
+exit 17
+EOF
+chmod +x "${NO_RUSTUP}/cargo"
+HOME="${TEMP}" CARGO_HOME="${NO_RUSTUP}" CARGO_LOG="${TEMP}/no-rustup-cargo" run_failure "${NO_RUSTUP}:/usr/bin:/bin" 'cargo install --locked worktrunk returned a failure'
+[ "$(cat "${TEMP}/no-rustup-cargo")" = "install --locked worktrunk" ]
+
+# A failed stable update stops before retrying Cargo.
+RUSTUP_FAIL="${TEMP}/rustup-fail"
+make_retry_fixture "${RUSTUP_FAIL}"
+HOME="${TEMP}" CARGO_HOME="${RUSTUP_FAIL}" CARGO_LOG="${TEMP}/rustup-fail-cargo" CARGO_COUNT="${TEMP}/rustup-fail-count" RUSTUP_LOG="${TEMP}/rustup-fail-rustup" FAIL_FIRST=1 RUSTUP_STATUS=19 run_failure "${RUSTUP_FAIL}:/usr/bin:/bin" 'rustup update stable'
+[ "$(cat "${TEMP}/rustup-fail-cargo")" = "install --locked worktrunk" ]
+[ "$(cat "${TEMP}/rustup-fail-rustup")" = "update stable" ]
+
+# A failed retry is reported, and the update and retry each run once.
+RETRY_FAIL="${TEMP}/retry-fail"
+make_retry_fixture "${RETRY_FAIL}"
+HOME="${TEMP}" CARGO_HOME="${RETRY_FAIL}" CARGO_LOG="${TEMP}/retry-fail-cargo" CARGO_COUNT="${TEMP}/retry-fail-count" RUSTUP_LOG="${TEMP}/retry-fail-rustup" FAIL_FIRST=1 FAIL_RETRY=1 run_failure "${RETRY_FAIL}:/usr/bin:/bin" 'cargo +stable install --locked worktrunk returned a failure'
+[ "$(cat "${TEMP}/retry-fail-cargo")" = "$(printf 'install --locked worktrunk\n+stable install --locked worktrunk')" ]
+[ "$(cat "${TEMP}/retry-fail-rustup")" = "update stable" ]
+[ "$(cat "${TEMP}/retry-fail-count")" = 2 ]
 
 # No supported installer and a failing installer both stop with the cause.
 EMPTY="${TEMP}/empty"
