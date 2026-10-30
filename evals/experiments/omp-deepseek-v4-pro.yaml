@@ -12,7 +12,7 @@
 experiment_id: omp-deepseek-v4-pro
 description: >-
   Trigger accuracy, constitution delivery and review-depth routing on DeepSeek
-  v4 Pro, with daily-driver loaded and without it.
+  V4 Pro 0813, with daily-driver loaded and without it.
 
 defaults:
   repeats: 5
@@ -24,16 +24,11 @@ defaults:
 
   agent:
     type: omp
-    # The model the issue pins is `deepseek/deepseek-v4-pro`. The direct
-    # `deepseek` provider carries no catalog entry in the throwaway Omp home —
-    # `omp models find deepseek-v4-pro` lists the id only under
-    # vercel-ai-gateway — so `omp` could not start a session on the direct
-    # route, and the report would not say which model ran. The id is served
-    # through the one gateway this machine is credentialed for, which is also
-    # the route the real home's own `modelRoles` take. Set as Omp's
-    # `provider/modelId` form and split on the first slash by the adapter's
-    # `set_model`.
-    model: vercel-ai-gateway/deepseek/deepseek-v4-pro
+    # The dated catalog entry Vercel lists, and only DeepSeek's first-party
+    # upstream may serve it. The suffix is the adapter's thinking-level
+    # setting, stripped before `set_model`; the full-rerun protocol uses high.
+    model: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high
+    vercel_gateway_only: [deepseek]
     permission_mode: acceptEdits
     # Enforced as `omp --tools=read`: `Skill` needs `read`, which is how Omp
     # engages a skill. A row that restates this field replaces it.
