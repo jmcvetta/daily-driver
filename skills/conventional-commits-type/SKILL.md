@@ -149,7 +149,7 @@ and nothing below it runs.
    is about behaviour, not about the changelog: `perf` is silent here and
    still gets a section there, as the table below shows.
 
-3. **Does anything the repository ship change?** Where the change's whole
+3. **Does anything the repository ships change?** Where the change's whole
    effect is on the repository's own verification — the tests, the `make
    check` legs, fixtures, eval tooling, or the dev dependencies of any of
    them — no consumer observes anything, and the type is `test`: `build`
