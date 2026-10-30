@@ -39,6 +39,7 @@ import contextlib
 import json
 import logging
 import os
+import re
 import shutil
 import signal
 import tempfile
@@ -47,6 +48,8 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Any, ClassVar, Literal, NoReturn
+
+from pydantic import model_validator
 
 from coder_eval.agent import Agent
 from coder_eval.errors import AgentConfigError, AgentCrashError, TurnTimeoutError
@@ -78,8 +81,8 @@ from coder_eval.streaming.events import (
 
 from .dispatch import EVIDENCE_FILENAME as DISPATCH_EVIDENCE_FILENAME
 from .dispatch import EvidenceTooLarge, error_document, evidence_document, task_call_records
+from .home import inherited_files, restrict_model_upstreams
 from .pricing import UNREPORTED, cost_usd
-from .home import inherited_files
 from .rpc import (
     AgentFinished,
     ExtensionFailed,
@@ -162,6 +165,12 @@ EXIT_REASONS = (
 #: dictation, judge) take other model kinds and are left alone.
 OMP_CHAT_ROLES = ("default", "smol", "slow", "vision", "plan", "commit", "tiny", "memory", "task", "advisor")
 
+#: The Omp provider id whose requests carry `providerOptions.gateway`.
+VERCEL_GATEWAY_PROVIDER = "vercel-ai-gateway"
+
+#: The shape of a Vercel upstream provider slug, the values its `only` accepts.
+_UPSTREAM_SLUG = re.compile(r"[a-z0-9][a-z0-9._-]*")
+
 
 def omp_config_text(model: str | None) -> str:
     """The throwaway home's `config.yml`: `OMP_CONFIG`, plus every chat role in
@@ -231,6 +240,43 @@ class OmpAgentConfig(BaseAgentConfig):
     persisted atomically after the subject stops on every exit path. The normal
     telemetry is untouched.
     """
+
+    vercel_gateway_only: list[str] | None = None
+    """Allowed upstream provider slugs for the selected Vercel AI Gateway model.
+
+    The adapter writes them into the throwaway home's `models.yml` as
+    `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
+    vercelGatewayRouting.only`, which Omp sends as the request's
+    `providerOptions.gateway.only`. An unavailable allowed upstream therefore
+    fails instead of falling back to another provider, and a model id that
+    begins with `deepseek/` is not evidence of which upstream served it.
+
+    `None` leaves routing as the caller configured it. A supplied list must be
+    non-empty, must hold provider slugs, and requires `model` to name a
+    `vercel-ai-gateway/<model>` selector; anything else is refused rather than
+    silently running unrestricted.
+    """
+
+    @model_validator(mode="after")
+    def _check_vercel_gateway_only(self) -> "OmpAgentConfig":
+        """Refuse a route restriction the adapter could not enforce exactly."""
+        if self.vercel_gateway_only is None:
+            return self
+        if not self.vercel_gateway_only:
+            raise ValueError(
+                "vercel_gateway_only must name at least one upstream provider; "
+                "omit it to leave routing unrestricted"
+            )
+        for slug in self.vercel_gateway_only:
+            if not isinstance(slug, str) or not _UPSTREAM_SLUG.fullmatch(slug):
+                raise ValueError(f"vercel_gateway_only entry {slug!r} is not a provider slug")
+        selection = model_commands(self.model or "")[0]
+        if selection.get("provider") != VERCEL_GATEWAY_PROVIDER or not selection.get("modelId"):
+            raise ValueError(
+                "vercel_gateway_only requires model to be a "
+                f"{VERCEL_GATEWAY_PROVIDER}/<model> selector"
+            )
+        return self
 
     extra_args: list[str] = []
     """Arguments appended to the `omp --mode rpc` command line, verbatim.
@@ -915,7 +961,9 @@ class OmpAgent(Agent[OmpAgentConfig]):
         `setting_sources: []`.
 
         Nothing is written into the real home. `omp plugin link` writes into
-        this one.
+        this one. Where the row restricts the route, the borrowed `models.yml`
+        is read and replaced by a private merge, so the operator's file keeps
+        its content and its symlink target.
         """
         agent_dir = home / ".omp" / "agent"
         agent_dir.mkdir(parents=True, exist_ok=True)
@@ -932,6 +980,15 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     "Omp refuses to start a session with no model available.",
                     real,
                 )
+
+        if self.config.vercel_gateway_only is not None:
+            selection = model_commands(self.config.model or "")[0]
+            restrict_model_upstreams(
+                agent_dir,
+                str(selection["provider"]),
+                str(selection["modelId"]),
+                self.config.vercel_gateway_only,
+            )
 
         (agent_dir / "config.yml").write_text(omp_config_text(self.config.model), encoding="utf-8")
 
