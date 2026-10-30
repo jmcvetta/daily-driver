@@ -36,7 +36,6 @@ const workflowToolConsumers = {
   'Install OpenTofu': ['check-infra'],
   'Install Checkov': ['check-checkov'],
   'Install uv': ['check-checkov'],
-  'Verify provider lock': ['check-infra'],
   'Install Omp': ['check-omp-plugin', 'check-omp-embark-title-live'],
 }
 

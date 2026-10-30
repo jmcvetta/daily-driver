@@ -348,7 +348,7 @@ changing it.
 | TypeScript (npm) | `npm ci` | PRA | `gate` |
 | JavaScript (npm) | `npm ci` (CI-selector dependencies) | DD | `gate` |
 | Python (uv) | `uv lock --check --offline` | CA | `gate` |
-| OpenTofu providers | `tofu init`, then `git diff --quiet` on `.terraform.lock.hcl` | DD | `none` |
+| OpenTofu providers | none; the lock stays committed for hash-pinning | DD | `none` |
 | OpenTofu providers | the same | PRA | `gate → none` |
 
 OpenTofu provider lockfiles (`.terraform.lock.hcl`) stay committed for
