@@ -21,6 +21,20 @@
 #     read_on: <YYYY-MM-DD>
 
 models:
+  vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:
+    unpriced_reason: >-
+      Vercel's first-party DeepSeek endpoint publishes prompt, completion and
+      cache-read rates but no cache-write rate, so the four-rate record cannot
+      price it without inventing one.
+    source: https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4-pro-0813/endpoints
+    read_on: 2026-10-30
+  vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:
+    unpriced_reason: >-
+      Vercel's first-party DeepSeek endpoint publishes prompt, completion and
+      cache-read rates but no cache-write rate, so the four-rate record cannot
+      price it without inventing one.
+    source: https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4.1-flash-1017/endpoints
+    read_on: 2026-10-30
   openai-codex/gpt-6.1-sol:
     unpriced_reason: Codex subscription usage has no per-token dollar rate.
     source: https://developers.openai.com/codex/pricing

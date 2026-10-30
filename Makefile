@@ -15,7 +15,7 @@ SHELL := /bin/bash
 	check-issue-infra check-model-telemetry model-telemetry check-checkov \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
-	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro \
+	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-deepseek-v4-1-flash \
 	check-claude-dependency evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna \
 	evals-run-codex evals-run-comparison evals-run-classes mcp-usage
 
@@ -372,6 +372,7 @@ evals-plan: evals-setup-claude evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4.1-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-5.6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-sol.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6-luna.yaml tasks/*/*.yaml
@@ -504,7 +505,7 @@ evals-run: evals-judge-preflight evals-plan evals-preflight
 
 # evals-run-omp: run every registered Omp experiment. Ablation targets compare
 # bare and treated variants; the focused acceptance target measures with-plugin only.
-evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-omp-gpt-6-1-sol evals-run-omp-gemini-3-8-flash evals-run-omp-gemini-3-1-pro evals-run-omp-gpt-6-1-sol-workflow
+evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-deepseek-v4-1-flash evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-omp-gpt-6-1-sol evals-run-omp-gemini-3-8-flash evals-run-omp-gemini-3-1-pro evals-run-omp-gpt-6-1-sol-workflow
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
 # `omp` on PATH and the provider's credentials -- `make evals-setup-omp` sets up
@@ -535,6 +536,12 @@ evals-run-omp-deepseek-v4-pro: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-deepseek-v4-pro.yaml \
 		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-deepseek-v4-pro.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+evals-run-omp-deepseek-v4-1-flash: evals-judge-preflight evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(OMP_RUN_LIMITS) -e experiments/omp-deepseek-v4.1-flash.yaml \
+		--exclude-tags claude-only,codex-only,skip:omp,model-classes $(RUN_TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/omp-deepseek-v4.1-flash.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 evals-run-omp-gpt-5-6-sol: evals-judge-preflight evals-plan evals-preflight
