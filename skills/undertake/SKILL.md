@@ -1103,8 +1103,9 @@ the harness itself says to stop following up when the user asks.
 Three things are not such a wake. A repeated wrap-up runs `The wrap-up` again,
 so a push that failed the first time is retried when `stand-down` is re-run. A
 correction from this session's orchestrator, or a new instruction from the
-user, starts the work again. The orchestrator is the session whose address
-this session was given; where none was given, only the user restarts it. So does a resumed `/undertake` in a new session.
+user, starts the work again, and so does a resumed `/undertake` in a new
+session. The orchestrator is the session whose address this session was given;
+where none was given, no session is, and only the user restarts the work.
 
 
 The stop
