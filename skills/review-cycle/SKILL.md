@@ -37,11 +37,12 @@ below is named in words here and resolved to a call there:
 harness in use, and read it before the wait rather than during it — the wait is
 where the harnesses differ most, and one of them cannot wait at all.
 
-Callers keep their own gates. `undertake` runs this round between its `Open the
-draft` and `Ready for review` steps, runs it again where its `Keep it current`
-earns one, and owns whether the pull request then goes ready — including the
-return to draft while that later round runs. Nothing here marks a draft ready
-or merges anything.
+`pr` starts and owns ongoing base maintenance for agent-opened pull requests;
+its `Keep it current` watch remains active through review rounds. `undertake`
+invokes that maintenance and owns whether its pull request goes ready —
+including the return to draft while a later round runs. This skill borrows the
+watch's CI wake but owns neither base maintenance nor readiness. Nothing here
+marks a draft ready or merges anything.
 
 
 The round

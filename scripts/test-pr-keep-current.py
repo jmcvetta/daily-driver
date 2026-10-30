@@ -48,6 +48,10 @@ elif args[:2] == ["pr", "update-branch"]:
     state = load()
     state["updates"] += 1
     log("update")
+    if state["conflict_update"]:
+        save(state)
+        print("Cannot update PR branch due to conflicts", file=sys.stderr)
+        raise SystemExit(1)
     if state["fail_update"]:
         save(state)
         print("fixture update failed", file=sys.stderr)
@@ -85,6 +89,7 @@ class KeepCurrentTests(unittest.TestCase):
             "merge_state": "BEHIND",
             "run_in_flight": False,
             "fail_update": False,
+            "conflict_update": False,
             "updates": 0,
             **overrides,
         }
@@ -144,6 +149,27 @@ class KeepCurrentTests(unittest.TestCase):
         self.assertEqual("CLEAN", self.read_state()["merge_state"])
         self.assertEqual(1, self.read_log(self.log_path).splitlines().count("update"))
 
+    def test_masked_currency_still_attempts_an_update(self):
+        """Catch draft or indeterminate merge states hiding a stale base forever."""
+        for merge_state in ("DRAFT", "BLOCKED", "UNKNOWN"):
+            with self.subTest(merge_state=merge_state):
+                self.start_watch(merge_state=merge_state)
+                try:
+                    self.wait_for(lambda: self.read_state()["updates"] == 1, "the masked base update")
+                    self.assertEqual("CLEAN", self.read_state()["merge_state"])
+                finally:
+                    self.stop_watch()
+
+    def test_draft_currency_waits_for_in_flight_ci(self):
+        """Catch a draft update restarting CI before the current run finishes."""
+        self.start_watch(merge_state="DRAFT", run_in_flight=True)
+        self.wait_for(lambda: "floor holds this tick" in self.read_log(self.output_path), "the draft CI floor")
+        self.assertEqual(0, self.read_state()["updates"])
+        state = self.read_state()
+        state["run_in_flight"] = False
+        self.write_state(state)
+        self.wait_for(lambda: self.read_state()["updates"] == 1, "the draft update after CI clears")
+
     def test_in_flight_ci_blocks_merge_until_it_clears(self):
         """Catch a watcher that restarts checks by merging during an in-flight run."""
         self.start_watch(run_in_flight=True)
@@ -177,6 +203,14 @@ class KeepCurrentTests(unittest.TestCase):
         self.wait_for(lambda: self.process.poll() is not None, "the conflict stop")
         self.assertEqual(3, self.process.returncode)
         self.assertEqual(0, self.read_state()["updates"])
+
+    def test_masked_conflict_stops_instead_of_retrying(self):
+        """Catch a masked conflict that retries forever instead of alerting the owner."""
+        self.start_watch(merge_state="DRAFT", conflict_update=True)
+        self.wait_for(lambda: self.process.poll() is not None, "the masked conflict stop")
+        self.assertEqual(3, self.process.returncode)
+        self.assertEqual(1, self.read_state()["updates"])
+        self.assertIn("conflicts with its base", self.read_log(self.output_path))
 
     def test_update_failure_is_reported_and_retried(self):
         """Catch a failed update that the watcher hides or does not retry."""

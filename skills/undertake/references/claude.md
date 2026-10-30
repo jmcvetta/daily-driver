@@ -94,7 +94,7 @@ The pull request
 | `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `mcp__github__add_issue_comment` |
 | `The gate` | Read the Blockers section | `mcp__github__pull_request_read`, method `get` — `body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
-| `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
+| `Keep it current` | Invoke `pr`'s ongoing base maintenance | [`pr` route](../../pr/references/claude.md#keep-it-current) |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
 | `The milestone` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable_state`, `head.sha` |
 | `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
@@ -245,40 +245,17 @@ so `The cadence` below neither reuses it nor counts it.
 The cadence
 ===========
 
-`Open the draft` starts the one durable cadence on this harness:
-`mcp__Claude_Code_Remote__send_later`, two minutes out, cancelled with
-`mcp__Claude_Code_Remote__delete_trigger`. It survives the session that armed
-it, which is what makes continuation across turns possible at all. Reaching
-ready retains this cadence; it does not arm a second one.
+[`pr`'s `Keep it current` route](../../pr/references/claude.md#keep-it-current)
+owns the common watch; this undertaking invokes it and does not start another.
 
-**Each wake carries its own instructions.** The prompt handed to `send_later`
-states the whole check-in, self-contained, in this order:
+Undertaking-specific continuation stays here. When current-head CI is green,
+post a missing review completion notice before continuing the ready-gate work.
+Use `review-cycle` for review and fix-delta work, then apply `Ready for review`
+and `The milestone` below. A capped wait, review wall, or human action reports
+unfinished work and its resume path; it never becomes completion.
 
-1. **Re-arm first.** `mcp__Claude_Code_Remote__send_later`, two minutes out,
-   with the same prompt. A pending trigger is reused; a wake that ends with no
-   trigger in flight has lost the undertaking's continuation.
-2. **Read state, currency, and the merge floor.** Read `state`, `draft`,
-   `mergeable_state`, `head.sha`, `get_check_runs`, and `get_status`. A merged
-   or closed pull request deletes the re-armed trigger and exits. If either CI
-   endpoint reports a run in flight, skip the merge. Otherwise `behind`,
-   `draft`, `blocked`, or an indeterminate merge state runs
-   `mcp__github__update_pull_request_branch`, whose own reply settles
-   currency; `dirty` is the conflict stop.
-3. **Assess the resulting head.** After a currency test that can move the
-   head, read both CI endpoints again; without one, the floor read is the
-   assessment. A changed head invalidates earlier CI and readiness evidence.
-   Pending or unregistered checks use `review-cycle`'s bounded wait; failed
-   checks return to `Fix, answer, resolve, push`, and missing logs remain an
-   evidence blocker. When CI on the current head is green and the gate's
-   notice read finds no completion notice, post the notice before continuing
-   the ready-gate work. Continue the remaining review or ready-gate work when
-   CI permits it. A capped wait, review wall, or human action reports unfinished
-   work and its resume path; it never becomes completion.
-
-The slot it occupies is the same slot `review-cycle`'s wait borrows and hands
-back. That ownership starts before ready, including red results and capped
-waits. A pending cadence wake is reused unless a CI wait borrowed it; on
-`End the wait`, cancel that borrowed wake and arm exactly one replacement.
+`review-cycle` borrows the cadence slot for its CI wait and hands it back as
+`pr`'s reference directs. It does not own the standing watch.
 
 
 The stop
@@ -289,14 +266,15 @@ The stop
 | Operation | Call |
 | --------- | ---- |
 | Read the issue's comments, for the claim and any equivalent handoff | `mcp__github__issue_read`, method `get_comments` |
-| Cancel the `Keep it current` wake slot timer | `mcp__Claude_Code_Remote__delete_trigger`, by the `trigger_id` the slot holds |
+| Cancel the common `Keep it current` wake | `pr`'s `Keep it current` route, `mcp__Claude_Code_Remote__delete_trigger` by its `trigger_id` |
 | Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
 | Post the handoff | `mcp__github__add_issue_comment` |
 
 The pushed head is `git rev-parse HEAD` after a push that succeeded, and the
 last head `git ls-remote origin <branch>` reports where it did not.
 
-`The wrap-up`'s `End the watch` uses the same two cancel rows, before its
+`The wrap-up`'s `End the watch` uses the same two cancel routes before its
 push. Neither is skipped because the orchestrator archives this session next:
 a `send_later` trigger survives the session that armed it, and an archive
 that fails leaves the subscription live.
+

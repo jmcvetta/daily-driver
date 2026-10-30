@@ -215,7 +215,7 @@ by cancelling the armed follow-up, and the owner re-arms with
 `daily_driver_schedule` after the wait.
 An armed reminder does not lapse, it fires: left pending, it injects *read
 the checks again* as a follow-up in the middle of the review, restarting a
-wait on a run that finished. On this harness `undertake`'s `Keep it current`
+wait on a run that finished. On this harness `pr`'s `Keep it current`
 watch is the detached `keep-current-<number>` service, not a timer, so the
 wait here borrows nothing from it — the loop's floor is what keeps a merge
 from restarting a run in flight.
@@ -228,7 +228,7 @@ service name and bases its next action on its current state.
 **The completed watch answers CI, not branch currency.** The base branch may
 move while the session is away, and the CI watcher does not watch it. After a
 resumed owner inspects the service, the base-currency read comes first —
-`undertake`'s [`omp.md`](../../undertake/references/omp.md) names the read and
+`pr`'s [`omp.md`](../../pr/references/omp.md) names the read and
 the answers — and a `BEHIND` answer goes to `Keep it current` before the round
 continues. A green run on a head the base has since moved past is not current
 work.
