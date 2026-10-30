@@ -136,13 +136,19 @@ the local execution branch separately. Otherwise the task-worktree branch
 must agree with the designation, or with the adopted resume branch.
 
 **A resume branch differing from the designation is not a collision.** The
-adopted remote branch is the task's push/PR head. The session's own
-instructions may still require explicit permission to push to a branch other
-than the designation. Where they do, ask the user once, in one line naming
-both branches and the resume evidence (the pull request, handoff comment or
-claim that named it), then, for repository work, push to the adopted branch.
-Never push the work to the designated branch instead, and never open a second
-pull request from it.
+adopted remote branch is the task's push/PR head. Before asking for permission
+to push there, check the user's applicable explicit authorization. Standing
+authorization to push the existing branch when resuming work satisfies a
+requirement for explicit permission; it does not require a fresh question on
+each resume. The pull request, handoff or claim identifies the branch, but
+does not by itself supply user consent.
+
+Ask only when applicable authorization is absent, or an actual higher-priority
+instruction specifically requires fresh or narrower permission. Do not infer
+that stricter requirement from unseen instructions. When a question is needed,
+name both branches and the resume evidence in one line, and wait for permission
+before pushing. Keep the adopted branch: never push the work to the designated
+branch instead, and never open a second pull request from it.
 
 For repository work in the primary-held designation exception, use the
 designated branch for the claim link, pushes, existing-PR lookup and PR
