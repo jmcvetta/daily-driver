@@ -1,13 +1,13 @@
 modelRoles:
-  default: vercel-ai-gateway/openai/gpt-6.1-sol:medium
-  smol: vercel-ai-gateway/openai/gpt-6-luna:medium
-  slow: vercel-ai-gateway/openai/gpt-6.1-sol:high
-  task: vercel-ai-gateway/openai/gpt-6-luna:high
-  advisor: vercel-ai-gateway/openai/gpt-6.1-sol:high
-  mechanical: vercel-ai-gateway/openai/gpt-6-luna:low
-  implementation: vercel-ai-gateway/openai/gpt-6-luna:high
-  reasoning: vercel-ai-gateway/openai/gpt-6.1-sol:high
-  frontier: vercel-ai-gateway/openai/gpt-6-astra:high
+  default: openai-codex/gpt-6.1-sol:medium
+  smol: openai-codex/gpt-6-luna:medium
+  slow: openai-codex/gpt-6.1-sol:high
+  task: openai-codex/gpt-6-luna:high
+  advisor: openai-codex/gpt-6.1-sol:high
+  mechanical: openai-codex/gpt-6-luna:low
+  implementation: openai-codex/gpt-6-luna:high
+  reasoning: openai-codex/gpt-6.1-sol:high
+  frontier: openai-codex/gpt-6-astra:high
   review: opencode-go/glm-5.3-flash:high
 
 task:
