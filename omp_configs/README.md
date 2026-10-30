@@ -33,7 +33,7 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | `gpt.yml` | GPT role overlay using `openai-codex` routes. |
 | `gpt.gateway.yml` | **Unsupported legacy overlay.** Its GPT role pins still use `vercel-ai-gateway`; do not use it for GPT calls. |
 | `cocktail.yml` | GLM 5.3 Flash by default, for task subagents, and for small, vision, and commit work; Kimi K3 for planning and deep work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
-| `multi-model.yml` | OpenAI roles through `openai-codex`: GPT-6 Luna for small, task, mechanical, and implementation work; GPT-6.1 Sol for default work, deep analysis, and advice; GPT-6 Astra for frontier work; DeepSeek V4 Pro 0813 through Vercel AI Gateway for review. |
+| `multi-model.yml` | OpenAI roles through `openai-codex`: GPT-6 Luna for small, task, mechanical, and implementation work; GPT-6.1 Sol for default work, deep analysis, and advice; GPT-6 Astra for frontier work; DeepSeek V4 Pro through OpenCode Go for review. |
 | `kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `cocktail.gpts-choice.yml` | The original GPT-generated cocktail: DeepSeek V4 Pro by default; Luna for small work; Sol for planning and deep work; GLM Flash for task subagents; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
 | `cheaper.yml` | DeepSeek V4 Pro for default and deep work; GPT-6 Luna for task subagents; Kimi K3 for planning; GLM Flash for advice; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
