@@ -49,7 +49,7 @@ exists to reach.
 | `Land the pull request` | Diagnose a blocked gate | `gh pr view <number> --json headRefOid,reviewDecision,statusCheckRollup`; current-head checks, statuses, and workflow runs through `review-cycle`'s `references/codex.md` |
 | `Land the pull request` | Read review threads | `review-cycle`'s `references/codex.md` thread read |
 | `Land the pull request` | Read the review-cycle completion notice | `gh pr view <number> --json headRefOid,comments` — `comments[].author.login` |
-| `Watch the wave` | Read issue-only child outcomes and dispositions | `gh issue view <number> --json body,comments,state` |
+| `Watch the wave` | Read child acceptance criteria and outcome evidence | `gh issue view <number> --json body,comments,state` |
 | `Land the pull request` | Read the commits after the notice's SHA | `git rev-list --first-parent --no-merges <sha>..<headRefOid>` after `git fetch` of the head |
 | `Land the pull request` | Squash merge the gated head | `gh pr merge <number> --squash --match-head-commit <headRefOid>` |
 | `Close the epic` | Comment with child outcome evidence or an unsupported claim | `gh issue comment <number> --body-file <path>` |
@@ -78,13 +78,12 @@ author of the task issue's claim comment, and the SHA it names. Where that SHA i
 `rev-list` must print nothing. A SHA off that chain, or any printed commit,
 fails the read.
 
-The merge is one conditional `gh pr merge` call for a task or corrected bug
-with a pull request, after the gate holds. `--match-head-commit <headRefOid>`
-makes it fail closed if the task session pushes after the read.
+The merge is one conditional `gh pr merge` call for a task pull request after
+the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
+task session pushes after the read.
 `Close the epic` posts its evidence comment before `gh issue close`, and never
 calls the latter when a child outcome is unsupported or landing is by hand.
-An issue-only research answer or bug disposition has no pull request to merge;
-read its body and comments against that kind's `issue-body` completion contract.
+Read the delivered outcome against the task's acceptance criteria.
 An issue's closed state alone does not prove the epic outcome was met.
 
 Each delegation's prompt is the child issue number and the instruction to
@@ -104,13 +103,12 @@ Route assessment limits
 =======================
 
 The delegation namespace has not been driven. No model or effort argument is
-measured, so do not invent either. For task issues, resolve the required class
-only where the offered configured route and its actual capabilities can be
-established. For bug and research issues, assess the work against the same
-capability rubric without adding task metadata. Otherwise stop that child and
-report the configuration gap. The muster roll records a required class only
-for task issues, plus the selected implementor route and actual model as
-`unreported` when the surface does not report one.
+measured, so do not invent either. Every epic story must pass `Take the wave`'s
+task-readiness gate. Resolve its required class only where the offered
+configured route and its actual capabilities can be established. Otherwise
+stop that child and report the configuration gap. The muster roll records
+each task's required class and selected implementor route, and the actual
+model as `unreported` when the surface does not report one.
 Treat an effective astra/fable route as frontier even when an override,
 fallback, or visible parent-model inheritance supplies it through a lower-class
 role. Dispatch a frontier assignment only when the issue records explicit user

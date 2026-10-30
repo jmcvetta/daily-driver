@@ -403,7 +403,8 @@ a reason.
 | OpenTofu | Checkov, `.checkov.yaml` (skips carry a comment; an Opengrep rule enforces that) | PG | `gate` |
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml` (five skips carry reasons) | DD | `gate` |
 | OpenTofu, Dockerfile, secrets | Checkov, pinned, frameworks `terraform dockerfile secrets` (`apps/omp-web`) | PG | `gate` |
-| OpenTofu | Checkov, `.checkov.yaml`, selected only when Tofu changes | CA, PRA | `none → gate` |
+| OpenTofu | Checkov, `.checkov.yaml`, selected only when Tofu changes | CA | `none → gate` |
+| OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | PRA | `none → gate` |
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | CMWB | `gate` |
 
 

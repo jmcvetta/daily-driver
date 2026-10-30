@@ -166,6 +166,29 @@ different claim from *this must close first*. An epic's children are not
 automatically its blockers, and saying so in edges would be inventing
 relationships.
 
+**Before linking a story to an epic**, read the proposed parent's labels and
+the child's current kind, body, and relevant comments. This gate applies to
+new issues, existing issues, reparenting, and either direction of a parent or
+sub-issue write, even outside `epic` planning. Invoke `epic`'s assignable-task
+rule: the child must have exactly the `task` kind and pass `issue-body`'s task
+readiness test before the edge is written. A task label alone is insufficient.
+An open legitimate blocker delays dispatch, not linking.
+
+Leave an already-ready task unchanged. Resolve repository-answerable gaps
+through `issue`, preserving valid requirements, evidence, and provenance under
+`issue-body`'s update rule and following `issue-labels`' kind-conflict rules.
+Do not blindly relabel another kind to pass the gate. If intent or a required
+prerequisite remains unavailable, name the exact gap, do not write the edge or
+claim the epic is ready, and continue independent safe preparation. Do not
+invent scope or open replacements without the applicable scope agreement.
+This readiness gate does not replace the relationship evidence test or
+`epic`'s plan agreement.
+
+A relationship read is not permission to migrate an existing non-task child.
+Report that policy violation and use the normal issue workflow for repair.
+Keep the edge and its derived marker truthful; never remove or manufacture
+an edge to hide the violation.
+
 **The `epic` label and the parent edge are not the same statement**, and both
 are wanted. The label says an issue coordinates others, which stops `undertake`
 starting on it; the edge says *which* children it has. `story` is the derived
