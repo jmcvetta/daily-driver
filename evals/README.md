@@ -1804,53 +1804,42 @@ whether a model can compress skill discovery, state inspection, the action,
 recovery and verification into a small budget. A case need not use its
 allowance, and a short run is not evidence that the ceiling was too high.
 
-**The policy.** A case that a #662 measurement runs has `max_turns: 60`,
-`turn_timeout: 900` and `task_timeout` at least `turn_timeout` plus its
-grading window. The window is the case's earlier gap, never less than 180
-seconds, so a case with several judge calls keeps its room. That is 88 cases:
-every case named in #665, #666, #667 and #689. The Claude experiment defaults
-in `experiments/with-without.yaml` and `experiments/base-vs-candidate.yaml`
-use `60`, `900` and `1080`. The cheap trigger-accuracy cases keep their
-small limits, because a skill that has fired or not fired ends the run. The
-Omp and Codex arms keep their own limits, and `OMP_RUN_LIMITS` in the
-`Makefile` overrides them.
+**The limits.** The behaviour cases that the #662 measurements run
+(#665, #666, #667 and #689) use `max_turns: 60` and `turn_timeout: 900`. Their
+`task_timeout` is `turn_timeout` plus the case's grading window, which is never
+less than 180 seconds, so a case with several judge calls keeps its room. The
+Claude experiment defaults in `experiments/with-without.yaml` and
+`experiments/base-vs-candidate.yaml` use `60`, `900` and `1080`.
 
-**Why 60.** Six cases exhausted limits of 6 to 10 turns in most attempts.
-Raising them to 14 did not help: three more attempts still ran out at an
-effective SDK `max_turns: 14` (15 turns used), and several attempts spent
-those turns searching host directories for policy. A workflow that reads the
-gate, acts, recovers from an error and verifies uses a small multiple of its
-minimum tool-call count. 60 is four times the rejected 14 and twice the 30
-the Omp arms use. It is not tuned to the shortest successful attempt. A
-ceiling this high only costs money in a session that is already lost.
+Other cases keep their own limits: the cheap trigger-accuracy cases, where a
+skill that has fired or not fired ends the run, and any behaviour case outside
+those issues. A run that includes such a case is not a corrected-policy
+measurement of it. Raise its limits first. The Omp and Codex arms keep their
+own limits, and `OMP_RUN_LIMITS` in the `Makefile` overrides them.
 
-**Timeouts move with it.** A tight timeout would replace the tight turn
-budget without a word. The turn timeout rises to 900 seconds, three times
-the 300 that cut a plugin run short as an agent timeout. The task timeout
-keeps each case's grading window above it. `plan` warns that
-`task_timeout` exceeds `turn_timeout`. That is deliberate.
+**Why 60.** A workflow that reads the gate, acts, recovers from an error and
+verifies uses a small multiple of its minimum tool-call count. A cap near that
+minimum leaves no room for discovery or recovery. 60 is twice the 30 that the
+Omp arms use. It is not tuned to the shortest successful attempt. A ceiling
+this high only costs money in a session that is already lost.
 
-**Recorded effective values.** With `coder-eval` 0.11.6 and
-`experiments/with-without.yaml`, all 88 cases resolve in both the `bare` and
-the `with-plugin` variant to `max_turns: 60` and `turn_timeout: 900`. The
-`task_timeout` is 1080 for 23 cases, 1200 for 62, 1500 for 2 and 2400 for 1;
-the last is `constitution/short-question-after-tool-heavy-work`, which runs
-two agent turns. This is configuration inspection only. It shows what the
-SDK would be given. It does not show that a subject loads the plugin, and it
-runs no subject or judge.
+**Timeouts move with it.** A tight timeout would replace a tight turn budget
+without a word, so the turn timeout is 900 seconds and the task timeout keeps
+the grading window above it. `plan` warns that `task_timeout` exceeds
+`turn_timeout`. That is deliberate.
 
 **What a ceiling does not fix.** A larger cap does not repair a fixture, a
-policy-discovery gap or plugin visibility. Known defects stay open and are
-not represented as fixed here:
+policy-discovery gap or plugin visibility. These stay open and are not
+represented as fixed here:
 
 - The shared readiness fixtures (`ready-clean`) say master was merged when
   setup does not merge it. They require a test that setup never commits.
-- The auto-files cases searched host directories for policy, and one treated
-  arm read a stale installed copy. The local `daily-driver` stub answers every
-  invocation, `--help` included, with the same error.
-- A treated `undertake/11` reply said the `undertake` skill was unavailable
-  although the recorded plugin roots were present. The cause is unresolved.
-  Offline discovery finding the skills does not show that an earlier SDK
+- The auto-files cases can search host directories for policy and read a stale
+  installed copy. The local `daily-driver` stub answers every invocation,
+  `--help` included, with the same error.
+- A treated `undertake/11` reply once said the `undertake` skill was
+  unavailable although the recorded plugin roots were present. The cause is
+  unresolved. Offline discovery finding the skills does not show that an SDK
   session loaded them.
 
 **Reading results.** Report three outcomes apart: execution-limit outcomes
@@ -1859,16 +1848,16 @@ behavioural outcomes, and fixture faults. An exhausted or empty attempt is an
 incomplete measurement. It is never a behavioural failure and never a pass.
 Do not raise a ceiling and retry until green.
 
-**The baseline reset.** Runs made under the old tight caps are historical
-diagnostics. Their artifacts stay in `evals/runs/` and nothing resumes them,
-fills their unused slots or mixes their outcomes with new-cap results. A
-measurement starts from a fresh run directory and needs its own bounded
-approval, naming the source and plugin revisions, cases, variants, repeats,
-effective limits, the native Claude Code route and the stop condition. Check
-the effective ceilings first. `make evals-plan` calls no model, but it only
-validates and warns; it does not print `max_turns`. Resolve the numbers with
-`coder-eval`'s own `resolve_task_for_variant`, once per variant, which also
-calls no model. Keep `GH_TOKEN` and `GITHUB_TOKEN` unset, and keep controller-only
+**The baseline.** A run made under older, tighter limits is a historical
+diagnostic. Keep its artifacts in `evals/runs/`. Do not resume it, fill its
+unused slots or mix its outcomes with a corrected-policy run. A measurement
+starts from a fresh run directory and needs its own bounded approval, naming
+the source and plugin revisions, cases, variants, repeats, effective limits,
+the native Claude Code route and the stop condition. Check the effective
+limits first. `make evals-plan` calls no model, but it only validates and
+warns; it does not print `max_turns`. Resolve the numbers with `coder-eval`'s
+own `resolve_task_for_variant`, once per variant, which also calls no model.
+Keep `GH_TOKEN` and `GITHUB_TOKEN` unset, and keep controller-only
 `BASH_DEFAULT_TIMEOUT_MS` and `BASH_MAX_TIMEOUT_MS` out of the subject.
 
 ## Cost

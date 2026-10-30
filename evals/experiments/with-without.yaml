@@ -29,11 +29,11 @@ defaults:
   run_limits:
     # A per-task runaway guard, not a target or a quota: it stops a session
     # that is going nowhere and must never be the reason a valid workflow
-    # fails. See `evals/README.md`, "Turn and time ceilings". The cheap
-    # trigger-accuracy cases restate small values; the behaviour cases the
-    # #662 measurements run use at least these. The two timeouts are different
-    # clocks and must not be set equal: `turn_timeout`
-    # is the agent's budget, while `task_timeout` is a watchdog armed before
+    # fails. See `evals/README.md`, "Turn and time ceilings". Cheap
+    # trigger-accuracy cases outside the #662 measurements restate small
+    # values; the behaviour cases those measurements run use at least these.
+    # The two timeouts are different clocks and must not be set equal:
+    # `turn_timeout` is the agent's budget, while `task_timeout` is a watchdog armed before
     # the turn starts that is still running when the criteria are checked.
     # Equal, a turn that spends its budget is SIGKILLed as a TIMEOUT before it
     # can be graded. The 180s gap is the grading window, and it is inherited by
