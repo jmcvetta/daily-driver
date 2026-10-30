@@ -68,6 +68,11 @@ Initial State
 
 - Open the PR as a draft
 
+Omp base currency
+-----------------
+
+On Omp, after creating or updating a pull request, complete the `Base currency checkpoint` in `references/omp.md` before ending the workflow. The update attempt is required when the PR's merge state requires it; narration or a promise to check later does not count. An undertaking still follows `undertake`'s pre-ready and post-ready maintenance steps.
+
 
 Github Issues
 -------------

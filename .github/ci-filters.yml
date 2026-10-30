@@ -77,6 +77,9 @@ check-scripts:
   - 'scripts/*.sh'
   - 'evals/fixtures/*/shared/*.sh'
   - 'evals/fixtures/*/cases/*/*.sh'
+check-pr-keep-current:
+  - 'scripts/test-pr-keep-current.py'
+  - 'scripts/pr-keep-current.sh'
 check-model-telemetry:
   - 'scripts/check-model-telemetry.py'
   - 'scripts/model-telemetry.py'

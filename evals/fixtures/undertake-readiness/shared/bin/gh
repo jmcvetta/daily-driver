@@ -80,6 +80,7 @@ def seen(state):
         "draft": pr["draft"],
         "merge_state": merge_state(state),
         "ci_green_for_head": ci_green(state),
+        "ci_in_flight": state.get("ci_in_flight", False),
         "notice_covers_head": notice_covers_head(state),
         "threads_open": threads_open(state),
         "reports": sum(1 for c in state["comments"] if c["body"].startswith(REPORT)),
@@ -106,7 +107,9 @@ def maybe_jq(text, args):
 def pr_json(state):
     pr = state["pr"]
     rollup = []
-    if ci_green(state):
+    if state.get("ci_in_flight", False):
+        rollup = [{"name": "make check", "status": "IN_PROGRESS", "conclusion": None}]
+    elif ci_green(state):
         rollup = [{"name": "make check", "status": "COMPLETED", "conclusion": "SUCCESS"}]
     return {
         "number": 25,
@@ -116,7 +119,7 @@ def pr_json(state):
         "isDraft": pr["draft"],
         "headRefOid": pr["head"],
         "headRefName": pr["branch"],
-        "baseRefName": "master",
+        "baseRefName": pr.get("base", "master"),
         "mergeStateStatus": merge_state(state),
         "mergeable": "UNKNOWN" if merge_state(state) == "UNKNOWN" else "MERGEABLE",
         "statusCheckRollup": rollup,
@@ -134,7 +137,9 @@ def comments_json(state):
 
 def check_runs(state, sha):
     runs = []
-    if sha in state["ci_green_for"]:
+    if state.get("ci_in_flight", False) and sha == state["pr"]["head"]:
+        runs = [{"name": "make check", "status": "in_progress", "conclusion": None, "head_sha": sha}]
+    elif sha in state["ci_green_for"]:
         runs = [{"name": "make check", "status": "completed", "conclusion": "success", "head_sha": sha}]
     return {"total_count": len(runs), "check_runs": runs}
 
@@ -146,7 +151,8 @@ def read_failed(state, *categories):
 FIELD_COVERS = {
     "statusCheckRollup": "ci", "comments": "comments", "files": "diff",
     "isDraft": "pr-state", "mergeStateStatus": "pr-state", "mergeable": "pr-state",
-    "headRefOid": "pr-state", "state": "pr-state", "reviewDecision": "pr-state",
+    "headRefOid": "pr-state", "headRefName": "pr-state", "baseRefName": "pr-state",
+    "state": "pr-state", "reviewDecision": "pr-state",
 }
 
 
@@ -198,7 +204,7 @@ def api_path(args):
         elif a in takes_value:
             skip = True
         elif not a.startswith("-"):
-            return a.removeprefix("/")
+            return a.removeprefix("/").replace("{owner}/{repo}", REPO)
     return ""
 
 
@@ -214,6 +220,46 @@ def api_fields(rest):
     if fields and method == "GET":
         method = "POST"
     return fields, method
+
+
+
+def do_edit(args, state):
+    title, body = state["pr"]["title"], state["pr"]["body"]
+    for index, arg in enumerate(args):
+        if arg == "--title" and index + 1 < len(args):
+            title = args[index + 1]
+        elif arg in ("--body", "-b") and index + 1 < len(args):
+            body = args[index + 1]
+        elif arg == "--body-file" and index + 1 < len(args):
+            body = open(args[index + 1], encoding="utf-8").read()
+    state["pr"]["title"], state["pr"]["body"] = title, body
+    save(state)
+    record(args, "edit", True, **seen(state))
+    print("✓ Pull request #25 edited")
+
+
+def do_update_branch(args, state):
+    old_head = state["pr"]["head"]
+    worktree = os.path.dirname(ROOT)
+    base = f"origin/{state['pr'].get('base', 'master')}"
+    merge = subprocess.run(["git", "merge", "--no-edit", "--no-ff", base], cwd=worktree, capture_output=True, text=True)
+    if merge.returncode:
+        subprocess.run(["git", "merge", "--abort"], cwd=worktree, capture_output=True, text=True)
+        fail(args, "update-branch", "base update conflicted")
+    push = subprocess.run(["git", "push", "origin", f"HEAD:{state['pr']['branch']}"], cwd=worktree, capture_output=True, text=True)
+    if push.returncode:
+        fail(args, "update-branch", "base update push failed")
+    new_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=worktree, capture_output=True, text=True, check=True).stdout.strip()
+    base_sha = subprocess.run(["git", "rev-parse", base], cwd=worktree, capture_output=True, text=True, check=True).stdout.strip()
+    parents = subprocess.run(["git", "rev-list", "--parents", "-n", "1", new_head], cwd=worktree, capture_output=True, text=True, check=True).stdout.split()[1:]
+    state["pr"]["head"] = new_head
+    state["commits"][new_head] = {"parents": parents}
+    state["ci_in_flight"] = True
+    save(state)
+    record(args, "update-branch", True, base_sha=base_sha, previous_head=old_head,
+           base_in_head=subprocess.run(["git", "merge-base", "--is-ancestor", base, new_head], cwd=worktree).returncode == 0,
+           **seen(state))
+    print("fixture gh: base merged into pull request head")
 
 
 def main(argv):
@@ -241,6 +287,10 @@ def main(argv):
                     print(f"--\nauthor: {c['author']}\n{c['body']}")
         return
 
+
+    if group == "pr" and verb == "edit":
+        do_edit(rest, state)
+        return
     if group == "pr" and verb == "checks":
         if read_failed(state, "ci"):
             fail(args, "ci", "HTTP 502: fixture read failure")
@@ -276,9 +326,13 @@ def main(argv):
         do_comment(args, state, body)
         return
 
-    if group == "pr" and verb in ("review", "update-branch"):
-        record(args, "review-round" if verb == "review" else "update-branch", True, **seen(state))
-        print(f"fixture gh: {verb} recorded")
+    if group == "pr" and verb == "review":
+        record(args, "review-round", True, **seen(state))
+        print("fixture gh: review recorded")
+        return
+
+    if group == "pr" and verb == "update-branch":
+        do_update_branch(args, state)
         return
 
     if group == "issue" and verb == "view":
@@ -319,6 +373,13 @@ def main(argv):
             category, payload = "comments", comments_json(state)
         elif tail in ("pulls/25/comments", "pulls/25/reviews"):
             category, payload = "reviews", []
+        elif re.fullmatch(r"actions/runs\?head_sha=[0-9a-f]+(&per_page=100)?", tail):
+            sha = re.search(r"head_sha=([0-9a-f]+)", tail).group(1)
+            runs = []
+            if state.get("ci_in_flight", False) and sha == pr["head"]:
+                runs = [{"head_sha": sha, "status": "in_progress", "run_attempt": 1,
+                         "pull_requests": [{"number": 25}]}]
+            category, payload = "workflows", {"total_count": len(runs), "workflow_runs": runs}
         elif re.fullmatch(r"commits/[0-9a-f]+/check-runs", tail):
             category, payload = "ci", check_runs(state, tail.split("/")[1])
         elif re.fullmatch(r"commits/[0-9a-f]+/status", tail):
