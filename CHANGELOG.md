@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.54.1](https://github.com/jmcvetta/daily-driver/compare/v0.54.0...v0.54.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* make stand-down stop promptly and stay stopped ([#711](https://github.com/jmcvetta/daily-driver/issues/711)) ([53e78d6](https://github.com/jmcvetta/daily-driver/commit/53e78d692c0b124c487426a124d3c04203204e53))
+* **task-worktree:** retry Cargo after updating stable Rust ([#714](https://github.com/jmcvetta/daily-driver/issues/714)) ([ec8aac8](https://github.com/jmcvetta/daily-driver/commit/ec8aac8666e77b44a1ca5b95d16adc0489280b14))
+
 ## [0.54.0](https://github.com/jmcvetta/daily-driver/compare/v0.53.0...v0.54.0) (2026-10-29)
 
 
