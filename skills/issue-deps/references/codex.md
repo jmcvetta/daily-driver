@@ -80,6 +80,10 @@ its output. Verify that a read target is an issue before believing an empty
 graph. After a write, read the other end with `--json blocking` or
 `--json subIssues`.
 
+Before a parent or sub-issue write to an epic, including a create call that
+sets a parent, apply `Sub-issues`' pre-link task-readiness gate in `SKILL.md`.
+This includes both `--parent` and `--add-sub-issue` and any available MCP route.
+
 After every parent read or write, read the confirmed parent's labels and invoke
 `issue-labels` to reconcile `story` on the child. A failed or unavailable
 graph read preserves the child labels and reports the limitation. A successful

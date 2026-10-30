@@ -172,7 +172,8 @@ def write_home(home: Path, port: int) -> None:
         f"      - id: {MODEL}\n"
         "        name: Embark title probe\n"
         "        api: openai-completions\n"
-        "        contextWindow: 8192\n"
+        # Keep expanded skills and both scenarios below the compaction threshold.
+        "        contextWindow: 131072\n"
         "        maxTokens: 1024\n"
         "        cost:\n"
         "          input: 0\n"
