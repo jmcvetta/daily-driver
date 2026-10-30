@@ -1,5 +1,36 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+* Require assignable task issues for all new and reused epic stories, with task readiness checked before linking and dispatch ([#723](https://github.com/jmcvetta/daily-driver/issues/723)).
+
+### Fixed
+
+* Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
+
+## [0.54.1](https://github.com/jmcvetta/daily-driver/compare/v0.54.0...v0.54.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* make stand-down stop promptly and stay stopped ([#711](https://github.com/jmcvetta/daily-driver/issues/711)) ([53e78d6](https://github.com/jmcvetta/daily-driver/commit/53e78d692c0b124c487426a124d3c04203204e53))
+* **task-worktree:** retry Cargo after updating stable Rust ([#714](https://github.com/jmcvetta/daily-driver/issues/714)) ([ec8aac8](https://github.com/jmcvetta/daily-driver/commit/ec8aac8666e77b44a1ca5b95d16adc0489280b14))
+
+## [0.54.0](https://github.com/jmcvetta/daily-driver/compare/v0.53.0...v0.54.0) (2026-10-29)
+
+
+### Features
+
+* **evals:** flag behaviour cases the bare variant passes ([#678](https://github.com/jmcvetta/daily-driver/issues/678)) ([57adcf6](https://github.com/jmcvetta/daily-driver/commit/57adcf67d3c48f041fe06dbe9790d0ab214b4291))
+
+
+### Bug Fixes
+
+* **pr-title:** classify evals-only changes as tests ([#687](https://github.com/jmcvetta/daily-driver/issues/687)) ([9bf4690](https://github.com/jmcvetta/daily-driver/commit/9bf4690530d869ba38958931aa36b038f734e2b4))
+* **pr:** keep Omp PR branches current ([#704](https://github.com/jmcvetta/daily-driver/issues/704)) ([7e9a51d](https://github.com/jmcvetta/daily-driver/commit/7e9a51d0ebee3b9b4fa08fea4b66409de8babb65))
+
 ## [0.53.0](https://github.com/jmcvetta/daily-driver/compare/v0.52.0...v0.53.0) (2026-10-24)
 
 
@@ -64,6 +95,7 @@
 ### Tests
 
 * **evals:** add offline behavioral coverage for delivery scope, integration ordering, useful task boundaries, and deployment state continuity
+* **pr:** verify base updates and current-head checks with offline behavior tests ([#693](https://github.com/jmcvetta/daily-driver/issues/693))
 
 * **evals:** record the bounded Sol/Luna/Terra comparison, its isolation limits, and normalized resource use ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
 * **evals:** preserve both historical schema-4 formats while new records retain token buckets and subscription billing ([#579](https://github.com/jmcvetta/daily-driver/issues/579))
@@ -71,6 +103,7 @@
 
 ### Bug Fixes
 
+* **pr:** require an Omp base-currency checkpoint after PR changes ([#693](https://github.com/jmcvetta/daily-driver/issues/693))
 * **embark:** remove the upfront landing and archive authorization question; default to orchestrator mode while preserving explicit by-hand opt-outs and real tool denials
 * **embark:** advance permitted preparation behind the draft gate without bypassing real approvals or repeating unchanged status reports ([#632](https://github.com/jmcvetta/daily-driver/issues/632))
 * **evals:** accept offline safety prose in Omp task dispatch while keeping child URI targets blocked ([#636](https://github.com/jmcvetta/daily-driver/issues/636))

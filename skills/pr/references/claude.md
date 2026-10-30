@@ -19,3 +19,33 @@ Codex's in [`codex.md`](codex.md).
   together. `mcp__github__update_pull_request`, called once both are decided
   (`pr-title`, `pr-body`). Keep the identified remote push head; do not create
   a second PR for the execution branch.
+ 
+Keep it current
+===============
+
+Start this route after creating or updating a PR. Arm one
+`mcp__Claude_Code_Remote__send_later` wake two minutes out; reuse the pending
+trigger, and retain its `trigger_id`. Cancel it with
+`mcp__Claude_Code_Remote__delete_trigger` when the PR is merged, closed, or
+the user stops the watch.
+
+The scheduled prompt carries this whole check-in, including its PR identity
+and the instruction to re-arm itself. **Re-arm first on every wake:** reuse a
+pending trigger or schedule the same prompt two minutes out before taking the
+reads below. Retain the new identifier. A wake with no successor loses
+maintenance after one tick.
+
+Immediately after create/update, and on each wake or return, read
+`mcp__github__pull_request_read`
+with method `get` for `state`, `draft`, `mergeable_state`, and `head.sha`, plus
+`get_check_runs` and `get_status`. If the PR is merged or closed, cancel the
+wake and exit. If the user has stopped the watch, cancel it and exit before
+any update. If either CI endpoint reports a run in flight, defer the update.
+For `behind`, `draft`, `blocked`, or an indeterminate merge state, update with
+`mcp__github__update_pull_request_branch`. For `dirty`, stop before the update
+and escalate the conflict. For `clean` or `unstable`, do not update the branch.
+
+After an update that can move the head, read `head.sha`, `get_check_runs`, and
+`get_status` again. The CI wait and result assessment use `review-cycle`'s
+routes. Its wait may borrow this wake; cancel the borrowed trigger at `End the
+wait` and arm one replacement before the turn ends.

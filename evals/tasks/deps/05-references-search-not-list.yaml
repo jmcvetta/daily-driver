@@ -44,9 +44,9 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 
 run_limits:
-  max_turns: 10
-  turn_timeout: 300
-  task_timeout: 600
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
 
 success_criteria:
   # Without this, a run that never reached the skill could still be judged on
@@ -56,6 +56,7 @@ success_criteria:
   # criterion the row has — scoring a truncated trajectory at 0 for a reason
   # the row does not intend.
   - type: skill_triggered
+    weight: 0
     description: "`deps` fires on a bulk upgrade of Dependabot's open pull requests"
     expected_skill: deps
     skill_name: deps

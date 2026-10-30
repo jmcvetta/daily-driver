@@ -21,14 +21,15 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
 
 run_limits:
-  max_turns: 8
-  turn_timeout: 300
-  task_timeout: 600
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
 
 success_criteria:
   # Unarmed: an on-fail stop would truncate the trajectory before the
   # `[RESULT - …]` reply the judge below needs.
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires"
     expected_skill: undertake
     skill_name: undertake

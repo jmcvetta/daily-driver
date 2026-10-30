@@ -7,9 +7,9 @@ description: >-
   "raise a pull request", or "update the PR", and including any call the agent
   makes on its own initiative before creating a pull request, or updating an
   existing pull request beyond its title or body alone. Supplies the branch
-  guard, the existing-PR check, draft state and the call on whether there is
-  an issue to reference; the title comes from `pr-title` and the body, issue
-  reference included, from `pr-body`.
+  guard, the existing-PR check, draft state, ongoing base-branch maintenance,
+  and the call on whether there is an issue to reference; the title comes
+  from `pr-title` and the body, issue reference included, from `pr-body`.
 ---
 
 # PR Workflow
@@ -67,6 +67,52 @@ Initial State
 -------------
 
 - Open the PR as a draft
+
+Keep it current
+---------------
+
+**Every PR the agent opens gets ongoing base-branch maintenance**, including
+drafts and direct PR work outside `undertake`. Start after opening the PR,
+before ending this workflow. Updating an existing PR reuses its watch or
+starts a missing one; reaching ready never starts a second watch. No issue,
+claim, or undertaking milestone is required.
+
+Use the active harness reference's currency checkpoint and continuation route.
+Read the PR's actual base rather than assuming `master`. Merge that base into
+the head with the harness's server-side update-branch call, never a rebase or
+force-push. The call also settles draft-masked or indeterminate currency.
+
+Check every two minutes where the harness supports durable continuation.
+Reuse one pending wake or running watch per PR. A run in flight on the current
+head defers the merge, so currency maintenance does not keep restarting CI.
+A clean merge needs current-head CI, not another review of an unchanged diff.
+
+Stop automatic updates on a conflict. Resolve only a plain mechanical
+conflict; ask when resolution requires a behavior decision. After resolution
+is pushed, resume maintenance and use `review-cycle` for the changed content.
+Never merge the PR itself or change its readiness just because currency is
+settled.
+
+The watch ends on merge, close, or the user's instruction to stop. Cancel its
+actor before any stop-time push and do not restart it on a stale wake. A new
+user instruction may resume it. Report a failed watch or unavailable durable
+route and the actual owner-resume requirement; do not claim unattended
+maintenance on a harness that cannot provide it.
+
+After the merge
+---------------
+
+Read CI for the resulting head through `review-cycle`'s wait rules. A head
+change invalidates earlier CI evidence. Fix failed checks; report unavailable
+logs as an evidence blocker, never green. Pending checks use its bounded wait.
+A process can merge without an agent turn but cannot assess review or
+readiness. Every owner turn returning to the PR takes the harness's catch-up
+look first.
+
+`undertake` invokes this maintenance and retains its review, ready gate, and
+first-readiness report. Direct PR work does not inherit those issue-specific
+steps. A clean base merge earns no review round; a conflict resolution or
+other content change follows `review-cycle`.
 
 
 Github Issues

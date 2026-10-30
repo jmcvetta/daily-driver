@@ -1,9 +1,8 @@
 """How the `omp` agent kind starts Omp: the config, the argv and the environment.
 
-Pure, for the reason `tools.py` is: `scripts/check-omp-agent.py` runs it in
-`make check` with no `coder_eval` and no `omp` installed. What it builds is the
-sandbox boundary `docs/notes/0013-the-omp-arm.md` records, so it is built here
-where it can be asserted rather than inline in `agent.py`.
+Pure, for the reason `tools.py` is: it builds the sandbox boundary documented
+in `docs/notes/0013-the-omp-arm.md` for direct use by `agent.py`, rather than
+inlining it there.
 """
 
 from __future__ import annotations
@@ -89,6 +88,14 @@ def child_env(
     env["HOME"] = str(home)
     for name in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
         env[name] = str(home / name.lower())
+    # Omp reads its agent directory from `HOME`, and relocates it to
+    # `PI_CONFIG_DIR`, a profile under `OMP_PROFILE` or `PI_PROFILE`, or an
+    # explicit `PI_CODING_AGENT_DIR` when any is set. An inherited one would
+    # point the session at a home this adapter never prepared, silently
+    # dropping the borrowed provider files and the private model routing
+    # written beside them.
+    for name in ("PI_CONFIG_DIR", "OMP_PROFILE", "PI_PROFILE", "PI_CODING_AGENT_DIR"):
+        env.pop(name, None)
     env[TOOLS_ENV] = ",".join(tools.tools)
     documents = [
         str(candidate.resolve())

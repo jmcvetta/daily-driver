@@ -33,6 +33,7 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | `gpt.yml` | GPT role overlay using `openai-codex` routes. |
 | `gpt.gateway.yml` | **Unsupported legacy overlay.** Its GPT role pins still use `vercel-ai-gateway`; do not use it for GPT calls. |
 | `cocktail.yml` | GLM 5.3 Flash by default, for task subagents, and for small, vision, and commit work; Kimi K3 for planning and deep work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
+| `multi-model.yml` | OpenAI roles through `openai-codex`: GPT-6 Luna for small, task, mechanical, and implementation work; GPT-6.1 Sol for default work, deep analysis, and advice; GPT-6 Astra for frontier work; DeepSeek V4 Pro through OpenCode Go for review. |
 | `kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `cocktail.gpts-choice.yml` | The original GPT-generated cocktail: DeepSeek V4 Pro by default; Luna for small work; Sol for planning and deep work; GLM Flash for task subagents; Terra as advisor; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
 | `cheaper.yml` | DeepSeek V4 Pro for default and deep work; GPT-6 Luna for task subagents; Kimi K3 for planning; GLM Flash for advice; MiniMax M3 for vision; Mercury 2.5 for tiny background work. |
@@ -43,6 +44,15 @@ The `advisor` role in the cocktail overlays does not enable the advisor. Start O
 ```sh
 omp --config ./cocktail.yml --advisor
 ```
+
+For OpenAI implementation with independent DeepSeek Pro review:
+
+```sh
+omp --config ./multi-model.yml
+```
+
+`multi-model.yml` routes the `reviewer` agent through the `review` role for both
+full review and fix-delta verification. Implementation roles remain separate.
 
 ## Provider access
 
@@ -57,9 +67,9 @@ Catalog entries do not guarantee that a provider still serves a model. An infere
 The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. Omp reads that name
 only; it uses `VERCEL_AI_GATEWAY_API_KEY` for catalog discovery, not for
 requests. In this repository `make evals-setup-omp` maps the second name to the
-first for non-GPT gateway routes. Every GPT subject, judge, and helper call
-must use `openai-codex`; never route a GPT model through the Vercel AI Gateway.
-Other non-GPT gateway routes remain allowed.
+first for non-GPT gateway routes. All OpenAI roles in `multi-model.yml` use
+`openai-codex`, as do eval GPT subject, judge, and helper calls. Log in with
+`omp login` and select `openai-codex` before using these routes.
 
 ## Capability classes
 

@@ -32,11 +32,12 @@ const matchers = Object.fromEntries(checkNames.map(name => [name,
 const workflowToolConsumers = {
   'Install Claude Code CLI': ['check-plugin', 'check-skills', 'check-agents', 'check-claude-dependency'],
   'Ensure ShellCheck': ['check-scripts'],
-  'Install Worktrunk': ['check-git-sync', 'check-task-worktree-fixture', 'check-worktrunk-install'],
-  'Install uv': ['check-eval-arms', 'check-agent-judges', 'check-evals-judge', 'check-evals-preflight', 'check-evals-provenance', 'check-omp-agent-settle'],
+  'Install Worktrunk': ['check-git-sync', 'check-worktrunk-install'],
   'Install OpenTofu': ['check-infra'],
+  'Install Checkov': ['check-checkov'],
+  'Install uv': ['check-checkov'],
   'Verify provider lock': ['check-infra'],
-  'Install Omp': ['check-omp-plugin', 'check-omp-eval-guard-live', 'check-omp-embark-title-live', 'check-omp-agent-settle'],
+  'Install Omp': ['check-omp-plugin', 'check-omp-embark-title-live'],
 }
 
 function workflowChecks(base, head) {
@@ -151,10 +152,10 @@ function makeTargetBlocks(contents) {
 }
 
 const aggregateConsumers = {
-  'check-plugin-validity': ['check-plugin', 'check-skills', 'check-agents', 'check-manifests', 'check-manifest-fixtures', 'check-claude-dependency'],
-  'check-runtime': ['check-constitution', 'check-ask-in-chat', 'check-title-gate', 'check-omp-extension', 'check-model-class-roles', 'check-omp-guard-differential', 'check-omp-cache-clean', 'check-git-sync', 'check-task-worktree-fixture', 'check-worktrunk-install', 'check-scripts'],
-  'check-eval-tooling': ['check-omp-agent', 'check-omp-eval-guard', 'check-codex-agent', 'check-eval-fixtures', 'check-model-classes-grader', 'check-dispatch-grader', 'check-eval-arms', 'check-agent-judges', 'check-evals-judge', 'check-evals-preflight', 'check-evals-provenance', 'check-evals-results', 'check-model-telemetry', 'check-evals-setup-omp', 'check-undertake-readiness'],
-  'check-issue-infra': ['check-labels', 'check-labels-fixtures'],
+  'check': ['check-step-names', 'check-release-paths', 'check-plugin', 'check-skills', 'check-agents', 'check-manifests', 'check-claude-dependency', 'check-constitution', 'check-ask-in-chat', 'check-title-gate', 'check-omp-extension', 'check-model-class-roles', 'check-omp-guard-differential', 'check-omp-cache-clean', 'check-git-sync', 'check-worktrunk-install', 'check-scripts', 'check-pr-keep-current', 'check-labels', 'check-model-telemetry'],
+  'check-plugin-validity': ['check-plugin', 'check-skills', 'check-agents', 'check-manifests', 'check-claude-dependency'],
+  'check-runtime': ['check-constitution', 'check-ask-in-chat', 'check-title-gate', 'check-omp-extension', 'check-model-class-roles', 'check-omp-guard-differential', 'check-omp-cache-clean', 'check-git-sync', 'check-worktrunk-install', 'check-scripts', 'check-pr-keep-current'],
+  'check-issue-infra': ['check-labels'],
   '__git_sync_run': ['check-git-sync'],
   'omp-update-daily-driver': ['check-omp-cache-clean'],
 }
@@ -168,18 +169,10 @@ export function changedMakeTargets(beforeText, afterText) {
     if (before.get(target) === after.get(target)) continue
     if (checkNames.includes(target)) changed.add(target)
     for (const consumer of aggregateConsumers[target] ?? []) changed.add(consumer)
-    if (target.startsWith('check-') && !checkNames.includes(target) &&
-        !aggregateConsumers[target]) changed.add('check-ci-scope')
-    if (target.startsWith('evals-run-') || target === 'evals-plan' || target === 'evals-variants') {
-      changed.add('check-eval-arms')
-    }
   }
   const readVar = (text, name) => {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     return text.match(new RegExp(`^${escaped}\\s*[:?+]?=\\s*.*$`, 'm'))?.[0] ?? ''
-  }
-  if (readVar(beforeText, 'CODER_EVAL_VERSION') !== readVar(afterText, 'CODER_EVAL_VERSION')) {
-    changed.add('check-omp-agent-settle')
   }
   if (['SHELL', '.SHELLFLAGS'].some(name => readVar(beforeText, name) !== readVar(afterText, name))) {
     for (const name of checkNames) changed.add(name)

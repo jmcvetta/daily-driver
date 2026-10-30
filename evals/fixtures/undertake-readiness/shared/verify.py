@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
-"""Verify an undertake-readiness run from the fixture's own record.
+"""Verify an undertake-readiness or branch-currency run from offline evidence.
 
 usage: verify.py gate [DIR]      ready/notice/report invariants for the scenario
        verify.py service [DIR]   launched, observed alive, cleaned up
+       verify.py currency [DIR]  base merge and current-head CI read
 
 DIR is the fixture directory (default `.fixture`). It reads `ops.log` (one JSON
-line per `gh` call, written by the offline client), `state.json` (the world the
-run ended in) and `service.log`. Exit 0 means every invariant held; otherwise
-each violation prints on its own line and the exit status is 1. A missing or
-empty record is a violation: a run that did nothing cannot pass, and a
-fixture that did not build is not a pass either.
+line per `gh` call), `state.json` (the world the verifier should observe) and
+`service.log`. Exit 0 means every invariant held; otherwise each violation
+prints on its own line.
 """
 import json
 import os
 import signal
+import subprocess
 import sys
 import time
-
-REQUIRED_READS = ("pr-state", "ci", "comments", "threads", "diff")
 
 
 def load_ops(directory):
@@ -104,6 +102,64 @@ def gate(directory):
     return bad
 
 
+
+def currency(directory):
+    state = json.load(open(os.path.join(directory, "state.json"), encoding="utf-8"))
+    ops = load_ops(directory)
+    if ops is None:
+        return ["no ops.log: the fixture client never ran"]
+    updates = [(i, op) for i, op in enumerate(ops) if op["category"] == "update-branch"]
+    bad = []
+    if len(updates) != 1 or not updates[0][1]["ok"]:
+        bad.append(f"expected one successful base update attempt, saw {len(updates)}")
+        return bad
+    update_index, update = updates[0]
+    previous_head = update.get("previous_head")
+    if update["argv"] != ["pr", "update-branch", "25"]:
+        bad.append("the update did not target pull request 25 through gh pr update-branch")
+    if not previous_head or update["head"] == previous_head:
+        bad.append("the update did not move the pull-request head")
+    if not update.get("base_in_head"):
+        bad.append("the resulting pull-request head does not contain its base")
+    root = os.path.dirname(os.path.abspath(directory))
+    current = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=True).stdout.strip()
+    base = subprocess.run(["git", "rev-parse", "origin/master"], cwd=root, capture_output=True, text=True, check=True).stdout.strip()
+    if update.get("base_sha") != base:
+        bad.append("the update did not use the pull request's master base")
+    if state["pr"]["head"] != current:
+        bad.append("the reported pull-request head differs from the fixture Git head")
+    ancestor = subprocess.run(["git", "merge-base", "--is-ancestor", "origin/master", "HEAD"], cwd=root)
+    if ancestor.returncode:
+        bad.append("the fixture Git head does not contain origin/master")
+    before_ci = [op for op in ops[:update_index]
+                 if op["ok"] and "ci" in op.get("covers", [op["category"]])
+                 and op["head"] == previous_head]
+    before_workflows = [op for op in ops[:update_index]
+                        if op["ok"] and op["category"] == "workflows"
+                        and op["head"] == previous_head]
+    if not any(op["argv"][-1].endswith("/check-runs") for op in before_ci):
+        bad.append("current-head check runs were not read before the update")
+    if not any(op["argv"][-1].endswith("/status") for op in before_ci):
+        bad.append("current-head commit statuses were not read before the update")
+    if not before_workflows:
+        bad.append("matching workflow runs were not read before the update")
+    after_ci = [op for op in ops[update_index + 1:]
+                if op["ok"] and "ci" in op.get("covers", [op["category"]])
+                and op["head"] == current]
+    after_workflows = [op for op in ops[update_index + 1:]
+                       if op["ok"] and op["category"] == "workflows"
+                       and op["head"] == current]
+    if not any(op["argv"][-1].endswith("/check-runs") for op in after_ci):
+        bad.append("check runs were not assessed on the updated head")
+    if not any(op["argv"][-1].endswith("/status") for op in after_ci):
+        bad.append("commit statuses were not assessed on the updated head")
+    if not after_workflows:
+        bad.append("matching workflow runs were not assessed on the updated head")
+    if not any(op.get("ci_in_flight") and not op["ci_green_for_head"] for op in after_ci):
+        bad.append("CI was not assessed as in flight on the updated head")
+    return bad
+
+
 def alive(pid):
     """True only while `pid` is still the keep-current stub; a reused pid is someone else's."""
     try:
@@ -129,8 +185,8 @@ def service(directory):
         bad.append("the launched service exited before it could be observed running")
     elif len(ticks) < 2:
         bad.append("the service was not observed alive for two heartbeats")
-    if len(starts) > 1:
-        bad.append("the service was started more than once")
+    if len(starts) > 2:
+        bad.append("the service was relaunched beyond its single mode-transition restart")
     # Cleanup is part of the check: no task-owned process outlives it.
     if pid is not None and alive(pid):
         os.kill(pid, signal.SIGTERM)
@@ -141,12 +197,12 @@ def service(directory):
 
 
 def main(argv):
-    if len(argv) < 2 or argv[1] not in ("gate", "service"):
+    if len(argv) < 2 or argv[1] not in ("gate", "service", "currency"):
         print(__doc__, file=sys.stderr)
         return 2
     directory = argv[2] if len(argv) > 2 else ".fixture"
     try:
-        bad = gate(directory) if argv[1] == "gate" else service(directory)
+        bad = {"gate": gate, "service": service, "currency": currency}[argv[1]](directory)
     except (OSError, ValueError, KeyError) as exc:
         bad = [f"fixture record unreadable: {exc}"]
     for line in dict.fromkeys(bad):

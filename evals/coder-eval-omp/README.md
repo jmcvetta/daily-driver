@@ -15,6 +15,7 @@ coder-eval-omp/
 └── src/coder_eval_omp/
     ├── rpc.py                     the command builder and frame reduction — pure, and tested
     ├── pricing.py                 prices.json lookup — pure, and tested
+    ├── home.py                    borrowed provider files and the private routing merge — pure
     ├── agent.py                   the process, the events, and what loaded
     └── plugin.py                  register(registry)
 ```
@@ -64,6 +65,27 @@ can reference) are symlinked from the real `~/.omp/agent/`. Nothing else is:
 `PERSONALITY.md` and `RULES.md` would load a person's own instructions into
 the bare arm. The list is `coder_eval_omp/home.py`'s `PROVIDER_FILES`.
 
+**A row may restrict the route to one upstream.** `vercel_gateway_only:
+[deepseek]` requires `model` to be a `vercel-ai-gateway/<model>` selector, and
+`home.restrict_model_upstreams` merges the allowlist into a private
+`models.yml` as `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
+vercelGatewayRouting.only`. Omp turns that into the request's
+`providerOptions.gateway.only`, so an unavailable upstream fails instead of
+falling back. The merge preserves every other provider and setting, replaces
+rather than unions the selected allowlist, drops the model's `order`
+preference, and replaces the borrowed symlink instead of writing through it.
+Because Omp's catalog transport for these models (`anthropic-messages`) never
+serializes the routing block, a restricted model also selects
+`api: openai-completions`, the transport that applies
+`providerOptions.gateway`. A malformed file, an empty or invalid allowlist, a
+non-Vercel selector, a model that names a compaction or context-promotion
+fallback in its override or its `models:` definition, or an inherited
+`compat.extraBody` that sets `model` or `providerOptions` is refused: Omp
+applies the extra body after the routing, so either key would replace the
+enforced value. The agent also clears `PI_CONFIG_DIR`, `OMP_PROFILE`,
+`PI_PROFILE` and `PI_CODING_AGENT_DIR` for the child: each relocates Omp's
+configuration or agent directory away from the throwaway home.
+
 **A row's tool lists must hold.** `tools.select_tools` maps a row's
 `allowed_tools` and `disallowed_tools` to Omp's tool names, and the agent
 passes the result as `omp --tools=<list>`, or `--no-tools` for an empty allow
@@ -93,7 +115,8 @@ the host through the shell. Concurrent filesystem mutation is not isolated.
 `provider/model:level`, but Omp's `set_model` accepts only the provider and
 model id. `rpc.model_commands` strips a recognized level such as `:high` and
 sends it with `set_thinking_level`; an unknown suffix stays in the model id.
-`scripts/check-omp-agent.py` tests the RPC commands without a model call.
+The RPC commands keep the model selection and thinking-level settings separate,
+without requiring a model call.
 
 ## What it records
 
@@ -180,10 +203,8 @@ using only each entry's `task` text. It requires a complete list of distinct
 jobs after the successful `Spawned N background agents using <agent>.` header.
 It accepts the observed Omp `Coordinate` paragraph only in its captured form
 and with a count matching the launch. Other suffixes, or extra launch-like
-lines after it, stay unknown and cannot pass.
-`make check-dispatch-grader` covers these parsing rules and the committed
-excerpts under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`;
-`make check-omp-agent-settle` drives the adapter itself.
+lines after it, stay unknown and cannot pass. Captured dispatch examples live
+under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`.
 
 ## Cost
 
@@ -196,31 +217,25 @@ price at run time: the table is a dated snapshot, sourced from
 current `evals/experiments/omp-*.yaml` files actually run. A model with no row
 prices `total_cost_usd` as `None` (`coder_eval`'s own "unreported", not
 `0.0`) — adding a new Omp model to an experiment means adding its row here
-too. `pricing.py` is pure, like `rpc.py`, so `scripts/check-omp-agent.py`
-drives it in `make check` without a `coder_eval` install.
+too. `pricing.py` is pure, like `rpc.py`; it prices recorded token usage without
+a `coder_eval` install.
 
 ## What is tested, and what is not
 
-`rpc.py`, `pricing.py` and `tools.py` import nothing — not `coder_eval`, not
-`omp` — and `scripts/check-omp-agent.py` drives them in `make check`, `rpc.py`
-against recorded frames and `pricing.py` against a test price table. That is
-where the four things above, and the token-usage and cost math, live, and it is
-why they live there.
+`rpc.py`, `pricing.py`, `home.py` and `tools.py` import nothing — not
+`coder_eval`, not `omp`. They hold the protocol, pricing, borrowed-home and
+tool-list behavior described above, including token-usage and cost math and the
+private model-routing merge.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the
 event protocol, both copied from `coder_eval`'s OpenCode agent and from
 `scripts/check-omp-plugin.py`, which drives a real `omp --mode rpc` today.
 
-One part of that lifecycle carries its own acceptance test:
-`scripts/check-omp-agent-settle.py` (`make check-omp-agent-settle`) drives the
-real `communicate` against a fake `omp --mode rpc` and asserts the
-early-stop invariant the first live run violated — a replicate that
-early-stops on `skill_triggered` cannot final-score 0 on that same criterion,
-because the abort settle emitted the frames it had been swallowing. It needs
-the `coder-eval` install (`make evals-install`), so it is not a `make check`
-leg, and it needs no network, so it is cheap to run whenever `agent.py`
-changes.
+The agent lifecycle includes an early-stop settle path: a replicate that
+early-stops on `skill_triggered` must not final-score 0 on that same criterion,
+because the abort settle emits frames it had been swallowing. The lifecycle
+depends on `coder-eval` and the real `omp --mode rpc` interface.
 
 ## Installing it
 

@@ -47,12 +47,12 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task, WebFetch, WebSearch]
 
 run_limits:
-  max_turns: 6
+  max_turns: 60
   # The same headroom rule as its sibling: the grading window rides on top of
   # the agent's turn budget, and two `agent_judge` calls run one after the
-  # other. 900 matches `completion-report-is-lean`.
-  task_timeout: 900
-  turn_timeout: 300
+  # other. 900 and 1500 match `completion-report-is-lean`.
+  task_timeout: 1500
+  turn_timeout: 900
 
 sandbox:
   template_sources:

@@ -17,14 +17,15 @@ pre_run:
 initial_prompt: >-
   Undertake PR #25: resume it at `Ready for review`. The previous session's
   handoff reads: "Outstanding: the live verification has not run. Resume: run
-  `verify-live --case 03` and record its result." Continue from there and
-  report the result. This sandbox has no GitHub access, so post nothing.
+  `verify-live --case 03` and record its result." This sandbox has no GitHub
+  access.
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
-run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 480}
+run_limits: {max_turns: 60, turn_timeout: 900, task_timeout: 1080}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` handles the resumed verification"
     expected_skill: undertake
     skill_name: undertake

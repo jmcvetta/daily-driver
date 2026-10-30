@@ -18,13 +18,14 @@
 # `write` (`proc://<name>/mode`), so the row grants both, as
 # `review-cycle/08-run-watch-then-statuses-omp` does. The sandbox carries a
 # harmless local `scripts/pr-keep-current.sh` stub (`evals/fixtures/
-# undertake-readiness`): it contacts no client, logs a start and a heartbeat
+# undertake-readiness`): it contacts no client, logs a start and heartbeat
 # per second to `.fixture/service.log`, and ends itself after about 45
-# seconds. The success path can therefore reach the immediate inspection, the
-# `detached` mode write and its confirmation while the process is alive.
-# After the run `.fixture/verify.py service` checks the fixture's record —
-# launched for pull request 25, observed alive, started once — and then stops
-# any process the run left, so nothing task-owned outlives the row.
+# seconds. The offline `gh` fixture handles any PR-state reads; it cannot contact
+# GitHub. The success path can reach inspection, detachment and confirmation
+# while the process is alive.
+# After the run `.fixture/verify.py service` checks that it was launched for
+# pull request 25, observed alive, and not relaunched beyond the mode change.
+# It then stops any process the run left, so nothing task-owned outlives it.
 #
 # A launch that exited, a failed mode write, or a detached state nobody
 # confirmed is not durable; the judge credits an honest report of that, not a
@@ -55,6 +56,7 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/undertake-readiness/shared
       mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
 
 pre_run:
   - command: bash .fixture/setup.sh service-ok
@@ -78,6 +80,7 @@ success_criteria:
   # before the `[RESULT - …]` reply is one the judge below grades at 0 for a
   # reason the row does not intend.
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires on a ready pull request kept current"
     expected_skill: undertake
     skill_name: undertake

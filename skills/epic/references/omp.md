@@ -39,12 +39,15 @@ The graph
 `issue-deps` owns both relationships and picks its own client. Read that
 skill's routes before `Write the graph`.
 
+Apply `issue-deps`' pre-link task-readiness gate before every parent or
+sub-issue write to the epic, including when linking an existing issue.
+
 
 The required class
 ==================
 
-`issue-body` owns the kind-specific body contracts and shared routing guidance
-in [`model-classes.md`](../../issue-body/references/model-classes.md). Child
-bodies are written under the selected-kind contract at `Open the issues`; only
-task bodies carry a model class. This skill neither duplicates the taxonomy nor
-records a concrete model.
+`issue-body` owns the task body contract and shared routing guidance in
+[`model-classes.md`](../../issue-body/references/model-classes.md). Every story
+uses that task contract and required model class at `Open the issues`, whether
+new or reused. This skill neither duplicates the taxonomy nor records a
+concrete model.

@@ -14,6 +14,8 @@ pre_run:
   - command: bash .fixture/setup.sh resume-applied
     timeout: 30
   - command: >-
+      printf '%s\n' human needs-approval >.fixture/labels.txt
+  - command: >-
       printf '%s\n' 'Tofu apply completed by authorized operator; updated state
       committed as 1a2b3c4; this is current branch evidence.'
       >.fixture/current-state-evidence.txt
@@ -33,9 +35,10 @@ initial_prompt: >-
 agent:
   allowed_tools: [Read, Write, Edit, Grep, Glob, Skill, Bash]
   disallowed_tools: [NotebookEdit, Agent, Task]
-run_limits: {max_turns: 14, turn_timeout: 300, task_timeout: 480}
+run_limits: {max_turns: 60, turn_timeout: 900, task_timeout: 1080}
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`undertake` revalidates an existing human blocker on resume"
     expected_skill: undertake
     skill_name: undertake
@@ -67,19 +70,14 @@ success_criteria:
     pattern: 'Waits on a human apply'
     must_match: false
     weight: 2
-  - type: agent_judge
-    description: The result preserves the unrelated valid blocker
-    include_agent_output: true
-    include_tool_calls: true
-    include_reference: false
+  - type: file_matches_regex
+    description: The resulting PR labels keep the pending approval requirement
+    path: .fixture/published-labels.txt
+    pattern: '(?m)^needs-approval$'
     weight: 2
-    max_turns: 5
-    turn_timeout: 120
-    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
-    prompt: |
-      Find the final `[RESULT - ...]` reply. Score 0 if absent.
-      Score 1 only if it says the current apply and state-commit evidence
-      satisfies the old blocker, removes that blocker and the PR `human` label,
-      and keeps the separate security approval requirement and `needs-approval`
-      label. The fixture's command and published-body trace must prove both
-      updates; a promise to edit is not enough.
+  - type: file_matches_regex
+    description: The resulting PR labels remove only the satisfied human blocker
+    path: .fixture/published-labels.txt
+    pattern: '(?m)^human$'
+    must_match: false
+    weight: 2

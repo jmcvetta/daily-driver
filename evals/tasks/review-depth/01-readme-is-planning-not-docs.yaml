@@ -2,7 +2,7 @@ task_id: review-depth-readme-is-planning-not-docs
 description: >-
   A rewrite of the root README routes to the planning panel, not to the docs
   skim. Sized past the fifty-line skim threshold on purpose, so kind is what
-  decides; `scripts/check-eval-fixtures.sh` holds the bound.
+  decides; the fixture stays above the fifty-line skim threshold.
 tags: [review-depth, routing, fire, claude-only]
 
 # `review` needs a repository: a base branch, a topic branch ahead of it, and a
@@ -56,12 +56,12 @@ agent:
               # cwd-relative path that ever stopped resolving would not lose
               # the roster, it would veto every dispatch in both arms and
               # report a routing table that dispatched nobody.
-              # `check-eval-fixtures.sh` asserts the recorder still runs.
+              # The recorder lets the evaluator observe whether dispatch occurred.
               command: python3 "$CLAUDE_PROJECT_DIR/.fixture/record-dispatch.py" || true
               timeout: 10
 
 run_limits:
-  max_turns: 30
+  max_turns: 60
   task_timeout: 1080
   # `turn_timeout` is the agent's budget; `task_timeout` is the watchdog around
   # the whole evaluation, armed before the turn starts and still running while

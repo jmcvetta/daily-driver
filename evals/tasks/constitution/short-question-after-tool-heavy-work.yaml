@@ -89,12 +89,12 @@ simulation:
 
 run_limits:
   # The per-agent-turn cap, not a budget across the two dialog turns. Turn one
-  # reads about nine files, so 30 clears it with room.
-  max_turns: 30
-  # Two agent turns, a simulator call and two judge calls: 2 × 300 + 2 × 120
-  # fits well inside 1200.
-  task_timeout: 1200
-  turn_timeout: 300
+  # reads about nine files, so 60 clears it many times over.
+  max_turns: 60
+  # Two agent turns, a simulator call and two judge calls: 2 × 900 + 2 × 120
+  # is 2040 before the simulator, so 2400 leaves the grading window intact.
+  task_timeout: 2400
+  turn_timeout: 900
 
 sandbox:
   template_sources:
@@ -180,8 +180,6 @@ sandbox:
             lint                     success
             check-step-names         success
             check-plugin-validity    success
-            check-eval-tooling       success
-            check-ci-scope           success
             evals-plan               success
 
         - path: tracker/checks/318.txt
@@ -189,7 +187,6 @@ sandbox:
             PR #318, head 90be2d1
 
             lint                     success
-            check-ci-scope           success
 
 initial_prompt: |
   Read the tracker export under `tracker/` — issue 457, its pull request, and

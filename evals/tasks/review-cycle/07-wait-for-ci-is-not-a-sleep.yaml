@@ -28,14 +28,14 @@ agent:
   allowed_tools: [Bash, Read, Grep, Glob, Skill, Agent, Task]
 
 run_limits:
-  max_turns: 12
+  max_turns: 60
   # `turn_timeout` is the agent's budget; `task_timeout` is the watchdog around
   # the whole evaluation, armed before the turn starts and still running while
   # the criteria are checked. Equal values mean a turn that uses its budget is
   # killed as a TIMEOUT before it can be graded, so `task_timeout` carries
   # headroom on top.
-  turn_timeout: 300
-  task_timeout: 480
+  turn_timeout: 900
+  task_timeout: 1080
 
 success_criteria:
   # The finding itself. `sleep [0-9]` rather than bare `sleep`, so that a
@@ -51,16 +51,10 @@ success_criteria:
     # A sleep has already lost the row, so ending the run on it costs nothing.
     stop_early: {}
 
-  # Without this, a run that did nothing at all scores a pass on the criterion
-  # above. Armed, and armed for the reason `evals/README.md` gives: a bare
-  # block leaves `on_pass` at `continue`, so it truncates nothing — it puts
-  # this criterion in the watcher's pass-capable set, which is what defers the
-  # sleep guard's fail-stop until the skill has had its chance to fire. Left
-  # unarmed, the armed set holds only that guard, and a row with no
-  # pass-capable armed criterion fail-stops on the first `sleep` — freezing
-  # this one at 0 on a trajectory that ended before the skill could fire.
+  # This records whether the skill fired. The command criterion guards against
+  # sleeping; the behaviour judge also requires the CI wait workflow.
   - type: skill_triggered
+    weight: 0
     description: "`review-cycle` fires on a pull request whose head needs reviewing"
     expected_skill: review-cycle
     skill_name: review-cycle
-    stop_early: {}

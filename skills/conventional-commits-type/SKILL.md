@@ -67,16 +67,24 @@ a change there goes to the tests below exactly as code would, and one that
 changes agent behavior is never `docs` however much it reads as writing. A
 typo or a rewording there that changes nothing still is. Outside those
 directories — `README.md`, `docs/` and their kind — prose is documentation.
-The consumer list has a boundary, and it is where `test` lives: **ships
-versus verifies.** What the repository uses to verify itself — tests, check
-legs, fixtures, eval tooling, and the dev dependencies of any of them — is
-seen by the people working on the repository, not by a consumer of the
-shipped thing. A change whose whole effect is there changes nothing anyone
-observes, and test 3 below types it `test` (or `build`/`ci`) before the
-consumer question is asked.
+The consumer list has a boundary: **ships versus verifies**. What the
+repository uses to verify itself — tests, check legs, fixtures, eval tooling,
+and the dev dependencies of any of them — is seen by the people working on the
+repository, not by a consumer of its shipped product. A change whose whole
+effect is there changes nothing anyone observes, and test 3 below types it
+`test` (or `build`/`ci`) before the consumer question is asked.
+
+Consumers also include people who use infrastructure the repository ships.
+An infrastructure change is not repository administration merely because it
+uses GitHub or OpenTofu; decide from who consumes its effects.
 
 Answer the question first, from the diff, before naming a type. The answer
-decides the type; the diff's shape does not.
+decides the type; the diff's shape does not. Repository settings administer
+the project, not its shipped product. A change whose only effect is such
+administration is `chore`, even when it changes a live setting. When a change
+also affects the shipped product, type it from that shipped effect.
+
+
 
 Repository-local product boundary
 ---------------------------------
@@ -87,6 +95,24 @@ versions. A pull request whose changes are confined to `omp_configs/` is
 therefore always `chore:`, even when an overlay changes which model Omp uses.
 If a pull request also changes shipped files, type the whole pull request from
 the shipped effect under the rules below.
+
+Evals are tests
+---------------
+
+**An evals-only pull request MUST use `test`, NEVER `feat` or `fix`.** Apply
+this boundary before asking whether a capability is new or broken. New eval
+cases, datasets, fixtures, scorers, judges, runners, adapters, model routes,
+and result reporting still verify the product. A new capability in that
+tooling is not a new capability in the shipped product; correcting it is not
+a product bug fix. For example, use `test(evals): add a model comparison
+runner`, not `feat(evals): …`.
+
+Read the whole diff to establish that it is evals-only. The word `evals` in a
+scope or path is not proof. A change confined to a CI workflow definition or
+packaging/build tooling still uses `ci` or `build` under gate 3; it does not
+become a feature because it supports evals. A mixed pull request that changes
+shipped behavior and adds evals takes its type from the shipped effect.
+Neither the number of eval files nor their novelty overrides that effect.
 
 
 The tests
@@ -136,8 +162,16 @@ and nothing below it runs.
    `fix` to shipped code with its tests alongside changes what the thing
    does, and test 4 below types it, tests and all.
 
-Past the gates the behaviour of the shipped thing changes, and the only
+   Where the change's only effect is administering the repository itself,
+   such as changing an existing GitHub repository setting and refreshing
+   its state snapshot, it is `chore`, not `feat` or `fix`. Use a meaningful
+   scope such as `chore(infra): …`. This is a consumer boundary, not a path
+   rule. Infrastructure that provides behavior to the product's users is
+   shipped behavior and continues to gate 4.
+
+Past these gates, the shipped product's behaviour changes, and the only
 question left is `fix` or `feat`. One test settles it:
+
 
 4. **Could the thing already do this, and merely do it wrong?**
 

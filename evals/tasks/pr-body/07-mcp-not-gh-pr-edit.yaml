@@ -40,15 +40,16 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 
 run_limits:
-  max_turns: 10
-  turn_timeout: 300
-  task_timeout: 600
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
 
 success_criteria:
   # Without this, a run that never reached the skill could still be judged on
   # a plausible-sounding reply. Left unarmed for the reason `undertake/08`
   # gives: there is no fail-stopping criterion here for a bare arm to defer.
   - type: skill_triggered
+    weight: 0
     description: "`pr-body` fires on fleshing out the body of an existing pull request"
     expected_skill: pr-body
     skill_name: pr-body

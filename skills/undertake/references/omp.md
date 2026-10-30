@@ -167,67 +167,18 @@ nothing.
 `daily_driver_get_session` call `The session` above uses.
 
 
-The watch is a detached Omp service
-===================================
+Common PR maintenance
+=====================
 
-**The merge is mechanical, so the watch that runs it can be too.** Omp's
-named Bash service owns the process lifecycle. Start the plugin's
-`scripts/pr-keep-current.sh` with `bash` service mode, `name`
-`keep-current-<number>`, its script path and pull-request number as the
-command, and `cwd` set to a checkout of this repository. Prefix the command
-with `printf 'keep-current-started\n'; exec` and set
-`ready: {"log": "keep-current-started"}`. This launch marker is deterministic
-even when the script's first tick produces no output; it means only that the
-service command launched, not that the pull request was updated. `exec`
-preserves the script's exit status as the service status. Service mode rejects
-`async` and `timeout`; do not supply either field. Read `proc://<name>` before
-starting so a resumed session does not restart an existing loop.
+Use [`pr`'s Omp route](../../pr/references/omp.md) for the currency checkpoint,
+detached watch, catch-up look, and cancellation. `Open the draft` starts or
+reuses that watch, including while CI or review is pending. `Ready for review`
+does not start another one.
 
-After readiness, immediately inspect `read proc://<name>`. If it has exited,
-read its logs and report the observed exit instead of requesting persistence or
-calling it durable. Otherwise request `detached` through
-`write proc://<name>/mode` with content `detached`, then confirm
-`read proc://<name>` reports `detached=true`. Detached mode lets the process
-survive broker shutdown and Omp exits. If the mode write fails or the status
-does not confirm it, stop the service with `write proc://<name>/kill` and
-report the exact failure; do not claim the watch is durable.
+The undertaking catch-up look
+-----------------------------
 
-The script runs every two minutes. It reads the pull request's state, merge
-status, and check rollup; skips the tick while a run on the head is in flight;
-merges the base branch in when the branch is behind; and logs each move to
-`proc://<name>`. Read that status and output with `read proc://<name>`.
-
-Its exits are `Keep it current`'s three, and nothing narrower. It exits 0
-when the pull request is merged or closed. It exits 3 on a conflict — the
-call fails and changes nothing, and the stop is left for the session's
-catch-up look below, whose `DIRTY` row restarts the loop once the conflict is
-resolved and pushed. When the user says to stop, use
-`write proc://<name>/kill`. Thirty consecutive failed reads exit 2: a watch
-polling a repository it cannot read is noise, not a watch.
-
-**`daily_driver_schedule` is not this cadence's vehicle.** The managed timer
-is unref'd and cleared on `session_shutdown`, so a cadence it carried lived
-only as long as the session — the failure that left ready pull requests
-behind their bases indefinitely. The CI wait uses `review-cycle`'s bounded,
-persistent named service, not a shell wait.
-
-The catch-up look
------------------
-
-**The first read of every turn that lands back on an open undertaking pull
-request is the base-currency read.** The detached service merges without a
-session, but it does not judge: red CI, a review wall, a conflict, and the
-milestone still need an agent turn. Read the service state and logs with
-`read proc://keep-current-<number>`, then run:
-
-    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
-
-Merged and closed pull requests end continuation. Read `statusCheckRollup` and
-`review-cycle`'s check, status and workflow-run reads before a currency merge; if any
-reports a run in flight, skip that merge. Otherwise `BEHIND`, `DRAFT`,
-`BLOCKED`, and `UNKNOWN` run `gh pr update-branch <number>`, whose own reply
-settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
-`CLEAN` and `UNSTABLE` need no currency action.
+Take the common catch-up look first, then continue this sequence:
 
 **Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
@@ -240,9 +191,8 @@ continuing the ready-gate work. A durable Omp service preserves its process,
 but does not resume the owner: where no owner turn is running, report unfinished
 work and the owner-resume requirement rather than claiming autonomous review.
 
-The detached `keep-current-<number>` merge loop still starts at ready and
-remains mechanical. It is not pre-ready CI supervision and never marks a
-draft ready.
+The common merge loop remains mechanical. It does not assess the gate or
+mark a draft ready.
 
 
 The stop

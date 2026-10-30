@@ -41,14 +41,14 @@ agent:
   allowed_tools: [Bash, Read, Grep, Glob, Skill, Agent, Task]
 
 run_limits:
-  max_turns: 8
+  max_turns: 60
   # `turn_timeout` is the agent's budget; `task_timeout` is the watchdog around
   # the whole evaluation, armed before the turn starts and still running while
   # the criteria are checked. Equal values mean a turn that uses its budget is
   # killed as a TIMEOUT before it can be graded, so `task_timeout` carries
   # headroom on top.
-  turn_timeout: 180
-  task_timeout: 300
+  turn_timeout: 900
+  task_timeout: 1080
 
 success_criteria:
   # The finding itself. Any write of a title on this pull request loses the
@@ -69,12 +69,11 @@ success_criteria:
     # nothing.
     stop_early: {}
 
-  # Without this, a run that did nothing at all scores a pass on the criterion
-  # above. Armed bare, for the reason `evals/README.md` gives: it puts this
-  # criterion in the watcher's pass-capable set, which is what defers the
-  # revert guard's fail-stop until the skill has had its chance to fire.
+  # This check records whether the skill fired. The command criterion alone
+  # guards against reverting the title; a run that does nothing still fails
+  # the behaviour judge in this row.
   - type: skill_triggered
+    weight: 0
     description: "`conventional-commits-type` fires on a moved type"
     expected_skill: conventional-commits-type
     skill_name: conventional-commits-type
-    stop_early: {}

@@ -10,8 +10,7 @@ session actually got.
 **Why a new kind rather than `agent: {type: codex}`.** The registry rejects two
 implementations claiming one kind, and shadowing a built-in would change what
 every other `coder_eval` user's `codex` means. A distinct kind also makes the
-arm's routing readable: `scripts/check-eval-arms.py` maps a pinned `agent.type`
-to the arm tag it must carry, and `codex-daily-driver` names exactly one arm.
+arm's routing readable: `agent.type` and the experiment arm tag must agree.
 
 **The first correction** is `transcript.render_agent_output`, applied to the
 `TurnRecord` this agent hands back. `transcript.py` says what it is for; the
@@ -32,9 +31,7 @@ already detects the spelling Codex does use — a shell read of
 `skills/<name>/` substring the criterion matches on. Adding a mapping would have
 been a rename of something already named.
 
-Nothing here can be exercised without a `coder_eval` install and the Codex SDK,
-which is why so little is here. `scripts/check-codex-agent.py` drives the pure
-half in `make check`.
+Nothing here can be exercised without a `coder_eval` install and the Codex SDK.
 """
 
 from __future__ import annotations

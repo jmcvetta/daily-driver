@@ -7,8 +7,7 @@ by hand, keyed by the model identifier exactly as `omp_configs/*.yml` and an
 experiment's `agent.model` spell it (`<gateway>/<provider>/<model>`, for
 example `vercel-ai-gateway/zai/glm-5.3`).
 
-Pure — no `coder_eval` import, same reasoning as `rpc.py` — so
-`scripts/check-omp-agent.py` can drive it in `make check`.
+Pure — no `coder_eval` import, same reasoning as `rpc.py`.
 """
 
 from __future__ import annotations
@@ -24,9 +23,8 @@ def _default_prices_path() -> Path:
     `[tool.hatch.build.targets.wheel.force-include]` copies the committed
     `evals/coder-eval-omp/prices.json` to `coder_eval_omp/prices.json` at
     build time, so an installed package finds it as this module's own
-    sibling. Running from source (this repo, via `scripts/check-omp-agent.py`
-    and `sys.path`) never runs that build step, so the committed path is
-    tried first and this checkout's is the fallback.
+    sibling. Running from source in this repo never runs that build step, so
+    the committed path is tried first and this checkout's is the fallback.
     """
     installed = Path(__file__).parent / "prices.json"
     if installed.is_file():

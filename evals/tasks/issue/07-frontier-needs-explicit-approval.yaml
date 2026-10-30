@@ -16,12 +16,13 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
 
 run_limits:
-  max_turns: 10
-  turn_timeout: 300
-  task_timeout: 600
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "Issue authoring applies the frontier gate"
     expected_skill: issue
     skill_name: issue

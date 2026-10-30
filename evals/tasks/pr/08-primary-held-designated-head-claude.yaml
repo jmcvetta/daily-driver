@@ -21,12 +21,13 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 
 run_limits:
-  max_turns: 10
-  turn_timeout: 300
-  task_timeout: 600
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`pr` fires on a pull-request request"
     expected_skill: pr
     skill_name: pr

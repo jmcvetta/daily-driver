@@ -65,6 +65,24 @@ assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
 heading list.
 
+`tasks/pr/08-omp-draft-currency.yaml` and `09-omp-resumed-pr-currency.yaml`
+are action-based Omp regressions for ordinary and resumed PR updates. Their
+offline `gh` updates a real local Git branch and fails the case unless the
+agent attempts the update against the PR's base, the resulting head contains
+that base, and all three CI sources are read for the new head rather than
+trusting old-head green evidence. Neither task supplies the update command.
+
+The Omp PR base-currency smoke used `openai-codex/gpt-6-luna` with the
+`omp-gpt-6.1-sol` judge, one replicate per case. The ordinary and resumed PR
+cases each passed both behavior criteria in
+[`17-55-48`](provenance/omp-gpt-6-luna-2026-10-29-2026-10-29_17-55-48.json):
+the actual local branch incorporated its base, and the agent read all three
+CI sources for the new head. The service case passed all three criteria in
+[`18-06-27`](provenance/omp-gpt-6-luna-2026-10-29-2026-10-29_18-06-27.json),
+including starting the keep-current watch after readiness. The bare service
+control did not trigger `undertake`, as expected. These bounded runs test
+workflow behavior; they do not estimate fleet reliability.
+
 `tasks/embark/16`–`18` cover unfinished-work supervision: a green draft still
 needs authorized preparation, a real execution approval does not block
 independent work, and an unchanged real prerequisite earns no duplicate update
@@ -79,6 +97,14 @@ It is a treated-only smoke, not an ablation or an estimate of fleet reliability.
 Every measured figure must cite a committed record under
 [`provenance/`](provenance/). A figure without that citation is an
 **unrecorded** anecdote: its run artifacts are no longer available for audit.
+
+`scripts/check-evals-leaks.py` reports behavior cases the bare variant passes
+without the plugin, as well as cases both variants fail and cases the plugin
+helps. It scores gating behavior criteria and ignores `skill_triggered`;
+a leak is a bare pass rate of at least 80% across three or more attempts.
+`make evals-leaks` reports all records, and `make check-evals-leaks` runs its
+inline classifier self-test. The separate `--check` mode fails on leaks in
+the newest record per experiment, limited to task IDs that still exist.
 
 Every record also carries a `cases` list, one row per task per repeat.
 `scripts/evals-render-routes.py` reads every committed record's `cases` and
@@ -159,7 +185,7 @@ no metered Anthropic key, and none is acquired. So no `ANTHROPIC_API_KEY`, no
 `AWS_BEARER_TOKEN_BEDROCK`, and no new `llm_judge` criterion: `llm_judge`
 calls the API directly and cannot run here. Write judges as `agent_judge`, with
 `allowed_tools: []`, `permission_mode: default` and the `disallowed_tools`
-list that `scripts/check-agent-judges.py` enforces. `allowed_tools: []` alone
+list of denied tools. `allowed_tools: []` alone
 hides nothing: a judge without the list reads the sandbox, times out, and
 scores 0.0 with no verdict.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
@@ -181,6 +207,10 @@ make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Real money.
 ```
+`REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
+example `make evals-run REPEATS=1`. When unset or empty, the experiment default
+is used.
+
 
 Claude plugin variants also load the official Worktrunk plugin from the pinned
 Git submodule at `evals/dependencies/worktrunk`. `make evals-install` and
@@ -296,8 +326,8 @@ being asked is about collisions rather than about the no-fire cases as such.
 
 Not part of `make check`. The cases need a live model and this repository's CI
 is deliberately credential-free. What *is* part of `make check` is
-`check-eval-fixtures`, which builds every review-depth fixture repository with
-nothing but git — see "The git problem" below for why that leg exists.
+no test tooling target covering this fixture-build leg; see "The git problem"
+below for why the fixtures are built from nothing but git.
 
 **`llm_judge` is not an alternate credential route.** It calls Anthropic's
 metered API, which this project does not use. `make evals-run` rejects every
@@ -495,8 +525,8 @@ for (`include_agent_output`, `include_tool_calls`, `include_dialog`), marked
 untrusted, and nothing else: `omp --no-tools` with every discovery switch off, in
 an empty directory, in a throwaway home that borrows only the provider files
 `coder_eval_omp.home` lists. A criterion that attaches `files:` or the reference
-cannot be judged that way and is refused, not degraded. `make check-agent-judges`
-asserts the command line and the prompt, as it asserts the Claude denylist.
+cannot be judged that way and is refused, not degraded. The judge's command line
+and prompt must preserve this boundary, as must the Claude denylist.
 
 **Errors are not scores.** A judge that is unreachable, times out, or returns
 anything but exactly one verdict object (`score` in [0, 1], `rationale`,
@@ -531,8 +561,8 @@ labels or the rule and it is a new set with a new `set_id`.
 Two further sets, `undertake-17-truthful-mock-v1` and
 `undertake-14-resume-explanation-v1`, hold hand-labelled expectations for the
 corrected row-17 and row-14 rubrics (select one with `calibrate --dir`). They are
-**unmeasured**: no judge has run on them, and `check-evals-judge` verifies only their
-shape and that row 17's mock starts nothing. Measuring them needs separate
+**unmeasured**: no judge has run on them, and their schema and row-17 mock
+behavior are documented here. Measuring them needs separate
 authorization and a new measurement identity.
 
 ### `base-vs-candidate`: does a constitution change move a row
@@ -600,8 +630,8 @@ It also carries one of the two rows here that grade behaviour rather than
 triggering: `07-wait-for-ci-is-not-a-sleep`, which enters the round with CI
 still running and asserts that no shell `sleep` was run. `Bash` is open on
 purpose — a negative control on a tool the model was never offered passes
-vacuously — and both criteria are armed bare, the positive included, for the
-reason the arming paragraph below gives. What the row cannot grade is the
+vacuously — and only the negative command criterion is armed: the firing
+criterion is informational (`weight: 0`). What the row cannot grade is the
 loop `How to wait` prescribes in the sleep's place: reading the checks needs
 the GitHub MCP and waking needs a surface that can wake itself, and the
 sandbox is neither. It grades the failure, not the fix.
@@ -617,6 +647,22 @@ to show. The same half is ungradeable: that the disagreement is raised and
 waited on needs a live pull request and someone to answer. It grades the
 revert, not the asking.
 
+The informational firing criterion also means these cases can receive their
+remaining weighted score on a no-op trajectory: the negative command checks in
+`conventional-commits-type/07` and `review-cycle/07` do not require a positive
+action, and `stand-down/03`'s judge does not require one when no disallowed
+action occurs. They remain an observed limitation of this change; their firing
+gate is not restored here.
+
+Run the evals-only title regression through both title skills with:
+
+```sh
+make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+  TASKS='tasks/pr-title/09-evals-only-are-tests.yaml'
+```
+
+It checks new and corrected eval tooling, mixed product-and-eval changes,
+CI/build-only changes, and an existing title written by another actor.
 `undertake/` asks the same question of a skill with two ways in. `Open the
 issue` opens one for work that has none, so an issue reference no longer has
 to be present for the skill to fire — and what fires it is now either an issue
@@ -652,7 +698,9 @@ access gap and before a real human action, credentialed cloud execution, an
 available authorized-agent handoff, a missing-handoff prerequisite, stale
 versus still-outstanding Tofu apply blockers on resume, a tool missing on
 resume that the documented setup target installs, and PR-body maintenance
-from undertaking evidence.
+from undertaking evidence. Their prompts are the request a user would make,
+naming the situation and pointing at the fixture; the expected handling lives
+in the criteria, so a bare run does not pass them by following the prompt.
 Run only this focused set with the documented
 `make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
 route after its `evals-plan`; the normal project checks remain CI's gate.
@@ -670,29 +718,29 @@ current head, before a ready write counts; it publishes a `First-readiness
 report` only when a read after the ready write affirms `CLEAN`; and it rejects a
 `Review record` in place of the notice, a notice written before the reads, a
 missing re-read, a new review round for a clean merge, and a duplicate or
-premature report. The service verifier needs a launch observed alive and stops
-whatever the run left behind. The judges now receive the tool calls
+premature report. Every valid transition and invalid case described here is an
+offline fixture scenario. The service verifier needs a launch observed alive and
+stops whatever the run left behind. The judges now receive the tool calls
 (`include_tool_calls`) and score a failed call as an observed limit that earns
-no completed-action credit. `skill_triggered` remains the activation
-criterion; read it separately from the behavioural criteria, because a run that
-only triggered the skill has not completed the workflow. Weights are kept.
-`scripts/check-undertake-readiness.py` (`make check-undertake-readiness`, part
-of `check-eval-tooling`) asserts offline that every valid transition passes and
-every invalid one — including approval-blocked and unknown post-ready states, a
-refused ready write, failed reads, CI on another head, a pre-merge notice that
-still covers a clean merge and one that does not cover a content change, and an
-exited service — fails. It does not test model judgment. These rows are a new,
+no completed-action credit. `skill_triggered` remains the activation criterion;
+read it separately from the behavioural criteria, because a run that only
+triggered the skill has not completed the workflow. These rows are a new,
 unmeasured instrument: no subject, judge or calibration run has recorded them,
 and the committed results for the previous rows are untouched.
 
+The Omp PR currency case uses `currency-stale`: the draft's base has advanced,
+the old head is green, and the verifier requires `gh pr update-branch` to merge
+the base into the actual local Git head before CI is read for the new head.
+`scripts/test-pr-keep-current.py` separately runs the real two-minute watch
+against an offline `gh` client, covering updates, the in-flight floor, conflicts,
+update failures, current branches, and merged or closed PRs.
 One collision is asserted from the other side. `pr/02-open-a-pr.yaml` carries an
 `undertake` distractor, because "get it to a pull request" is in `undertake`'s
 register too and the only thing separating them is that the prompt has no issue
-to undertake. Its `pr` criterion is armed bare rather than
-pass-stopped for that reason: a pass-stop there would end the run the moment
-`pr` fires and the distractor would pass vacuously, while the bare arm keeps
-that criterion pass-capable so the distractor's fail-stop stays deferred. The reverse assertion is absent on purpose — `undertake` invokes
-`pr` at `Open the draft`, so `pr` firing on an undertake prompt is correct.
+to undertake. Its `pr` criterion is armed bare rather than pass-stopped for
+that reason: a pass-stop there would end the run the moment `pr` fires and the
+distractor would pass vacuously, while the bare arm keeps `pr` at `Open the
+draft`, so `pr` firing on an undertake prompt is correct.
 
 `deps/` asks where the line falls between a bulk upgrade and one dependency.
 `01` is the slash command and `02` is the register the skill was written for —
@@ -823,6 +871,11 @@ Such a row also has nothing pass-capable beside it, so its `stop_early: {}` is
 armed for the other reason — a misfire has already lost the row, and there is
 no recall decision left for a fail-stop to pre-empt.
 
+Behaviour rows grade the reply, so their `skill_triggered` criterion is
+informational: give it `weight: 0`. Trigger-accuracy rows grade whether the
+skill fired, so that criterion remains gating. When both tags are present, the
+trigger-accuracy tag takes precedence and keeps the firing criterion gating.
+
 ## Both arms, every criterion
 
 Every criterion is scored under both variants: `bare` (nothing loaded) and
@@ -830,7 +883,11 @@ Every criterion is scored under both variants: `bare` (nothing loaded) and
 with the plugin, 0 without it, because without it there is no skill to fire —
 and a number reported for the treated arm alone has nothing to compare itself
 to. In the old format this took an explicit `arm: both` on every grader;
-`coder_eval` does it by construction.
+`coder_eval` does it by construction. On behaviour rows, `skill_triggered`
+records whether the skill fired but does not gate the result (`weight: 0`).
+On trigger-accuracy rows it keeps its default positive weight and gates. When
+both tags are present, trigger-accuracy takes precedence, so the firing
+criterion keeps its gate.
 
 `repeats` is **5**, set explicitly, because `coder_eval` defaults it to 1. One
 replicate of a non-deterministic agent is an anecdote. Even 3-of-3 — what the
@@ -915,12 +972,18 @@ distractor is armed bare (`stop_early: {}`) — a misfire has already lost the
 row, so there is nothing left to pay for — **and so is the positive criterion
 beside it**, which is the part that is easy to get backwards.
 
+On behaviour rows, `skill_triggered` is informational and is not armed as a
+gate; this keeps a missing skill from making an otherwise correct behaviour
+fail. Trigger-accuracy rows keep the firing criterion armed. When a row has
+both tags, trigger-accuracy takes precedence and the firing criterion remains
+gating.
+
 On the trigger suites this is free. On `review-depth`'s no-fire row it is not,
 and that row says so: the fail-stop is deferred while the pass-capable `pr`
 criterion is undecided, so on the very trajectory the row exists to catch —
 `review` fires, `pr` never does — nothing decides it, the stop never comes, and
 the run pays for a full reviewer panel up to its turn cap. Recall is worth that
-there; `max_turns` is what bounds the bill.
+there; the turn ceiling is the backstop on the bill.
 
 Arming the positive cannot truncate anything: a bare `stop_early: {}` leaves
 `on_pass` at its default `continue`. What it does is put the criterion in the
@@ -1195,10 +1258,9 @@ prose. A `PreToolUse` hook that exits non-zero *blocks* the tool call, so a
 recorder that failed would not merely lose the roster — it would veto every
 dispatch, in both arms, and report a routing table that dispatched nobody. The
 hook command is therefore absolute (via `$CLAUDE_PROJECT_DIR`, which Claude Code
-puts in every hook's environment) and ends in `|| true`. And because `|| true`
-would then hide a genuinely broken recorder behind an empty roster,
-`scripts/check-eval-fixtures.sh` runs the recorder against the copy the sandbox
-would get and fails `make check` if it does not record.
+puts in every hook's environment) and ends in `|| true`. Because that can hide a
+broken recorder behind an empty roster, keep its expected output visible in
+fixture review.
 
 The hook also writes nothing to stdout, so it cannot contest the `updatedInput`
 returned by the plugin's own `PreToolUse` hook on the same event.
@@ -1218,11 +1280,9 @@ enforced rather than asked for:
   and `sensitive-tiny.sh` names the routing rule being graded as loudly as any
   comment would.
 - **No fixture file contains the substring `skills/`.**
-  `scripts/check-eval-fixtures.sh` greps for it, because `skill_triggered`
+  Fixture review must preserve this rule because `skill_triggered`
   counts such a path in any tool parameter as engaging that skill — so a fixture
   carrying one would score as a skill firing the moment the agent read the file.
-  (The check found its first offender immediately: a comment explaining the
-  rule.)
 
 **None of this is a boundary, and it should not be described as one.** The suite
 runs on the default `driver: tempdir`, where `coder_eval`'s own note is that
@@ -1253,7 +1313,7 @@ does not fail — it re-routes, and then measures a depth it was not written for
 `01`, `02` and `03` are over ~50 on purpose (under it they route to Skim on size
 alone, whatever bucket their paths land in); `04` is over ~800; `05` and `06`
 are deliberately under ~50, because "tiny and still reviewed" is the whole
-claim. `scripts/check-eval-fixtures.sh` holds those bounds and fails on drift.
+claim. Keep those bounds when changing fixtures.
 
 ### The git problem
 
@@ -1280,9 +1340,8 @@ suite measures), commit a base tree, publish it to a bare `origin` under
 `review` stops at "Local changes not pushed" when the branch is ahead of its
 remote, and would never reach the routing decision under test.
 
-`scripts/check-eval-fixtures.sh` builds all six and asserts that shape. It runs
-in `make check` because it needs only git and bash — and because a fixture that
-stops building does not turn the suite red, it turns every case into a silent 0.
+The six fixture scripts build that shape from git. A fixture that stops building
+does not turn the suite red; it turns every case into a silent 0.
 
 These cases run in **Local mode**: there is no GitHub MCP in the sandbox, so the
 pull-request lookup finds nothing and the skill assembles the diff from git.
@@ -1293,6 +1352,11 @@ The same suites and plugin run Omp subjects with paired `bare` and
 `with-plugin` variants. GLM 5.3 Flash is the tier probe beside full GLM.
 The committed GPT 6 Sol and Luna experiments use their Codex provider routes.
 Their historical gateway records remain unchanged.
+The DeepSeek experiments pin the newest dated Pro and Flash catalog entries and
+restrict each to DeepSeek's first-party upstream; a missing route fails instead
+of falling back to another provider. The older DeepSeek result does not
+establish whether quantization caused its poor score. Both experiments require
+a separately authorized live run before any serving or quality claim.
 `docs/notes/0013-the-omp-arm.md` records the adapter decision.
 
 Only a Claude judge requires a Claude Code execution session for an Omp
@@ -1318,7 +1382,8 @@ fail.
 ```sh
 make evals-run-omp-glm-5-3                    # GLM 5.3 only
 make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
-make evals-run-omp-deepseek-v4-pro            # DeepSeek v4 Pro only
+make evals-run-omp-deepseek-v4-pro            # DeepSeek V4 Pro 0813 only
+make evals-run-omp-deepseek-v4-1-flash        # DeepSeek V4.1 Flash 1017 only
 make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol via openai-codex
 make evals-run-omp-gpt-6-luna                 # GPT 6 Luna via openai-codex
 make evals-run-omp-gpt-6-sol                  # GPT 6 Sol via openai-codex
@@ -1333,7 +1398,8 @@ must configure it. Every GPT subject, judge, and helper call must use
 | --- | --- |
 | `omp-glm-5.3.yaml` | `vercel-ai-gateway/zai/glm-5.3` |
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
-| `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
+| `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro-0813` |
+| `omp-deepseek-v4.1-flash.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
 | `omp-gpt-6-sol.yaml` | `openai-codex/gpt-6-sol` |
 | `omp-gpt-6-luna.yaml` | `openai-codex/gpt-6-luna` |
@@ -1345,6 +1411,30 @@ Omp home and writes nothing back into it. It does not borrow `config.yml`: the
 throwaway home gets its own, which pins every Omp chat role to the arm's
 `model`. Unpinned, Omp's subagents and helper calls would run on whatever the
 provider catalog offers.
+
+**The DeepSeek arms allow one upstream.** Each names `vercel_gateway_only:
+[deepseek]`, and the adapter writes that into the throwaway home's `models.yml`
+as `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
+vercelGatewayRouting.only`. Omp sends it as the request's
+`providerOptions.gateway.only`, so an unavailable DeepSeek upstream fails
+rather than being served by another provider; `order` alone would not, and a
+`deepseek/...` model id is not evidence of which upstream answered. The merge
+replaces the selected model's allowlist instead of unioning it with the
+operator's, keeps every unrelated provider, credential and compatibility
+setting, and swaps the borrowed symlink for a private file so
+`~/.omp/agent/models.yml` keeps its content and target. Omp's catalog gives
+every gateway model the `anthropic-messages` transport, which never serializes
+the routing block, so a restricted model also selects `api:
+openai-completions` — the transport Omp applies `providerOptions.gateway` on.
+The adapter also
+clears `PI_CONFIG_DIR`, `OMP_PROFILE`, `PI_PROFILE` and `PI_CODING_AGENT_DIR`
+for the child, because each relocates Omp's configuration or agent directory
+and would silently bypass the throwaway home. A non-Vercel selector, an empty
+allowlist, an invalid slug, a selected model that names an alternate model in
+its override or `models:` definition, or an inherited `compat.extraBody` that
+sets `model` or `providerOptions` is refused before Omp starts. None of this
+proves which upstream served a request: that needs a separately authorized
+live run.
 
 ### Running an Omp arm
 
@@ -1401,8 +1491,8 @@ rows cannot be graded identically on Claude Code and Oh My Pi, so each is two
 files tagged `claude-only` and `omp-only`, with `-omp` on the second's
 `task_id`. `make evals-run` excludes `omp-only`; every `make evals-run-omp-*`
 target excludes `claude-only` and `codex-only`; and with the Codex arm each
-also excludes `codex-only`. `make check-eval-arms` holds the sets, model files,
-variant pair and Make targets in step.
+also excludes `codex-only`. Keep these sets, model files, variant pairs and
+Make targets in step.
 
 | Suite | Claude-only row | Omp counterpart |
 | --- | --- | --- |
@@ -1419,9 +1509,9 @@ variant pair and Make targets in step.
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-session-id-omp` |
 | `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-omp` |
 
-Each Omp row names its sibling with a `forks:<task_id>` tag, which is what
-`check-eval-arms` pairs. The seven `review-depth` rows remain `claude-only`
-because they drive Claude's settings and dispatch hook.
+Each Omp row names its sibling with a `forks:<task_id>` tag. The seven
+`review-depth` rows remain `claude-only` because they drive Claude's settings
+and dispatch hook.
 
 **`plan` does not fail on a broken arm.** With no plugin installed,
 `coder-eval plan` prints a resolution failure and exits 0. `make evals-plan`
@@ -1458,8 +1548,8 @@ into `<cwd>/.agents/skills/`, and records `commandExecution` as `Bash` with its
 command string. What it does not do is build the `[RESULT - …]` transcript, and
 every rubric here anchors on that tag and scores 0.0 without it. Point the
 experiment at `codex` and the suite runs, costs money, and reports zeros that
-read exactly like a plugin that never loaded — so `make check-eval-arms` reads
-each experiment's variants against the arm table and refuses that spelling.
+read exactly like a plugin that never loaded. Keep each experiment's variants
+consistent with the arm tags.
 `coder-eval-codex/` is the built-in subclassed; its README says what it adds and
 why.
 
@@ -1708,12 +1798,6 @@ split, the class and elapsed reads, and `task_timeout` derivation. No
 standalone CI check repeats them: the builder runs them before every
 invocation, so a defect in it surfaces on its next run.
 
-`scripts/check-eval-arms.py` treats `model-classes` as a fourth arm that
-owns both the `omp` and `claude-code` kinds — it measures a model, not a
-harness — so the agent kind alone cannot say which arm a row belongs to; the
-`model-classes` tag is what does. The checker discovers
-`classes-*.yaml` experiments inside the eval suite and requires each to pin
-its model. Personal Omp configuration is not an input to this check.
 
 ## Two defaults, decided on purpose
 
@@ -1739,6 +1823,80 @@ One to know about and not fix here: `coder_eval` calls
 `ANTHROPIC_API_KEY` included. A stale `.env` in the working directory is a
 surprising way to run a suite against the wrong account.
 
+## Turn and time ceilings
+
+`run_limits` holds three numbers, and each is a runaway guard. None is a
+target, a quota or a performance goal.
+
+- `max_turns` is the SDK's cap on agent turns. A session that reaches it is
+  stopped, and its record ends `MAX_TURNS_EXHAUSTED` with an empty
+  `[RESULT - ERROR]` marker instead of a reply.
+- `turn_timeout` is the agent's wall-clock budget.
+- `task_timeout` is the watchdog around the whole task, grading included. It
+  must exceed `turn_timeout` by at least the grading window.
+
+A ceiling exists to stop futile execution. It must never be the reason a
+valid workflow fails. A compliance case measures the requested behaviour, not
+whether a model can compress skill discovery, state inspection, the action,
+recovery and verification into a small budget. A case need not use its
+allowance, and a short run is not evidence that the ceiling was too high.
+
+**The limits.** The behaviour cases that the #662 measurements run
+(#665, #666, #667 and #689) use `max_turns: 60` and `turn_timeout: 900`. Their
+`task_timeout` is `turn_timeout` plus the case's grading window, which is never
+less than 180 seconds, so a case with several judge calls keeps its room. The
+Claude experiment defaults in `experiments/with-without.yaml` and
+`experiments/base-vs-candidate.yaml` use `60`, `900` and `1080`.
+
+Other cases keep their own limits: the cheap trigger-accuracy cases, where a
+skill that has fired or not fired ends the run, and any behaviour case outside
+those issues. A run that includes such a case is not a corrected-policy
+measurement of it. Raise its limits first. The Omp and Codex arms keep their
+own limits, and `OMP_RUN_LIMITS` in the `Makefile` overrides them.
+
+**Why 60.** A workflow that reads the gate, acts, recovers from an error and
+verifies uses a small multiple of its minimum tool-call count. A cap near that
+minimum leaves no room for discovery or recovery. 60 is twice the 30 that the
+Omp arms use. It is not tuned to the shortest successful attempt. A ceiling
+this high only costs money in a session that is already lost.
+
+**Timeouts move with it.** A tight timeout would replace a tight turn budget
+without a word, so the turn timeout is 900 seconds and the task timeout keeps
+the grading window above it. `plan` warns that `task_timeout` exceeds
+`turn_timeout`. That is deliberate.
+
+**What a ceiling does not fix.** A larger cap does not repair a fixture, a
+policy-discovery gap or plugin visibility. These stay open and are not
+represented as fixed here:
+
+- The shared readiness fixtures (`ready-clean`) say master was merged when
+  setup does not merge it. They require a test that setup never commits.
+- The auto-files cases can search host directories for policy and read a stale
+  installed copy. The local `daily-driver` stub answers every invocation,
+  `--help` included, with the same error.
+- A treated `undertake/11` reply once said the `undertake` skill was
+  unavailable although the recorded plugin roots were present. The cause is
+  unresolved. Offline discovery finding the skills does not show that an SDK
+  session loaded them.
+
+**Reading results.** Report three outcomes apart: execution-limit outcomes
+(`MAX_TURNS_EXHAUSTED`, `TIMEOUT`, an `ERROR` with no reply), completed
+behavioural outcomes, and fixture faults. An exhausted or empty attempt is an
+incomplete measurement. It is never a behavioural failure and never a pass.
+Do not raise a ceiling and retry until green.
+
+**The baseline.** A run made under older, tighter limits is a historical
+diagnostic. Keep its artifacts in `evals/runs/`. Do not resume it, fill its
+unused slots or mix its outcomes with a corrected-policy run. A measurement
+starts from a fresh run directory and needs its own bounded approval, naming
+the source and plugin revisions, cases, variants, repeats, effective limits,
+the native Claude Code route and the stop condition. Check the effective
+limits first. `make evals-plan` calls no model, but it only validates and
+warns; it does not print `max_turns`. Resolve the numbers with `coder-eval`'s
+own `resolve_task_for_variant`, once per variant, which also calls no model.
+Keep `GH_TOKEN` and `GITHUB_TOKEN` unset, and keep controller-only
+`BASH_DEFAULT_TIMEOUT_MS` and `BASH_MAX_TIMEOUT_MS` out of the subject.
+
 ## Cost
 
 `plan` warns on every task here that `task_timeout` exceeds `turn_timeout`.
@@ -1753,7 +1911,7 @@ and the fire half stops the moment the skill fires. `review-depth` is not: its s
 cases each dispatch a real reviewer panel over a real diff, five times, in the
 `with-plugin` arm. The `bare` arm is cheaper but not free: it has no `review`
 skill and none of the plugin's reviewer agents, but it keeps the `Agent` tool
-and thirty turns, so a session that decides to review the diff by hand can
+and its turn ceiling, so a session that decides to review the diff by hand can
 still spend. Its no-fire case pays for a panel too, on exactly the trajectory
 it is trying to catch. Run one suite at a time with
 `TASKS=` while iterating, and keep `make evals-plan` between edits, where the

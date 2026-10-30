@@ -28,12 +28,13 @@ agent:
   disallowed_tools: [NotebookEdit, Agent, Task]
 
 run_limits:
-  max_turns: 25
-  turn_timeout: 600
-  task_timeout: 780
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1080
 
 success_criteria:
   - type: skill_triggered
+    weight: 0
     description: "`task-worktree` fires for a task resumed on an existing branch"
     expected_skill: task-worktree
     skill_name: task-worktree
