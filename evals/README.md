@@ -205,6 +205,10 @@ make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
 ```
+`REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
+example `make evals-run REPEATS=1`. When unset or empty, the experiment default
+is used.
+
 
 Claude plugin variants also load the official Worktrunk plugin from the pinned
 Git submodule at `evals/dependencies/worktrunk`. `make evals-install` and
