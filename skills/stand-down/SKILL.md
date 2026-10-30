@@ -5,12 +5,13 @@ description: >-
   because work must stop — when the user says "/stand-down", "stand down",
   "stop work", "wrap up", or is putting the machine away, and whenever an
   embark must end for any reason short of the last wave coming in. Supplies
-  the wrap-up that secures every implementor's work-in-progress — commit and
-  push — before the handoff it writes: one comment per task issue at sea and
-  one roll-shaped stand-down comment on the epic. Then the stop and archive
-  of every implementor, the cancellation of the orchestrator's own watches,
-  and the banner that says stopping is safe. Runs fast by design: parallel
-  batches, no polls, one bounded wrap-up wait, one bounded retry anywhere.
+  the cancellation of the orchestrator's own watches first, then the wrap-up
+  that secures every implementor's work-in-progress — commit and push —
+  before the handoff it writes: one comment per task issue at sea and one
+  roll-shaped stand-down comment on the epic. Then the stop and archive of
+  every implementor and the banner that says stopping is safe. Runs fast by
+  design: no `embark` work from the invocation on, parallel batches, no
+  polls, one bounded wrap-up wait, one bounded retry anywhere.
   Not for the watch ending because the epic is worked out — `embark` reports
   that itself — and not for a single issue, which has no fleet to stand down
   and whose stop is `undertake`'s `The stop`.
@@ -42,6 +43,22 @@ answer awaited from an implementor: messaging here is one way, and what the
 wait watches for is a turn ending, not a reply. Anything slower than that is
 a residual the banner reports, never a further wait.
 
+**Stopping starts at the invocation.** From the moment this skill fires, this
+session does none of `embark`'s work: no landing, no recovery, no nudge, no
+answer to an implementor's report, no review, and no CI fix. A wake that
+arrives during the stand-down or after the banner is dropped with a one-line
+note. That covers a backstop, a pull-request event, a CI result on a
+work-in-progress push, a child-session event, and an implementor's report.
+Harness guidance to drive a watched pull request green does not restart the
+watch: the user asked to stop, and the harness itself says to stop following
+up when the user asks.
+
+**Load only what the stop needs.** That is this file, the reference for the
+harness in use, and `provenance` for the block each write carries. `embark`,
+`epic` and `issue-deps` own what this skill reads, but they are not loaded to
+stand down: the muster rolls and claims are read as written, and the
+reference names every call.
+
 **The routes are per harness, and they live beside this file.** Every call
 the steps below need is named in words here and resolved to a route there:
 [`references/claude.md`](references/claude.md) for Claude Code,
@@ -61,10 +78,10 @@ The sequence
 | # | Step | Owner |
 | - | ---- | ----- |
 | 0 | `Read the fleet` | this skill, `embark` |
-| 1 | `Secure the work` | this skill |
-| 2 | `Write the handoff` | this skill |
-| 3 | `Stop the fleet` | this skill |
-| 4 | `Cancel the watches` | this skill |
+| 1 | `Cancel the watches` | this skill |
+| 2 | `Secure the work` | this skill |
+| 3 | `Write the handoff` | this skill |
+| 4 | `Stop the fleet` | this skill |
 | 5 | `Print the banner` | this skill |
 
 0 — Read the fleet
@@ -86,12 +103,30 @@ record alone.
 The reads run in one parallel batch. No full comment histories are paged:
 the rolls and the claims carry what this step needs.
 
-**No epic, or an epic with nothing at sea, is not an error.** `Print the
-banner` runs immediately, with the count of what was stood down at zero and
+**No epic, or an epic with nothing at sea, is not an error.** `Cancel the
+watches` still runs, because a backstop or a subscription can outlive the
+last implementor. Then `Print the banner` runs, with the count of what was stood down at zero and
 the reason named — the invocation is a stop instruction, and the answer to
 it is the stop.
 
-1 — Secure the work
+1 — Cancel the watches
+----------------------
+
+First, so nothing wakes this session back into `embark`'s work while the
+stand-down runs. The CI that `Secure the work`'s pushes start is the common
+case: left subscribed, each result would arrive as a pull-request event
+during the wrap-up wait. Fire-and-forget, by the identifiers the record holds,
+in one parallel batch, sent with `Secure the work`'s interrupts: the backstop
+timer behind the wake slot, any persistent watcher a CI wait left running,
+and every pull-request subscription the watch subscribed. Their identifiers
+go in the epic's stand-down comment at `Write the handoff`, so a reader can
+see what was silenced as well as what was stopped.
+
+A cancel that fails is a residual for the banner, not a wait. The
+orchestrator's own session ends at the banner regardless: no wake is
+re-armed, and no check-in restarted.
+
+2 — Secure the work
 -------------------
 
 Before the handoff is written, so its branch line describes what actually
@@ -102,9 +137,12 @@ more than the one deadline below.
 
 **Web sessions (Claude Code).** Interrupt the session, then address it the
 way `embark`'s `Recover a session` addresses a correction — the address the
-muster roll records — with the wrap-up: commit everything in progress and
-push it, then end the turn without starting anything else. Normally the task
-branch is both local and remote. For the primary-held designation mapping,
+muster roll records — with the wrap-up: cancel its own wake timer and
+pull-request subscriptions, commit everything in progress and push it, then
+end the turn without starting anything else. `undertake`'s `The wrap-up` is
+what the session obeys, and the reference file names what the message must
+say so that a session that does not reread that section still stops.
+Normally the task branch is both local and remote. For the primary-held designation mapping,
 commit on the local execution branch and push to the recorded remote push
 branch with its configured non-force upstream/refspec. Never push or open a
 PR for the local-only name.
@@ -145,7 +183,7 @@ already committed even where this step adds nothing new.
 residual.** Named in the banner, the same as any other; nothing here retries
 past the one bounded attempt.
 
-2 — Write the handoff
+3 — Write the handoff
 ---------------------
 
 After the work is secured, so the record describes the pushed tip rather
@@ -237,12 +275,13 @@ at-sea status from.
 re-run, not duplicated, and the writes are idempotent one by one: a handoff
 comment already on a task issue is not posted twice, and a stand-down
 comment already on the epic is not posted again. A `## Handoff —` comment
-that `undertake`'s `The stop` posted, after the latest claim and naming the
-current pushed head, counts as the handoff already present. `Write the handoff` writes
+that `undertake`'s `The stop` posted, after the latest claim (or anywhere, when
+the issue has no claim comment) and naming the current pushed head, counts as
+the handoff already present. `Write the handoff` writes
 only what is missing, and a record that is complete sends this step
 straight to the stops.
 
-3 — Stop the fleet
+4 — Stop the fleet
 ------------------
 
 Everything in one parallel batch, and nothing polled beyond `Secure the
@@ -267,20 +306,6 @@ chance to: that is `Secure the work`'s job, done before this step runs. What
 survives an implementor that missed its wrap-up window is exactly what
 reached origin by then — named as a residual, never softened into an
 accepted loss.
-
-4 — Cancel the watches
-----------------------
-
-Fire-and-forget, by the identifiers the record holds, in one parallel
-batch: the backstop timer behind the wake slot, any persistent watcher a
-CI wait left running, and every pull-request subscription the watch
-subscribed. Their identifiers go in the epic's stand-down comment —
-written there at `Write the handoff`, when they are known — so a reader
-can see what was silenced as well as what was stopped.
-
-A cancel that fails is a residual for the banner, not a wait. The
-orchestrator's own session ends at the banner regardless: no wake is
-re-armed, and no check-in restarted.
 
 5 — Print the banner
 --------------------

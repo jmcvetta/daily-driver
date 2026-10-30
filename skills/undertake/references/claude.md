@@ -289,3 +289,8 @@ The stop
 
 The pushed head is `git rev-parse HEAD` after a push that succeeded, and the
 last head `git ls-remote origin <branch>` reports where it did not.
+
+`The wrap-up`'s `End the watch` uses the same two cancel rows, before its
+push. Neither is skipped because the orchestrator archives this session next:
+a `send_later` trigger survives the session that armed it, and an archive
+that fails leaves the subscription live.
