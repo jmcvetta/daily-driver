@@ -41,11 +41,22 @@ ensure_worktrunk() {
 		}
 		install_bin="${brew_prefix}/bin"
 	elif command -v cargo >/dev/null 2>&1; then
-		if ! cargo install --locked worktrunk; then
+		if cargo install --locked worktrunk; then
+			install_bin="${CARGO_HOME:-${HOME}/.cargo}/bin"
+		elif command -v rustup >/dev/null 2>&1; then
+			if ! rustup update stable; then
+				printf 'Worktrunk installation failed: rustup update stable returned a failure.\n' >&2
+				return 1
+			fi
+			if ! cargo +stable install --locked worktrunk; then
+				printf 'Worktrunk installation failed: cargo +stable install --locked worktrunk returned a failure.\n' >&2
+				return 1
+			fi
+			install_bin="${CARGO_HOME:-${HOME}/.cargo}/bin"
+		else
 			printf 'Worktrunk installation failed: cargo install --locked worktrunk returned a failure.\n' >&2
 			return 1
 		fi
-		install_bin="${CARGO_HOME:-${HOME}/.cargo}/bin"
 	else
 		printf 'Worktrunk is unavailable: install it with Homebrew (brew install worktrunk) or Cargo (cargo install --locked worktrunk), then retry.\n' >&2
 		return 1

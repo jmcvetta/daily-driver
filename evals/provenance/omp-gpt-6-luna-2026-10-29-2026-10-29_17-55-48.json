@@ -1,0 +1,530 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`pr` fires while the existing pull request is updated",
+          "details": "observed='no', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request contains its base update and CI is assessed on the new head",
+          "details": "Command: python3 .fixture/verify.py currency\nExit code: 1 (expected: 0)\nStdout:\nFAIL: expected one successful base update attempt, saw 0\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "pr-08-omp-draft-currency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`pr` fires while the existing pull request is updated",
+          "details": "observed='yes', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request contains its base update and CI is assessed on the new head",
+          "details": "Command: python3 .fixture/verify.py currency\nExit code: 0 (expected: 0)\nStdout:\nok: currency invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-08-omp-draft-currency",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a ready pull request kept current",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The keep-current service was launched for PR 25 and observed alive",
+          "details": "Command: python3 .fixture/verify.py service\nExit code: 0 (expected: 0)\nStdout:\nok: service invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "A watch that survives the session is armed and its detachment is confirmed",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A watch that survives the session is armed and its detachment is confirmed",
+            "duration_seconds": 9.61,
+            "findings": [
+              "The initial launch failed because ready required a log or port; the subsequent launch succeeded as pr25-keep-current, not keep-current-25.",
+              "The proc inspection succeeded but did not report detached mode.",
+              "No write to a service mode endpoint or confirmation of detachment appears in the calls.",
+              "The final reply says the script exited with status 0 and does not name a surviving process."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a55ac54fcee9af5386493e9e94b04054718e0c08479ca251ba5d4c629cf4bcbd",
+            "rationale": "ANCHOR: result. The calls show a launched and inspected service, but no detached-mode write or confirming read; the reply reports an exited script rather than a running, detached watch. This does not establish the required surviving watch.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2016,
+              "output": 184
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "59ac6749e0729d0357257002e5ce695956cd6ee15e00f736c06d82891276d9cd"
+      },
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.8,
+      "replicate_index": 0,
+      "task_id": "undertake-08-cadence-stops-at-ready-omp",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a ready pull request kept current",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The keep-current service was launched for PR 25 and observed alive",
+          "details": "Command: python3 .fixture/verify.py service\nExit code: 1 (expected: 0)\nStdout:\nFAIL: the service was started more than once\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "A watch that survives the session is armed and its detachment is confirmed",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A watch that survives the session is armed and its detachment is confirmed",
+            "duration_seconds": 7.04,
+            "findings": [
+              "Named service keep-current-25 launched successfully with the keep-current script.",
+              "Immediate inspection succeeded, followed by a successful detached-mode write and confirming read reporting ready, persistent, and detached.",
+              "The reply acknowledges that the offline stub exits after 45 seconds rather than claiming indefinite maintenance."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a55ac54fcee9af5386493e9e94b04054718e0c08479ca251ba5d4c629cf4bcbd",
+            "rationale": "ANCHOR: result. Calls 8\u201311 show the named bash watch launched, successfully inspected, successfully switched to detached mode, and confirmed ready and detached; the reply reports it started and confirmed detached while qualifying the stub's limited lifetime.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1597,
+              "output": 148
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "59ac6749e0729d0357257002e5ce695956cd6ee15e00f736c06d82891276d9cd"
+      },
+      "measured_score": 0.6,
+      "raw_weighted_score": 0.6,
+      "replicate_index": 0,
+      "task_id": "undertake-08-cadence-stops-at-ready-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`pr` fires while the resumed pull request is updated",
+          "details": "observed='no', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The resumed pull request contains its base update and CI is assessed on the new head",
+          "details": "Command: python3 .fixture/verify.py currency\nExit code: 1 (expected: 0)\nStdout:\nFAIL: expected one successful base update attempt, saw 0\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "pr-09-omp-resumed-pr-currency",
+      "variant_id": "bare"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`pr` fires while the resumed pull request is updated",
+          "details": "observed='yes', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The resumed pull request contains its base update and CI is assessed on the new head",
+          "details": "Command: python3 .fixture/verify.py currency\nExit code: 0 (expected: 0)\nStdout:\nok: currency invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-09-omp-resumed-pr-currency",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 82.56966638565063,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "pr-08-omp-draft-currency",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 54912,
+        "output_tokens": 3381,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 19913
+      },
+      "tokens": 78206,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 80.49144244194031,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "pr-08-omp-draft-currency",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 337280,
+        "output_tokens": 5566,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 38965
+      },
+      "tokens": 381811,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 120.54206705093384,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "undertake-08-cadence-stops-at-ready-omp",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 75648,
+        "output_tokens": 2631,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 9320
+      },
+      "tokens": 87599,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 47.394835472106934,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "undertake-08-cadence-stops-at-ready-omp",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 158080,
+        "output_tokens": 1838,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 56276
+      },
+      "tokens": 216194,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 57.82318115234375,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "pr-09-omp-resumed-pr-currency",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 41984,
+        "output_tokens": 2138,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18396
+      },
+      "tokens": 62518,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 68.31342577934265,
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-luna",
+      "task_id": "pr-09-omp-resumed-pr-currency",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 308608,
+        "output_tokens": 4534,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 33568
+      },
+      "tokens": 346710,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.13.3",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-29T18:03:25.419284",
+  "experiment_id": "omp-gpt-6-luna",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "59ac6749e0729d0357257002e5ce695956cd6ee15e00f736c06d82891276d9cd",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3613,
+      "output": 332
+    }
+  },
+  "plugin_revision": {
+    "commit": "26b4a32f630ef6cdad9a48743dfef02671fd1561",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-29T11:03:43.239455+00:00",
+  "run_id": "2026-10-29_17-55-48",
+  "schema_version": 5,
+  "started_at": "2026-10-29T17:55:48.270441",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-08-omp-draft-currency": [
+          0.0
+        ],
+        "pr-09-omp-resumed-pr-currency": [
+          0.0
+        ],
+        "undertake-08-cadence-stops-at-ready-omp": [
+          0.4
+        ]
+      },
+      "task_ids": [
+        "pr-08-omp-draft-currency",
+        "undertake-08-cadence-stops-at-ready-omp",
+        "pr-09-omp-resumed-pr-currency"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6-luna",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-08-omp-draft-currency": [
+          1.0
+        ],
+        "pr-09-omp-resumed-pr-currency": [
+          1.0
+        ],
+        "undertake-08-cadence-stops-at-ready-omp": [
+          0.6
+        ]
+      },
+      "task_ids": [
+        "pr-08-omp-draft-currency",
+        "undertake-08-cadence-stops-at-ready-omp",
+        "pr-09-omp-resumed-pr-currency"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

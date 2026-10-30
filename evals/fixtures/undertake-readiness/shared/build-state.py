@@ -74,7 +74,12 @@ elif scenario == "covered-ancestor":
 elif scenario == "stale-notice-content":
     state["comments"] = [notice_for(review_head)]
     state["expect"].update(ready=False, report="none", notice="needs-round", no_review_round=False)
+elif scenario == "currency-stale":
+    state["comments"] = []
+    state["ci_green_for"] = [head]
+    state["expect"].update(ready=False, report="none", notice="existing", no_review_round=True)
 elif scenario.startswith("service-"):
+    state["pr"]["draft"] = False
     state["expect"].update(ready=False, report="none")
 else:
     sys.exit(f"unknown scenario {scenario}")
