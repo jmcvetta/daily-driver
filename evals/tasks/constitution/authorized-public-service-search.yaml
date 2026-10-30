@@ -7,9 +7,9 @@ agent:
   disallowed_tools: [WebFetch, WebSearch]
 
 run_limits:
-  max_turns: 4
-  turn_timeout: 180
-  task_timeout: 360
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1080
 
 initial_prompt: >-
   The Smithsonian National Museum of Natural History is a public third-party
