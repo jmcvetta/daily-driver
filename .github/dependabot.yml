@@ -17,9 +17,9 @@ updates:
     schedule:
       interval: weekly
 
-  # package-lock.json, at the repository root. The CI selector script imports
-  # these dependencies, so a bump that arrives here is checked by the same CI
-  # as a hand-written one.
+  # package-lock.json, at the repository root. Only the CI selector script
+  # imports these dev dependencies. CI fails a bump that breaks it, but not
+  # one that quietly changes which checks it selects, so read those PRs.
   - package-ecosystem: npm
     directory: /
     schedule:
