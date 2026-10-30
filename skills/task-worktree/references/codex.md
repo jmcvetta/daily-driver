@@ -8,9 +8,11 @@ Before Worktrunk worktree inspection, source `scripts/ensure-worktrunk.sh`
 from the repository root and run `ensure_worktrunk`. It returns without
 installing when `wt` exists. If missing, it uses Homebrew or Cargo in user
 scope, adds the installed bin directory to this shell's `PATH`, and verifies
-`wt --version`. Source and run it again in each later shell invocation that
-uses `wt`; it restores the installed bin path without reinstalling. It never
-upgrades `wt`; if neither installer works, stop with the helper's cause and
+`wt --version`. If the Cargo install fails and `rustup` is available, it updates
+the stable toolchain once and retries with `cargo +stable install --locked
+worktrunk`. Source and run it again in each later shell invocation that uses
+`wt`; it restores the installed bin path without reinstalling. It never upgrades
+an existing `wt`; if neither installer works, stop with the helper's cause and
 actionable installation requirement. Do not use bare Git worktree creation as
 a fallback.
 
