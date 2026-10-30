@@ -156,6 +156,13 @@ that parent's labels. Add `story` only when the confirmed parent carries the
 Closing the child does not change a confirmed qualifying edge, so it
 keeps the marker.
 
+`epic` requires every story to be an assignable `task` issue; `issue-deps`
+checks task readiness before linking. The marker remains graph-derived, not
+proof of readiness. If a read finds a non-task child of an epic, report the
+policy violation for repair through `issue`. Reconcile the marker against the
+confirmed edge without silently changing the kind or body, hiding the edge,
+or removing `story` merely because the child is not ready.
+
 A kind swap that removes `epic` from a parent is a reconciliation event even
 though its parent edges do not move. Invoke `issue-deps` to read that issue's
 direct children, then reconcile `story` on each one against the parent's new
