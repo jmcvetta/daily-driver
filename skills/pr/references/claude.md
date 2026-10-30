@@ -29,7 +29,14 @@ trigger, and retain its `trigger_id`. Cancel it with
 `mcp__Claude_Code_Remote__delete_trigger` when the PR is merged, closed, or
 the user stops the watch.
 
-For each wake and each return to the PR, read `mcp__github__pull_request_read`
+The scheduled prompt carries this whole check-in, including its PR identity
+and the instruction to re-arm itself. **Re-arm first on every wake:** reuse a
+pending trigger or schedule the same prompt two minutes out before taking the
+reads below. Retain the new identifier. A wake with no successor loses
+maintenance after one tick.
+
+Immediately after create/update, and on each wake or return, read
+`mcp__github__pull_request_read`
 with method `get` for `state`, `draft`, `mergeable_state`, and `head.sha`, plus
 `get_check_runs` and `get_status`. If the PR is merged or closed, cancel the
 wake and exit. If the user has stopped the watch, cancel it and exit before
