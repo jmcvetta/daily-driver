@@ -67,6 +67,11 @@ ALTERNATE_MODEL_FIELDS: tuple[str, ...] = ("compactionModel", "contextPromotionT
 #: dropped and the request runs on whatever upstream the gateway picks.
 GATEWAY_ROUTING_API = "openai-completions"
 
+#: Request-body keys an inherited `compat.extraBody` must not set. Omp merges
+#: the extra body over the built request, so either one replaces the enforced
+#: model or upstream instead of adding to it.
+EXTRA_BODY_CONFLICTS: tuple[str, ...] = ("model", "providerOptions")
+
 
 def inherited_files(real_agent_dir: Path) -> list[Path]:
     """The files of `real_agent_dir` the throwaway home symlinks in.
@@ -104,22 +109,21 @@ def restrict_model_upstreams(
     Duplicates in `only` collapse in first-seen order.
 
     Raises `ValueError` for an unreadable or malformed configuration, an empty
-    allowlist, or a selected model that names an alternate model of its own.
+    allowlist, a selected model that names an alternate model in its override
+    or its `models:` definition, or an inherited `compat.extraBody` that would
+    replace the enforced model or upstream.
     """
     allowed = list(dict.fromkeys(only))
     if not allowed:
         raise ValueError("an upstream restriction must name at least one provider")
     path = agent_dir / MODEL_CONFIG_FILE
     document = _read_models(path)
-    override = _selected_override(document, provider, model_id, path)
-    for field in ALTERNATE_MODEL_FIELDS:
-        value = override.get(field)
-        if value and value != f"{provider}/{model_id}":
-            raise ValueError(
-                f"{path}: {provider}/{model_id} carries {field}={value!r}, which routes "
-                "auxiliary work to another model; refusing to restrict a route that "
-                "falls back away from the selected one"
-            )
+    providers = _mapping(document, "providers", str(path))
+    block = _mapping(providers, provider, f"{path}: providers")
+    override = _selected_override(block, provider, model_id, path)
+    _refuse_alternate_model(override, provider, model_id, path, "modelOverrides")
+    _refuse_alternate_model(_custom_model(block, model_id, path), provider, model_id, path, "models")
+    _refuse_extra_body(block, override, model_id, path)
     compat = _mapping(override, "compat", f"{path}: {provider}/{model_id}")
     routing = _mapping(compat, "vercelGatewayRouting", f"{path}: {provider}/{model_id}.compat")
     routing.pop("order", None)
@@ -147,13 +151,79 @@ def _read_models(path: Path) -> dict[str, object]:
 
 
 def _selected_override(
-    document: dict[str, object], provider: str, model_id: str, path: Path
+    block: dict[str, object], provider: str, model_id: str, path: Path
 ) -> dict[str, object]:
     """The `modelOverrides` entry for `model_id`, created where it is absent."""
-    providers = _mapping(document, "providers", str(path))
-    block = _mapping(providers, provider, f"{path}: providers")
     overrides = _mapping(block, "modelOverrides", f"{path}: providers.{provider}")
     return _mapping(overrides, model_id, f"{path}: providers.{provider}.modelOverrides")
+
+
+def _custom_model(block: dict[str, object], model_id: str, path: Path) -> dict[str, object]:
+    """The `models:` definition for `model_id`, or an empty mapping.
+
+    A provider may define `models:` entries instead of borrowing the catalog.
+    They carry the same auxiliary-model fields as an override, and the run
+    reads them, so the restriction has to inspect them too.
+    """
+    models = block.get("models")
+    if models is None:
+        return {}
+    if not isinstance(models, list):
+        raise ValueError(f"{path}: providers.<provider>.models must be a list, not {type(models).__name__}")
+    for entry in models:
+        if not isinstance(entry, dict):
+            raise ValueError(f"{path}: providers.<provider>.models entries must be mappings")
+        if entry.get("id") == model_id:
+            return entry
+    return {}
+
+
+def _refuse_alternate_model(
+    definition: dict[str, object], provider: str, model_id: str, path: Path, where: str
+) -> None:
+    """Refuse an auxiliary-model target that points away from the selected model."""
+    for field in ALTERNATE_MODEL_FIELDS:
+        value = definition.get(field)
+        if value and value != f"{provider}/{model_id}":
+            raise ValueError(
+                f"{path}: {provider}/{model_id} carries {field}={value!r} in {where}, which "
+                "routes auxiliary work to another model; refusing to restrict a route that "
+                "falls back away from the selected one"
+            )
+
+
+def _refuse_extra_body(
+    block: dict[str, object], override: dict[str, object], model_id: str, path: Path
+) -> None:
+    """Refuse an inherited request body that could replace the enforced values.
+
+    Omp applies `compat.extraBody` after the gateway routing, with a plain
+    `Object.assign`, so an inherited `providerOptions` replaces the allowlist
+    and an inherited `model` replaces the selected model. Provider `compat` is
+    a baseline and per-model `compat` is merged over it, so a conflicting key
+    in either layer is refused rather than silently dropped.
+    """
+    provider_compat = block.get("compat")
+    if provider_compat is not None and not isinstance(provider_compat, dict):
+        raise ValueError(f"{path}: providers.<provider>.compat must be a mapping")
+    override_compat = override.get("compat")
+    if override_compat is not None and not isinstance(override_compat, dict):
+        raise ValueError(f"{path}: {model_id}.compat must be a mapping")
+    for compat, layer in ((provider_compat, "provider"), (override_compat, "model")):
+        if not compat:
+            continue
+        extra = compat.get("extraBody")
+        if extra is None:
+            continue
+        if not isinstance(extra, dict):
+            raise ValueError(f"{path}: the {layer} extraBody must be a mapping")
+        for field in EXTRA_BODY_CONFLICTS:
+            if field in extra:
+                raise ValueError(
+                    f"{path}: the {layer} extraBody sets {field!r}, which would replace the "
+                    "enforced model or upstream in the outgoing request; refusing to restrict "
+                    "a route whose request body is overridden"
+                )
 
 
 def _mapping(parent: dict[str, object], key: str, where: str) -> dict[str, object]:

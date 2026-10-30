@@ -1421,10 +1421,12 @@ every gateway model the `anthropic-messages` transport, which never serializes
 the routing block, so a restricted model also selects `api:
 openai-completions` — the transport Omp applies `providerOptions.gateway` on.
 The adapter also
-clears `PI_CONFIG_DIR` and `OMP_PROFILE` for the child, because either would
-relocate Omp's configuration root and silently bypass the throwaway home. A
-non-Vercel selector, an empty allowlist, an invalid slug or a selected model
-that names an alternate model is refused before Omp starts. None of this
+clears `PI_CONFIG_DIR`, `OMP_PROFILE`, `PI_PROFILE` and `PI_CODING_AGENT_DIR`
+for the child, because each relocates Omp's configuration or agent directory
+and would silently bypass the throwaway home. A non-Vercel selector, an empty
+allowlist, an invalid slug, a selected model that names an alternate model in
+its override or `models:` definition, or an inherited `compat.extraBody` that
+sets `model` or `providerOptions` is refused before Omp starts. None of this
 proves which upstream served a request: that needs a separately authorized
 live run.
 

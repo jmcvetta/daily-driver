@@ -78,10 +78,13 @@ Because Omp's catalog transport for these models (`anthropic-messages`) never
 serializes the routing block, a restricted model also selects
 `api: openai-completions`, the transport that applies
 `providerOptions.gateway`. A malformed file, an empty or invalid allowlist, a
-non-Vercel selector, or a model that names a compaction or context-promotion
-fallback is refused. The
-agent also clears `PI_CONFIG_DIR` and `OMP_PROFILE` for the child: either
-would relocate Omp's configuration root away from the throwaway home.
+non-Vercel selector, a model that names a compaction or context-promotion
+fallback in its override or its `models:` definition, or an inherited
+`compat.extraBody` that sets `model` or `providerOptions` is refused: Omp
+applies the extra body after the routing, so either key would replace the
+enforced value. The agent also clears `PI_CONFIG_DIR`, `OMP_PROFILE`,
+`PI_PROFILE` and `PI_CODING_AGENT_DIR` for the child: each relocates Omp's
+configuration or agent directory away from the throwaway home.
 
 **A row's tool lists must hold.** `tools.select_tools` maps a row's
 `allowed_tools` and `disallowed_tools` to Omp's tool names, and the agent
