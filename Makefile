@@ -326,6 +326,7 @@ check-checkov:
 ZIZMOR_VERSION := 1.31.1
 check-zizmor:
 	@test "$$(zizmor --version)" = "zizmor $(ZIZMOR_VERSION)" || { echo "zizmor $(ZIZMOR_VERSION) is required; found: $$(zizmor --version 2>&1)" >&2; exit 1; }
+	@[ -n "$$GH_TOKEN" ] || echo 'GH_TOKEN is unset: running the offline audits only; CI also runs the online ones.'
 	zizmor $$([ -n "$$GH_TOKEN" ] || echo --offline) --config .github/zizmor.yml .github/workflows
 
 # evals-install: the pinned harness, from PyPI. `uv` fetches Python 3.13 itself,
