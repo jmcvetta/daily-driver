@@ -92,7 +92,7 @@ The pull request
 | `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
-| `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
+| `Keep it current` | Invoke `pr`'s ongoing base maintenance | [`pr` route](../../pr/references/codex.md#keep-it-current) |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 | `The milestone` | Read the readiness state | `gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid` |
 | `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
@@ -175,46 +175,28 @@ nothing.
 follows `The session` above.
 
 
-There is no durable wake
-========================
+The cadence
+===========
 
-**No actor on this harness outlives the turn that armed it** — no durable
-process, no scheduled wake. From `Open the draft`, report that an unfinished
-pull request needs its owner to resume. Do not claim a cadence, timer, shell
-loop, subscription, or autonomous review. Reaching ready does not change that
-limit.
+[`pr`'s `Keep it current` route](../../pr/references/codex.md#keep-it-current)
+owns the common watch and its no-durable-wake limit. This undertaking invokes
+that maintenance; it does not claim or start a timer or autonomous review.
 
-**The catch-up look is the first read of every turn that lands back on the
-pull request.** A turn that returns the session to the pull request — a
-resume, a continuation, a user turn about it — starts with:
-
-    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
-
-Read `statusCheckRollup` and `review-cycle`'s check and status endpoints
-before a currency merge; if either reports a run in flight, skip that merge.
-Otherwise `BEHIND`, `DRAFT`, `BLOCKED`, and an indeterminate answer run `gh pr
-update-branch <number>`, whose own reply settles currency. `DIRTY` is the
-conflict stop; `CLEAN` and `UNSTABLE` need no currency action.
-
-**Then assess the resulting current head.** After a currency test that can move
-the head, read `gh pr view <number> --json statusCheckRollup` and the check and
-status endpoints `review-cycle` owns. Earlier green evidence does not survive
-a head change. Pending or unregistered checks follow its bounded limits; failed
-checks return to `Fix, answer, resolve, push`, and unavailable logs are an
-explicit evidence blocker. When CI on the current head is green and the gate's
-notice read finds no completion notice, post the notice before continuing the
-ready-gate work. State the unfinished condition and owner-resume
-requirement; never call a clean branch, an already-up-to-date response, or a
-draft completion.
+Undertaking-specific continuation stays here. When current-head CI is green,
+post a missing review completion notice before continuing the ready-gate work.
+Use `review-cycle` for review and fix-delta work, then apply `Ready for review`
+and `The milestone` below. State unfinished work and the owner-resume
+requirement; never call a clean branch, an up-to-date response, or a draft
+completion.
 
 
 The stop
 ========
 
 `SKILL.md`'s `The stop` names each operation in words; these are the calls.
-There is no wake, process or subscription on this harness, so `End the watch`
-has nothing to cancel: say so in the handoff's `Outstanding` line only where
-a stop leaves unfinished work.
+The Codex route has no durable actor to cancel; `pr`'s reference owns the
+stop semantics. Say that no timer or subscription exists only when the
+handoff leaves unfinished work.
 
 | Operation | Call |
 | --------- | ---- |
@@ -222,3 +204,4 @@ a stop leaves unfinished work.
 | Post the handoff | `gh issue comment <number> --body-file <path>` |
 
 The pushed head is `git ls-remote origin <branch>`.
+

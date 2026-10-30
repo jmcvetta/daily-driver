@@ -17,8 +17,8 @@
 #
 # `gh` resolves the repository from its working directory, so run this with
 # its working directory set to any checkout of the repository the pull
-# request lives in. `SKILL.md`'s `Keep it current` states the rules; this
-# script is the Omp route's actor.
+# request lives in. `skills/pr/SKILL.md`'s `Keep it current` states the
+# rules; this script is the Omp route's actor.
 
 set -u
 
@@ -65,12 +65,14 @@ while :; do
         continue
     fi
 
-    if [ "$merge_state" = "BEHIND" ]; then
-        echo "pr-keep-current: behind its base; merging the base branch in"
-        if ! gh pr update-branch "$PR"; then
-            echo "pr-keep-current: update-branch failed; retrying next tick"
-        fi
-    fi
+    case "$merge_state" in
+        BEHIND | DRAFT | BLOCKED | UNKNOWN)
+            echo "pr-keep-current: testing base currency ($merge_state); merging if needed"
+            if ! gh pr update-branch "$PR"; then
+                echo "pr-keep-current: update-branch failed; retrying next tick"
+            fi
+            ;;
+    esac
 
     sleep "$INTERVAL"
 done

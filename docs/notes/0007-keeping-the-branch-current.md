@@ -87,3 +87,18 @@ wait and drops it with the wait. Keeping it standing would not answer this
 question — it carries comments, reviews and checks, and never a push to the
 base branch — so it would be a subscription held for events that cannot
 arrive.
+
+## Amendment — every agent-opened PR, 2026-10-30
+
+[`#735`](https://github.com/jmcvetta/daily-driver/issues/735) extends currency
+maintenance beyond `undertake`. `pr` now owns the common policy and harness
+routes. Opening a draft starts maintenance; direct PR work needs no issue.
+Updating an existing PR and reaching ready reuse its existing watch.
+`undertake` retains review, readiness, and milestone assessment.
+
+Omp uses its detached merge service from PR creation, not only after ready.
+Draft and indeterminate merge states can hide a stale base, so the service
+uses the update-branch call to settle those states as well as `BEHIND`.
+The CI floor, conflict stop, and merge/close/user-stop exits remain unchanged.
+Claude reuses its durable wake; Codex reports its lack of durable continuation
+and takes the currency look when the owner resumes.

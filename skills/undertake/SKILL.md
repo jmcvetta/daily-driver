@@ -72,7 +72,7 @@ The sequence
 | 8 | `Fix, answer, resolve, push` | `review-cycle` |
 | 9 | `Verify the fix delta` | `review-cycle` |
 | 10 | `Ready for review` | the harness's pull request client |
-| 11 | `Keep it current` | this skill, `review-cycle` |
+| 11 | `Keep it current` | `pr`, `review-cycle` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta`
 are `review-cycle` stages and carry the same names for that reason. `Ready for
@@ -485,8 +485,8 @@ The issue-only research route closes at `Implement` after recording its
 complete answer on the issue.
 
 Push the branch, then invoke `pr`: it owns the branch guard, the existing-PR
-check, draft state, and the call on whether there is an issue to reference —
-there is, and it is this one. The `Issues` section of the body closes it, and
+check, draft state, ongoing currency, and whether there is an issue to
+reference — there is, and it is this one. The body closes it, and
 `issue-deps` treats that line as the write into the graph. Its evidence test
 has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
@@ -496,13 +496,10 @@ closes.
 adopted branch, `pr`'s existing-PR check finds its open pull request and
 updates it, and no second pull request is opened.
 
-**Opening or reusing the draft starts supervision.** The undertaking owns its
-continuation from this point, including while CI, review, or `The gate` keeps
-the pull request draft. A durable scheduler arms its one wake before yielding;
-a harness without one reports the unfinished condition and that the owner must
-resume. Reaching `Ready for review` changes the work being watched; it does
-not start a second watch. Only a merged or closed pull request, or an explicit
-user stop, ends this obligation.
+**Opening or reusing the draft starts supervision.** `pr` starts or reuses
+common currency maintenance. The undertaking retains assessment of CI, review,
+`The gate`, and `The milestone` while draft and after ready. Its active
+harness reference names the continuation and any owner-resume limitation.
 
 **The body is `pr-body`'s, and so are blockers that go with a Tofu diff.**
 Where the branch changes the infrastructure Tofu stack, the body carries
@@ -652,130 +649,31 @@ a person can clear is the false claim the gate exists to refuse.
 11 — Keep it current
 --------------------
 
-Commits land on the base branch while the work is written and while a
-reviewer reads, and a branch behind its base was reviewed and tested against a
-tree nobody will merge into. This step brings the base branch in, and it is the
-only step that runs more than once.
-
-**Its first run is before `Ready for review`, not after it.** The gate's first
-condition is that step's merge, so the sequence reaches it once out of the
-table's order and then again on its own cadence. Ready is not the end either,
-so it runs again on the cadence under `When it looks`.
-
-**The merge is the harness's update-branch call**, whichever one the reference
-file names. It merges the base branch into the head server-side, so it needs no
-checkout: by the time this
-runs, the session may be on another branch, and the working tree it had may be
-gone. The call is the test as well as the merge — GitHub answers that the
-branch is already up to date when there is nothing to bring in, so nothing
-here has to compute how far behind the branch is.
-
-**A merge, never a rebase.** A rebase rewrites history somebody is reading,
-and it voids the mark `review-cycle` recorded at `Review the head`. A merge
-commit leaves both intact.
+Invoke `pr`'s `Keep it current` and its active harness route. That skill owns
+the base merge, cadence, CI floor, conflict handling, and watch lifecycle for
+every agent-opened PR. `Open the draft` starts maintenance; this step reuses
+it rather than waiting until ready or starting a second actor.
 
 When it looks
 -------------
 
-Once before `Ready for review`, as the gate's look rather than the cadence's.
-**Continuation starts at `Open the draft`, not at ready.** The check-in and
-catch-up rules therefore cover every open undertaking pull request; ready
-changes what remains to be maintained, not whether unfinished work is
-supervised. The **merge** is mechanical: one update-branch call, tested by the
-call itself, with the floor below. The **assessment** is agent work: after
-currency is settled, it reads CI on the resulting head and continues the
-review or ready-gate work. The reference file names the actor and routes.
+Take `pr`'s catch-up look on every turn returning to the open pull request,
+and once before `Ready for review`. Currency is the gate's first condition,
+not proof that the undertaking is complete.
 
-**Where the harness supervises processes that survive it, the watch is one of
-those processes after ready.** It runs the merge on a two-minute tick and
-nothing else: read the pull request's state and merge status, skip the tick
-while a run on the head is in flight, merge when the branch is behind, and
-stop on a conflict. It never judges. Before ready, the persistent bounded CI
-watcher `review-cycle` owns is the available continuation; its completion
-still requires the owner session to assess the result.
-
-**Where the harness has a durable scheduled wake and no such process, the
-cadence is a check-in every two minutes, one wake at a time — from `Open the
-draft`.** The prompt given to the scheduler states the whole check-in,
-self-contained: arm the next wake first, take the state and base-currency
-read, merge when required, then assess CI on the resulting current head. A
-rule kept only in session memory dies on the first wake turn that ends without
-re-arming; the instruction travels with the wake instead, and
-`review-cycle`'s `The backstop` discipline holds for it.
-
-**Where the harness has neither, report the unfinished handoff at `Open the
-draft`.** The next turn returning to the pull request takes the catch-up look
-below. A watch a surface cannot keep is worse claimed than skipped; a draft,
-red, pending, capped, walled, or human-blocked pull request is not complete.
-
-**A catch-up look answers the pull-request question, not only currency.** It
-reads state and branch currency first, applies this step's existing merge and
-run-in-flight rules, then reads the check runs and commit statuses for the
-resulting head through `review-cycle`'s `How to wait`. A head change invalidates
-earlier CI and readiness evidence. A clean branch, matching local and remote
-SHA, draft state, or an already-up-to-date response never ends the assessment.
-Merged and closed pull requests exit without further work.
-
-Failed checks return to `Fix, answer, resolve, push`; missing logs are an
-explicit failed-CI evidence blocker, not green and not "no action needed".
-Every failed-CI or evidence-blocker handoff names the failed checks, current
-head, unavailable evidence, and concrete action needed to resume. Pending or
-unregistered checks use `review-cycle`'s bounded wait and registration rules.
-A cap, review wall, human action, or evidence blocker pauses with the
-outstanding condition and the actual path to resume; it does not reset the
-bound, authorize a retry, or call the undertaking complete.
-
-**Never end a turn with the wake slot empty while check-ins are available.**
-They run from `Open the draft` until the pull request is merged or closed or
-the user says to stop. Inside them the slot is one timer, held by the returned
-identifier, and it empties when the timer fires or `review-cycle` borrows it
-at `End the wait`. Fill it before the turn ends; a still-pending timer is
-reused rather than duplicated. This is the failure
-[`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md) records, and
-[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) scopes to a
-single harness.
-
-**Two minutes, the same interval `review-cycle` waits on CI with.** A busy
-`master` takes a commit every few minutes, so a slower check-in is a branch
-kept behind on purpose, and the merge itself costs a call and a CI run that
-this repository answers in seconds. Behind is the state to leave as briefly as
-the scheduler allows.
-
-**The one floor is a run in flight.** A check-in that finds CI from the last
-merge still going does nothing: merging again restarts the run it is waiting
-on. Where CI answers in seconds that floor almost never bites, and where it
-answers in twenty minutes it is what keeps the branch from never being green.
-
-A merge-conflict notice does not wait for the cadence either. It is the case
-where behind has already cost something, and it is answered on the wake that
-reports it.
-
-The watch ends when the pull request is merged or closed, or when the user
-says to stop. A process stops itself on the first two; a scheduled wake ends
-on them and on the user's word alike. A pull request nobody merges is not a
-reason to keep an actor running for ever.
-
+After currency settles, assess CI on the resulting head through
+`review-cycle`'s `How to wait`, then continue review, the ready gate, and
+`The milestone` when their conditions permit. Missing logs remain an
+evidence blocker. A cap, review wall, human action, or evidence blocker
+reports the outstanding condition and actual resume path; it does not reset
+the bound, authorize a retry, or call the undertaking complete. Where the
+harness has no owner continuation, report that limitation at `Open the draft`.
 
 After the merge
 ---------------
 
-The head moved, so CI runs again. Wait for it the way `review-cycle`'s
-`How to wait` says, and answer a red check under `Fix, answer, resolve, push`.
-Where the watch is a process, nothing is borrowed: the floor above is what
-keeps a merge from restarting a run in flight, so the wait and the watch
-coexist. Where the watch is a scheduled wake, that wait borrows the wake slot
-for its backstop and gives it back at `End the wait`: the check-ins above are
-armed again before that turn ends, whichever way the wait ended, and after
-the round the wait was clearing the way for rather than into it.
-**Red CI is how a base merge reports that it broke something**: the base
-changed what the branch depends on, the branch's own diff is untouched, and no
-review of that diff would have found it.
-
-**A clean merge does not earn a round.** `review-cycle`'s `Does it go again?`
-classifies it under `Neither`, and the reason is what the round's review reads —
-the pull request's three-dot diff, which after a clean merge is byte-identical
-to what `Review the head` already reviewed. A base branch that moves daily
-would otherwise buy a review a day for a diff nobody changed.
+Follow `pr`'s `After the merge` for current-head CI and its continuation
+route. Failed checks return to `Fix, answer, resolve, push`.
 
 **A clean merge earns no new notice either.** A completion notice that names
 the pre-merge head still covers the merged head, by the first-parent walk
@@ -785,9 +683,6 @@ current head once CI is green on it. Red CI after the merge goes to `Fix,
 answer, resolve, push` as above, and the push that fixes it is a new head that
 the round covers in the normal way.
 
-**A conflict resolution does.** Resolving a conflict rewrites the branch's own
-files, which is `Changing what the code does` in that same classification.
-One round over it, and `review-cycle` decides anything further.
 
 A round after ready goes back to draft
 --------------------------------------
@@ -1015,8 +910,8 @@ What the report carries
   the durable start, so a session arriving late never restarts the clock.
   Both ends are UTC timestamps — the start and the milestone — with the
   duration between them in words. The interval covers implementation, review,
-  fixes, and the waits in between; it excludes the maintenance watch that
-  follows, and the report never calls it compute time or the undertaking's
+  fixes, and the waits in between; it excludes maintenance after first
+  readiness, and the report never calls it compute time or the undertaking's
   total duration. An undertaking with no recoverable start reports the timing
   as unavailable rather than inventing one.
 

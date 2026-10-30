@@ -381,9 +381,9 @@ So on every wake:
   following wave, or `Close the epic`.
 - **A completed child has no session left to run, archived once.** Unless
   landing is by hand, archive its session after reading the issue's completion
-  evidence. For a pull request child, do not archive while its PR is green but
-  waiting on review; it still holds `undertake`'s cadence and must answer the
-  next review comment.
+  evidence. Do not archive a pull request child while its PR is green but
+  waiting on review; `pr`'s `Keep it current` watch remains active and its
+  owner must answer the next review comment.
   **Once per child, not once per wake**: read the muster roll's archive record
   before archiving again. In the fallback the ship is a
   subagent that has already ended, so there is no session to archive. **Post the
@@ -393,17 +393,20 @@ So on every wake:
 issue stays open and its session is spent, so nothing here re-dispatches it:
 say which child it was, and leave it to the person who closed it.
 
-**This skill does not manage the branches.** `undertake`'s `Keep it current`
-already merges the base branch into each head on its own two-minute cadence, so
-a sibling whose base moved heals itself, and a real content conflict stops that
-session rather than this one. An orchestrator resolving a conflict in code it
-never wrote is the wrong hand on the tiller.
+**This skill does not manage the branches.** `pr` owns `Keep it current` for
+each agent-opened PR, merging its actual base on the harness's supported
+continuation route. A sibling whose base moved is maintained by that PR's
+owner, and a real content conflict stops there rather than here. An
+orchestrator resolving a conflict in code it never wrote is the wrong hand on
+the tiller.
 
 **One wake slot, and a turn never ends with it empty** while a wave is at sea.
-[`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md) is the rule,
-and it is the same one `undertake` and `review-cycle` hold — one durable timer,
-kept by the identifier the call returned, filled again before the turn ends
-whenever it is empty. A wake that finds the timer still in flight arms nothing.
+[`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md) is the rule.
+This orchestrator owns its own slot for the wave watch; each implementor's
+`pr` watch has its own slot, which `review-cycle` may borrow during a CI wait.
+Keep each slot by the identifier its call returned, and fill it before that
+session's turn ends whenever it is empty. A wake that finds the timer still in
+flight arms nothing.
 **An implementor's report is not this slot.** It arrives on a timer the
 implementor armed, so it neither fills the slot nor empties it, and this
 session has no report timer to cancel at `Close the epic` or at `stand-down`.
@@ -684,8 +687,7 @@ Non-goals
   change.
 - **Does not manage sibling branches.** It does not serialise their merges and
   it does not resolve a conflict between them. Landing one pull request moves
-  the base; each sibling's `undertake` session brings that base into its own
-  head through `Keep it current`.
+  base; `pr`'s `Keep it current` maintains each sibling PR's head.
 - **Does not close the epic in `Landing: by hand` mode.** It reports the epic
   ready and stops there. The default `Landing: orchestrator` mode closes it
   only after `Close the epic` reads every `Summary` claim as delivered.
