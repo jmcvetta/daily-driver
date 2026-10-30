@@ -196,14 +196,14 @@ read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
 **Post the report before marking ready.** Read the PR's comments with
 `mcp__github__pull_request_read`, method `get_comments`, and find the fixed
 `First-readiness report` marker before writing. If it is absent and the gate
-holds, post with `mcp__github__add_issue_comment`. A failed report write
-leaves the PR draft; a failed ready write preserves the report for a
-revalidated retry.
+holds, post with `mcp__github__add_issue_comment`. Only after that write
+succeeds, call `mcp__github__update_pull_request` with `draft: false`. A
+failed report write leaves the PR draft; a failed ready write preserves the
+report for a revalidated retry.
 
 **The provenance** is `provenance`'s block, read the way its
 [`references/claude.md`](../../provenance/references/claude.md) names: the
 same `mcp__Claude_Code_Remote__get_session` call `The session` above uses.
-
 
 
 The orchestrator

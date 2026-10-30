@@ -467,8 +467,8 @@ pull request.
 
 1. **The pull request is not a draft.** `undertake` clears the draft at `Ready
    for review`; this skill never does.
-2. **Its merge state is `clean`.** This is the value `undertake`'s `The
-   milestone` reads, and only `clean` is a yes here. `behind`, `dirty`,
+2. **Its merge state is `clean`.** After `Ready for review` clears the
+   draft, this field answers mergeability, and only `clean` is a yes here. `behind`, `dirty`,
    `unstable`, and `unknown` belong to the task session or to a wait.
    `blocked` means an unresolved merge gate, not proof that a person must
    approve. Read current-head CI through `review-cycle`'s checks and status

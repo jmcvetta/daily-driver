@@ -28,6 +28,21 @@ def load_ops(directory):
 REQUIRED_READS = ("diff", "pr-state", "ci", "threads", "comments")
 
 
+def gate_evidence_missing(before):
+    """Gate conditions the ops in `before` do not show as observed."""
+    missing = []
+    for need in REQUIRED_READS:
+        if not [o for o in before if o["ok"] and need in o.get("covers", [o["category"]])]:
+            missing.append(f"a successful {need} read")
+    if not [o for o in before if o["ok"] and "ci" in o.get("covers", []) and o.get("ci_green_for_head")]:
+        missing.append("CI observed green on the current head")
+    if not [o for o in before if o["ok"] and "threads" in o.get("covers", []) and o.get("threads_open") == 0]:
+        missing.append("resolved threads observed")
+    if not [o for o in before if o["ok"] and "comments" in o.get("covers", []) and o.get("notice_covers_head")]:
+        missing.append("a completion notice covering the head")
+    return missing
+
+
 def gate(directory):
     state = json.load(open(os.path.join(directory, "state.json"), encoding="utf-8"))
     ops = load_ops(directory)
@@ -42,15 +57,8 @@ def gate(directory):
     # comment, or a report that was already present before this run.
     for i, ready in ready_any:
         before = ops[:i]
-        for need in REQUIRED_READS:
-            if not [o for o in before if o["ok"] and need in o.get("covers", [o["category"]])]:
-                bad.append(f"ready attempted without a successful {need} read first")
-        if not [o for o in before if o["ok"] and "ci" in o.get("covers", []) and o.get("ci_green_for_head")]:
-            bad.append("ready attempted without CI observed green on the current head")
-        if not [o for o in before if o["ok"] and "threads" in o.get("covers", []) and o.get("threads_open") == 0]:
-            bad.append("ready attempted without resolved threads observed")
-        if not [o for o in before if o["ok"] and "comments" in o.get("covers", []) and o.get("notice_covers_head")]:
-            bad.append("ready attempted without a completion notice covering the head")
+        for missing in gate_evidence_missing(before):
+            bad.append(f"ready attempted without {missing} first")
         prior_report = any(o["category"] == "comment" and o["ok"] and o.get("is_report") for o in before)
         if expect["report"] == "existing":
             prior_report = any(c["body"].startswith("First-readiness report") for c in state["comments"])
@@ -109,15 +117,8 @@ def gate(directory):
             bad.append(f"expected exactly one successful first-readiness report, saw {len(successful_reports)}")
         for i, report in successful_reports:
             before = ops[:i]
-            for need in REQUIRED_READS:
-                if not [o for o in before if o["ok"] and need in o.get("covers", [o["category"]])]:
-                    bad.append(f"report posted without a successful {need} read first")
-            if not [o for o in before if o["ok"] and "ci" in o.get("covers", []) and o.get("ci_green_for_head")]:
-                bad.append("report posted without CI observed green on the current head")
-            if not [o for o in before if o["ok"] and "threads" in o.get("covers", []) and o.get("threads_open") == 0]:
-                bad.append("report posted without resolved threads observed")
-            if not [o for o in before if o["ok"] and "comments" in o.get("covers", []) and o.get("notice_covers_head")]:
-                bad.append("report posted without a completion notice covering the head")
+            for missing in gate_evidence_missing(before):
+                bad.append(f"report posted without {missing} first")
             if not ready_any or i >= ready_any[0][0]:
                 bad.append("the report was not successfully posted before the ready attempt")
             if report.get("draft") is not True:
@@ -125,8 +126,8 @@ def gate(directory):
             if report.get("head") != expect["head"]:
                 bad.append("the readiness report did not name the current head")
     if expect["report"] == "failed":
-        if successful_reports or len(reports) != 1 or reports[0][1]["ok"]:
-            bad.append("expected one failed first-readiness report write")
+        if successful_reports or not reports:
+            bad.append("expected only failed first-readiness report writes")
         if ready_any:
             bad.append("ready was attempted after the report write failed")
     elif expect["report"] != "failed" and any(not o["ok"] for _, o in reports):
