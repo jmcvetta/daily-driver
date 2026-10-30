@@ -48,6 +48,10 @@ elif args[:2] == ["pr", "update-branch"]:
     state = load()
     state["updates"] += 1
     log("update")
+    if state["conflict_update"]:
+        save(state)
+        print("Cannot update PR branch due to conflicts", file=sys.stderr)
+        raise SystemExit(1)
     if state["fail_update"]:
         save(state)
         print("fixture update failed", file=sys.stderr)
@@ -85,6 +89,7 @@ class KeepCurrentTests(unittest.TestCase):
             "merge_state": "BEHIND",
             "run_in_flight": False,
             "fail_update": False,
+            "conflict_update": False,
             "updates": 0,
             **overrides,
         }
@@ -198,6 +203,14 @@ class KeepCurrentTests(unittest.TestCase):
         self.wait_for(lambda: self.process.poll() is not None, "the conflict stop")
         self.assertEqual(3, self.process.returncode)
         self.assertEqual(0, self.read_state()["updates"])
+
+    def test_masked_conflict_stops_instead_of_retrying(self):
+        """Catch a masked conflict that retries forever instead of alerting the owner."""
+        self.start_watch(merge_state="DRAFT", conflict_update=True)
+        self.wait_for(lambda: self.process.poll() is not None, "the masked conflict stop")
+        self.assertEqual(3, self.process.returncode)
+        self.assertEqual(1, self.read_state()["updates"])
+        self.assertIn("conflicts with its base", self.read_log(self.output_path))
 
     def test_update_failure_is_reported_and_retried(self):
         """Catch a failed update that the watcher hides or does not retry."""

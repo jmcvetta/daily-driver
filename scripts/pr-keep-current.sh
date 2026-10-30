@@ -68,7 +68,16 @@ while :; do
     case "$merge_state" in
         BEHIND | DRAFT | BLOCKED | UNKNOWN)
             echo "pr-keep-current: testing base currency ($merge_state); merging if needed"
-            if ! gh pr update-branch "$PR"; then
+            if update_output=$(gh pr update-branch "$PR" 2>&1); then
+                printf '%s\n' "$update_output"
+            else
+                printf '%s\n' "$update_output" >&2
+                case "$update_output" in
+                    *"Cannot update PR branch due to conflicts"*)
+                        echo "pr-keep-current: pull request $PR conflicts with its base; watch ends for the conflict stop" >&2
+                        exit 3
+                        ;;
+                esac
                 echo "pr-keep-current: update-branch failed; retrying next tick"
             fi
             ;;
