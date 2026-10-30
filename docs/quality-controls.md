@@ -362,14 +362,15 @@ already have no such gate.
 
 Locked dependencies are checked against an advisory database at its latest
 data, and any finding fails the check. The scan scopes to production
-dependencies; dev-only advisories are not a gate.
+dependencies; dev-only advisories are not a gate. DD declares only dev
+dependencies today, so its audit finds nothing until a production dependency
+is added.
 
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | pip-audit over the `uv export` of the lockfile | CA | `gate` |
 | TypeScript (pnpm) | `pnpm audit --prod` (fails on any finding; no severity floor) | PG | `none → gate` |
-| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | DD | `gate` |
-| TypeScript (npm) | the same | PRA | `none → gate` |
+| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | DD `gate`; PRA `none → gate` |
 
 ### QC-BUILD — the shipped artifact builds and loads
 
