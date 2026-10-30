@@ -368,7 +368,8 @@ dependencies; dev-only advisories are not a gate.
 | --- | --- | --- | --- |
 | Python | pip-audit over the `uv export` of the lockfile | CA | `gate` |
 | TypeScript (pnpm) | `pnpm audit --prod` (fails on any finding; no severity floor) | PG | `none → gate` |
-| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | `none → gate` (#708 in DD) |
+| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | DD | `gate` |
+| TypeScript (npm) | the same | PRA | `none → gate` |
 
 ### QC-BUILD — the shipped artifact builds and loads
 
@@ -446,7 +447,7 @@ control covers.
 | QC-COVERAGE | none | gate (Python) | none → gate | gate | none → gate |
 | QC-MUTATION | none | none | local | none | none |
 | QC-LOCKFILE | gate (npm); gate → none (HCL) | gate (Python) | gate (pnpm) | gate (npm); gate → none (HCL) | none |
-| QC-VULN-AUDIT | none → gate | gate (Python) | none → gate | none → gate | n/a |
+| QC-VULN-AUDIT | gate | gate (Python) | none → gate | none → gate | n/a |
 | QC-BUILD | n/a | none | gate | gate | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
 | QC-IAC-POLICY | gate | none → gate | gate | none → gate | gate |

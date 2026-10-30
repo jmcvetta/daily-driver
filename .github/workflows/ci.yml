@@ -26,6 +26,9 @@ jobs:
           node-version: 24
       - name: Install selector dependencies
         run: npm ci
+      # Advisories are disclosed against unchanged lockfiles, so this runs on every pull request. Dev-only advisories are not a gate.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev
       - name: Plan changed checks
         id: plan
         env:
