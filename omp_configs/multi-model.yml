@@ -8,7 +8,7 @@ modelRoles:
   implementation: openai-codex/gpt-6-luna:high
   reasoning: openai-codex/gpt-6.1-sol:high
   frontier: openai-codex/gpt-6-astra:high
-  review: opencode-go/glm-5.3-flash:high
+  review: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high
 
 task:
   agentModelOverrides:
