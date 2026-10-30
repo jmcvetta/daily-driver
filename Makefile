@@ -498,7 +498,7 @@ check-evals-leaks:
 # replaces the first rather than adding to it -- and the exclusions it dropped
 # come back as rows run in the wrong arm, silently, at full price.
 evals-run: evals-judge-preflight evals-plan evals-preflight
-	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/with-without.yaml \
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) -e experiments/with-without.yaml \
 		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
