@@ -38,9 +38,11 @@ defaults:
   repeats: 5
 
   run_limits:
-    max_turns: 30
-    task_timeout: 780
-    turn_timeout: 600
+    # Runaway guards, not targets; see `evals/README.md`, "Turn and time
+    # ceilings". The 180s gap between the two timeouts is the grading window.
+    max_turns: 60
+    task_timeout: 1080
+    turn_timeout: 900
 
   agent:
     type: claude-code

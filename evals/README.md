@@ -977,7 +977,7 @@ and that row says so: the fail-stop is deferred while the pass-capable `pr`
 criterion is undecided, so on the very trajectory the row exists to catch —
 `review` fires, `pr` never does — nothing decides it, the stop never comes, and
 the run pays for a full reviewer panel up to its turn cap. Recall is worth that
-there; `max_turns` is what bounds the bill.
+there; the turn ceiling is the backstop on the bill.
 
 Arming the positive cannot truncate anything: a bare `stop_early: {}` leaves
 `on_pass` at its default `continue`. What it does is put the criterion in the
@@ -1817,6 +1817,80 @@ One to know about and not fix here: `coder_eval` calls
 `ANTHROPIC_API_KEY` included. A stale `.env` in the working directory is a
 surprising way to run a suite against the wrong account.
 
+## Turn and time ceilings
+
+`run_limits` holds three numbers, and each is a runaway guard. None is a
+target, a quota or a performance goal.
+
+- `max_turns` is the SDK's cap on agent turns. A session that reaches it is
+  stopped, and its record ends `MAX_TURNS_EXHAUSTED` with an empty
+  `[RESULT - ERROR]` marker instead of a reply.
+- `turn_timeout` is the agent's wall-clock budget.
+- `task_timeout` is the watchdog around the whole task, grading included. It
+  must exceed `turn_timeout` by at least the grading window.
+
+A ceiling exists to stop futile execution. It must never be the reason a
+valid workflow fails. A compliance case measures the requested behaviour, not
+whether a model can compress skill discovery, state inspection, the action,
+recovery and verification into a small budget. A case need not use its
+allowance, and a short run is not evidence that the ceiling was too high.
+
+**The limits.** The behaviour cases that the #662 measurements run
+(#665, #666, #667 and #689) use `max_turns: 60` and `turn_timeout: 900`. Their
+`task_timeout` is `turn_timeout` plus the case's grading window, which is never
+less than 180 seconds, so a case with several judge calls keeps its room. The
+Claude experiment defaults in `experiments/with-without.yaml` and
+`experiments/base-vs-candidate.yaml` use `60`, `900` and `1080`.
+
+Other cases keep their own limits: the cheap trigger-accuracy cases, where a
+skill that has fired or not fired ends the run, and any behaviour case outside
+those issues. A run that includes such a case is not a corrected-policy
+measurement of it. Raise its limits first. The Omp and Codex arms keep their
+own limits, and `OMP_RUN_LIMITS` in the `Makefile` overrides them.
+
+**Why 60.** A workflow that reads the gate, acts, recovers from an error and
+verifies uses a small multiple of its minimum tool-call count. A cap near that
+minimum leaves no room for discovery or recovery. 60 is twice the 30 that the
+Omp arms use. It is not tuned to the shortest successful attempt. A ceiling
+this high only costs money in a session that is already lost.
+
+**Timeouts move with it.** A tight timeout would replace a tight turn budget
+without a word, so the turn timeout is 900 seconds and the task timeout keeps
+the grading window above it. `plan` warns that `task_timeout` exceeds
+`turn_timeout`. That is deliberate.
+
+**What a ceiling does not fix.** A larger cap does not repair a fixture, a
+policy-discovery gap or plugin visibility. These stay open and are not
+represented as fixed here:
+
+- The shared readiness fixtures (`ready-clean`) say master was merged when
+  setup does not merge it. They require a test that setup never commits.
+- The auto-files cases can search host directories for policy and read a stale
+  installed copy. The local `daily-driver` stub answers every invocation,
+  `--help` included, with the same error.
+- A treated `undertake/11` reply once said the `undertake` skill was
+  unavailable although the recorded plugin roots were present. The cause is
+  unresolved. Offline discovery finding the skills does not show that an SDK
+  session loaded them.
+
+**Reading results.** Report three outcomes apart: execution-limit outcomes
+(`MAX_TURNS_EXHAUSTED`, `TIMEOUT`, an `ERROR` with no reply), completed
+behavioural outcomes, and fixture faults. An exhausted or empty attempt is an
+incomplete measurement. It is never a behavioural failure and never a pass.
+Do not raise a ceiling and retry until green.
+
+**The baseline.** A run made under older, tighter limits is a historical
+diagnostic. Keep its artifacts in `evals/runs/`. Do not resume it, fill its
+unused slots or mix its outcomes with a corrected-policy run. A measurement
+starts from a fresh run directory and needs its own bounded approval, naming
+the source and plugin revisions, cases, variants, repeats, effective limits,
+the native Claude Code route and the stop condition. Check the effective
+limits first. `make evals-plan` calls no model, but it only validates and
+warns; it does not print `max_turns`. Resolve the numbers with `coder-eval`'s
+own `resolve_task_for_variant`, once per variant, which also calls no model.
+Keep `GH_TOKEN` and `GITHUB_TOKEN` unset, and keep controller-only
+`BASH_DEFAULT_TIMEOUT_MS` and `BASH_MAX_TIMEOUT_MS` out of the subject.
+
 ## Cost
 
 `plan` warns on every task here that `task_timeout` exceeds `turn_timeout`.
@@ -1831,7 +1905,7 @@ and the fire half stops the moment the skill fires. `review-depth` is not: its s
 cases each dispatch a real reviewer panel over a real diff, five times, in the
 `with-plugin` arm. The `bare` arm is cheaper but not free: it has no `review`
 skill and none of the plugin's reviewer agents, but it keeps the `Agent` tool
-and thirty turns, so a session that decides to review the diff by hand can
+and its turn ceiling, so a session that decides to review the diff by hand can
 still spend. Its no-fire case pays for a panel too, on exactly the trajectory
 it is trying to catch. Run one suite at a time with
 `TASKS=` while iterating, and keep `make evals-plan` between edits, where the
