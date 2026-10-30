@@ -369,14 +369,13 @@ the same session posts nothing, as before.
 
 **The claim's timestamp is the undertaking's clock start.** The comment's own
 `created_at` is what `The milestone` reads back when the pull request first
-reaches merge readiness — through resumes, through whatever draft states the
-sequence has passed since. No timestamp is written into the claim for the
-milestone's sake: the durable start is the post, not a line in it. Where more
-than one comment carries the claim's shape — the collision the policy above
-permits — the earliest of them is the start: a later claim does not restart a
-clock already running. A claim that was never posted leaves the milestone with
-no start to read, and `The milestone` reports the timing as unavailable rather
-than guessing at one.
+passes the ready-for-review gate — through resumes and later draft states. No
+timestamp is written into the claim for the milestone's sake: the durable
+start is the post, not a line in it. Where more than one comment carries the
+claim's shape — the collision the policy above permits — the earliest of them
+is the start: a later claim does not restart a clock already running. A claim
+that was never posted leaves the milestone with no start to read, and `The
+milestone` reports the timing as unavailable rather than guessing at one.
 
 5 — Implement
 -------------
@@ -638,13 +637,14 @@ independent permitted work and the review round before pausing, unless a
 safety rule requires an immediate stop. The gate remains unmet until the
 required verification evidence is recorded.
 
-When the gate clears and the pull request is marked ready, the milestone's
-moment has arrived: the sequence publishes the first-readiness report through
-`The milestone` below — once, the way that section's own rules bound it. The
-existing supervision continues without a second owner. A pull request that
-stops here on a human action publishes nothing: it has not reached the
-milestone the report would name, and a report naming readiness over a bar only
-a person can clear is the false claim the gate exists to refuse.
+When the gate clears, the milestone's moment has arrived: publish the
+first-readiness report through `The milestone` below, before marking the pull
+request ready. The report records that the ready-for-review gate cleared; it
+does not claim the PR is already ready to merge. The existing supervision
+continues without a second owner. A pull request that stops here on a human
+action publishes nothing: it has not passed the gate, and a report naming
+readiness over a bar only a person can clear is the false claim the gate exists
+to refuse.
 
 11 — Keep it current
 --------------------
@@ -771,9 +771,9 @@ number.
    do not infer required approval from the enum. Holding a draft until approval
    can stall the transition that requests that review. `has_hooks` is a
    passing state with a hook configured.
-   **`clean` is the yes only after the draft is cleared**, which is why
-   `The milestone` reads this same field again and this gate does not wait
-   for that value.
+   **`clean` is not a gate condition**: the report is published while the PR is
+   still a draft, after the gate's independent reads establish currency and
+   green CI. The milestone does not wait for a post-ready merge-state read.
 2. **CI on the head commit**, for the condition that it is green. Read the
    checks themselves rather than inferring them from the merge state, which
    reports a draft's status before its checks': the union of check runs and
@@ -817,10 +817,12 @@ number.
    pauses on it; this condition is what the sequence returns to once the
    branch carries the result.
 
-**When the reads agree, mark the pull request ready in the same turn.** The
-call is the reference file's, and nothing comes between the last read and it:
-no summary written first, no permission sought, no turn ended on the
-intention to do it next time.
+**When the reads agree, publish the first-readiness report if none exists,
+then mark the pull request ready in the same turn.** The harness calls are in
+`The milestone` and the reference file; no summary, permission request or
+turn boundary comes between the gate and these actions. A failed report write
+leaves the PR draft. If marking ready fails after the report posts, preserve
+the report and revalidate the gate before retrying.
 
 **The user is never a gate condition.** Every stop this sequence takes is
 named under `Where it stops and waits`, and none of them is a confirmation
@@ -856,99 +858,103 @@ completeness read, and the draft before a content push.
 The milestone
 =============
 
-Ready is a state the pull request carries; the milestone is the one comment
-that says how long reaching it took. The first time the sequence carries a
-pull request through the ready side of `The gate` — `review-cycle`'s round
-complete, every gate condition holding on the current head, and the pull
-request actually marked ready by `Ready for review` — it publishes the
-undertaking's first-readiness report: one comment on the pull request, with
-the elapsed time and the provenance of the work. The reference file for the
-harness in use names the calls that read the readiness state, find the
-claim's timestamp, and post it.
+The first-readiness report records the first time an undertaking passes the
+ready-for-review gate. Publish it on the pull request after every condition in
+`The gate` holds on the current head, but before `Ready for review` marks the
+pull request ready. The reference file for the harness in use names the calls
+that read the claim's timestamp, find an existing report and post it.
 
-**The report is a milestone, not the end.** Posting it does not stop the
-watch at `Keep it current`, does not stop a process or cancel a scheduled
-wake, does not close the issue, and does not merge anything. The watch's
-exits — merged, closed, or the user says to stop — are what they were before
-the comment existed, and a base-branch advance after it runs the same update,
-CI wait, and return through the gate as any other.
+**The report is a milestone, not the end.** Posting it does not mark the
+pull request ready by itself, stop the watch at `Keep it current`, stop a
+process or cancel a scheduled wake, close the issue, or merge anything. The
+watch's exits — merged, closed, or the user says to stop — are what they were
+before the comment existed, and a base-branch advance after it runs the same
+update, CI wait, and return through the gate as any other.
 
 
-Merge readiness, not draft cleared
-----------------------------------
+Ready-for-review gate, not merge readiness
+-----------------------------------------
 
-Draft status being gone is not what the report attests. It is published only
-when all of these hold on the current head:
+The report states that the ready-for-review gate passed. It does not state
+that the pull request has already left draft or that every later merge
+requirement is satisfied. It is published only when all of these hold on the
+current head:
 
 - `The gate` holds — the round at `Review the head` has completed
   successfully, and every condition in the gate is satisfied on this head.
-- The pull request has actually been marked ready. A draft the sequence is
-  about to mark, or one whose state a merge or a re-run has not yet touched,
-  is not the milestone.
-- The branch is current with its base and merges cleanly, and the harness's
-  own mergeability answer is affirmative. A pending required check, an
-  outstanding required approval, or an answer the harness cannot yet give —
-  an `UNKNOWN` mergeability, an indeterminate merge state — is a wait, not a
-  milestone, and the reads `review-cycle`'s `How to wait` prescribes are what
-  distinguish them.
-- No review thread is unresolved, and the pull request waits on no human
-  action. The pause `Ready for review` takes on the `Blockers` section keeps the
-  report unpublished with the pull request itself.
+- The pull request is still a draft. The report is the required action before
+  the harness marks it ready.
+- The branch is current with its base and has no unresolved conflict, as
+  established by the gate's currency read and `Keep it current`. The report
+  does not wait for the post-ready mergeability answer.
+- Current-head CI is green, review threads are resolved, the completion notice
+  covers the head, and no human action remains owed. A pending check, an
+  unresolved thread, a missing notice or a human blocker keeps the report
+  unpublished.
 
-Any one of them missing keeps the comment unpublished, and the sequence keeps
-watching. A report that says the pull request is ready to merge while a check
-is still pending is the same false claim a red pull request marked ready is.
+The draft merge-state value is not affirmative evidence: `DRAFT` and
+`BLOCKED` can mask branch currency or other mergeability. The gate uses its
+independent reads for currency, CI, reviews, threads, the completion notice
+and blockers. It does not infer that a masked state is clean or wait for a
+post-ready `CLEAN` state before reporting.
+
+Any missing condition keeps the comment unpublished and the sequence watching.
+A report that says the ready-for-review gate passed while a check is pending
+is the same false claim a red pull request marked ready would be.
 
 
 What the report carries
 -----------------------
 
 - **The timing, labelled as what it is** — wall-clock time from the claim to
-  first merge readiness. It runs from the claim comment's timestamp, read
-  back off the issue whatever has happened since: resumes, later returns to
-  draft and out again. The claim's timestamp is
-  the durable start, so a session arriving late never restarts the clock.
-  Both ends are UTC timestamps — the start and the milestone — with the
-  duration between them in words. The interval covers implementation, review,
-  fixes, and the waits in between; it excludes maintenance after first
-  readiness, and the report never calls it compute time or the undertaking's
-  total duration. An undertaking with no recoverable start reports the timing
-  as unavailable rather than inventing one.
+  the first successful ready-for-review gate. It runs from the claim comment's
+  timestamp, read back off the issue through resumes and later draft states.
+  The claim's timestamp is the durable start, so a session arriving late never
+  restarts the clock. After the gate reads pass, capture the current UTC time
+  immediately before posting the report; that is the milestone timestamp.
+  Preserve the telemetry-readable line shape:
+  `Elapsed: <duration>, from claim (<UTC timestamp>) to first ready-for-review gate (<UTC timestamp>).`
+  The interval covers implementation, review, fixes and waits; it excludes
+  maintenance after the first report and is never called compute time or total
+  undertaking duration. If the claim start is unrecoverable, report timing as
+  unavailable. If posting fails, publish no milestone; revalidate the gate and
+  capture a new time before retrying.
 
 - **`provenance`'s block, under `Claim the issue`'s rules for it.** One
   session did the work, so one model and one session are named; where a
   resume moved the work to another session, both are named in the order they
   ran, and attribution nobody reported is not reconstructed.
 
-- **The head it binds to.** The pull request's head SHA and the milestone
-  timestamp. The comment is a statement about that head: a later head —
-  after a base merge, a conflict resolution, any push — is not what it
-  described, and nothing in the comment claims otherwise.
+- **The head it binds to.** The pull request's head SHA and the report
+  timestamp. The comment is a statement about that head: a later head — after
+  a base merge, conflict resolution or any push — is not what it described,
+  and nothing in the comment claims otherwise.
 
 
 Once per undertaking
 --------------------
 
-The report posts once for an undertaking and its pull request, and the check
-for it comes before the write: read the pull request's existing comments and
-look for the comment that opens with the fixed line `First-readiness report`
-before posting one. That opening line is the report's marker — the content
-beneath it may be phrased for the harness and the moment, but the line the
-duplicate check matches is one line, written the same way every time. A
-resumed sequence, a retry of the readiness check, or a later return through
-draft — the path `A round after ready goes back to draft` writes — finds it
-there and posts nothing. The original milestone timestamp and elapsed time
-are never overwritten, because a later pass through the gate that finds the
-report does not touch it.
+The report posts once for an undertaking and its pull request. Before posting,
+read the pull request's existing comments and look for the comment that opens
+with the fixed line `First-readiness report`. That line is the marker, written
+the same way every time. A resumed sequence, a failed ready transition, or a
+later return through draft finds the original report and does not duplicate or
+overwrite it. An existing report does not replace current-head gate evidence:
+re-read every condition before attempting to mark the pull request ready.
 
-**A short read is a reason to look again, not to stop.** A first readiness
-read that comes back blocked, unknown, or otherwise short of the conditions
-above leaves the report unpublished, and the standing continuation carries
-the evaluation. Every check-in and catch-up look reads current-head CI after
-currency, then takes the milestone's readiness read when CI permits progress.
-An approval that arrives and a mergeability answer that settles move no head
-and no base — the look that notices them is what posts the report the first
-pass withheld.
+Post the report only after all gate conditions hold. If the report write fails,
+leave the pull request in draft and stop before the ready write. If the report
+posts but marking ready fails, preserve that report; revalidate the current
+gate before retrying readiness. Do not rewrite the report's original timestamp
+or head on a later pass.
+
+**A short read is a reason to look again, not to stop.** A gate read that comes
+back blocked, unknown or otherwise short of the conditions above leaves the
+report unpublished, and the standing continuation carries the evaluation.
+Every check-in and catch-up look reads current-head CI after currency, then
+takes the gate's remaining reads when CI permits progress. An approval that
+arrives or a mergeability answer that settles moves no head or base — the look
+that observes all gate conditions is what posts the report.
 
 
 The wrap-up

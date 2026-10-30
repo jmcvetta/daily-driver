@@ -93,12 +93,12 @@ The pull request
 | `The gate` | Read the completion notice | `mcp__github__pull_request_read`, method `get_comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
 | `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `mcp__github__add_issue_comment` |
 | `The gate` | Read the Blockers section | `mcp__github__pull_request_read`, method `get` — `body`, where `pr-body`'s Blockers section sits |
+| `The milestone` | Read the draft state and report head | `mcp__github__pull_request_read`, method `get` — `draft`, `head.sha` |
+| `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
+| `The milestone` | Post the report | `mcp__github__add_issue_comment` |
 | `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
 | `Keep it current` | Invoke `pr`'s ongoing base maintenance | [`pr` route](../../pr/references/claude.md#keep-it-current) |
 | `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
-| `The milestone` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable_state`, `head.sha` |
-| `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
-| `The milestone` | Post the report | `mcp__github__add_issue_comment` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/claude.md` names the full-review surface and
@@ -174,23 +174,16 @@ The milestone
 that read the readiness state, find the claim's timestamp, and post it.
 
 **The readiness state is `mcp__github__pull_request_read`, method `get`** —
-the same call `The gate` makes, asking a different question. Three fields
-answer `SKILL.md`'s: `draft`, which must be false; `mergeable_state`; and
-`head.sha`, the SHA the report binds to.
+the same call `The gate` makes, asking a different question. `draft` must
+still be true, and `head.sha` is the SHA the report binds to. The report is
+posted while the pull request is still a draft, after the gate holds and
+before `Ready for review` marks it ready.
 
-**Here `clean` is the only yes**, and that is the difference from the gate.
-The gate runs while the pull request is still a draft, where this field
-reports `draft` or `blocked` and says nothing about the merge; the milestone
-runs after the draft is cleared, where the same field finally answers the
-mergeability question the report attests to. So `unstable` is a check that is
-no longer green, `behind` a base the branch does not carry, `dirty` a
-conflict, `blocked` a required review outstanding, and `unknown` GitHub
-saying it cannot determine the answer yet — the indeterminate readiness
-`SKILL.md` rules out. Each of them is a wait, not a milestone.
-
-This call returns no `mergeable` boolean — measured on the server this
-session holds, 2026-09-18 — so `mergeable_state` is the whole answer rather
-than half of it.
+`mergeable_state` is not a milestone condition. The gate uses it only for
+`behind`, `dirty` and `unknown`; `draft` and `blocked` do not answer branch
+currency or readiness. The independent gate reads for currency, current-head
+CI, review completion, threads, the completion notice and blockers decide
+whether the report may be posted. Do not wait for a post-ready `clean` read.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the
@@ -200,16 +193,17 @@ carries that shape, the earliest is the start. The resumed sequence makes this
 read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
 `SKILL.md`.
 
-**The report posts with `mcp__github__add_issue_comment`** — a pull request's
-comments are issue comments, so the claim's write is the report's. The same
-call only writes, so read first: `mcp__github__pull_request_read`, method
-`get_comments`, on the pull request, the report found by its opening line, `First-readiness
-report`, the marker `SKILL.md` fixes, and a resumed sequence that finds it
-posts nothing.
+**Post the report before marking ready.** Read the PR's comments with
+`mcp__github__pull_request_read`, method `get_comments`, and find the fixed
+`First-readiness report` marker before writing. If it is absent and the gate
+holds, post with `mcp__github__add_issue_comment`. A failed report write
+leaves the PR draft; a failed ready write preserves the report for a
+revalidated retry.
 
 **The provenance** is `provenance`'s block, read the way its
 [`references/claude.md`](../../provenance/references/claude.md) names: the
 same `mcp__Claude_Code_Remote__get_session` call `The session` above uses.
+
 
 
 The orchestrator
