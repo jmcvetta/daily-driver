@@ -31,7 +31,6 @@ PI_CONFIG_FILES=./cocktail.yml omp
 | --- | --- |
 | `glm.yml` | GLM 5.3 Flash for default, small, vision, commit, and tiny work; GLM 5.3 for deep analysis, planning, and advice; GLM 5.3 Fast for task subagents. |
 | `gpt.yml` | GPT role overlay using `openai-codex` routes. |
-| `gpt.gateway.yml` | **Unsupported legacy overlay.** Its GPT role pins still use `vercel-ai-gateway`; do not use it for GPT calls. |
 | `cocktail.yml` | GLM 5.3 Flash by default, for task subagents, and for small, vision, and commit work; Kimi K3 for planning and deep work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
 | `multi-model.yml` | OpenAI roles through `openai-codex`: GPT-6 Luna for small, task, mechanical, and implementation work; GPT-6.1 Sol for default work, deep analysis, and advice; GPT-6 Astra for frontier work; GLM 5.3 Flash through OpenCode Go for review. |
 | `kimi.yml` | Kimi K3 with high reasoning for default work, planning, and deep work, and low reasoning for task subagents; GLM 5.3 Flash for small, vision, and commit work; Qwen 3.8 Max 0902 for advice; Mercury 2.5 for tiny background work. |
@@ -67,9 +66,14 @@ Catalog entries do not guarantee that a provider still serves a model. An infere
 The Vercel AI Gateway models require `AI_GATEWAY_API_KEY`. Omp reads that name
 only; it uses `VERCEL_AI_GATEWAY_API_KEY` for catalog discovery, not for
 requests. In this repository `make evals-setup-omp` maps the second name to the
-first for non-GPT gateway routes. All OpenAI roles in `multi-model.yml` use
-`openai-codex`, as do eval GPT subject, judge, and helper calls. Log in with
-`omp login` and select `openai-codex` before using these routes.
+first for non-GPT gateway routes. All OpenAI model selectors in these overlays
+must use `openai-codex`, never `openai` or a gateway. Eval GPT subject, judge,
+and helper calls also use `openai-codex`. Log in with `omp login` and select
+`openai-codex` before using these routes.
+
+These overlays do not enforce a runtime provider ban. Unlisted roles inherit
+the underlying configuration, and later overlays or manual model selection
+can change routes. Keep those OpenAI selections on `openai-codex` too.
 
 The OpenCode Go reviewer requires OpenCode credentials (`OPENCODE_API_KEY` or
 credentials stored by `omp login`). Select the `opencode-go` provider, not

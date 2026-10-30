@@ -87,7 +87,6 @@ approval policy do not imply benchmark support.
 | google-antigravity/gemini-3.1-pro:high | classes-gemini-3-1-pro | mechanical | 1/1 | 0/1 | unreported | 2026-10-09_21-01-52 | 2026-10-09 |
 | google-antigravity/gemini-3.8-flash:high | classes-gemini-3-8-flash | none | 0/2 | 0/2 | unreported | 2026-10-08_18-49-13 | 2026-10-08 |
 | gpt | classes-gpt | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
-| gpt.gateway | classes-gpt.gateway | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | kimi | classes-kimi | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | minimax | classes-minimax | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | openai-codex/gpt-5.6-terra | classes-smoke-terra-5-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-17_17-50-08 | 2026-10-17 |
