@@ -35,12 +35,12 @@ The fleet
 | ---- | --------- | ---- |
 | `Read the fleet` | Read the epic's muster rolls | `gh issue view <epic> --json comments` |
 | `Read the fleet` | Read a task issue's claim and handoff | `gh issue view <number> --json comments` |
+| `Cancel the watches` | — | no timer, no watcher, no subscription exists on this surface |
 | `Secure the work` | Cancel a delegation | `multi_agent_v1`, one attempt per implementor — unmeasured; a refusal is a residual |
 | `Secure the work` | Stage and commit the worktree | `git -C <worktree> add <named files>` then `git -C <worktree> commit -m <message>` |
 | `Secure the work` | Push the branch | `git -C <worktree> push` |
 | `Write the handoff` | Read a task's pull-request state | `gh pr view <number>` |
 | `Write the handoff` | Comment on a task issue or the epic | `gh issue comment <number> --body-file <path>` |
-| `Cancel the watches` | — | no timer, no watcher, no subscription exists on this surface |
 
 `--body-file` on every comment write, for the reason the other fallback
 routes give: the handoff carries backticks and identifiers a shell argument

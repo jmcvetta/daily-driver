@@ -30,14 +30,13 @@ The fleet
 | `Read the fleet` | Read the epic's muster rolls | `gh issue view <epic> --json comments` |
 | `Read the fleet` | Read a task issue's claim and handoff | `issue://<number>`, comments included |
 | `Read the fleet` | Read a background task's job state | `read proc://<job-id>` using the job ID returned by `task` |
+| `Cancel the watches` | Cancel the backstop timer | `daily_driver_cancel_schedule`, by the trigger id the call returned |
+| `Cancel the watches` | Stop a persistent CI service | `write proc://<name>/kill`, by the service name review-cycle started |
 | `Secure the work` | Cancel a subagent | `write proc://<job-id>/kill`, using that same job ID |
 | `Secure the work` | Stage and commit the worktree | `bash`, `git -C <worktree> add <named files>` then `git -C <worktree> commit -m <message>` |
 | `Secure the work` | Push the branch | `bash`, `git -C <worktree> push`
 | `Write the handoff` | Read a task's pull-request state | `pr://<number>` |
 | `Write the handoff` | Comment on a task issue or the epic | `gh issue comment <number> --body-file <path>` |
-
-| `Cancel the watches` | Cancel the backstop timer | `daily_driver_cancel_schedule`, by the trigger id the call returned |
-| `Cancel the watches` | Stop a persistent CI service | `write proc://<name>/kill`, by the service name review-cycle started |
 
 `--body-file` on every comment write, for the reason the other skills'
 routes give: the handoff carries fenced blocks, backticks and identifiers,
