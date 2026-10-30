@@ -9,9 +9,7 @@ updates:
     schedule:
       interval: weekly
 
-  # infra/github/.terraform.lock.hcl. The `Checks` job fails a pull request whose
-  # lock file `tofu init` would rewrite, so a provider bump that arrives here
-  # is checked the same way a hand-written one is.
+  # infra/github/.terraform.lock.hcl; CI does not check that file for drift.
   - package-ecosystem: terraform
     directory: /infra/github
     schedule:
