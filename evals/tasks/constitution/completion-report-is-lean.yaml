@@ -225,17 +225,18 @@ run_limits:
   # `agent_judge` calls. A turn like that is a handful of tool calls, but the
   # ceiling is NOT set to that figure: issue #279's comparison was corrupted by
   # an 8-turn ceiling on a row that used 12 to 22, and a row truncated at its
-  # cap scores 0 in both arms and reads exactly like non-compliance. 30 is the
-  # experiment default and clears the real need with room to spare.
-  max_turns: 30
+  # cap scores 0 in both arms and reads exactly like non-compliance. 60 is the
+  # runaway guard for the behaviour suites (see `evals/README.md`, "Turn and
+  # time ceilings"), and clears the real need many times over.
+  max_turns: 60
   # `turn_timeout` is the budget for ONE agent turn; `task_timeout` is a single
   # watchdog armed before the turn starts and still running while both judges
-  # are called. The arithmetic here is 1 × 300 for the turn and 2 × 120 for the
-  # judges, which is 540 — and a judge that retries once on a rate limit has to
-  # fit inside the difference too. 900 leaves the grading window intact. It is
-  # headroom, not a target: the work in this fixture is two edits.
-  task_timeout: 900
-  turn_timeout: 300
+  # are called. The arithmetic here is 1 × 900 for the turn and 2 × 120 for the
+  # judges, which is 1140 — and a judge that retries once on a rate limit has
+  # to fit inside the difference too. 1500 leaves the grading window intact. It
+  # is headroom, not a target: the work in this fixture is two edits.
+  task_timeout: 1500
+  turn_timeout: 900
 
 sandbox:
   template_sources:

@@ -10,9 +10,9 @@ agent:
 
 
 run_limits:
-  max_turns: 14
-  turn_timeout: 300
-  task_timeout: 600
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
 
 sandbox:
   template_sources:

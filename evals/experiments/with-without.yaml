@@ -27,16 +27,20 @@ defaults:
   repeats: 5
 
   run_limits:
-    # A per-task ceiling, not a target; every task restates both timeouts with
-    # what it actually needs. They are two different clocks and must not be set
-    # equal: `turn_timeout` is the agent's budget, while `task_timeout` is a
-    # watchdog armed before the turn starts that is still running when the
-    # criteria are checked. Equal, a turn that spends its budget is SIGKILLed
-    # as a TIMEOUT before it can be graded. The 180s gap is the grading window,
-    # and it is inherited by any task that omits this block.
-    max_turns: 30
-    task_timeout: 780
-    turn_timeout: 600
+    # A per-task runaway guard, not a target or a quota: it stops a session
+    # that is going nowhere and must never be the reason a valid workflow
+    # fails. See `evals/README.md`, "Turn and time ceilings". The cheap
+    # trigger-accuracy cases restate small values; the behaviour cases the
+    # #662 measurements run use at least these. The two timeouts are different
+    # clocks and must not be set equal: `turn_timeout`
+    # is the agent's budget, while `task_timeout` is a watchdog armed before
+    # the turn starts that is still running when the criteria are checked.
+    # Equal, a turn that spends its budget is SIGKILLed as a TIMEOUT before it
+    # can be graded. The 180s gap is the grading window, and it is inherited by
+    # any task that omits this block.
+    max_turns: 60
+    task_timeout: 1080
+    turn_timeout: 900
 
   agent:
     type: claude-code

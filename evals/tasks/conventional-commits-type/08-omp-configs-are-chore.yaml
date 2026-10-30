@@ -14,9 +14,9 @@ agent:
   disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
 
 run_limits:
-  max_turns: 5
-  task_timeout: 300
-  turn_timeout: 120
+  max_turns: 60
+  task_timeout: 1080
+  turn_timeout: 900
 
 success_criteria:
   - type: skill_triggered
