@@ -121,9 +121,10 @@ def restrict_model_upstreams(
     providers = _mapping(document, "providers", str(path))
     block = _mapping(providers, provider, f"{path}: providers")
     override = _selected_override(block, provider, model_id, path)
+    custom = _custom_model(block, model_id, path)
     _refuse_alternate_model(override, provider, model_id, path, "modelOverrides")
-    _refuse_alternate_model(_custom_model(block, model_id, path), provider, model_id, path, "models")
-    _refuse_extra_body(block, override, model_id, path)
+    _refuse_alternate_model(custom, provider, model_id, path, "models")
+    _refuse_extra_body(block, override, custom, model_id, path)
     compat = _mapping(override, "compat", f"{path}: {provider}/{model_id}")
     routing = _mapping(compat, "vercelGatewayRouting", f"{path}: {provider}/{model_id}.compat")
     routing.pop("order", None)
@@ -193,15 +194,20 @@ def _refuse_alternate_model(
 
 
 def _refuse_extra_body(
-    block: dict[str, object], override: dict[str, object], model_id: str, path: Path
+    block: dict[str, object],
+    override: dict[str, object],
+    custom: dict[str, object],
+    model_id: str,
+    path: Path,
 ) -> None:
     """Refuse an inherited request body that could replace the enforced values.
 
     Omp applies `compat.extraBody` after the gateway routing, with a plain
     `Object.assign`, so an inherited `providerOptions` replaces the allowlist
     and an inherited `model` replaces the selected model. Provider `compat` is
-    a baseline and per-model `compat` is merged over it, so a conflicting key
-    in either layer is refused rather than silently dropped.
+    a baseline, per-model `compat` is merged over it, and a custom `models:`
+    definition carries its own compatibility configuration, so a conflicting
+    key in any layer is refused rather than silently dropped.
     """
     provider_compat = block.get("compat")
     if provider_compat is not None and not isinstance(provider_compat, dict):
@@ -209,7 +215,15 @@ def _refuse_extra_body(
     override_compat = override.get("compat")
     if override_compat is not None and not isinstance(override_compat, dict):
         raise ValueError(f"{path}: {model_id}.compat must be a mapping")
-    for compat, layer in ((provider_compat, "provider"), (override_compat, "model")):
+    custom_compat = custom.get("compat")
+    if custom_compat is not None and not isinstance(custom_compat, dict):
+        raise ValueError(f"{path}: the models: definition for {model_id} must carry compat as a mapping")
+    layers = (
+        (provider_compat, "provider"),
+        (override_compat, "model override"),
+        (custom_compat, "models: definition"),
+    )
+    for compat, layer in layers:
         if not compat:
             continue
         extra = compat.get("extraBody")
