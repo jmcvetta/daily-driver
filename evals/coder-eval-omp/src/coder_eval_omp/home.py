@@ -1,4 +1,5 @@
-"""Which files of a real Omp home the throwaway home may borrow.
+"""Which files of a real Omp home the throwaway home may borrow, and how a
+borrowed model configuration is restricted.
 
 Pure on purpose, like `rpc`; it imports no `coder_eval` dependency.
 
@@ -10,7 +11,11 @@ allow list, never by "everything except".
 
 from __future__ import annotations
 
+import os
+from collections.abc import Sequence
 from pathlib import Path
+
+import yaml
 
 
 #: The files that carry providers and credentials, in Omp 18.4.10:
@@ -41,6 +46,27 @@ PROVIDER_FILES: tuple[str, ...] = (
     "secrets.yml",
 )
 
+#: The one file of the agent directory that carries provider and per-model
+#: routing configuration (Omp 18.14.0, `packages/coding-agent/src/config/
+#: models-config.ts`). Omp relocates its config root, and this file with it,
+#: when `PI_CONFIG_DIR` or `OMP_PROFILE` is set; `launch.child_env` clears both
+#: so the throwaway home is the configuration the session actually reads.
+MODEL_CONFIG_FILE = "models.yml"
+
+#: Model-override fields that name a second model for auxiliary work. On the
+#: selected route they are a fallback away from it, so the restriction refuses
+#: them rather than letting a run reach a model the experiment does not measure.
+ALTERNATE_MODEL_FIELDS: tuple[str, ...] = ("compactionModel", "contextPromotionTarget")
+
+#: The transport that can carry a Vercel gateway restriction. Omp's catalog
+#: gives every `vercel-ai-gateway` model `api: anthropic-messages`, and that
+#: provider never serializes `compat.vercelGatewayRouting`; only the Chat
+#: Completions and Responses providers apply it (`applyOpenAIGatewayRouting`,
+#: `packages/ai/src/providers/openai-shared.ts` in Omp 18.14.0). A restricted
+#: model therefore selects Chat Completions, or the allowlist is silently
+#: dropped and the request runs on whatever upstream the gateway picks.
+GATEWAY_ROUTING_API = "openai-completions"
+
 
 def inherited_files(real_agent_dir: Path) -> list[Path]:
     """The files of `real_agent_dir` the throwaway home symlinks in.
@@ -53,3 +79,102 @@ def inherited_files(real_agent_dir: Path) -> list[Path]:
         for name in PROVIDER_FILES
         if (real_agent_dir / name).is_file()
     ]
+
+
+def restrict_model_upstreams(
+    agent_dir: Path,
+    provider: str,
+    model_id: str,
+    only: Sequence[str],
+) -> Path:
+    """Write `agent_dir/models.yml` with `model_id` restricted to `only`.
+
+    The inherited `models.yml` is read and merged into a private copy, so the
+    caller's file is never written through the symlink that borrows it. Only the
+    selected model's Vercel gateway routing changes: unrelated providers,
+    credentials, models and compatibility settings survive, and the model's
+    upstream allowlist is replaced rather than unioned with what the operator
+    configured. A personal `order` preference is dropped, because it names
+    alternate upstreams for a route that now allows exactly `only`. The
+    override also selects `GATEWAY_ROUTING_API`, because Omp's catalog
+    transport for these models drops the allowlist instead of sending it.
+
+    `provider` must be `vercel-ai-gateway` and `model_id` the exact catalog
+    entry, which `rpc.model_commands` resolves from the experiment's selector.
+    Duplicates in `only` collapse in first-seen order.
+
+    Raises `ValueError` for an unreadable or malformed configuration, an empty
+    allowlist, or a selected model that names an alternate model of its own.
+    """
+    allowed = list(dict.fromkeys(only))
+    if not allowed:
+        raise ValueError("an upstream restriction must name at least one provider")
+    path = agent_dir / MODEL_CONFIG_FILE
+    document = _read_models(path)
+    override = _selected_override(document, provider, model_id, path)
+    for field in ALTERNATE_MODEL_FIELDS:
+        value = override.get(field)
+        if value and value != f"{provider}/{model_id}":
+            raise ValueError(
+                f"{path}: {provider}/{model_id} carries {field}={value!r}, which routes "
+                "auxiliary work to another model; refusing to restrict a route that "
+                "falls back away from the selected one"
+            )
+    compat = _mapping(override, "compat", f"{path}: {provider}/{model_id}")
+    routing = _mapping(compat, "vercelGatewayRouting", f"{path}: {provider}/{model_id}.compat")
+    routing.pop("order", None)
+    routing["only"] = allowed
+    override["api"] = GATEWAY_ROUTING_API
+    _write_private(path, document)
+    return path
+
+
+def _read_models(path: Path) -> dict[str, object]:
+    """The model configuration at `path`, or an empty document where none exists."""
+    if not path.exists():
+        return {}
+    try:
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except OSError as error:
+        raise ValueError(f"{path}: cannot read the inherited model configuration: {error}") from error
+    except yaml.YAMLError as error:
+        raise ValueError(f"{path}: the inherited model configuration is not valid YAML: {error}") from error
+    if document is None:
+        return {}
+    if not isinstance(document, dict):
+        raise ValueError(f"{path}: the model configuration must be a mapping, not {type(document).__name__}")
+    return document
+
+
+def _selected_override(
+    document: dict[str, object], provider: str, model_id: str, path: Path
+) -> dict[str, object]:
+    """The `modelOverrides` entry for `model_id`, created where it is absent."""
+    providers = _mapping(document, "providers", str(path))
+    block = _mapping(providers, provider, f"{path}: providers")
+    overrides = _mapping(block, "modelOverrides", f"{path}: providers.{provider}")
+    return _mapping(overrides, model_id, f"{path}: providers.{provider}.modelOverrides")
+
+
+def _mapping(parent: dict[str, object], key: str, where: str) -> dict[str, object]:
+    """`parent[key]` as a mapping, created when absent, refused when malformed."""
+    value = parent.setdefault(key, {})
+    if not isinstance(value, dict):
+        raise ValueError(f"{where}.{key} must be a mapping, not {type(value).__name__}")
+    return value
+
+
+def _write_private(path: Path, document: dict[str, object]) -> None:
+    """Replace `path` with a private copy, even where it is a borrowed symlink.
+
+    `os.replace` swaps the directory entry, so the file the symlink pointed at
+    keeps its content; writing through `Path.write_text` would follow the link
+    into the operator's own `~/.omp/agent/`. Owner-only permissions match what
+    Omp writes for the same file, which can carry a provider's credentials.
+    """
+    temporary = path.with_name(f"{path.name}.tmp")
+    text = yaml.safe_dump(document, sort_keys=False)
+    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    os.replace(temporary, path)

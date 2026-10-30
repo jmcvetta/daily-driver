@@ -88,6 +88,13 @@ def child_env(
     env["HOME"] = str(home)
     for name in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
         env[name] = str(home / name.lower())
+    # Omp reads its agent directory from `HOME`, and relocates it to
+    # `PI_CONFIG_DIR` or a profile under `OMP_PROFILE` when either is set. An
+    # inherited one would point the session at a home this adapter never
+    # prepared, silently dropping the borrowed provider files and the private
+    # model routing written beside them.
+    for name in ("PI_CONFIG_DIR", "OMP_PROFILE"):
+        env.pop(name, None)
     env[TOOLS_ENV] = ",".join(tools.tools)
     documents = [
         str(candidate.resolve())

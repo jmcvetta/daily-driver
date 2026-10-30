@@ -1346,6 +1346,11 @@ The same suites and plugin run Omp subjects with paired `bare` and
 `with-plugin` variants. GLM 5.3 Flash is the tier probe beside full GLM.
 The committed GPT 6 Sol and Luna experiments use their Codex provider routes.
 Their historical gateway records remain unchanged.
+The DeepSeek experiments pin the newest dated Pro and Flash catalog entries and
+restrict each to DeepSeek's first-party upstream; a missing route fails instead
+of falling back to another provider. The older DeepSeek result does not
+establish whether quantization caused its poor score. Both experiments require
+a separately authorized live run before any serving or quality claim.
 `docs/notes/0013-the-omp-arm.md` records the adapter decision.
 
 Only a Claude judge requires a Claude Code execution session for an Omp
@@ -1371,7 +1376,8 @@ fail.
 ```sh
 make evals-run-omp-glm-5-3                    # GLM 5.3 only
 make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
-make evals-run-omp-deepseek-v4-pro            # DeepSeek v4 Pro only
+make evals-run-omp-deepseek-v4-pro            # DeepSeek V4 Pro 0813 only
+make evals-run-omp-deepseek-v4-1-flash        # DeepSeek V4.1 Flash 1017 only
 make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol via openai-codex
 make evals-run-omp-gpt-6-luna                 # GPT 6 Luna via openai-codex
 make evals-run-omp-gpt-6-sol                  # GPT 6 Sol via openai-codex
@@ -1386,7 +1392,8 @@ must configure it. Every GPT subject, judge, and helper call must use
 | --- | --- |
 | `omp-glm-5.3.yaml` | `vercel-ai-gateway/zai/glm-5.3` |
 | `omp-glm-5.3-flash.yaml` | `vercel-ai-gateway/zai/glm-5.3-flash` |
-| `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro` |
+| `omp-deepseek-v4-pro.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4-pro-0813` |
+| `omp-deepseek-v4.1-flash.yaml` | `vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017` |
 | `omp-gpt-5.6-sol.yaml` | `openai-codex/gpt-5.6-sol` |
 | `omp-gpt-6-sol.yaml` | `openai-codex/gpt-6-sol` |
 | `omp-gpt-6-luna.yaml` | `openai-codex/gpt-6-luna` |
@@ -1398,6 +1405,28 @@ Omp home and writes nothing back into it. It does not borrow `config.yml`: the
 throwaway home gets its own, which pins every Omp chat role to the arm's
 `model`. Unpinned, Omp's subagents and helper calls would run on whatever the
 provider catalog offers.
+
+**The DeepSeek arms allow one upstream.** Each names `vercel_gateway_only:
+[deepseek]`, and the adapter writes that into the throwaway home's `models.yml`
+as `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
+vercelGatewayRouting.only`. Omp sends it as the request's
+`providerOptions.gateway.only`, so an unavailable DeepSeek upstream fails
+rather than being served by another provider; `order` alone would not, and a
+`deepseek/...` model id is not evidence of which upstream answered. The merge
+replaces the selected model's allowlist instead of unioning it with the
+operator's, keeps every unrelated provider, credential and compatibility
+setting, and swaps the borrowed symlink for a private file so
+`~/.omp/agent/models.yml` keeps its content and target. Omp's catalog gives
+every gateway model the `anthropic-messages` transport, which never serializes
+the routing block, so a restricted model also selects `api:
+openai-completions` — the transport Omp applies `providerOptions.gateway` on.
+The adapter also
+clears `PI_CONFIG_DIR` and `OMP_PROFILE` for the child, because either would
+relocate Omp's configuration root and silently bypass the throwaway home. A
+non-Vercel selector, an empty allowlist, an invalid slug or a selected model
+that names an alternate model is refused before Omp starts. None of this
+proves which upstream served a request: that needs a separately authorized
+live run.
 
 ### Running an Omp arm
 
