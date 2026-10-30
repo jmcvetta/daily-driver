@@ -1,0 +1,19 @@
+# Hand-labelled calibration examples for the reviewer-quality semantic rubric.
+# These are constructed transcripts, not outputs from a subject or judge.
+set_id: reviewer-quality-01-boundary-v1
+
+rubric:
+  task: evals/tasks/reviewer-quality/01-boundary.yaml
+  criterion: 0
+  presented_as: agent_output
+
+acceptance:
+  pass_score: 0.7
+  min_accuracy: 1.0
+  max_false_passes: 0
+  max_errors: 0
+
+examples:
+  - {id: true-positive-boundary, kind: true-positive, label: pass, expected_score: 1.0, transcript: transcripts/tp-boundary.txt}
+  - {id: unsupported-finding, kind: false-positive, label: fail, expected_score: 0.0, transcript: transcripts/fp-unrelated.txt}
+  - {id: missed-boundary-defect, kind: missed-defect, label: fail, expected_score: 0.0, transcript: transcripts/fn-boundary.txt}

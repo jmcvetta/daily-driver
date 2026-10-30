@@ -1,0 +1,1 @@
+{"reviewer_reported_identity":"unreported","verdict":"defects","findings":[{"location":"records.py","trigger":"no validation that items is a list","impact":"malformed caller input may behave unexpectedly","severity":"medium"},{"location":"records.py","trigger":"zero limit is accepted","impact":"no records are returned","severity":"low"}]}

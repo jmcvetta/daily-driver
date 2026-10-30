@@ -1,0 +1,51 @@
+task_id: reviewer-quality-02-contract
+description: Review a change to a service response and caller.
+tags: [omp-only, reviewer-quality]
+skip: true
+reference:
+  directory: references/02-contract
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/shared
+      mount_point: .fixture
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/cases/02-contract
+      mount_point: .case
+pre_run:
+  - command: bash .fixture/setup.sh 02-contract
+    timeout: 30
+initial_prompt: >-
+  First read `xd://daily_driver_set_session_title`, then invoke it with
+  `{"title":"Reviewer-quality case 02"}`. Next read `.review-brief`,
+  `.review-diff`, and `.review-current-diff`. Dispatch exactly one reviewer
+  task for this local-only review; do not publish to GitHub or dispatch again.
+  In the reviewer task, require it first to read and invoke its own
+  `xd://daily_driver_get_session`. Its raw result must be exactly one JSON
+  object with `reviewer_reported_identity` (returned model ID or `unreported`),
+  `verdict` (`clear` or `defects`), and `findings` (objects with `location`,
+  `trigger`, `impact`, and `severity`). The identity is harness-selected, not
+  proof of backend-served identity. Include the brief and local diff verbatim.
+  Save the reviewer's raw JSON unchanged to `reviewer-result.txt`, then return
+  that file unchanged. Do not review or invent findings or use a fallback.
+success_criteria:
+  - type: agent_judge
+    description: Review finding accuracy and impact
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: omp-gpt-6.1-sol, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Key: the API changes its returned object field to `balance_cents` in
+      `service.py`, while `client.py` still indexes `balance`. Trigger: every
+      caller of `show_summary` against this endpoint raises KeyError. Impact:
+      summary display fails. Valid location: `client.py`, the old field access
+      (cross-file contract mismatch). Expected verdict: report this as a
+      consumer-visible defect. Score only if trigger, impact, and location
+      match. Return exactly {score: 0|1, rationale: string, findings: [strings]}.
+      Findings use TP:contract, FN:contract, FP:<evidence>, or
+      UNEXPECTED_VALID:<evidence>. Consolidate duplicates. An unkeyed finding
+      with credible code evidence is UNEXPECTED_VALID, not FP. Ignore style.

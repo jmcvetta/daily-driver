@@ -1,0 +1,29 @@
+experiment_id: omp-reviewer-deepseek-v4-pro-go
+description: >-
+  Reviewer finding quality on eight frozen local diffs. Only the reviewer
+  route differs from omp-reviewer-glm-5-3-go; the parent is not scored
+  as the reviewer. Smoke repeats are explicitly overridden to one.
+defaults:
+  repeats: 5
+  run_limits:
+    max_turns: 16
+    turn_timeout: 900
+    task_timeout: 900
+  agent:
+    type: omp
+    model: openai-codex/gpt-6.1-sol:low
+    permission_mode: acceptEdits
+    allowed_tools: [Read, Bash, Task, Write]
+    record_task_dispatches: true
+    settle_on_async_handoff: false
+    extra_args: [--config, routes/deepseek.yml]
+  post_run:
+    - command: 'cat omp-task-dispatches.json'
+    - command: 'cat omp-protocol-observations.json'
+variants:
+  - variant_id: reviewer
+    description: Fixed plugin and parent; DeepSeek V4 Pro reviewer on OpenCode Go.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

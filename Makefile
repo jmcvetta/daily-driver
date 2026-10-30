@@ -395,6 +395,13 @@ evals-plan: evals-setup-claude evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-high.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-low.yaml tasks/*/*.yaml
 
+# The reviewer-quality cohort is opt-in and does not run workflow ablations.
+.PHONY: evals-plan-reviewer-quality
+evals-plan-reviewer-quality: evals-setup-claude
+	uv run --frozen python3 scripts/evals-variants.py evals/experiments/omp-reviewer-glm-5.3-go.yaml evals/experiments/omp-reviewer-deepseek-v4-pro-go.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-reviewer-glm-5.3-go.yaml tasks/reviewer-quality/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/omp-reviewer-deepseek-v4-pro-go.yaml tasks/reviewer-quality/*.yaml
+
 # evals-variants: refuse to start when an arm's agent kind is not registered.
 # `coder-eval plan` PRINTS "Variant 'omp': resolution failed" and then exits 0,
 # so plan alone cannot catch an arm that will measure nothing -- measured, and

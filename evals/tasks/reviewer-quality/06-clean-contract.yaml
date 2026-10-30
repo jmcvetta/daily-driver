@@ -1,0 +1,49 @@
+task_id: reviewer-quality-06-clean-contract
+description: Review a coordinated service and client update.
+tags: [omp-only, reviewer-quality]
+skip: true
+reference:
+  directory: references/06-clean-contract
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/shared
+      mount_point: .fixture
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/cases/06-clean-contract
+      mount_point: .case
+pre_run:
+  - command: bash .fixture/setup.sh 06-clean-contract
+    timeout: 30
+initial_prompt: >-
+  First read `xd://daily_driver_set_session_title`, then invoke it with
+  `{"title":"Reviewer-quality case 06"}`. Next read `.review-brief`,
+  `.review-diff`, and `.review-current-diff`. Dispatch exactly one reviewer
+  task for this local-only review; do not publish to GitHub or dispatch again.
+  In the reviewer task, require it first to read and invoke its own
+  `xd://daily_driver_get_session`. Its raw result must be exactly one JSON
+  object with `reviewer_reported_identity` (returned model ID or `unreported`),
+  `verdict` (`clear` or `defects`), and `findings` (objects with `location`,
+  `trigger`, `impact`, and `severity`). The identity is harness-selected, not
+  proof of backend-served identity. Include the brief and local diff verbatim.
+  Save the reviewer's raw JSON unchanged to `reviewer-result.txt`, then return
+  that file unchanged. Do not review or invent findings or use a fallback.
+success_criteria:
+  - type: agent_judge
+    description: Review finding accuracy and impact
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: omp-gpt-6.1-sol, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Key: `service.py` and `client.py` both use `balance_cents`; the changed
+      response contract has a matching caller. Expected verdict: no actionable
+      defect. Score 1 only when the response reports no actionable defect;
+      unsupported defect claims count as false positives. Return exactly
+      {score: 0|1, rationale: string, findings: [strings]}. Findings use
+      FP:<evidence> for unsupported claims or UNEXPECTED_VALID:<evidence> for a
+      credible unkeyed defect. Consolidate duplicates. A credible unkeyed
+      defect is not automatically an FP.

@@ -1,0 +1,52 @@
+task_id: reviewer-quality-07-delta-fixed
+description: Review the change that addresses a previously reported boundary issue.
+tags: [omp-only, reviewer-quality]
+skip: true
+reference:
+  directory: references/07-delta-fixed
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/shared
+      mount_point: .fixture
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/cases/07-delta-fixed
+      mount_point: .case
+pre_run:
+  - command: bash .fixture/setup.sh 07-delta-fixed
+    timeout: 30
+initial_prompt: >-
+  First read `xd://daily_driver_set_session_title`, then invoke it with
+  `{"title":"Reviewer-quality case 07"}`. Next read `.review-brief`,
+  `.review-diff`, `.review-current-diff`, and `.review-delta`. Dispatch
+  exactly one reviewer task for this local-only review; do not publish to
+  GitHub or dispatch again. In that reviewer task, require it first to read
+  and invoke its own `xd://daily_driver_get_session`. Its raw result must be
+  exactly one JSON object with `reviewer_reported_identity` (returned model ID
+  or `unreported`), `verdict` (`clear` or `defects`), and `findings` (objects
+  with `location`, `trigger`, `impact`, and `severity`). The identity is
+  harness-selected, not proof of backend-served identity. Include all four
+  local files verbatim and request only a bounded original/current three-dot
+  review of the prior finding and caller. Save reviewer JSON unchanged to
+  `reviewer-result.txt`, then return it unchanged. Do not full-audit, invent
+  findings, or use a fallback.
+success_criteria:
+  - type: agent_judge
+    description: Delta finding status and scope
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: omp-gpt-6.1-sol, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Key: the prior boundary finding is fully fixed in current: `page` now
+      returns `items[offset:offset + limit]`, restoring the omitted final item.
+      The fix introduces no caller impact. Expected verdict: clearly say fixed
+      and identify no regression. Score 1 only when status, impact, and location
+      match. Return exactly {score: 0|1, rationale: string, findings: [strings]}.
+      Findings use DELTA:clear, FN:fixed, FP:<evidence>, or
+      UNEXPECTED_VALID:<evidence>. Consolidate duplicates; credible unkeyed
+      defects are not automatically false positives. Ignore full-audit issues
+      outside the named change.
