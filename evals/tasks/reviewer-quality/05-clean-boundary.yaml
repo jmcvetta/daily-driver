@@ -12,6 +12,9 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/reviewer-quality/cases/05-clean-boundary
       mount_point: .case
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/shared/routes
+      mount_point: routes
 pre_run:
   - command: bash .fixture/setup.sh 05-clean-boundary
     timeout: 30

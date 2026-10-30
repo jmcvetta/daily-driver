@@ -8,8 +8,4 @@ current=$(awk -F= '$1 == "current" {print $2}' .review-commits)
 git diff "$base...$review" >.review-diff
 git diff "$base...$current" >.review-current-diff
 git diff "$review...$current" >.review-delta
-if [[ -d .fixture/routes ]]; then
-  mkdir -p routes
-  cp -R .fixture/routes/. routes/
-fi
 rm -rf -- .fixture .case

@@ -1,0 +1,83 @@
+{
+  "acceptance_rule": {
+    "max_errors": 0,
+    "max_false_passes": 0,
+    "min_accuracy": 1.0,
+    "pass_score": 0.7
+  },
+  "correct": 3,
+  "errors": 0,
+  "examples": [
+    {
+      "correct": true,
+      "id": "true-positive-boundary",
+      "kind": "true-positive",
+      "label": "pass",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "pass",
+      "rationale": "The report correctly identifies the exclusive end expression in records.py's page function, the positive-limit trigger returning one fewer record, and the resulting skipped final record during pagination.",
+      "score": 1.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 651,
+        "output": 53
+      }
+    },
+    {
+      "correct": true,
+      "id": "unsupported-finding",
+      "kind": "false-positive",
+      "label": "fail",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The agent did not report the off-by-one exclusive end expression in records.py page or its positive-limit record loss and pagination impact. Its input-validation and zero-limit findings do not match the keyed defect and lack credible code evidence of separate defects.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 667,
+        "output": 100
+      }
+    },
+    {
+      "correct": true,
+      "id": "missed-boundary-defect",
+      "kind": "missed-defect",
+      "label": "fail",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The agent reported no findings and marked the code clear, missing the required pagination boundary defect in records.py. The exclusive end offset + limit - 1 returns one fewer record for positive limits and can silently lose or skip results.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 613,
+        "output": 65
+      }
+    }
+  ],
+  "false_passes": 0,
+  "judge": {
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "route": "omp",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated"
+  },
+  "labels_sha": "fd4417bcc8b6ba4c8d5c890c2958ca5b8649b75a9d1ac1abb2060c60d5021f3b",
+  "met_acceptance_rule": true,
+  "prompt_version": "omp-judge-v1",
+  "rubric_prompt_sha": "63c268a35281441484010cc471b6902b6c7d603e6b90800ade58b38dc29c30b7",
+  "rubric_source": {
+    "criterion": 0,
+    "presented_as": "agent_output",
+    "task": "evals/tasks/reviewer-quality/01-boundary.yaml"
+  },
+  "schema_version": 1,
+  "set_id": "reviewer-quality-01-boundary-v1",
+  "total": 3
+}

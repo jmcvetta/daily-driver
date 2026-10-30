@@ -27,6 +27,9 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/reviewer-quality/cases/08-delta-incomplete
       mount_point: .case
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/shared/routes
+      mount_point: routes
 pre_run:
   - command: bash .fixture/setup.sh 08-delta-incomplete
     timeout: 30

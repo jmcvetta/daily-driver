@@ -12,6 +12,9 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/reviewer-quality/cases/06-clean-contract
       mount_point: .case
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/shared/routes
+      mount_point: routes
 pre_run:
   - command: bash .fixture/setup.sh 06-clean-contract
     timeout: 30

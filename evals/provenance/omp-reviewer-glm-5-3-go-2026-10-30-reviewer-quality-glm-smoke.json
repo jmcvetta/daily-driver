@@ -1,0 +1,127 @@
+{
+  "attempts": [
+    {
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-01-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "variant_id": "reviewer"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 39.70181727409363,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-01-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 43.30638241767883,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "reviewer"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-30T20:32:10.569318",
+  "experiment_id": "omp-reviewer-glm-5-3-go",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "29fc48bd6f1dcd06970511fdb811b6bd7aa2034107d26d44a5e2e2b15972a2d4",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": "unavailable",
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": "unavailable"
+  },
+  "plugin_revision": {
+    "commit": "9d6e53709c82ea34e3a519419d4b1264cce2d69c",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-30T13:32:59.850408+00:00",
+  "run_id": "reviewer-quality-glm-smoke",
+  "schema_version": 5,
+  "started_at": "2026-10-30T20:30:47.557588",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "reviewer-quality-01-boundary": [
+          0.0
+        ],
+        "reviewer-quality-05-clean-boundary": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "reviewer-quality-01-boundary",
+        "reviewer-quality-05-clean-boundary"
+      ],
+      "variant_id": "reviewer"
+    }
+  ]
+}

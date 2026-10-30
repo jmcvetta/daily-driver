@@ -12,6 +12,9 @@ sandbox:
     - type: template_dir
       path: ../../fixtures/reviewer-quality/cases/01-boundary
       mount_point: .case
+    - type: template_dir
+      path: ../../fixtures/reviewer-quality/shared/routes
+      mount_point: routes
 pre_run:
   - command: bash .fixture/setup.sh 01-boundary
     timeout: 30
