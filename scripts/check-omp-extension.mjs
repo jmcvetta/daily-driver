@@ -44,6 +44,7 @@ import { tmpdir } from "node:os";
 import { MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS, installModelClassDefaults } from "../extensions/role-default-helper.mjs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import registerUndertakingRoutingChecks from "./undertaking-routing-cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, "..");
@@ -109,6 +110,9 @@ function fakeApi(overrides = {}) {
 			min(n) {
 				return schemaNode({ ...meta, min: n });
 			},
+			optional() {
+				return schemaNode({ ...meta, optional: true });
+			},
 			max(n) {
 				return schemaNode({ ...meta, max: n });
 			},
@@ -160,8 +164,23 @@ function fakeApi(overrides = {}) {
 	const fire = (event, payload, ctx) => {
 		const registered = handlers.get(event);
 		if (!registered) return undefined;
-		const results = registered.map((handler) => handler(payload, ctx));
-		return results.length === 1 ? results[0] : Promise.all(results);
+		let firstResult;
+		function dispatch(start) {
+			for (let index = start; index < registered.length; index++) {
+				const result = registered[index](payload, ctx);
+				if (typeof result?.then === "function") {
+					return Promise.resolve(result).then((value) => {
+						if (event === "tool_call" && value?.block) return value;
+						firstResult ??= value;
+						return dispatch(index + 1);
+					});
+				}
+				if (event === "tool_call" && result?.block) return result;
+				firstResult ??= result;
+			}
+			return firstResult;
+		}
+		return dispatch(0);
 	};
 
 	return { pi, rec: calls, tools, timers, fire };
@@ -3200,15 +3219,20 @@ function guardWithPath(binDir, target, env = {}, call = null) {
 				"const handlers = new Map();",
 				"const node = (m) => ({ describe: () => node(m), min: () => node(m), max: () => node(m), int: () => node(m), optional: () => node(m) });",
 				"const pi = { zod: { object: (s) => s, string: () => node({}), number: () => node({}) },",
-				"  on: (e, h) => handlers.set(e, h), registerTool: () => {}, setSessionName: async () => {},",
+				"  on: (e, h) => { const registered = handlers.get(e) ?? []; registered.push(h); handlers.set(e, registered); }, registerTool: () => {}, setSessionName: async () => {},",
 				"  sendMessage: () => {}, setTimeout: () => 1, clearTimer: () => {} };",
 				"mod.default(pi);",
 				`const target = ${JSON.stringify(target)};`,
 				`const call = ${JSON.stringify(call ?? { toolName: "write", input: { path: "new.txt", content: "x" } })};`,
-				'const decision = handlers.get("tool_call")(',
-				'  { type: "tool_call", toolCallId: "child", toolName: call.toolName, input: call.input },',
-				"  { cwd: target, ui: {} },",
-				");",
+				"let decision;",
+				'for (const handler of handlers.get("tool_call") ?? []) {',
+				"  const result = await handler(",
+				'    { type: "tool_call", toolCallId: "child", toolName: call.toolName, input: call.input },',
+				"    { cwd: target, ui: {} },",
+				"  );",
+				"  if (result?.block) { decision = result; break; }",
+				"  decision ??= result;",
+				"}",
 				"process.stdout.write(JSON.stringify(decision ?? null));",
 			].join("\n"),
 		],
@@ -3406,6 +3430,9 @@ check("get_session reads the session manager and the serving model", async () =>
 		sessionId: "0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
 		sessionName: "Fix the parser",
 		model: "zai/glm-5.3",
+		provider: null,
+		authenticationRoute: null,
+		undertaking: null,
 	});
 });
 
@@ -3414,7 +3441,7 @@ check("get_session tolerates an unnamed session and no model", async () => {
 	const def = s.tools.get("daily_driver_get_session");
 	const ctx = { sessionManager: { getSessionId: () => "s1", getSessionName: () => undefined } };
 	const result = await def.execute("c0b", {}, undefined, undefined, ctx);
-	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null });
+	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null, provider: null, authenticationRoute: null, undertaking: null });
 });
 
 // --- legacy task worktree entries do not restore a separate status ----------
@@ -3540,6 +3567,8 @@ check("package.json wires the extension and is a module", () => {
 	assert.equal(pkg.private, true);
 	assert.deepEqual(pkg.omp, { extensions: ["./extensions/daily-driver.js"] });
 });
+
+registerUndertakingRoutingChecks(check);
 
 /** Build a real extension consumer with mutable active-branch task records. */
 function taskSession(entries = []) {
@@ -3840,7 +3869,6 @@ check("task completion is an explicit report rather than a runtime proof", async
 	assert.equal(await session.fire("before_agent_start", { systemPrompt: ["Policy"] }, session.ctx), undefined);
 	assert.equal(await session.fire("session.compacting", {}, session.ctx), undefined);
 });
-
 await Promise.all(checks);
 rmSync(worktrees.root, { recursive: true, force: true });
 rmSync(staleWorktrees.root, { recursive: true, force: true });

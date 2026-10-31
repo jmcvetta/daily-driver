@@ -47,11 +47,12 @@ frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Non-frontier standalone work keeps its existing route without a class-to-model
-gate. A frontier session resolves its effective route before branch creation
-or claim, then hands ordinary work to an eligible non-frontier session or
-stops with a configuration gap. The unmeasured delegation surface may not be
-assumed to provide that route.
+Before worktree creation or claim, classed work requires the exact class on the
+same family, provider, backend, and authentication route. This surface exposes
+no measured agent-callable in-session model switch. Continue only when the
+current execution identity and all route constraints are established; do not
+invent a switch tool. Otherwise report the unsupported control or configuration
+gap before work begins.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -84,15 +85,13 @@ enforcement or a durable wake mechanism.
 The implementor
 ===============
 
-Ordinary non-frontier implementation stays in the session running this
-sequence. Before branch creation or claim, a frontier session may hand off the
-full undertaking through `multi_agent_v1` only if it can establish an eligible
-non-frontier route and the delegation can start a separate `undertake #<issue>`
-session. The receiving session owns its worktree, claim, implementation, and
-pull request. This namespace is not measured; when those requirements cannot
-be established, stop before the claim and report the configuration gap. A
-supported model switch may continue only after the harness reports
-non-frontier execution.
+Prefer a verified in-session route. A full `undertake #<issue>` handoff through
+`multi_agent_v1` is allowed only if it can constrain and verify the exact class
+and same family, provider, backend, authentication route, and fallbacks. Its
+model selection is unmeasured; do not assume that constraint exists. The
+receiving session owns the worktree, claim, implementation, and pull request;
+the sender stops without recursively handing off or duplicating ownership.
+When neither route can be established, stop and report the exact gap.
 
 
 The pull request

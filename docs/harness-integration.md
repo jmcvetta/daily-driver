@@ -107,6 +107,32 @@ credentials. Use `/model` → Roles to assign models. Existing `omp_configs/`
 files remain process overlays; assignments present at startup take precedence,
 and later edits may require an Omp restart.
 
+Classed undertaking routes through `daily_driver_route_undertaking` before
+worktree creation or claim. It selects the exact class on the same model family,
+provider, backend, and authentication route, including delegated issue workers
+and visible fallbacks. The tool reports `pending`, `verified`, or `blocked`;
+only an observed, verified execution identity permits work. An unavailable or
+incompatible mapping is a configuration gap, not permission to rewrite roles.
+Eligible OAuth account refresh or rotation is allowed. Independently configured
+`reviewer`, `scout`, `security-reviewer`, and `seance` helpers are not issue
+implementation workers and retain their configured routes; implementation
+workers and their execution fallbacks retain the strict route.
+
+After the pull request is ready, or answer-only research is completed and
+recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
+before reusing the session for another issue. Do not finish stopped or
+incomplete work. Selecting a different issue returns an error without replacing
+the existing owner or route; finish the completed undertaking or resume the
+existing one before selecting another. A finish call with the wrong issue also
+returns an error without changing the existing state.
+
+Omp prefers its extension's in-session switch. A full handoff needs a surface
+that can constrain and verify the same route and has one owner. Claude's
+host-side Agent SDK model setter is not an agent-callable tool; Codex's
+delegation model control is unmeasured. Neither is a reason to invent a switch
+tool or assume fallback and authentication constraints. Stop before ownership
+when the available surface cannot establish them.
+
 Omp does not relocate a live session when it creates a task worktree. Use the
 verified absolute task-worktree paths for shell and file-tool operations.
 

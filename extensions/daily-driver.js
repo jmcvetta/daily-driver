@@ -48,6 +48,7 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { installModelClassDefaults } from "./role-default-helper.mjs";
+import { installUndertakingRouting } from "./undertaking-routing.mjs";
 import { installTaskState } from "./task-state.mjs";
 
 /**
@@ -2356,12 +2357,22 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	installTaskState(pi);
 
 	const initializedSettings = new WeakSet();
+	const routingSettings = new Map();
+	function settingsFor(ctx) {
+		// Use the handler's live settings scope, including CLI overlays and child snapshots.
+		if (!pi.settingsManagerFactory && pi.pi?.settings) return Promise.resolve(pi.pi.settings);
+		if (!routingSettings.has(ctx.cwd)) routingSettings.set(ctx.cwd, Promise.resolve(
+			pi.settingsManagerFactory
+				? pi.settingsManagerFactory(ctx.cwd)
+				: import("@mariozechner/pi-coding-agent").then(module => module.SettingsManager.create(ctx.cwd)),
+		));
+		return routingSettings.get(ctx.cwd);
+	}
+	const undertakingRouting = installUndertakingRouting(pi, settingsFor);
 	pi.on("session_start", async (_event, ctx) => {
 		invalidateStartupState();
 		if (typeof ctx?.cwd !== "string") return;
-		const settings = pi.settingsManagerFactory
-			? pi.settingsManagerFactory(ctx.cwd)
-			: (await import("@mariozechner/pi-coding-agent")).SettingsManager.create(ctx.cwd);
+		const settings = await settingsFor(ctx);
 		if (initializedSettings.has(settings)) return;
 		initializedSettings.add(settings);
 		const tags = modelTagsSetting ?? (await import("@oh-my-pi/pi-coding-agent/config/model-settings")).cfgModelTags;
@@ -2690,6 +2701,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 				sessionId: ctx.sessionManager.getSessionId(),
 				sessionName: ctx.sessionManager.getSessionName() ?? null,
 				model,
+				...undertakingRouting.describe(ctx),
 			};
 			return {
 				content: [
