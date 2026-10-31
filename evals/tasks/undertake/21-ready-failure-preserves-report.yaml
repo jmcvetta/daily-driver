@@ -1,0 +1,65 @@
+task_id: undertake-21-ready-failure-preserves-report
+description: >-
+  A failed ready transition preserves the already-published first-readiness
+  report and is reported honestly.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  PR #25 is a draft for issue #24 and the gate conditions hold on its current
+  head. The first-readiness report will post, but marking the PR ready will
+  fail. `gh` is an offline client; see `.fixture/README.md`. What happens now?
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh ready-write-fails
+    timeout: 60
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`undertake` fires on a ready-write failure after reporting"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: run_command
+    description: The report posts before the refused ready write
+    command: python3 .fixture/verify.py gate
+    timeout: 30
+    weight: 3
+
+  - type: agent_judge
+    description: The report is preserved and the failed ready transition is clear
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only actual calls and the final reply. Score 1.0 when the report
+      comment succeeds before `gh pr ready 25` fails, and the reply says the
+      report is preserved while the PR remains draft. Score 0.5 when that
+      failure is reported honestly but the report was not published first.
+      Score 0.0 if the agent claims readiness, repeats or overwrites the
+      report, asks the user, or makes no relevant call.

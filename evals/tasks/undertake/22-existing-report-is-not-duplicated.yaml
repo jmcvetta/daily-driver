@@ -1,0 +1,68 @@
+task_id: undertake-22-existing-report-is-not-duplicated
+description: >-
+  A resumed draft rechecks the current gate, reuses its existing report, and
+  does not post a duplicate.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  PR #25 is a draft for issue #24. Its first-readiness report already exists
+  from an earlier pass, but the gate must be re-read on this head before it can
+  be marked ready. `gh` is an offline client; see `.fixture/README.md`. What
+  happens now?
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh existing-report
+    timeout: 60
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`undertake` fires on a resumed draft with an existing report"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: run_command
+    description: Current-head gate reads precede ready and no report is duplicated
+    command: python3 .fixture/verify.py gate
+    timeout: 30
+    weight: 3
+
+  - type: agent_judge
+    description: The existing report is reused only after current gate reads
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only actual calls and the final reply. Score 1.0 when the agent
+      reads the current gate evidence, verifies that the existing
+      `First-readiness report` is present, posts no duplicate, and only then
+      successfully runs `gh pr ready 25`. Score 0.5 when the report is not
+      duplicated but the gate is incomplete or readiness is not completed for
+      a reason other than an unmet gate condition. Score 0.0 if it posts a
+      duplicate, treats the old report as current-head evidence, asks the user,
+      or claims success without the calls.
