@@ -49,10 +49,13 @@ frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Non-frontier standalone work keeps its existing route without a class-to-model
-gate. A frontier session resolves its actual route before branch creation or
-claim and must hand ordinary work to an eligible non-frontier session or stop
-with a configuration gap.
+Before worktree creation or claim, classed work requires the exact class on the
+same family, provider, backend, and authentication route. The Claude Agent SDK's
+host-side `Query.setModel` is not an agent-callable switch tool. Do not invent
+one or assume that a session-creation model selector also constrains backend,
+authentication, and fallbacks. Continue only when the current execution identity
+and all route constraints are established; otherwise report the unsupported
+control or configuration gap before work begins.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -66,16 +69,13 @@ test holds. Failed or incomplete research stays open.
 The implementor
 ===============
 
-Ordinary non-frontier implementation stays in the session running this
-sequence. Before branch creation or claim, a frontier session may use
-`mcp__Claude_Code_Remote__create_session` or the `Agent` tool only after
-resolving an eligible non-frontier route under
-[`embark`'s Claude routing rules](../../embark/references/claude.md#the-required-class).
-It hands off the full `undertake #<issue>`; the receiving session owns its
-worktree, claim, implementation, and pull request. If the concrete route
-cannot be established, stop and report the configuration gap. A supported
-model switch may continue here only after the harness reports non-frontier
-execution.
+Prefer a verified in-session route. A full `undertake #<issue>` handoff through
+`mcp__Claude_Code_Remote__create_session` or `Agent` is allowed only if that
+surface can constrain and verify the exact class and same family, provider,
+backend, authentication route, and fallbacks. The receiving session owns the
+worktree, claim, implementation, and pull request; the sender stops. Do not
+assume an unmeasured constraint or recursively hand off. If neither route can
+be established, stop and report the exact gap.
 
 
 The pull request

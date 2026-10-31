@@ -31,6 +31,14 @@ setting, or price does not prove class suitability or working credentials.
 Omp's parent-model authentication fallback needs the same reassessment and
 cannot be assumed to satisfy the class.
 
+For classed undertaking, `daily_driver_route_undertaking` resolves the exact
+`@class` mapping before worktree or claim. Its same-family, provider, backend,
+and authentication invariant also applies to delegated issue workers and their
+visible fallbacks. Wait for `verified` execution identity; `pending` is not
+confirmation. A missing, cleared, incompatible, or unverifiable route is a
+configuration gap. Do not rewrite shared roles or credentials. Independently
+configured host helper inference is outside this undertaking policy.
+
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
 assume an API route. The `reasoning` role defaults to

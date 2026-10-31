@@ -242,11 +242,10 @@ The API contract and edge cases are fixed; implementation follows the existing
 adapter pattern.
 ```
 
-`embark` resolves the required class to an eligible concrete route. It never
-uses the issue body as concrete-model provenance. `undertake` validates the
-section and repairs an old or invalid body before its claim. A non-frontier
-standalone session does not gate on its own identity, but a frontier session
-must hand ordinary implementation to an eligible non-frontier route or stop
-with a configuration gap. Any frontier assignment must carry explicit user
-approval and its exact envelope before execution. Claim comments, readiness
-reports, and execution records retain the concrete model the harness reports.
+`undertake` validates and, where grounded, migrates the section before routing.
+Classed undertaking selects the exact class before worktree creation or claim,
+on the same family, provider, backend, and authentication route. It prefers a
+verified in-session switch; a constrained full handoff is the fallback.
+Unavailable control or route evidence is a stop, not a standalone bypass.
+Any frontier assignment still needs explicit user approval and its exact
+envelope. Claim comments and execution records retain the observed model.

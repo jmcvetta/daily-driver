@@ -44,6 +44,7 @@ import { tmpdir } from "node:os";
 import { MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS, installModelClassDefaults } from "../extensions/role-default-helper.mjs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import registerUndertakingRoutingChecks from "./undertaking-routing-cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, "..");
@@ -108,6 +109,9 @@ function fakeApi(overrides = {}) {
 			},
 			min(n) {
 				return schemaNode({ ...meta, min: n });
+			},
+			optional() {
+				return schemaNode({ ...meta, optional: true });
 			},
 			max(n) {
 				return schemaNode({ ...meta, max: n });
@@ -3365,6 +3369,9 @@ check("get_session reads the session manager and the serving model", async () =>
 		sessionId: "0199c0a2-7d17-7b13-a2f4-6f21f5b4e9a8",
 		sessionName: "Fix the parser",
 		model: "zai/glm-5.3",
+		provider: null,
+		authenticationRoute: null,
+		undertaking: null,
 	});
 });
 
@@ -3373,7 +3380,7 @@ check("get_session tolerates an unnamed session and no model", async () => {
 	const def = s.tools.get("daily_driver_get_session");
 	const ctx = { sessionManager: { getSessionId: () => "s1", getSessionName: () => undefined } };
 	const result = await def.execute("c0b", {}, undefined, undefined, ctx);
-	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null });
+	assert.deepEqual(result.details, { sessionId: "s1", sessionName: null, model: null, provider: null, authenticationRoute: null, undertaking: null });
 });
 
 // --- legacy task worktree entries do not restore a separate status ----------
@@ -3499,6 +3506,8 @@ check("package.json wires the extension and is a module", () => {
 	assert.equal(pkg.private, true);
 	assert.deepEqual(pkg.omp, { extensions: ["./extensions/daily-driver.js"] });
 });
+
+registerUndertakingRoutingChecks(check);
 
 await Promise.all(checks);
 rmSync(worktrees.root, { recursive: true, force: true });

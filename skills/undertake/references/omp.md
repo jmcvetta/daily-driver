@@ -42,12 +42,30 @@ grounded. A frontier task also needs explicit approval and its exact work
 envelope. A frontier `research` issue keeps that label and its narrow metadata
 exception; do not impose the task template.
 
-Use `daily_driver_get_session` to read the current model before branch creation
-or claim when needed for the frontier restriction. If its effective route is
-frontier and the issue is ordinary work, resolve a non-frontier agent using
-[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs).
-Hand off the full undertaking through `task`, or stop with the exact route gap;
-the receiving session owns its branch and claim.
+Before worktree creation or claim, call `daily_driver_route_undertaking` with
+`{ issue: <positive issue number>, modelClass: "mechanical" | "implementation" |
+"reasoning" | "frontier", frontierApproval?: <recorded approval and envelope> }`.
+Validate readiness and frontier approval first; the approval argument is evidence,
+not authorization by itself. The tool resolves the configured exact `@class`
+and optional effort without rewriting shared roles.
+
+Read `details.undertaking` from the result or `daily_driver_get_session`:
+`issue`, `modelClass`, `selectedModel`, `observedModel`, and `status`, with
+optional `reason`. `verified` permits the undertaking to proceed. `pending`
+means a switch was requested but actual execution is not yet confirmed; wait
+for a subsequent allowed response and read the state again. Do not create the
+worktree, claim, or implement while pending. A rejected route is an error with
+a named gap; `blocked` is not success. The session result also reports provider
+and non-secret `authenticationRoute`. A matching model and effort can verify
+without a switch. Read-only discovery and route/session recovery remain available
+while pending; queued mutating calls are blocked.
+
+The effective route must retain the current model family, provider, backend
+and authentication route, including visible child and fallback candidates.
+Account refresh or eligible rotation does not change that invariant. Missing,
+cleared, incompatible, or unverifiable mappings are configuration gaps.
+Delegated issue workers inherit the constraints; do not override incompatible
+explicit agent roles or change unrelated reviewer, scout, or host helper roles.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -61,15 +79,13 @@ stays open.
 The implementor
 ===============
 
-Ordinary non-frontier implementation stays in the session running this
-sequence. The frontier-only handoff exception runs before branch creation and
-claim: resolve a supported non-frontier agent route using
-[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs),
-then use the `task` surface to dispatch a full `undertake #<issue>` to that
-agent. The receiving session owns its worktree, claim, implementation, and
-pull request. Do not dispatch if the route is unavailable or frontier; report
-the exact configuration gap. A supported model switch may continue here only
-after Omp reports a non-frontier execution identity.
+Prefer the in-session route. A full `undertake #<issue>` handoff through `task`
+is permitted only if the effective child route and every visible fallback can
+be constrained to the same family, provider, backend, authentication route,
+and exact class. The receiving session verifies its own execution and owns the
+worktree, claim, implementation, and pull request. The sender stops rather
+than repeating the handoff or supervising duplicate work. If the surface cannot
+establish those constraints, stop and report the precise gap.
 
 
 The pull request
