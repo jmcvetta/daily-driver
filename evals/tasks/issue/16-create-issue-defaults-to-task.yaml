@@ -1,0 +1,79 @@
+task_id: issue-16-create-issue-defaults-to-task
+description: >-
+  An unspecified creation request should yield an assignable task rather than
+  a bug report merely because it describes broken behavior.
+tags: [issue, behaviour, fire]
+
+sandbox:
+  python: null
+  template_sources:
+    - type: starter_files
+      files:
+        - path: release.py
+          content: |
+            """Release signing behavior and its input contract."""
+            # Each release manifest maps artifact names to SHA-256 digests.
+            # Previous signatures remain available in the release store.
+            def sign_changed(current, previous, sign):
+                for name, digest in current.items():
+                    sign(name, digest)
+        - path: test_release.py
+          content: |
+            """Offline signing tests use a list as the sign callback."""
+            from release import sign_changed
+
+            def test_signs_artifacts():
+                calls = []
+                sign_changed({"a": "abc"}, {}, lambda *args: calls.append(args))
+                assert calls == [("a", "abc")]
+
+        - path: README.md
+          content: |
+            The release module signs artifacts from the current manifest.
+            Run the offline tests with pytest. CI runs the same tests.
+
+initial_prompt: >-
+  Create an issue for this: the release script signs unchanged artifacts on
+  every run. Skip an artifact when its checksum matches the previous release.
+  Do not post it. Show me the kind and issue body you would use.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: agent_judge
+    description: A plain create request produces an assignable task
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply after the last [RESULT - ...] tag in AGENT OUTPUT.
+      The sandbox's `release.py::sign_changed(current, previous, sign)` calls
+      `sign(name, digest)` unconditionally for each current artifact. Current
+      and previous manifests map names to SHA-256 digests, and prior signatures
+      remain in the release store. `test_release.py::test_signs_artifacts`
+      records calls in a list and tests a new artifact with an empty previous
+      manifest. `README.md`
+      says to run pytest offline and states CI runs those tests. These are
+      supplied facts, not invented claims. Begin with ANCHOR: result, or
+      ANCHOR: none if the final reply is absent.
+      The reply must select the task kind without a kind-selection question.
+      It must give a ready task body grounded in the sandbox's release code
+      and tests, with outcome, scope, model class, acceptance, and provenance.
+      An unready draft does not pass. It must not invent repository evidence.
+      Score 1.0 when all hold, 0.5 when task is selected but a body requirement
+      is missing or the draft is unready, and 0.0 otherwise.

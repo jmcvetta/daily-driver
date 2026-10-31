@@ -11,7 +11,7 @@ initial_prompt: >-
   user+tag@example.test; plus signs are valid email characters, so login should
   succeed. This happens on every attempt in production, but the affected
   release/version and root cause are unknown. The failure blocks these users
-  from signing in. Do not post anything; show the exact issue body.
+  from signing in. Do not post anything; show the issue kind and exact body.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -58,7 +58,7 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The reply proposes a useful bug body from supplied evidence. It records
+      The reply selects the `bug` kind and proposes a useful bug body from supplied evidence. It records
       the affected login behavior, expected success versus observed HTTP 500,
       the supplied request as reproduction, known frequency and impact, and
       explicitly says release/version and root cause are unknown. It must not
@@ -73,5 +73,5 @@ success_criteria:
       adds no invented facts or task machinery, and preserves trailing
       provenance. Score 0.5 if it reports the bug usefully but omits a known
       impact/frequency detail or mishandles a minor non-task requirement.
-      Score 0.0 if it invents evidence, asserts a root cause, uses task
-      metadata, omits provenance, or gives no body.
+      Score 0.0 if it selects a non-bug kind, invents evidence, asserts a root
+      cause, uses task metadata, omits provenance, or gives no body.

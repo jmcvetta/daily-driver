@@ -63,6 +63,18 @@ and in `infra/github/labels.tf` — and `scripts/check-labels.py` fails
 Picking one
 ===========
 
+For a user request to create, open, or file an issue without a specified kind,
+select `task`. A description of broken behavior does not by itself request a
+bug report. Prepare the task through `issue-body`, including its readiness
+test; ask for unresolved user-owned decisions rather than inventing them or
+silently changing the kind. Do not ask which kind the user wants solely
+because the request omitted it.
+
+An explicitly requested kind takes precedence. Automatic Daily Driver bug
+reports retain `issue`'s separate bug-report route. This creation default does
+not change the classification of existing issues or explicit epic workflows.
+The questions below apply to those other classification decisions.
+
 Ask the question in this order. The first answer that holds is the label.
 
 1. **Does the issue describe work, or coordinate it?** An issue whose body is
