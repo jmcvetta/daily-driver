@@ -10,6 +10,26 @@
 
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
 
+## [0.55.0](https://github.com/jmcvetta/daily-driver/compare/v0.54.1...v0.55.0) (2026-10-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* Epic stories must now be ready `task` issues. Existing bug, research, human, proposal, or nested-epic children are planning defects and cannot be dispatched as stories. Repair them through the normal issue workflow; standalone issue-kind contracts remain unchanged.
+
+### Features
+
+* **constitution:** require precise professional vocabulary in names ([#746](https://github.com/jmcvetta/daily-driver/issues/746)) ([5034764](https://github.com/jmcvetta/daily-driver/commit/5034764ff5517d51c7ef20bf0dfb8857a5e590e3))
+* **pr:** keep all agent-opened PRs current ([#736](https://github.com/jmcvetta/daily-driver/issues/736)) ([fd8919f](https://github.com/jmcvetta/daily-driver/commit/fd8919f40e402d748711fb5f5ead3bdcffd77c65))
+* require assignable tasks for epic stories ([#724](https://github.com/jmcvetta/daily-driver/issues/724)) ([06f76f0](https://github.com/jmcvetta/daily-driver/commit/06f76f0b092c1680fdb6a4df27f08710e890f317))
+
+
+### Bug Fixes
+
+* **conventional-commits-type:** classify repository administration as chore ([#728](https://github.com/jmcvetta/daily-driver/issues/728)) ([a61c25d](https://github.com/jmcvetta/daily-driver/commit/a61c25dcd554a34d9fb664dc70746d1977f95123))
+* **undertake:** report readiness before marking PR ready ([#739](https://github.com/jmcvetta/daily-driver/issues/739)) ([060b1c9](https://github.com/jmcvetta/daily-driver/commit/060b1c9c5dc7acd8d83763b334ed987c0421e551))
+* **undertake:** reuse standing permission for resumed pushes ([#733](https://github.com/jmcvetta/daily-driver/issues/733)) ([77da2ee](https://github.com/jmcvetta/daily-driver/commit/77da2eede1088e87280f2bd91829b0ab46bc298e))
+
 ## [0.54.1](https://github.com/jmcvetta/daily-driver/compare/v0.54.0...v0.54.1) (2026-10-30)
 
 
