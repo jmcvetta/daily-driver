@@ -56,7 +56,7 @@ What `create_session` is given
 | `prompt` | The child issue and the ask to undertake it. Nothing else. |
 | `append_system_prompt` | The way back: this session's own id, below. |
 | `title` | `session-title`'s form for that child issue. |
-| `model` | A concrete identifier resolved from the task's required class, or from a non-task capability assessment, and current session availability. |
+| `model` | A concrete identifier resolved from the task's required class and current session availability. |
 | `environment_id` | Omitted to inherit the calling environment. |
 | `permission_mode` | Omitted to inherit. |
 | `outcome_branch` | `Recover a session` only. |
@@ -98,13 +98,10 @@ stops and waits`.
 Route assessment
 ----------------
 
-For a `task`, resolve its `Model class` using
+Every epic story must pass `Take the wave`'s task-readiness gate. Resolve its
+`Model class` using
 [`issue-body`'s shared guidance](../../issue-body/references/model-classes.md)
-before calling `create_session`. For a `bug` or `research` child, apply its
-`issue-body` readiness contract and assess the work against the same capability
-rubric. Do not add a task class section to a `bug` or routine research body. A
-`research` child assigned `frontier` uses `issue-body`'s narrow exception and
-needs its single class section, rationale, approval, and exact work envelope.
+before calling `create_session`.
 `session_context.model` is a candidate concrete identifier only after that
 assessment; `configured_model` can be an alias or unsupported suffix. Never
 pass a class name to `model`, and never silently inherit an unchecked model.
@@ -172,9 +169,9 @@ The watch
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Watch the wave` | Subscribe to a task or bug pull request when one exists | `mcp__github__subscribe_pr_activity` |
+| `Watch the wave` | Subscribe to a task pull request when one exists | `mcp__github__subscribe_pr_activity` |
 | `Watch the wave` | Find a pull request for a child issue when one exists | `mcp__github__issue_read`, `method: get` — `closed_by_pull_requests` |
-| `Watch the wave` | Read an issue-only child result or disposition | `mcp__github__issue_read`, `method: get` and `get_comments` |
+| `Watch the wave` | Read a child's acceptance criteria and outcome evidence | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Watch the wave` | Read a pull request's state and checks | `mcp__github__pull_request_read` |
 | `Watch the wave` | Arm the backstop | `mcp__Claude_Code_Remote__send_later`, ten minutes out |
 | `Watch the wave` | Archive a finished session | `mcp__Claude_Code_Remote__archive_session` |
@@ -199,7 +196,7 @@ recorded as completed.
 Landing and close
 -----------------
 
-The state read is `undertake`'s `The milestone` row: `draft` must be false,
+The state read is the pull request `get` call: `draft` must be false,
 `mergeable_state` must be `clean`, and `head.sha` is the head the merge binds
 to. The same `get` call supplies the labels and body for the human-action read.
 The complete thread read is the one `review-cycle`'s `Review history,
@@ -223,17 +220,16 @@ is not `head.sha`, walk `get_commit` from `head.sha` along each first parent
 until the named SHA; every commit on the way must carry two `parents`. A
 single-parent commit, or a walk that never reaches the SHA, fails the read.
 
-The merge call is made only for a task or corrected bug with a pull request,
+The merge call is made only for a task pull request,
 after those reads hold. `expectedHeadSha` makes it fail closed if the task
 session pushes after the read. `merge_method: squash` preserves the
 repository's pull-request-title subject. `Close the epic` uses the issue
 update only after the epic's coordinated acceptance condition is evidenced.
 
-**`closed_by_pull_requests` links a task or corrected bug to its pull request**
-through the `Closes #123` line `pr-body` writes. A research answer or bug
-disposition may complete on its issue without a PR. Read the body and comments
-under that kind's `issue-body` completion contract; a closed issue alone is not
-evidence that the epic outcome was met.
+**`closed_by_pull_requests` links a task to its pull request** through the
+`Closes #123` line `pr-body` writes. Compare the delivered outcome with the
+task's acceptance criteria; a closed issue alone is not evidence that the
+epic outcome was met.
 
 **There is a `mcp__Claude_Code_Remote__subscribe_pr_activity` with the same
 contract.** Where both exist, use the GitHub one, and use one namespace

@@ -15,6 +15,7 @@ coder-eval-omp/
 └── src/coder_eval_omp/
     ├── rpc.py                     the command builder and frame reduction — pure, and tested
     ├── pricing.py                 prices.json lookup — pure, and tested
+    ├── home.py                    borrowed provider files and the private routing merge — pure
     ├── agent.py                   the process, the events, and what loaded
     └── plugin.py                  register(registry)
 ```
@@ -63,6 +64,27 @@ can reference) are symlinked from the real `~/.omp/agent/`. Nothing else is:
 `--tools` says, and `AGENTS.md`, `SYSTEM.md`, `SYSTEM_TEMPLATE.md`,
 `PERSONALITY.md` and `RULES.md` would load a person's own instructions into
 the bare arm. The list is `coder_eval_omp/home.py`'s `PROVIDER_FILES`.
+
+**A row may restrict the route to one upstream.** `vercel_gateway_only:
+[deepseek]` requires `model` to be a `vercel-ai-gateway/<model>` selector, and
+`home.restrict_model_upstreams` merges the allowlist into a private
+`models.yml` as `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
+vercelGatewayRouting.only`. Omp turns that into the request's
+`providerOptions.gateway.only`, so an unavailable upstream fails instead of
+falling back. The merge preserves every other provider and setting, replaces
+rather than unions the selected allowlist, drops the model's `order`
+preference, and replaces the borrowed symlink instead of writing through it.
+Because Omp's catalog transport for these models (`anthropic-messages`) never
+serializes the routing block, a restricted model also selects
+`api: openai-completions`, the transport that applies
+`providerOptions.gateway`. A malformed file, an empty or invalid allowlist, a
+non-Vercel selector, a model that names a compaction or context-promotion
+fallback in its override or its `models:` definition, or an inherited
+`compat.extraBody` that sets `model` or `providerOptions` is refused: Omp
+applies the extra body after the routing, so either key would replace the
+enforced value. The agent also clears `PI_CONFIG_DIR`, `OMP_PROFILE`,
+`PI_PROFILE` and `PI_CODING_AGENT_DIR` for the child: each relocates Omp's
+configuration or agent directory away from the throwaway home.
 
 **A row's tool lists must hold.** `tools.select_tools` maps a row's
 `allowed_tools` and `disallowed_tools` to Omp's tool names, and the agent
@@ -200,9 +222,10 @@ a `coder_eval` install.
 
 ## What is tested, and what is not
 
-`rpc.py`, `pricing.py` and `tools.py` import nothing — not `coder_eval`, not
-`omp`. They hold the protocol, pricing and tool-list behavior described above,
-including token-usage and cost math.
+`rpc.py`, `pricing.py`, `home.py` and `tools.py` import nothing — not
+`coder_eval`, not `omp`. They hold the protocol, pricing, borrowed-home and
+tool-list behavior described above, including token-usage and cost math and the
+private model-routing merge.
 
 `agent.py` cannot be reached without a `coder-eval` install and an `omp`
 binary, and CI here has neither. What it holds is process lifecycle and the

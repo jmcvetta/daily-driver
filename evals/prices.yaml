@@ -21,6 +21,20 @@
 #     read_on: <YYYY-MM-DD>
 
 models:
+  vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:
+    unpriced_reason: >-
+      Vercel's first-party DeepSeek endpoint publishes prompt, completion and
+      cache-read rates but no cache-write rate, so the four-rate record cannot
+      price it without inventing one.
+    source: https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4-pro-0813/endpoints
+    read_on: 2026-10-30
+  vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:
+    unpriced_reason: >-
+      Vercel's first-party DeepSeek endpoint publishes prompt, completion and
+      cache-read rates but no cache-write rate, so the four-rate record cannot
+      price it without inventing one.
+    source: https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4.1-flash-1017/endpoints
+    read_on: 2026-10-30
   openai-codex/gpt-6.1-sol:
     unpriced_reason: Codex subscription usage has no per-token dollar rate.
     source: https://developers.openai.com/codex/pricing
@@ -41,3 +55,14 @@ models:
     unpriced_reason: Antigravity quota is a subscription allowance with no applicable per-token USD rate.
     source: https://antigravity.google/docs/plans
     read_on: 2026-10-08
+  # Claude Code prices its own rows. This entry prices only a row it left
+  # unpriced, such as an early-stopped Haiku turn. The rates are the tier for
+  # prompts up to 100,000 tokens, and `cache_write` is the 5-minute rate; a
+  # longer prompt or a 1-hour cache write would be priced low.
+  claude-haiku-5-5:
+    input: 0.0000001
+    output: 0.0000005
+    cache_read: 0.00000001
+    cache_write: 0.000000125
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    read_on: 2026-10-18

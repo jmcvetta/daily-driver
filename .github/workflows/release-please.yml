@@ -97,6 +97,10 @@ jobs:
         with:
           app-id: ${{ vars.RELEASE_BOT_APP_ID }}
           private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          # The token gets what the job's `permissions` above grant, no more.
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
 
       # No `release-type:`. Its presence is release-please-action's mode
       # switch, and setting it here would make release-please ignore
@@ -112,7 +116,9 @@ jobs:
       # kept anyway: they are what makes `git checkout v0` mean the newest
       # 0.x, and the two workflows staying alike is worth more than the few
       # lines. release-please writes only the exact tag.
-      - uses: actions/checkout@v7
+      # The tag push below needs the checkout's credentials, so zizmor's
+      # artipacked finding is ignored on this step.
+      - uses: actions/checkout@v7 # zizmor: ignore[artipacked]
         if: steps.release.outputs.release_created == 'true'
         with:
           fetch-depth: 0

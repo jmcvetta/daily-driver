@@ -72,7 +72,7 @@ The sequence
 | 8 | `Fix, answer, resolve, push` | `review-cycle` |
 | 9 | `Verify the fix delta` | `review-cycle` |
 | 10 | `Ready for review` | the harness's pull request client |
-| 11 | `Keep it current` | this skill, `review-cycle` |
+| 11 | `Keep it current` | `pr`, `review-cycle` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta`
 are `review-cycle` stages and carry the same names for that reason. `Ready for
@@ -369,14 +369,13 @@ the same session posts nothing, as before.
 
 **The claim's timestamp is the undertaking's clock start.** The comment's own
 `created_at` is what `The milestone` reads back when the pull request first
-reaches merge readiness — through resumes, through whatever draft states the
-sequence has passed since. No timestamp is written into the claim for the
-milestone's sake: the durable start is the post, not a line in it. Where more
-than one comment carries the claim's shape — the collision the policy above
-permits — the earliest of them is the start: a later claim does not restart a
-clock already running. A claim that was never posted leaves the milestone with
-no start to read, and `The milestone` reports the timing as unavailable rather
-than guessing at one.
+passes the ready-for-review gate — through resumes and later draft states. No
+timestamp is written into the claim for the milestone's sake: the durable
+start is the post, not a line in it. Where more than one comment carries the
+claim's shape — the collision the policy above permits — the earliest of them
+is the start: a later claim does not restart a clock already running. A claim
+that was never posted leaves the milestone with no start to read, and `The
+milestone` reports the timing as unavailable rather than guessing at one.
 
 5 — Implement
 -------------
@@ -485,8 +484,8 @@ The issue-only research route closes at `Implement` after recording its
 complete answer on the issue.
 
 Push the branch, then invoke `pr`: it owns the branch guard, the existing-PR
-check, draft state, and the call on whether there is an issue to reference —
-there is, and it is this one. The `Issues` section of the body closes it, and
+check, draft state, ongoing currency, and whether there is an issue to
+reference — there is, and it is this one. The body closes it, and
 `issue-deps` treats that line as the write into the graph. Its evidence test
 has nothing to weigh here, because the edge is given by the assignment rather
 than inferred: the issue being implemented is the issue the pull request
@@ -496,13 +495,10 @@ closes.
 adopted branch, `pr`'s existing-PR check finds its open pull request and
 updates it, and no second pull request is opened.
 
-**Opening or reusing the draft starts supervision.** The undertaking owns its
-continuation from this point, including while CI, review, or `The gate` keeps
-the pull request draft. A durable scheduler arms its one wake before yielding;
-a harness without one reports the unfinished condition and that the owner must
-resume. Reaching `Ready for review` changes the work being watched; it does
-not start a second watch. Only a merged or closed pull request, or an explicit
-user stop, ends this obligation.
+**Opening or reusing the draft starts supervision.** `pr` starts or reuses
+common currency maintenance. The undertaking retains assessment of CI, review,
+`The gate`, and `The milestone` while draft and after ready. Its active
+harness reference names the continuation and any owner-resume limitation.
 
 **The body is `pr-body`'s, and so are blockers that go with a Tofu diff.**
 Where the branch changes the infrastructure Tofu stack, the body carries
@@ -641,141 +637,43 @@ independent permitted work and the review round before pausing, unless a
 safety rule requires an immediate stop. The gate remains unmet until the
 required verification evidence is recorded.
 
-When the gate clears and the pull request is marked ready, the milestone's
-moment has arrived: the sequence publishes the first-readiness report through
-`The milestone` below — once, the way that section's own rules bound it. The
-existing supervision continues without a second owner. A pull request that
-stops here on a human action publishes nothing: it has not reached the
-milestone the report would name, and a report naming readiness over a bar only
-a person can clear is the false claim the gate exists to refuse.
+When the gate clears, the milestone's moment has arrived: publish the
+first-readiness report through `The milestone` below, before marking the pull
+request ready. The report records that the ready-for-review gate cleared; it
+does not claim the PR is already ready to merge. The existing supervision
+continues without a second owner. A pull request that stops here on a human
+action publishes nothing: it has not passed the gate, and a report naming
+readiness over a bar only a person can clear is the false claim the gate exists
+to refuse.
 
 11 — Keep it current
 --------------------
 
-Commits land on the base branch while the work is written and while a
-reviewer reads, and a branch behind its base was reviewed and tested against a
-tree nobody will merge into. This step brings the base branch in, and it is the
-only step that runs more than once.
-
-**Its first run is before `Ready for review`, not after it.** The gate's first
-condition is that step's merge, so the sequence reaches it once out of the
-table's order and then again on its own cadence. Ready is not the end either,
-so it runs again on the cadence under `When it looks`.
-
-**The merge is the harness's update-branch call**, whichever one the reference
-file names. It merges the base branch into the head server-side, so it needs no
-checkout: by the time this
-runs, the session may be on another branch, and the working tree it had may be
-gone. The call is the test as well as the merge — GitHub answers that the
-branch is already up to date when there is nothing to bring in, so nothing
-here has to compute how far behind the branch is.
-
-**A merge, never a rebase.** A rebase rewrites history somebody is reading,
-and it voids the mark `review-cycle` recorded at `Review the head`. A merge
-commit leaves both intact.
+Invoke `pr`'s `Keep it current` and its active harness route. That skill owns
+the base merge, cadence, CI floor, conflict handling, and watch lifecycle for
+every agent-opened PR. `Open the draft` starts maintenance; this step reuses
+it rather than waiting until ready or starting a second actor.
 
 When it looks
 -------------
 
-Once before `Ready for review`, as the gate's look rather than the cadence's.
-**Continuation starts at `Open the draft`, not at ready.** The check-in and
-catch-up rules therefore cover every open undertaking pull request; ready
-changes what remains to be maintained, not whether unfinished work is
-supervised. The **merge** is mechanical: one update-branch call, tested by the
-call itself, with the floor below. The **assessment** is agent work: after
-currency is settled, it reads CI on the resulting head and continues the
-review or ready-gate work. The reference file names the actor and routes.
+Take `pr`'s catch-up look on every turn returning to the open pull request,
+and once before `Ready for review`. Currency is the gate's first condition,
+not proof that the undertaking is complete.
 
-**Where the harness supervises processes that survive it, the watch is one of
-those processes after ready.** It runs the merge on a two-minute tick and
-nothing else: read the pull request's state and merge status, skip the tick
-while a run on the head is in flight, merge when the branch is behind, and
-stop on a conflict. It never judges. Before ready, the persistent bounded CI
-watcher `review-cycle` owns is the available continuation; its completion
-still requires the owner session to assess the result.
-
-**Where the harness has a durable scheduled wake and no such process, the
-cadence is a check-in every two minutes, one wake at a time — from `Open the
-draft`.** The prompt given to the scheduler states the whole check-in,
-self-contained: arm the next wake first, take the state and base-currency
-read, merge when required, then assess CI on the resulting current head. A
-rule kept only in session memory dies on the first wake turn that ends without
-re-arming; the instruction travels with the wake instead, and
-`review-cycle`'s `The backstop` discipline holds for it.
-
-**Where the harness has neither, report the unfinished handoff at `Open the
-draft`.** The next turn returning to the pull request takes the catch-up look
-below. A watch a surface cannot keep is worse claimed than skipped; a draft,
-red, pending, capped, walled, or human-blocked pull request is not complete.
-
-**A catch-up look answers the pull-request question, not only currency.** It
-reads state and branch currency first, applies this step's existing merge and
-run-in-flight rules, then reads the check runs and commit statuses for the
-resulting head through `review-cycle`'s `How to wait`. A head change invalidates
-earlier CI and readiness evidence. A clean branch, matching local and remote
-SHA, draft state, or an already-up-to-date response never ends the assessment.
-Merged and closed pull requests exit without further work.
-
-Failed checks return to `Fix, answer, resolve, push`; missing logs are an
-explicit failed-CI evidence blocker, not green and not "no action needed".
-Every failed-CI or evidence-blocker handoff names the failed checks, current
-head, unavailable evidence, and concrete action needed to resume. Pending or
-unregistered checks use `review-cycle`'s bounded wait and registration rules.
-A cap, review wall, human action, or evidence blocker pauses with the
-outstanding condition and the actual path to resume; it does not reset the
-bound, authorize a retry, or call the undertaking complete.
-
-**Never end a turn with the wake slot empty while check-ins are available.**
-They run from `Open the draft` until the pull request is merged or closed or
-the user says to stop. Inside them the slot is one timer, held by the returned
-identifier, and it empties when the timer fires or `review-cycle` borrows it
-at `End the wait`. Fill it before the turn ends; a still-pending timer is
-reused rather than duplicated. This is the failure
-[`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md) records, and
-[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) scopes to a
-single harness.
-
-**Two minutes, the same interval `review-cycle` waits on CI with.** A busy
-`master` takes a commit every few minutes, so a slower check-in is a branch
-kept behind on purpose, and the merge itself costs a call and a CI run that
-this repository answers in seconds. Behind is the state to leave as briefly as
-the scheduler allows.
-
-**The one floor is a run in flight.** A check-in that finds CI from the last
-merge still going does nothing: merging again restarts the run it is waiting
-on. Where CI answers in seconds that floor almost never bites, and where it
-answers in twenty minutes it is what keeps the branch from never being green.
-
-A merge-conflict notice does not wait for the cadence either. It is the case
-where behind has already cost something, and it is answered on the wake that
-reports it.
-
-The watch ends when the pull request is merged or closed, or when the user
-says to stop. A process stops itself on the first two; a scheduled wake ends
-on them and on the user's word alike. A pull request nobody merges is not a
-reason to keep an actor running for ever.
-
+After currency settles, assess CI on the resulting head through
+`review-cycle`'s `How to wait`, then continue review, the ready gate, and
+`The milestone` when their conditions permit. Missing logs remain an
+evidence blocker. A cap, review wall, human action, or evidence blocker
+reports the outstanding condition and actual resume path; it does not reset
+the bound, authorize a retry, or call the undertaking complete. Where the
+harness has no owner continuation, report that limitation at `Open the draft`.
 
 After the merge
 ---------------
 
-The head moved, so CI runs again. Wait for it the way `review-cycle`'s
-`How to wait` says, and answer a red check under `Fix, answer, resolve, push`.
-Where the watch is a process, nothing is borrowed: the floor above is what
-keeps a merge from restarting a run in flight, so the wait and the watch
-coexist. Where the watch is a scheduled wake, that wait borrows the wake slot
-for its backstop and gives it back at `End the wait`: the check-ins above are
-armed again before that turn ends, whichever way the wait ended, and after
-the round the wait was clearing the way for rather than into it.
-**Red CI is how a base merge reports that it broke something**: the base
-changed what the branch depends on, the branch's own diff is untouched, and no
-review of that diff would have found it.
-
-**A clean merge does not earn a round.** `review-cycle`'s `Does it go again?`
-classifies it under `Neither`, and the reason is what the round's review reads —
-the pull request's three-dot diff, which after a clean merge is byte-identical
-to what `Review the head` already reviewed. A base branch that moves daily
-would otherwise buy a review a day for a diff nobody changed.
+Follow `pr`'s `After the merge` for current-head CI and its continuation
+route. Failed checks return to `Fix, answer, resolve, push`.
 
 **A clean merge earns no new notice either.** A completion notice that names
 the pre-merge head still covers the merged head, by the first-parent walk
@@ -785,9 +683,6 @@ current head once CI is green on it. Red CI after the merge goes to `Fix,
 answer, resolve, push` as above, and the push that fixes it is a new head that
 the round covers in the normal way.
 
-**A conflict resolution does.** Resolving a conflict rewrites the branch's own
-files, which is `Changing what the code does` in that same classification.
-One round over it, and `review-cycle` decides anything further.
 
 A round after ready goes back to draft
 --------------------------------------
@@ -876,9 +771,9 @@ number.
    do not infer required approval from the enum. Holding a draft until approval
    can stall the transition that requests that review. `has_hooks` is a
    passing state with a hook configured.
-   **`clean` is the yes only after the draft is cleared**, which is why
-   `The milestone` reads this same field again and this gate does not wait
-   for that value.
+   **`clean` is not a gate condition**: the report is published while the PR is
+   still a draft, after the gate's independent reads establish currency and
+   green CI. The milestone does not wait for a post-ready merge-state read.
 2. **CI on the head commit**, for the condition that it is green. Read the
    checks themselves rather than inferring them from the merge state, which
    reports a draft's status before its checks': the union of check runs and
@@ -922,10 +817,12 @@ number.
    pauses on it; this condition is what the sequence returns to once the
    branch carries the result.
 
-**When the reads agree, mark the pull request ready in the same turn.** The
-call is the reference file's, and nothing comes between the last read and it:
-no summary written first, no permission sought, no turn ended on the
-intention to do it next time.
+**When the reads agree, publish the first-readiness report if none exists,
+then mark the pull request ready in the same turn.** The harness calls are in
+`The milestone` and the reference file; no summary, permission request or
+turn boundary comes between the gate and these actions. A failed report write
+leaves the PR draft. If marking ready fails after the report posts, preserve
+the report and revalidate the gate before retrying.
 
 **The user is never a gate condition.** Every stop this sequence takes is
 named under `Where it stops and waits`, and none of them is a confirmation
@@ -961,99 +858,103 @@ completeness read, and the draft before a content push.
 The milestone
 =============
 
-Ready is a state the pull request carries; the milestone is the one comment
-that says how long reaching it took. The first time the sequence carries a
-pull request through the ready side of `The gate` — `review-cycle`'s round
-complete, every gate condition holding on the current head, and the pull
-request actually marked ready by `Ready for review` — it publishes the
-undertaking's first-readiness report: one comment on the pull request, with
-the elapsed time and the provenance of the work. The reference file for the
-harness in use names the calls that read the readiness state, find the
-claim's timestamp, and post it.
+The first-readiness report records the first time an undertaking passes the
+ready-for-review gate. Publish it on the pull request after every condition in
+`The gate` holds on the current head, but before `Ready for review` marks the
+pull request ready. The reference file for the harness in use names the calls
+that read the claim's timestamp, find an existing report and post it.
 
-**The report is a milestone, not the end.** Posting it does not stop the
-watch at `Keep it current`, does not stop a process or cancel a scheduled
-wake, does not close the issue, and does not merge anything. The watch's
-exits — merged, closed, or the user says to stop — are what they were before
-the comment existed, and a base-branch advance after it runs the same update,
-CI wait, and return through the gate as any other.
+**The report is a milestone, not the end.** Posting it does not mark the
+pull request ready by itself, stop the watch at `Keep it current`, stop a
+process or cancel a scheduled wake, close the issue, or merge anything. The
+watch's exits — merged, closed, or the user says to stop — are what they were
+before the comment existed, and a base-branch advance after it runs the same
+update, CI wait, and return through the gate as any other.
 
 
-Merge readiness, not draft cleared
-----------------------------------
+Ready-for-review gate, not merge readiness
+-----------------------------------------
 
-Draft status being gone is not what the report attests. It is published only
-when all of these hold on the current head:
+The report states that the ready-for-review gate passed. It does not state
+that the pull request has already left draft or that every later merge
+requirement is satisfied. It is published only when all of these hold on the
+current head:
 
 - `The gate` holds — the round at `Review the head` has completed
   successfully, and every condition in the gate is satisfied on this head.
-- The pull request has actually been marked ready. A draft the sequence is
-  about to mark, or one whose state a merge or a re-run has not yet touched,
-  is not the milestone.
-- The branch is current with its base and merges cleanly, and the harness's
-  own mergeability answer is affirmative. A pending required check, an
-  outstanding required approval, or an answer the harness cannot yet give —
-  an `UNKNOWN` mergeability, an indeterminate merge state — is a wait, not a
-  milestone, and the reads `review-cycle`'s `How to wait` prescribes are what
-  distinguish them.
-- No review thread is unresolved, and the pull request waits on no human
-  action. The pause `Ready for review` takes on the `Blockers` section keeps the
-  report unpublished with the pull request itself.
+- The pull request is still a draft. The report is the required action before
+  the harness marks it ready.
+- The branch is current with its base and has no unresolved conflict, as
+  established by the gate's currency read and `Keep it current`. The report
+  does not wait for the post-ready mergeability answer.
+- Current-head CI is green, review threads are resolved, the completion notice
+  covers the head, and no human action remains owed. A pending check, an
+  unresolved thread, a missing notice or a human blocker keeps the report
+  unpublished.
 
-Any one of them missing keeps the comment unpublished, and the sequence keeps
-watching. A report that says the pull request is ready to merge while a check
-is still pending is the same false claim a red pull request marked ready is.
+The draft merge-state value is not affirmative evidence: `DRAFT` and
+`BLOCKED` can mask branch currency or other mergeability. The gate uses its
+independent reads for currency, CI, reviews, threads, the completion notice
+and blockers. It does not infer that a masked state is clean or wait for a
+post-ready `CLEAN` state before reporting.
+
+Any missing condition keeps the comment unpublished and the sequence watching.
+A report that says the ready-for-review gate passed while a check is pending
+is the same false claim a red pull request marked ready would be.
 
 
 What the report carries
 -----------------------
 
 - **The timing, labelled as what it is** — wall-clock time from the claim to
-  first merge readiness. It runs from the claim comment's timestamp, read
-  back off the issue whatever has happened since: resumes, later returns to
-  draft and out again. The claim's timestamp is
-  the durable start, so a session arriving late never restarts the clock.
-  Both ends are UTC timestamps — the start and the milestone — with the
-  duration between them in words. The interval covers implementation, review,
-  fixes, and the waits in between; it excludes the maintenance watch that
-  follows, and the report never calls it compute time or the undertaking's
-  total duration. An undertaking with no recoverable start reports the timing
-  as unavailable rather than inventing one.
+  the first successful ready-for-review gate. It runs from the claim comment's
+  timestamp, read back off the issue through resumes and later draft states.
+  The claim's timestamp is the durable start, so a session arriving late never
+  restarts the clock. After the gate reads pass, capture the current UTC time
+  immediately before posting the report; that is the milestone timestamp.
+  Preserve the telemetry-readable line shape:
+  `Elapsed: <duration>, from claim (<UTC timestamp>) to first ready-for-review gate (<UTC timestamp>).`
+  The interval covers implementation, review, fixes and waits; it excludes
+  maintenance after the first report and is never called compute time or total
+  undertaking duration. If the claim start is unrecoverable, report timing as
+  unavailable. If posting fails, publish no milestone; revalidate the gate and
+  capture a new time before retrying.
 
 - **`provenance`'s block, under `Claim the issue`'s rules for it.** One
   session did the work, so one model and one session are named; where a
   resume moved the work to another session, both are named in the order they
   ran, and attribution nobody reported is not reconstructed.
 
-- **The head it binds to.** The pull request's head SHA and the milestone
-  timestamp. The comment is a statement about that head: a later head —
-  after a base merge, a conflict resolution, any push — is not what it
-  described, and nothing in the comment claims otherwise.
+- **The head it binds to.** The pull request's head SHA and the report
+  timestamp. The comment is a statement about that head: a later head — after
+  a base merge, conflict resolution or any push — is not what it described,
+  and nothing in the comment claims otherwise.
 
 
 Once per undertaking
 --------------------
 
-The report posts once for an undertaking and its pull request, and the check
-for it comes before the write: read the pull request's existing comments and
-look for the comment that opens with the fixed line `First-readiness report`
-before posting one. That opening line is the report's marker — the content
-beneath it may be phrased for the harness and the moment, but the line the
-duplicate check matches is one line, written the same way every time. A
-resumed sequence, a retry of the readiness check, or a later return through
-draft — the path `A round after ready goes back to draft` writes — finds it
-there and posts nothing. The original milestone timestamp and elapsed time
-are never overwritten, because a later pass through the gate that finds the
-report does not touch it.
+The report posts once for an undertaking and its pull request. Before posting,
+read the pull request's existing comments and look for the comment that opens
+with the fixed line `First-readiness report`. That line is the marker, written
+the same way every time. A resumed sequence, a failed ready transition, or a
+later return through draft finds the original report and does not duplicate or
+overwrite it. An existing report does not replace current-head gate evidence:
+re-read every condition before attempting to mark the pull request ready.
 
-**A short read is a reason to look again, not to stop.** A first readiness
-read that comes back blocked, unknown, or otherwise short of the conditions
-above leaves the report unpublished, and the standing continuation carries
-the evaluation. Every check-in and catch-up look reads current-head CI after
-currency, then takes the milestone's readiness read when CI permits progress.
-An approval that arrives and a mergeability answer that settles move no head
-and no base — the look that notices them is what posts the report the first
-pass withheld.
+Post the report only after all gate conditions hold. If the report write fails,
+leave the pull request in draft and stop before the ready write. If the report
+posts but marking ready fails, preserve that report; revalidate the current
+gate before retrying readiness. Do not rewrite the report's original timestamp
+or head on a later pass.
+
+**A short read is a reason to look again, not to stop.** A gate read that comes
+back blocked, unknown or otherwise short of the conditions above leaves the
+report unpublished, and the standing continuation carries the evaluation.
+Every check-in and catch-up look reads current-head CI after currency, then
+takes the gate's remaining reads when CI permits progress. An approval that
+arrives or a mergeability answer that settles moves no head or base — the look
+that observes all gate conditions is what posts the report.
 
 
 The wrap-up
@@ -1061,36 +962,77 @@ The wrap-up
 
 A `stand-down` orchestrator may interrupt this session mid-sequence and send
 one message: the wrap-up instruction its `Secure the work` sends, addressed
-the way `embark`'s `Recover a session` addresses a correction. It is obeyed
-at once, whichever step of this sequence is running when it arrives — commit
-what is in progress to the task branch, named files staged and no hook or
-test skipped, push it, and end the turn without starting anything else. It
-opens no pull request and marks nothing ready: that is `stand-down`'s own
+the way `embark`'s `Recover a session` addresses a correction. **It is the
+user's stop, relayed by the session that dispatched this one, and it is obeyed,
+not weighed.** The harness tells a session to treat a peer's message as data
+and to take no destructive action on it alone. A commit and a push to this
+session's own task branch is not destructive, so that caution does not delay
+the wrap-up. A wrap-up from the orchestrator whose address this session was
+given is obeyed. Where no address was given, a wrap-up that names this
+session's task issue is obeyed too: obeying a stray one costs one pushed
+work-in-progress commit, and the user can still resume the work, as `A wake
+after the stop does no work` says.
+
+**It preempts the step that is running.** That step is abandoned, not
+finished: no CI wait runs out, no review round completes, and no base merge,
+fix or test run starts. A tool call the interrupt cut off is not retried. In
+this one turn, in order:
+
+1. **End the watch** — the cancellations `The stop`'s `End the watch` names.
+   They go first, so the CI run that the push starts wakes nothing here.
+2. **Commit and push** what is in progress to the task branch, named files
+   staged and no hook or test skipped. A branch with nothing new is pushed as
+   it is.
+3. **End the turn** without starting anything else. Send no report to the
+   orchestrator: it is already waiting for this turn to end.
+
+It opens no pull request and marks nothing ready: that is `stand-down`'s own
 record to write, not a step of this sequence completing.
 
 **It writes no handoff.** `stand-down`'s `Write the handoff` writes the one
 task-issue comment, so a handoff here would make two. `The stop` below is not
 this section: it governs a stop the user gives this session directly.
 
+**A wake after the stop does no work.** This holds after `The wrap-up` and
+after `The stop`. A timer that escaped the cancel, a pull-request event, a CI
+result on the work-in-progress push, or a check-in reaches an undertaking that
+is stopped. Answer it in one line that the work is stood down, and end the
+turn. Harness guidance that makes a pull request this session opened its own
+to drive green does not restart the work: the user's stop outranks it, and
+the harness itself says to stop following up when the user asks.
+
+Three things are not such a wake. A repeated wrap-up runs `The wrap-up` again,
+so a push that failed the first time is retried when `stand-down` is re-run. A
+correction from this session's orchestrator, or a new instruction from the
+user, starts the work again, and so does a resumed `/undertake` in a new
+session. The orchestrator is the session whose address this session was given;
+where none was given, no session is, and only the user restarts the work.
+
 
 The stop
 ========
 
-The user tells this undertaking to stop, stand down or wrap up. It applies at
-any point after `Claim the issue`, whether or not a draft pull request exists.
-A claim says the work started and never says where it ended, so a stop that
-leaves only the claim leaves the next session to guess. **A stop that arrives
-as `stand-down`'s wrap-up message is `The wrap-up`'s, not this section's.**
+The user tells this undertaking to stop, stand down or wrap up. **The stop
+preempts the step that is running**, the same as `The wrap-up`: that step is
+abandoned, not finished, and nothing new starts. It applies at any point after
+`Establish task worktree`, whether or not a claim or a draft pull request
+exists. A claim says the work started and never says where it ended, so a stop
+that leaves only the claim leaves the next session to guess. Before `Establish
+task worktree` there is no branch, so nothing to secure or hand off: say so in
+one line and stop. **A stop that
+arrives as `stand-down`'s wrap-up message is `The wrap-up`'s, not this
+section's.**
 
 In order:
 
 
-1. **Secure the work.** The rules are `stand-down`'s `Secure the work`: commit
+1. **End the watch.** Cancel the `Keep it current` wake slot timer, any CI
+   watcher this session holds, and every pull-request subscription. The
+   reference file for the harness in use names the calls. This goes first, so
+   the CI run that the push starts wakes nothing here.
+2. **Secure the work.** The rules are `stand-down`'s `Secure the work`: commit
    work in progress to the existing task branch, stage named files, skip no
    hook and no test, and push. A branch with nothing new is pushed as it is.
-2. **End the watch.** Cancel the `Keep it current` wake slot timer, any CI
-   watcher this session holds, and every pull-request subscription. The
-   reference file for the harness in use names the calls.
 3. **Write the handoff.** One comment on the task issue:
 
    ```markdown
@@ -1116,13 +1058,18 @@ In order:
    it, the reason `stand-down`'s task handoffs carry none. A push that fails
    is stated here: `Pushed head:` names the last head that reached origin,
    `Outstanding:` names the failure, and the handoff is still written.
+   **The handoff is filled from what this session already knows**, plus the
+   git read the reference names for `Pushed head:`. No test or CI check is
+   run, no CI wait is finished, and nothing else is investigated to fill a
+   field: what is not known is written as unknown.
 4. **Stop.** The undertaking does not mark the pull request ready, does not
    close the issue, and does not call the work complete.
 
 
 **Idempotent.** Read the issue's comments before posting. A `## Handoff —`
-comment posted after the latest claim comment that names the same pushed head
-is an equivalent handoff: post nothing. One that names an older head is not
+comment that names the same pushed head, posted after the latest claim comment
+— or anywhere, when the issue has no claim comment — is an equivalent
+handoff: post nothing. One that names an older head is not
 equivalent, so post a new one. This is `stand-down`'s `Idempotent re-entry`.
 
 **An embark-dispatched implementor the user stops directly** runs `The stop`

@@ -165,7 +165,12 @@ event fields, over-broad token permissions, dangerous triggers such as
   public action that reads untrusted pull-request text with a write token.
   Each repository's adoption issue triages the first findings and sets how
   the pinning audit treats major-version tags.
-- Status: `none → gate` in all five repositories (#709 in DD).
+
+| Implementation | Repository | Status |
+| --- | --- | --- |
+| zizmor 1.31.1, `.github/zizmor.yml` (action tags pinned by `ref-pin`; two inline ignores carry reasons) | DD | `gate` |
+
+- Status: `gate` in DD; `none → gate` in CA, PG, PRA and CMWB.
 
 ### QC-GENERATED-FRESH — generated files match their source
 
@@ -348,7 +353,7 @@ changing it.
 | TypeScript (npm) | `npm ci` | PRA | `gate` |
 | JavaScript (npm) | `npm ci` (CI-selector dependencies) | DD | `gate` |
 | Python (uv) | `uv lock --check --offline` | CA | `gate` |
-| OpenTofu providers | `tofu init`, then `git diff --quiet` on `.terraform.lock.hcl` | DD | `gate → none` (#706) |
+| OpenTofu providers | none; the lock stays committed for hash-pinning | DD | `none` |
 | OpenTofu providers | the same | PRA | `gate → none` |
 
 OpenTofu provider lockfiles (`.terraform.lock.hcl`) stay committed for
@@ -362,13 +367,15 @@ already have no such gate.
 
 Locked dependencies are checked against an advisory database at its latest
 data, and any finding fails the check. The scan scopes to production
-dependencies; dev-only advisories are not a gate.
+dependencies; dev-only advisories are not a gate. DD declares only dev
+dependencies today, so its audit finds nothing until a production dependency
+is added.
 
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | pip-audit over the `uv export` of the lockfile | CA | `gate` |
 | TypeScript (pnpm) | `pnpm audit --prod` (fails on any finding; no severity floor) | PG | `none → gate` |
-| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | `none → gate` (#708 in DD) |
+| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | DD `gate`; PRA `none → gate` |
 
 ### QC-BUILD — the shipped artifact builds and loads
 
@@ -403,7 +410,9 @@ a reason.
 | OpenTofu | Checkov, `.checkov.yaml` (skips carry a comment; an Opengrep rule enforces that) | PG | `gate` |
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml` (five skips carry reasons) | DD | `gate` |
 | OpenTofu, Dockerfile, secrets | Checkov, pinned, frameworks `terraform dockerfile secrets` (`apps/omp-web`) | PG | `gate` |
-| OpenTofu | Checkov, `.checkov.yaml`, selected only when Tofu changes | CA, PRA, CMWB | `none → gate` |
+| OpenTofu | Checkov, `.checkov.yaml`, selected only when Tofu changes | CA | `none → gate` |
+| OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | PRA | `none → gate` |
+| OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | CMWB | `gate` |
 
 
 ## Adoption matrix
@@ -428,7 +437,7 @@ control covers.
 | QC-RELEASE-CONFIG | none | gate (schema unpinned) | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate → none | none | none |
-| QC-WORKFLOW-SECURITY | none → gate | none → gate | none → gate | none → gate | none → gate |
+| QC-WORKFLOW-SECURITY | gate | none → gate | none → gate | none → gate | none → gate |
 | QC-GENERATED-FRESH | none | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none → on | on | none → on |
@@ -443,11 +452,11 @@ control covers.
 | QC-UNIT-TESTS | none | gate | gate | gate | gate |
 | QC-COVERAGE | none | gate (Python) | none → gate | gate | none → gate |
 | QC-MUTATION | none | none | local | none | none |
-| QC-LOCKFILE | gate (npm); gate → none (HCL) | gate (Python) | gate (pnpm) | gate (npm); gate → none (HCL) | none |
-| QC-VULN-AUDIT | none → gate | gate (Python) | none → gate | none → gate | n/a |
+| QC-LOCKFILE | gate (npm); none (HCL) | gate (Python) | gate (pnpm) | gate (npm); gate → none (HCL) | none |
+| QC-VULN-AUDIT | gate | gate (Python) | none → gate | none → gate | n/a |
 | QC-BUILD | n/a | none | gate | gate | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
-| QC-IAC-POLICY | gate | none → gate | gate | none → gate | none → gate |
+| QC-IAC-POLICY | gate | none → gate | gate | none → gate | gate |
 
 CA also holds a TypeScript tree (`agent-cli`, `core`, `cflow`, `viewer`,
 `polite-pace`). Its vitest and `tsc` legs run only locally (`make

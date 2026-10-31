@@ -105,4 +105,5 @@ One row per committed record, oldest first.
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 8m 37s |
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 1/3 | subscription | subscription | 9m 03s |
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 7m 17s |
+| 2026-10-24 | with-without-haiku-5-5 | claude-code | claude-haiku-5-5 | claude-code claude-sonnet-5 (task-pinned) | 1880 | 571/1880 | $70.62 | $0.12 | 13m 35s |
 | 2026-10-29 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | subscription | subscription | 0m 17s |

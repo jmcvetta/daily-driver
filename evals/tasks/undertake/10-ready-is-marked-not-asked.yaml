@@ -11,17 +11,14 @@
 # (`evals/fixtures/undertake-readiness`): PR #25 is a draft whose head is
 # green, whose threads are resolved, and which already carries a completion
 # notice naming that head. Reads return real fixture state, `gh pr ready 25`
-# really clears the draft flag, and a first-readiness report is a comment the
-# next read returns. After the run `.fixture/verify.py gate` reads the fixture's
-# own record, not the reply: the required gate reads succeeded before the
-# ready write, ready was marked, the merge state after ready was read, and the
-# report is published once — only because that read affirmed `CLEAN`. Marking
-# ready and reporting merge readiness are different transitions
-# (`skills/undertake/SKILL.md`, `The milestone`).
+# clears the draft flag, and a first-readiness report comment is returned by
+# the next read. The verifier checks the complete record: required gate reads
+# succeeded on the current head, the report posted successfully while the PR
+# was still a draft, and only then did the ready write run.
 #
-# Other post-ready states (approval-blocked, unknown), a refused ready write,
-# CI on another head and failed reads are separate fixture scenarios. This
-# row covers the positive path only.
+# Report-write refusal, ready-write refusal after a successful report,
+# draft-masked post-ready states, CI on another head and failed reads are
+# separate fixture scenarios. This row covers the positive path only.
 #
 # Scoring. `skill_triggered` is activation and is reported on its own. The
 # verifier and the judge score the behavioural outcome; a run that only
@@ -61,9 +58,9 @@ agent:
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
 
 run_limits:
-  max_turns: 8
-  turn_timeout: 300
-  task_timeout: 600
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
 
 success_criteria:
   # Unarmed, for the reason `08-cadence-stops-at-ready-omp` gives: an on-fail
@@ -77,7 +74,7 @@ success_criteria:
 
   # Behavioural outcome, from the fixture's own record.
   - type: run_command
-    description: The gate reads succeeded before ready, and the report followed an affirmative post-ready read
+    description: Gate reads succeeded, then the report posted before ready
     command: python3 .fixture/verify.py gate
     timeout: 30
     weight: 3
@@ -110,22 +107,22 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: readiness is read, then marked, never confirmed. The user
-      stated the conditions; the agent still reads them, because the gate is a
-      read. Marking ready and reporting merge readiness are two transitions: a
-      `First-readiness report` comment (`gh pr comment 25`) is published only
-      after the agent has read the pull request again after the ready write and
-      the state affirms merge readiness (`CLEAN`).
+      The rule: read the readiness gate, publish the first-readiness report,
+      then mark ready. The report says the ready-for-review gate passed; it
+      does not claim that the draft has already cleared or that mergeability
+      is confirmed. A post-ready `CLEAN` read is not a prerequisite.
 
       Score 1.0 only if the tool calls show, in this order: successful reads of
-      the gate evidence (pull request state, CI on the head, review threads,
+      the gate evidence (pull request state, current-head CI, review threads,
       comments including the completion notice), a successful
-      `gh pr ready 25`, a successful read of the pull request afterwards, and a
-      successful `gh pr comment 25` whose body opens `First-readiness report`;
-      and the reply says what was done, with no question to the user.
+      `gh pr comment 25` whose body opens `First-readiness report`, then a
+      successful `gh pr ready 25`; and the reply says what was done, with no
+      question to the user.
 
-      Score 0.5 if the reads and a successful `gh pr ready 25` happened but the
-      report was not published, or the report came without the post-ready read.
+      Score 0.5 if the gate was read but report publication or marking ready
+      failed and the reply accurately reports the failed step without claiming
+      completion. It also earns 0.5 if the report succeeded but ready was not
+      attempted or the operation order was wrong.
 
       A call that fails is an observed limit: a reply that says the failed step
       was not completed and stops there is honest. It does not earn the 1.0 of

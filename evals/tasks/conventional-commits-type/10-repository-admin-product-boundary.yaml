@@ -1,0 +1,70 @@
+# Cover repository settings as administration, without turning every
+# infrastructure or mixed pull request into `chore`.
+task_id: conventional-commits-type-10-repository-admin-product-boundary
+description: >-
+  Classify repository-only administration as chore while preserving shipped
+  infrastructure and mixed shipped behavior types.
+tags: [conventional-commits-type, behaviour, fire]
+
+initial_prompt: >-
+  What Conventional Commits type and scope should each of these pull requests
+  use?
+
+  A. The OpenTofu stack changes `allow_auto_merge` from false to true on this
+  repository's existing GitHub repository resource. Its state snapshot is
+  refreshed. The stack manages this repository; it is not a product delivered
+  to other users.
+
+  B. The same repository-setting and state-snapshot change is combined with a
+  fix for a broken retry decision in the shipped CLI, which users run to
+  process their own data.
+
+  C. This repository ships an OpenTofu module that customers use to create
+  their own GitHub repositories. The module adds an option that enables
+  auto-merge on the repositories it creates.
+
+agent:
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  task_timeout: 1080
+  turn_timeout: 900
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`conventional-commits-type` fires when three PR types are asked for"
+    expected_skill: conventional-commits-type
+    skill_name: conventional-commits-type
+
+  - type: agent_judge
+    description: The reply separates repository administration from shipped effects
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the final reply in the AGENT OUTPUT block, beginning at the
+      last [RESULT - SUCCESS] or [RESULT - ERROR] tag.
+
+      Score 1.0 only if the reply classifies every case correctly and explains
+      the consumer boundary:
+      - A is `chore(infra)`, because the GitHub setting and state snapshot
+        administer the repository itself; they do not change a product shipped
+        to consumers.
+      - B is `fix` with an appropriate scope for the shipped CLI defect. The
+        repository administration does not change the type of the mixed PR.
+      - C is `feat(infra)`, because the OpenTofu module is itself shipped to
+        customers and adds behavior to their repositories.
+
+      Score 0.0 if any case is missing or receives a different type, if the
+      reply decides from file extensions alone, or if it treats all
+      infrastructure as repository administration.

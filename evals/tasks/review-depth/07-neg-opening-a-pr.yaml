@@ -54,15 +54,15 @@ agent:
               timeout: 10
 
 run_limits:
-  max_turns: 12
-  task_timeout: 780
+  max_turns: 60
+  task_timeout: 1080
   # `turn_timeout` is the agent's budget; `task_timeout` is the watchdog around
   # the whole evaluation, armed before the turn starts and still running while
   # the criteria are checked. Equal values mean a turn that uses its budget is
   # killed as a TIMEOUT before it can be graded, so `task_timeout` carries
   # headroom on top. `plan` warns that the larger number cannot extend the
   # turn; that is the point — it is not meant to.
-  turn_timeout: 600
+  turn_timeout: 900
 
 initial_prompt: "I finished the branch and need a pull request. Could you open one?"
 

@@ -65,25 +65,19 @@ it, and nothing else. The prompt boundary of `Open the sessions` holds.
 The route an implementor runs
 =============================
 
-The `task` surface selects an `agent`, not a model. For a `task` issue,
-select the agent named for its required class (`mechanical`, `implementation`,
-`reasoning`, or `frontier`). For `bug` and `research`, first apply that kind's
-`issue-body` readiness test, then assess the actual work against the same
-capability rubric. For `research` assigned `frontier`, require `issue-body`'s
-explicit approval and exact work envelope before selecting the `frontier`
-agent. Routine research carries no task class metadata. Select an eligible
-agent from the assessment without adding task class metadata to other issue
-kinds. Each batch item sets only `agent`; it carries no per-item model
+The `task` surface selects an `agent`, not a model. Every epic story must pass
+`Take the wave`'s task-readiness gate before dispatch. Select the agent named
+for its required class (`mechanical`, `implementation`, `reasoning`, or
+`frontier`). Each batch item sets only `agent`; it carries no per-item model
 argument. Resolve the effective route under [`issue-body`'s required-class
 policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
 frontmatter, including a tagged-role assignment such as `@implementation` or
-`@frontier`. Resolve configured prewalk and retry fallbacks under the same
+`@frontier`. Resolve configured prewalk and retry fallbacks under the same policy.
 
-For a task, a current measured class outranks handwritten guidance, and a
-measured class below its requirement excludes that route. For bug and research
-work, use measured capability evidence when available; an unmeasured,
-unreported, or stale row is unknown, not proof of suitability. Use the
+A current measured class outranks handwritten guidance, and a measured class
+below the task's requirement excludes that route. An unmeasured, unreported,
+or stale row is unknown, not proof of suitability. Use the
 operator's configured eligible preference without claiming measured
 capability. That preference never waives class capability, tools, context,
 modality, availability, or credential requirements. Do not invent a freshness
@@ -113,10 +107,10 @@ implementation or supervise it on frontier. Frontier implementation needs
 separate, explicit user authorization for that exception and bounded scope;
 frontier research approval is not enough.
 
-For a task, record its required class; for another kind, record `not
-applicable`. Keep the selected agent/effective route and actual execution model
-distinct in the muster roll. Record `unreported` when execution identity is
-unavailable; a selector is not observed identity. If Omp reports a different
+Record the task's required class. Keep the selected agent/effective route and
+actual execution model distinct in the muster roll. Record `unreported` when
+execution identity is unavailable; a selector is not observed identity. If Omp
+reports a different
 model or fallback, record that observed model and reassess before work
 continues. `sonic` is a bundled agent, not a model role. Reviewers and scouts
 are not implementation routes.
@@ -153,9 +147,9 @@ The watch
 | `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-`Land the pull request` uses the same readiness fields as `undertake`'s `The
-milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
-`headRefOid` is the head the merge binds to. The labels and body answer the
+`Land the pull request` reads its own state: `isDraft` must be false,
+`mergeStateStatus` must be `CLEAN`, and `headRefOid` is the head the merge
+binds to. The labels and body answer the
 human-action read in the same call. The complete thread graph is the paginated
 GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
 
@@ -176,13 +170,12 @@ author of the task issue's claim comment, and the SHA it names. Where that SHA i
 `rev-list` must print nothing. A SHA off that chain, or any printed commit,
 fails the read.
 
-The merge is one conditional `gh pr merge` call for a task or corrected bug
-with a pull request, after the gate holds. `--match-head-commit <headRefOid>`
-makes it fail closed if the task session pushes after the read.
+The merge is one conditional `gh pr merge` call for a task pull request after
+the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
+task session pushes after the read.
 `Close the epic` posts its evidence comment before `gh issue close`, and never
 calls the latter when a child outcome is unsupported or landing is by hand.
-An issue-only research answer or bug disposition has no pull request to merge;
-read its body and comments against that kind's `issue-body` completion contract.
+Read the delivered outcome against the task's acceptance criteria.
 An issue's closed state alone does not prove the epic outcome was met.
 
 **A live subagent's result or failure arrives as a wake of its own.** The

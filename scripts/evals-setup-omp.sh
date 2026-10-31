@@ -57,7 +57,12 @@ sys.exit(0 if any(m.get("selector") == want for m in models) else 1)
 
 # Read outside a process substitution, so a failing `sed` (a missing file)
 # stops the run, and an empty list fails rather than checking nothing.
-models="$(sed -n 's/^[[:space:]]*model:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$@" | sort -u)"
+#
+# An experiment names its effort as a suffix (`provider/model:high`), which the
+# adapter strips before `set_model`; Omp's catalog lists the bare id, so the
+# suffix comes off here or the check would reject a model the arm can serve.
+models="$(sed -n 's/^[[:space:]]*model:[[:space:]]*\([^[:space:]#]*\).*/\1/p' "$@" \
+	| sed -E 's/:(off|minimal|low|medium|high|xhigh|max|auto)$//' | sort -u)"
 if [ -z "${models}" ]; then
 	echo "error: no model: line in $*" >&2
 	exit 1

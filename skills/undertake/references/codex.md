@@ -91,12 +91,12 @@ The pull request
 | `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
 | `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
-| `Ready for review` | Take it out of draft | `gh pr ready <number>` |
-| `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
-| `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
-| `The milestone` | Read the readiness state | `gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid` |
+| `The milestone` | Read the draft state and report head | `gh pr view <number> --json isDraft,headRefOid` |
 | `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
 | `The milestone` | Post the report | `gh pr comment <number> --body-file <path>` |
+| `Ready for review` | Take it out of draft | `gh pr ready <number>` |
+| `Keep it current` | Invoke `pr`'s ongoing base maintenance | [`pr` route](../../pr/references/codex.md#keep-it-current) |
+| `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/codex.md` names the full-review surface and
@@ -133,20 +133,17 @@ The milestone
 that read the readiness state, find the claim's timestamp, and post it. They
 are `gh` throughout, as everywhere on this harness.
 
-**The readiness state is one read:**
+**The report is posted while the pull request is still a draft.** Read the
+state and head with:
 
-    gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid
+    gh pr view <number> --json isDraft,headRefOid
 
-`isDraft` false and `mergeable` `MERGEABLE` are two of the answers the report
-needs, and neither is sufficient alone. `mergeStateStatus` answers the rest,
-and here — after the draft is cleared — `CLEAN` is the only yes: `BEHIND` is
-a base the branch does not carry, `UNSTABLE` a check that is no longer green,
-`DIRTY` a conflict, and `UNKNOWN` and `BLOCKED` are states `SKILL.md` rules
-out as readiness outright. Each is a wait, not a milestone. **`The gate` reads
-the same field for less**, because a draft reports `DRAFT` or `BLOCKED` there
-whatever its branch and checks are doing: only `BEHIND`, `DIRTY` and `UNKNOWN`
-are that read's, and CI at the gate comes from `statusCheckRollup` instead.
-`headRefOid` is the SHA the report binds to.
+`isDraft` must be true, and `headRefOid` is the SHA the report binds to. The
+gate already establishes branch currency, current-head CI, review completion,
+resolved threads, the completion notice and absence of human blockers.
+`mergeable` and `mergeStateStatus` are not readiness prerequisites here:
+draft states can mask the underlying result, and a post-ready `CLEAN` read
+would put the report after the transition it must precede.
 
 **The start is the claim comment's `createdAt`.** `gh issue view <issue>
 --json comments` is the read `Read the issue and its edges` already makes —
@@ -156,65 +153,45 @@ comment carries that shape, the earliest is the start. A resumed session
 finds it with the same read. An issue with no recoverable claim leaves the
 timing `n/a`, per `SKILL.md`.
 
-**The report posts as a pull-request comment** — a pull request's comments
-are issue comments:
+**Post the report before marking ready.** Read the existing comments with
+`gh pr view <number> --json comments` and look for the fixed
+`First-readiness report` marker. If none exists and the gate holds, write the
+report as a pull-request comment:
 
     gh pr comment <number> --body-file <path>
 
-`--body-file` for the reason `Claim the issue`'s row gives: backticks and a
-markdown link in the body, and a double-quoted shell argument substitutes
-them before `gh` sees them.
-
-**Read the existing comments before posting** — `gh pr view <number> --json
-comments` again, the report found by its opening line, `First-readiness
-report`, the marker `SKILL.md` fixes; a resumed sequence that finds it posts
-nothing.
+Only after that write succeeds, run `gh pr ready <number>`. A failed report
+write leaves the PR draft. A failed ready write preserves the report; on
+retry, revalidate the current gate and do not duplicate or rewrite the
+existing report.
 
 **The provenance** is `provenance`'s block, read the way its
 [`references/codex.md`](../../provenance/references/codex.md) names: it
 follows `The session` above.
 
 
-There is no durable wake
-========================
+The cadence
+===========
 
-**No actor on this harness outlives the turn that armed it** — no durable
-process, no scheduled wake. From `Open the draft`, report that an unfinished
-pull request needs its owner to resume. Do not claim a cadence, timer, shell
-loop, subscription, or autonomous review. Reaching ready does not change that
-limit.
+[`pr`'s `Keep it current` route](../../pr/references/codex.md#keep-it-current)
+owns the common watch and its no-durable-wake limit. This undertaking invokes
+that maintenance; it does not claim or start a timer or autonomous review.
 
-**The catch-up look is the first read of every turn that lands back on the
-pull request.** A turn that returns the session to the pull request — a
-resume, a continuation, a user turn about it — starts with:
-
-    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
-
-Read `statusCheckRollup` and `review-cycle`'s check and status endpoints
-before a currency merge; if either reports a run in flight, skip that merge.
-Otherwise `BEHIND`, `DRAFT`, `BLOCKED`, and an indeterminate answer run `gh pr
-update-branch <number>`, whose own reply settles currency. `DIRTY` is the
-conflict stop; `CLEAN` and `UNSTABLE` need no currency action.
-
-**Then assess the resulting current head.** After a currency test that can move
-the head, read `gh pr view <number> --json statusCheckRollup` and the check and
-status endpoints `review-cycle` owns. Earlier green evidence does not survive
-a head change. Pending or unregistered checks follow its bounded limits; failed
-checks return to `Fix, answer, resolve, push`, and unavailable logs are an
-explicit evidence blocker. When CI on the current head is green and the gate's
-notice read finds no completion notice, post the notice before continuing the
-ready-gate work. State the unfinished condition and owner-resume
-requirement; never call a clean branch, an already-up-to-date response, or a
-draft completion.
+Undertaking-specific continuation stays here. When current-head CI is green,
+post a missing review completion notice before continuing the ready-gate work.
+Use `review-cycle` for review and fix-delta work, then apply `Ready for review`
+and `The milestone` below. State unfinished work and the owner-resume
+requirement; never call a clean branch, an up-to-date response, or a draft
+completion.
 
 
 The stop
 ========
 
 `SKILL.md`'s `The stop` names each operation in words; these are the calls.
-There is no wake, process or subscription on this harness, so `End the watch`
-has nothing to cancel: say so in the handoff's `Outstanding` line only where
-a stop leaves unfinished work.
+The Codex route has no durable actor to cancel; `pr`'s reference owns the
+stop semantics. Say that no timer or subscription exists only when the
+handoff leaves unfinished work.
 
 | Operation | Call |
 | --------- | ---- |
@@ -222,3 +199,4 @@ a stop leaves unfinished work.
 | Post the handoff | `gh issue comment <number> --body-file <path>` |
 
 The pushed head is `git ls-remote origin <branch>`.
+

@@ -87,12 +87,12 @@ The pull request
 | `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
 | `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
+| `The milestone` | Read the draft state and report head | `gh pr view <number> --json isDraft,headRefOid` |
+| `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
+| `The milestone` | Post the report | `gh pr comment <number> --body-file <path>` |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
-| `The milestone` | Read the readiness state | `gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid` |
-| `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
-| `The milestone` | Post the report | `gh pr comment <number> --body-file <path>` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/omp.md` names the reviewer task, durable
@@ -124,20 +124,17 @@ The milestone
 `SKILL.md` owns what the report says and when it is owed; these are the calls
 that read the readiness state, find the claim's timestamp, and post it.
 
-**The readiness state is one read:**
+**The report is posted while the pull request is still a draft.** Read the
+state and head with:
 
-    gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid
+    gh pr view <number> --json isDraft,headRefOid
 
-`isDraft` false and `mergeable` `MERGEABLE` are two of the answers the report
-needs, and neither is sufficient alone. `mergeStateStatus` answers the rest,
-and here — after the draft is cleared — `CLEAN` is the only yes: `BEHIND` is
-a base the branch does not carry, `UNSTABLE` a check that is no longer green,
-`DIRTY` a conflict, and `UNKNOWN` and `BLOCKED` are states `SKILL.md` rules
-out as readiness outright. Each is a wait, not a milestone. **`The gate` reads
-the same field for less**, because a draft reports `DRAFT` or `BLOCKED` there
-whatever its branch and checks are doing: only `BEHIND`, `DIRTY` and `UNKNOWN`
-are that read's, and CI at the gate comes from `statusCheckRollup` instead.
-`headRefOid` is the SHA the report binds to.
+`isDraft` must be true, and `headRefOid` is the SHA the report binds to. The
+gate already establishes branch currency, current-head CI, review completion,
+resolved threads, the completion notice and absence of human blockers.
+`mergeable` and `mergeStateStatus` are not readiness prerequisites here:
+draft states can mask the underlying result, and a post-ready `CLEAN` read
+would put the report after the transition it must precede.
 
 **The start is the claim comment's `createdAt`.** `issue://<issue>` carries
 the comments, so `Read the issue and its edges` already has them; `gh issue
@@ -148,86 +145,35 @@ that shape, the earliest of them is the start — a later claim does not restart
 the clock. A resumed session finds the start with the same read. An issue
 with no recoverable claim leaves the timing `n/a`, per `SKILL.md`.
 
-**The report posts as a pull-request comment** — a pull request's comments
-are issue comments, so the write is the claim's own:
+**Post the report before marking ready.** Read the existing comments with
+`gh pr view <number> --json comments` and look for the fixed
+`First-readiness report` marker. If none exists and the gate holds, write the
+report as a pull-request comment:
 
     gh pr comment <number> --body-file <path>
 
-`--body-file` for the reason `Claim the issue`'s row gives: the report
-carries backticks, a SHA, and timestamps, and a double-quoted shell argument
-substitutes the backticks before `gh` sees them.
-
-**Read the existing comments before posting** — `gh pr view <number> --json
-comments` again, the report found by its opening line, `First-readiness
-report`, the marker `SKILL.md` fixes; a resumed sequence that finds it posts
-nothing.
+Only after that write succeeds, run `gh pr ready <number>`. A failed report
+write leaves the PR draft. A failed ready write preserves the report; on
+retry, revalidate the current gate and do not duplicate or rewrite the
+existing report.
 
 **The provenance** is `provenance`'s block, read the way its
 [`references/omp.md`](../../provenance/references/omp.md) names: the same
 `daily_driver_get_session` call `The session` above uses.
 
 
-The watch is a detached Omp service
-===================================
+Common PR maintenance
+=====================
 
-**The merge is mechanical, so the watch that runs it can be too.** Omp's
-named Bash service owns the process lifecycle. Start the plugin's
-`scripts/pr-keep-current.sh` with `bash` service mode, `name`
-`keep-current-<number>`, its script path and pull-request number as the
-command, and `cwd` set to a checkout of this repository. Prefix the command
-with `printf 'keep-current-started\n'; exec` and set
-`ready: {"log": "keep-current-started"}`. This launch marker is deterministic
-even when the script's first tick produces no output; it means only that the
-service command launched, not that the pull request was updated. `exec`
-preserves the script's exit status as the service status. Service mode rejects
-`async` and `timeout`; do not supply either field. Read `proc://<name>` before
-starting so a resumed session does not restart an existing loop.
+Use [`pr`'s Omp route](../../pr/references/omp.md) for the currency checkpoint,
+detached watch, catch-up look, and cancellation. `Open the draft` starts or
+reuses that watch, including while CI or review is pending. `Ready for review`
+does not start another one.
 
-After readiness, immediately inspect `read proc://<name>`. If it has exited,
-read its logs and report the observed exit instead of requesting persistence or
-calling it durable. Otherwise request `detached` through
-`write proc://<name>/mode` with content `detached`, then confirm
-`read proc://<name>` reports `detached=true`. Detached mode lets the process
-survive broker shutdown and Omp exits. If the mode write fails or the status
-does not confirm it, stop the service with `write proc://<name>/kill` and
-report the exact failure; do not claim the watch is durable.
+The undertaking catch-up look
+-----------------------------
 
-The script runs every two minutes. It reads the pull request's state, merge
-status, and check rollup; skips the tick while a run on the head is in flight;
-merges the base branch in when the branch is behind; and logs each move to
-`proc://<name>`. Read that status and output with `read proc://<name>`.
-
-Its exits are `Keep it current`'s three, and nothing narrower. It exits 0
-when the pull request is merged or closed. It exits 3 on a conflict — the
-call fails and changes nothing, and the stop is left for the session's
-catch-up look below, whose `DIRTY` row restarts the loop once the conflict is
-resolved and pushed. When the user says to stop, use
-`write proc://<name>/kill`. Thirty consecutive failed reads exit 2: a watch
-polling a repository it cannot read is noise, not a watch.
-
-**`daily_driver_schedule` is not this cadence's vehicle.** The managed timer
-is unref'd and cleared on `session_shutdown`, so a cadence it carried lived
-only as long as the session — the failure that left ready pull requests
-behind their bases indefinitely. The CI wait uses `review-cycle`'s bounded,
-persistent named service, not a shell wait.
-
-The catch-up look
------------------
-
-**The first read of every turn that lands back on an open undertaking pull
-request is the base-currency read.** The detached service merges without a
-session, but it does not judge: red CI, a review wall, a conflict, and the
-milestone still need an agent turn. Read the service state and logs with
-`read proc://keep-current-<number>`, then run:
-
-    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
-
-Merged and closed pull requests end continuation. Read `statusCheckRollup` and
-`review-cycle`'s check, status and workflow-run reads before a currency merge; if any
-reports a run in flight, skip that merge. Otherwise `BEHIND`, `DRAFT`,
-`BLOCKED`, and `UNKNOWN` run `gh pr update-branch <number>`, whose own reply
-settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
-`CLEAN` and `UNSTABLE` need no currency action.
+Take the common catch-up look first, then continue this sequence:
 
 **Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
@@ -240,9 +186,8 @@ continuing the ready-gate work. A durable Omp service preserves its process,
 but does not resume the owner: where no owner turn is running, report unfinished
 work and the owner-resume requirement rather than claiming autonomous review.
 
-The detached `keep-current-<number>` merge loop still starts at ready and
-remains mechanical. It is not pre-ready CI supervision and never marks a
-draft ready.
+The common merge loop remains mechanical. It does not assess the gate or
+mark a draft ready.
 
 
 The stop

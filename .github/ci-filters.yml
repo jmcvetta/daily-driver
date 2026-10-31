@@ -94,6 +94,10 @@ check-checkov:
   - 'infra/**'
   - '.checkov.yaml'
   - 'Makefile'
+check-zizmor:
+  - '.github/workflows/**'
+  - '.github/zizmor.yml'
+  - 'Makefile'
 check-omp-plugin:
   - 'scripts/check-omp-plugin.py'
   - 'package.json'

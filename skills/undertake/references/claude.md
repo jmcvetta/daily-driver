@@ -93,12 +93,12 @@ The pull request
 | `The gate` | Read the completion notice | `mcp__github__pull_request_read`, method `get_comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
 | `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `mcp__github__add_issue_comment` |
 | `The gate` | Read the Blockers section | `mcp__github__pull_request_read`, method `get` — `body`, where `pr-body`'s Blockers section sits |
-| `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
-| `Keep it current` | Merge the base branch in | `mcp__github__update_pull_request_branch` |
-| `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
-| `The milestone` | Read the readiness state | `mcp__github__pull_request_read`, method `get` — `draft`, `mergeable_state`, `head.sha` |
+| `The milestone` | Read the draft state and report head | `mcp__github__pull_request_read`, method `get` — `draft`, `head.sha` |
 | `The milestone` | Read the existing comments | `mcp__github__pull_request_read`, method `get_comments` |
 | `The milestone` | Post the report | `mcp__github__add_issue_comment` |
+| `Ready for review` | Take it out of draft | `mcp__github__update_pull_request`, `draft: false` |
+| `Keep it current` | Invoke `pr`'s ongoing base maintenance | [`pr` route](../../pr/references/claude.md#keep-it-current) |
+| `A round after ready goes back to draft` | Return it to draft | `mcp__github__update_pull_request`, `draft: true` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/claude.md` names the full-review surface and
@@ -136,13 +136,19 @@ the local execution branch separately. Otherwise the task-worktree branch
 must agree with the designation, or with the adopted resume branch.
 
 **A resume branch differing from the designation is not a collision.** The
-adopted remote branch is the task's push/PR head. The session's own
-instructions may still require explicit permission to push to a branch other
-than the designation. Where they do, ask the user once, in one line naming
-both branches and the resume evidence (the pull request, handoff comment or
-claim that named it), then, for repository work, push to the adopted branch.
-Never push the work to the designated branch instead, and never open a second
-pull request from it.
+adopted remote branch is the task's push/PR head. Before asking for permission
+to push there, check the user's applicable explicit authorization. Standing
+authorization to push the existing branch when resuming work satisfies a
+requirement for explicit permission; it does not require a fresh question on
+each resume. The pull request, handoff or claim identifies the branch, but
+does not by itself supply user consent.
+
+Ask only when applicable authorization is absent, or an actual higher-priority
+instruction specifically requires fresh or narrower permission. Do not infer
+that stricter requirement from unseen instructions. When a question is needed,
+name both branches and the resume evidence in one line, and wait for permission
+before pushing. Keep the adopted branch: never push the work to the designated
+branch instead, and never open a second pull request from it.
 
 For repository work in the primary-held designation exception, use the
 designated branch for the claim link, pushes, existing-PR lookup and PR
@@ -168,23 +174,16 @@ The milestone
 that read the readiness state, find the claim's timestamp, and post it.
 
 **The readiness state is `mcp__github__pull_request_read`, method `get`** —
-the same call `The gate` makes, asking a different question. Three fields
-answer `SKILL.md`'s: `draft`, which must be false; `mergeable_state`; and
-`head.sha`, the SHA the report binds to.
+the same call `The gate` makes, asking a different question. `draft` must
+still be true, and `head.sha` is the SHA the report binds to. The report is
+posted while the pull request is still a draft, after the gate holds and
+before `Ready for review` marks it ready.
 
-**Here `clean` is the only yes**, and that is the difference from the gate.
-The gate runs while the pull request is still a draft, where this field
-reports `draft` or `blocked` and says nothing about the merge; the milestone
-runs after the draft is cleared, where the same field finally answers the
-mergeability question the report attests to. So `unstable` is a check that is
-no longer green, `behind` a base the branch does not carry, `dirty` a
-conflict, `blocked` a required review outstanding, and `unknown` GitHub
-saying it cannot determine the answer yet — the indeterminate readiness
-`SKILL.md` rules out. Each of them is a wait, not a milestone.
-
-This call returns no `mergeable` boolean — measured on the server this
-session holds, 2026-09-18 — so `mergeable_state` is the whole answer rather
-than half of it.
+`mergeable_state` is not a milestone condition. The gate uses it only for
+`behind`, `dirty` and `unknown`; `draft` and `blocked` do not answer branch
+currency or readiness. The independent gate reads for currency, current-head
+CI, review completion, threads, the completion notice and blockers decide
+whether the report may be posted. Do not wait for a post-ready `clean` read.
 
 **The start is the claim comment's `created_at`.** Read the issue's comments
 with `mcp__github__issue_read`, method `get_comments` — the read `Read the
@@ -194,12 +193,13 @@ carries that shape, the earliest is the start. The resumed sequence makes this
 read anyway; an issue with no recoverable claim leaves the timing `n/a`, per
 `SKILL.md`.
 
-**The report posts with `mcp__github__add_issue_comment`** — a pull request's
-comments are issue comments, so the claim's write is the report's. The same
-call only writes, so read first: `mcp__github__pull_request_read`, method
-`get_comments`, on the pull request, the report found by its opening line, `First-readiness
-report`, the marker `SKILL.md` fixes, and a resumed sequence that finds it
-posts nothing.
+**Post the report before marking ready.** Read the PR's comments with
+`mcp__github__pull_request_read`, method `get_comments`, and find the fixed
+`First-readiness report` marker before writing. If it is absent and the gate
+holds, post with `mcp__github__add_issue_comment`. Only after that write
+succeeds, call `mcp__github__update_pull_request` with `draft: false`. A
+failed report write leaves the PR draft; a failed ready write preserves the
+report for a revalidated retry.
 
 **The provenance** is `provenance`'s block, read the way its
 [`references/claude.md`](../../provenance/references/claude.md) names: the
@@ -239,40 +239,17 @@ so `The cadence` below neither reuses it nor counts it.
 The cadence
 ===========
 
-`Open the draft` starts the one durable cadence on this harness:
-`mcp__Claude_Code_Remote__send_later`, two minutes out, cancelled with
-`mcp__Claude_Code_Remote__delete_trigger`. It survives the session that armed
-it, which is what makes continuation across turns possible at all. Reaching
-ready retains this cadence; it does not arm a second one.
+[`pr`'s `Keep it current` route](../../pr/references/claude.md#keep-it-current)
+owns the common watch; this undertaking invokes it and does not start another.
 
-**Each wake carries its own instructions.** The prompt handed to `send_later`
-states the whole check-in, self-contained, in this order:
+Undertaking-specific continuation stays here. When current-head CI is green,
+post a missing review completion notice before continuing the ready-gate work.
+Use `review-cycle` for review and fix-delta work, then apply `Ready for review`
+and `The milestone` below. A capped wait, review wall, or human action reports
+unfinished work and its resume path; it never becomes completion.
 
-1. **Re-arm first.** `mcp__Claude_Code_Remote__send_later`, two minutes out,
-   with the same prompt. A pending trigger is reused; a wake that ends with no
-   trigger in flight has lost the undertaking's continuation.
-2. **Read state, currency, and the merge floor.** Read `state`, `draft`,
-   `mergeable_state`, `head.sha`, `get_check_runs`, and `get_status`. A merged
-   or closed pull request deletes the re-armed trigger and exits. If either CI
-   endpoint reports a run in flight, skip the merge. Otherwise `behind`,
-   `draft`, `blocked`, or an indeterminate merge state runs
-   `mcp__github__update_pull_request_branch`, whose own reply settles
-   currency; `dirty` is the conflict stop.
-3. **Assess the resulting head.** After a currency test that can move the
-   head, read both CI endpoints again; without one, the floor read is the
-   assessment. A changed head invalidates earlier CI and readiness evidence.
-   Pending or unregistered checks use `review-cycle`'s bounded wait; failed
-   checks return to `Fix, answer, resolve, push`, and missing logs remain an
-   evidence blocker. When CI on the current head is green and the gate's
-   notice read finds no completion notice, post the notice before continuing
-   the ready-gate work. Continue the remaining review or ready-gate work when
-   CI permits it. A capped wait, review wall, or human action reports unfinished
-   work and its resume path; it never becomes completion.
-
-The slot it occupies is the same slot `review-cycle`'s wait borrows and hands
-back. That ownership starts before ready, including red results and capped
-waits. A pending cadence wake is reused unless a CI wait borrowed it; on
-`End the wait`, cancel that borrowed wake and arm exactly one replacement.
+`review-cycle` borrows the cadence slot for its CI wait and hands it back as
+`pr`'s reference directs. It does not own the standing watch.
 
 
 The stop
@@ -283,9 +260,15 @@ The stop
 | Operation | Call |
 | --------- | ---- |
 | Read the issue's comments, for the claim and any equivalent handoff | `mcp__github__issue_read`, method `get_comments` |
-| Cancel the `Keep it current` wake slot timer | `mcp__Claude_Code_Remote__delete_trigger`, by the `trigger_id` the slot holds |
+| Cancel the common `Keep it current` wake | `pr`'s `Keep it current` route, `mcp__Claude_Code_Remote__delete_trigger` by its `trigger_id` |
 | Drop a pull-request subscription | `mcp__github__unsubscribe_pr_activity`, one call per subscription |
 | Post the handoff | `mcp__github__add_issue_comment` |
 
 The pushed head is `git rev-parse HEAD` after a push that succeeded, and the
 last head `git ls-remote origin <branch>` reports where it did not.
+
+`The wrap-up`'s `End the watch` uses the same two cancel routes before its
+push. Neither is skipped because the orchestrator archives this session next:
+a `send_later` trigger survives the session that armed it, and an archive
+that fails leaves the subscription live.
+
