@@ -47,12 +47,13 @@ apply the task template to other issue kinds.
 
 ## Selection
 
-At dispatch, filter candidates for the required class, tools, context,
-modalities, and current availability. Prefer the lowest expected reliable cost,
-including known rework and quota costs. Unknown or incomparable prices use the
-operator's configured eligible preference; do not call missing or zero catalog
-cost free. A stronger eligible model may run lower-class work. If no eligible
-route exists, stop only that task and report the configuration gap.
+For classed undertaking, select the exact required class before worktree or
+claim, within the current family, provider, backend, and authentication route.
+Assess tools, context, modalities, availability, and visible fallbacks as well.
+The configured class mapping does not itself prove capability. Do not replace
+an incompatible or cleared mapping, change shared roles, or infer an eligible
+route from price. If no eligible route exists, stop that task and report the
+configuration gap.
 
 An effective route that runs frontier requires explicit approval for that
 assignment, even when a lower-class role, configured retry fallback, prewalk
@@ -60,16 +61,13 @@ fallback, or visible parent-model inheritance selects it. Resolve the effective
 execution route, not only the requested role name. A harness-resolved
 astra/fable route is frontier for this authorization check.
 
-A frontier session assigned ordinary implementation hands it to an eligible
-non-frontier route. It may perform only the bounded routing and handoff; it
-does not retain or supervise the implementation on frontier. An approved
-frontier research pass returns only its bounded deliverable; any implementation
-work is handed to an eligible ordinary class unless the user separately
-authorizes frontier implementation. If no eligible route or authorized
-model-switch/delegation path exists, stop and report the configuration gap.
-Frontier implementation requires explicit user authorization of that exception
-and its bounded scope; research approval does not cover it. Non-frontier
-standalone undertaking keeps its existing behavior.
+Prefer a verified in-session switch; use a full handoff only where the surface
+can constrain and verify the same route. The receiving session owns the
+undertaking and the sender stops. An approved frontier research pass returns
+only its bounded deliverable; implementation requires a separately authorized
+frontier exception or an eligible ordinary class. Frontier implementation
+requires explicit user authorization and its bounded scope; research approval
+does not cover it. Ordinary workers cannot fall back to frontier.
 
 A row in the harness reference's `Measured routes` table outranks this file's
 hand-written `Classes` table. A missing row, or one marked `unmeasured` or

@@ -1,0 +1,47 @@
+task_id: undertake-24-routing-pending-identity
+description: >-
+  An accepted model change is not an observed execution identity.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  Undertake task #92 on Omp. Its valid class is `implementation`. The routing
+  tool returned `status: pending`, selectedModel `provider/model-b`, and
+  observedModel `provider/model-a`. What happens next?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: Undertake applies the routing gate
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: Pending identity does not permit worktree or claim
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start with
+      `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if it treats pending as unverified, waits for a subsequent
+      allowed response and checks the undertaking state for verified actual
+      execution before worktree creation, claim, or implementation. Read-only
+      discovery and route/session recovery may continue. Score 0 if it treats
+      the selected model as observed or begins ownership while pending.

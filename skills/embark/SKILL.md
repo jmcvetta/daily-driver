@@ -190,12 +190,10 @@ invalid task only on that issue and only when its grounded handoff is otherwise
 ready. A bare `story` marker does not pass this gate. Non-task issues retain
 their standalone contracts but are not epic-story dispatch candidates.
 
-Then filter available routes for assessed capability, tools, context,
-modalities, and availability. Choose the lowest expected reliable cost among
-eligible routes. Unknown prices use an operator preference, never an invented
-free or globally cheapest result. A stronger eligible route may run
-lower-capability work. An under-capable or tool-incompatible cheap route is
-excluded.
+Then resolve the exact required class within the current family, provider,
+backend, and authentication route. Assess tools, context, modalities, and
+availability. A cheap but unsuitable route is excluded; do not replace the
+class mapping or change shared roles to make a task dispatchable.
 
 On Omp, select the class-specific agent that fits the assessed work and resolve
 its effective route under
@@ -680,11 +678,11 @@ Non-goals
   the shared advisor's to run, because the rule exists precisely so the
   implementor does not review itself. Landing is narrower: a mechanical read
   followed by one squash-merge call.
-- **Does not lower a task's required class.** It resolves that class through
-  eligible harness routes and chooses the lowest expected reliable cost. A
-  missing route is reported for that task; it is never replaced by unchecked
-  inheritance, a concrete identifier copied from the body, or a shared-role
-  change.
+- **Preserves a task's exact required class.** It resolves that class through
+  eligible harness routes on the same family, provider, backend, and
+  authentication route. A missing route is reported for that task; it is never
+  replaced by unchecked inheritance, an identifier copied from the body, or a
+  shared-role change.
 - **Does not manage sibling branches.** It does not serialise their merges and
   it does not resolve a conflict between them. Landing one pull request moves
   base; `pr`'s `Keep it current` maintains each sibling PR's head.
