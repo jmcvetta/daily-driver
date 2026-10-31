@@ -30,8 +30,8 @@ initial_prompt: >-
   with `location`, `trigger`, `impact`, and `severity`). The identity is
   harness-selected, not proof of backend-served identity. Include all four
   local files verbatim and request only a bounded original/current three-dot
-  review of the prior finding and caller. Save reviewer JSON unchanged to
-  `reviewer-result.txt`, then return it unchanged. Do not full-audit, invent
+  review of the prior finding and caller. Return the reviewer's raw JSON
+  unchanged as your final response. Do not write files, full-audit, invent
   findings, or use a fallback.
 success_criteria:
   - type: agent_judge

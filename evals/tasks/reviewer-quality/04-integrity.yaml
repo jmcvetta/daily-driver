@@ -29,8 +29,8 @@ initial_prompt: >-
   `verdict` (`clear` or `defects`), and `findings` (objects with `location`,
   `trigger`, `impact`, and `severity`). The identity is harness-selected, not
   proof of backend-served identity. Include the brief and local diff verbatim.
-  Save the reviewer's raw JSON unchanged to `reviewer-result.txt`, then return
-  that file unchanged. Do not review or invent findings or use a fallback.
+  Return the reviewer's raw JSON unchanged as your final response. Do not write
+  files, review or invent findings, or use a fallback.
 success_criteria:
   - type: agent_judge
     description: Review finding accuracy and impact

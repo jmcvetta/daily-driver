@@ -44,10 +44,24 @@ def json_file(path: Path) -> dict[str, Any]:
 
 
 def bounded_text(path: Path | None) -> str | None:
-    """Return the bounded final reviewer artifact, never a transcript."""
+    """Return the bounded final reviewer response, never the full transcript."""
     if path is None or not path.is_file():
         return None
     text = path.read_text(encoding="utf-8", errors="replace")
+    if path.name == "task.json":
+        task = json.loads(text)
+        iterations = task.get("iterations", [])
+        output = str(iterations[-1].get("agent_output", "")) if iterations else ""
+        marker = "[RESULT - SUCCESS] "
+        if marker not in output:
+            return None
+        text = output.rsplit(marker, 1)[1].strip()
+        try:
+            value = json.loads(text)
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(value, dict) or not {"reviewer_reported_identity", "verdict", "findings"} <= value.keys():
+            return None
     text = "".join(ch for ch in text if ch in "\n\t" or ord(ch) >= 32)
     if len(text) > MAX_FINDINGS_CHARS:
         text = text[:MAX_FINDINGS_CHARS] + "\n...[truncated]"
@@ -108,7 +122,7 @@ def find_record(run_id: str, explicit: Path | None, provenance: Path) -> tuple[P
 
 
 def result_text(run_dir: Path, variant: str, case: str, repeat: int) -> Path | None:
-    """Find only the case's designated reviewer-result artifact."""
+    """Find the designated result artifact or the adapter's final JSON response."""
     run_root = run_dir.resolve()
     path = run_dir / variant / case / f"{repeat:02d}" / "reviewer-result.txt"
     if path.is_file() and path.resolve().is_relative_to(run_root):
@@ -121,6 +135,9 @@ def result_text(run_dir: Path, variant: str, case: str, repeat: int) -> Path | N
         ]
         if len(matches) == 1:
             return matches[0]
+        task_path = root / "task.json"
+        if task_path.is_file() and task_path.resolve().is_relative_to(run_root):
+            return task_path
     return None
 
 
