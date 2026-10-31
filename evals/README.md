@@ -704,27 +704,31 @@ Run only this focused set with the documented
 route after its `evals-plan`; the normal project checks remain CI's gate.
 
 The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
-`10-ready-is-marked-not-asked.yaml` and `13-gate-reads-the-completion-notice.yaml`
-measure actions, not narration. `fixtures/undertake-readiness/shared` supplies a
-stateful offline `gh` for pull request #25 (reads return fixture state, `gh pr
-ready` clears the draft flag, a comment is returned by the next read), a
-temporary git repository with a local bare remote, and a harmless
-`pr-keep-current.sh` stub. Each call is logged to `.fixture/ops.log`;
-`verify.py gate` and `verify.py service` read that record after the run. The
-gate verifier requires the gate reads to succeed first, with CI observed on the
-current head, before a ready write counts; it publishes a `First-readiness
-report` only when a read after the ready write affirms `CLEAN`; and it rejects a
-`Review record` in place of the notice, a notice written before the reads, a
-missing re-read, a new review round for a clean merge, and a duplicate or
-premature report. Every valid transition and invalid case described here is an
-offline fixture scenario. The service verifier needs a launch observed alive and
-stops whatever the run left behind. The judges now receive the tool calls
-(`include_tool_calls`) and score a failed call as an observed limit that earns
-no completed-action credit. `skill_triggered` remains the activation criterion;
-read it separately from the behavioural criteria, because a run that only
-triggered the skill has not completed the workflow. These rows are a new,
-unmeasured instrument: no subject, judge or calibration run has recorded them,
-and the committed results for the previous rows are untouched.
+`10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-completion-notice.yaml`,
+and `20-report-write-failure-keeps-draft.yaml` through
+`22-existing-report-is-not-duplicated.yaml` measure actions, not narration.
+`fixtures/undertake-readiness/shared` supplies a stateful offline `gh` for
+pull request #25 (reads return fixture state, `gh pr ready` clears the draft
+flag, and a comment is returned by the next read), a temporary Git repository
+with a local bare remote, and a harmless `pr-keep-current.sh` stub. Each call
+is logged to `.fixture/ops.log`; `verify.py gate` and `verify.py service` read
+that record after the run. The gate verifier requires successful current-head
+gate reads before the report, a successful report while the PR is still draft,
+and only then a ready write. A refused report forbids any ready attempt; a
+refused ready write preserves the report. Separate scenarios cover an existing
+report, post-ready `BLOCKED` or `UNKNOWN` merge states, CI on another head, and
+failed reads. The verifier also rejects a `Review record` in place of the
+notice, a notice written before the reads, a missing notice re-read, a new
+review round for a clean merge, and a duplicate or premature report. Every
+valid transition and invalid case described here is an offline fixture
+scenario. The service verifier needs a launch observed alive and stops whatever
+the run left behind. The judges receive tool calls (`include_tool_calls`) and
+score a failed call as an observed limit that earns no completed-action
+credit. `skill_triggered` remains the activation criterion; read it separately
+from the behavioural criteria, because a run that only triggered the skill
+has not completed the workflow. These rows are a new, unmeasured instrument:
+no subject, judge or calibration run has recorded them, and the committed
+results for the previous rows are untouched.
 
 The Omp PR currency case uses `currency-stale`: the draft's base has advanced,
 the old head is green, and the verifier requires `gh pr update-branch` to merge

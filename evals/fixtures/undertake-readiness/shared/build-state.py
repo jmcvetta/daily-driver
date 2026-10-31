@@ -45,17 +45,17 @@ if scenario == "ready-clean":
     pass
 elif scenario == "ready-blocked":
     state["pr"]["post_ready_merge_state"] = "BLOCKED"
-    state["expect"]["report"] = "none"
 elif scenario == "ready-unknown":
     state["pr"]["post_ready_merge_state"] = "UNKNOWN"
-    state["expect"]["report"] = "none"
 elif scenario == "ready-write-fails":
     state["ready_fails"] = True
-    state["expect"].update(ready="attempt", report="none")
+    state["expect"].update(ready="attempt")
+elif scenario == "report-write-fails":
+    state["fail_comment"] = True
+    state["expect"].update(ready="none", report="failed")
 elif scenario == "existing-report":
-    state["pr"]["draft"] = False
     state["comments"].append(report)
-    state["expect"].update(ready=False, report="existing")
+    state["expect"].update(ready=True, report="existing")
 elif scenario == "ci-wrong-head":
     state["ci_green_for"] = [review_head]
     state["expect"].update(ready=False, report="none")
