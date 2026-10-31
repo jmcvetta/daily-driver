@@ -154,8 +154,8 @@ approved assignment.
 
 Every complete issue-body draft intended for a write includes the block it
 would publish. Withholding the live write does not remove the provenance
-requirement. Follow `provenance`'s placement and field rules, and preserve
-earlier provenance blocks on an edited issue.
+requirement. Follow `provenance`'s placement, field, and distinct-attribution
+rules on an edited issue.
 
 
 **Relationships are edges, not prose.** What an issue waits on is
@@ -219,8 +219,8 @@ Unrelated text is not reflowed and existing issues are not swept.
 
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Summary`, never
-a `provenance` block below the closing `---` rule, which this migration
-leaves alone. When selecting an old task for work, assess its body
+a `provenance` block below the closing `---` rule, which follows `provenance`'s
+distinct-attribution rule. When selecting an old task for work, assess its body
 against the class rubric and migrate only that issue before dispatch. Map the
 former `standard` class to `implementation` and `advanced` to `reasoning`, based
 on the grounded handoff; do not change its rationale or capability requirement,

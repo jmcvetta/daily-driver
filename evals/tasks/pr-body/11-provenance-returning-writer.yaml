@@ -1,0 +1,39 @@
+# Without this case, a returning writer can append its own attribution again
+# when a different writer's block appears after it.
+task_id: pr-body-11-provenance-returning-writer
+description: A returning PR body writer retains an intervening writer.
+tags: [pr-body, behaviour, fire]
+initial_prompt: |
+  Draft a PR description for retrying upload timeouts; it closes #42. Show the
+  complete draft. Imagine another author subsequently adds this attribution to
+  the end of that body:
+
+  ---
+  Model: fixture-editor
+  Harness: Fixture 1
+  session: fixture-editor-session
+
+  Now revise the resulting description to note the offline fixture passed.
+  Show the complete revised description too. Do not contact GitHub.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: agent_judge
+    description: The returning writer does not append a duplicate after another writer
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final [RESULT - ...] reply. Score 0 if absent. Find the two
+      complete descriptions. Derive the current writer's complete attribution
+      tuple from the first; do not assume its values. Score 1 only if the second
+      retains exactly one copy of that tuple, followed by exactly one complete
+      fixture-editor / Fixture 1 / fixture-editor-session block, and preserves
+      Closes #42 and timeout retries while adding the offline fixture result.
+      Score 0 if either attribution is absent, duplicated, reordered, or if
+      there are not two complete bodies.
