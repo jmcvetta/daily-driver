@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -34,7 +35,10 @@ jobs:
         run: node scripts/ci-select.mjs --base "$BASE_SHA" --head "$HEAD_SHA"
       - name: Install Claude Code CLI
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-skills') || contains(fromJSON(steps.plan.outputs.checks), 'check-agents') || contains(fromJSON(steps.plan.outputs.checks), 'check-claude-dependency')
-        run: npm install -g @anthropic-ai/claude-code@latest
+        # The newest CLI is the point: these checks validate the plugin against
+        # the Claude Code that users run, so a pin would hide a break. That is
+        # why zizmor's adhoc-packages finding is ignored here.
+        run: npm install -g @anthropic-ai/claude-code@latest # zizmor: ignore[adhoc-packages]
       - name: Ensure ShellCheck
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-scripts')
         run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
@@ -139,20 +143,9 @@ jobs:
         id: validate-infrastructure
         if: ${{ !cancelled() && steps.install-opentofu.outcome == 'success' }}
         run: make check-infra
-      # Only meaningful after the step above succeeds: `tofu init` rewrites
-      # .terraform.lock.hcl in place and this step asks git what changed. A lock
-      # file that init would rewrite is not a pin anyone is reading.
-      - name: Verify provider lock
-        if: ${{ !cancelled() && steps.validate-infrastructure.outcome == 'success' }}
-        run: |
-          if ! git diff --quiet -- infra/github/.terraform.lock.hcl; then
-            echo "::error::infra/github/.terraform.lock.hcl is stale. See the diff below." >&2
-            git diff -- infra/github/.terraform.lock.hcl >&2
-            exit 1
-          fi
       - name: Install uv
         id: install-uv
-        if: ${{ !cancelled() && steps.plan.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') }}
+        if: ${{ !cancelled() && steps.plan.outcome == 'success' && (contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') || contains(fromJSON(steps.plan.outputs.checks), 'check-zizmor')) }}
         uses: astral-sh/setup-uv@v6
       - name: Install Checkov
         id: install-checkov
@@ -161,6 +154,19 @@ jobs:
       - name: Validate infrastructure policy
         if: ${{ !cancelled() && steps.install-checkov.outcome == 'success' }}
         run: make check-checkov
+      # `make check-zizmor` checks the installed version against the Makefile's
+      # pin, so this version and that one cannot drift apart unnoticed.
+      - name: Install zizmor
+        id: install-zizmor
+        if: ${{ !cancelled() && steps.install-uv.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-zizmor') }}
+        run: uv tool install zizmor==1.31.1
+      - name: Audit workflows
+        if: ${{ !cancelled() && steps.install-zizmor.outcome == 'success' }}
+        env:
+          # Read-only. It lets zizmor's online audits ask GitHub about the
+          # actions the workflows call.
+          GH_TOKEN: ${{ github.token }}
+        run: make check-zizmor
       # Advisories are disclosed against unchanged lockfiles, so the audit runs on every pull request. It runs last and tolerates an earlier failed check, so an advisory cannot hide another result. Dev-only advisories are not a gate.
       - name: Audit production dependencies
         if: ${{ !cancelled() }}

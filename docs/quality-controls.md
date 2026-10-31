@@ -165,7 +165,12 @@ event fields, over-broad token permissions, dangerous triggers such as
   public action that reads untrusted pull-request text with a write token.
   Each repository's adoption issue triages the first findings and sets how
   the pinning audit treats major-version tags.
-- Status: `none → gate` in all five repositories (#709 in DD).
+
+| Implementation | Repository | Status |
+| --- | --- | --- |
+| zizmor 1.31.1, `.github/zizmor.yml` (action tags pinned by `ref-pin`; two inline ignores carry reasons) | DD | `gate` |
+
+- Status: `gate` in DD; `none → gate` in CA, PG, PRA and CMWB.
 
 ### QC-GENERATED-FRESH — generated files match their source
 
@@ -348,7 +353,7 @@ changing it.
 | TypeScript (npm) | `npm ci` | PRA | `gate` |
 | JavaScript (npm) | `npm ci` (CI-selector dependencies) | DD | `gate` |
 | Python (uv) | `uv lock --check --offline` | CA | `gate` |
-| OpenTofu providers | `tofu init`, then `git diff --quiet` on `.terraform.lock.hcl` | DD | `gate → none` (#706) |
+| OpenTofu providers | none; the lock stays committed for hash-pinning | DD | `none` |
 | OpenTofu providers | the same | PRA | `gate → none` |
 
 OpenTofu provider lockfiles (`.terraform.lock.hcl`) stay committed for
@@ -432,7 +437,7 @@ control covers.
 | QC-RELEASE-CONFIG | none | gate (schema unpinned) | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate → none | none | none |
-| QC-WORKFLOW-SECURITY | none → gate | none → gate | none → gate | none → gate | none → gate |
+| QC-WORKFLOW-SECURITY | gate | none → gate | none → gate | none → gate | none → gate |
 | QC-GENERATED-FRESH | none | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none → on | on | none → on |
@@ -447,7 +452,7 @@ control covers.
 | QC-UNIT-TESTS | none | gate | gate | gate | gate |
 | QC-COVERAGE | none | gate (Python) | none → gate | gate | none → gate |
 | QC-MUTATION | none | none | local | none | none |
-| QC-LOCKFILE | gate (npm); gate → none (HCL) | gate (Python) | gate (pnpm) | gate (npm); gate → none (HCL) | none |
+| QC-LOCKFILE | gate (npm); none (HCL) | gate (Python) | gate (pnpm) | gate (npm); gate → none (HCL) | none |
 | QC-VULN-AUDIT | gate | gate (Python) | none → gate | none → gate | n/a |
 | QC-BUILD | n/a | none | gate | gate | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
