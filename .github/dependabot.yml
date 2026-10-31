@@ -1,7 +1,7 @@
-# There is no package manifest to track here — the plugin is Markdown and
-# JSON, and the Claude Code CLI that validates it is installed unpinned by
-# ci.yml on purpose. What is pinned, and so can go stale silently, is the
-# actions the workflows call and the OpenTofu provider the infra stack locks.
+# What is pinned, and so can go stale silently, is the actions the workflows
+# call, the OpenTofu provider the infra stack locks, and the npm dev
+# dependencies in package-lock.json. The Claude Code CLI that validates the
+# plugin is installed unpinned by ci.yml on purpose.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -14,5 +14,13 @@ updates:
   # is checked the same way a hand-written one is.
   - package-ecosystem: terraform
     directory: /infra/github
+    schedule:
+      interval: weekly
+
+  # package-lock.json, at the repository root. Only the CI selector script
+  # imports these dev dependencies. CI fails a bump that breaks it, but not
+  # one that quietly changes which checks it selects, so read those PRs.
+  - package-ecosystem: npm
+    directory: /
     schedule:
       interval: weekly
