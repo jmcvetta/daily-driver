@@ -1,0 +1,34 @@
+# Without this case, the same writer can add another identical block on every
+# revision, or a repeated revision can change the provenance section again.
+task_id: pr-body-10-provenance-repeat-revision
+description: Successive revisions retain the current writer's attribution once.
+tags: [pr-body, behaviour, fire]
+initial_prompt: |
+  Draft a PR description for a change that retries upload timeouts and closes
+  issue #42. Then revise your draft to add that an offline fixture passed.
+  Finally, revise that description again to add that authentication failures
+  are not retried. Show all three complete versions, in order, so I can compare
+  them. Do not contact GitHub.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 12, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: agent_judge
+    description: Repeated revisions keep one copy of the writer's attribution
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final [RESULT - ...] reply. Score 0 if absent. Examine all three
+      complete proposed descriptions in order. Derive the current writer's
+      exact Model, Harness, and session values from the first description; do
+      not assume them. Score 1 only if that complete tuple appears exactly once
+      in each of the three descriptions, with the same values; all retain
+      Closes #42 and retry behavior; the second and third retain the offline
+      fixture result; and the third adds the authentication exclusion. Missing
+      versions, absent attribution, duplicate tuples, or changing the tuple
+      across revisions scores 0.

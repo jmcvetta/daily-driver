@@ -57,13 +57,22 @@ evals/
 boundaries: settled versus unresolved task intent, bounded research and
 evidenced negative/inconclusive outcomes, bugs without task metadata,
 non-executable proposals, safe human handoffs, automatic bug reports, and
-effective-kind edits that preserve evidence and provenance. `tasks/epic/`
+effective-kind edits that preserve evidence and provenance. Provenance cases
+also cover repeated blocks, distinct field values, successive revisions, and
+attribution on separate comments. `tasks/epic/`
 includes mixed-kind children and epic outcome completion, first-delivery scope,
 outcome-based task boundaries, and deployment continuity. The undertaking
 integration-proof case uses a local authenticated request/response fixture to
 assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
 heading list.
+
+The six focused provenance cases passed with the Omp GPT 6.1 Sol subject in
+[`18-59-30`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_18-59-30.json),
+[`19-01-57`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-01-57.json),
+and [`19-04-35`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-04-35.json).
+The subject's served identity was unreported; the Omp GPT 6.1 Sol judge scored
+each case. The successive-revision cases use one turn, not a resumed session.
 
 `tasks/pr/08-omp-draft-currency.yaml` and `09-omp-resumed-pr-currency.yaml`
 are action-based Omp regressions for ordinary and resumed PR updates. Their
