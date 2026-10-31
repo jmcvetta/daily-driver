@@ -13,7 +13,14 @@ initial_prompt: >-
   implementation only. Show me the proposed issue body ending with this
   provenance block; do not post:
 
-  --- Model: fixture-model Harness: Omp 18.8.4 session: fixture-session
+  ---
+
+  Model: fixture-model
+
+  Harness: Omp 18.8.4
+
+  session: fixture-session
+
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
   disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
