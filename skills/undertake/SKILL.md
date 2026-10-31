@@ -384,6 +384,19 @@ route is confirmed non-frontier, or when the user explicitly authorizes the
 bounded frontier implementation exception. No implementor dispatch is used for
 ordinary undertakings.
 
+**A direct request authorizes its scoped work and normal verification.** This
+includes focused behavioral evaluation through the configured subscription.
+Do not ask the user to authorize that work again merely because verification
+uses inference or subscription allowance. A focused smoke is not a broad
+evaluation campaign or separately metered spend. Check applicable user
+authorization before declaring an approval gap.
+
+Actual higher-priority restrictions, explicit scope exclusions, production
+and dangerous-operation prohibitions, and required frontier approval still
+apply. Ask only for authorization that is actually missing, including fresh
+or narrower approval when an applicable instruction specifically requires it.
+The request does not authorize unrelated spend or scope expansion.
+
 **Start with the smallest proof that can invalidate the route.** Before
 investing in implementation that depends on an uncertain integration, identify
 and exercise the actual relevant integration and authentication path. Startup
