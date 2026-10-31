@@ -65,6 +65,29 @@ leaves it unchanged. Post the complete answer with
 with `mcp__github__issue_write` only when `issue-body`'s research completion
 test holds. Failed or incomplete research stays open.
 
+Authorization and unfinished stops
+----------------------------------
+
+Apply the constitution's continuation rule and `SKILL.md`'s operational
+escalation contract. Preserve scoped authorization, original source references,
+conditions and revocations in the existing private session and task handoff.
+Restore them after compaction and revalidate on resume. Do not publish private
+chat approvals in public issue comments or treat an agent's summary as approval.
+
+Claude Code documents a `Stop` hook that can request continuation, and user
+interrupts do not invoke it. However, its documented `UserPromptSubmit` input
+has no origin discriminator and also fires for scheduled tasks, background
+subagent reports and peer messages. That event alone cannot establish original
+user authority or permission to restart cancelled work. Daily Driver does not
+register the Omp task-state controller through that unverified transport.
+Approval persistence and stop evidence here are workflow contracts, not a
+claim of enforced Omp parity. Do not invent a hook source flag or trust a
+timer as renewed approval.
+
+See the [Claude hook reference](https://code.claude.com/docs/en/hooks), especially
+`UserPromptSubmit` and `Stop`. A future transport needs verified source and
+cancellation semantics before it may supply trusted events to the controller.
+
 
 The implementor
 ===============

@@ -144,6 +144,63 @@ resolved, never from an assumed `origin`.
 Omp uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
 
+Task evidence state
+-------------------
+
+`daily_driver_task_state` stores private, active-branch task records. Call
+`{action: "status"}` before another approval request or an unfinished stop.
+For ordinary repository work not already active, call `begin`; do not activate
+an ordinary question. Mutating calls take a JSON-string `record`. `status`
+with `record: "{\"sourceId\":\"<id>\"}"` reads the original authority source
+or retained tool evidence rather than the default bounded excerpts.
+
+- `begin`: `{taskId, operation, target, source: {sourceId, quote}}`. Use the
+  latest external user source returned by `status`, not a copied handoff.
+- `authorization`: `{id, kind: "user" | "workflow", operation, target,
+  source: {sourceId, quote}, limits, conditions, expiresAt?, supersedes?,
+  revokes?, freshConfirmation?}`. Sources must resolve to original user input
+  or workflow instructions. Exact quotes establish provenance, not semantic
+  permission. Read conditions against the original source before acting.
+- `blocker`: `{operation, target, kind: "external" | "authorization" |
+  "safety" | "execution", evidence: [{sourceId, quote}], authorizationIds: [],
+  routes: [{route, disposition: "failed" | "prohibited" | "unavailable",
+  evidence: {sourceId, quote}}], externalContribution,
+  independentWork: {pending: [], completed: []}, resume}`.
+- `complete`: `{summary}`. This records reported completion, not independent
+  proof that acceptance criteria passed.
+
+The tool never grants permission or replaces harness approval. Original
+sources and tool evidence stay in session entries through compaction and
+process resume. Cross-session handoffs carry source references and applicable
+scope; copied agent text is not an original approval source in a new session.
+Revalidate through the original source or existing workflow authorization.
+
+Tool observations retain at most 2048 characters of serialized input and
+8192 characters of output, with a fingerprint of the complete original
+input/output. Truncated output retains prefix and suffix fragments;
+`textTruncated` and `prefixLength` identify their boundary. Exact quotes must
+fit wholly within one retained fragment, never across omitted text. A source
+lookup cannot recover the omitted payload. User and workflow authority sources
+are separate and remain available for approval revalidation.
+
+The `session_stop` adapter checks active unfinished tasks and returns at most
+two corrections for an unchanged observed condition. The count survives
+resume; rewriting record labels does not renew it. Exhaustion persists an
+execution failure and emits an error notification without another model turn.
+It does not complete the task or invent an approval requirement. User stop
+input and an aborted stop event prevent continuation. The adapter does not
+prove arbitrary prose claims about approval or exhausted routes.
+
+Enforcement requires direct access to the task-state tool or Omp's active
+`write` device route. If both are unavailable, the adapter records and warns
+about that capability limit instead of demanding an inaccessible tool. It
+does not enable tools or invent a human blocker; the shared continuation rule
+still applies.
+
+Omp exposes an external-input origin on `input`, so scheduled reminders and
+tool output do not become user authority. These semantics do not establish
+equivalent hook provenance on another harness.
+
 
 The milestone
 =============

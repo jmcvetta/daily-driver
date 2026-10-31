@@ -265,10 +265,11 @@ check-scripts:
 check-pr-keep-current:
 	python3 scripts/test-pr-keep-current.py
 
-# The live embark barrier needs a real Omp but not the eval guard: issue://
-# must reach its offline fixture client to provide the canonical issue metadata.
+# Exercise live Omp title and task-state regressions with local providers.
+# The title barrier needs native issue:// access rather than the eval guard.
 check-omp-embark-title-live:
 	python3 scripts/check-omp-embark-title-live.py
+	python3 scripts/check-omp-task-state-live.py
 
 
 

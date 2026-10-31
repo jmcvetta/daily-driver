@@ -62,6 +62,25 @@ leaves it unchanged. Post the complete answer with `gh issue comment
 `issue-body`'s research completion test holds. Failed or incomplete research
 stays open.
 
+Authorization and unfinished stops
+----------------------------------
+
+Apply the constitution's continuation rule and `SKILL.md`'s operational
+escalation contract. Preserve task-scoped authorization and its original source,
+conditions, revocations and correction count in the existing private session
+and handoff. Revalidate on resume; copied agent text does not create authority.
+Do not publish private chat approval in a public issue comment.
+
+The [Codex hook reference](https://developers.openai.com/codex/hooks) documents
+`Stop` continuation and `Interrupt` cancellation. A stop continuation becomes
+a new user prompt; it must not become fresh approval or renew a correction
+budget. Daily Driver's shared hook manifest cannot register `Interrupt`
+without failing Claude Code's strict plugin validation. It therefore does not
+install an incomplete cancellation-unsafe task-state adapter here.
+The [integration boundary](../../../docs/harness-integration.md#hook-harness-boundary)
+records this limit. Workflow instructions are not a claim of runtime
+enforcement or a durable wake mechanism.
+
 
 The implementor
 ===============
