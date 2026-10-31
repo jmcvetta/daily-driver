@@ -1,0 +1,233 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A plain file request produces an assignable task",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A plain file request produces an assignable task",
+            "duration_seconds": 9.89,
+            "findings": [
+              "Clearly specifies signing only new or changed artifacts by same-name digest comparison.",
+              "Provides concrete offline regression coverage and preserves input and callback contracts.",
+              "Claims the existing test is named test_signs_artifacts, an unsupported repository detail."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "23f2340259045bc6526277d9f0b8c2d2a20893a2da73576d1d5d3142d1109039",
+            "rationale": "ANCHOR: result. The reply selects task without a question and provides a ready body with outcome, scope, model class, acceptance criteria, and provenance, but asserts an exact existing test name that the supplied repository facts do not establish.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1610,
+              "output": 211
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c824624e0b4c4700eaaecec0ad6c9756955aa4197e615e4233f9e470ecf0cc22"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-17-file-issue-defaults-to-task",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A plain create request produces an assignable task",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A plain create request produces an assignable task",
+            "duration_seconds": 9.22,
+            "findings": [
+              "Selects task without a kind-selection question.",
+              "Defines checksum-based skipping, preserved callback behavior, bounded scope, and offline pytest acceptance.",
+              "Grounds most repository context in supplied facts.",
+              "The asserted existing test name `test_signs_artifacts` is unsupported by the supplied evidence."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "23f2340259045bc6526277d9f0b8c2d2a20893a2da73576d1d5d3142d1109039",
+            "rationale": "ANCHOR: result. The reply selects task and supplies a ready body with outcome, scope, model class, acceptance criteria, and provenance, but it invents repository evidence by naming an existing test that the supplied facts do not identify.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1648,
+              "output": 156
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c824624e0b4c4700eaaecec0ad6c9756955aa4197e615e4233f9e470ecf0cc22"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-16-create-issue-defaults-to-task",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 38.2273223400116,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-17-file-issue-defaults-to-task",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 70656,
+        "output_tokens": 1305,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20890
+      },
+      "tokens": 92851,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 42.4860954284668,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-16-create-issue-defaults-to-task",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68480,
+        "output_tokens": 1342,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20536
+      },
+      "tokens": 90358,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-31T18:05:10.377465",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "c824624e0b4c4700eaaecec0ad6c9756955aa4197e615e4233f9e470ecf0cc22",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3258,
+      "output": 367
+    }
+  },
+  "plugin_revision": {
+    "commit": "6b5267517931c3969efb60c67a8e4eb2a00468c5",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-31T11:05:31.138970+00:00",
+  "run_id": "2026-10-31_18-03-49",
+  "schema_version": 5,
+  "started_at": "2026-10-31T18:03:49.656728",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-16-create-issue-defaults-to-task": [
+          0.5
+        ],
+        "issue-17-file-issue-defaults-to-task": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "issue-17-file-issue-defaults-to-task",
+        "issue-16-create-issue-defaults-to-task"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
