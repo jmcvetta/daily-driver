@@ -62,11 +62,14 @@ success_criteria:
       permission_mode: default
     prompt: |
       Grade the final reply after the last [RESULT - ...] tag in AGENT OUTPUT.
-      The sandbox provides `release.py::sign_changed(current, previous, sign)`,
-      `test_release.py` with a recording callback, and a README naming pytest.
-      Both manifests map artifact names to SHA-256 digests; prior signatures
-      remain in the release store. Begin with ANCHOR: result, or ANCHOR: none
-      if the final reply is absent.
+      The sandbox's `release.py::sign_changed(current, previous, sign)` calls
+      `sign(name, digest)` unconditionally for each current artifact. Current
+      and previous manifests map names to SHA-256 digests, and prior signatures
+      remain in the release store. `test_release.py` records calls in a list
+      and tests a new artifact with an empty previous manifest. `README.md`
+      says to run pytest offline and states CI runs those tests. These are
+      supplied facts, not invented claims. Begin with ANCHOR: result, or
+      ANCHOR: none if the final reply is absent.
       The reply must select the task kind without a kind-selection question.
       It must give a ready task body grounded in the sandbox's release code
       and tests, with outcome, scope, model class, acceptance, and provenance.
