@@ -134,12 +134,12 @@ python3 scripts/evals-reviewer-run.py --arm glm --phase smoke \
   --run-dir evals/runs/reviewer-quality-glm-smoke
 make evals-record RUN=evals/runs/reviewer-quality-glm-smoke \
   EXPERIMENT=evals/experiments/omp-reviewer-glm-5.3-go.yaml \
-  JUDGE=omp-gpt-6.1-sol JUDGE_TASKS_DIR=evals/tasks/reviewer-quality
+  JUDGE=omp-gpt-6.1-sol
 python3 scripts/evals-reviewer-run.py --arm deepseek --phase smoke \
   --run-dir evals/runs/reviewer-quality-deepseek-smoke
 make evals-record RUN=evals/runs/reviewer-quality-deepseek-smoke \
   EXPERIMENT=evals/experiments/omp-reviewer-deepseek-v4-pro-go.yaml \
-  JUDGE=omp-gpt-6.1-sol JUDGE_TASKS_DIR=evals/tasks/reviewer-quality
+  JUDGE=omp-gpt-6.1-sol
 ```
 
 Each smoke runs one defective and one clean case. Inspect actual reviewer
@@ -156,6 +156,9 @@ false alarms, fix-delta accuracy, latency distributions, and repeat
 variability. Name severe missed defects. Keep requested route, observed
 harness identity, and backend-served identity separate. Missing served
 identity is `unreported`; known mismatches invalidate attribution.
+The parent returns the reviewer's JSON unchanged. The collector reads the
+adapter's final response from `task.json`; it does not require a file write
+inside the read-only Git fixture. Earlier result-file artifacts remain readable.
 Reviewer usage and latency are `unavailable` unless directly exposed.
 Parent usage is not reviewer usage. Subscription allowance consumption is
 not cash spend; unknown cash spend is not zero.

@@ -238,13 +238,13 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
     ))]
     fp = sum(1 for entry in full for token in entry["judge_classifications"] if token.startswith("FP:"))
     clean = [entry for entry in classes if entry["case_id"].endswith(("05-clean-boundary", "06-clean-contract"))]
-    clean_false_alarms = sum(1 for entry in clean if any(token.startswith(("TP:", "FP:", "UNEXPECTED_VALID:")) for token in entry["judge_classifications"]))
+    clean_false_alarms = sum(1 for entry in clean if any(token.startswith("FP:") for token in entry["judge_classifications"]))
     delta = [entry for entry in classes if entry["case_id"].endswith(("07-delta-fixed", "08-delta-incomplete"))]
     delta_correct = sum(
         1 for entry in delta
         if (
-            ("DELTA:clear" in entry["judge_classifications"] and entry["reviewer_verdict"] == "clear")
-            or ("DELTA:defects" in entry["judge_classifications"] and entry["reviewer_verdict"] == "defects")
+            (entry["case_id"].endswith("07-delta-fixed") and "DELTA:clear" in entry["judge_classifications"] and entry["reviewer_verdict"] == "clear")
+            or (entry["case_id"].endswith("08-delta-incomplete") and "TP:still-open" in entry["judge_classifications"] and entry["reviewer_verdict"] == "defects")
         )
     )
     latencies = [entry["attempt_seconds"] for entry in entries if isinstance(entry.get("attempt_seconds"), (int, float)) and entry["attempt_seconds"] > 0]
@@ -283,6 +283,11 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
         "judge_unavailable": sum(entry["judge_status"] == "unavailable" for entry in entries),
         "unattempted": sum(entry["status"] == "unattempted" for entry in entries),
         "classification": {
+            "unexpected_valid": [
+                {"case_id": entry["case_id"], "repeat": entry["repeat"], "evidence": token}
+                for entry in classes for token in entry["judge_classifications"]
+                if token.startswith("UNEXPECTED_VALID:")
+            ],
             "full_review": {
                 "tp": tp, "fn": fn, "fp": fp,
                 "precision": tp / (tp + fp) if tp + fp else None,
@@ -361,9 +366,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             for repeat in range(args.repeats):
                 row = rows.get((args.variant, case, repeat))
                 row_status = str(row.get("status", "unreported")).upper() if row else "unattempted"
-                error_text = str(row.get("error", "") or "")
+                error_text = str(row.get("error_message", "") or "") if row else ""
                 provider_error = bool(re.search(r"rate[ -]?limit|quota|too many requests|(?:HTTP|status)[ :=]+429", error_text, re.IGNORECASE))
-                harness_error = bool(row) and row_status in {"ERROR", "TIMEOUT", "TIMED_OUT", "CRASHED"}
+                harness_error = bool(row) and not provider_error and row_status in {"ERROR", "TIMEOUT", "TIMED_OUT", "CRASHED"}
                 result_path = result_text(run_dir, args.variant, case, repeat) if row else None
                 text = bounded_text(result_path)
                 reviewer_identity, reviewer_verdict = reviewer_result_fields(text)
@@ -372,7 +377,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 judge = judge_evidence(run_dir, record, args.variant, case, repeat) if row else {"status": "unavailable", "classifications": [], "score": "unavailable"}
                 if reviewer_identity != "unreported":
                     observed_identities.append(reviewer_identity)
-                    if normalize_model(reviewer_identity) != normalize_model(requested):
+                    provider_mismatch = "/" in reviewer_identity and reviewer_identity.split("/", 1)[0] != requested.split("/", 1)[0]
+                    effort_mismatch = ":" in reviewer_identity and reviewer_identity.rsplit(":", 1)[1] != requested.rsplit(":", 1)[1]
+                    if provider_mismatch or effort_mismatch or normalize_model(reviewer_identity) != normalize_model(requested):
                         attribution_mismatches.append({"run_id": run_id, "case_id": case, "repeat": str(repeat), "reported": reviewer_identity, "expected_selector": requested})
                 if not row:
                     status = "unattempted"

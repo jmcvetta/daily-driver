@@ -45,8 +45,9 @@ success_criteria:
       Key: the API changes its returned object field to `balance_cents` in
       `service.py`, while `client.py` still indexes `balance`. Trigger: every
       caller of `show_summary` against this endpoint raises KeyError. Impact:
-      summary display fails. Valid location: `client.py`, the old field access
-      (cross-file contract mismatch). Expected verdict: report this as a
+      summary display fails. Valid location: the changed `balance_cents` field
+      in `service.py` or the stale `balance` access in `client.py` (cross-file
+      contract mismatch). Expected verdict: report this as a
       consumer-visible defect. Score only if trigger, impact, and location
       match. Return exactly {score: 0|1, rationale: string, findings: [strings]}.
       Findings use TP:contract, FN:contract, FP:<evidence>, or
