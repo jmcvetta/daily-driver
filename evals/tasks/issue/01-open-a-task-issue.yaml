@@ -10,8 +10,8 @@ initial_prompt: >-
   Open an issue for this: the release script re-signs every artifact even
   when nothing changed, and each run takes eleven minutes. Skip artifacts
   whose checksum matches the previous release. Do not post anything — show
-  me the exact issue body you would open, then explain which parts of it
-  are the grounded map and which design choices you left to the implementer.
+  me the issue kind and exact issue body you would open, then explain which
+  parts of it are grounded and which choices you left to the implementer.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -69,19 +69,20 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the REPLY proposes an issue body for a settled task. It must
-      state the observable outcome and why the change is needed. It must contain
-      `## Summary`, immediately followed by `## Model class`, then `## Detail`.
-      The class section starts with exactly one backtick-wrapped lowercase class
-      token and a short rationale. The task metadata section must not add a
-      concrete `Model:` identifier or `Effort:` field between `Summary` and
-      `Detail`. The final `provenance` block below `---` is distinct and must be
-      retained; a concrete `Model:` line inside that block is allowed.
-      The surrounding REPLY distinguishes the grounded map from routine
-      implementer choices.
+      The rule: the REPLY selects `task` as the issue kind even though the
+      request describes broken behavior and does not name a kind. It proposes
+      a ready task handoff, not a bug report, without asking which kind to use.
+      The body states the observable outcome, reason, scope, and observable
+      acceptance criteria. It contains `## Summary`, immediately followed by
+      `## Model class`, then `## Detail`. The class section starts with exactly
+      one backtick-wrapped lowercase class token and a short rationale. The task
+      metadata must not add a concrete `Model:` identifier or `Effort:` field.
+      The final provenance block below `---` is distinct and must be retained.
+      The surrounding reply distinguishes grounded context from routine
+      implementer choices; it must not invent repository evidence.
 
-      Score 1.0 if the exact class-section order, rationale, no-concrete-ID
-      task metadata rule, and provenance distinction hold. Score 0.5 if the
-      handoff is plausible but misses one. Score 0.0 if it lacks a body, a
-      class section, or puts concrete model/effort metadata in the task
-      sections.
+      Score 1.0 if the reply explicitly selects `task` and meets the rule.
+      Score 0.5 if it selects `task` and provides a plausible handoff but
+      misses one body requirement. Score 0.0 if it selects another kind, asks
+      the user to choose a kind, lacks a task body or class section, or puts
+      concrete model or effort metadata in the task sections.

@@ -1,0 +1,42 @@
+task_id: issue-16-create-issue-defaults-to-task
+description: >-
+  An unspecified creation request should yield an assignable task rather than
+  a bug report merely because it describes broken behavior.
+tags: [issue, behaviour, fire]
+
+initial_prompt: >-
+  Create an issue for this: the release script signs unchanged artifacts on
+  every run. Skip an artifact when its checksum matches the previous release.
+  Do not post it. Show me the kind and issue body you would use.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: agent_judge
+    description: A plain create request produces an assignable task
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply after the last [RESULT - ...] tag in AGENT OUTPUT.
+      Begin the rationale with ANCHOR: result, or ANCHOR: none if absent.
+      The reply must select the task kind without a kind-selection question.
+      It must give an assignable task body with outcome, scope, model class,
+      acceptance criteria, and provenance, not merely a bug report. It must
+      not invent repository evidence. Score 1.0 when all hold, 0.5 when task
+      is selected but a body requirement is missing, and 0.0 otherwise.
