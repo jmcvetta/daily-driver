@@ -28,7 +28,7 @@ limits; a shared skill does not imply identical capabilities on every harness.
 
 | Skill | When to use it |
 | ----- | -------------- |
-| [issue](issue/SKILL.md) | Open or update a GitHub issue; coordinate its body, labels and relationships. |
+| [issue](issue/SKILL.md) | Open or update a GitHub issue; new requests default to assignable tasks unless a kind is specified. |
 | [issue-body](issue-body/SKILL.md) | Write an issue body with the scope, evidence and completion conditions required by its kind. |
 | [issue-labels](issue-labels/SKILL.md) | Classify issues and determine which kinds are eligible for agent work. |
 | [issue-deps](issue-deps/SKILL.md) | Record or inspect blocked-by, parent/sub-issue and PR-closes relationships. |
