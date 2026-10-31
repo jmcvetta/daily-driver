@@ -496,11 +496,11 @@ evals-render-routes:
 evals-render-results:
 	python3 scripts/evals-render-results.py
 
-# evals-leaks: report behavior leaks and failures from every committed record.
+# evals-leaks: report bare-pass candidates and failures from every committed record.
 evals-leaks:
 	python3 scripts/check-evals-leaks.py
 
-# check-evals-leaks: exercise the leak classifier; #662 wires it into `check`.
+# check-evals-leaks: exercise the bare-pass classifier. Eval results gate no CI job.
 check-evals-leaks:
 	python3 scripts/check-evals-leaks.py --selftest
 
