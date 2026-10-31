@@ -16,7 +16,7 @@
 
 experiment_id: with-without
 description: >-
-  Trigger accuracy, constitution delivery and review-depth routing, with the
+  Trigger accuracy and constitution delivery, with the
   daily-driver plugin loaded and without it.
 
 defaults:
@@ -54,7 +54,7 @@ defaults:
 
     # Deliberately narrow, and widened per task. Trigger accuracy is about
     # which skill loads, so `Skill` alone is the whole surface those tasks
-    # need; the review-depth tasks that must drive git and dispatch a panel
+    # need; behaviour tasks that drive git or other tools
     # restate this field with what they actually use.
     allowed_tools: [Skill]
 

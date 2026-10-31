@@ -26,6 +26,9 @@ LEAK_THRESHOLD = 0.8
 FAIL_THRESHOLD = 0.2
 HELPED_DELTA = 0.6
 MIN_LEAK_ATTEMPTS = 3
+# Suites whose task directory was deleted. Committed records still carry their
+# task IDs, so the report keeps grouping them under the old directory name.
+RETIRED_DIRECTORIES = ("review-depth",)
 
 
 def load_records(provenance_dir: Path) -> list[dict[str, Any]]:
@@ -44,7 +47,7 @@ def task_directories(tasks_dir: Path) -> tuple[dict[str, str], list[str]]:
         return {}, []
     task_ids: dict[str, str] = {}
     directories = sorted(
-        (path.name for path in tasks_dir.iterdir() if path.is_dir()),
+        {path.name for path in tasks_dir.iterdir() if path.is_dir()} | set(RETIRED_DIRECTORIES),
         key=len,
         reverse=True,
     )

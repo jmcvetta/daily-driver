@@ -259,7 +259,7 @@ check-omp-cache-clean:
 check-scripts:
 	shellcheck -x --source-path=SCRIPTDIR \
 		skills/*/scripts/*.sh scripts/*.sh \
-		evals/fixtures/*/shared/*.sh evals/fixtures/*/cases/*/*.sh
+		evals/fixtures/*/shared/*.sh
 
 # Exercise the real Omp keep-current loop against an offline GitHub client.
 check-pr-keep-current:
