@@ -41,6 +41,11 @@ evals/
 ├── fixtures/
 │   ├── fix-daily-driver-bugs/shared/
 │   │                    offline `gh` recorder and issue-state assertions
+│   ├── task-worktree/shared/        builds the clean repository a task-worktree row starts in
+│   ├── undertake-readiness/shared/  a git repository, bare remote and stateful PR stub per scenario
+│   ├── undertake-escalation/shared/ command stubs for undertake escalation rows
+│   ├── integration-proof/           a local authenticated-integration probe and work recorder
+│   ├── eval-route/                  an `evals/README.md` excerpt the judge-route rows read
 │   └── model-classes/
 │       ├── shared/       clones the source repo's base SHA; the grader and its two checks
 │       ├── cases/<repo>-<pr>/  the answer key, one per selected PR: a `reference:`, never mounted
