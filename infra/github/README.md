@@ -110,18 +110,11 @@ declaration stays anyway, because the other half was wrong then and is wrong
 now — a setting the release job falls back on belongs written down next to the
 reason it is needed, whether or not something better exists.
 
-## The Provider Lock Has To Be What `init` Produces
+## The Provider Lock
 
-`.terraform.lock.hcl` is committed, and the `Checks` job fails a
-pull request whose lock file `tofu init` would rewrite. That is stricter than
-it sounds: initialising against the registry records an `h1:` hash for every
-platform the provider publishes, so a lock file carrying fewer of them is
-rewritten on the next init, on any machine. A file that init rewrites is not a
-pin anyone reads — the diff appears, nobody asked for it, and it gets
-committed unread.
-
-So when the provider version changes, let init write the file and commit what
-it wrote:
+`.terraform.lock.hcl` is committed for hash-pinning, and CI does not check it
+for drift. One operator applies this configuration by hand. When the provider
+version changes, let init write the file and commit what it wrote:
 
 ```bash
 cd infra/github

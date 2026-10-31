@@ -37,7 +37,6 @@ const workflowToolConsumers = {
   'Install Checkov': ['check-checkov'],
   'Install uv': ['check-checkov', 'check-zizmor'],
   'Install zizmor': ['check-zizmor'],
-  'Verify provider lock': ['check-infra'],
   'Install Omp': ['check-omp-plugin', 'check-omp-embark-title-live'],
 }
 
