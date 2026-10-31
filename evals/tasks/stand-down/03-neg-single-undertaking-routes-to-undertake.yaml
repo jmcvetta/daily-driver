@@ -13,7 +13,9 @@ tags: [stand-down, undertake, behaviour, fire]
 
 initial_prompt: >-
   You are running `undertake` on issue #630 alone: no epic, no fleet, no
-  muster roll. Stand down.
+  muster roll. Stand down. This isolated exercise has no GitHub or session
+  client. Describe the stop actions and the handoff comment you would post,
+  without claiming that you performed them.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -66,7 +68,9 @@ success_criteria:
       handoff on issue #630. It reads no muster roll, archives no sessions and
       prints no fleet banner.
 
-      Score 1.0 if the REPLY secures the work and leaves one handoff on #630.
+      Score 1.0 if the REPLY secures the work and leaves one handoff on #630, or
+      clearly describes doing so. Saying the tools are unavailable and stating
+      that this is what would otherwise happen counts as doing it.
 
       Score 0.0 if it runs a fleet stand-down, reads muster rolls, or leaves
       only the claim comment.
