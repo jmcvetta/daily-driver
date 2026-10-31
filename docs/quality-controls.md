@@ -165,7 +165,12 @@ event fields, over-broad token permissions, dangerous triggers such as
   public action that reads untrusted pull-request text with a write token.
   Each repository's adoption issue triages the first findings and sets how
   the pinning audit treats major-version tags.
-- Status: `none → gate` in all five repositories (#709 in DD).
+
+| Implementation | Repository | Status |
+| --- | --- | --- |
+| zizmor 1.31.1, `.github/zizmor.yml` (action tags pinned by `ref-pin`; two inline ignores carry reasons) | DD | `gate` |
+
+- Status: `gate` in DD; `none → gate` in CA, PG, PRA and CMWB.
 
 ### QC-GENERATED-FRESH — generated files match their source
 
@@ -430,7 +435,7 @@ control covers.
 | QC-RELEASE-CONFIG | none | gate (schema unpinned) | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate → none | none | none |
-| QC-WORKFLOW-SECURITY | none → gate | none → gate | none → gate | none → gate | none → gate |
+| QC-WORKFLOW-SECURITY | gate | none → gate | none → gate | none → gate | none → gate |
 | QC-GENERATED-FRESH | none | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none → on | on | none → on |
