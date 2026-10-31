@@ -177,8 +177,11 @@ def do_ready(args, state, undo):
 
 
 def do_comment(args, state, body):
+    first = body.splitlines()[0] if body else ""
+    is_notice, is_report = first.startswith(NOTICE), first.startswith(REPORT)
     if state["fail_comment"]:
-        record(args, "comment", False, **seen(state))
+        record(args, "comment", False, **seen(state), body_first_line=first,
+               is_notice=is_notice, is_report=is_report)
         print("fixture gh: HTTP 403: comment refused", file=sys.stderr)
         sys.exit(1)
     state["comments"].append({"author": state["claim_author"], "body": body})
@@ -186,10 +189,9 @@ def do_comment(args, state, body):
     os.makedirs(PUBLISHED, exist_ok=True)
     with open(os.path.join(PUBLISHED, f"{len(state['comments']):02d}.md"), "w", encoding="utf-8") as fh:
         fh.write(body)
-    first = body.splitlines()[0] if body else ""
     named = re.findall(r"\b[0-9a-f]{7,40}\b", body)
     record(args, "comment", True, **seen(state), body_first_line=first,
-           is_notice=first.startswith(NOTICE), is_report=first.startswith(REPORT),
+           is_notice=is_notice, is_report=is_report,
            names_head=any(state["pr"]["head"].startswith(n) for n in named))
     print("https://github.com/acme/widgets/pull/25#issuecomment-fixture")
 
