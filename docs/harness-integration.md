@@ -42,9 +42,12 @@ uses `session_stop` for bounded correction. Task scope, source-anchored
 authorization, tool evidence and correction counts live in private,
 active-branch session entries. The adapter restores a compact handoff during
 context preparation and compaction. `status` returns bounded source excerpts;
-`status` with a JSON `record` containing `sourceId` returns that original
-source. The [Omp undertaking reference](../skills/undertake/references/omp.md#task-evidence-state)
-defines the tool's records.
+`status` with a JSON `record` containing `sourceId` returns the original
+authority source or retained tool evidence. Tool input/output payloads have
+bounded previews, truncation metadata and a fingerprint; the adapter does not
+persist a second full copy of every file written or command result.
+The [Omp undertaking reference](../skills/undertake/references/omp.md#task-evidence-state)
+defines the records and exact-quote limits.
 
 An unsupported unfinished stop receives at most two corrective continuations
 per unchanged observed condition. Restarting the process does not renew that

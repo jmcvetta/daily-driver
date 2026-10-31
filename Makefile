@@ -10,7 +10,7 @@ SHELL := /bin/bash
 .PHONY: __git_sync_run check-git-sync omp-update-daily-driver check check-plugin check-skills check-agents check-scripts \
 	check-manifests check-release-paths check-constitution check-ask-in-chat check-title-gate \
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
-	check-omp-cache-clean check-omp-embark-title-live check-omp-task-state-live check-step-names \
+	check-omp-cache-clean check-omp-embark-title-live check-step-names \
 	check-worktrunk-install check-labels check-infra check-plugin-validity check-runtime check-pr-keep-current \
 	check-issue-infra check-model-telemetry model-telemetry check-checkov check-zizmor \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
@@ -265,13 +265,10 @@ check-scripts:
 check-pr-keep-current:
 	python3 scripts/test-pr-keep-current.py
 
-# The live embark barrier needs a real Omp but not the eval guard: issue://
-# must reach its offline fixture client to provide the canonical issue metadata.
+# Exercise live Omp title and task-state regressions with local providers.
+# The title barrier needs native issue:// access rather than the eval guard.
 check-omp-embark-title-live:
 	python3 scripts/check-omp-embark-title-live.py
-
-# Exercise durable approvals, bounded stop corrections, resume and abort offline.
-check-omp-task-state-live:
 	python3 scripts/check-omp-task-state-live.py
 
 

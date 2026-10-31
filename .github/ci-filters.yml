@@ -111,8 +111,5 @@ check-omp-embark-title-live:
   - 'skills/embark/**'
   - 'skills/session-title/**'
   - 'evals/coder-eval-omp/src/coder_eval_omp/tools.py'
-check-omp-task-state-live:
   - 'scripts/check-omp-task-state-live.py'
-  - 'scripts/check-omp-embark-title-live.py'
-  - 'extensions/daily-driver.js'
   - 'extensions/task-state.mjs'

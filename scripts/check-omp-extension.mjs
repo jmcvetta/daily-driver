@@ -3677,7 +3677,7 @@ check("task stop corrections remain bounded across agent mutations and resume", 
 
 /** Cancellation must win over already returned corrections and stay cancelled after resume. */
 check("task cancellation and abort prevent queued continuation and synthetic restart", async () => {
-	for (const phrase of ["cancel", "/stand-down", "wrap up", "please stop", "Stop working on this task.", "stop work on #760"]) {
+	for (const phrase of ["cancel", "cancel the task", "cancel this undertaking", "/stand-down", "wrap up", "please stop", "Stop working on this task.", "stop work on #760"]) {
 		const session = taskSession();
 		await session.input("Fix the parser.");
 		assert.equal((await session.stop()).continue, true);
@@ -3731,6 +3731,64 @@ check("task abort listeners expire at terminal settle and shutdown but survive c
 	await continuing.fire("agent_end", { willContinue: true }, continuing.ctx);
 	active.abort();
 	assert.equal((await continuing.command("status")).details.state.status, "cancelled");
+});
+
+/** Cancelling a watcher or an unwanted behavior must not abandon the authorized task. */
+check("sub-operation cancellation preserves task authority and continuation", async () => {
+	for (const phrase of [
+		"Cancel the obsolete CI watcher and continue verification.",
+		"Stop the repeated approval requests and continue working.",
+		"Stop this approval loop and continue verification.",
+		"Stop the task-state recorder and continue the task.",
+	]) {
+		const session = taskSession();
+		await session.input("Fix the parser. You may verify offline.");
+		await session.command("begin", { taskId: "parser", operation: "verify", target: "parser" });
+		const source = (await session.command("status")).details.sources[0];
+		await session.command("authorization", {
+			id: "approval", kind: "user", operation: "verify", target: "parser",
+			source: { sourceId: source.sourceId, quote: "You may verify offline." },
+			limits: "offline", conditions: "parser only",
+		});
+		const before = (await session.command("status")).details.state;
+		await session.input(phrase);
+		const after = (await session.command("status")).details.state;
+		assert.equal(after.status, "active", phrase);
+		assert.equal(after.externalSourceId, before.externalSourceId, phrase);
+		assert.deepEqual(after.authorizations, before.authorizations, phrase);
+		assert.equal((await session.stop()).continue, true, phrase);
+	}
+});
+
+/** Large tool payloads must not survive as full duplicate copies or invent cross-fragment quotes. */
+check("tool evidence is bounded and retains authentic diagnostic fragments", async () => {
+	const session = taskSession();
+	await session.input("Fix the parser.");
+	await session.command("begin", { operation: "compile", target: "parser" });
+	const output = `start failure\n${"a".repeat(10000)}MIDDLE-SENTINEL${"b".repeat(10000)}\nend failure`;
+	const input = { command: "compile fixture", content: "private fixture body".repeat(5000) };
+	await session.observe("large", output, true, "bash", input);
+	const evidence = (await session.command("status", { sourceId: "tool:large" })).details.source;
+	assert.equal(evidence.inputTruncated, true);
+	assert.ok(evidence.input.length <= 2048);
+	assert.equal(evidence.textTruncated, true);
+	assert.ok(evidence.text.length <= 8192);
+	assert.equal(evidence.originalTextLength, output.length);
+	const blocker = (quote) => ({
+		operation: "compile", target: "parser", kind: "execution",
+		evidence: [{ sourceId: "tool:large", quote }], authorizationIds: [],
+		routes: [{ route: "compiler", disposition: "failed", evidence: { sourceId: "tool:large", quote } }],
+		externalContribution: "No external contribution.", independentWork: { pending: [], completed: [] },
+		resume: "Continue diagnosis.",
+	});
+	assert.ok(!(await session.command("blocker", blocker("start failure"))).isError);
+	assert.ok(!(await session.command("blocker", blocker("end failure"))).isError);
+	assert.equal((await session.command("blocker", blocker("MIDDLE-SENTINEL"))).isError, true);
+	const acrossGap = evidence.text.slice(evidence.prefixLength - 4, evidence.prefixLength + 5);
+	assert.equal((await session.command("blocker", blocker(acrossGap))).isError, true);
+	await session.observe("changed-middle", output.replace("MIDDLE-SENTINEL", "DIFFERENT-MIDDLE"), true, "bash", input);
+	const changed = (await session.command("status", { sourceId: "tool:changed-middle" })).details.source;
+	assert.notEqual(changed.fingerprint, evidence.fingerprint);
 });
 
 /** Completion reports release the task without claiming an independent proof of completion. */

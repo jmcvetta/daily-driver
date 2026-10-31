@@ -5,7 +5,9 @@ const SOURCE = "daily-driver.task-source";
 const OBSERVATION = "daily-driver.task-observation";
 const RULE = "Continue authorized unfinished work. Diagnose ordinary failures and use permitted alternatives. Before asking for approval, inspect applicable original sources and their limits. A record does not grant permission or override harness or safety restrictions. Stop only for reported completion, cancellation, an evidenced external prerequisite after independent work, or the bounded execution failure.";
 const REQUEST = /^(?:\s*(?:please\s+)?(?:implement|fix|update|add|remove|refactor|complete|resolve|undertake|build|create|change|investigate|debug|repair|migrate|address|test|verify)\b|\s*\/(?:skill:)?undertake\b|\s*(?:can|could|would) you\s+(?:please\s+)?(?:implement|fix|update|add|remove|refactor|complete|resolve|build|create|change|investigate|debug|repair|migrate|address|test|verify)\b)/iu;
-const CANCEL = /^\s*(?:please\s+)?(?:\/(?:skill:)?stand-down\b|stand[ -]down\b|wrap\s+up\b|cancel\b|stop(?:\s+(?:work|working|this|the|now|here)|[.!\s]*$))/iu;
+const CANCEL = /^\s*(?:please\s+)?(?:\/(?:skill:)?stand-down\b|stand[ -]down\b|wrap\s+up\b|cancel(?:[.!\s]*$|\s+(?:(?:this|the)\s+)?(?:task|work|undertaking)(?=\s|[.!;,]|$))|stop(?:[.!\s]*$|\s+(?:work(?:ing)?(?=\s|[.!;,]|$)|now\b|here\b|(?:this|the)\s+(?:task|work|undertaking)(?=\s|[.!;,]|$))))/iu;
+const EVIDENCE_TEXT_LIMIT = 8192;
+const EVIDENCE_INPUT_LIMIT = 2048;
 
 function digest(value) {
 	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -61,7 +63,10 @@ function createTaskStateController(pi) {
 		if (!ref || typeof ref.sourceId !== "string") throw new Error("A real sourceId and exact quote are required");
 		const source = sources(ctx).find((item) => item.sourceId === ref.sourceId) ??
 			(!authority && observations(ctx).find((item) => item.sourceId === ref.sourceId));
-		if (!source || !required(ref.quote, "source quote").trim() || !source.text.includes(ref.quote)) {
+		const retained = source?.kind === "tool" && source.textTruncated
+			? [source.text.slice(0, source.prefixLength), source.text.slice(source.prefixLength + 1)]
+			: [source?.text ?? ""];
+		if (!source || !required(ref.quote, "source quote").trim() || !retained.some((part) => part.includes(ref.quote))) {
 			throw new Error(`Source reference ${ref.sourceId} does not match active-branch evidence`);
 		}
 		return source;
@@ -131,9 +136,16 @@ function createTaskStateController(pi) {
 		if (!available(ctx) || !read(ctx) ||
 			["daily_driver_task_state", "daily_driver_get_session", "daily_driver_set_session_title"].includes(event.toolName) ||
 			event.input?.path === "xd://daily_driver_task_state") return;
+		const output = text(event.content);
+		const input = JSON.stringify(event.input ?? {});
+		const textTruncated = output.length > EVIDENCE_TEXT_LIMIT;
+		const prefixLength = EVIDENCE_TEXT_LIMIT / 2;
 		const observation = {
 			sourceId: `tool:${event.toolCallId}`, kind: "tool", toolName: event.toolName,
-			input: event.input, text: text(event.content), isError: Boolean(event.isError),
+			input: input.slice(0, EVIDENCE_INPUT_LIMIT), inputTruncated: input.length > EVIDENCE_INPUT_LIMIT,
+			text: textTruncated ? `${output.slice(0, prefixLength)}\n${output.slice(-(EVIDENCE_TEXT_LIMIT - prefixLength - 1))}` : output,
+			textTruncated, prefixLength, originalTextLength: output.length,
+			fingerprint: digest([event.toolName, event.input, output]), isError: Boolean(event.isError),
 			taskSourceId: read(ctx).externalSourceId,
 		};
 		if (!observations(ctx).some((item) => item.sourceId === observation.sourceId)) {
@@ -150,7 +162,7 @@ function createTaskStateController(pi) {
 		} : null;
 		const support = capability();
 		if (!support.enforced) return `${RULE}\nRuntime task-state stop enforcement is unavailable: ${support.reason} The shared continuation rule still applies. Do not expand tool permissions, invent a human blocker, or claim record-based enforcement. Retain authorization and blocker evidence in the normal handoff.\nCurrent private task handoff:\n${JSON.stringify(handoff)}`;
-		return `${RULE}\nUse daily_driver_task_state(action: status) before an unfinished stop or another approval request. For explicit repository work not already active, call begin with {taskId,operation,target,source:{sourceId,quote}} as a JSON record. Do not activate ordinary Q&A. Authorization records keep user approval separate from workflow; exact source anchoring does not verify arbitrary prose meaning. Keep revocations, expiry and fresh-confirmation conditions. Record a structured blocker before an external pause; complete only when reporting completion. Cancelled state must not restart without fresh external user input. Status returns bounded source/evidence excerpts; status with record {sourceId} returns one full original source for exact anchoring.\nCurrent private task handoff (never publish conversation sources):\n${JSON.stringify(handoff)}`;
+		return `${RULE}\nUse daily_driver_task_state(action: status) before an unfinished stop or another approval request. For explicit repository work not already active, call begin with {taskId,operation,target,source:{sourceId,quote}} as a JSON record. Do not activate ordinary Q&A. Authorization records keep user approval separate from workflow; exact source anchoring does not verify arbitrary prose meaning. Keep revocations, expiry and fresh-confirmation conditions. Record a structured blocker before an external pause; complete only when reporting completion. Cancelled state must not restart without fresh external user input. Status returns bounded source/evidence excerpts; status with record {sourceId} returns the original authority source or retained tool evidence. Truncated tool evidence retains separate prefix and suffix fragments; quotes cannot cross the omitted region.\nCurrent private task handoff (never publish conversation sources):\n${JSON.stringify(handoff)}`;
 	}
 
 	const shouldExpose = (ctx) => available(ctx) && ["active", "cancelled"].includes(read(ctx)?.status);
@@ -275,7 +287,7 @@ function createTaskStateController(pi) {
 		} catch (error) { reason = error.message; }
 		// Agent labels, record rewrites, status calls and duplicate observations cannot reset this count.
 		const failures = [...new Set(observations(ctx).filter((item) => item.taskSourceId === state.externalSourceId && item.isError)
-			.map((item) => digest([item.toolName, item.input, item.text])))].sort();
+			.map((item) => item.fingerprint ?? digest([item.toolName, item.input, item.text])))].sort();
 		const condition = digest([state.externalSourceId, failures]);
 		const count = state.condition === condition ? state.corrections : 0;
 		if (count >= 2) {

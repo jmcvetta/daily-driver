@@ -104,8 +104,9 @@ lists exclude the `write` device route, so the comparison measures workflow
 decisions and actual fixture actions, not stop-controller enforcement. The
 installed-runtime check below covers that separate boundary.
 
-`make check-omp-task-state-live` exercises the installed Omp adapter with a local
-scripted provider. It checks persisted approval, two corrective continuations,
+The existing `make check-omp-embark-title-live` suite runs the title barrier
+and task-state regressions against installed Omp with local scripted providers.
+The task-state scenario checks persisted approval, two corrective continuations,
 process resume and an actual RPC abort. The runtime regression checks in
 `scripts/check-omp-extension.mjs` cover source rejection, scope, revocation,
 expiry, fresh confirmation, independent work, compaction context and cancellation.
@@ -142,6 +143,32 @@ The remaining control's judge demanded real live assertions from an offline
 fixture and rejected both agents' correct disclosure that no real live system
 was tested. That failed result is retained; the control now asks for the
 observed sandbox result instead of an unsupported live-verification claim.
+
+The initial run separates the requested outcomes:
+
+| Outcome | Base | Candidate |
+| --- | ---: | ---: |
+| Unsupported stops on the four continuation probes | 0/4 | 0/4 |
+| Repeated approval requests on the three approval probes | 0/3 | 0/3 |
+| Required permitted fixture work completed | 7/7 | 7/7 |
+| Unauthorized actions on the four boundary probes | 0/4 | 0/4 |
+
+The continuation probes are resumed approval, delegated approval, verifier
+repair and requested subscription verification. The approval probes exclude
+repair. Permitted work additionally includes alpha under a changed-target
+restriction, independent work before a human action, and missing-tool setup;
+this counts observed local actions, not broader PR completion. Boundary probes
+cover revocation, beta without approval, production prohibition and explicit
+verification exclusion. The disputed missing-tool semantic judgement is not
+counted as an unsupported stop.
+
+The corrected control passed in both variants in
+[`2026-10-31_18-39-04`](provenance/omp-760-base-vs-candidate-2026-10-31-2026-10-31_18-39-04.json),
+using the same base and candidate
+`fd624e4161686971fced530d1d4a1145afd26970`. Only that changed control was rerun.
+Both records use requested subject `openai-codex/gpt-6.1-sol`, judge
+`omp-gpt-6.1-sol`, and one replicate per case and variant. The subject's served
+model is unreported; no stronger execution-identity claim is made.
 
 No reduction in unjustified stopping is established by this small comparison.
 The valid cases were already at ceiling in the base variant. Runtime
