@@ -123,7 +123,9 @@ Task evidence state
 `daily_driver_task_state` stores private, active-branch task records. Call
 `{action: "status"}` before another approval request or an unfinished stop.
 For ordinary repository work not already active, call `begin`; do not activate
-an ordinary question. Mutating calls take a JSON-string `record`.
+an ordinary question. Mutating calls take a JSON-string `record`. `status`
+with `record: "{\"sourceId\":\"<id>\"}"` reads one full original source rather
+than the default bounded excerpts.
 
 - `begin`: `{taskId, operation, target, source: {sourceId, quote}}`. Use the
   latest external user source returned by `status`, not a copied handoff.
@@ -148,11 +150,17 @@ Revalidate through the original source or existing workflow authorization.
 
 The `session_stop` adapter checks active unfinished tasks and returns at most
 two corrections for an unchanged observed condition. The count survives
-resume; rewriting record labels does not renew it. Exhaustion emits an
-execution-failure notice. It does not complete the task or invent an approval
-requirement. User stop input and an aborted stop event prevent continuation.
-The adapter does not prove arbitrary prose claims about approval or exhausted
-routes. Preserve the original evidence and make no stronger claim.
+resume; rewriting record labels does not renew it. Exhaustion persists an
+execution failure and emits an error notification without another model turn.
+It does not complete the task or invent an approval requirement. User stop
+input and an aborted stop event prevent continuation. The adapter does not
+prove arbitrary prose claims about approval or exhausted routes.
+
+Enforcement requires direct access to the task-state tool or Omp's active
+`write` device route. If both are unavailable, the adapter records and warns
+about that capability limit instead of demanding an inaccessible tool. It
+does not enable tools or invent a human blocker; the shared continuation rule
+still applies.
 
 Omp exposes an external-input origin on `input`, so scheduled reminders and
 tool output do not become user authority. These semantics do not establish

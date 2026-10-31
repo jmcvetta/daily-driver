@@ -21,12 +21,8 @@ function required(value, name) {
 	return value;
 }
 
-/**
- * createTaskStateController shares task policy across trusted lifecycle transports.
- * The transport must append branch entries synchronously and supply authentic
- * external input and tool-result events. Agent commands may call execute only.
- */
-export function createTaskStateController(pi) {
+/** Create the Omp task lifecycle controller. */
+function createTaskStateController(pi) {
 	let pendingStop;
 
 	function releaseStop() {
@@ -41,6 +37,17 @@ export function createTaskStateController(pi) {
 	const available = (ctx) => ctx?.agent?.kind === "main" &&
 		typeof ctx.sessionManager?.getBranch === "function" &&
 		typeof ctx.sessionManager?.getSessionId === "function";
+
+	function capability() {
+		if (typeof pi.getActiveTools !== "function") return { enforced: false, reason: "Active tool visibility is unavailable." };
+		const active = pi.getActiveTools();
+		if (active.includes("daily_driver_task_state")) return { enforced: true, route: "direct" };
+		if (active.includes("write") && typeof pi.getAllTools === "function" &&
+			pi.getAllTools().some((tool) => tool.name === "daily_driver_task_state")) {
+			return { enforced: true, route: "write-device" };
+		}
+		return { enforced: false, reason: "The task-state tool is not exposed directly and its write device is unavailable in this tool scope." };
+	}
 	const branch = (ctx) => available(ctx) ? ctx.sessionManager.getBranch() : [];
 	const sessionId = (ctx) => ctx.sessionManager.getSessionId();
 	const entries = (ctx, type) => branch(ctx).filter((entry) => entry.type === "custom" &&
@@ -78,6 +85,7 @@ export function createTaskStateController(pi) {
 			? [...sources(ctx), ...observations(ctx)].find((item) => item.sourceId === request.sourceId) : undefined;
 		return {
 			state,
+			capability: capability(),
 			authorizations: state?.authorizations.map((item) => ({ ...item, applicability: authorizationStatus(ctx, state, item) })) ?? [],
 			sources: sources(ctx).slice(-8).map(excerpt),
 			evidence: observations(ctx).filter((item) => item.taskSourceId === state?.externalSourceId).slice(-8).map(excerpt),
@@ -140,8 +148,12 @@ export function createTaskStateController(pi) {
 			externalSourceId: state.externalSourceId, authorizations: state.authorizations,
 			blocker: state.blocker, corrections: state.corrections, stopFailure: state.stopFailure,
 		} : null;
+		const support = capability();
+		if (!support.enforced) return `${RULE}\nRuntime task-state stop enforcement is unavailable: ${support.reason} The shared continuation rule still applies. Do not expand tool permissions, invent a human blocker, or claim record-based enforcement. Retain authorization and blocker evidence in the normal handoff.\nCurrent private task handoff:\n${JSON.stringify(handoff)}`;
 		return `${RULE}\nUse daily_driver_task_state(action: status) before an unfinished stop or another approval request. For explicit repository work not already active, call begin with {taskId,operation,target,source:{sourceId,quote}} as a JSON record. Do not activate ordinary Q&A. Authorization records keep user approval separate from workflow; exact source anchoring does not verify arbitrary prose meaning. Keep revocations, expiry and fresh-confirmation conditions. Record a structured blocker before an external pause; complete only when reporting completion. Cancelled state must not restart without fresh external user input. Status returns bounded source/evidence excerpts; status with record {sourceId} returns one full original source for exact anchoring.\nCurrent private task handoff (never publish conversation sources):\n${JSON.stringify(handoff)}`;
 	}
+
+	const shouldExpose = (ctx) => available(ctx) && ["active", "cancelled"].includes(read(ctx)?.status);
 
 	function beforeAgentStart(event, ctx) {
 		if (!available(ctx)) return;
@@ -151,15 +163,16 @@ export function createTaskStateController(pi) {
 		if (policy && !sources(ctx).some((item) => item.sourceId === source.sourceId)) {
 			pi.appendEntry(SOURCE, { sessionId: sessionId(ctx), source });
 		}
+		if (!shouldExpose(ctx)) return;
 		return { systemPrompt: [...systemPrompt, instructions(ctx)] };
 	}
 	function context(event, ctx) {
-		if (!available(ctx)) return;
+		if (!shouldExpose(ctx)) return;
 		return { messages: [...event.messages, {
 			role: "custom", customType: STATE, content: instructions(ctx), display: false, timestamp: Date.now(),
 		}] };
 	}
-	const compacting = (_event, ctx) => available(ctx) ? { context: [instructions(ctx)] } : undefined;
+	const compacting = (_event, ctx) => shouldExpose(ctx) ? { context: [instructions(ctx)] } : undefined;
 
 	async function execute(_id, params, _signal, _update, ctx) {
 			try {
@@ -243,6 +256,16 @@ export function createTaskStateController(pi) {
 			pendingStop = { signal: event.signal, onAbort };
 			event.signal.addEventListener("abort", onAbort, { once: true });
 		}
+		const support = capability();
+		if (!support.enforced) {
+			if (state.enforcementUnavailable !== support.reason) {
+				save(ctx, { ...state, enforcementUnavailable: support.reason });
+				const warning = `Daily Driver stop enforcement unavailable: ${support.reason} Shared continuation instructions still apply; this is not a missing user approval.`;
+				if (typeof ctx.ui?.notify === "function") ctx.ui.notify(warning, "warning");
+				else console.error(`daily-driver: ${warning}`);
+			}
+			return;
+		}
 		let reason;
 		try {
 			validateBlocker(ctx, state, state.blocker);
@@ -256,8 +279,10 @@ export function createTaskStateController(pi) {
 		const condition = digest([state.externalSourceId, failures]);
 		const count = state.condition === condition ? state.corrections : 0;
 		if (count >= 2) {
-			save(ctx, { ...state, condition, corrections: count, stopFailure: reason });
-			pi.sendMessage({ customType: "daily-driver.task-stop-failure", content: `Execution failure: the same unsupported unfinished stop reached the two-correction limit. ${reason}. This is not completion or missing user approval. Evidence remains in daily_driver_task_state status.`, display: true }, { triggerTurn: false });
+			const failure = `Execution failure: the same unsupported unfinished stop reached the two-correction limit. ${reason}. This is not completion or missing user approval. Evidence remains in daily_driver_task_state status.`;
+			save(ctx, { ...state, condition, corrections: count, stopFailure: failure });
+			if (typeof ctx.ui?.notify === "function") ctx.ui.notify(failure, "error");
+			else console.error(`daily-driver: ${failure}`);
 			return;
 		}
 		if (event.signal?.aborted || read(ctx)?.status !== "active") return;
@@ -271,7 +296,7 @@ export function createTaskStateController(pi) {
 		if (current?.status === "active") save(ctx, { ...current, status: "cancelled", cancellationSource: source });
 	}
 
-	return { input, toolResult, beforeAgentStart, context, compacting, execute, stop, cancel, status,
+	return { input, toolResult, beforeAgentStart, context, compacting, execute, stop,
 		agentEnd, shutdown: releaseStop };
 }
 

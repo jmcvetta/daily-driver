@@ -140,6 +140,8 @@ function fakeApi(overrides = {}) {
 		registerTool(def) {
 			tools.set(def.name, def);
 		},
+		getActiveTools: () => ["read", "write"],
+		getAllTools: () => [...tools.values()],
 		async appendEntry(customType, data) {
 			calls.entries.push({ type: "custom", customType, data });
 		},
@@ -3507,6 +3509,8 @@ check("package.json wires the extension and is a module", () => {
 function taskSession(entries = []) {
 	const session = makeSession({ entries });
 	const ctx = startupCtx(session, "task-session");
+	const notifications = [];
+	ctx.ui.notify = (message, type) => notifications.push({ message, type });
 	const command = (action, record) => session.tools.get("daily_driver_task_state").execute(
 		"state-command", { action, ...(record ? { record: JSON.stringify(record) } : {}) },
 		undefined, undefined, ctx,
@@ -3515,7 +3519,7 @@ function taskSession(entries = []) {
 	const stop = (signal = new AbortController().signal) => session.fire("session_stop", { signal, messages: [] }, ctx);
 	const observe = (id, content, isError = true, toolName = "bash", input = { command: "compile fixture" }) =>
 		session.fire("tool_result", { toolCallId: id, toolName, content: [{ type: "text", text: content }], input, isError }, ctx);
-	return { ...session, ctx, command, input, stop, observe };
+	return { ...session, ctx, command, input, stop, observe, notifications };
 }
 
 /** Ordinary answers must not be trapped, while non-undertake repository work is protected. */
@@ -3524,9 +3528,33 @@ check("task state excludes Q&A and activates ordinary repository work", async ()
 	await session.input("What does this repository do?");
 	assert.equal((await session.command("status")).details.state, null);
 	assert.equal(await session.stop(), undefined);
+	assert.equal(await session.fire("context", { messages: [] }, session.ctx), undefined);
+	assert.equal(await session.fire("before_agent_start", { systemPrompt: ["Policy"] }, session.ctx), undefined);
+	assert.equal(await session.fire("session.compacting", {}, session.ctx), undefined);
 	await session.input("Fix the parser.");
 	assert.equal((await session.command("status")).details.state.status, "active");
+	assert.match((await session.fire("context", { messages: [] }, session.ctx)).messages[0].content, /Current private task handoff/u);
 	assert.equal((await session.stop()).continue, true);
+});
+
+/** A tool-scoped verification task must not be forced to call an inaccessible record device. */
+check("task stop enforcement respects record tool visibility without expanding permissions", async () => {
+	const restricted = taskSession();
+	restricted.pi.getActiveTools = () => ["read", "bash"];
+	await restricted.input("Verify the parser offline.");
+	assert.equal(await restricted.stop(), undefined);
+	const status = (await restricted.command("status")).details;
+	assert.equal(status.capability.enforced, false);
+	assert.equal(status.state.corrections, 0);
+	assert.match(status.state.enforcementUnavailable, /write device is unavailable/u);
+	assert.equal(restricted.notifications[0].type, "warning");
+	assert.equal(restricted.rec.sent.length, 0);
+	assert.match((await restricted.fire("context", { messages: [] }, restricted.ctx)).messages[0].content, /Do not expand tool permissions/u);
+	const direct = taskSession();
+	direct.pi.getActiveTools = () => ["read", "daily_driver_task_state"];
+	await direct.input("Verify the parser offline.");
+	assert.equal((await direct.stop()).continue, true);
+	assert.equal((await direct.command("status")).details.capability.route, "direct");
 });
 
 /** A compacted or resumed session must not lose scope or promote tool prose into consent. */
@@ -3638,7 +3666,10 @@ check("task stop corrections remain bounded across agent mutations and resume", 
 	await resumed.observe("duplicate", "compile failed");
 	await resumed.observe("invalid-state", "invalid record", true, "write", { path: "xd://daily_driver_task_state" });
 	assert.equal(await resumed.stop(), undefined);
-	assert.match(resumed.rec.sent[0].msg.content, /Execution failure/u);
+	assert.equal(resumed.rec.sent.length, 0, "cap reporting must not queue a model request");
+	assert.match(resumed.notifications[0].message, /Execution failure/u);
+	assert.equal(resumed.notifications[0].type, "error");
+	assert.match((await resumed.command("status")).details.state.stopFailure, /Execution failure/u);
 	assert.equal((await resumed.command("status")).details.state.status, "active");
 	await resumed.observe("new-failure", "different failure");
 	assert.match((await resumed.stop()).additionalContext, /1\/2/u);
@@ -3711,6 +3742,9 @@ check("task completion is an explicit report rather than a runtime proof", async
 	assert.equal(result.details.state.status, "reported-complete");
 	assert.match(result.details.limits, /not independently proven/u);
 	assert.equal(await session.stop(), undefined);
+	assert.equal(await session.fire("context", { messages: [] }, session.ctx), undefined);
+	assert.equal(await session.fire("before_agent_start", { systemPrompt: ["Policy"] }, session.ctx), undefined);
+	assert.equal(await session.fire("session.compacting", {}, session.ctx), undefined);
 });
 
 await Promise.all(checks);

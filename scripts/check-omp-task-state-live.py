@@ -46,8 +46,10 @@ class Model(BaseHTTPRequestHandler):
         for candidate in reversed(messages):
             if candidate.get("role") == "system":
                 continue
+            content = candidate.get("content")
+            parts = [part.get("text", "") for part in content if isinstance(part, dict)] if isinstance(content, list) else [content or ""]
             lines = [line.strip().removeprefix("User:").strip()
-                     for line in FIXTURE.text_of(candidate.get("content")).splitlines()]
+                     for part in parts for line in part.splitlines()]
             phase = next((name for name, prompt in PROBES.items() if prompt in lines), None)
             if phase is not None:
                 break
@@ -206,8 +208,10 @@ export default function(pi) {
             run(omp, base, env, "resume", observer)
             run(omp, base, env, "cancel", observer)
             rows = [json.loads(line) for line in (base / "state.log").read_text().splitlines()]
-            counts = [row["corrections"] for row in rows if row.get("cancel") is False and row.get("status") == "active"]
-            assert counts == [1, 2, 2, 2], rows
+            assert all(row["corrections"] <= 2 for row in rows if "corrections" in row), rows
+            # Three state commands and three model stops prove exactly two corrective turns;
+            # shutdown may emit extra stop notifications without another model request.
+            assert REQUESTS["first"] == 6, REQUESTS
             assert any(row.get("cancelled") and row.get("status") == "cancelled" for row in rows), rows
             assert REQUESTS["cancel"] == 1, REQUESTS
             assert REQUESTS["resume"] == 1, REQUESTS

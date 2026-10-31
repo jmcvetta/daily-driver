@@ -99,7 +99,10 @@ delegated approval history, revocation, a changed target, and repair after a
 failed verifier. Their offline command recorder proves the operation and target,
 not just the agent's stated intention. Resume and delegation history in these
 cases is supplied in the initial prompt; these cases do not prove actual
-compaction, session storage or delegation delivery.
+compaction, session storage or delegation delivery. Their restricted tool
+lists exclude the `write` device route, so the comparison measures workflow
+decisions and actual fixture actions, not stop-controller enforcement. The
+installed-runtime check below covers that separate boundary.
 
 `make check-omp-task-state-live` exercises the installed Omp adapter with a local
 scripted provider. It checks persisted approval, two corrective continuations,

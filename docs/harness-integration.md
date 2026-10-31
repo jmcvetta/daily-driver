@@ -49,8 +49,15 @@ defines the tool's records.
 An unsupported unfinished stop receives at most two corrective continuations
 per unchanged observed condition. Restarting the process does not renew that
 allowance. Explicit cancellation and an aborted stop handler prevent further
-correction. Exhaustion reports an execution failure, not completion or a new
-approval requirement. Ordinary questions do not automatically activate a task.
+correction. Exhaustion persists an execution failure and shows an error
+notification without scheduling another model turn. Ordinary questions do not
+automatically activate a task.
+
+Enforcement also requires an accessible task-state tool: either direct
+exposure, or Omp's active `write` device route. A restricted tool selection
+without either route receives a capability notice, not corrections that demand
+an inaccessible tool. The adapter never enables tools or calls this a missing
+user approval. Shared workflow instructions still apply.
 
 These checks validate provenance, scope fields and referenced observations.
 They do not prove that arbitrary prose grants permission, that every possible
