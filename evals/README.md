@@ -162,7 +162,14 @@ contribution.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
 is the current decision; this README is the single operational runbook.
 
-### Credentials: read this before any paid run
+A direct request includes normal focused verification through the configured
+subscription; do not request authorization for the same work again.
+Subscription inference uses allowance, not separately metered API spend.
+Explicit exclusions and specific approval requirements still apply, including
+the calibration measurements below. A focused smoke does not authorize a broad
+evaluation campaign, an unrelated expense, or a prohibited credential route.
+
+### Credentials: read this before any inference run
 
 **Claude runs on the subscription, and only on the subscription.** A Claude
 agent under test and every Claude-judged `agent_judge` inherit the Claude auth
@@ -199,7 +206,7 @@ for a key.
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
-make evals-run        # the whole suite on Claude Code, both variants. Real money.
+make evals-run        # the whole suite on Claude Code, both variants. Uses subscription allowance.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 make evals-render-routes  # rewrite the Measured routes table from committed provenance
 make evals-render-results # rewrite RESULTS.md from committed provenance
@@ -208,7 +215,7 @@ make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
-make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Real money.
+make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Uses subscription allowance.
 ```
 `REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
 example `make evals-run REPEATS=1`. When unset or empty, the experiment default
@@ -343,9 +350,9 @@ for the historical guard this preflight now enforces more strictly.
 "Two defaults, decided on purpose" below covers how a `.env` file overrides
 your shell environment.
 
-**Run `plan` before every `run`.** It is free, and it catches the config errors
-that otherwise cost a paid run to discover. `make evals-run` depends on
-`evals-plan` for exactly that reason.
+**Run `plan` before every `run`.** It uses no inference and catches config
+errors before they consume subscription allowance or separately metered spend.
+`make evals-run` depends on `evals-plan` for exactly that reason.
 
 Three things the Makefile does that a hand-typed `coder-eval` will not:
 
