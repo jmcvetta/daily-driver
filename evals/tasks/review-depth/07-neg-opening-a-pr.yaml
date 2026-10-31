@@ -64,7 +64,7 @@ run_limits:
   # turn; that is the point — it is not meant to.
   turn_timeout: 900
 
-initial_prompt: "The branch is finished. Open a pull request for it."
+initial_prompt: "I finished the branch and need a pull request. Could you open one?"
 
 success_criteria:
   - type: skill_triggered
