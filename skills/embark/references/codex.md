@@ -116,6 +116,10 @@ approval and its exact work envelope. Do not invent a provider identifier or
 assume an API route. Since this delegation surface does not report a measured
 model argument, stop the affected task with a configuration gap unless the
 configured route and its class can be established.
+The exact class and all visible fallbacks must retain the current family,
+provider, backend, and authentication route. If the unmeasured surface cannot
+constrain and verify them, stop that task before dispatch. Do not rewrite shared
+roles or assume that a model identifier proves the route.
 
 A frontier session may only route ordinary work to an eligible non-frontier
 implementor; it must not retain or supervise implementation on frontier.

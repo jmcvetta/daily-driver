@@ -186,30 +186,34 @@ A frontier assignment must carry explicit approval and its exact work envelope
 before execution. Frontier implementation also needs an explicit user
 exception recorded for that implementation scope.
 
-**A frontier session does not retain ordinary implementation.** Resolve the
-effective route, including role overrides, fallbacks, and visible parent-model
-inheritance; a role label cannot disguise an astra/fable route. For an ordinary
-`mechanical`, `implementation`, or `reasoning` issue, hand implementation to an
-eligible non-frontier route using an authorized model switch or delegation. The
-frontier session may do only the bounded routing and handoff; it does not keep
-the implementation or supervise it as a substitute for handoff. If no eligible
-route is available, stop and report the configuration gap. Frontier
-implementation requires explicit user authorization of that exception and its
-bounded scope; a research approval is not enough.
-For ordinary work, a frontier session resolves an eligible non-frontier route
-before establishing the task branch or posting a claim. It may continue only
-after a supported model switch reports a non-frontier execution identity, or
-hand off the full undertaking to an eligible non-frontier session. The
-receiving session runs `undertake` and owns its branch and claim. If neither
-route is available, stop here and report the exact configuration gap.
+**Route classed undertaking work before the worktree or claim.** Resolve the
+issue's exact class through the harness route, including the effective model,
+effort, and all visible fallbacks. Keep the current model family, provider,
+backend, and authentication route. An eligible account may refresh or rotate;
+do not change shared roles or credentials to make a route available. This
+policy covers undertaking workers, delegated issue work, and their execution
+fallbacks. Independently configured `reviewer`, `scout`, `security-reviewer`,
+and `seance` helpers are not issue implementation workers.
 
-After handing off the full issue, stop this sequence; do not claim it, open a
-second branch, or continue as a frontier supervisor.
+Prefer a supported in-session switch. Continue only when the harness confirms
+the selected execution identity, not merely when it accepts a switch. While
+confirmation is pending, do not establish a worktree, claim, or implement.
+If an in-session switch is unavailable, a full handoff is allowed only on a
+surface that can constrain and verify the same route. The receiving session
+owns the whole undertaking, including its worktree and claim. The sender stops:
+it must not recursively hand off, claim again, or supervise a duplicate.
+If neither route can enforce the invariant, stop before the worktree or claim
+and report the precise configuration or unsupported-surface gap.
 
-A non-frontier standalone undertaking keeps its existing behavior: it does not
-gate on a mapping between its own model identity and the task class. Concrete
-`Model:` lines in claim provenance remain actual-model records, not task
-metadata.
+In Omp, an attempt to select another issue does not replace the existing
+undertaking owner. Finish the completed undertaking or resume the existing one
+before selecting a different issue; use the Omp reference for the finish call.
+
+An effective Astra/Fable route is frontier even through a lower-class role or
+fallback. Ordinary classes cannot fall back to frontier. Frontier execution
+requires the recorded approval and exact envelope; frontier implementation
+also requires the explicit user exception above. Concrete `Model:` lines in
+claim provenance record the observed model, not task metadata.
 
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
@@ -444,6 +448,10 @@ supported no is a result. Inconclusive work is complete only under
 `issue-body`'s bounded-report rule. Failed access, unresolved blocking intent,
 or abandoned work stays open and follows `Where it stops and waits`.
 
+After completion, finish the Omp undertaking through its harness route before
+reusing the session for another issue. Do not finish a stopped or incomplete
+undertaking.
+
 This route skips `Open the draft`, `Review the head`, `Fix, answer, resolve,
 push`, `Verify the fix delta`, `Ready for review`, and `Keep it current`.
 Never create an empty PR or mark an incomplete result complete. Repository
@@ -636,6 +644,9 @@ below holds. It does not review; `review-cycle` supplies the full review and
 independent verification that the gate consumes. The completion notice is one
 of the gate's reads, so a round that closed without posting it is not yet
 ready.
+
+Once the pull request is ready, finish the Omp undertaking through its harness
+route before reusing the session for another issue.
 
 Marking a draft ready is a natural moment to reach for a review, and the
 branch was already reviewed at `Review the head` — whether that review is
