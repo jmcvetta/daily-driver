@@ -11,6 +11,23 @@
 
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
 
+## [0.56.0](https://github.com/jmcvetta/daily-driver/compare/v0.55.0...v0.56.0) (2026-10-31)
+
+
+### Features
+
+* **ci:** require approval for recurring checks ([#766](https://github.com/jmcvetta/daily-driver/issues/766)) ([93c01fb](https://github.com/jmcvetta/daily-driver/commit/93c01fb1c05c607b0b83bfe52f667bc3e7190e67))
+* enforce evidence-backed task continuation ([#764](https://github.com/jmcvetta/daily-driver/issues/764)) ([8e2119d](https://github.com/jmcvetta/daily-driver/commit/8e2119d667270c2f12831a51d2543c30216ed6fb))
+* **issue:** default unspecified requests to tasks ([#754](https://github.com/jmcvetta/daily-driver/issues/754)) ([22040b6](https://github.com/jmcvetta/daily-driver/commit/22040b610c9773a070d7bbc58715b5e416c88cfa))
+* **undertake:** select worker classes without changing authentication routes ([#763](https://github.com/jmcvetta/daily-driver/issues/763)) ([df6c7a1](https://github.com/jmcvetta/daily-driver/commit/df6c7a149ea7da7d8d9098a3bec6ad973d004cf4))
+
+
+### Bug Fixes
+
+* **omp:** distinguish link pathnames from executables ([#767](https://github.com/jmcvetta/daily-driver/issues/767)) ([eaba53e](https://github.com/jmcvetta/daily-driver/commit/eaba53ee831c62e7fb1a70d6e18f1f0a4dd638ea))
+* **provenance:** avoid duplicate attribution blocks ([#773](https://github.com/jmcvetta/daily-driver/issues/773)) ([7a9cf95](https://github.com/jmcvetta/daily-driver/commit/7a9cf95bb6f4d8973fdb6f8809be7c5d7a672b72))
+* **undertake:** honor requested subscription verification ([#757](https://github.com/jmcvetta/daily-driver/issues/757)) ([f785f50](https://github.com/jmcvetta/daily-driver/commit/f785f506b20898fc13e6e12b57846962d7c2e293))
+
 ## [0.55.0](https://github.com/jmcvetta/daily-driver/compare/v0.54.1...v0.55.0) (2026-10-31)
 
 
