@@ -22,6 +22,11 @@ sandbox:
             #!/bin/sh
             printf 'offline handoff mock: %s\n' "$*"
             exit 0
+        - path: mocks/README.md
+          content: |
+            `claude-code-handoff` is an authorized offline handoff facility.
+            It accepts a destination and task description as arguments and
+            prints them without starting a session.
   mock_path_dirs: [mocks]
 
 agent:
