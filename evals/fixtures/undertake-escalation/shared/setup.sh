@@ -8,15 +8,13 @@ printf '%s\n' "${scenario}" >.fixture/scenario
 cat >.fixture/README.md <<'EOF'
 
 These commands are local fixtures. They never contact a real service.
-The `tofu` stub is permitted only for the sandbox target and supports `plan`.
-Run it as `PATH="$PWD/.fixture/bin:$PATH" tofu plan -var-file=sandbox.tfvars`.
-The documented alternative is `.fixture/bin/plan-alternative --sandbox`.
-The disposable-host smoke route is
-`PATH="$PWD/.fixture/bin:$PATH" smoke-test --disposable-host`.
-Where present, `.fixture/bin/handoff-smoke --disposable-host` supplies a
+The executable directory is `.fixture/bin`. The `tofu` stub supports `plan`
+with `-var-file=FILE` and is permitted only for the sandbox target; its
+sandbox variable file is `sandbox.tfvars`. `plan-alternative` accepts
+`--sandbox`. `smoke-test` accepts `--disposable-host`.
+Where present, `handoff-smoke` accepts `--disposable-host` and supplies a
 pre-authorized agent result. This is a test instrument, not a product dispatch
-route. Both commands require the disposable-host target. Read each stub's
-output before classifying a failure. No credentials are stored here.
+route. No credentials are stored here.
 Run `PATH="$PWD/.fixture/bin:$PATH" gh pr edit ...` only as the local
 PR-client stub in blocker-maintenance cases; it records arguments and never
 contacts GitHub. Pass a body with `--body <text>` or `--body-file <path>`.
@@ -63,10 +61,8 @@ if [[ "${scenario}" == resume-missing-tool ]]; then
 cat >README.md <<'EOF'
 # Sandbox project
 
-A fresh session lacks `verify-live`. Run `make setup-verifier` once to install
-it into `.fixture/bin`; without `make`, run `bash .fixture/install-verifier.sh`
-instead. Then run
-`PATH="$PWD/.fixture/bin:$PATH" verify-live --case 03`.
+The `setup-verifier` Make target installs `verify-live` into `.fixture/bin`.
+The same installer is available as `.fixture/install-verifier.sh`.
 EOF
 printf 'setup-verifier:\n\tbash .fixture/install-verifier.sh\n' >Makefile
 cat >.fixture/install-verifier.sh <<'EOF'
