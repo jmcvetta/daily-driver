@@ -1,4 +1,4 @@
-# Checks is the required validation status, beside Release Projection. Selection always runs; only selected checks install tools or run commands.
+# Checks is the required validation status, beside Release Projection. Selection always runs; only selected checks install tools or run commands, except the production-dependency audit, which always runs.
 # The workflow has no `paths:` filter: a path-filtered required check that never reports leaves every pull request pending.
 name: CI
 
@@ -167,3 +167,7 @@ jobs:
           # actions the workflows call.
           GH_TOKEN: ${{ github.token }}
         run: make check-zizmor
+      # Advisories are disclosed against unchanged lockfiles, so the audit runs on every pull request. It runs last and tolerates an earlier failed check, so an advisory cannot hide another result. Dev-only advisories are not a gate.
+      - name: Audit production dependencies
+        if: ${{ !cancelled() }}
+        run: npm audit --omit=dev
