@@ -1,0 +1,195 @@
+{
+  "analysis_valid": true,
+  "arm": "deepseek",
+  "attempts": [
+    {
+      "arm": "deepseek",
+      "artifact_sha256": "4bee82f3dae433ea11c2afe0898e34f71e8e432d82cb4fff6278c4600d417e30",
+      "attempt_seconds": 86.067706823349,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "deepseek-v4-pro",
+      "reviewer_requested": "opencode-go/deepseek-v4-pro:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"deepseek-v4-pro\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Calling page(items, offset, limit) with limit >= 1 returns limit - 1 records instead of limit because the slice end is offset + limit - 1.\",\"impact\":\"Off-by-one error: every cursor page silently drops its last record, contradicting the docstring 'Return up to limit records' and breaking listing completeness; limit=1 yields an empty page.\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-deepseek-smoke-final-json",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "deepseek",
+      "artifact_sha256": "45103647c8f8f90b37826b95c5c8632ac8945d6bd79ddb4f35312c87829d0a12",
+      "attempt_seconds": 351.389212846756,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "deepseek-v4-pro",
+      "reviewer_requested": "opencode-go/deepseek-v4-pro:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"deepseek-v4-pro\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-deepseek-smoke-final-json",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "reviewer-reported session identity only; backend-served identity is unreported",
+    "expected_model_id": "deepseek-v4-pro",
+    "expected_reviewer_selector": "opencode-go/deepseek-v4-pro:high",
+    "mismatches": [],
+    "reported_model_ids": [
+      "deepseek-v4-pro"
+    ],
+    "reviewer_reported_identities": [
+      "deepseek-v4-pro"
+    ],
+    "valid": true
+  },
+  "cohort_complete": true,
+  "coverage_complete": true,
+  "created_at": "2026-10-31T08:57:57.101802+00:00",
+  "planned": {
+    "attempts": 2,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-05-clean-boundary"
+    ],
+    "repeats_per_case": 1
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/reviewer-quality-deepseek-smoke-final-json",
+      "run_id": "reviewer-quality-deepseek-smoke-final-json",
+      "run_record": "evals/provenance/omp-reviewer-deepseek-v4-pro-go-2026-10-31-reviewer-quality-deepseek-smoke-final-json.json",
+      "run_record_sha256": "5691739eb6973f7514af755ba2bc4879f6c50a7de57b6fa3028d084fb9ba0389"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-deepseek-v4-pro-go.yaml",
+    "experiment_sha256": "260e82fba73502d2f1233ada8d0d0bcb7e7dc52a740690382530f944a3f14eee",
+    "route_overlay_path": "/home/jmcvetta/projects/daily-driver.issue-737-reviewer-quality/evals/fixtures/reviewer-quality/shared/routes/deepseek.yml",
+    "route_overlay_sha256": "add91cbf8891391b2be6a014a7c43c48d6750647537161698984e8f0105860a4"
+  },
+  "summary": {
+    "attempts": 2,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 1,
+        "false_alarms": 0,
+        "planned_denominator": 1
+      },
+      "delta": {
+        "accuracy": null,
+        "correct": 0,
+        "eligible_denominator": 0,
+        "planned_denominator": 0
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "precision_denominator": 1,
+        "recall": 1.0,
+        "recall_eligible_denominator": 1,
+        "recall_planned_denominator": 1,
+        "tp": 1
+      },
+      "unexpected_valid": []
+    },
+    "eligible": 2,
+    "harness_errors": 0,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 2,
+      "max": 351.389212846756,
+      "mean": 218.7284598350525,
+      "median": 218.7284598350525,
+      "min": 86.067706823349,
+      "population_stddev": 132.6607530117035
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_completed": 1,
+        "reviewer_errors": 0
+      },
+      "reviewer-quality-05-clean-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_completed": 1,
+        "reviewer_errors": 0
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_completed": 2,
+    "reviewer_completion_rate": 1.0,
+    "unattempted": 0
+  },
+  "winner": null
+}

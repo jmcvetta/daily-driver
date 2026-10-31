@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "source_commit": "3341a0e258fd6ccc4bffd2d3fe8fe7bbe7fdc881",
+  "omp_version": "18.14.1",
+  "coder_eval_version": "0.11.6",
+  "subjects": [
+    "opencode-go/glm-5.3:high",
+    "opencode-go/deepseek-v4-pro:high"
+  ],
+  "parent_and_helpers": "openai-codex/gpt-6.1-sol:low",
+  "judge": "omp-gpt-6.1-sol",
+  "case_ids": [
+    "reviewer-quality-01-boundary",
+    "reviewer-quality-02-contract",
+    "reviewer-quality-03-authorization",
+    "reviewer-quality-04-integrity",
+    "reviewer-quality-05-clean-boundary",
+    "reviewer-quality-06-clean-contract",
+    "reviewer-quality-07-delta-fixed",
+    "reviewer-quality-08-delta-incomplete"
+  ],
+  "smoke": {
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-05-clean-boundary"
+    ],
+    "repeats": 1,
+    "attempts": 4,
+    "run_directories": [
+      "evals/runs/reviewer-quality-glm-smoke-final-json",
+      "evals/runs/reviewer-quality-deepseek-smoke-final-json"
+    ]
+  },
+  "cohort": {
+    "repeats": 5,
+    "attempts": 80,
+    "max_parallel": 1
+  },
+  "limits": {
+    "parent_max_turns": 16,
+    "parent_turn_and_task_timeout_seconds": 900,
+    "reviewer_max_runtime_seconds": 600,
+    "reviewer_soft_request_budget": 30,
+    "retries": false,
+    "model_fallback": false
+  },
+  "input_sha256": {
+    "Makefile": "5b6868f77370b9d04233a3a3695b82bf007e5fa82b369e0becc5761ca46511a4",
+    "evals/README.md": "ef93953a72a20b00a3cb547749dcfd7b7aa70a12e4ff936c6234feb7813a8446",
+    "scripts/evals-reviewer-run.py": "0b2c107c6f848684dc3451c71a24cda48eb8e08f1bacbd2c9ca684f3acfff86e",
+    "scripts/evals-reviewer-quality.py": "cdc9634bdf88351d5d6dd16a6b14b4645f627cdbb6fda8d955b5670c3b7c4f16",
+    "evals/experiments/omp-reviewer-glm-5.3-go.yaml": "1d1b63793a37e2aed451a71638f8d515f126e2d1885ce6f7aeda4bbf8d69943d",
+    "evals/experiments/omp-reviewer-deepseek-v4-pro-go.yaml": "260e82fba73502d2f1233ada8d0d0bcb7e7dc52a740690382530f944a3f14eee",
+    "evals/fixtures/reviewer-quality/shared/bootstrap.py": "38f4e7c0194ea2f903360fd943ff3ae2be5b8c30bc48cb8c0c9379d4829b3b24",
+    "evals/fixtures/reviewer-quality/shared/setup.sh": "fb6befb3863126b5e38b0866e34715f9c9824e39b93c0253dd54c84d0ec80d46",
+    "evals/fixtures/reviewer-quality/shared/routes/glm.yml": "805e42c910651b62ab77e5c4b13a9e60d5d73ef761753ce78eb966b39d5cbd1a",
+    "evals/fixtures/reviewer-quality/shared/routes/deepseek.yml": "add91cbf8891391b2be6a014a7c43c48d6750647537161698984e8f0105860a4",
+    "evals/fixtures/reviewer-quality/calibration/labels.yaml": "edaca9916a3d4f12cc48492ad2a5169bff2ccb0a765aaf2143f31c770dd86bbb",
+    "evals/fixtures/reviewer-quality/calibration/transcripts/tp-boundary.txt": "e8409e46e2bbb683940bdb6a686e156c689a72471ee6b929a885ca35d0a78463",
+    "evals/fixtures/reviewer-quality/calibration/transcripts/fp-unrelated.txt": "5f74b8239dec695e79cb018c1b6a9d4dace0e9ed8cb326f9f6ea16d3000bf2b7",
+    "evals/fixtures/reviewer-quality/calibration/transcripts/fn-boundary.txt": "e7dd4dec51f99d37d49b815cdd50831bcc95d011b54a8b2d2b3aa253afc76e9c",
+    "evals/tasks/reviewer-quality/01-boundary.yaml": "ac9c3d15bec608bf674425c1c5cd55f0adaf3bc78e028b5cafcb4977caac8ea8",
+    "evals/tasks/reviewer-quality/references/01-boundary/key.md": "854d4990b37ae3d8745764335bb0adceb8bd8e1462d1ca8dea152b6a5ab59e40",
+    "evals/fixtures/reviewer-quality/cases/01-boundary/case.json": "279c94b341cca23c0ada7dbd63459b1139f5f5af5f55e5e970e3447a9c998685",
+    "evals/tasks/reviewer-quality/02-contract.yaml": "f8e7b4e1a89dcd57d2d2062b140e5e481b18a4af0a29089111c47d045dc17207",
+    "evals/tasks/reviewer-quality/references/02-contract/key.md": "527870b6393829ba7c93ec2756c6259b9bd3e494f1251d7de234feaf1e71648a",
+    "evals/fixtures/reviewer-quality/cases/02-contract/case.json": "47bde14d198a591f708511fb057414befac89092694ceccf7cdf083b621d1c4e",
+    "evals/tasks/reviewer-quality/03-authorization.yaml": "03311154988c5647dd61fbe2512df68ed86e6f590e563c9c30f11a0e3d1cc40c",
+    "evals/tasks/reviewer-quality/references/03-authorization/key.md": "34187480182c6c2f3551dc48ed1c8cddcc00145e7534bb31d6156efb4a111021",
+    "evals/fixtures/reviewer-quality/cases/03-authorization/case.json": "a521b65122f110065e0cd29f796fb3ca749807743c3c22e02877c8123bfe8f3d",
+    "evals/tasks/reviewer-quality/04-integrity.yaml": "aef3a189963af96492ed6842f67ce7ed093c875e2987a8b91faa2cfad89993ca",
+    "evals/tasks/reviewer-quality/references/04-integrity/key.md": "d56b95b0aea12bcf428ea5bdb2f8a171bfd99acf1ecf206cd9085ff8711a3e83",
+    "evals/fixtures/reviewer-quality/cases/04-integrity/case.json": "e820ec81bb89d90963aba1b0393a3c00b5bbe2d8a8bdd5cb8e46e84fba04bc97",
+    "evals/tasks/reviewer-quality/05-clean-boundary.yaml": "b0f7fd9227732db021f9cbebbc5947fa0a41a21dcfc8cb8b8d721093999d7220",
+    "evals/tasks/reviewer-quality/references/05-clean-boundary/key.md": "21dbc400767e75632d5eb4b9e04836d156362806de510b8d82ace622da17ea81",
+    "evals/fixtures/reviewer-quality/cases/05-clean-boundary/case.json": "58a45a5b082b21dac532b11f90df0bb22e3f500a791bcc1bac3d5a404f53e73a",
+    "evals/tasks/reviewer-quality/06-clean-contract.yaml": "7d1d34ea633842b66bbe1dc621ca77cad2840ac3e69b5a81f41814a9be415906",
+    "evals/tasks/reviewer-quality/references/06-clean-contract/key.md": "54266e5267dcb467733855639f7b6849b13d07bb122823806eaa0fd8d89dab7c",
+    "evals/fixtures/reviewer-quality/cases/06-clean-contract/case.json": "cdbb36c12457d09ef0f170b18d1b98bff9472fab877bc6f1a283720b62b7229d",
+    "evals/tasks/reviewer-quality/07-delta-fixed.yaml": "67acfb857dcb68d40f385421831fdb9787cfc61023aff91fe16c6d05131f90e2",
+    "evals/tasks/reviewer-quality/references/07-delta-fixed/key.md": "66e40cecfdf6a19ea971bdaddacff00f1dbecb6b6bb54ba1b99019186d1dc2e9",
+    "evals/fixtures/reviewer-quality/cases/07-delta-fixed/case.json": "06b3e44b64eb9fab1a8fd489691230d62dbde7d52087695f892980185f4b951f",
+    "evals/tasks/reviewer-quality/08-delta-incomplete.yaml": "501ff7c5459c117edc4fbd5d40558dfaf473669ed58a98b6fb8d0dbddb4bb69e",
+    "evals/tasks/reviewer-quality/references/08-delta-incomplete/key.md": "39420195a31e6ed48c582ae91bd2d030ae6c4b7391059a0f587c6f008234f2d0",
+    "evals/fixtures/reviewer-quality/cases/08-delta-incomplete/case.json": "47034e0d661a74eed063bd440b0d7160339b153d08654fdb63650be8ae9a7843",
+    "scripts/evals-judge.py": "d7f17fff20f68530502b901c14c044f52c7a2a8e6142d79e012c14a2ee84c5af"
+  },
+  "route_evidence_policy": "Requested selectors and reviewer-reported harness identity are separate. Backend-served identity remains unreported without provider evidence. Known model mismatch invalidates attribution.",
+  "usage_policy": "Reviewer usage and latency unavailable unless directly exposed. Parent metrics do not substitute. Shared allowance snapshots cannot isolate benchmark consumption; unknown cash spend is not zero.",
+  "supersedes": "freeze-v2.json: collect unchanged final reviewer JSON without fixture writes; correct case-02 accepted locations, delta scoring, provider error classification, and explicit route mismatches before measured cohort. Earlier smoke and interrupted attempts remain separate.",
+  "recording_tasks_directory": "evals/tasks (judge-run scans */*.yaml; suite subdirectory selects no rubrics)"
+}

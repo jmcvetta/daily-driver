@@ -1,0 +1,195 @@
+{
+  "analysis_valid": true,
+  "arm": "glm",
+  "attempts": [
+    {
+      "arm": "glm",
+      "artifact_sha256": "f0121ed1b272d39f5ecd72bb5196743c87f86663869356421e2a1d08044a80f9",
+      "attempt_seconds": 61.7291145324707,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Any call to page(items, offset, limit) after this change. The slice end is now offset + limit - 1, so the function returns at most limit-1 records instead of limit (verified: page([1,2,3,4,5],0,3) returns [1,2]; page([1,2,3,4,5],2,3) returns [3,4]; page(items,0,1) returns []). Additionally, when limit=0 and offset=0 the stop index becomes -1, which Python slicing treats as relative to the end, so page([1,2,3,4,5],0,0) returns [1,2,3,4] instead of [].\",\"impact\":\"The cursor-based listing endpoint drops the last record of every page, so pagination skips records silently (record loss). The limit=0 edge case returns nearly the whole collection instead of nothing, a silent wrong-result path that can duplicate or leak records across pages. Both contradict the docstring 'Return up to limit records beginning at offset'.\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-smoke-final-json",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "a9fca8e91cc0ef3f80c7e20866e4198a60e7353481526b647a7162b56ea9f36f",
+      "attempt_seconds": 47.6879026889801,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-smoke-final-json",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "reviewer-reported session identity only; backend-served identity is unreported",
+    "expected_model_id": "glm-5.3",
+    "expected_reviewer_selector": "opencode-go/glm-5.3:high",
+    "mismatches": [],
+    "reported_model_ids": [
+      "glm-5.3"
+    ],
+    "reviewer_reported_identities": [
+      "glm-5.3"
+    ],
+    "valid": true
+  },
+  "cohort_complete": true,
+  "coverage_complete": true,
+  "created_at": "2026-10-31T08:53:37.654535+00:00",
+  "planned": {
+    "attempts": 2,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-05-clean-boundary"
+    ],
+    "repeats_per_case": 1
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/reviewer-quality-glm-smoke-final-json",
+      "run_id": "reviewer-quality-glm-smoke-final-json",
+      "run_record": "evals/provenance/omp-reviewer-glm-5-3-go-2026-10-31-reviewer-quality-glm-smoke-final-json.json",
+      "run_record_sha256": "55362b7fb8bfdbe077c7ce2ab3aff4e082236fa24c5496bd677fc973a72a5550"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-glm-5.3-go.yaml",
+    "experiment_sha256": "1d1b63793a37e2aed451a71638f8d515f126e2d1885ce6f7aeda4bbf8d69943d",
+    "route_overlay_path": "/home/jmcvetta/projects/daily-driver.issue-737-reviewer-quality/evals/fixtures/reviewer-quality/shared/routes/glm.yml",
+    "route_overlay_sha256": "805e42c910651b62ab77e5c4b13a9e60d5d73ef761753ce78eb966b39d5cbd1a"
+  },
+  "summary": {
+    "attempts": 2,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 1,
+        "false_alarms": 0,
+        "planned_denominator": 1
+      },
+      "delta": {
+        "accuracy": null,
+        "correct": 0,
+        "eligible_denominator": 0,
+        "planned_denominator": 0
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "precision_denominator": 1,
+        "recall": 1.0,
+        "recall_eligible_denominator": 1,
+        "recall_planned_denominator": 1,
+        "tp": 1
+      },
+      "unexpected_valid": []
+    },
+    "eligible": 2,
+    "harness_errors": 0,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 2,
+      "max": 61.7291145324707,
+      "mean": 54.7085086107254,
+      "median": 54.7085086107254,
+      "min": 47.6879026889801,
+      "population_stddev": 7.0206059217453
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_completed": 1,
+        "reviewer_errors": 0
+      },
+      "reviewer-quality-05-clean-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_completed": 1,
+        "reviewer_errors": 0
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_completed": 2,
+    "reviewer_completion_rate": 1.0,
+    "unattempted": 0
+  },
+  "winner": null
+}
