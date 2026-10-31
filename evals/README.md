@@ -11,6 +11,7 @@ the `claude` binary, so there is no version to hold back.
 evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
+│   ├── with-without-haiku-5.5.yaml the same ablation, pinned to Claude Haiku 5.5
 │   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
 │   ├── omp-*.yaml                  Omp model experiments; paired ablations or focused acceptance runs
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
@@ -204,6 +205,7 @@ make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
+make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Real money.
 ```
 `REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
 example `make evals-run REPEATS=1`. When unset or empty, the experiment default
@@ -1735,12 +1737,12 @@ make evals-run-classes MODEL=sol-6-1
 make evals-run-classes MODEL=luna-6
 make evals-run-classes MODEL=terra-5-6
 
-The Claude Code files (`classes-opus-low`, `classes-sonnet-high`,
-`classes-sonnet-low`) set effort through `sdk_options.effort`, which the
-Agent SDK passes as `claude --effort`. They run the bare session
-`with-without.yaml` measures against — `plugins: []` and
-`setting_sources: [project]` — so an advisor or a plugin in the operator's own
-user settings never reaches the model under test.
+The Claude Code files (`classes-haiku-low`, `classes-haiku-medium`,
+`classes-opus-low`, `classes-sonnet-high`, `classes-sonnet-low`) set effort
+through `sdk_options.effort`, which the Agent SDK passes as `claude --effort`.
+They run the bare session `with-without.yaml` measures against — `plugins: []`
+and `setting_sources: [project]` — so an advisor or a plugin in the operator's
+own user settings never reaches the model under test.
 
 `defaults.repeats` is 3 in every file, so a full run is 3 replicates per
 case per model, each a real `git apply` plus the
