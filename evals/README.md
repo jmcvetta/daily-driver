@@ -74,6 +74,15 @@ and [`19-04-35`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-04-35.json)
 The subject's served identity was unreported; the Omp GPT 6.1 Sol judge scored
 each case. The successive-revision cases use one turn, not a resumed session.
 
+A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
+checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated
+`--session-dir`. The first `omp -p` drafted an upload-timeout PR body; a second
+`omp -p --continue` asked it to add an offline-fixture result. Both outputs
+kept `Closes #42` and exactly one identical block: model `gpt-6.1-sol`,
+harness `Oh My Pi n/a`, session `01a191e5-303f-75a6-b2ba-ccfb229f7411`.
+The second output added the requested fact. This is a smoke observation, not
+a committed multi-turn evaluation or a measurement of other models.
+
 `tasks/pr/08-omp-draft-currency.yaml` and `09-omp-resumed-pr-currency.yaml`
 are action-based Omp regressions for ordinary and resumed PR updates. Their
 offline `gh` updates a real local Git branch and fails the case unless the
