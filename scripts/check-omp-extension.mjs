@@ -2956,6 +2956,42 @@ checkGuard(
 	worktrees.task,
 );
 
+// Link pathnames used to trigger Git alias consultation or shell parsing.
+for (const command of [
+	"ln -s /usr/bin/git .tmp.claude/runtime-smoke/bin/git",
+	'/usr/bin/ln -s "/usr/bin/git" ".tmp.claude/runtime smoke/bin/git"',
+	"LINK_MODE=symbolic ln -s /usr/bin/git .tmp.claude/runtime-smoke/bin/git",
+	`ln -s /usr/bin/git "${worktrees.outside}/git"`,
+	"ln -s /usr/bin/bash .tmp.claude/runtime-smoke/bin/bash",
+]) {
+	checkGuard(
+		`link pathname operands do not become commands: ${command}`,
+		false,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
+// Excluding link operands must not hide commands in other shell segments.
+for (const command of [
+	`ln -s /usr/bin/git .tmp/git; .tmp/git -C "${worktrees.primary}" switch master`,
+	`ln -s /usr/bin/git .tmp/git; git -C "${worktrees.primary}" switch master`,
+	`ln -s "$(git -C '${worktrees.primary}' switch master)" .tmp/git`,
+	`ln -s <(git -C "${worktrees.primary}" switch master) .tmp/git`,
+	`ln -s /usr/bin/git .tmp/git; timeout 5 git -C "${worktrees.primary}" switch master`,
+	`find . -name ln -exec git -C "${worktrees.primary}" switch master \\;`,
+	`ln() { git -C "${worktrees.primary}" switch master; }; ln`,
+]) {
+	checkGuard(
+		`link operand classification retains executable checks: ${command}`,
+		true,
+		"bash",
+		{ command },
+		worktrees.task,
+	);
+}
+
 checkGuard(
 	"a substitution in an ordinary argument is still allowed",
 	false,
