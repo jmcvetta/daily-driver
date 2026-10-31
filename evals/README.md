@@ -133,6 +133,20 @@ establish fleet reliability, and a high baseline may leave improvement
 unmeasurable on these cases. Do not combine the Omp result with an unverified
 claim about Claude Code or Codex stop enforcement.
 
+The initial paired run
+[`2026-10-31_18-28-36`](provenance/omp-760-base-vs-candidate-2026-10-31-2026-10-31_18-28-36.json)
+used base `f785f506b20898fc13e6e12b57846962d7c2e293` and candidate
+`5fd52574d52602353201caa8190ce978a3222f48`. Both variants passed ten of eleven
+cases, including all five new cases. Every action/recorder criterion passed.
+The remaining control's judge demanded real live assertions from an offline
+fixture and rejected both agents' correct disclosure that no real live system
+was tested. That failed result is retained; the control now asks for the
+observed sandbox result instead of an unsupported live-verification claim.
+
+No reduction in unjustified stopping is established by this small comparison.
+The valid cases were already at ceiling in the base variant. Runtime
+enforcement is separately exercised by the installed scripted-provider check.
+
 ## Provenance
 
 Every measured figure must cite a committed record under
