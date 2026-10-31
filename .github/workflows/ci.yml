@@ -146,7 +146,7 @@ jobs:
       - name: Install uv
         id: install-uv
         if: ${{ !cancelled() && steps.plan.outcome == 'success' && (contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') || contains(fromJSON(steps.plan.outputs.checks), 'check-zizmor')) }}
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
       - name: Install Checkov
         id: install-checkov
         if: ${{ !cancelled() && steps.install-uv.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') }}
