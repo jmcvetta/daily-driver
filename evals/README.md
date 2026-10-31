@@ -202,12 +202,13 @@ Every measured figure must cite a committed record under
 without the plugin, as well as cases both variants fail and cases the plugin
 helps. It scores gating behavior criteria and ignores `skill_triggered`.
 It flags bare pass rates of at least 80% across three or more attempts as
-investigation candidates, not proof of answer disclosure. Inspect the prompt,
-fixtures and available run evidence before classifying a candidate. Correct
-bare behavior without disclosure shows no measured plugin benefit in that run.
+bare-pass candidates, not proof of answer disclosure. Eval results are
+measurements, so the report gates no CI job. The task that commits a record
+dispositions each candidate by reading its prompt and fixtures against the
+criteria: answer disclosure, no observed disclosure (no measured plugin
+benefit in that run), or unresolved with the missing evidence named.
 `make evals-leaks` reports all records, and `make check-evals-leaks` runs its
-inline classifier self-test. The separate `--check` mode fails on flagged
-cases in the newest record per experiment, limited to task IDs that still exist.
+inline classifier self-test.
 
 Every record also carries a `cases` list, one row per task per repeat.
 `scripts/evals-render-routes.py` reads every committed record's `cases` and

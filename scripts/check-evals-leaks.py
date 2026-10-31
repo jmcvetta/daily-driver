@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Report behavior cases that pass without the plugin.
 
-A leak is a behavior case that the bare variant passes on at least 80% of
-three or more attempts. The skill-firing criterion is ignored because this
-check measures behavior, not whether the skill loaded.
+A bare-pass candidate is a behavior case that the bare variant passes on at
+least 80% of three or more attempts. A candidate is not proof of answer
+disclosure: a person reads the prompt and fixtures to decide. The report gates
+no CI job, because eval results are measurements. The skill-firing criterion is
+ignored because this check measures behavior, not whether the skill loaded.
 """
 
 from __future__ import annotations
@@ -13,7 +15,6 @@ import json
 import re
 import sys
 from collections import defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -93,7 +94,7 @@ def behavior_pass(attempt: dict[str, Any]) -> bool:
     )
 
 
-def classify_record(record: dict[str, Any], active_task_ids: set[str] | None = None) -> dict[str, Any]:
+def classify_record(record: dict[str, Any]) -> dict[str, Any]:
     """Classify behavior cases in one record and collect skipped entries."""
     attempts = record.get("attempts", [])
     variant_ids = {attempt.get("variant_id") for attempt in attempts}
@@ -103,7 +104,7 @@ def classify_record(record: dict[str, Any], active_task_ids: set[str] | None = N
     by_case: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for attempt in attempts:
         task_id = attempt.get("task_id")
-        if not task_id or not attempt.get("variant_id") or (active_task_ids is not None and task_id not in active_task_ids):
+        if not task_id or not attempt.get("variant_id"):
             continue
         if behavior_criteria(attempt):
             by_case[task_id].append(attempt)
@@ -148,57 +149,32 @@ def classify_record(record: dict[str, Any], active_task_ids: set[str] | None = N
     return {"skipped": False, "cases": cases}
 
 
-def newest_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Keep only the newest record for each experiment ID."""
-    latest: dict[str, tuple[datetime, int, dict[str, Any]]] = {}
-    unkeyed: list[dict[str, Any]] = []
-    for index, record in enumerate(records):
-        experiment_id = record.get("experiment_id")
-        if not experiment_id:
-            unkeyed.append(record)
-            continue
-        recorded_at = str(record.get("recorded_at", ""))
-        try:
-            timestamp = datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
-            if timestamp.tzinfo is None:
-                timestamp = timestamp.replace(tzinfo=timezone.utc)
-        except ValueError:
-            timestamp = datetime.min.replace(tzinfo=timezone.utc)
-        current = latest.get(experiment_id)
-        if current is None or (timestamp, index) > (current[0], current[1]):
-            latest[experiment_id] = (timestamp, index, record)
-    return unkeyed + [entry[2] for entry in latest.values()]
-
-
 def render_report(
     records: list[dict[str, Any]],
     task_ids: dict[str, str],
     directories: list[str],
-    active_task_ids: set[str] | None = None,
-) -> tuple[str, bool, int]:
-    """Render the report; return it, whether any leak exists, and the behavior case count."""
-    output = ["Eval behavior leak report"]
-    has_leaks = False
+) -> str:
+    """Render the report of bare-pass candidates, both-fail cases and helped cases."""
+    output = ["Eval bare-pass candidate report"]
     skipped: list[str] = []
     behavior_case_count = 0
     for record in records:
         name = f"{record.get('experiment_id', 'unknown experiment')} [{record.get('_source_name', 'record')}]"
-        classification = classify_record(record, active_task_ids)
+        classification = classify_record(record)
         if classification["skipped"]:
             skipped.append(name)
             output.append(f"\n{ name }: skipped ({classification['reason']})")
             continue
         cases = classification["cases"]
-        has_leaks = has_leaks or any(case["leak"] for case in cases)
         leaks = sum(case["leak"] for case in cases)
         both_failures = sum(case["both_fail"] for case in cases)
         helped = sum(case["helped"] for case in cases)
         behavior_case_count += len(cases)
         output.append(
-            f"\n{name}: {len(cases)} behavior cases, {leaks} leaks, "
+            f"\n{name}: {len(cases)} behavior cases, {leaks} bare-pass candidates, "
             f"{both_failures} both-fail, {helped} helped"
         )
-        for label, key in (("Leaks", "leak"), ("Both-fail", "both_fail"), ("Helped", "helped")):
+        for label, key in (("Bare-pass candidates", "leak"), ("Both-fail", "both_fail"), ("Helped", "helped")):
             grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
             for case in cases:
                 if case[key]:
@@ -218,11 +194,11 @@ def render_report(
     output.insert(1, f"Behavior cases: {behavior_case_count}")
     if skipped:
         output.append("\nSkipped records: " + ", ".join(skipped))
-    return "\n".join(output), has_leaks, behavior_case_count
+    return "\n".join(output)
 
 
 def selftest() -> bool:
-    """Catch silent misclassification of leaks, both-fail cases, and firing-only cases."""
+    """Catch silent misclassification of bare-pass candidates, both-fail cases, and firing-only cases."""
     def attempt(task_id: str, variant_id: str, status: str, score: float, firing: float = 0.0) -> dict[str, Any]:
         return {
             "task_id": task_id,
@@ -274,29 +250,26 @@ def selftest() -> bool:
     if observed != expected:
         print(f"selftest failed: expected {expected!r}, got {observed!r}", file=sys.stderr)
         return False
-    old = {"experiment_id": "e", "recorded_at": "2026-10-01T00:00:00Z", "attempts": []}
-    new = {"experiment_id": "e", "recorded_at": "2026-10-02T00:00:00Z", "attempts": []}
-    if newest_records([new, old]) != [new] or classify_record({"attempts": [attempts[0]]})["skipped"] is not True:
-        print("selftest failed: newest_records or skipped-record handling", file=sys.stderr)
+    if classify_record({"attempts": [attempts[0]]})["skipped"] is not True:
+        print("selftest failed: skipped-record handling", file=sys.stderr)
         return False
     return True
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse leak-check arguments."""
+    """Parse report arguments."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--record", type=Path, help="read one provenance record instead of the directory")
-    parser.add_argument("--check", action="store_true", help="exit 1 when a current behavior case leaks")
     parser.add_argument("--selftest", action="store_true", help="run the inline classifier self-test")
     return parser.parse_args()
 
 
 def main() -> int:
-    """Report behavior leaks or run the self-test."""
+    """Report bare-pass candidates or run the self-test."""
     args = parse_args()
     if args.selftest:
-        if args.record or args.check:
-            print("--selftest cannot be combined with --record or --check", file=sys.stderr)
+        if args.record:
+            print("--selftest cannot be combined with --record", file=sys.stderr)
             return 2
         if not selftest():
             return 1
@@ -310,15 +283,8 @@ def main() -> int:
     else:
         records = load_records(DEFAULT_PROVENANCE_DIR)
     task_ids, directories = task_directories(TASKS_DIR)
-    if args.check and args.record is None:
-        records = newest_records(records)
-    active_ids = set(task_ids) if args.check else None
-    report, has_leaks, case_count = render_report(records, task_ids, directories, active_ids)
-    print(report)
-    if args.check and case_count == 0:
-        print("--check evaluated no behavior cases", file=sys.stderr)
-        return 1
-    return 1 if args.check and has_leaks else 0
+    print(render_report(records, task_ids, directories))
+    return 0
 
 
 if __name__ == "__main__":
