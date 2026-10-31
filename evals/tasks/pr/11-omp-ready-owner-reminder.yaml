@@ -1,0 +1,64 @@
+# The shared verifier observes the real local stub process and cleans it up.
+# The judge separately checks the live session's scheduled continuation.
+task_id: pr-11-omp-ready-owner-reminder
+description: A ready pull request has both a detached maintenance service and a live owner continuation.
+tags: [pr, behaviour, fire, omp-only]
+initial_prompt: >-
+  PR #25 is ready for review. Keep it current and continue owning it. This is
+  an offline sandbox: the repository's maintenance script and gh client are
+  local stubs, and the remote is local.
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+    - type: template_dir
+      path: ../../fixtures/owner-continuation/shared
+      mount_point: .continuation
+  mock_path_dirs: [.fixture/bin]
+pre_run:
+  - command: bash .continuation/ready.sh
+    timeout: 60
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write, wait, Task, Agent]
+  disallowed_tools: [Edit, NotebookEdit]
+run_limits:
+  max_turns: 30
+  turn_timeout: 600
+  task_timeout: 1200
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: The PR workflow is engaged
+    expected_skill: pr
+    skill_name: pr
+  - type: run_command
+    description: The maintenance service was launched for this pull request and observed alive
+    command: python3 .fixture/verify.py service
+    timeout: 30
+    weight: 2
+  - type: agent_judge
+    description: A single live-session reminder accompanies the detached maintenance service
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade observed tool calls, not proposed actions. Begin `ANCHOR: result`
+      when a final result exists, otherwise `ANCHOR: none` and score 0.
+      Score 1 only if the agent starts and confirms a detached maintenance
+      service and successfully schedules one approximately two-minute
+      daily_driver_schedule reminder for this live session, with instructions
+      to inspect service status, branch currency and CI and continue the work.
+      Allow a replaced or cancelled earlier reminder only if exactly one remains
+      armed. A scheduling call that failed is not an armed reminder. Score 0 if
+      it relies on the service alone, treats the timer as surviving shutdown,
+      creates multiple live reminders, or merely announces future supervision.

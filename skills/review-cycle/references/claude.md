@@ -150,9 +150,15 @@ every wake ends in a read whatever the wake was for. Note whose it is, because
 End the wait
 ------------
 
-Both halves are running until something stops them, and neither stops itself.
-On the wake that ends the wait — every check reported, however it reported, or
-the fifteen-minute cap:
+At each fifteen-minute observation-window boundary, read the head and both CI
+sources again. Nonterminal work renews the window with the existing single
+timer and subscription; do not ask the user to restart monitoring. Expiration
+alone is not a human blocker. A changed head invalidates earlier conclusions.
+Diagnose failed observation routes and retain supported continuation while
+permitted work remains.
+
+Both halves stay active across window renewals. End this wait only when CI
+has reported or a genuine blocker or user stop requires it:
 
 - **Cancel the timer in the slot** with
   `mcp__Claude_Code_Remote__delete_trigger` — the backstop this wait armed, or

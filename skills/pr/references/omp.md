@@ -77,20 +77,53 @@ restart. When the user stops maintenance, kill `proc://<name>` and do not
 restart it on a stale wake. Stop any separate CI watcher through
 `review-cycle`'s route.
 
-`daily_driver_schedule` is not durable: its timers are cleared on shutdown.
-Do not use it for this cadence. The detached watch starts while draft, but
-does not replace `review-cycle`'s bounded CI watcher or resume the owner.
+The detached service supplies mechanical updates across client exits. It does
+not replace `review-cycle`'s bounded CI watcher or the owner continuation below.
+
+The owner continuation
+=======================
+
+**Keep one managed two-minute owner reminder alongside the detached service.**
+`daily_driver_schedule({delaySeconds: 120, message: <continuation>})` sends a
+follow-up turn to the live session, including when the owner is idle. Keep
+the returned `triggerId`; `daily_driver_cancel_schedule({triggerId})` cancels
+it. Before any turn ends with this PR open and owned, ensure that slot is
+occupied. Reuse an armed timer on unrelated wakes; never arm one per event.
+When it fires, clear the slot, take the catch-up look, then rearm if work remains.
+
+The prompt names the PR and branch, the maintenance and CI services/window,
+and the next unfinished review or readiness action. It says to check the user
+stop first, inspect service failures, read current-head evidence, and continue
+permitted work. A timeout is not a handoff to the user. During a CI wait,
+`review-cycle` reuses this slot rather than cancelling the only future owner
+turn. A reminder does not restart a live watcher. Coalesce a reminder and a
+service completion by rereading state, not by launching duplicate work.
+
+A stopped maintenance service is unfinished owner work, not a successful
+watch. Exit 3 requires conflict inspection: resolve a plain mechanical
+conflict under the existing policy; ask only for a semantic decision. Other
+failures require diagnosis before restart. Report the agent state separately
+from service state; a detached process alone does not establish active review.
+
+Timers are cleared on session shutdown. This reminder supplies live-session
+continuation, not cross-shutdown recovery. If scheduling fails, diagnose the
+failure and name the exact missing continuation capability; do not claim an
+armed owner. Keep supervising an existing CI service where possible.
+
+On merge, close, or user stop, cancel the reminder and stop owned services.
+Cancel before a stop-time push. A queued stale wake checks that stop first
+and does no work; it must not rearm itself.
 
 The catch-up look
 -----------------
 
 A stale wake after a user stop does no work. Otherwise every owner turn
-returning to the PR first reads `proc://keep-current-<number>` and runs the
-`Base currency checkpoint`. Then assess current-head CI through
-`review-cycle`'s three-source read and bounded wait. Report failed checks or
-missing evidence as unfinished work. A durable service preserves mechanical
-updates, not autonomous review; name the owner-resume requirement when no
-owner turn is available.
+returning to the PR first reads `proc://keep-current-<number>` and inspects
+failures, then runs the `Base currency checkpoint`. Assess current-head CI
+through `review-cycle`'s three-source read and renewable bounded wait.
+Continue diagnosis, review, and readiness as applicable. Known-running CI
+retains a real reminder or supervised wait; a detached service alone is not
+an owner continuation. Rearm the single slot before ending an unfinished turn.
 
 For an undertaking, continue its review, ready gate, and milestone through
 [`undertake`'s route](../../undertake/references/omp.md). A direct PR has no

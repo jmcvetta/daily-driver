@@ -201,10 +201,15 @@ named-service mode. If persistence fails, stop the service and report the
 failure; do not claim that CI remains watched.
 
 This durability does not turn the process into an agent. A persistent service
-can continue its bounded CI command after the client exits, but it cannot
-reopen or resume a terminated orchestrator, interpret the result, mark the
-wave `done`, or launch the next wave. A later `embark` invocation must read the
-graph and pull requests before continuing agent work.
+can continue its bounded command after a client exits, but cannot reopen a
+terminated owner. While the session is live, each implementor retains `pr`'s
+owner reminder across renewable CI windows. An implementor result that says
+only a detached service remains is unfinished, not an active agent watch.
+Inspect its lifecycle and recover an ended owner on the same branch under
+`Recovering an implementor`; do not wait for a user status request. Preserve
+genuine prerequisites and avoid a second writer alongside a live owner.
+After actual session shutdown, a later invocation must read the graph and
+PR evidence; do not claim cross-shutdown recovery.
 
 While the orchestrator lives, the backstop is the timer pair:
 `daily_driver_schedule` arms it ten minutes out, and

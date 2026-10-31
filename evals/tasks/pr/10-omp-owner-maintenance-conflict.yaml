@@ -1,0 +1,60 @@
+# The local base and feature commits edit the same line. The recorded service
+# exit reports a conflict; a live owner can inspect and attempt the real merge.
+task_id: pr-10-omp-owner-maintenance-conflict
+description: A live owner investigates a maintenance conflict instead of leaving it to a detached service.
+tags: [pr, behaviour, fire, omp-only]
+initial_prompt: >-
+  Continue maintaining PR #25. The local maintenance service left its latest
+  output in .fixture/service.log. This sandbox uses a local Git remote and an
+  offline gh client; please handle what you find.
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+    - type: template_dir
+      path: ../../fixtures/owner-continuation/shared
+      mount_point: .continuation
+  mock_path_dirs: [.fixture/bin]
+pre_run:
+  - command: bash .continuation/conflict.sh
+    timeout: 60
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write, Edit, wait, Task, Agent]
+  disallowed_tools: [NotebookEdit]
+run_limits:
+  max_turns: 40
+  turn_timeout: 600
+  task_timeout: 1200
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: The PR workflow is engaged
+    expected_skill: pr
+    skill_name: pr
+  - type: agent_judge
+    description: The live owner acts on the conflict and does not claim that the service resolved it
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade actions in the tool calls and the final result, not plans. Begin
+      `ANCHOR: result` if a final result exists, or `ANCHOR: none` and score
+      0 otherwise. The fixture service exited 3 with a merge conflict, and the
+      local base and feature branches actually conflict in uploader.txt.
+      Score 1 only if the owner inspects the recorded failure and takes a real
+      diagnostic or resolution action on the conflicting branches or file
+      (for example an attempted merge and inspection of the conflict), and
+      accurately reports any remaining unresolved work. A failed attempt is
+      not a resolved conflict. Score 0 if the owner just restarts or relies on
+      the service, asks the user to take over a resolvable conflict, claims a
+      clean merge without evidence, or only promises future action.

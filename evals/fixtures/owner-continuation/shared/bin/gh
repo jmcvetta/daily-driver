@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Provide local CI transitions while delegating other PR operations."""
+import json
+import os
+import re
+import subprocess
+import sys
+
+root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+args = sys.argv[1:]
+with open(os.path.join(root, "scenario"), encoding="utf-8") as source:
+    scenario = source.read().strip()
+with open(os.path.join(root, "windows"), encoding="utf-8") as source:
+    windows = int(source.read())
+with open(os.path.join(root, "operations.jsonl"), "a", encoding="utf-8") as log:
+    log.write(json.dumps({"args": args, "windows": windows}) + "\n")
+
+if (args[:2] == ["pr", "checks"] and "--watch" in args) or args[:2] == ["run", "watch"]:
+    windows += 1
+    with open(os.path.join(root, "windows"), "w", encoding="utf-8") as output:
+        output.write(str(windows))
+    if windows == 1:
+        print("watch expired" if scenario == "empty" else "make check\tpending\tCI is still running")
+        sys.exit(124)
+    state_path = os.path.join(os.path.dirname(root), ".fixture", "state.json")
+    with open(state_path, encoding="utf-8") as source:
+        state = json.load(source)
+    state["ci_in_flight"] = False
+    if scenario == "success":
+        state["ci_green_for"] = [state["pr"]["head"]]
+    with open(state_path, "w", encoding="utf-8") as output:
+        json.dump(state, output)
+    print("make check\t" + ("fail" if scenario == "failure" else "pass"))
+    sys.exit(1 if scenario == "failure" else 0)
+
+if args[:2] == ["run", "view"]:
+    print("make check failed: uploader retry test returned an unexpected result")
+    sys.exit(0)
+
+if args and args[0] == "api":
+    path = next((arg for arg in args[1:] if "check-runs" in arg or "/status" in arg or "actions/runs?" in arg), "")
+    if path:
+        match = re.search(r"(?:commits/|head_sha=)([0-9a-f]{7,40})", path)
+        sha = match.group(1) if match else ""
+        terminal = windows >= 2
+        conclusion = ("failure" if scenario == "failure" else "success") if terminal else None
+        if "check-runs" in path:
+            payload = {"total_count": 1, "check_runs": [{"name": "make check", "status": "completed" if terminal else "in_progress", "conclusion": conclusion, "head_sha": sha}]}
+        elif "/status" in path:
+            payload = {"state": "success" if terminal and conclusion == "success" else "pending", "statuses": []}
+        else:
+            payload = {"total_count": 1, "workflow_runs": [{"id": 901, "name": "CI", "head_sha": sha, "status": "completed" if terminal else "in_progress", "conclusion": conclusion, "run_attempt": 1, "pull_requests": [{"number": 25}]}]}
+        if scenario == "empty":
+            if "check-runs" in path:
+                payload = {"total_count": 0, "check_runs": []}
+            elif "/status" in path:
+                payload = {"state": "pending", "statuses": []}
+            else:
+                payload = {"total_count": 0, "workflow_runs": []}
+        if "--slurp" in args:
+            payload = [payload]
+        text = json.dumps(payload)
+        for flag in ("--jq", "-q"):
+            if flag in args:
+                result = subprocess.run(["jq", "-r", args[args.index(flag) + 1]], input=text, text=True, capture_output=True)
+                if result.returncode == 0:
+                    text = result.stdout
+        print(text)
+        sys.exit(0)
+
+os.execv(os.path.join(os.path.dirname(root), ".fixture", "bin", "gh"), ["gh", *args])

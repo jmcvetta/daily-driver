@@ -262,13 +262,13 @@ Take the common catch-up look first, then continue this sequence:
 **Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s three-source read remains the CI verdict.
-Pending or unregistered checks use its persistent bounded watcher. Failed
-checks return to `Fix, answer, resolve, push`; unavailable logs are a named
-evidence blocker, not green. When CI on the current head is green and the
-gate's notice read finds no completion notice, post the notice before
-continuing the ready-gate work. A durable Omp service preserves its process,
-but does not resume the owner: where no owner turn is running, report unfinished
-work and the owner-resume requirement rather than claiming autonomous review.
+Pending or unregistered checks retain its renewable bounded observation and
+the common PR owner reminder. Window expiration is not a task blocker.
+Failed checks return to `Fix, answer, resolve, push`; unavailable logs require
+diagnosis, not a green verdict. When CI on the current head is green and the
+gate's notice read finds no completion notice, post it before continuing the
+ready gate. A live idle owner must retain the common reminder. Process
+persistence alone does not resume an owner after session shutdown.
 
 The common merge loop remains mechanical. It does not assess the gate or
 mark a draft ready.
@@ -282,6 +282,7 @@ The stop
 | Operation | Call |
 | --------- | ---- |
 | Read the issue's comments, for the claim and any equivalent handoff | `gh issue view <number> --json comments` |
+| Cancel the owner reminder | `daily_driver_cancel_schedule({triggerId})`, using the common PR slot |
 | End the merge watch | `write proc://keep-current-<number>/kill`, the service name it was started under |
 | Post the handoff | `gh issue comment <number> --body-file <path>` |
 
