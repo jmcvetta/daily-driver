@@ -55,6 +55,7 @@ check-omp-extension:
   - 'scripts/check-omp-extension.mjs'
   - 'extensions/daily-driver.js'
   - 'extensions/role-default-helper.mjs'
+  - 'extensions/task-state.mjs'
   - 'package.json'
 check-model-class-roles:
   - 'scripts/check-model-class-role-defaults.mjs'
@@ -110,3 +111,5 @@ check-omp-embark-title-live:
   - 'skills/embark/**'
   - 'skills/session-title/**'
   - 'evals/coder-eval-omp/src/coder_eval_omp/tools.py'
+  - 'scripts/check-omp-task-state-live.py'
+  - 'extensions/task-state.mjs'

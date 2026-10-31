@@ -101,6 +101,14 @@ genuinely does not settle it:
   rather than in `attic/skills/` — offers its walkthrough before applying
   anything. This skill overrides none of them.
 
+Before asking for a confirmation, check whether its requirement is already
+satisfied. Follow the constitution's authorization record and `undertake`'s
+operational escalation contract: name the changed scope, condition or
+fresh-confirmation rule that requires another decision. A failed attempt,
+compaction, handoff or new session is not itself a changed requirement.
+Existing approval never waives an explicit fresh-confirmation rule or a
+higher-priority restriction.
+
 **A question that survives is asked in prose, not in the widget.**
 The widget is closed on every harness, each by its own deny adapter — the
 reference file for the harness in use names the adapter and what it does
