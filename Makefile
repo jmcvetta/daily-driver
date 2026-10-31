@@ -259,16 +259,17 @@ check-omp-cache-clean:
 check-scripts:
 	shellcheck -x --source-path=SCRIPTDIR \
 		skills/*/scripts/*.sh scripts/*.sh \
-		evals/fixtures/*/shared/*.sh evals/fixtures/*/cases/*/*.sh
+		evals/fixtures/*/shared/*.sh
 
 # Exercise the real Omp keep-current loop against an offline GitHub client.
 check-pr-keep-current:
 	python3 scripts/test-pr-keep-current.py
 
-# The live embark barrier needs a real Omp but not the eval guard: issue://
-# must reach its offline fixture client to provide the canonical issue metadata.
+# Exercise live Omp title and task-state regressions with local providers.
+# The title barrier needs native issue:// access rather than the eval guard.
 check-omp-embark-title-live:
 	python3 scripts/check-omp-embark-title-live.py
+	python3 scripts/check-omp-task-state-live.py
 
 
 
@@ -365,9 +366,9 @@ evals-setup-claude:
 evals-setup-omp:
 	scripts/evals-setup-omp.sh evals/experiments/omp-*.yaml
 
-# evals-plan: validate every eval case without calling a model. Free, and it
-# catches the config errors that otherwise cost a paid run to discover -- so
-# run it before every `evals-run`.
+# evals-plan: validate every eval case without calling a model. It catches
+# config errors before they consume subscription allowance or metered spend.
+# Run it before every `evals-run`.
 #
 # Both eval targets `cd evals` first, and that is load-bearing twice over. The
 # plugin path in the experiment is relative and resolves against the process
@@ -419,9 +420,9 @@ evals-plan: evals-setup-claude evals-variants
 evals-variants:
 	uv run --frozen python3 scripts/evals-variants.py evals/experiments/*.yaml
 
-# evals-run: the whole suite on Claude Code, both variants. Costs real money --
-# see evals/README.md for what and why. Narrow it with TASKS=, e.g.
-#   make evals-run TASKS='tasks/pr/*.yaml'
+# evals-run: the whole suite on the Claude Code subscription, both variants.
+# See evals/README.md for credential and authorization boundaries. Narrow it
+# with TASKS=, e.g. make evals-run TASKS='tasks/pr/*.yaml'.
 TASKS ?= tasks/*/*.yaml
 
 # JOBS: max concurrent subject or judge replicates. Subject runs use `coder-eval

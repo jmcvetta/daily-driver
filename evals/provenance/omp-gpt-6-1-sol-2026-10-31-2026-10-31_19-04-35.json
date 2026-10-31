@@ -1,0 +1,148 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The returning writer does not append a duplicate after another writer",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The returning writer does not append a duplicate after another writer",
+            "duration_seconds": 6.07,
+            "findings": [
+              "Initial attribution: gpt-6.1-sol / Omp 18.14.1 / 01a191d8-f4f1-740c-83e9-7bc47d0dadb0.",
+              "Revised attribution blocks appear exactly once each and in the required order.",
+              "Both complete bodies preserve Closes #42 and timeout retry behavior; the revised body states that the offline fixture passed."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "8ea5319cab02cd86c05ce8ea00a90593c945101158a8e59bdbe9d925af966f6f",
+            "rationale": "The final [RESULT - SUCCESS] reply contains two complete descriptions. The revised description retains exactly one copy of the initial writer\u2019s full attribution tuple, followed by exactly one complete fixture-editor attribution block, while preserving Closes #42 and timeout retries and adding the offline fixture result.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1173,
+              "output": 158
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "a6b427d029d41710b5b7df7ba1cfe0dc599bad184c2543ffafff826f44d5dc98"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-body-11-provenance-returning-writer",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 34.76569581031799,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-body-11-provenance-returning-writer",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 26240,
+        "output_tokens": 935,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 22997
+      },
+      "tokens": 50172,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-31T19:05:10.112267",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "a6b427d029d41710b5b7df7ba1cfe0dc599bad184c2543ffafff826f44d5dc98",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 1173,
+      "output": 158
+    }
+  },
+  "plugin_revision": {
+    "commit": "eaba53ee831c62e7fb1a70d6e18f1f0a4dd638ea",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-31T12:05:18.308050+00:00",
+  "run_id": "2026-10-31_19-04-35",
+  "schema_version": 5,
+  "started_at": "2026-10-31T19:04:35.341285",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-body-11-provenance-returning-writer": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "pr-body-11-provenance-returning-writer"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

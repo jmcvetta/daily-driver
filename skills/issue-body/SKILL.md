@@ -154,8 +154,8 @@ approved assignment.
 
 Every complete issue-body draft intended for a write includes the block it
 would publish. Withholding the live write does not remove the provenance
-requirement. Follow `provenance`'s placement and field rules, and preserve
-earlier provenance blocks on an edited issue.
+requirement. Follow `provenance`'s placement, field, and distinct-attribution
+rules on an edited issue.
 
 
 **Relationships are edges, not prose.** What an issue waits on is
@@ -219,8 +219,8 @@ Unrelated text is not reflowed and existing issues are not swept.
 
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Summary`, never
-a `provenance` block below the closing `---` rule, which this migration
-leaves alone. When selecting an old task for work, assess its body
+a `provenance` block below the closing `---` rule, which follows `provenance`'s
+distinct-attribution rule. When selecting an old task for work, assess its body
 against the class rubric and migrate only that issue before dispatch. Map the
 former `standard` class to `implementation` and `advanced` to `reasoning`, based
 on the grounded handoff; do not change its rationale or capability requirement,
@@ -242,11 +242,10 @@ The API contract and edge cases are fixed; implementation follows the existing
 adapter pattern.
 ```
 
-`embark` resolves the required class to an eligible concrete route. It never
-uses the issue body as concrete-model provenance. `undertake` validates the
-section and repairs an old or invalid body before its claim. A non-frontier
-standalone session does not gate on its own identity, but a frontier session
-must hand ordinary implementation to an eligible non-frontier route or stop
-with a configuration gap. Any frontier assignment must carry explicit user
-approval and its exact envelope before execution. Claim comments, readiness
-reports, and execution records retain the concrete model the harness reports.
+`undertake` validates and, where grounded, migrates the section before routing.
+Classed undertaking selects the exact class before worktree creation or claim,
+on the same family, provider, backend, and authentication route. It prefers a
+verified in-session switch; a constrained full handoff is the fallback.
+Unavailable control or route evidence is a stop, not a standalone bypass.
+Any frontier assignment still needs explicit user approval and its exact
+envelope. Claim comments and execution records retain the observed model.

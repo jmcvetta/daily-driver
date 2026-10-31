@@ -30,6 +30,72 @@ Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
 
+## Task continuation and approval evidence
+
+The constitution requires agents to diagnose ordinary failures, preserve
+applicable approval, and finish independent permitted work before pausing.
+`undertake` owns the detailed escalation contract. The rule also applies to
+ordinary repository work.
+
+On Omp, `extensions/task-state.mjs` registers `daily_driver_task_state` and
+uses `session_stop` for bounded correction. Task scope, source-anchored
+authorization, tool evidence and correction counts live in private,
+active-branch session entries. The adapter restores a compact handoff during
+context preparation and compaction. `status` returns bounded source excerpts;
+`status` with a JSON `record` containing `sourceId` returns the original
+authority source or retained tool evidence. Tool input/output payloads have
+bounded previews, truncation metadata and a fingerprint; the adapter does not
+persist a second full copy of every file written or command result.
+The [Omp undertaking reference](../skills/undertake/references/omp.md#task-evidence-state)
+defines the records and exact-quote limits.
+
+An unsupported unfinished stop receives at most two corrective continuations
+per unchanged observed condition. Restarting the process does not renew that
+allowance. Explicit cancellation and an aborted stop handler prevent further
+correction. Exhaustion persists an execution failure and shows an error
+notification without scheduling another model turn. Ordinary questions do not
+automatically activate a task.
+
+Enforcement also requires an accessible task-state tool: either direct
+exposure, or Omp's active `write` device route. A restricted tool selection
+without either route receives a capability notice, not corrections that demand
+an inaccessible tool. The adapter never enables tools or calls this a missing
+user approval. Shared workflow instructions still apply.
+
+These checks validate provenance, scope fields and referenced observations.
+They do not prove that arbitrary prose grants permission, that every possible
+route was exhausted, or that reported completion satisfies acceptance criteria.
+The tool does not replace harness permissions. Original approval sources,
+conditions and safety restrictions remain authoritative. A copied agent
+handoff cannot grant approval in another session.
+
+`scripts/check-omp-task-state-live.py` exercises the installed Omp with a local
+scripted provider, persistent session resume and RPC abort. It makes no live
+model request. Behavioral cases separately measure whether a model uses
+approval and completes permitted actions; see [evaluation guidance](../evals/README.md).
+
+### Hook-harness boundary
+
+Claude Code and Codex document stop interception, but Daily Driver does not
+claim the Omp adapter is enforced there:
+
+- [Claude Code's `UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit)
+  also receives scheduled tasks, background-agent reports and peer messages.
+  Its documented event has no origin discriminator. Treating every prompt
+  event as a user source would manufacture authority and could restart
+  cancelled work.
+- [Codex documents `Stop` and `Interrupt`](https://developers.openai.com/codex/hooks).
+  Its stop continuation becomes a new user prompt, so an adapter must exclude
+  its own messages from authority and retry renewal. The shared plugin hook
+  manifest cannot register Codex's `Interrupt` event: Claude's strict plugin
+  validator reports it as unknown and rejects the manifest.
+
+These are integration limits, not a claim that either harness lacks a stop
+hook. Their shared workflow and handoff contracts preserve approval references
+and require blocker evidence. Runtime parity needs a supported transport with
+verified input-origin and cancellation semantics, not guessed transcript fields
+or omission of cancellation handling.
+
 ## Omp task roles and worktrees
 
 The Omp installation defines `mechanical`, `implementation`, `reasoning` and
@@ -41,6 +107,32 @@ credentials. Use `/model` → Roles to assign models. Existing `omp_configs/`
 files remain process overlays; assignments present at startup take precedence,
 and later edits may require an Omp restart.
 
+Classed undertaking routes through `daily_driver_route_undertaking` before
+worktree creation or claim. It selects the exact class on the same model family,
+provider, backend, and authentication route, including delegated issue workers
+and visible fallbacks. The tool reports `pending`, `verified`, or `blocked`;
+only an observed, verified execution identity permits work. An unavailable or
+incompatible mapping is a configuration gap, not permission to rewrite roles.
+Eligible OAuth account refresh or rotation is allowed. Independently configured
+`reviewer`, `scout`, `security-reviewer`, and `seance` helpers are not issue
+implementation workers and retain their configured routes; implementation
+workers and their execution fallbacks retain the strict route.
+
+After the pull request is ready, or answer-only research is completed and
+recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
+before reusing the session for another issue. Do not finish stopped or
+incomplete work. Selecting a different issue returns an error without replacing
+the existing owner or route; finish the completed undertaking or resume the
+existing one before selecting another. A finish call with the wrong issue also
+returns an error without changing the existing state.
+
+Omp prefers its extension's in-session switch. A full handoff needs a surface
+that can constrain and verify the same route and has one owner. Claude's
+host-side Agent SDK model setter is not an agent-callable tool; Codex's
+delegation model control is unmeasured. Neither is a reason to invent a switch
+tool or assume fallback and authentication constraints. Stop before ownership
+when the available surface cannot establish them.
+
 Omp does not relocate a live session when it creates a task worktree. Use the
 verified absolute task-worktree paths for shell and file-tool operations.
 
@@ -51,9 +143,12 @@ plugin-driven movement is not available.
 The guard rejects primary-checkout and detached-worktree `write` and `edit`
 calls. It also denies Git commands that rewrite the primary checkout's files.
 Attached feature-worktree mutations remain available. The command parser is
-conservative: it rejects unresolved commands and unterminated quotes. It does
-not audit programs launched through `make`, Python or scripts, so those
-programs must also stay inside the task worktree.
+conservative: it rejects unresolved commands and unterminated quotes. A literal
+`ln` command takes pathname operands, so paths named `git` or `bash` do not
+become executable candidates. Nested substitutions and later commands still
+receive the normal checks. Unknown wrappers retain conservative scanning.
+The guard does not audit programs launched through `make`, Python or scripts,
+so those programs must also stay inside the task worktree.
 
 Use absolute task-worktree paths in file tools. Omp resolves file-tool paths
 against the session working directory, not a directory change made by a shell.

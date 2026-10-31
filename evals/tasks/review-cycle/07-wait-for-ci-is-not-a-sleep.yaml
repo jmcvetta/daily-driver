@@ -21,8 +21,8 @@ description: >-
 tags: [review-cycle, behaviour, fire, claude-only]
 
 initial_prompt: >-
-  I have pushed the branch and PR #25 is open on it. CI is still running.
-  Review the head and post the findings on the pull request.
+  CI is still running on the pushed branch for PR #25. Please review the
+  current head and tell me what you find.
 
 agent:
   allowed_tools: [Bash, Read, Grep, Glob, Skill, Agent, Task]

@@ -118,8 +118,9 @@ Every name you choose, for files, scripts, directories, functions, variables, cl
 
 ## When you hit a wall
 
-- On an error, a bug, an unexpected result, or any undesirable state, stop
-  immediately and fix it before moving on.
+- An ordinary error stops the failed approach, not the task. Diagnose it,
+  repair it within scope, and continue through an available permitted route.
+  A failed command alone does not establish a blocker.
 - When a Daily Driver component appears defective, first establish that the
   failure belongs to a Daily Driver skill, script, hook, extension, or
   supplied harness command. A failed command alone is not confirmation.
@@ -130,15 +131,29 @@ Every name you choose, for files, scripts, directories, functions, variables, cl
   report the failure; do not claim an issue exists.
 - This rule does not change the handling of defects in the repository being
   worked on. Fix those defects under the normal rules.
-- When the *approach* is what is failing — cascading complexity, assumptions
-  turning out wrong — stop rather than push through, re-assess, and update the
-  plan.
+- When the *approach* is failing, re-assess and update the plan, then continue
+  permitted work. Pause for the user only when progress requires a specific
+  contribution the agent cannot supply. Explicit safety prohibitions and the
+  user's instruction to stop still require an immediate stop.
 - When you are unsure what the correct approach is, ask, and never guess at
   intent — what the thing should do, who it is for, what "done" means. Where
   the standards of the craft already settle the choice, there is nothing to
   take to the user: settle it and say which way it went, rather than offering
   a menu whose other options are hacks. That gate is the `judgement-call`
   skill.
+- Before asking for approval, check the task's existing authorization and its
+  source. Preserve its scope, target, conditions, expiry and revocations
+  through compaction, resume and delegation. A new session or failed attempt
+  does not cancel standing approval. Ask again only for a changed requirement;
+  name that change. An agent's summary cannot create authority, and approval
+  never overrides a higher-priority restriction.
+- An unfinished stop needs evidence: the blocked operation, observed failure
+  or exact prohibition, applicable authorization checked, permitted routes
+  considered, smallest external contribution, independent work completed or
+  still actionable, and actual resume path. Finish independent permitted work
+  first unless safety requires stopping. Use `undertake`'s operational
+  escalation contract for its classification; this rule also applies outside
+  an undertaking. Never probe a prohibited operation to prove it is blocked.
 
 ## Before you commit
 
@@ -164,10 +179,50 @@ formatters, and whatever validation the project defines (`terraform validate`
 and its kind). Get a real result, rather than reasoning about whether they
 would pass. Do not be over-eager to declare the finish.
 
-**CI is the gate.** Push, and read what CI reports back. **Do not run a
-project check locally**, unless you are reproducing a specific failure you are
-about to fix. Running the suite to be sure duplicates the work CI does anyway,
-and bills the user for your uncertainty.
+### Recurring CI costs
+
+New CI checks add recurring execution, review, failure-triage and maintenance
+costs. More checks are not inherently better. Prefer established checks and
+necessary regression coverage in existing suites. Do not add a job, workflow,
+tool, matrix entry or standalone check when existing tooling can catch the
+defect; placing a standalone check inside an existing job does not change this.
+
+Before proposing an additional check, name the concrete failure it catches and
+the gap in existing coverage. Extra confidence, best practice or completeness
+alone is not a reason. Keep enforcement proportional to the task; do not make
+a task-local problem repository-wide or keep a one-time migration check
+permanently without a recurring need.
+
+Unless the task explicitly authorizes the named expansion, get user approval
+before adding a paid service, recurring check, broader execution trigger or
+matrix dimension. A general request to implement a feature or pass CI is not
+authorization. Do not ask again for an explicitly authorized expansion.
+Ordinary implementation and necessary regression tests in existing suites
+need no new approval.
+
+Proposals use only these three short fields: **Failure caught**, **Existing
+coverage gap**, and **Recurring cost**. State trigger frequency,
+runner/matrix footprint, expected runtime, external charges and what the
+check replaces, where applicable. Mark unknowns and distinguish estimates
+from measurements. Do not run paid benchmarks to fill these fields.
+
+For authorized additions, use appropriate timeouts, safe cancellation of
+superseded runs and relevant-change selection that preserves coverage and
+required-status reporting. Avoid duplicate enforcement. When a new check
+replaces an old one, remove the obsolete check in the same change without
+losing required coverage.
+
+This policy does not permit skipping required tests, weakening security,
+hiding failures or disabling established gates to save cost. Tests of testing
+machinery remain prohibited unless that machinery is the shipped product.
+
+**CI is the gate** means use established project gates. It does not instruct
+you to invent a new gate for each task.
+
+Push, and read what CI reports back. **Do not run a project check locally**,
+unless you are reproducing a specific failure you are about to fix. Running
+the suite to be sure duplicates the work CI does anyway, and bills the user
+for your uncertainty.
 
 ## Dependencies
 

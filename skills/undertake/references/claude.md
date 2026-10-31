@@ -49,10 +49,13 @@ frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Non-frontier standalone work keeps its existing route without a class-to-model
-gate. A frontier session resolves its actual route before branch creation or
-claim and must hand ordinary work to an eligible non-frontier session or stop
-with a configuration gap.
+Before worktree creation or claim, classed work requires the exact class on the
+same family, provider, backend, and authentication route. The Claude Agent SDK's
+host-side `Query.setModel` is not an agent-callable switch tool. Do not invent
+one or assume that a session-creation model selector also constrains backend,
+authentication, and fallbacks. Continue only when the current execution identity
+and all route constraints are established; otherwise report the unsupported
+control or configuration gap before work begins.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -62,20 +65,40 @@ leaves it unchanged. Post the complete answer with
 with `mcp__github__issue_write` only when `issue-body`'s research completion
 test holds. Failed or incomplete research stays open.
 
+Authorization and unfinished stops
+----------------------------------
+
+Apply the constitution's continuation rule and `SKILL.md`'s operational
+escalation contract. Preserve scoped authorization, original source references,
+conditions and revocations in the existing private session and task handoff.
+Restore them after compaction and revalidate on resume. Do not publish private
+chat approvals in public issue comments or treat an agent's summary as approval.
+
+Claude Code documents a `Stop` hook that can request continuation, and user
+interrupts do not invoke it. However, its documented `UserPromptSubmit` input
+has no origin discriminator and also fires for scheduled tasks, background
+subagent reports and peer messages. That event alone cannot establish original
+user authority or permission to restart cancelled work. Daily Driver does not
+register the Omp task-state controller through that unverified transport.
+Approval persistence and stop evidence here are workflow contracts, not a
+claim of enforced Omp parity. Do not invent a hook source flag or trust a
+timer as renewed approval.
+
+See the [Claude hook reference](https://code.claude.com/docs/en/hooks), especially
+`UserPromptSubmit` and `Stop`. A future transport needs verified source and
+cancellation semantics before it may supply trusted events to the controller.
+
 
 The implementor
 ===============
 
-Ordinary non-frontier implementation stays in the session running this
-sequence. Before branch creation or claim, a frontier session may use
-`mcp__Claude_Code_Remote__create_session` or the `Agent` tool only after
-resolving an eligible non-frontier route under
-[`embark`'s Claude routing rules](../../embark/references/claude.md#the-required-class).
-It hands off the full `undertake #<issue>`; the receiving session owns its
-worktree, claim, implementation, and pull request. If the concrete route
-cannot be established, stop and report the configuration gap. A supported
-model switch may continue here only after the harness reports non-frontier
-execution.
+Prefer a verified in-session route. A full `undertake #<issue>` handoff through
+`mcp__Claude_Code_Remote__create_session` or `Agent` is allowed only if that
+surface can constrain and verify the exact class and same family, provider,
+backend, authentication route, and fallbacks. The receiving session owns the
+worktree, claim, implementation, and pull request; the sender stops. Do not
+assume an unmeasured constraint or recursively hand off. If neither route can
+be established, stop and report the exact gap.
 
 
 The pull request

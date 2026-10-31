@@ -1,15 +1,14 @@
 /**
  * Omp runtime adapter for daily-driver.
  *
- * This is the thin Oh My Pi half of the daily-driver plugin. Claude Code gets
- * the same behaviour from `hooks/hooks.json` + `hooks/ask-in-chat.py`; this
- * module brings that behaviour to Omp (Oh My Pi) as an `ExtensionAPI` factory,
- * where hooks are not the mechanism. The two harnesses share the skills and
- * the one marketplace catalog (`.claude-plugin/marketplace.json` — Omp reads
- * that Claude-compatible catalog, so there is deliberately no
- * `.omp-plugin/marketplace.json`).
+ * This is the Oh My Pi half of the daily-driver plugin. The common guards
+ * correspond to `hooks/hooks.json`; Omp also provides task-state enforcement
+ * through its trusted input and stop lifecycle. Hooks on other harnesses do
+ * not establish those same provenance and cancellation guarantees.
+ * The harnesses share the skills and marketplace catalog
+ * (`.claude-plugin/marketplace.json`); there is no separate Omp catalog.
  *
- * Four jobs:
+ * Five jobs:
  *
  * 1. Block Omp's `ask` tool, the way Claude Code denies `AskUserQuestion`.
  *    The model is told not to retry and to ask the question in chat instead,
@@ -35,10 +34,13 @@
  *    `daily_driver_get_session` is part of the runtime surface consumed by
  *    harness-portable skills.
  *
+ * 5. Retain private task and authorization evidence and correct unsupported
+ *    unfinished stops through the bounded task-state controller.
+ *
  * This file has no third-party dependencies: it runs as a plain `.js` module
  * under Omp, with no build step and no package install between this repo and
- * a user's `~/.omp`. All per-session state lives in the factory closure so two
- * sessions in one process never share a trigger map.
+ * a user's `~/.omp`. Trigger maps stay in the factory closure; durable task
+ * evidence stays on the active session branch. Neither is process-global.
  */
 
 import { execFileSync } from "node:child_process";
@@ -46,6 +48,8 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { installModelClassDefaults } from "./role-default-helper.mjs";
+import { installUndertakingRouting } from "./undertaking-routing.mjs";
+import { installTaskState } from "./task-state.mjs";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -1830,6 +1834,32 @@ function walkShellCommand(command, toolCwd) {
 		previousSeparator = segment.separator;
 		if (arithmeticStack.at(-1) === true) continue;
 
+		// The executable, once any leading environment assignments are past.
+		let position = 0;
+		while (
+			position < segment.words.length &&
+			isEnvironmentAssignment(segment.words[position])
+		) {
+			position++;
+		}
+		const executable = segment.words[position];
+		if (executable === undefined) continue;
+		if (!executable.literal) {
+			// Everywhere, not only in the primary checkout: the program a word
+			// expands to may be `git`, and `git -C <primary> switch` reaches the
+			// primary from any directory at all.
+			throw new UnreadableCommandError(
+				"a command names an executable that expands",
+			);
+		}
+
+		const name = basename(executable.text);
+
+		// A literal link command takes pathnames, not executable operands.
+		// Substitutions and later commands remain separate segments in this walk.
+		// A shell function named ln does not establish that operand contract.
+		if (name === "ln" && !defined.has(name)) continue;
+
 		for (const start of gitWordIndices(segment.words)) {
 			const invocation = gitInvocation(segment.words, shellCwd, start, toolCwd);
 			if (invocation === null || !rewritesWorkingTree(invocation)) continue;
@@ -1869,27 +1899,6 @@ function walkShellCommand(command, toolCwd) {
 				}
 			}
 		}
-
-		// The executable, once any leading environment assignments are past.
-		let position = 0;
-		while (
-			position < segment.words.length &&
-			isEnvironmentAssignment(segment.words[position])
-		) {
-			position++;
-		}
-		const executable = segment.words[position];
-		if (executable === undefined) continue;
-		if (!executable.literal) {
-			// Everywhere, not only in the primary checkout: the program a word
-			// expands to may be `git`, and `git -C <primary> switch` reaches the
-			// primary from any directory at all.
-			throw new UnreadableCommandError(
-				"a command names an executable that expands",
-			);
-		}
-
-		const name = basename(executable.text);
 
 		// An interpreter is found at every literal word, the way `git` is, so a
 		// wrapper in front of it — `exec bash -c …`, `timeout 5 bash -c …`,
@@ -2345,14 +2354,25 @@ function newTriggerId() {
 /** The `daily-driver` Omp extension factory. */
 export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	const z = pi.zod;
+	installTaskState(pi);
 
 	const initializedSettings = new WeakSet();
+	const routingSettings = new Map();
+	function settingsFor(ctx) {
+		// Use the handler's live settings scope, including CLI overlays and child snapshots.
+		if (!pi.settingsManagerFactory && pi.pi?.settings) return Promise.resolve(pi.pi.settings);
+		if (!routingSettings.has(ctx.cwd)) routingSettings.set(ctx.cwd, Promise.resolve(
+			pi.settingsManagerFactory
+				? pi.settingsManagerFactory(ctx.cwd)
+				: import("@mariozechner/pi-coding-agent").then(module => module.SettingsManager.create(ctx.cwd)),
+		));
+		return routingSettings.get(ctx.cwd);
+	}
+	const undertakingRouting = installUndertakingRouting(pi, settingsFor);
 	pi.on("session_start", async (_event, ctx) => {
 		invalidateStartupState();
 		if (typeof ctx?.cwd !== "string") return;
-		const settings = pi.settingsManagerFactory
-			? pi.settingsManagerFactory(ctx.cwd)
-			: (await import("@mariozechner/pi-coding-agent")).SettingsManager.create(ctx.cwd);
+		const settings = await settingsFor(ctx);
 		if (initializedSettings.has(settings)) return;
 		initializedSettings.add(settings);
 		const tags = modelTagsSetting ?? (await import("@oh-my-pi/pi-coding-agent/config/model-settings")).cfgModelTags;
@@ -2681,6 +2701,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 				sessionId: ctx.sessionManager.getSessionId(),
 				sessionName: ctx.sessionManager.getSessionName() ?? null,
 				model,
+				...undertakingRouting.describe(ctx),
 			};
 			return {
 				content: [

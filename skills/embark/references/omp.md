@@ -75,6 +75,13 @@ policy](../../issue-body/references/omp.md#the-required-class):
 frontmatter, including a tagged-role assignment such as `@implementation` or
 `@frontier`. Resolve configured prewalk and retry fallbacks under the same policy.
 
+Undertaking issue workers and every visible execution fallback must resolve to
+the exact required class on the parent's family, provider, backend, and
+authentication route. An incompatible explicit override is a gap, not a
+selector to rewrite. The worker verifies its route before worktree or claim.
+This constraint does not recast reviewer or scout specialization or change
+independently configured host helper inference.
+
 A current measured class outranks handwritten guidance, and a measured class
 below the task's requirement excludes that route. An unmeasured, unreported,
 or stale row is unknown, not proof of suitability. Use the

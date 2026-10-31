@@ -42,12 +42,41 @@ grounded. A frontier task also needs explicit approval and its exact work
 envelope. A frontier `research` issue keeps that label and its narrow metadata
 exception; do not impose the task template.
 
-Use `daily_driver_get_session` to read the current model before branch creation
-or claim when needed for the frontier restriction. If its effective route is
-frontier and the issue is ordinary work, resolve a non-frontier agent using
-[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs).
-Hand off the full undertaking through `task`, or stop with the exact route gap;
-the receiving session owns its branch and claim.
+Before worktree creation or claim, call `daily_driver_route_undertaking` with
+`{ issue: <positive issue number>, modelClass: "mechanical" | "implementation" |
+"reasoning" | "frontier", frontierApproval?: <recorded approval and envelope> }`.
+Validate readiness and frontier approval first; the approval argument is evidence,
+not authorization by itself. The tool resolves the configured exact `@class`
+and optional effort without rewriting shared roles.
+
+Read `details.undertaking` from the result or `daily_driver_get_session`:
+`issue`, `modelClass`, `selectedModel`, `observedModel`, and `status`, with
+optional `reason`. `verified` permits the undertaking to proceed. `pending`
+means a switch was requested but actual execution is not yet confirmed; wait
+for a subsequent allowed response and read the state again. Do not create the
+worktree, claim, or implement while pending. A rejected route is an error with
+a named gap; `blocked` is not success. The session result also reports provider
+and non-secret `authenticationRoute`. A matching model and effort can verify
+without a switch. Read-only discovery and route/session recovery remain available
+while pending; queued mutating calls are blocked.
+
+The effective route must retain the current model family, provider, backend
+and authentication route, including visible child and fallback candidates.
+Account refresh or eligible rotation does not change that invariant. Missing,
+cleared, incompatible, or unverifiable mappings are configuration gaps.
+Delegated implementation workers and their execution fallbacks inherit the
+constraints; do not override incompatible explicit worker roles. Independently
+configured `reviewer`, `scout`, `security-reviewer`, and `seance` helpers are
+not issue implementation workers and retain their configured routes.
+
+After the pull request is ready, or answer-only research is completed and
+recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
+for the completed undertaking before reusing the session for another issue.
+Do not finish a stopped or incomplete undertaking. Selecting a different issue
+returns an error and preserves the existing owner and route. Finish the
+completed undertaking or resume the existing one before selecting another.
+A finish call with the wrong issue also returns an error and preserves the
+existing state.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -61,15 +90,13 @@ stays open.
 The implementor
 ===============
 
-Ordinary non-frontier implementation stays in the session running this
-sequence. The frontier-only handoff exception runs before branch creation and
-claim: resolve a supported non-frontier agent route using
-[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs),
-then use the `task` surface to dispatch a full `undertake #<issue>` to that
-agent. The receiving session owns its worktree, claim, implementation, and
-pull request. Do not dispatch if the route is unavailable or frontier; report
-the exact configuration gap. A supported model switch may continue here only
-after Omp reports a non-frontier execution identity.
+Prefer the in-session route. A full `undertake #<issue>` handoff through `task`
+is permitted only if the effective child route and every visible fallback can
+be constrained to the same family, provider, backend, authentication route,
+and exact class. The receiving session verifies its own execution and owns the
+worktree, claim, implementation, and pull request. The sender stops rather
+than repeating the handoff or supervising duplicate work. If the surface cannot
+establish those constraints, stop and report the precise gap.
 
 
 The pull request
@@ -116,6 +143,63 @@ record; fetch it from the remote before `task-worktree` attaches it.
 resolved, never from an assumed `origin`.
 Omp uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
+
+Task evidence state
+-------------------
+
+`daily_driver_task_state` stores private, active-branch task records. Call
+`{action: "status"}` before another approval request or an unfinished stop.
+For ordinary repository work not already active, call `begin`; do not activate
+an ordinary question. Mutating calls take a JSON-string `record`. `status`
+with `record: "{\"sourceId\":\"<id>\"}"` reads the original authority source
+or retained tool evidence rather than the default bounded excerpts.
+
+- `begin`: `{taskId, operation, target, source: {sourceId, quote}}`. Use the
+  latest external user source returned by `status`, not a copied handoff.
+- `authorization`: `{id, kind: "user" | "workflow", operation, target,
+  source: {sourceId, quote}, limits, conditions, expiresAt?, supersedes?,
+  revokes?, freshConfirmation?}`. Sources must resolve to original user input
+  or workflow instructions. Exact quotes establish provenance, not semantic
+  permission. Read conditions against the original source before acting.
+- `blocker`: `{operation, target, kind: "external" | "authorization" |
+  "safety" | "execution", evidence: [{sourceId, quote}], authorizationIds: [],
+  routes: [{route, disposition: "failed" | "prohibited" | "unavailable",
+  evidence: {sourceId, quote}}], externalContribution,
+  independentWork: {pending: [], completed: []}, resume}`.
+- `complete`: `{summary}`. This records reported completion, not independent
+  proof that acceptance criteria passed.
+
+The tool never grants permission or replaces harness approval. Original
+sources and tool evidence stay in session entries through compaction and
+process resume. Cross-session handoffs carry source references and applicable
+scope; copied agent text is not an original approval source in a new session.
+Revalidate through the original source or existing workflow authorization.
+
+Tool observations retain at most 2048 characters of serialized input and
+8192 characters of output, with a fingerprint of the complete original
+input/output. Truncated output retains prefix and suffix fragments;
+`textTruncated` and `prefixLength` identify their boundary. Exact quotes must
+fit wholly within one retained fragment, never across omitted text. A source
+lookup cannot recover the omitted payload. User and workflow authority sources
+are separate and remain available for approval revalidation.
+
+The `session_stop` adapter checks active unfinished tasks and returns at most
+two corrections for an unchanged observed condition. The count survives
+resume; rewriting record labels does not renew it. Exhaustion persists an
+execution failure and emits an error notification without another model turn.
+It does not complete the task or invent an approval requirement. User stop
+input and an aborted stop event prevent continuation. The adapter does not
+prove arbitrary prose claims about approval or exhausted routes.
+
+Enforcement requires direct access to the task-state tool or Omp's active
+`write` device route. If both are unavailable, the adapter records and warns
+about that capability limit instead of demanding an inaccessible tool. It
+does not enable tools or invent a human blocker; the shared continuation rule
+still applies.
+
+Omp exposes an external-input origin on `input`, so scheduled reminders and
+tool output do not become user authority. These semantics do not establish
+equivalent hook provenance on another harness.
 
 
 The milestone

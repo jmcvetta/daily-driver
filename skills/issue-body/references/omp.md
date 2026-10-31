@@ -31,6 +31,14 @@ setting, or price does not prove class suitability or working credentials.
 Omp's parent-model authentication fallback needs the same reassessment and
 cannot be assumed to satisfy the class.
 
+For classed undertaking, `daily_driver_route_undertaking` resolves the exact
+`@class` mapping before worktree or claim. Its same-family, provider, backend,
+and authentication invariant also applies to delegated issue workers and their
+visible fallbacks. Wait for `verified` execution identity; `pending` is not
+confirmation. A missing, cleared, incompatible, or unverifiable route is a
+configuration gap. Do not rewrite shared roles or credentials. Independently
+configured host helper inference is outside this undertaking policy.
+
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
 assume an API route. The `reasoning` role defaults to
@@ -90,6 +98,7 @@ approval policy do not imply benchmark support.
 | gpt.gateway | classes-gpt.gateway | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | kimi | classes-kimi | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | minimax | classes-minimax | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
+| multi-model | classes-multi-model | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured | unmeasured |
 | openai-codex/gpt-5.6-terra | classes-smoke-terra-5-6 | implementation | 1/1 | 1/1 | unreported | 2026-10-17_17-50-08 | 2026-10-17 |
 | openai-codex/gpt-5.6-terra | classes-terra-5-6 | none | 6/9 | 1/9 | subscription | 2026-10-17_17-56-32 | 2026-10-18 |
 | openai-codex/gpt-6-luna | classes-luna-6 | implementation | 9/9 | 7/7 | unreported | 2026-10-09_19-52-53 | 2026-10-09 |
