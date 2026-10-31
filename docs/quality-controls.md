@@ -60,14 +60,24 @@ Actions, Ansible, containers and Claude Code plugins.
 
 ### Apply it to a project
 
-1. Implement every universal control.
+The catalog records control status and previously decided changes. It does
+not authorize unsolicited control expansion during unrelated work. The
+constitution's [recurring CI cost policy](../rules/constitution.md#recurring-ci-costs)
+governs proposals for new checks and other recurring CI expansion.
+
+1. Implement every universal control and applicable decided change recorded
+   for the project, within the constitution's approval boundary.
 2. List the ecosystems the repository contains.
-3. For each ecosystem control, implement the row for each of those
-   ecosystems. Where the row is `none`, record the gap.
-4. Make each gate control part of a required check (`QC-REQUIRED-CHECKS`):
+3. For each ecosystem control, implement the row already decided for that
+   project. Where the row is `none`, record the gap; the gap alone is not
+   authorization to add a check.
+4. Keep established gate controls in required checks (`QC-REQUIRED-CHECKS`):
    a step of `Checks`, or of `Release Projection` for the title and the
    projection, which must run on every pull request.
 
+When an authorized check is added, bound and select it as the constitution
+requires. Do not use workflow-level path filters that leave required checks
+pending.
 
 ## Universal controls
 
@@ -129,10 +139,15 @@ tag rather than `main`.
 
 ### QC-CONVENTION-RULES — repository rules as executable checks
 
-A repository rule that a pattern or a script can detect is an executable
-check with a failing test, not only a sentence in a document. Conventions are
-one source of such rules; config consistency and domain invariants are
-others. The rest stay review-only.
+A repository rule that a pattern or script can detect may be an executable
+check, not only a sentence in a document. Add one only when it catches a
+concrete failure that existing coverage misses, and only under the
+constitution's recurring CI cost policy. A regression test in an existing
+suite may provide the needed coverage without adding a separate check.
+Tests whose subject is testing machinery are not quality controls and must
+not be added, except when that machinery is the shipped product. Conventions
+are one source of detectable rules; config consistency and domain invariants
+are others. The rest stay review-only.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |

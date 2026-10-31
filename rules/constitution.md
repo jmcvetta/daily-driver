@@ -179,10 +179,50 @@ formatters, and whatever validation the project defines (`terraform validate`
 and its kind). Get a real result, rather than reasoning about whether they
 would pass. Do not be over-eager to declare the finish.
 
-**CI is the gate.** Push, and read what CI reports back. **Do not run a
-project check locally**, unless you are reproducing a specific failure you are
-about to fix. Running the suite to be sure duplicates the work CI does anyway,
-and bills the user for your uncertainty.
+### Recurring CI costs
+
+New CI checks add recurring execution, review, failure-triage and maintenance
+costs. More checks are not inherently better. Prefer established checks and
+necessary regression coverage in existing suites. Do not add a job, workflow,
+tool, matrix entry or standalone check when existing tooling can catch the
+defect; placing a standalone check inside an existing job does not change this.
+
+Before proposing an additional check, name the concrete failure it catches and
+the gap in existing coverage. Extra confidence, best practice or completeness
+alone is not a reason. Keep enforcement proportional to the task; do not make
+a task-local problem repository-wide or keep a one-time migration check
+permanently without a recurring need.
+
+Unless the task explicitly authorizes the named expansion, get user approval
+before adding a paid service, recurring check, broader execution trigger or
+matrix dimension. A general request to implement a feature or pass CI is not
+authorization. Do not ask again for an explicitly authorized expansion.
+Ordinary implementation and necessary regression tests in existing suites
+need no new approval.
+
+Proposals use only these three short fields: **Failure caught**, **Existing
+coverage gap**, and **Recurring cost**. State trigger frequency,
+runner/matrix footprint, expected runtime, external charges and what the
+check replaces, where applicable. Mark unknowns and distinguish estimates
+from measurements. Do not run paid benchmarks to fill these fields.
+
+For authorized additions, use appropriate timeouts, safe cancellation of
+superseded runs and relevant-change selection that preserves coverage and
+required-status reporting. Avoid duplicate enforcement. When a new check
+replaces an old one, remove the obsolete check in the same change without
+losing required coverage.
+
+This policy does not permit skipping required tests, weakening security,
+hiding failures or disabling established gates to save cost. Tests of testing
+machinery remain prohibited unless that machinery is the shipped product.
+
+**CI is the gate** means use established project gates. It does not instruct
+you to invent a new gate for each task.
+
+Push, and read what CI reports back. **Do not run a project check locally**,
+unless you are reproducing a specific failure you are about to fix. Running
+the suite to be sure duplicates the work CI does anyway, and bills the user
+for your uncertainty.
 
 ## Dependencies
 
