@@ -1,0 +1,47 @@
+# The model-classes capability arm for Claude Haiku 5.5 at `medium` effort, on Claude Code.
+#
+# Measures whether this model, in the role it plays for delegated implementation
+# work (its `task` role), clears the mechanical/implementation cases the suite builds from
+# real merged pull requests -- see `scripts/evals-cases-from-prs.py` and
+# `evals/tasks/model-classes/`. One variant: there is no plugin ablation here,
+# only the question "does this model finish this task and leave its own tests
+# passing". `make evals-run-classes MODEL=haiku-medium` runs it.
+#
+# A challenger for the `mechanical` route of the Claude route table for
+# `embark`'s workflow dispatch (issue #435), at about a twentieth of Sonnet
+# 5.5's per-token price. This run uses Haiku 5.5's own default effort,
+# `medium`. Its pair is `classes-haiku-low.yaml`. The three `mechanical` cases
+# are the floor it must clear; its `implementation` cases say how far above
+# that floor it reaches. Read pass rate and cost per completed task together.
+#
+# It runs on `claude-code`, the harness the route table is for. The session is
+# the bare one `with-without.yaml` measures against: no plugin, and project
+# settings only, so the user's own settings -- an advisor, an enabled plugin --
+# never reach the model under test.
+
+experiment_id: classes-haiku-medium
+description: >-
+  Model-class capability on real merged-pull-request cases, claude-haiku-5-5 at `medium` effort
+  on Claude Code in the `task` role.
+
+defaults:
+  repeats: 3
+
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+
+  agent:
+    type: claude-code
+    model: claude-haiku-5-5
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+    plugins: []
+    setting_sources: [project]
+    sdk_options:
+      effort: medium
+
+variants:
+  - variant_id: default
+    description: This model against the model-classes suite.
