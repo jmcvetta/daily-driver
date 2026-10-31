@@ -1834,7 +1834,7 @@ criteria are checked, so equal values mean a turn that uses its budget is killed
 as a TIMEOUT before it can be graded. The headroom is the difference.
 
 `run_limits` caps turns and wall clock per task, but nothing caps the bill. The
-64 trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
+trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
 and the fire half stops the moment the skill fires. Behaviour rows and
 `model-classes` grant more tools and more turns, and cost more. Run one suite at a time with
 `TASKS=` while iterating, and keep `make evals-plan` between edits, where the
