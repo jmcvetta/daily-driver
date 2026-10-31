@@ -1041,6 +1041,14 @@ which is what a model weighing two sibling skills reaches for, still scores as
 engaging `pr`. The trigger rows therefore carry an explicit `disallowed_tools`,
 which is the field that actually removes a tool.
 
+The same hazard binds every fixture a task mounts, because the agent can read
+it. A fixture carries mechanics, not claims: the reasoning for a case lives in
+the task YAML and here, never in a file one `cat` away. And no mounted fixture file
+contains the substring `skills/`, or reading it would score as that skill
+firing. Neither rule is a boundary on the default `driver: tempdir`, where the
+agent shares the harness's filesystem view; they keep the answer out of the
+agent's way, not out of its reach.
+
 `skill_triggered` also improved a detail. The old graders matched the skill
 name out of the tool input as a regex, so `pr` had to be written `(:|")pr"` to
 avoid matching `pr-title`. `skill_name` is an exact match against the set of
