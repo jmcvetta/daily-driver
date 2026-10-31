@@ -34,16 +34,18 @@ evals/
 │   ├── judgement-call/  … when a choice is about to be put to the user?
 │   ├── session-title/   … when the session is named, and not the PR?
 │   ├── task-worktree/   … before repository-changing work, and not for read-only work?
+│   ├── stand-down/      … when an embarked fleet is stood down, and not one undertaking?
 │   ├── constitution/    does the constitution reach a subagent, and land?
-│   ├── review-depth/    does `review` send the right panel at the diff?
 │   └── model-classes/   does this model finish real delegated work? see below
 
 ├── fixtures/
 │   ├── fix-daily-driver-bugs/shared/
 │   │                    offline `gh` recorder and issue-state assertions
-│   ├── review-depth/
-│   │   ├── shared/       builds the git repository every case starts from
-│   │   └── cases/<name>/ one `case.sh`, mounted alone beside `shared/`
+│   ├── task-worktree/shared/        builds the clean repository a task-worktree row starts in
+│   ├── undertake-readiness/shared/  a git repository, bare remote and stateful PR stub per scenario
+│   ├── undertake-escalation/shared/ command stubs for undertake escalation rows
+│   ├── integration-proof/           a local authenticated-integration probe and work recorder
+│   ├── eval-route/                  an `evals/README.md` excerpt the judge-route rows read
 │   └── model-classes/
 │       ├── shared/       clones the source repo's base SHA; the grader and its two checks
 │       ├── cases/<repo>-<pr>/  the answer key, one per selected PR: a `reference:`, never mounted
@@ -435,9 +437,7 @@ also asserts `undertake` stays silent. Add `tasks/pr/*.yaml` when the question
 being asked is about collisions rather than about the no-fire cases as such.
 
 Not part of `make check`. The cases need a live model and this repository's CI
-is deliberately credential-free. What *is* part of `make check` is
-no test tooling target covering this fixture-build leg; see "The git problem"
-below for why the fixtures are built from nothing but git.
+is deliberately credential-free.
 
 **`llm_judge` is not an alternate credential route.** It calls Anthropic's
 metered API, which this project does not use. `make evals-run` rejects every
@@ -948,15 +948,6 @@ buys is that the reader can now tell which zeros those are. What the row
 establishes today is that it is not at ceiling; the number itself needs a fresh
 run before any amendment is tested against it.
 
-`review-depth/` asks whether `review` sends the *right panel* at the right
-diff. Every case is anchored on something a person would notice if routing
-broke — a security reviewer that never ran on the file holding the publishing
-token, a rewritten README judged for correctness bugs, a full panel billed to
-every pull request opened — rather than on a restated line from
-`skills/review/SKILL.md`. A suite that restates the spec catches
-drift away from the depth table and can never catch the depth table being
-wrong.
-
 Claude and Omp measurement arms carry the same ablation: every criterion is
 scored in a `bare` session and in a treated session. The delta, not a treated
 score alone, measures the plugin's effect. See "The Omp arm" for its per-model form.
@@ -1033,7 +1024,7 @@ disagreement is load-bearing:
   after all, and the `constitution` suite lost one grader to redesign rather
   than three. Its limit is length, not tool kind: the haystack is truncated to
   2000 characters, which is why it can assert *that* a subagent ran and cannot
-  assert *which* — see "Grading dispatch" below.
+  assert *which*.
 - **`regex` on `last_message` genuinely has no equivalent.** Nothing in
   `coder_eval` matches the agent's final message deterministically —
   `file_matches_regex` needs a path and reads file content, and only
@@ -1044,7 +1035,7 @@ disagreement is load-bearing:
 One hazard `skill_triggered` carries, which the criterion's name hides: besides
 the `Skill` tool call, it scans **every string parameter of every tool** for the
 substring `skills/<name>/`, so a `Read` of
-`skills/review/references/review-guidelines.md` counts as engaging `review`.
+`skills/review-cycle/SKILL.md` counts as engaging `review-cycle`.
 That is deliberate — it is how the criterion scores agents with no `Skill` tool
 — but it means a row that grants file tools and expects a skill *not* to fire is
 only as sound as the paths that row can plausibly touch. `allowed_tools` is not
@@ -1053,11 +1044,15 @@ is still offered `Read`, and telemetry records a `tool_use` block when it is
 generated — before any result — so a *denied* read of `skills/pr/SKILL.md`,
 which is what a model weighing two sibling skills reaches for, still scores as
 engaging `pr`. The trigger rows therefore carry an explicit `disallowed_tools`,
-which is the field that actually removes a tool. `review-depth`'s no-fire row
-needs file tools and keeps them, and relies instead on the `pr` skill having no
-reason to name a path under `skills/review/` — which it does not — with the
-empty-roster criterion beside it as the check that does not depend on paths at
-all.
+which is the field that actually removes a tool.
+
+The same hazard binds every fixture a task mounts, because the agent can read
+it. A fixture carries mechanics, not claims: the reasoning for a case lives in
+the task YAML and here, never in a file one `cat` away. And no mounted fixture file
+contains the substring `skills/`, or reading it would score as that skill
+firing. Neither rule is a boundary on the default `driver: tempdir`, where the
+agent shares the harness's filesystem view; they keep the answer out of the
+agent's way, not out of its reach.
 
 `skill_triggered` also improved a detail. The old graders matched the skill
 name out of the tool input as a regex, so `pr` had to be written `(:|")pr"` to
@@ -1065,8 +1060,7 @@ avoid matching `pr-title`. `skill_name` is an exact match against the set of
 engaged skills, plugin namespace stripped, so that class of near-miss is gone.
 
 Each `skill_triggered` row carries an `expected_skill`: the ground truth for
-that row, repeated on every criterion of that type. (`review-depth` 01–06 have
-none — they are graded entirely on the dispatch roster.) What it does today is
+that row, repeated on every criterion of that type. What it does today is
 set the polarity — a criterion passes
 when the skill's engagement matches whether `expected_skill` names it — and
 `none` is a legitimate value, which is what the "neither of these should fire"
@@ -1091,13 +1085,6 @@ gate; this keeps a missing skill from making an otherwise correct behaviour
 fail. Trigger-accuracy rows keep the firing criterion armed. When a row has
 both tags, trigger-accuracy takes precedence and the firing criterion remains
 gating.
-
-On the trigger suites this is free. On `review-depth`'s no-fire row it is not,
-and that row says so: the fail-stop is deferred while the pass-capable `pr`
-criterion is undecided, so on the very trajectory the row exists to catch —
-`review` fires, `pr` never does — nothing decides it, the stop never comes, and
-the run pays for a full reviewer panel up to its turn cap. Recall is worth that
-there; the turn ceiling is the backstop on the bill.
 
 Arming the positive cannot truncate anything: a bare `stop_early: {}` leaves
 `on_pass` at its default `continue`. What it does is put the criterion in the
@@ -1294,172 +1281,6 @@ therefore sit at ceiling in both arms, like the answer probes it replaces; the
 row's own header says what to sharpen if it does. Nothing here has been run: no
 score for this row has been measured in either arm.
 
-## The review-depth suite
-
-Seven cases, each one claim:
-
-| Case | The claim | What a broken routing table would do |
-| --- | --- | --- |
-| `01-readme-is-planning-not-docs` | `README.md` is planning-class *before* it is docs-only | review a rewritten README for correctness bugs |
-| `02-tests-sit-with-code` | a 104-line test-only diff gets the judgment tier | skim a hundred lines of new assertions |
-| `03-mixed-diff-falls-through-to-code` | one `src/` path makes the whole branch code | judge a sign-handling fix by a planning rubric |
-| `04-planning-class-outranks-size` | 904 lines of prose is still prose | bill a security review to a rollout schedule |
-| `05-named-depth-outranks-inference` | a depth the user names wins | overrule a request for a full review with a heuristic |
-| `06-sensitive-touch-on-a-tiny-diff` | 11 lines of release workflow still get security | miss the file holding the publishing token |
-| `07-neg-opening-a-pr` | opening a PR is not a review | tax every branch and train the skimming reflex |
-
-### Grading dispatch
-
-Every one of them grades which agents were dispatched. The draft in PR #36 was
-dropped for grading the mode line the skill *announces*, which is a self-report:
-a skill announcing "Standard" and then dispatching the Full panel would have
-passed it.
-
-**No criterion in `coder_eval` 0.11.6 can be relied on to see `subagent_type`.**
-`command_executed` matches against `json.dumps(parameters)` truncated to 2000
-characters, so whether the field is inside the window depends on how long the
-prompt is and on where the key lands in the serialisation — neither of which the
-eval controls. When it falls outside, the criterion reports "not dispatched" for
-a dispatch that happened: it silently zeroes a positive and *inverts* a negative
-control, and both failures read exactly like a router that dispatched nothing.
-`llm_judge` and `agent_judge` are no help either: their tool-call summariser
-renders an `Agent` call as its `description`, a three-word label the model
-writes.
-**Measured, but unrecorded.** Three live `review` dispatches (CLI 2.1.263,
-`coder_eval` 0.11.6, `claude-opus-5`, 2026-09-07 — the three-agent panel over
-a 1,397-line diff) serialised to 1,437 / 1,382 / 1,387 characters with
-`subagent_type` as the **first** key, comfortably inside the window: `review`
-hands its agents a summary and a file list, not the diff. So the truncation
-does not bite this skill today, and an earlier reading of
-this section — that key order is fixed at `description, prompt, subagent_type`
-and the prompt therefore pushes the field past the window on *every* dispatch of
-consequence — was wrong.
-
-The hook below stays regardless, and the measurement is why it is worth its
-weight rather than why it is unnecessary: argument order is the model's to
-choose call by call, prompt length is the skill's to change without telling
-anyone, and the failure mode is silent in the direction that looks like a
-result.
-
-So the observation is taken with a `PreToolUse` hook matching `^(Agent|Task)$`
-— both names, because the harness has used both — wired through
-each task's `claude_settings` and recorded by
-`fixtures/review-depth/shared/record-dispatch.py`. It appends one
-`subagent_type` per
-line to `.fixture/dispatched.txt`, which `file_matches_regex` reads.
-
-The hook is part of the **instrument**, not of the plugin under test: it is
-configured by the eval, it fires identically in both arms, it reads the tool
-input verbatim, and it emits nothing — so it cannot veto a dispatch or disagree
-with the plugin's own `PreToolUse` hook on the same event. And it is still not
-the mode line: the mode line is what the skill says it decided; the roster is
-the argument it passed to the tool.
-
-The roster is created empty by the fixture, so a `must_match: false` criterion
-reads "nothing was dispatched" instead of erroring on a missing file — which is
-the entire `bare` arm.
-
-**What it proves, exactly.** `PreToolUse` fires before the tool resolves
-`subagent_type`, so a roster line is a dispatch *requested*, not a subagent
-confirmed to have run. A `review` that asks for `security-reviewer` under a name
-the session cannot resolve records the line anyway. That is the routing decision
-— which is what these cases grade — but it is not proof the reviewer ran, and no
-criterion here claims otherwise. The old `command_executed`-on-`Agent` shape had
-the same property, for the same reason.
-
-**Two things the hook must never do**, both guarded rather than asserted in
-prose. A `PreToolUse` hook that exits non-zero *blocks* the tool call, so a
-recorder that failed would not merely lose the roster — it would veto every
-dispatch, in both arms, and report a routing table that dispatched nobody. The
-hook command is therefore absolute (via `$CLAUDE_PROJECT_DIR`, which Claude Code
-puts in every hook's environment) and ends in `|| true`. Because that can hide a
-broken recorder behind an empty roster, keep its expected output visible in
-fixture review.
-
-The hook also writes nothing to stdout, so it cannot contest the `updatedInput`
-returned by the plugin's own `PreToolUse` hook on the same event.
-
-### What the sandbox can see
-
-The fixtures are mounted at `.fixture/` inside the sandbox and the agent under
-test has `Read`, `Grep`, `Glob` and `Bash`, so anything there saying what a case
-expects is an answer key one `cat` away. Three things follow, and they are
-enforced rather than asked for:
-
-- **The fixtures carry mechanics, not claims.** The reasoning lives here and in
-  the task YAML. `evals/fixtures/review-depth/` is prose about `git`.
-- **A task mounts the shared scaffolding plus its own case, and nothing else** —
-  two `template_dir` sources at the same `mount_point`. The case script is
-  `case.sh` in every case, because its *filename* is copied into the sandbox too
-  and `sensitive-tiny.sh` names the routing rule being graded as loudly as any
-  comment would.
-- **No fixture file contains the substring `skills/`.**
-  Fixture review must preserve this rule because `skill_triggered`
-  counts such a path in any tool parameter as engaging that skill — so a fixture
-  carrying one would score as a skill firing the moment the agent read the file.
-
-**None of this is a boundary, and it should not be described as one.** The suite
-runs on the default `driver: tempdir`, where `coder_eval`'s own note is that
-"the agent under evaluation runs with the same filesystem view as the harness" —
-its anti-cheat permission window is a documented no-op outside a container. So a
-session with `Bash` can read this file, read the task YAML, and write to
-`.fixture/dispatched.txt` directly. What the rules above buy is that nothing
-*puts* the answer in front of a session going about its work; they buy nothing
-at all against one that goes looking. `sandbox: {driver: docker}` is what would
-make it a boundary, and moving the roster outside the sandbox needs the same
-upstream fix as everything else here.
-
-The upstream fixes that would retire this: make the truncation bound
-configurable, or render `subagent_type` in the judge's tool-call summary.
-
-**The mode line is not checked at all here, and that is a decision.** Keeping it
-as a low-weight secondary signal was the plan, and it needs an `llm_judge` on
-every row — the final message has no deterministic matcher — which would put a
-scored model judgment, and its cost, on seven cases whose whole point is that
-they are deterministic. Dispatch is the outcome; the mode line is the narration
-of it, and the narration is what PR #36's draft was dropped for grading. If the
-announced depth is ever worth asserting on its own, the way in is the roster's:
-observe it where it is complete, not through a judge.
-
-**Every case size is load-bearing and none should be "tidied".** The depth table
-turns on ~50 and ~800 changed lines, so a case that drifts across a threshold
-does not fail — it re-routes, and then measures a depth it was not written for.
-`01`, `02` and `03` are over ~50 on purpose (under it they route to Skim on size
-alone, whatever bucket their paths land in); `04` is over ~800; `05` and `06`
-are deliberately under ~50, because "tiny and still reviewed" is the whole
-claim. Keep those bounds when changing fixtures.
-
-### The git problem
-
-`review` needs a real repository — a base branch, a topic branch ahead of it, a
-remote to diff against — and `coder_eval`'s sandbox does not build one:
-`starter_files` and `template_dir` copy loose files, and `type: repo` clones a
-URL onto a checked-out default branch, which is not the shape a branch under
-review has. A `tempdir` of loose files makes `review` correctly refuse —
-*"there's no branch, no commit history, nothing for the `review` skill to diff
-against"* — which is a true negative from a bad case, and indistinguishable in
-the report from the finding the suite exists to produce.
-
-**`pre_run` is the seam.** It runs a shell command inside the sandbox after
-setup and before the agent, and by default aborts the evaluation on a non-zero
-exit, so a fixture that fails to build never reaches a model and never scores a
-misleading 0. Each case mounts `fixtures/review-depth/shared/` and its own
-`fixtures/review-depth/cases/<name>/` at `.fixture` — two `template_dir`
-sources, one mount point, for the reason in "What the sandbox can see" — and
-runs `.fixture/case.sh`. The scripts `git init` the sandbox
-root, exclude `.fixture/` through `.git/info/exclude` (a `.gitignore` would show
-up as a changed path and shift the diff's *kind*, which is the one thing this
-suite measures), commit a base tree, publish it to a bare `origin` under
-`.fixture/`, then branch, change, commit and push. The push is not optional:
-`review` stops at "Local changes not pushed" when the branch is ahead of its
-remote, and would never reach the routing decision under test.
-
-The six fixture scripts build that shape from git. A fixture that stops building
-does not turn the suite red; it turns every case into a silent 0.
-
-These cases run in **Local mode**: there is no GitHub MCP in the sandbox, so the
-pull-request lookup finds nothing and the skill assembles the diff from git.
-
 ## The Omp arm
 
 The same suites and plugin run Omp subjects with paired `bare` and
@@ -1623,9 +1444,7 @@ Make targets in step.
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-session-id-omp` |
 | `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-omp` |
 
-Each Omp row names its sibling with a `forks:<task_id>` tag. The seven
-`review-depth` rows remain `claude-only` because they drive Claude's settings
-and dispatch hook.
+Each Omp row names its sibling with a `forks:<task_id>` tag.
 
 **`plan` does not fail on a broken arm.** With no plugin installed,
 `coder-eval plan` prints a resolution failure and exits 0. `make evals-plan`
@@ -2020,14 +1839,9 @@ criteria are checked, so equal values mean a turn that uses its budget is killed
 as a TIMEOUT before it can be graded. The headroom is the difference.
 
 `run_limits` caps turns and wall clock per task, but nothing caps the bill. The
-64 trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
-and the fire half stops the moment the skill fires. `review-depth` is not: its six fire
-cases each dispatch a real reviewer panel over a real diff, five times, in the
-`with-plugin` arm. The `bare` arm is cheaper but not free: it has no `review`
-skill and none of the plugin's reviewer agents, but it keeps the `Agent` tool
-and its turn ceiling, so a session that decides to review the diff by hand can
-still spend. Its no-fire case pays for a panel too, on exactly the trajectory
-it is trying to catch. Run one suite at a time with
+trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
+and the fire half stops the moment the skill fires. Behaviour rows and
+`model-classes` grant more tools and more turns, and cost more. Run one suite at a time with
 `TASKS=` while iterating, and keep `make evals-plan` between edits, where the
 mistakes are free.
 

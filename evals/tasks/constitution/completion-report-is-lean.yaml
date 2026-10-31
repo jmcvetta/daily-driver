@@ -315,9 +315,7 @@ sandbox:
 # constitution's "commit as you work". Those read this repository's config, so
 # the overrides have to live there — `add -f` is no help to a `git add` the
 # agent runs itself, which is why `core.excludesFile` is persisted rather than
-# worked around. `evals/fixtures/review-depth/shared/lib.sh` persists
-# `commit.gpgsign` the same way; the other two are this fixture's own, because
-# the agent here runs Git and there it does not.
+# worked around.
 pre_run:
   - command: >-
       git init -q &&
