@@ -87,6 +87,14 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
       there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
+      The sandbox's `release.py::sign_changed(current, previous, sign)` calls
+      `sign(name, digest)` unconditionally for each current artifact. Current
+      and previous manifests map names to SHA-256 digests, and prior signatures
+      remain in the release store. `test_release.py::test_signs_artifacts`
+      records calls in a list and tests a new artifact with an empty previous
+      manifest. `README.md` says to run pytest offline and CI runs those tests.
+      These are supplied facts, not invented claims.
+
       The rule: the REPLY selects `task` as the issue kind even though the
       request describes broken behavior and does not name a kind. It proposes
       a ready task handoff, not a bug report, without asking which kind to use.
