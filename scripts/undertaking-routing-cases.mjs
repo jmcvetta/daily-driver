@@ -87,7 +87,6 @@ function fakeSession(options = {}) {
 	const calls = { models: [], effort: [], aborts: 0, keyLookups: [] };
 	let current = options.current ?? MECHANICAL;
 	let effort = options.effort ?? "high";
-	let requestModel;
 	let closed = false;
 	const schema = () => ({
 		describe() { return this; },
@@ -120,7 +119,7 @@ function fakeSession(options = {}) {
 	const ctx = {
 		cwd: "/offline-routing-fixture",
 		agent: options.parentId
-			? { kind: "sub", id: agentId, name: "reviewer", depth: 1, parentId: options.parentId }
+			? { kind: "sub", id: agentId, name: options.agentName ?? "implementation", depth: 1, parentId: options.parentId }
 			: { kind: "main", id: agentId, name: "Main", depth: 0 },
 		sessionManager: {
 			getSessionId: () => sessionId,
@@ -152,11 +151,14 @@ function fakeSession(options = {}) {
 		isIdle: () => false,
 		ui: { notify() {}, setStatus() {} },
 	};
-	Object.defineProperty(ctx, "model", { get: () => requestModel ?? current });
+	Object.defineProperty(ctx, "model", { get: () => current });
 	const api = installUndertakingRouting(pi, async () => ({ getModelRole: (role) => roles[role] }));
-	async function fire(event, payload = {}) {
+	async function fire(event, payload = {}, selected = current) {
+		const eventContext = event === "before_provider_request"
+			? { ...ctx, model: selected, models: { ...ctx.models, current: () => selected } }
+			: ctx;
 		const results = [];
-		for (const handler of handlers.get(event) ?? []) results.push(await handler({ type: event, ...payload }, ctx));
+		for (const handler of handlers.get(event) ?? []) results.push(await handler({ type: event, ...payload }, eventContext));
 		return results.find((result) => result !== undefined);
 	}
 	return {
@@ -171,19 +173,17 @@ function fakeSession(options = {}) {
 			assert.ok(tool, "undertaking route tool must be registered");
 			return tool.execute("routing-call", { issue: 755, modelClass: "implementation", ...params }, undefined, undefined, ctx);
 		},
+		finish: (issue = 755) => {
+			const tool = tools.get("daily_driver_finish_undertaking");
+			assert.ok(tool, "undertaking finish tool must be registered");
+			return tool.execute("finish-call", { issue }, undefined, undefined, ctx);
+		},
 		tool: (toolName, input = {}) => fire("tool_call", { toolCallId: "queued-call", toolName, input }),
 		request: () => fire("before_provider_request", { payload: { model: current.id } }),
-		async helperRequest(selected) {
-			requestModel = selected;
-			try {
-				return await fire("before_provider_request", { payload: { model: selected.id } });
-			} finally {
-				requestModel = undefined;
-			}
-		},
+		helperRequest: (selected) => fire("before_provider_request", { payload: { model: selected.id } }, selected),
 		response: (status = 200) => fire("after_provider_response", { status, headers: {} }),
 		assistant: (selected = current) => fire("assistant_message", { message: { role: "assistant", provider: selected.provider, model: selected.id, content: [{ type: "text", text: "Offline routing response" }] } }),
-		spawn: (patterns, modelRole = "reviewer", spawnKey = `routing-child-${sessionId}`) => fire("before_subagent_spawn", { agent: "reviewer", invocationKind: "task", modelRole, patterns, spawnKey }),
+		spawn: (patterns, modelRole = "implementation", spawnKey = `routing-child-${sessionId}`, agent = modelRole) => fire("before_subagent_spawn", { agent, invocationKind: "task", modelRole, patterns, spawnKey }),
 		async close() {
 			if (!closed) {
 				closed = true;
@@ -221,8 +221,8 @@ export default function registerUndertakingRoutingChecks(check) {
 				const session = fakeSession(options);
 				sessions.push(session);
 				const parents = options?.parentId ? sessions.filter((candidate) => candidate.agentId === options.parentId) : [];
-				if (parents.length === 1) {
-					await parents[0].spawn([qualified(session.ctx.models.current())], "reviewer", session.agentId);
+				if (parents.length === 1 && options?.handoff !== false) {
+					await parents[0].spawn([qualified(session.ctx.models.current())], options.agentName ?? "implementation", session.agentId);
 				}
 				await session.start();
 				return session;
@@ -567,35 +567,280 @@ export default function registerUndertakingRoutingChecks(check) {
 		s.auth.sessions.unrestrict(PROVIDER, s.sessionId, newer);
 	});
 
-	// Child specialization must survive routing instead of every child becoming an implementor.
-	routingCheck("compatible reviewer selection preserves specialization", async (create) => {
+	// Completion must remove the worker policy and batch reservation without changing the model.
+	routingCheck("completion releases its lease, clears selection, and persists a tombstone", async (create) => {
 		const s = await create();
 		await s.route();
-		const decision = await s.spawn([`${qualified(REASONING)}:high`]);
-		assertAllowed(decision);
-		assert.equal(decision?.model, undefined, "compatible explicit reviewer patterns must not be replaced");
+		const owned = s.auth.calls.restrict[0];
+		await s.fire("assistant_message", { message: {
+			role: "assistant", provider: PROVIDER, model: MECHANICAL.id,
+			content: [{ type: "toolCall", id: "reserved-route", name: "daily_driver_route_undertaking",
+				arguments: { issue: 755, modelClass: "implementation" } }],
+		} });
+		assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
+		assertAllowed(await s.tool("daily_driver_finish_undertaking", { issue: 755 }));
+		assertAllowed(await s.tool("write", { path: "xd://daily_driver_finish_undertaking", content: '{"issue":755}' }));
+		const result = await s.finish();
+		assert.notEqual(result.isError, true);
+		assert.equal(result.details.undertaking, null);
+		assert.equal(s.describe().undertaking, null);
+		assert.deepEqual(s.entries.at(-1), {
+			type: "custom", customType: "daily-driver-undertaking-route",
+			data: { schema: 1, issue: 755, completed: true },
+		});
+		assert.deepEqual(s.auth.calls.unrestrict, [{ provider: PROVIDER, sessionId: s.sessionId, lease: owned.lease }]);
+		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+		assert.equal(s.ctx.models.current(), MECHANICAL);
+		assert.equal(s.calls.models.length, 0);
+		assert.equal(s.calls.effort.length, 0);
+		assertAllowed(await s.tool("write", { path: "implementation.js", content: "change" }));
+		s.setCurrent(FOREIGN);
+		await s.request();
+		assert.equal(s.calls.aborts, 0, "completed routes must not constrain later inference");
+		await s.close();
+		assert.equal(s.auth.calls.unrestrict.length, 1, "shutdown must not release the completed lease twice");
 	});
 
-	// A compatible first choice must not hide an incompatible fallback or a wildcard expansion.
+	// A pending model switch must not retain ownership after the undertaking finishes.
+	routingCheck("completion clears a pending route before worker inference", async (create) => {
+		const s = await create();
+		await s.route({ modelClass: "reasoning" });
+		assert.equal(s.describe().undertaking.status, "pending");
+		assertAllowed(await s.tool("daily_driver_finish_undertaking", { issue: 755 }));
+		assert.notEqual((await s.finish()).isError, true);
+		assert.equal(s.describe().undertaking, null);
+		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+		assertAllowed(await s.tool("write", { path: "implementation.js", content: "change" }));
+		assert.notEqual((await s.route({ issue: 756, modelClass: "reasoning" })).isError, true);
+		assert.equal(s.describe().undertaking.issue, 756);
+		assert.equal(s.describe().undertaking.status, "verified");
+	});
+
+	// A rejected finish must not clear the current owner's policy or release its OAuth restriction.
+	routingCheck("finishing another issue preserves the verified owner", async (create) => {
+		const s = await create();
+		await s.route();
+		const before = s.describe().undertaking;
+		const entries = structuredClone(s.entries);
+		const result = await s.finish(756);
+		assert.equal(result.isError, true);
+		assert.deepEqual(result.details.undertaking, before);
+		assert.deepEqual(s.describe().undertaking, before);
+		assert.deepEqual(s.entries, entries);
+		assert.equal(s.auth.calls.unrestrict.length, 0);
+		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), true);
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
+		assertAllowed(await s.tool("write", { path: "implementation.js", content: "change" }));
+	});
+
+	// Selecting another issue must report ownership conflict without poisoning the verified route.
+	routingCheck("selecting another issue preserves the verified owner", async (create) => {
+		const s = await create();
+		await s.route();
+		const before = s.describe().undertaking;
+		const entries = structuredClone(s.entries);
+		const result = await s.route({ issue: 756, modelClass: "reasoning" });
+		assert.equal(result.isError, true);
+		assert.deepEqual(result.details.undertaking, before);
+		assert.deepEqual(s.describe().undertaking, before);
+		assert.deepEqual(s.entries, entries);
+		assert.equal(s.calls.models.length, 0);
+		assert.equal(s.auth.calls.restrict.length, 1);
+		assert.equal(s.auth.calls.unrestrict.length, 0);
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
+		assertAllowed(await s.tool("write", { path: "implementation.js", content: "change" }));
+	});
+
+	// A completed session must accept a new issue and still require evidence for its model switch.
+	routingCheck("completion permits a new issue to select and verify its own route", async (create) => {
+		const s = await create();
+		await s.route({ modelClass: "reasoning" });
+		await s.request();
+		await s.assistant();
+		assert.notEqual((await s.finish()).isError, true);
+		assert.equal(s.ctx.models.current(), REASONING, "completion must not restore an earlier model");
+		const result = await s.route({ issue: 756 });
+		assert.notEqual(result.isError, true);
+		assert.equal(result.details.undertaking.issue, 756);
+		assert.equal(result.details.undertaking.selectedModel, qualified(MECHANICAL));
+		assert.equal(result.details.undertaking.status, "pending");
+		assert.equal(s.auth.calls.restrict.length, 2, "the new undertaking needs a new owned lease");
+		assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
+		await s.request();
+		await s.assistant();
+		assert.equal(s.describe().undertaking.status, "verified");
+		assertAllowed(await s.tool("write", { path: "implementation.js", content: "change" }));
+	});
+
+	// Recovery must honor the latest completion record instead of reviving an earlier saved policy.
+	routingCheck("completion tombstone prevents route and lease recovery", async (create) => {
+		const first = await create();
+		await first.route();
+		await first.finish();
+		const entries = structuredClone(first.entries);
+		await first.close();
+		const resumed = await create({
+			auth: first.auth, sessionId: first.sessionId, agentId: first.agentId,
+			entries, current: REASONING,
+		});
+		assert.equal(resumed.describe().undertaking, null);
+		assert.equal(resumed.auth.sessions.isRestricted(PROVIDER, resumed.sessionId), false);
+		assert.equal(resumed.auth.calls.restrict.length, 1);
+		await resumed.request();
+		assert.equal(resumed.calls.aborts, 0);
+		assertAllowed(await resumed.tool("write", { path: "implementation.js", content: "change" }));
+		assert.notEqual((await resumed.route({ issue: 756, modelClass: "reasoning" })).isError, true);
+		assert.equal(resumed.describe().undertaking.issue, 756);
+		assert.equal(resumed.describe().undertaking.status, "verified");
+	});
+
+	// Completion must not remove an operator lease, whether it predates or replaces our own lease.
+	for (const timing of ["existing", "replacement"]) {
+		routingCheck(`completion preserves an ${timing} operator OAuth restriction`, async (create) => {
+			const auth = fakeAuth();
+			const sessionId = `operator-completion-${++nextSession}`;
+			let operator;
+			if (timing === "existing") operator = auth.sessions.restrict(PROVIDER, sessionId, ["account:eligible-one"]);
+			const s = await create({ auth, sessionId });
+			await s.route();
+			const owned = timing === "replacement" ? auth.calls.restrict[0] : undefined;
+			if (timing === "replacement") operator = auth.sessions.restrict(PROVIDER, sessionId, ["account:eligible-two"]);
+			assert.notEqual((await s.finish()).isError, true);
+			assert.equal(s.describe().undertaking, null);
+			assert.equal(auth.sessions.isRestricted(PROVIDER, sessionId), true);
+			assert.equal(auth.sessions.permits(PROVIDER, sessionId, timing === "existing" ? 1 : 2), true);
+			assert.equal(auth.sessions.permits(PROVIDER, sessionId, timing === "existing" ? 2 : 1), false);
+			assert.deepEqual(auth.calls.unrestrict, owned ? [{ provider: PROVIDER, sessionId, lease: owned.lease }] : []);
+			await s.close();
+			assert.equal(auth.sessions.isRestricted(PROVIDER, sessionId), true);
+			auth.sessions.unrestrict(PROVIDER, sessionId, operator);
+		});
+	}
+
+	// Worker specialization must survive routing instead of every child becoming an implementor.
+	routingCheck("compatible reasoning worker selection preserves specialization", async (create) => {
+		const s = await create();
+		await s.route();
+		const decision = await s.spawn([`${qualified(REASONING)}:high`], "reasoning");
+		assertAllowed(decision);
+		assert.equal(decision?.model, undefined, "compatible explicit worker patterns must not be replaced");
+	});
+
+	// A compatible first worker choice must not hide an incompatible fallback or wildcard expansion.
 	for (const patterns of [
 		[qualified(REASONING), qualified(FOREIGN)],
 		[qualified(REASONING), qualified(FRONTIER)],
 		[`${PROVIDER}/*`],
 	]) {
-		routingCheck(`child fallback is checked across ${patterns.join(",")}`, async (create) => {
+		routingCheck(`worker fallback is checked across ${patterns.join(",")}`, async (create) => {
 			const s = await create();
 			await s.route();
 			assertBlocked(await s.spawn(patterns));
 		});
 	}
 
-	// Explicit incompatible roles must report a gap rather than silently overwrite user configuration.
-	routingCheck("incompatible reviewer role cannot be replaced with an implementation role", async (create) => {
-		const s = await create({ roles: { reviewer: qualified(FOREIGN) } });
-		await s.route();
-		const decision = await s.spawn([qualified(FOREIGN)]);
-		assertBlocked(decision);
-		assert.equal(decision.model, undefined);
+	// An incompatible worker role must not bypass the policy or be silently replaced.
+	for (const agent of ["implementation", "reasoning", "task"]) {
+		routingCheck(`incompatible ${agent} worker cannot escape its undertaking`, async (create) => {
+			const s = await create({ roles: { [agent]: qualified(FOREIGN) } });
+			await s.route({ modelClass: "mechanical" });
+			await s.assistant();
+			assert.equal(s.describe().undertaking.status, "verified");
+			const decision = await s.spawn([qualified(FOREIGN)], agent);
+			assertBlocked(decision);
+			assert.equal(decision.model, undefined);
+		});
+	}
+
+	// Independent specialists must retain their configured models rather than inherit worker constraints.
+	for (const agentName of ["reviewer", "scout", "security-reviewer", "seance"]) {
+		routingCheck(`${agentName} admission and startup preserve its independent route`, async (create) => {
+			const parent = await create({ roles: { [agentName]: qualified(FOREIGN) } });
+			await parent.route();
+			const childId = `specialist-${agentName}-${++nextSession}`;
+			const decision = await parent.spawn([qualified(FOREIGN)], agentName, childId);
+			assertAllowed(decision);
+			assert.equal(decision?.model, undefined);
+			const restrictions = parent.auth.calls.restrict.length;
+			const child = await create({
+				auth: parent.auth, parentId: parent.agentId, agentId: childId, agentName,
+				current: FOREIGN, handoff: false,
+			});
+			assert.equal(child.describe().undertaking, null);
+			assert.equal(child.auth.sessions.isRestricted(PROVIDER, child.sessionId), false);
+			assert.equal(child.auth.calls.restrict.length, restrictions, "specialists must not acquire worker leases");
+			assert.deepEqual(child.entries, [], "specialists must not persist an inherited worker route");
+			assert.equal(child.calls.models.length, 0);
+			await child.request();
+			assert.equal(child.calls.aborts, 0);
+			assertAllowed(await child.tool("write", { path: "review.txt", content: "Review result" }));
+			assert.equal(parent.describe().undertaking.status, "verified");
+		});
+	}
+
+	// A specialist name without a correlated handoff must not bypass child startup authorization.
+	routingCheck("specialist startup without a handoff fails closed", async (create) => {
+		const parent = await create();
+		await parent.route();
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentName: "reviewer",
+			current: FOREIGN, handoff: false,
+		});
+		assert.equal(child.describe().undertaking.status, "blocked");
+		await assert.rejects(child.request());
+		assert.equal(child.calls.aborts, 2);
+	});
+
+	// A consumed exemption must not authorize a second child that reuses the same process-local ID.
+	routingCheck("specialist startup consumes its handoff exemption", async (create) => {
+		const parent = await create();
+		await parent.route();
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentName: "reviewer", current: FOREIGN,
+		});
+		assert.equal(child.describe().undertaking, null);
+		await child.close();
+		const repeated = await create({
+			auth: parent.auth, parentId: parent.agentId, agentId: child.agentId,
+			agentName: "reviewer", current: FOREIGN, handoff: false,
+		});
+		assert.equal(repeated.describe().undertaking.status, "blocked");
+		await assert.rejects(repeated.request());
+	});
+
+	// A valid specialist handoff must not waive the shared-auth and exact-parent checks.
+	for (const mismatch of ["authentication scope", "parent identity"]) {
+		routingCheck(`specialist handoff rejects another ${mismatch}`, async (create) => {
+			const parent = await create();
+			await parent.route();
+			const childId = `foreign-specialist-${++nextSession}`;
+			assertAllowed(await parent.spawn([qualified(FOREIGN)], "reviewer", childId));
+			const child = await create({
+				auth: mismatch === "authentication scope" ? fakeAuth() : parent.auth,
+				parentId: mismatch === "parent identity" ? `other-parent-${++nextSession}` : parent.agentId,
+				agentId: childId, agentName: "reviewer", current: FOREIGN, handoff: false,
+			});
+			assert.equal(child.describe().undertaking.status, "blocked");
+			await assert.rejects(child.request());
+			assert.equal(child.calls.aborts, 2);
+		});
+	}
+
+	// A previously admitted specialist must not start after its parent loses verification.
+	routingCheck("specialist startup requires a still-verified parent", async (create) => {
+		const parent = await create();
+		await parent.route();
+		const childId = `pending-parent-specialist-${++nextSession}`;
+		assertAllowed(await parent.spawn([qualified(FOREIGN)], "reviewer", childId));
+		await parent.route({ modelClass: "reasoning" });
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentId: childId,
+			agentName: "reviewer", current: FOREIGN, handoff: false,
+		});
+		assert.equal(child.describe().undertaking.status, "blocked");
+		await assert.rejects(child.request());
 	});
 
 	// A child must install the parent's eligible OAuth pool before its first inference can escape.
@@ -721,7 +966,7 @@ export default function registerUndertakingRoutingChecks(check) {
 		const parent = await create();
 		await parent.route();
 		const childId = `closed-parent-child-${++nextSession}`;
-		assertAllowed(await parent.spawn([qualified(MECHANICAL)], "reviewer", childId));
+		assertAllowed(await parent.spawn([qualified(MECHANICAL)], "implementation", childId));
 		await parent.close();
 		const child = await create({ auth: parent.auth, parentId: parent.agentId, agentId: childId });
 		assert.equal(child.describe().undertaking.status, "blocked");

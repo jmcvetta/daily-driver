@@ -48,7 +48,17 @@ and visible fallbacks. The tool reports `pending`, `verified`, or `blocked`;
 only an observed, verified execution identity permits work. An unavailable or
 incompatible mapping is a configuration gap, not permission to rewrite roles.
 Eligible OAuth account refresh or rotation is allowed. Independently configured
-host helper roles are unchanged.
+`reviewer`, `scout`, `security-reviewer`, and `seance` helpers are not issue
+implementation workers and retain their configured routes; implementation
+workers and their execution fallbacks retain the strict route.
+
+After the pull request is ready, or answer-only research is completed and
+recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
+before reusing the session for another issue. Do not finish stopped or
+incomplete work. Selecting a different issue returns an error without replacing
+the existing owner or route; finish the completed undertaking or resume the
+existing one before selecting another. A finish call with the wrong issue also
+returns an error without changing the existing state.
 
 Omp prefers its extension's in-session switch. A full handoff needs a surface
 that can constrain and verify the same route and has one owner. Claude's

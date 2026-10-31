@@ -4,6 +4,7 @@ const ENTRY = "daily-driver-undertaking-route";
 const CLASSES = ["mechanical", "implementation", "reasoning", "frontier"];
 const EFFORT = /:(off|minimal|low|medium|high|xhigh|max|auto|inherit)$/u;
 const GUARDED_APIS = ["openai-completions", "openai-responses", "openai-codex-responses", "anthropic-messages", "google-generative-ai", "google-gemini-cli", "google-vertex"];
+const SPECIALISTS = new Set(["reviewer", "scout", "security-reviewer", "seance"]);
 // Agent names are process-local, not globally unique. A shared auth store and
 // an unambiguous live parent session are both required for inheritance.
 const roots = new WeakMap();
@@ -101,6 +102,7 @@ function storedState(ctx) {
 	const entries = ctx.sessionManager.getBranch?.() ?? [];
 	const saved = entries.filter(entry => entry.type === "custom" && entry.customType === ENTRY).at(-1)?.data;
 	if (!saved) return null;
+	if (saved.completed === true && saved.schema === 1) return null;
 	if (saved.schema !== 1 || !CLASSES.includes(saved.modelClass) || !Number.isSafeInteger(saved.issue) ||
 		!saved.origin?.provider || !saved.selectedModel || !saved.authenticationRoute) {
 		throw new Error("Saved undertaking route is invalid; recover the original execution identity before work");
@@ -116,6 +118,7 @@ export function installUndertakingRouting(pi, getSettings) {
 	function current(ctx) { return states.get(ctx.sessionManager?.getSessionId?.()); }
 
 	function publish(ctx, state) {
+		state.workerModels ??= ctx.models;
 		states.set(state.sessionId, state);
 		const sessions = scope(ctx);
 		if (sessions) sessions.set(state.sessionId, { agentId: ctx.agent?.id, state });
@@ -156,11 +159,17 @@ export function installUndertakingRouting(pi, getSettings) {
 				throw new Error("Child cannot inherit an undertaking from another root or authentication scope");
 			}
 			if (!expected && parents.length && !saved) throw new Error("Child undertaking handoff identity is missing");
+			if (expected?.specialist) {
+				if (expected.state.status !== "verified") throw new Error("Parent undertaking route is not verified");
+				pendingChildren.delete(ctx.agent.id);
+				return;
+			}
 			const parent = expected?.state;
 			if (!parent && !saved) return;
 			if (expected) pendingChildren.delete(ctx.agent.id);
 			state = {
 				...(parent ?? saved), sessionId, lease: undefined, status: "pending", observedModel: null,
+				workerModels: ctx.models,
 				selectedModel: parent ? selector(ctx.models.current()) : saved.selectedModel,
 				selectedEffort: parent ? pi.getThinkingLevel() : saved.selectedEffort,
 				identities: (parent ?? saved).identities ? [...(parent ?? saved).identities] : undefined,
@@ -195,6 +204,11 @@ export function installUndertakingRouting(pi, getSettings) {
 		}),
 		execute: async (_id, params, _signal, _update, ctx) => {
 			let state = current(ctx);
+			if (state && state.issue !== params.issue) return {
+				isError: true,
+				content: [{ type: "text", text: "Another undertaking owns this session; finish or resume it before selecting a different issue." }],
+				details: describe(ctx),
+			};
 			try {
 				if (!Number.isSafeInteger(params.issue) || params.issue < 1 || !CLASSES.includes(params.modelClass)) {
 					throw new Error("A valid issue and required model class are mandatory");
@@ -208,11 +222,11 @@ export function installUndertakingRouting(pi, getSettings) {
 					throw new Error("Configured class model is unavailable");
 				}
 				if (state?.issue !== params.issue) {
-					if (state) throw new Error("Another undertaking owns this session; finish or resume it before selecting a different issue");
 					state = {
 						issue: params.issue, modelClass: params.modelClass, origin: origin(model),
 						authenticationRoute: source(ctx, model.provider), sessionId: ctx.sessionManager.getSessionId(),
 						status: "pending", selectedModel: selector(target), observedModel: null,
+						workerModels: ctx.models,
 					};
 					publish(ctx, state);
 				}
@@ -253,11 +267,29 @@ export function installUndertakingRouting(pi, getSettings) {
 		},
 	});
 
+	pi.registerTool({
+		name: "daily_driver_finish_undertaking",
+		label: "Finish undertaking model route",
+		description: "Release this completed undertaking's owned route restriction before reusing the session. Does not change the selected model or shared roles.",
+		parameters: pi.zod.object({ issue: pi.zod.number().int().min(1) }),
+		execute: async (_id, params, _signal, _update, ctx) => {
+			const state = current(ctx);
+			if (!state || state.issue !== params.issue) return {
+				isError: true, content: [{ type: "text", text: "No matching undertaking owns this session." }], details: describe(ctx),
+			};
+			await pi.appendEntry(ENTRY, { schema: 1, issue: state.issue, completed: true });
+			release(ctx, state);
+			return { content: [{ type: "text", text: "Undertaking route finished." }], details: describe(ctx) };
+		},
+	});
+
 	pi.on("before_provider_request", (_event, ctx) => {
 		const state = current(ctx);
 		if (!state) return;
 		// Side requests on independently selected helper models are not undertaking workers.
-		if (selector(ctx.model) !== selector(ctx.models.current())) return;
+		// Keep the live query captured outside this request: request contexts bind
+		// both model accessors to the request model, including helper requests.
+		if (selector(ctx.model) !== selector(state.workerModels.current())) return;
 		try {
 			if (state.status === "blocked") throw new Error(state.reason);
 			checkModel(ctx, state, ctx.model);
@@ -296,8 +328,8 @@ export function installUndertakingRouting(pi, getSettings) {
 	pi.on("tool_call", (event, ctx) => {
 		const state = current(ctx);
 		if ((!state || state.status === "verified") && !selecting.has(ctx.sessionManager?.getSessionId?.())) return;
-		if (["read", "grep", "glob", "daily_driver_get_session", "daily_driver_route_undertaking"].includes(event.toolName)) return;
-		if (event.toolName === "write" && ["xd://daily_driver_get_session", "xd://daily_driver_route_undertaking"].includes(event.input?.path)) return;
+		if (["read", "grep", "glob", "daily_driver_get_session", "daily_driver_route_undertaking", "daily_driver_finish_undertaking"].includes(event.toolName)) return;
+		if (event.toolName === "write" && ["xd://daily_driver_get_session", "xd://daily_driver_route_undertaking", "xd://daily_driver_finish_undertaking"].includes(event.input?.path)) return;
 		return { block: true, reason: state?.reason ?? "Undertaking model selection is pending actual worker identity verification." };
 	});
 
@@ -307,7 +339,8 @@ export function installUndertakingRouting(pi, getSettings) {
 		try {
 			if (state.status !== "verified") throw new Error("Parent undertaking route is not verified");
 			if (!event.patterns?.length) throw new Error("Child effective model route is unavailable");
-			for (const pattern of event.patterns) {
+			const specialist = SPECIALISTS.has(event.agent);
+			if (!specialist) for (const pattern of event.patterns) {
 				if (typeof pattern !== "string" || /[*?,]/u.test(pattern)) throw new Error("Child route must use concrete, verifiable candidates");
 				const model = ctx.models.resolve(pattern);
 				if (!model) throw new Error("Child model route cannot be resolved");
@@ -318,17 +351,21 @@ export function installUndertakingRouting(pi, getSettings) {
 			if (!event.spawnKey) throw new Error("Child stable handoff identity is unavailable");
 			const previous = pendingChildren.get(event.spawnKey);
 			if (previous && previous.state !== state && previous.state.status !== "closed") throw new Error("Child handoff identity belongs to another undertaking");
-			pendingChildren.set(event.spawnKey, { state, parentId: ctx.agent?.id, auth: ctx.modelRegistry.authStorage });
+			pendingChildren.set(event.spawnKey, { state, specialist, parentId: ctx.agent?.id, auth: ctx.modelRegistry.authStorage });
 		} catch (error) { return { block: true, reason: `Undertaking route gap: ${error.message}` }; }
 	});
 
-	pi.on("session_shutdown", (_event, ctx) => {
-		const state = current(ctx);
-		if (!state) return;
+	function release(ctx, state) {
 		if (state.lease) ctx.modelRegistry.authStorage.sessions.unrestrict(state.origin.provider, state.sessionId, state.lease);
 		state.status = "closed";
 		scope(ctx)?.delete(state.sessionId);
 		states.delete(state.sessionId);
+		selecting.delete(state.sessionId);
+	}
+
+	pi.on("session_shutdown", (_event, ctx) => {
+		const state = current(ctx);
+		if (state) release(ctx, state);
 	});
 
 	return { describe };

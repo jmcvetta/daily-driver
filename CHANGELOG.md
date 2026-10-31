@@ -4,7 +4,7 @@
 
 ### Changed
 
-* Route classed undertaking work to the exact configured class before ownership, while preserving its provider, backend, family, and authentication route ([#755](https://github.com/jmcvetta/daily-driver/issues/755)).
+* Route classed undertaking work to the exact configured class before ownership, preserving its provider, backend, family, and authentication route; retain independent specialist helper routes and finish completed undertakings before session reuse ([#755](https://github.com/jmcvetta/daily-driver/issues/755)).
 * Require assignable task issues for all new and reused epic stories, with task readiness checked before linking and dispatch ([#723](https://github.com/jmcvetta/daily-driver/issues/723)).
 
 ### Fixed

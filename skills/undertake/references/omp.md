@@ -64,8 +64,19 @@ The effective route must retain the current model family, provider, backend
 and authentication route, including visible child and fallback candidates.
 Account refresh or eligible rotation does not change that invariant. Missing,
 cleared, incompatible, or unverifiable mappings are configuration gaps.
-Delegated issue workers inherit the constraints; do not override incompatible
-explicit agent roles or change unrelated reviewer, scout, or host helper roles.
+Delegated implementation workers and their execution fallbacks inherit the
+constraints; do not override incompatible explicit worker roles. Independently
+configured `reviewer`, `scout`, `security-reviewer`, and `seance` helpers are
+not issue implementation workers and retain their configured routes.
+
+After the pull request is ready, or answer-only research is completed and
+recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
+for the completed undertaking before reusing the session for another issue.
+Do not finish a stopped or incomplete undertaking. Selecting a different issue
+returns an error and preserves the existing owner and route. Finish the
+completed undertaking or resume the existing one before selecting another.
+A finish call with the wrong issue also returns an error and preserves the
+existing state.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a

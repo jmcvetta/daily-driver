@@ -192,7 +192,8 @@ effort, and all visible fallbacks. Keep the current model family, provider,
 backend, and authentication route. An eligible account may refresh or rotate;
 do not change shared roles or credentials to make a route available. This
 policy covers undertaking workers, delegated issue work, and their execution
-fallbacks, not independently configured host helper roles.
+fallbacks. Independently configured `reviewer`, `scout`, `security-reviewer`,
+and `seance` helpers are not issue implementation workers.
 
 Prefer a supported in-session switch. Continue only when the harness confirms
 the selected execution identity, not merely when it accepts a switch. While
@@ -203,6 +204,10 @@ owns the whole undertaking, including its worktree and claim. The sender stops:
 it must not recursively hand off, claim again, or supervise a duplicate.
 If neither route can enforce the invariant, stop before the worktree or claim
 and report the precise configuration or unsupported-surface gap.
+
+In Omp, an attempt to select another issue does not replace the existing
+undertaking owner. Finish the completed undertaking or resume the existing one
+before selecting a different issue; use the Omp reference for the finish call.
 
 An effective Astra/Fable route is frontier even through a lower-class role or
 fallback. Ordinary classes cannot fall back to frontier. Frontier execution
@@ -443,6 +448,10 @@ supported no is a result. Inconclusive work is complete only under
 `issue-body`'s bounded-report rule. Failed access, unresolved blocking intent,
 or abandoned work stays open and follows `Where it stops and waits`.
 
+After completion, finish the Omp undertaking through its harness route before
+reusing the session for another issue. Do not finish a stopped or incomplete
+undertaking.
+
 This route skips `Open the draft`, `Review the head`, `Fix, answer, resolve,
 push`, `Verify the fix delta`, `Ready for review`, and `Keep it current`.
 Never create an empty PR or mark an incomplete result complete. Repository
@@ -603,6 +612,9 @@ below holds. It does not review; `review-cycle` supplies the full review and
 independent verification that the gate consumes. The completion notice is one
 of the gate's reads, so a round that closed without posting it is not yet
 ready.
+
+Once the pull request is ready, finish the Omp undertaking through its harness
+route before reusing the session for another issue.
 
 Marking a draft ready is a natural moment to reach for a review, and the
 branch was already reviewed at `Review the head` — whether that review is
