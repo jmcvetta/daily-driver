@@ -11,7 +11,7 @@
 
 experiment_id: omp-glm-5-3
 description: >-
-  Trigger accuracy, constitution delivery and review-depth routing on GLM 5.3,
+  Trigger accuracy and constitution delivery on GLM 5.3,
   with daily-driver loaded and without it.
 
 defaults:

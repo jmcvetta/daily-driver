@@ -1,5 +1,5 @@
 experiment_id: with-without-667-rerun-with-plugin
-description: Trigger accuracy, constitution delivery and review-depth routing, with
+description: Trigger accuracy and constitution delivery, with
   the daily-driver plugin loaded and without it.
 defaults:
   repeats: 5
