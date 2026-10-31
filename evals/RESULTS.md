@@ -112,4 +112,15 @@ One row per committed record, oldest first.
 | 2026-10-30 | with-without | claude-code | claude-sonnet-5 | claude-code claude-sonnet-5 (task-pinned) | 10 | 5/10 | $7.33 | $1.47 | 35m 34s |
 | 2026-10-31 | with-without | claude-code | claude-sonnet-5 | claude-code claude-sonnet-5 (task-pinned) | 170 | 112/170 | $40.34 | $0.36 | 25m 55s |
 | 2026-10-31 | with-without | claude-code | claude-sonnet-5 | claude-code claude-sonnet-5 (task-pinned) | 80 | 68/80 | $18.04 | $0.27 | 10m 56s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 7 | 6/7 | subscription | subscription | 4m 02s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 0/1 | subscription | subscription | 1m 08s |
 | 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | subscription | subscription | 0m 23s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 0/3 | subscription | subscription | 2m 11s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 1/3 | subscription | subscription | 2m 41s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 1/3 | subscription | subscription | 2m 36s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 0/2 | subscription | subscription | 1m 20s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | subscription | subscription | 1m 24s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 0/1 | subscription | subscription | 0m 42s |
+| 2026-10-31 | omp-760-base-vs-candidate | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 22 | 20/22 | subscription | subscription | 6m 12s |
+| 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | subscription | subscription | 0m 49s |
+| 2026-10-31 | omp-760-base-vs-candidate | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | subscription | subscription | 1m 10s |

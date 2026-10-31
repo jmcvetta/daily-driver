@@ -122,7 +122,7 @@ jobs:
       - name: Validate Omp plugin integration
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin')
         run: make check-omp-plugin
-      - name: Validate live Omp embark title barrier
+      - name: Validate live Omp runtime integration
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live')
         run: make check-omp-embark-title-live
       # The infrastructure steps run last and tolerate an earlier failed check,
