@@ -147,9 +147,9 @@ The watch
 | `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-`Land the pull request` uses the same readiness fields as `undertake`'s `The
-milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
-`headRefOid` is the head the merge binds to. The labels and body answer the
+`Land the pull request` reads its own state: `isDraft` must be false,
+`mergeStateStatus` must be `CLEAN`, and `headRefOid` is the head the merge
+binds to. The labels and body answer the
 human-action read in the same call. The complete thread graph is the paginated
 GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
 
