@@ -117,6 +117,47 @@ resolved, never from an assumed `origin`.
 Omp uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
 
+Task evidence state
+-------------------
+
+`daily_driver_task_state` stores private, active-branch task records. Call
+`{action: "status"}` before another approval request or an unfinished stop.
+For ordinary repository work not already active, call `begin`; do not activate
+an ordinary question. Mutating calls take a JSON-string `record`.
+
+- `begin`: `{taskId, operation, target, source: {sourceId, quote}}`. Use the
+  latest external user source returned by `status`, not a copied handoff.
+- `authorization`: `{id, kind: "user" | "workflow", operation, target,
+  source: {sourceId, quote}, limits, conditions, expiresAt?, supersedes?,
+  revokes?, freshConfirmation?}`. Sources must resolve to original user input
+  or workflow instructions. Exact quotes establish provenance, not semantic
+  permission. Read conditions against the original source before acting.
+- `blocker`: `{operation, target, kind: "external" | "authorization" |
+  "safety" | "execution", evidence: [{sourceId, quote}], authorizationIds: [],
+  routes: [{route, disposition: "failed" | "prohibited" | "unavailable",
+  evidence: {sourceId, quote}}], externalContribution,
+  independentWork: {pending: [], completed: []}, resume}`.
+- `complete`: `{summary}`. This records reported completion, not independent
+  proof that acceptance criteria passed.
+
+The tool never grants permission or replaces harness approval. Original
+sources and tool evidence stay in session entries through compaction and
+process resume. Cross-session handoffs carry source references and applicable
+scope; copied agent text is not an original approval source in a new session.
+Revalidate through the original source or existing workflow authorization.
+
+The `session_stop` adapter checks active unfinished tasks and returns at most
+two corrections for an unchanged observed condition. The count survives
+resume; rewriting record labels does not renew it. Exhaustion emits an
+execution-failure notice. It does not complete the task or invent an approval
+requirement. User stop input and an aborted stop event prevent continuation.
+The adapter does not prove arbitrary prose claims about approval or exhausted
+routes. Preserve the original evidence and make no stronger claim.
+
+Omp exposes an external-input origin on `input`, so scheduled reminders and
+tool output do not become user authority. These semantics do not establish
+equivalent hook provenance on another harness.
+
 
 The milestone
 =============

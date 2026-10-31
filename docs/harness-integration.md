@@ -30,6 +30,62 @@ Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
 
+## Task continuation and approval evidence
+
+The constitution requires agents to diagnose ordinary failures, preserve
+applicable approval, and finish independent permitted work before pausing.
+`undertake` owns the detailed escalation contract. The rule also applies to
+ordinary repository work.
+
+On Omp, `extensions/task-state.mjs` registers `daily_driver_task_state` and
+uses `session_stop` for bounded correction. Task scope, source-anchored
+authorization, tool evidence and correction counts live in private,
+active-branch session entries. The adapter restores a compact handoff during
+context preparation and compaction. `status` returns bounded source excerpts;
+`status` with a JSON `record` containing `sourceId` returns that original
+source. The [Omp undertaking reference](../skills/undertake/references/omp.md#task-evidence-state)
+defines the tool's records.
+
+An unsupported unfinished stop receives at most two corrective continuations
+per unchanged observed condition. Restarting the process does not renew that
+allowance. Explicit cancellation and an aborted stop handler prevent further
+correction. Exhaustion reports an execution failure, not completion or a new
+approval requirement. Ordinary questions do not automatically activate a task.
+
+These checks validate provenance, scope fields and referenced observations.
+They do not prove that arbitrary prose grants permission, that every possible
+route was exhausted, or that reported completion satisfies acceptance criteria.
+The tool does not replace harness permissions. Original approval sources,
+conditions and safety restrictions remain authoritative. A copied agent
+handoff cannot grant approval in another session.
+
+`scripts/check-omp-task-state-live.py` exercises the installed Omp with a local
+scripted provider, persistent session resume and RPC abort. It makes no live
+model request. Behavioral cases separately measure whether a model uses
+approval and completes permitted actions; see [evaluation guidance](../evals/README.md).
+
+### Hook-harness boundary
+
+Claude Code and Codex document stop interception, but Daily Driver does not
+claim the Omp adapter is enforced there:
+
+- [Claude Code's `UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit)
+  also receives scheduled tasks, background-agent reports and peer messages.
+  Its documented event has no origin discriminator. Treating every prompt
+  event as a user source would manufacture authority and could restart
+  cancelled work.
+- [Codex documents `Stop` and `Interrupt`](https://developers.openai.com/codex/hooks).
+  Its stop continuation becomes a new user prompt, so an adapter must exclude
+  its own messages from authority and retry renewal. The shared plugin hook
+  manifest cannot register Codex's `Interrupt` event: Claude's strict plugin
+  validator reports it as unknown and rejects the manifest.
+
+These are integration limits, not a claim that either harness lacks a stop
+hook. Their shared workflow and handoff contracts preserve approval references
+and require blocker evidence. Runtime parity needs a supported transport with
+verified input-origin and cancellation semantics, not guessed transcript fields
+or omission of cancellation handling.
+
 ## Omp task roles and worktrees
 
 The Omp installation defines `mechanical`, `implementation`, `reasoning` and

@@ -1,15 +1,14 @@
 /**
  * Omp runtime adapter for daily-driver.
  *
- * This is the thin Oh My Pi half of the daily-driver plugin. Claude Code gets
- * the same behaviour from `hooks/hooks.json` + `hooks/ask-in-chat.py`; this
- * module brings that behaviour to Omp (Oh My Pi) as an `ExtensionAPI` factory,
- * where hooks are not the mechanism. The two harnesses share the skills and
- * the one marketplace catalog (`.claude-plugin/marketplace.json` — Omp reads
- * that Claude-compatible catalog, so there is deliberately no
- * `.omp-plugin/marketplace.json`).
+ * This is the Oh My Pi half of the daily-driver plugin. The common guards
+ * correspond to `hooks/hooks.json`; Omp also provides task-state enforcement
+ * through its trusted input and stop lifecycle. Hooks on other harnesses do
+ * not establish those same provenance and cancellation guarantees.
+ * The harnesses share the skills and marketplace catalog
+ * (`.claude-plugin/marketplace.json`); there is no separate Omp catalog.
  *
- * Four jobs:
+ * Five jobs:
  *
  * 1. Block Omp's `ask` tool, the way Claude Code denies `AskUserQuestion`.
  *    The model is told not to retry and to ask the question in chat instead,
@@ -35,10 +34,13 @@
  *    `daily_driver_get_session` is part of the runtime surface consumed by
  *    harness-portable skills.
  *
+ * 5. Retain private task and authorization evidence and correct unsupported
+ *    unfinished stops through the bounded task-state controller.
+ *
  * This file has no third-party dependencies: it runs as a plain `.js` module
  * under Omp, with no build step and no package install between this repo and
- * a user's `~/.omp`. All per-session state lives in the factory closure so two
- * sessions in one process never share a trigger map.
+ * a user's `~/.omp`. Trigger maps stay in the factory closure; durable task
+ * evidence stays on the active session branch. Neither is process-global.
  */
 
 import { execFileSync } from "node:child_process";
@@ -46,6 +48,7 @@ import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { installModelClassDefaults } from "./role-default-helper.mjs";
+import { installTaskState } from "./task-state.mjs";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -2345,6 +2348,7 @@ function newTriggerId() {
 /** The `daily-driver` Omp extension factory. */
 export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	const z = pi.zod;
+	installTaskState(pi);
 
 	const initializedSettings = new WeakSet();
 	pi.on("session_start", async (_event, ctx) => {

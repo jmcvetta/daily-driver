@@ -55,7 +55,7 @@ jobs:
           echo "$RUNNER_TEMP/worktrunk/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/worktrunk/bin/wt" --version
       - name: Install Omp
-        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live')
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-task-state-live')
         run: |
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
@@ -125,6 +125,9 @@ jobs:
       - name: Validate live Omp embark title barrier
         if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live')
         run: make check-omp-embark-title-live
+      - name: Validate live Omp task continuation
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-task-state-live')
+        run: make check-omp-task-state-live
       # The infrastructure steps run last and tolerate an earlier failed check,
       # so an unrelated failure cannot hide a stack error and a stack error
       # cannot stop the checks above. `!cancelled()` keeps a cancelled run from
