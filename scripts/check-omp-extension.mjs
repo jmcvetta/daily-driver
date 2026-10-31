@@ -159,8 +159,23 @@ function fakeApi(overrides = {}) {
 	const fire = (event, payload, ctx) => {
 		const registered = handlers.get(event);
 		if (!registered) return undefined;
-		const results = registered.map((handler) => handler(payload, ctx));
-		return results.length === 1 ? results[0] : Promise.all(results);
+		let firstResult;
+		function dispatch(start) {
+			for (let index = start; index < registered.length; index++) {
+				const result = registered[index](payload, ctx);
+				if (typeof result?.then === "function") {
+					return Promise.resolve(result).then((value) => {
+						if (event === "tool_call" && value?.block) return value;
+						firstResult ??= value;
+						return dispatch(index + 1);
+					});
+				}
+				if (event === "tool_call" && result?.block) return result;
+				firstResult ??= result;
+			}
+			return firstResult;
+		}
+		return dispatch(0);
 	};
 
 	return { pi, rec: calls, tools, timers, fire };
@@ -3161,17 +3176,22 @@ function guardWithPath(binDir, target, env = {}, call = null) {
 			[
 				`const mod = await import(${JSON.stringify(pathToFileURL(EXTENSION).href)});`,
 				"const handlers = new Map();",
-				"const node = (m) => ({ describe: () => node(m), min: () => node(m), max: () => node(m), int: () => node(m) });",
+				"const node = (m) => ({ describe: () => node(m), min: () => node(m), max: () => node(m), int: () => node(m), optional: () => node(m) });",
 				"const pi = { zod: { object: (s) => s, string: () => node({}), number: () => node({}) },",
-				"  on: (e, h) => handlers.set(e, h), registerTool: () => {}, setSessionName: async () => {},",
+				"  on: (e, h) => { const registered = handlers.get(e) ?? []; registered.push(h); handlers.set(e, registered); }, registerTool: () => {}, setSessionName: async () => {},",
 				"  sendMessage: () => {}, setTimeout: () => 1, clearTimer: () => {} };",
 				"mod.default(pi);",
 				`const target = ${JSON.stringify(target)};`,
 				`const call = ${JSON.stringify(call ?? { toolName: "write", input: { path: "new.txt", content: "x" } })};`,
-				'const decision = handlers.get("tool_call")(',
-				'  { type: "tool_call", toolCallId: "child", toolName: call.toolName, input: call.input },',
-				"  { cwd: target, ui: {} },",
-				");",
+				"let decision;",
+				'for (const handler of handlers.get("tool_call") ?? []) {',
+				"  const result = await handler(",
+				'    { type: "tool_call", toolCallId: "child", toolName: call.toolName, input: call.input },',
+				"    { cwd: target, ui: {} },",
+				"  );",
+				"  if (result?.block) { decision = result; break; }",
+				"  decision ??= result;",
+				"}",
 				"process.stdout.write(JSON.stringify(decision ?? null));",
 			].join("\n"),
 		],

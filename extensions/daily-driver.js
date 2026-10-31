@@ -2350,6 +2350,8 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	const initializedSettings = new WeakSet();
 	const routingSettings = new Map();
 	function settingsFor(ctx) {
+		// Use the handler's live settings scope, including CLI overlays and child snapshots.
+		if (!pi.settingsManagerFactory && pi.pi?.settings) return Promise.resolve(pi.pi.settings);
 		if (!routingSettings.has(ctx.cwd)) routingSettings.set(ctx.cwd, Promise.resolve(
 			pi.settingsManagerFactory
 				? pi.settingsManagerFactory(ctx.cwd)

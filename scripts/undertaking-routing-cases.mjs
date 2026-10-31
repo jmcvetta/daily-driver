@@ -451,6 +451,16 @@ export default function registerUndertakingRoutingChecks(check) {
 		});
 	}
 
+	// A lower effort on the same model must not silently weaken the configured class route.
+	routingCheck("same-model effort drift aborts before inference", async (create) => {
+		const s = await create();
+		await s.route();
+		s.setEffort("low");
+		await assert.rejects(s.request(), /effort/iu);
+		assert.equal(s.calls.aborts, 1);
+		assert.equal(s.describe().undertaking.status, "blocked");
+	});
+
 	// Refreshable OAuth is allowed, but retrying through a configured API key is not.
 	routingCheck("authentication source drift explicitly aborts", async (create) => {
 		const s = await create();

@@ -135,14 +135,15 @@ export function installUndertakingRouting(pi, getSettings) {
 		await pi.appendEntry(ENTRY, {
 			schema: 1, issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
 			origin: state.origin, authenticationRoute: state.authenticationRoute,
+			selectedEffort: state.selectedEffort,
 			...(state.identities ? { identities: state.identities } : {}),
 			...(state.frontierApproval ? { frontierApproval: state.frontierApproval } : {}),
 		});
 	}
 
 	async function start(_event, ctx) {
-		const sessionId = ctx.sessionManager.getSessionId();
-		if (states.has(sessionId)) return;
+		const sessionId = ctx.sessionManager?.getSessionId?.();
+		if (!sessionId || states.has(sessionId)) return;
 		let state;
 		try {
 			const sessions = scope(ctx);
@@ -161,6 +162,7 @@ export function installUndertakingRouting(pi, getSettings) {
 			state = {
 				...(parent ?? saved), sessionId, lease: undefined, status: "pending", observedModel: null,
 				selectedModel: parent ? selector(ctx.models.current()) : saved.selectedModel,
+				selectedEffort: parent ? pi.getThinkingLevel() : saved.selectedEffort,
 				identities: (parent ?? saved).identities ? [...(parent ?? saved).identities] : undefined,
 			};
 			publish(ctx, state);
@@ -228,6 +230,7 @@ export function installUndertakingRouting(pi, getSettings) {
 					content: [{ type: "text", text: "Undertaking route is already verified." }], details: describe(ctx),
 				};
 				state.selectedModel = selector(target);
+				state.selectedEffort = nextEffort ?? pi.getThinkingLevel();
 				state.status = "pending";
 				state.reason = undefined;
 				state.observedModel = null;
@@ -259,6 +262,7 @@ export function installUndertakingRouting(pi, getSettings) {
 			if (state.status === "blocked") throw new Error(state.reason);
 			checkModel(ctx, state, ctx.model);
 			if (selector(ctx.model) !== state.selectedModel) throw new Error("Execution fallback does not match the selected worker class route");
+			if (state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort) throw new Error("Worker effort no longer matches its selected class route");
 			if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Worker authentication route changed");
 		} catch (error) {
 			routeError(state, error.message);
@@ -268,7 +272,8 @@ export function installUndertakingRouting(pi, getSettings) {
 	});
 
 	pi.on("assistant_message", (event, ctx) => {
-		const sessionId = ctx.sessionManager.getSessionId();
+		const sessionId = ctx.sessionManager?.getSessionId?.();
+		if (!sessionId) return;
 		const message = event.message;
 		// Tool admission may run for the whole batch before any tool executes.
 		// Reserve selection before admitting even a preceding sibling mutation.
@@ -290,7 +295,7 @@ export function installUndertakingRouting(pi, getSettings) {
 
 	pi.on("tool_call", (event, ctx) => {
 		const state = current(ctx);
-		if ((!state || state.status === "verified") && !selecting.has(ctx.sessionManager.getSessionId())) return;
+		if ((!state || state.status === "verified") && !selecting.has(ctx.sessionManager?.getSessionId?.())) return;
 		if (["read", "grep", "glob", "daily_driver_get_session", "daily_driver_route_undertaking"].includes(event.toolName)) return;
 		if (event.toolName === "write" && ["xd://daily_driver_get_session", "xd://daily_driver_route_undertaking"].includes(event.input?.path)) return;
 		return { block: true, reason: state?.reason ?? "Undertaking model selection is pending actual worker identity verification." };
