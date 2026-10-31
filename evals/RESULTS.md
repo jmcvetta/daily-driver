@@ -110,4 +110,5 @@ One row per committed record, oldest first.
 | 2026-10-29 | omp-gpt-6-luna | omp | openai-codex/gpt-6-luna (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 1/2 | subscription | subscription | 2m 37s |
 | 2026-10-30 | omp-glm-5-3 | omp | vercel-ai-gateway/zai/glm-5.3 (requested) | omp-glm-5.3 (run-selected) | 50 | 0/50 | not recorded | not recorded | 23m 55s |
 | 2026-10-30 | with-without | claude-code | claude-sonnet-5 | claude-code claude-sonnet-5 (task-pinned) | 10 | 5/10 | $7.33 | $1.47 | 35m 34s |
+| 2026-10-31 | with-without | claude-code | claude-sonnet-5 | claude-code claude-sonnet-5 (task-pinned) | 170 | 112/170 | $40.34 | $0.36 | 25m 55s |
 | 2026-10-31 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | subscription | subscription | 0m 23s |
