@@ -196,7 +196,7 @@ recorded as completed.
 Landing and close
 -----------------
 
-The state read is `undertake`'s `The milestone` row: `draft` must be false,
+The state read is the pull request `get` call: `draft` must be false,
 `mergeable_state` must be `clean`, and `head.sha` is the head the merge binds
 to. The same `get` call supplies the labels and body for the human-action read.
 The complete thread read is the one `review-cycle`'s `Review history,

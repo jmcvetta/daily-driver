@@ -55,9 +55,9 @@ exists to reach.
 | `Close the epic` | Comment with child outcome evidence or an unsupported claim | `gh issue comment <number> --body-file <path>` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-`Land the pull request` uses the same readiness fields as `undertake`'s `The
-milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
-`headRefOid` is the head the merge binds to. The labels and body answer the
+`Land the pull request` reads its own state: `isDraft` must be false,
+`mergeStateStatus` must be `CLEAN`, and `headRefOid` is the head the merge
+binds to. The labels and body answer the
 human-action read in the same call. The complete thread graph is the paginated
 GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
 
