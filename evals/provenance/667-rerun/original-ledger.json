@@ -1,0 +1,1402 @@
+[
+ {
+  "variant": "bare",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 2,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 2,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 0,
+  "status": "ERROR",
+  "cause": "timeout"
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 0,
+  "status": "ERROR",
+  "cause": "timeout"
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 1,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "bare",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-authorized-public-service-search",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-completion-report-is-lean",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "deps-06-security-major-constraint",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "embark-12-neg-stale-completion-notice",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 2,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-08-research-supported-no-is-complete",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 2,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-12-effective-kind-preserves-content",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 0,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 2,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 1,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-12-fallback-review-publication",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-cycle-14-completion-notice-premature",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 0,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 1,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 2,
+  "status": "SUCCESS",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "review-depth-neg-opening-a-pr",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 0,
+  "status": "ERROR",
+  "cause": "timeout"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 1,
+  "status": "ERROR",
+  "cause": "timeout"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 0,
+  "status": "ERROR",
+  "cause": "timeout"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 1,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 2,
+  "status": "FAILURE",
+  "cause": ""
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 3,
+  "status": "ERROR",
+  "cause": "limit"
+ },
+ {
+  "variant": "with-plugin",
+  "case": "task-worktree-06-designated-primary-branch",
+  "repeat": 4,
+  "status": "ERROR",
+  "cause": "limit"
+ }
+]
