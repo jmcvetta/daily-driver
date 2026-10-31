@@ -117,9 +117,12 @@ plugin-driven movement is not available.
 The guard rejects primary-checkout and detached-worktree `write` and `edit`
 calls. It also denies Git commands that rewrite the primary checkout's files.
 Attached feature-worktree mutations remain available. The command parser is
-conservative: it rejects unresolved commands and unterminated quotes. It does
-not audit programs launched through `make`, Python or scripts, so those
-programs must also stay inside the task worktree.
+conservative: it rejects unresolved commands and unterminated quotes. A literal
+`ln` command takes pathname operands, so paths named `git` or `bash` do not
+become executable candidates. Nested substitutions and later commands still
+receive the normal checks. Unknown wrappers retain conservative scanning.
+The guard does not audit programs launched through `make`, Python or scripts,
+so those programs must also stay inside the task worktree.
 
 Use absolute task-worktree paths in file tools. Omp resolves file-tool paths
 against the session working directory, not a directory change made by a shell.
