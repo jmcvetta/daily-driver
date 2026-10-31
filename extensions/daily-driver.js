@@ -1831,6 +1831,32 @@ function walkShellCommand(command, toolCwd) {
 		previousSeparator = segment.separator;
 		if (arithmeticStack.at(-1) === true) continue;
 
+		// The executable, once any leading environment assignments are past.
+		let position = 0;
+		while (
+			position < segment.words.length &&
+			isEnvironmentAssignment(segment.words[position])
+		) {
+			position++;
+		}
+		const executable = segment.words[position];
+		if (executable === undefined) continue;
+		if (!executable.literal) {
+			// Everywhere, not only in the primary checkout: the program a word
+			// expands to may be `git`, and `git -C <primary> switch` reaches the
+			// primary from any directory at all.
+			throw new UnreadableCommandError(
+				"a command names an executable that expands",
+			);
+		}
+
+		const name = basename(executable.text);
+
+		// A literal link command takes pathnames, not executable operands.
+		// Substitutions and later commands remain separate segments in this walk.
+		// A shell function named ln does not establish that operand contract.
+		if (name === "ln" && !defined.has(name)) continue;
+
 		for (const start of gitWordIndices(segment.words)) {
 			const invocation = gitInvocation(segment.words, shellCwd, start, toolCwd);
 			if (invocation === null || !rewritesWorkingTree(invocation)) continue;
@@ -1870,27 +1896,6 @@ function walkShellCommand(command, toolCwd) {
 				}
 			}
 		}
-
-		// The executable, once any leading environment assignments are past.
-		let position = 0;
-		while (
-			position < segment.words.length &&
-			isEnvironmentAssignment(segment.words[position])
-		) {
-			position++;
-		}
-		const executable = segment.words[position];
-		if (executable === undefined) continue;
-		if (!executable.literal) {
-			// Everywhere, not only in the primary checkout: the program a word
-			// expands to may be `git`, and `git -C <primary> switch` reaches the
-			// primary from any directory at all.
-			throw new UnreadableCommandError(
-				"a command names an executable that expands",
-			);
-		}
-
-		const name = basename(executable.text);
 
 		// An interpreter is found at every literal word, the way `git` is, so a
 		// wrapper in front of it — `exec bash -c …`, `timeout 5 bash -c …`,
