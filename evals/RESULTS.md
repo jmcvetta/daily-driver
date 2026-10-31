@@ -104,3 +104,10 @@ One row per committed record, oldest first.
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 8m 37s |
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 1/3 | subscription | subscription | 9m 03s |
 | 2026-10-24 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 7m 17s |
+| 2026-10-29 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | subscription | subscription | 0m 17s |
+| 2026-10-29 | omp-gpt-6-luna | omp | openai-codex/gpt-6-luna (requested) | omp-gpt-6.1-sol (run-selected) | 6 | 2/6 | subscription | subscription | 7m 37s |
+| 2026-10-29 | omp-gpt-6-luna | omp | openai-codex/gpt-6-luna (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 1/2 | subscription | subscription | 2m 37s |
+| 2026-10-30 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 0/2 | not recorded | not recorded | 1m 23s |
+| 2026-10-31 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | not recorded | not recorded | 1m 49s |
+| 2026-10-31 | omp-reviewer-deepseek-v4-pro-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | not recorded | not recorded | 7m 17s |
+| 2026-10-31 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 40 | 18/40 | not recorded | not recorded | 3h 22m 37s |

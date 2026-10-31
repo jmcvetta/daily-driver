@@ -154,6 +154,9 @@ def classification_tokens(values: list[Any]) -> list[str]:
         if not isinstance(value, str):
             continue
         token = value.strip().strip("` -*")
+        label = re.match(r"^((?:TP|FN):[\w-]+|DELTA:(?:clear|defects))(?=$|[\s`.,;:])", token)
+        if label:
+            token = label.group(1)
         if CLASSIFICATION_RE.fullmatch(token) and token not in found:
             found.append(token[:512] + "...[truncated]" if len(token) > 512 else token)
     return found

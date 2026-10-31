@@ -1,0 +1,1923 @@
+{
+  "analysis_valid": true,
+  "arm": "glm",
+  "attempts": [
+    {
+      "arm": "glm",
+      "artifact_sha256": "70765a1a816b9afe944608f5e47aa9b0c89d9604b1ff3506d7b6203eea352664",
+      "attempt_seconds": 58.81671643257141,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary",
+        "UNEXPECTED_VALID:records.py:3 returns all but the last record for offset=0 and limit=0 because the slice end becomes -1."
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Any call to page(items, offset, limit): reproduced locally \u2014 page(range(10), 0, 3) returns [0, 1] instead of [0, 1, 2]; page(range(10), 0, 1) returns [] instead of [0].\",\"impact\":\"Off-by-one introduced by the patch: the slice end offset+limit-1 yields limit-1 records, violating the documented contract 'Return up to limit records beginning at offset'. Every page silently drops its last record, and limit=1 pages return nothing, so cursor-based listing skips records or terminates immediately.\",\"severity\":\"high\"},{\"location\":\"records.py:3\",\"trigger\":\"limit=0 (or any value making offset+limit-1 negative), reproduced: page(range(10), 0, 0) returns [0, 1, 2, 3, 4, 5, 6, 7, 8] instead of [].\",\"impact\":\"Negative slice end is interpreted by Python as an index from the end, so a caller requesting zero records receives nearly the whole collection (all but the last element). Silent over-return of records from the new listing endpoint.\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "c58dae3b3f40f05e5ee4e46f52c7031c467178110391d58c4f548682b3655c2a",
+      "attempt_seconds": 34.55399441719055,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "507361ca352380f66a919b6ad852d0fa47d36640475492ee253f70a26a9d69da",
+      "attempt_seconds": 26.194618225097656,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "64de82caa58cc968f411982b7cbed11ca00fae3e09db4990192c1a54d3b65ab3",
+      "attempt_seconds": 905.007298707962,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "6eee0755dc7055daaf77c3da748b87829af925caf7a93accf0dfdb9dcc2735ef",
+      "attempt_seconds": 42.42410659790039,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Any call to page(items, offset, limit) from the new cursor-based listing endpoint. The slice end is offset + limit - 1 instead of offset + limit, so the function returns limit - 1 records, not limit. Additionally, when offset=0 and limit=0, offset + limit - 1 evaluates to -1 and items[0:-1] returns every record except the last, instead of an empty page.\",\"impact\":\"The docstring 'Return up to limit records beginning at offset' is violated: every page silently drops its last record, and the limit=0, offset=0 edge case returns nearly the whole collection. Silent record loss in a listing endpoint; no error is raised.\",\"severity\":1}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "90b8d908b117fa5de228e79ccbecb11f8c45873cd613b1b6811db6561350f364",
+      "attempt_seconds": 49.552746057510376,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-02-contract"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"service.py:3 (producer) / client.py:3 (consumer, unchanged by patch)\",\"trigger\":\"The patch renames the response key in account_summary from \\\"balance\\\" to \\\"balance_cents\\\", but the consumer show_summary in client.py still indexes api.get_summary(account_id)[\\\"balance\\\"]. Every call to show_summary against the updated service hits the new key set {\\\"balance_cents\\\"} and looks up the removed key \\\"balance\\\".\",\"impact\":\"client.show_summary raises KeyError('balance') on every invocation \u2014 the client integration is broken for all requests, with no input conditions required. The cross-boundary contract (service response payload -> client field access) was changed on the producing side only; the consuming dispatch/access point was not migrated.\",\"severity\":1}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "bc0dda6fed7d8ef90e8bc4a5d41a7390778297d046ecb835b91f6e19323614c2",
+      "attempt_seconds": 40.75248837471008,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-02-contract"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "a80bec96ea058a0c78631a52ee3fc369dcd2cb90901b94db4da7916dae00ff8e",
+      "attempt_seconds": 34.54856872558594,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-02-contract"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "27461419d3232baa3fe89dd6a1699023b625b9f7b8a95fc60a59db96510d88ea",
+      "attempt_seconds": 508.9293830394745,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-02-contract"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"service.py:3 (consumer: client.py:3, `api.get_summary(account_id)[\\\"balance\\\"]`)\",\"trigger\":\"The patch renames the response key in `account_summary` from `balance` to `balance_cents` but does not update `client.py`, whose `show_summary` still indexes the returned dict with `[\\\"balance\\\"]`.\",\"impact\":\"Every call to `show_summary` now raises `KeyError: 'balance'` because the service response no longer contains that key. The stated client-integration update is missing from the patch, breaking the service-to-client contract.\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "bed841d6a1203a979b4c40037267aad8bc32bb44c0c42d9b74bac57b674f8321",
+      "attempt_seconds": 902.7457029819489,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-02-contract"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "2f0d93aa6507ab72a9b93bdefa75d3bfb209a15341a7dc4d29764aa14cb08fe6",
+      "attempt_seconds": 258.40316367149353,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:3 (export_project, diff line +if user.id == project.owner_id)\",\"trigger\":\"The access check condition was inverted from user.id != project.owner_id to user.id == project.owner_id. Any call to export_project where the requesting user is the project owner now hits the raise PermissionError branch.\",\"impact\":\"Authorization is reversed: legitimate owners are denied export of their own project archive, while any non-owner caller passes the check and reaches project.archive(), exposing the archive to unauthorized users. This defeats the stated purpose of the change (export only for its owner) and is a data-exposure access-control bug introduced by this patch.\",\"severity\":\"critical\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "bf62ecf6988ed099bfb7893b006112f06179a4d7b7bafba844289c62a5d3c57d",
+      "attempt_seconds": 27.877556800842285,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "6f79bf8620c0fefddbe9b99a76a0b91f492878637d9f1fe017685b7ac6748d8b",
+      "attempt_seconds": 901.5101244449615,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "52aba9fa979923c1e380b07e7277956d6cc2b3d29a672eb4047c8f9d1a8b11d0",
+      "attempt_seconds": 49.468008279800415,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:3\",\"trigger\":\"Any user whose id equals project.owner_id (the owner) calls export_project; the new condition `if user.id == project.owner_id: raise PermissionError` inverts the original check.\",\"impact\":\"The project owner is always denied the export with PermissionError, while any non-owner user passes the check and receives project.archive() \u2014 authorization is inverted, leaking the archive to unauthorized users and blocking the intended owner. This is the only hunk in the patch (base...review and base...current are identical; review...current is empty).\",\"severity\":\"P0\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "0d311e57325f2bd2302712813ad4c5e80628406c3212d5e351b13a9645b98ed8",
+      "attempt_seconds": 39.35060954093933,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:4 (diff: `if user.id != project.owner_id` \u2192 `if user.id == project.owner_id`)\",\"trigger\":\"Any request to export_project where user.id differs from project.owner_id passes the new condition check (it no longer raises), and the function returns project.archive(). Conversely, the actual owner now hits `raise PermissionError`.\",\"impact\":\"Complete authorization inversion on the export endpoint: non-owners can download the project archive (unauthorized data disclosure of all project contents), while legitimate owners are denied. This is a release-blocking security regression introduced by the patch.\",\"severity\":\"critical\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "f8c639a588df2dabeb5f09652b0b5a22f73cb59b34db348bd84f445c8111ae0b",
+      "attempt_seconds": 901.4959666728973,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "3106897d4e88f9b13c358808bba66a124cbcf756c62999b13f2c5cef9d63e0de",
+      "attempt_seconds": 34.09395241737366,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "e9422ce231a760041540c7a8d30c90f6214721f395cf142afe1536ff974556cb",
+      "attempt_seconds": 36.10966396331787,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "b066770e37a4dad50b4c94b6d507309e0fa97da273af6fc903c1e52985424855",
+      "attempt_seconds": 47.60605573654175,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"wallet.py:5\",\"trigger\":\"transfer(source, target, amount) is called with any amount\",\"impact\":\"The patch appends a second source.debit(amount), so the source balance is debited twice while the target is credited once. This contradicts the function docstring (\\\"debitting source once and crediting target once\\\") and silently destroys amount from the system on every transfer; depending on debit implementation it may instead raise on insufficient funds mid-transfer after the credit already landed, leaving an inconsistent wallet state.\",\"severity\":\"critical\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "49005c3ee96a4078ea115b810a67f71458ac31d9c1464bf7270fcefad511accd",
+      "attempt_seconds": 901.5922591686249,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "bed415bfc547c855e7253f8075671c88285f17676f445495e1c09cf2237d347c",
+      "attempt_seconds": 56.72341322898865,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "4d6475de2fcdbd0a7e84ef5934451d33e4e621709460b62ff851335ce1fca37d",
+      "attempt_seconds": 40.39715814590454,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "900053c81b30c9b4ff6538f9830d771ad0ce97773edd1d443dd4d11a839f04c2",
+      "attempt_seconds": 39.85667181015015,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "917bd4cd512286cd25a8dec1f42cc6aeba81abeddb0e010f0a60f8e5ec721c05",
+      "attempt_seconds": 42.08325910568237,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "b45ef7c5528d53ed80112cc25fb2c6237d4413d03fcbfab3789d7e0b5a2c9774",
+      "attempt_seconds": 45.46758580207825,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "7f8c0c5026aeea005d1a0e5fe0a9da17d787293e54b1b7758476137d3aee41ff",
+      "attempt_seconds": 90.89502263069153,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "82024ca21eaa7b3df0402c2ce081caaf910a7315de2ca3ad33dc2bc92f00bd44",
+      "attempt_seconds": 29.23348569869995,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "1e30251fc32bbec5a8e579d5676d590bf02a7381407d3834c828ee2c9183784b",
+      "attempt_seconds": 39.29971671104431,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "51e102475a9fdea094a04926af8f41bd90c09980ad378dbd07f82fe32b938c11",
+      "attempt_seconds": 901.0405838489532,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "a42f020f243fab09c087f4763ae8a1bd2a0590b9684106a22efa75dd1021b5f0",
+      "attempt_seconds": 125.31550097465515,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "78053308a66f678d25fd1204e7c6269322a7a983a73ed4a338488a5ea18da12d",
+      "attempt_seconds": 902.0137252807617,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "42ef1d7e90819a9e921d217ad430ad97c1443f8c7f7cc766e471ecb8e2600ff8",
+      "attempt_seconds": 41.190943479537964,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-07-delta-fixed",
+        "DELTA:clear"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "3e7e71094cf1d31918fd0df168ade76140f1d08beaa874e5340420cd4d816154",
+      "attempt_seconds": 900.9990999698639,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "a090462fb8651e4b28620b6c5d322ffea3ed6228d498284baaaf0b9c26339654",
+      "attempt_seconds": 901.5274405479431,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "aa74cb2872536a20f91f912884b4ec6c6da90b1bbfe6063734fc20de113757fe",
+      "attempt_seconds": 901.9226739406586,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "d4b8a55aa223d84ff6b29fdb75aba3805e25c42adccde1f4b2a566de60d99e62",
+      "attempt_seconds": 60.65674138069153,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3-4 (current commit 61fa14e, function page)\",\"trigger\":\"Call page(items, offset, limit) with enough items to fill a full page, e.g. page([0,1,2,3], 0, 4). The base version used the slice items[offset:offset + limit] and returned exactly limit records. The review commit (192d892) changed the end index to offset + limit - 1, dropping the last requested item. The current revision only extracts that same wrong expression into a variable (end = offset + limit - 1; return items[offset:end]) and does not restore the correct bound.\",\"impact\":\"The original finding is not resolved: the helper still returns limit-1 records instead of limit whenever a full page is available, silently omitting the final item of every page. The caller client.py:list_records delegates directly to page and passes the truncated result through unchanged, so every consumer of list_records sees pages one record short with no error. Example: page([0,1,2,3], 0, 4) returns [0,1,2], and list_records([0,1,2,3], 0, 4) likewise returns [0,1,2].\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "0a254db616a04705eba7bddc194ac921c653d0ef1304ad62547e680ffc6eef8e",
+      "attempt_seconds": 82.16865968704224,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "df642edea58003d6a5dcd67cbc762bb809f64c01a06cd888245e0372412dfdc3",
+      "attempt_seconds": 63.29653024673462,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3-4 (current commit 61fa14e, `end = offset + limit - 1; return items[offset:end]`)\",\"trigger\":\"Any call to page() (directly or via list_records() in client.py) where at least `limit` items remain after `offset`, e.g. page([0,1,2,3,4], 0, 3) \u2192 [0, 1]\",\"impact\":\"The original finding is unresolved: the last requested item is still dropped at every full page boundary. Verified offline: page(items,0,3) returns 2 items and page(items,1,2) returns 1 item, while base cc13cd8 (`items[offset:offset + limit]`) was already correct. The review commit 192d892 introduced the off-by-one and the current commit's refactor keeps it, so all pages served by list_records are silently one record short. Fix: `end = offset + limit; return items[offset:end]`\",\"severity\":1}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "ef7341bc727341e361a6bccc2e08591dbe230a1eefb0ca7d872a95f5939e4d30",
+      "attempt_seconds": 902.6252067089081,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "17fbe9a392b2903ded85b24a109b521e3da5e3704971b15311d9f55fe0ded3be",
+      "attempt_seconds": 189.43908286094666,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open",
+        "UNEXPECTED_VALID: The zero-limit example also exposes the retained endpoint defect: page(list(range(10)), 0, 0) returns nine items rather than an empty page; this is another manifestation of the same finding."
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3-4 (review...current delta; caller client.py:3)\",\"trigger\":\"Any full-page request, e.g. page(list(range(10)), 0, 10) \u2014 verified: returns [0..8], 9 items.\",\"impact\":\"The claimed fix is cosmetic only: the review...current delta renames offset + limit - 1 into a variable end but changes no behavior, so the original finding persists. The slice end must be offset + limit; the - 1 still drops the last requested record at every full page boundary. The caller list_records in client.py:3 returns page(items, offset, limit) directly, so every consumer of list_records also silently loses the final record of each page. Verified by running the current revision.\",\"severity\":\"high\"},{\"location\":\"records.py:3\",\"trigger\":\"limit = 0 (or any limit <= 0) makes end = offset - 1 a negative slice bound, e.g. page(list(range(10)), 0, 0) \u2014 verified: returns [0..8].\",\"impact\":\"Negative end wraps to count from the list's tail, so instead of the empty page the baseline returned (items[offset:offset+0]), the helper now returns items outside the requested window. Introduced by the same - 1 carried over from the review commit into the current revision, and propagated unchanged through list_records.\",\"severity\":\"medium\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "reviewer-reported session identity only; backend-served identity is unreported",
+    "expected_model_id": "glm-5.3",
+    "expected_reviewer_selector": "opencode-go/glm-5.3:high",
+    "mismatches": [],
+    "reported_model_ids": [
+      "glm-5.3"
+    ],
+    "reviewer_reported_identities": [
+      "glm-5.3"
+    ],
+    "valid": true
+  },
+  "cohort_complete": true,
+  "coverage_complete": true,
+  "created_at": "2026-10-31T12:26:46.009832+00:00",
+  "planned": {
+    "attempts": 40,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-02-contract",
+      "reviewer-quality-03-authorization",
+      "reviewer-quality-04-integrity",
+      "reviewer-quality-05-clean-boundary",
+      "reviewer-quality-06-clean-contract",
+      "reviewer-quality-07-delta-fixed",
+      "reviewer-quality-08-delta-incomplete"
+    ],
+    "repeats_per_case": 5
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/reviewer-quality-glm-cohort-v3",
+      "run_id": "reviewer-quality-glm-cohort-v3",
+      "run_record": "evals/provenance/omp-reviewer-glm-5-3-go-2026-10-31-reviewer-quality-glm-cohort-v3.json",
+      "run_record_sha256": "fbfae96340c8c0f7daa05ef98b4572babf2ad93b7897b7c883966e17bf184186"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-glm-5.3-go.yaml",
+    "experiment_sha256": "1d1b63793a37e2aed451a71638f8d515f126e2d1885ce6f7aeda4bbf8d69943d",
+    "route_overlay_path": "/home/jmcvetta/projects/daily-driver.issue-737-reviewer-quality/evals/fixtures/reviewer-quality/shared/routes/glm.yml",
+    "route_overlay_sha256": "805e42c910651b62ab77e5c4b13a9e60d5d73ef761753ce78eb966b39d5cbd1a"
+  },
+  "summary": {
+    "attempts": 40,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 5,
+        "false_alarms": 0,
+        "planned_denominator": 10
+      },
+      "delta": {
+        "accuracy": 1.0,
+        "correct": 3,
+        "eligible_denominator": 3,
+        "planned_denominator": 10
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "precision_denominator": 8,
+        "recall": 1.0,
+        "recall_eligible_denominator": 8,
+        "recall_planned_denominator": 20,
+        "tp": 8
+      },
+      "unexpected_valid": [
+        {
+          "case_id": "reviewer-quality-01-boundary",
+          "evidence": "UNEXPECTED_VALID:records.py:3 returns all but the last record for offset=0 and limit=0 because the slice end becomes -1.",
+          "repeat": 0
+        },
+        {
+          "case_id": "reviewer-quality-08-delta-incomplete",
+          "evidence": "UNEXPECTED_VALID: The zero-limit example also exposes the retained endpoint defect: page(list(range(10)), 0, 0) returns nine items rather than an empty page; this is another manifestation of the same finding.",
+          "repeat": 4
+        }
+      ]
+    },
+    "eligible": 16,
+    "harness_errors": 11,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 40,
+      "max": 905.007298707962,
+      "mean": 303.929637157917,
+      "median": 57.77006483078003,
+      "min": 26.194618225097656,
+      "population_stddev": 377.22646617271744
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 2,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_completed": 2,
+        "reviewer_errors": 3
+      },
+      "reviewer-quality-02-contract": {
+        "eligible": 2,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_completed": 2,
+        "reviewer_errors": 3
+      },
+      "reviewer-quality-03-authorization": {
+        "eligible": 3,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_completed": 3,
+        "reviewer_errors": 2
+      },
+      "reviewer-quality-04-integrity": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_completed": 1,
+        "reviewer_errors": 4
+      },
+      "reviewer-quality-05-clean-boundary": {
+        "eligible": 3,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_completed": 3,
+        "reviewer_errors": 2
+      },
+      "reviewer-quality-06-clean-contract": {
+        "eligible": 2,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_completed": 2,
+        "reviewer_errors": 3
+      },
+      "reviewer-quality-07-delta-fixed": {
+        "eligible": 0,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_completed": 0,
+        "reviewer_errors": 5
+      },
+      "reviewer-quality-08-delta-incomplete": {
+        "eligible": 3,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_completed": 3,
+        "reviewer_errors": 2
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_completed": 16,
+    "reviewer_completion_rate": 0.4,
+    "unattempted": 0
+  },
+  "winner": null
+}

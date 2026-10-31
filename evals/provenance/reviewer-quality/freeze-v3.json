@@ -88,5 +88,11 @@
   "route_evidence_policy": "Requested selectors and reviewer-reported harness identity are separate. Backend-served identity remains unreported without provider evidence. Known model mismatch invalidates attribution.",
   "usage_policy": "Reviewer usage and latency unavailable unless directly exposed. Parent metrics do not substitute. Shared allowance snapshots cannot isolate benchmark consumption; unknown cash spend is not zero.",
   "supersedes": "freeze-v2.json: collect unchanged final reviewer JSON without fixture writes; correct case-02 accepted locations, delta scoring, provider error classification, and explicit route mismatches before measured cohort. Earlier smoke and interrupted attempts remain separate.",
-  "recording_tasks_directory": "evals/tasks (judge-run scans */*.yaml; suite subdirectory selects no rubrics)"
+  "recording_tasks_directory": "evals/tasks (judge-run scans */*.yaml; suite subdirectory selects no rubrics)",
+  "analysis_amendment": {
+    "collector_sha256": "2390c1914dd08258546281abca24a8ffaa175a3df8249ea5d3127253a0125c92",
+    "change": "Accept rubric labels followed by judge explanations, such as TP:still-open followed by an em dash. Preserve the original grade and explanation. Apply the same extraction to both arms.",
+    "reason": "Bare-label-only parsing dropped correct classifications from saved judge responses.",
+    "measurement_effect": "None: no subject inputs, routes, rubric, limits, reviewer attempts, or judge calls changed or reran."
+  }
 }
