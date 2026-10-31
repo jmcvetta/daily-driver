@@ -1,10 +1,36 @@
 task_id: issue-01-open-a-task-issue
 description: >-
-  Opening a task issue routes through `issue` and its body contract. The
-  sandbox has no GitHub and no repository with the change in it, so the
-  prompt supplies the change in words and asks for the draft body rather
-  than a post — the same move `undertake/09` makes for an unpostable claim.
+  An ordinary request must select an assignable task for a concrete change.
+  The sandbox supplies the release code and existing verification context.
 tags: [trigger-accuracy, issue, fire, behaviour]
+sandbox:
+  python: null
+  template_sources:
+    - type: starter_files
+      files:
+        - path: release.py
+          content: |
+            """Release signing behavior and its input contract."""
+            # Each release manifest maps artifact names to SHA-256 digests.
+            # Previous signatures remain available in the release store.
+            def sign_changed(current, previous, sign):
+                for name, digest in current.items():
+                    sign(name, digest)
+        - path: test_release.py
+          content: |
+            """Offline signing tests use a list as the sign callback."""
+            from release import sign_changed
+
+            def test_signs_artifacts():
+                calls = []
+                sign_changed({"a": "abc"}, {}, lambda *args: calls.append(args))
+                assert calls == [("a", "abc")]
+
+        - path: README.md
+          content: |
+            The release module signs artifacts from the current manifest.
+            Run the offline tests with pytest. CI runs the same tests.
+
 
 initial_prompt: >-
   Open an issue for this: the release script re-signs every artifact even
@@ -23,18 +49,10 @@ run_limits:
   task_timeout: 1200
 
 success_criteria:
-  # Armed: once the entry-point skill has fired, nothing later in the run
-  # can change that answer.
   - type: skill_triggered
     description: "`issue` fires on an issue being opened"
     expected_skill: issue
     skill_name: issue
-    stop_early:
-      on_pass: stop
-
-  # Unarmed: a second fire assertion cannot also carry the pass-stop, and a
-  # misfire here is already caught by the judge below reading a body that
-  # arrived without its contract.
   - type: skill_triggered
     description: "`issue-body` fires on the body being written"
     expected_skill: issue-body
