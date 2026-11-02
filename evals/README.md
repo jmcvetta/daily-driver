@@ -1482,8 +1482,9 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
      that copy, not the original run.
 
   [`provenance/667-rerun/`](provenance/667-rerun/) is the worked example, from
-  the Claude Code arm: `launch.sh`, `mapping.json` and `merge.py` do the three
-  steps. An Omp re-run uses the Omp experiment and tags instead. The re-run is
+  the Claude Code arm: `launch.sh`, `mapping.json` and `merge.py` run the
+  slots, map them and build the merged copy. `make evals-record` records it.
+  An Omp re-run uses the Omp experiment and tags instead. The re-run is
   a new measurement and needs its own bounded approval. A run made under older
   limits is not filled this way. **The baseline** in
   [Turn and time ceilings](#turn-and-time-ceilings) states both rules.
