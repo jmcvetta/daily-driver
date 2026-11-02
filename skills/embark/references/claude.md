@@ -233,7 +233,9 @@ update only after the epic's coordinated acceptance condition is evidenced.
 **`closed_by_pull_requests` links a task or bug to its pull request** through
 the `Closes #123` line `pr-body` writes. Compare the delivered outcome with the
 story's own completion contract. A research story has no pull request: read the
-answer recorded on the issue with `get_comments` against its deliverable. A
+answer recorded on the issue with `get_comments` against its deliverable. A bug
+closed by evidenced disposition has none either: read the recorded evidence and
+reason the same way. A
 closed issue alone is not evidence that the epic outcome was met.
 
 **There is a `mcp__Claude_Code_Remote__subscribe_pr_activity` with the same

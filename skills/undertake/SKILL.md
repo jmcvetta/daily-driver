@@ -177,8 +177,11 @@ story (it carries the `story` marker or is a child of an epic), when it carries
 a `## Model class` section, or when it is assigned `frontier`. Validate its one
 `## Model class` section and rationale through `issue-body` before the claim,
 repairing an old or invalid body to the current contract where the handoff is
-otherwise grounded. A missing or invalid class, or a missing rationale, on a
-story is a gap to report; never default it to `implementation`. A classed
+otherwise grounded. A story linked before the class was required is such an
+old body: where the handoff is grounded, repair its class through `issue` under
+`issue-body`'s update rule, choosing the lowest class that can deliver the
+settled work. Otherwise a missing or invalid class, or a missing rationale, is a
+gap to report; never default it to `implementation`. A classed
 `research` or `bug` keeps its kind: it uses its own readiness and completion
 tests, not the task template. A standalone `bug` or `research` with no story
 role and no class section uses its kind-specific readiness test alone. A

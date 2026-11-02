@@ -474,8 +474,9 @@ the session — said once, not claimed.
 - Its pull request has not moved across two check-ins while its session says it
   is running.
 - **A pull-request story has no pull request across two check-ins.** A session
-  that died before its draft leaves nothing to watch. An answer-only research
-  story has no pull request by design; its signal is the answer on the issue.
+  that died before its draft leaves nothing to watch. Answer-only research and
+  a bug closed by evidenced disposition have no pull request by design; their
+  signal is the answer or the recorded disposition on the issue.
 
 None of the three is a verdict on its own: a session can be running and stuck,
 a pull request can be legitimately waiting on a person, and a large code
@@ -613,8 +614,9 @@ evidence a task's or bug's contribution; an evidenced answer recorded on the
 issue can evidence a research story's, including its follow-on issue
 specifications. Confirm that each story's specified outcome was delivered.
 Bounded inconclusive research is complete under its own contract but does not
-settle a downstream requirement that the epic's acceptance condition depends
-on. Closing a child alone does not prove the epic outcome was met. A canceled child does not
+settle a downstream requirement. Where the epic's acceptance condition depends
+on that requirement, the claim is unsupported: name it, leave the epic open and
+wait for a person, as the stop below says. Closing a child alone does not prove the epic outcome was met. A canceled child does not
 satisfy the outcome unless the epic's accepted condition explicitly permits
 that result. No open-child count stands in for this read.
 
@@ -662,12 +664,13 @@ Where it stops and waits
 Seven, and four of them are reports rather than questions.
 
 - **An issue that is not an epic**, at `Read the epic`. A report: say which
-  issue it is and which skill takes it — `undertake` for a single story issue, `epic`
+  issue it is and which skill takes it — `undertake` for a single story issue,
+  `epic`
   for work not yet decomposed.
 - **No wave to take**, at `Take the wave`. A report: every open story is blocked
   by something open, so name the issue that blocks and wait for it.
-- **A session that stopped to ask**, at `Recover a session`. Name the task,
-  its session and its pull request, and hand the question to the user. A
+- **A session that stopped to ask**, at `Recover a session`. Name the story,
+  its session and its pull request where one exists, and hand the question to the user. A
   fallback implementor's question is the other thing: it arrives through the
   messaging, is readable, and is answered on the advisor route. So is a web
   session's question that arrives in its report. This stop covers the

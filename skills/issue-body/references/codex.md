@@ -20,7 +20,8 @@ Write the body to a file and hand over the path.
 The required class
 ==================
 
-Task bodies, assignable epic stories of any eligible kind, and frontier research assignments use the provider-neutral
+Task bodies, assignable epic stories of any eligible kind, and frontier
+research assignments use the provider-neutral
 `Model class` section defined in [`model-classes.md`](model-classes.md).
 Codex dispatch must inspect the offered route and configuration, use an
 eligible configured route when it can establish one, and otherwise report a
