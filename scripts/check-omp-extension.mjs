@@ -3587,6 +3587,28 @@ function taskSession(entries = []) {
 	return { ...session, ctx, command, input, stop, observe, notifications };
 }
 
+/** A consumer must not need fabricated source IDs to record and retrieve a complete task lifecycle. */
+check("task state accepts fixture-discovered sources throughout a lifecycle", async () => {
+	const session = taskSession();
+	await session.input("Fix the parser. Verify the fixture offline only.");
+	const discovered = (await session.command("status")).details.sources.find((item) => item.kind === "user");
+	const source = (await session.command("status", { sourceId: discovered.sourceId })).details.source;
+	const ref = { sourceId: source.sourceId, quote: "Verify the fixture offline only." };
+	assert.ok(!(await session.command("begin", { taskId: "fixture", operation: "verify", target: "fixture", source: ref })).isError);
+	assert.ok(!(await session.command("authorization", { id: "fixture-approval", kind: "user", operation: "verify",
+		target: "fixture", limits: "offline only", conditions: "fixture only", source: ref })).isError);
+	await session.observe("fixture", "fixture access denied");
+	const observed = (await session.command("status")).details.evidence.find((item) => item.text.includes("fixture access denied"));
+	const evidence = (await session.command("status", { sourceId: observed.sourceId })).details.source;
+	const failure = { sourceId: evidence.sourceId, quote: "fixture access denied" };
+	assert.ok(!(await session.command("blocker", { kind: "execution", operation: "verify", target: "fixture",
+		evidence: [failure], authorizationIds: ["fixture-approval"],
+		routes: [{ route: "fixture", disposition: "failed", evidence: failure }],
+		independentWork: { pending: [], completed: [] }, externalContribution: "Provide fixture access.",
+		resume: "Retry the fixture." })).isError);
+	assert.equal((await session.command("complete", { summary: "Fixture work completed." })).details.state.status, "reported-complete");
+});
+
 /** Ordinary answers must not be trapped, while non-undertake repository work is protected. */
 check("task state excludes Q&A and activates ordinary repository work", async () => {
 	const session = taskSession();
