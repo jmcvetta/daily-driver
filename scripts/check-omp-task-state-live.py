@@ -101,7 +101,9 @@ class Model(BaseHTTPRequestHandler):
                     SOURCES["failure"] = evidence
                     params = {"action": "status", "record": json.dumps({"sourceId": evidence["sourceId"]})}
                 elif index == 8:
-                    evidence = SOURCES["failure"]
+                    # Quote the entry retrieved by sourceId, not the status excerpt, as the device documents.
+                    evidence = latest_status()["source"]
+                    assert evidence["sourceId"] == SOURCES["failure"]["sourceId"], evidence
                     ref = {"sourceId": evidence["sourceId"], "quote": evidence["text"]}
                     params = {"action": "blocker", "record": json.dumps({
                         "kind": "execution", "operation": "verify", "target": "fixture",

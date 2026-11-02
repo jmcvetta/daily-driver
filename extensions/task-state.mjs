@@ -8,6 +8,12 @@ const REQUEST = /^(?:\s*(?:please\s+)?(?:implement|fix|update|add|remove|refacto
 const CANCEL = /^\s*(?:please\s+)?(?:\/(?:skill:)?stand-down\b|stand[ -]down\b|wrap\s+up\b|cancel(?:[.!\s]*$|\s+(?:(?:this|the)\s+)?(?:task|work|undertaking)(?=\s|[.!;,]|$))|stop(?:[.!\s]*$|\s+(?:work(?:ing)?(?=\s|[.!;,]|$)|now\b|here\b|(?:this|the)\s+(?:task|work|undertaking)(?=\s|[.!;,]|$))))/iu;
 const EVIDENCE_TEXT_LIMIT = 8192;
 const EVIDENCE_INPUT_LIMIT = 2048;
+const AUTHORIZATION_KINDS = ["user", "workflow"];
+const BLOCKER_KINDS = ["external", "authorization", "safety", "execution"];
+const ROUTE_DISPOSITIONS = ["failed", "prohibited", "unavailable"];
+// Renders an enum as prose for the device description so it cannot drift from validation.
+const oneOf = (items) => items.length === 2 ? items.map((item) => `"${item}"`).join(" or ")
+	: `${items.slice(0, -1).map((item) => `"${item}"`).join(", ")}, or "${items.at(-1)}"`;
 
 function digest(value) {
 	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -204,7 +210,7 @@ function createTaskStateController(pi) {
 						const source = reference(ctx, record.source, true);
 						if (source.kind === "user" && source.sourceId !== state.externalSourceId &&
 							source.taskSourceId !== state.externalSourceId) throw new Error("Authorization source belongs to another task");
-						if (!["user", "workflow"].includes(record.kind) || record.kind !== source.kind) throw new Error("Authorization kind must match the original user or system source");
+						if (!AUTHORIZATION_KINDS.includes(record.kind) || record.kind !== source.kind) throw new Error("Authorization kind must match the original user or system source");
 						for (const key of ["id", "operation", "target", "limits", "conditions"]) required(record[key], key);
 						if (state.authorizations.some((item) => item.id === record.id)) throw new Error("Authorization ids are immutable; use a new superseding or revoking record");
 						if (record.expiresAt && !Number.isFinite(Date.parse(record.expiresAt))) throw new Error("expiresAt must be an ISO date");
@@ -229,7 +235,7 @@ function createTaskStateController(pi) {
 	function validateBlocker(ctx, state, blocker) {
 		if (!blocker) throw new Error("Record a blocker with observed evidence, permitted routes, authorization checked, independent work and resumption path; or report completion explicitly");
 		if (blocker.operation !== state.operation || blocker.target !== state.target) throw new Error("Blocker operation and target must match the active task scope");
-		if (!["external", "authorization", "safety", "execution"].includes(blocker.kind)) throw new Error("Name the blocker kind");
+		if (!BLOCKER_KINDS.includes(blocker.kind)) throw new Error("Name the blocker kind");
 		for (const key of ["externalContribution", "resume"]) required(blocker[key], key);
 		if (!Array.isArray(blocker.evidence) || !blocker.evidence.length) throw new Error("Reference an observed failure or exact authority restriction");
 		const evidence = blocker.evidence.map((ref) => reference(ctx, ref));
@@ -243,7 +249,7 @@ function createTaskStateController(pi) {
 		if (!Array.isArray(blocker.routes) || !blocker.routes.length) throw new Error("Record the disposition and evidence for available permitted routes");
 		for (const route of blocker.routes) {
 			required(route.route, "route");
-			if (!["failed", "prohibited", "unavailable"].includes(route.disposition)) throw new Error("A route remains actionable");
+			if (!ROUTE_DISPOSITIONS.includes(route.disposition)) throw new Error("A route remains actionable");
 			const source = reference(ctx, route.evidence);
 			if (source.kind === "tool" && source.taskSourceId !== state.externalSourceId) throw new Error("Route evidence belongs to another task");
 			if (route.disposition === "failed" && !source.isError) throw new Error("A failed route requires an observed error");
@@ -332,8 +338,8 @@ Start with status {}. Its sources and evidence contain recent retained entries a
 Actions and records:
 - status: optional {sourceId}; without it, returns state, source and evidence excerpts, authorization applicability and capability.
 - begin: optional {taskId, operation, target, source}. source is a user reference and defaults to the latest external user source. It must be the latest external user input and not a cancellation. New-task defaults are taskId = sourceId, operation = source text, target = current working directory. On the same active source, omitted fields retain current values; relabeling does not reset corrections or evidence. Cancelled or settled work needs fresh external user input; a cancellation is not a fresh request.
-- authorization: {id, kind, operation, target, limits, conditions, source}, all required; strings except source must be nonblank. kind is "user" or "workflow" and must match the original user or workflow source. User sources must be associated with the active task. Optional expiresAt is a parseable date; freshConfirmation marks confirmation required; revokes and supersedes name existing authorization IDs. IDs are immutable: use a new ID for amendments. Applicability reports scope, expiry, revocation and confirmation; review the original conditions.
-- blocker: {kind, operation, target, evidence, authorizationIds, routes, independentWork, externalContribution, resume}. operation and target exactly match active state. kind is "external", "authorization", "safety", or "execution". evidence is a nonempty reference array: external and execution require tool evidence; execution requires an error; safety and authorization require user or workflow authority. authorizationIds lists every retained authorization ID, including amendments, or [] if none. routes is a nonempty array of {route, disposition, evidence}; route is nonblank, disposition is "failed", "prohibited", or "unavailable", and evidence is a reference. Failed needs an observed error; prohibited needs original authority, not a tool probe. independentWork is {pending: [], completed: []}; pending must be empty except for safety. externalContribution and resume are nonblank strings. Validation checks references, not whether routes are truly exhausted.
+- authorization: {id, kind, operation, target, limits, conditions, source}, all required; strings except source must be nonblank. kind is ${oneOf(AUTHORIZATION_KINDS)} and must match the original user or workflow source. User sources must be associated with the active task. Optional expiresAt is a parseable date; freshConfirmation marks confirmation required; revokes and supersedes name existing authorization IDs. IDs are immutable: use a new ID for amendments. Applicability reports scope, expiry, revocation and confirmation; review the original conditions.
+- blocker: {kind, operation, target, evidence, authorizationIds, routes, independentWork, externalContribution, resume}. operation and target exactly match active state. kind is ${oneOf(BLOCKER_KINDS)}. evidence is a nonempty reference array: external and execution require tool evidence; execution requires an error; safety and authorization require user or workflow authority. authorizationIds lists every retained authorization ID, including amendments, or [] if none. routes is a nonempty array of {route, disposition, evidence}; route is nonblank, disposition is ${oneOf(ROUTE_DISPOSITIONS)}, and evidence is a reference. Failed needs an observed error; prohibited needs original authority, not a tool probe. independentWork is {pending: [], completed: []}; pending must be empty except for safety. externalContribution and resume are nonblank strings. Validation checks references, not whether routes are truly exhausted.
 - complete: {summary}, a nonblank string. This marks reported-complete, not independently proven completion. Mutations other than begin require an active unfinished task.
 
 Example sequence in an isolated fixture: let s = status(); let u = s.sources.find(x => x.kind === "user"); retrieve u with status({sourceId:u.sourceId}); let ref = {sourceId:u.sourceId, quote: an exact nonblank substring of u.text}. Call begin({taskId:"fixture", operation:"verify", target:"fixture", source:ref}); then authorization({id:"fixture-approval", kind:"user", operation:"verify", target:"fixture", limits:"offline", conditions:"fixture only", source:ref}) only if the original source actually supports it. After an observed fixture error, retrieve its real entry e through status and use r = {sourceId:e.sourceId, quote: an exact retained error substring}; blocker({kind:"execution", operation:"verify", target:"fixture", evidence:[r], authorizationIds:["fixture-approval"], routes:[{route:"fixture", disposition:"failed", evidence:r}], independentWork:{pending:[], completed:[]}, externalContribution:"Provide fixture access.", resume:"Retry the fixture."}). Finally complete({summary:"Fixture work completed."}) only when work is complete. Serialize each object into record; the example identifiers label records, not source authority.`,
