@@ -75,25 +75,26 @@ test holds. Failed or incomplete research stays open.
 Authorization and unfinished stops
 ----------------------------------
 
-Apply the constitution's continuation rule and `SKILL.md`'s operational
-escalation contract. Preserve scoped authorization, original source references,
-conditions and revocations in the existing private session and task handoff.
-Restore them after compaction and revalidate on resume. Do not publish private
-chat approvals in public issue comments or treat an agent's summary as approval.
+Use `mcp__daily-driver__task_state` with `action` and an optional JSON-string
+`record`. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
+define `status`, `contract`, `plan`, `handoff` and `resume`; the Omp reference's
+evidence records define `authorization`, `blocker` and reported `complete`.
+Recover the contract before changing a resumed task's plan.
 
-Claude Code documents a `Stop` hook that can request continuation, and user
-interrupts do not invoke it. However, its documented `UserPromptSubmit` input
-has no origin discriminator and also fires for scheduled tasks, background
-subagent reports and peer messages. That event alone cannot establish original
-user authority or permission to restart cancelled work. Daily Driver does not
-register the Omp task-state controller through that unverified transport.
-Approval persistence and stop evidence here are workflow contracts, not a
-claim of enforced Omp parity. Do not invent a hook source flag or trust a
-timer as renewed approval.
+This route requires Claude Code native mods support, terminal version 2.1.287
+or later; the installed-runtime proof used 2.1.316. The mod registers the tool,
+captures engine-stamped `prompt.submit.origin` and records aborted turns through
+`turn.complete.isAborted`. Settings `UserPromptSubmit` has no safe origin
+discriminator and is not used as user authority. SDK-host input is interpretation,
+not user approval.
 
-See the [Claude hook reference](https://code.claude.com/docs/en/hooks), especially
-`UserPromptSubmit` and `Stop`. A future transport needs verified source and
-cancellation semantics before it may supply trusted events to the controller.
+Contracts and original sources persist privately under `CLAUDE_CONFIG_DIR`
+(default `~/.claude`). The controller restores scope, criterion IDs, sources
+and correction bounds on resume and compaction. Delegation retains native
+source locators; copied prose grants no approval. Cancellation suppresses
+pending corrections. Never publish private quotes in issue or PR comments.
+The [runtime integration](../../../docs/harness-integration.md#hook-harness-boundary)
+records packaging, prerequisites and the bounded native-event proof.
 
 
 The implementor

@@ -1,0 +1,4 @@
+{
+  "description": "Claude native task-contract lifecycle; requires Claude Code 2.1.287 or later.",
+  "modules": ["./task-state-claude.js"]
+}

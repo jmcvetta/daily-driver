@@ -4,6 +4,7 @@
 
 ### Changed
 
+* Preserve source-anchored, versioned task contracts and separate execution plans across Omp, Claude Code native mods and Codex CLI hooks; retain criterion IDs, amendment history, authority references and cancellation bounds through resume and delegation ([#802](https://github.com/jmcvetta/daily-driver/issues/802)).
 * Retire the print-only Claude evaluation handoff case; preserve its historical records and the separate no-handoff case ([#789](https://github.com/jmcvetta/daily-driver/issues/789)).
 * Report a newly opened task issue's assigned model class beside its issue-kind label ([#783](https://github.com/jmcvetta/daily-driver/issues/783)).
 * Route classed undertaking work to the exact configured class before ownership, preserving its provider, backend, family, and authentication route; retain independent specialist helper routes and finish completed undertakings before session reuse ([#755](https://github.com/jmcvetta/daily-driver/issues/755)).

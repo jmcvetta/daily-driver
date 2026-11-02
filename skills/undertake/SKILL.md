@@ -405,6 +405,20 @@ route is confirmed non-frontier, or when the user explicitly authorizes the
 bounded frontier implementation exception. No implementor dispatch is used for
 ordinary undertakings.
 
+**Retain the task contract before implementation.** Use the active harness's
+task-state route to ground the captured request in the issue version actually
+read. Preserve objective, scope, exclusions, constraints, stable criterion IDs,
+evidence/review kinds and approval requirements. Unknown fields stay unknown.
+Keep plans separate. A revised issue cannot silently delete an unmet criterion.
+Material amendments retain the prior revision and applicable original user
+decision; retries and compaction need no new approval.
+
+On resume, recover the existing contract identity and revision before changing
+the plan. Delegation and stop handoffs carry criterion IDs and original-source
+locators, not copied prose presented as approval. The
+[shared runtime contract](../../docs/harness-integration.md#contract-and-execution-state)
+defines the representation. The active harness reference names the tool.
+
 **A direct request authorizes its scoped work and normal verification.** This
 includes focused behavioral evaluation through the configured subscription.
 An explicitly assigned, bounded evaluation campaign or separately metered
@@ -1125,6 +1139,9 @@ In order:
    - Reached: <the last step of the sequence completed>.
    - Outstanding: <what is blocked, failing, or unverified — failed checks,
      open review threads, a human action owed — or "nothing known">.
+   - Contract: <stable contract ID and revision, unresolved criterion IDs, and
+     private native source locators; or "unavailable">. Retain the full contract
+     privately. This comment does not amend it or verify acceptance.
    - Environment: <each tool or credential the outstanding work needs, with
      the repository route that sets it up, e.g. "`omp`: `make evals-install
      && make evals-setup-omp`" — or "the checkout alone">.
