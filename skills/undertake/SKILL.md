@@ -95,9 +95,9 @@ request, that is the issue — go on to `Title the session` with it, and say
 which one it is, so a wrong match is corrected before the task worktree exists.
 
 Otherwise open one, and author it through `issue`: the read-before-write
-rule, the body contract and the label are that sequence's, invoked rather
-than restated here. What stays here is the intent gate and the label rule
-below — and the order: **writing the issue must not start the
+rule, the body contract, label, and post-creation report are that sequence's,
+invoked rather than restated here. What stays here is the intent gate and the
+label rule below — and the order: **writing the issue must not start the
 implementation it describes.** The sequence continues when the issue is
 written, not while the work is begun. An issue is the statement of the
 request, and scope invented for it is scope the pull request is then

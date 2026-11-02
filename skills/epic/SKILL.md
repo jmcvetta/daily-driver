@@ -248,6 +248,15 @@ create call that also sets a parent. After that call, verify the edge and
 invoke `issue-labels` to add `story`. The marker supplements the task kind;
 it is never sent in place of one.
 
+When this step creates a new epic, report its link and the `epic` label under
+[`issue`'s reporting rule](../issue/SKILL.md#reporting-a-newly-opened-issue).
+
+After each child is created, report its link, the `task` label, and the exact
+class from its `Model class` section. Apply
+[`issue`'s reporting rule](../issue/SKILL.md#reporting-a-newly-opened-issue)
+to each child. Do not report the epic's label or another child's class as its
+own.
+
 An issue converted into the epic is **relabelled** rather than labelled: it
 carried something before, and two of the six kinds on one issue is a stop in
 its own right. Both harnesses make that swap awkward, in opposite ways, and the
