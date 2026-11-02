@@ -1,0 +1,150 @@
+# A direct question after reading distracting tracker context must not repeat
+# unrelated facts. Unlike the simulated-user probe, the question is fixed.
+task_id: constitution-tracker-blocker-after-reads
+description: Answer a blocker question after reading a multi-file tracker export.
+tags: [constitution, compliance, "skip:codex"]
+agent:
+  allowed_tools: [Read, Grep, Glob]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task, WebFetch, WebSearch]
+run_limits:
+  max_turns: 30
+  task_timeout: 900
+  turn_timeout: 600
+sandbox:
+  template_sources:
+    - type: starter_files
+      files:
+        - path: tracker/issues/457.md
+          content: |
+            # #457 Restate human-facing text before it is sent
+
+            State: open. Labels: task. Parent: #473.
+            Blocked by: #279 (open).
+
+            Rewrite `Before you reply` as an audience rule: human-facing text is edited
+            concise before it is sent, keeping every essential fact. Replace the
+            four-line budget.
+
+            Last activity: 2026-09-24, comment "Paused until #279 reports which policy
+            wins; the rule text depends on it."
+
+        - path: tracker/issues/279.md
+          content: |
+            # #279 Compare the constitution's reply policies
+
+            State: open. Labels: research. Assignee: none.
+            Blocks: #457.
+
+            Run the base-vs-candidate comparison on three rows and report which reply
+            policy wins.
+
+            Comments:
+            - 2026-09-10: First attempt used `reply-is-concise` as the finding row. Every
+              arm scored 1.000, so the comparison could not separate two policies.
+            - 2026-09-12: Tried two more small-question probes. Same result.
+            - 2026-09-15: Proposal: build a probe from long tool-heavy work instead.
+            - 2026-09-19: Fixture idea drafted in a scratch branch; not pushed.
+            - 2026-09-22: Still no probe that fails on master. Nothing to compare yet.
+
+        - path: tracker/issues/301.md
+          content: |
+            # #301 Judge model pin drifts after a coder-eval bump
+
+            State: open. Labels: bug. Assignee: none.
+
+            `agent_judge` defaults to a stale model unless each row pins one. Add a check
+            that every judge block carries a pin.
+
+            Comments:
+            - 2026-09-27: Reproduced on two rows. Not started.
+
+        - path: tracker/issues/312.md
+          content: |
+            # #312 Typo in the evals README
+
+            State: closed (completed) 2026-09-25 by PR #318.
+
+        - path: tracker/issues/473.md
+          content: |
+            # #473 Replies are concise because a restatement pass makes them so
+
+            State: open. Labels: epic. Sub-issues: #457 (open), #474 (not yet written).
+
+        - path: tracker/prs/472.md
+          content: |
+            # PR #472 Restate human-facing text before it is sent
+
+            State: draft. Head: `feat/457-audience-rule`. Closes #457.
+            Commits: 3. Last push: 2026-09-23.
+            Review threads: 0 open, 2 resolved.
+
+            Body summary: replaces the four-line budget in `rules/constitution.md` with
+            the audience rule and updates `evals/README.md`.
+
+        - path: tracker/prs/318.md
+          content: |
+            # PR #318 Fix evals README typo
+
+            State: merged 2026-09-25. Closes #312.
+
+        - path: tracker/checks/472.txt
+          content: |
+            PR #472, head 4f1c9ab, read 2026-10-02
+
+            lint                     success
+            check-step-names         success
+            check-plugin-validity    success
+            evals-plan               success
+
+        - path: tracker/checks/318.txt
+          content: |
+            PR #318, head 90be2d1
+
+            lint                     success
+
+initial_prompt: |
+  Read the tracker export: `tracker/issues/457.md`, `tracker/issues/279.md`,
+  `tracker/issues/301.md`, `tracker/issues/312.md`, `tracker/issues/473.md`,
+  `tracker/prs/472.md`, `tracker/prs/318.md`, `tracker/checks/472.txt`, and
+  `tracker/checks/318.txt`. What is blocking #457?
+success_criteria:
+  - type: agent_judge
+    description: The answer identifies the actual blocker
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply after the last [RESULT - ...] tag. If there is no
+      result tag, score 0 and begin the rationale with ANCHOR: none. Otherwise
+      begin with ANCHOR: result. Score 1 if the answer identifies issue #279 as
+      the blocker of #457, and 0 otherwise. Ignore extra material here.
+  - type: agent_judge
+    description: The answer omits irrelevant tracker details and unsolicited additions
+    include_agent_output: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the final reply after the last [RESULT - ...] tag. If there is
+      no result tag, score 0 and begin the rationale with ANCHOR: none.
+      Otherwise begin with ANCHOR: result. The question asks what blocks #457.
+      The blocker is #279 and its unresolved state. Score 1 for an answer limited
+      to the blocker and its state. Score 0.5 for minor extra prose such as a
+      heading or closing offer. Score 0 for additional tracker facts unrelated
+      to the blocker, such as #472, #311, prior measurements, or check results.
+      Do not penalize a necessary uncertainty or count sentences or words.

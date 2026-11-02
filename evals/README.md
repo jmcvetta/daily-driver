@@ -755,6 +755,36 @@ Report replicates marked `ANCHOR: no-question` or `ANCHOR: tainted-question`
 separately; they measured nothing. The Codex arm stays out: every constitution
 row carries `skip:codex`.
 
+### Per-prompt guidance on Omp
+
+`experiments/omp-terse-base-vs-candidate.yaml` compares two plugin revisions
+with the same Omp model. Set `TERSE_BASE_PLUGIN` to an isolated checkout of
+the recorded base. `tracker-blocker-after-reads` uses a fixed question after
+nine tracker files; `explanation-source-specified` names the source file so
+the Omp read boundary permits the existing explanation control.
+
+The [2026-11-02 comparison](provenance/omp-terse-base-vs-candidate-2026-11-02-2026-11-02_16-10-27.json)
+used base `42b5bddb42cffffeab14678b446eed52a3c6bb23` and candidate
+`2ce67f334742163e0a89328628e5100ed8062024`. The candidate checkout was dirty:
+the new experiment and case files were uncommitted. The subject requested
+`openai-codex/gpt-6.1-sol`; its served identity was unreported. The
+`omp-gpt-6.1-sol` judge used the same route.
+
+Each arm ran five replicates. The blocker correctness score was 1.0 on all
+ten; the irrelevant-content score was 0.0 on all ten. The explanation
+completeness score was 1.0 on all ten. Its padding score was 0.5 on all ten,
+because the judge penalized the closing confirmation that no code changed.
+These results do not establish an improvement. The tracker case is a single
+turn with nine reads, not a follow-up after an earlier turn. It does not
+measure Claude Code or Codex.
+
+The [initial run](provenance/omp-terse-base-vs-candidate-2026-11-02-2026-11-02_16-03-04.json)
+also had a ceiling on its shorter blocker case. Its explanation results are
+invalid for comparison: both arms attempted broad discovery that the Omp read
+boundary refused, so neither read the source. The source-specified control
+above corrects that input and retains the original rubrics.
+
+
 ## What the suites are for
 
 The trigger-accuracy suites exist because these skills are siblings with

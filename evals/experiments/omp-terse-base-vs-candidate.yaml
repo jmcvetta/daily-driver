@@ -1,0 +1,28 @@
+# Compare the same Omp model with the base and candidate plugin revisions.
+# Set TERSE_BASE_PLUGIN to an isolated checkout at the recorded base revision.
+experiment_id: omp-terse-base-vs-candidate
+description: Compare per-prompt terse guidance with the existing plugin.
+defaults:
+  repeats: 5
+  run_limits:
+    max_turns: 30
+    task_timeout: 900
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: openai-codex/gpt-6.1-sol
+    permission_mode: default
+    allowed_tools: [Skill]
+variants:
+  - variant_id: base
+    description: Daily Driver at the recorded base revision.
+    agent:
+      plugins:
+        - type: local
+          path: "$TERSE_BASE_PLUGIN"
+  - variant_id: candidate
+    description: Daily Driver with per-prompt guidance.
+    agent:
+      plugins:
+        - type: local
+          path: ".."
