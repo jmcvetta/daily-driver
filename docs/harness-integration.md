@@ -130,6 +130,12 @@ confirms actual execution. Show informative status during this normal
 verification, not an error; do not batch mutations with routing or start work
 while pending. An already matching model and effort needs no switch.
 
+Rejecting an inference request does not replace the selected worker's route
+with a permanent blocked disposition. After restoring the selected model,
+effort, and authentication route, the session can continue without a restart.
+A partially applied selection whose restoration failed remains recovery-only;
+an ordinary response does not verify that route.
+
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
 immediately on the invoking model, provider, and effort without confirmation.
