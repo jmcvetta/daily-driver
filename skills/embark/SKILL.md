@@ -346,6 +346,11 @@ direct-request rule; do not invent a second approval for that same work.
 Retain actual exclusions, revocations and fresh-confirmation requirements.
 Never probe a prohibited target. Record only the missing contribution and keep
 the pull request draft.
+For evaluation execution and recovery, follow the
+[evaluation runbook](../../evals/README.md#choose-the-execution-session-first).
+An authorized run still needs its required execution session. Do not restart
+an unsupported controller or infer the route from a local CLI probe; continue
+independent eligible work and report only what actually ran.
 When the same action is already in progress, do not send it again. When only
 the same prerequisite remains, retain the existing continuation and stay
 silent; another draft-status report is not progress.
