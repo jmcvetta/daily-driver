@@ -339,9 +339,13 @@ does not take over its branch or clear its draft.
 
 Before pausing for a real prerequisite, require evidence that independent
 permitted work is complete, unless a safety rule requires an immediate stop.
-Preserve production prohibitions, dangerous-action rules, paid-execution
-approval and explicit access or authorization limits. Never probe a prohibited
-target. Record only the missing contribution and keep the pull request draft.
+Preserve production prohibitions, dangerous-action rules, and explicit access
+or authorization limits. An invocation authorizes the issue's specified
+bounded work, including paid evaluation execution, under `undertake`'s
+direct-request rule; do not invent a second approval for that same work.
+Retain actual exclusions, revocations and fresh-confirmation requirements.
+Never probe a prohibited target. Record only the missing contribution and keep
+the pull request draft.
 When the same action is already in progress, do not send it again. When only
 the same prerequisite remains, retain the existing continuation and stay
 silent; another draft-status report is not progress.

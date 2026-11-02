@@ -11,6 +11,7 @@
 
 ### Fixed
 
+* Honor assigned, bounded evaluation work without requesting duplicate execution approval ([#775](https://github.com/jmcvetta/daily-driver/issues/775)).
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 
