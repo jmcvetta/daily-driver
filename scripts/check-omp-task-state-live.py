@@ -30,6 +30,7 @@ PROBES = {
     "first": "Fix smoke-first. Verify the fixture offline only.",
     "resume": "Report smoke-resume current state without starting a new task.",
     "cancel": "Fix smoke-cancel abort fixture.",
+    "contract": "Fix smoke-contract. Verify the fixture offline only.",
 }
 
 
@@ -56,7 +57,70 @@ class Model(BaseHTTPRequestHandler):
         if phase is None:
             raise AssertionError(f"No external probe phrase in provider messages: {repr(messages[-5:])[:16000]}")
         index = REQUESTS.get(phase, 0)
-        if phase == "first" and index < 3:
+        if phase == "contract" and index < 10:
+            def latest_status() -> dict:
+                decoder = json.JSONDecoder()
+                for candidate in reversed(messages):
+                    content = FIXTURE.text_of(candidate.get("content"))
+                    offset = content.find('{"state":')
+                    if offset >= 0:
+                        try:
+                            result, _end = decoder.raw_decode(content, offset)
+                            return result
+                        except json.JSONDecodeError:
+                            pass
+                raise AssertionError("Task-state status was not returned")
+
+            if index == 0:
+                name, args = "read", {"path": "xd://daily_driver_task_state"}
+            elif index == 5:
+                name, args = "read", {"path": "absent-task-state-fixture"}
+            else:
+                name = "write"
+                if index in (1, 6):
+                    params = {"action": "status"}
+                elif index == 2:
+                    source = next(item for item in latest_status()["sources"] if item["kind"] == "user")
+                    SOURCES[phase] = source
+                    params = {"action": "status", "record": json.dumps({"sourceId": source["sourceId"]})}
+                elif index == 3:
+                    source = SOURCES[phase]
+                    ref = {"sourceId": source["sourceId"], "quote": "Verify the fixture offline only."}
+                    params = {"action": "begin", "record": json.dumps({
+                        "taskId": "fixture", "operation": "verify", "target": "fixture", "source": ref,
+                    })}
+                elif index == 4:
+                    source = SOURCES[phase]
+                    params = {"action": "authorization", "record": json.dumps({
+                        "id": "fixture-approval", "kind": "user", "operation": "verify", "target": "fixture",
+                        "source": {"sourceId": source["sourceId"], "quote": "Verify the fixture offline only."},
+                        "limits": "offline only", "conditions": "fixture only",
+                    })}
+                elif index == 7:
+                    evidence = next(item for item in latest_status()["evidence"] if item["isError"])
+                    SOURCES["failure"] = evidence
+                    params = {"action": "status", "record": json.dumps({"sourceId": evidence["sourceId"]})}
+                elif index == 8:
+                    # Quote the entry retrieved by sourceId, not the status excerpt, as the device documents.
+                    evidence = latest_status()["source"]
+                    assert evidence["sourceId"] == SOURCES["failure"]["sourceId"], evidence
+                    ref = {"sourceId": evidence["sourceId"], "quote": evidence["text"]}
+                    params = {"action": "blocker", "record": json.dumps({
+                        "kind": "execution", "operation": "verify", "target": "fixture",
+                        "evidence": [ref], "authorizationIds": ["fixture-approval"],
+                        "routes": [{"route": "fixture", "disposition": "failed", "evidence": ref}],
+                        "independentWork": {"pending": [], "completed": []},
+                        "externalContribution": "Provide fixture access.", "resume": "Retry the fixture.",
+                    })}
+                else:
+                    params = {"action": "complete", "record": json.dumps({"summary": "Fixture work completed."})}
+                args = {"path": "xd://daily_driver_task_state", "content": json.dumps(params)}
+            message = {"role": "assistant", "tool_calls": [{
+                "index": 0, "id": f"contract-{index}", "type": "function",
+                "function": {"name": name, "arguments": json.dumps(args)},
+            }]}
+            finish = "tool_calls"
+        elif phase == "first" and index < 3:
             if index == 0:
                 params = {"action": "status"}
             elif index == 1:
@@ -115,7 +179,7 @@ class Model(BaseHTTPRequestHandler):
 
 def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -> list[dict]:
     """Reject lost resume state and corrections delivered after a real RPC abort."""
-    storage = base / ("cancel-session" if phase == "cancel" else "persistent-session")
+    storage = base / (f"{phase}-session" if phase in ("cancel", "contract") else "persistent-session")
     storage.mkdir(exist_ok=True)
     resume = ["--resume", str(next(storage.glob("*.jsonl")))] if phase == "resume" else []
     stderr_path = base / f"{phase}.stderr"
@@ -207,6 +271,19 @@ export default function(pi) {
             first = run(omp, base, env, "first", observer)
             run(omp, base, env, "resume", observer)
             run(omp, base, env, "cancel", observer)
+            # A rendered device and its documented calls must work in the installed runtime, not only in a mock.
+            contract = run(omp, base, env, "contract", observer)
+            calls = [frame for frame in contract if frame.get("type") == "tool_execution_end"]
+            assert len(calls) == 10, calls
+            assert all(not frame.get("isError") for index, frame in enumerate(calls) if index != 5), calls
+            assert calls[5].get("isError"), calls[5]
+            contract_session = next((base / "contract-session").glob("*.jsonl"))
+            contract_entries = [json.loads(line) for line in contract_session.read_text().splitlines()]
+            contract_state = [entry["data"]["state"] for entry in contract_entries
+                              if entry.get("customType") == "daily-driver.task-state"][-1]
+            assert contract_state["status"] == "reported-complete", contract_state
+            assert contract_state["blocker"]["kind"] == "execution", contract_state
+            print("Rendered task-state device:", json.dumps(calls[0]))
             rows = [json.loads(line) for line in (base / "state.log").read_text().splitlines()]
             assert all(row["corrections"] <= 2 for row in rows if "corrections" in row), rows
             # Three state commands and three model stops prove exactly two corrective turns;
