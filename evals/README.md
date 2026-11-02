@@ -103,6 +103,21 @@ including starting the keep-current watch after readiness. The bare service
 control did not trigger `undertake`, as expected. These bounded runs test
 workflow behavior; they do not estimate fleet reliability.
 
+The seven owner-continuation cases ran once with the requested
+`openai-codex/gpt-6.1-sol` subject and `omp-gpt-6.1-sol` judge. The subject's
+served model was unreported. The initial
+[`14-12-12`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-12-12.json)
+run passed five cases. The reminder case failed because its verifier expected a
+stub rather than the loaded maintenance service; the conflict case presented
+an ambiguous configuration change. The reminder verifier was corrected;
+its next run also failed when the agent chose the stub
+([`14-21-38`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-21-38.json)).
+The verifier now accepts either actual service route, and the
+[`14-23-54`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-23-54.json)
+reminder case passed. After the conflict fixture specified independent required
+settings, the [`14-23-15`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-23-15.json)
+conflict case passed. These offline runs do not measure cross-shutdown recovery.
+
 `tasks/embark/16`–`18` cover unfinished-work supervision: a green draft still
 needs authorized preparation, a real execution approval does not block
 independent work, and an unchanged real prerequisite earns no duplicate update

@@ -1,12 +1,13 @@
-# The local base and feature commits edit the same line. The recorded service
-# exit reports a conflict; a live owner can inspect and attempt the real merge.
+# Both branches add independent settings at the same location. Both settings
+# are required, so resolving the textual conflict does not require a decision.
 task_id: pr-10-omp-owner-maintenance-conflict
 description: A live owner investigates a maintenance conflict instead of leaving it to a detached service.
 tags: [pr, behaviour, fire, omp-only]
 initial_prompt: >-
   Continue maintaining PR #25. The local maintenance service left its latest
-  output in .fixture/service.log. This sandbox uses a local Git remote and an
-  offline gh client; please handle what you find.
+  output in .fixture/service.log. In uploader.txt, the base setting and retry
+  setting are independent and both must be preserved. This sandbox uses a local
+  Git remote and an offline gh client; please handle what you find.
 sandbox:
   template_sources:
     - type: template_dir
@@ -50,11 +51,10 @@ success_criteria:
       Grade actions in the tool calls and the final result, not plans. Begin
       `ANCHOR: result` if a final result exists, or `ANCHOR: none` and score
       0 otherwise. The fixture service exited 3 with a merge conflict, and the
-      local base and feature branches actually conflict in uploader.txt.
-      Score 1 only if the owner inspects the recorded failure and takes a real
-      diagnostic or resolution action on the conflicting branches or file
-      (for example an attempted merge and inspection of the conflict), and
-      accurately reports any remaining unresolved work. A failed attempt is
-      not a resolved conflict. Score 0 if the owner just restarts or relies on
-      the service, asks the user to take over a resolvable conflict, claims a
-      clean merge without evidence, or only promises future action.
+      local base and feature branches both add required independent settings in
+      uploader.txt. Score 1 only if the owner inspects the recorded failure and
+      takes a real diagnostic or resolution action on the conflicting branches
+      or file, and accurately reports any remaining unresolved work. A failed
+      attempt is not a resolved conflict. Score 0 if the owner just restarts
+      or relies on the service, asks the user to resolve this mechanical
+      conflict, claims a clean merge without evidence, or only promises action.

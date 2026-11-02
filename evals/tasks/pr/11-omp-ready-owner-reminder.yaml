@@ -1,5 +1,5 @@
-# The shared verifier observes the real local stub process and cleans it up.
-# The judge separately checks the live session's scheduled continuation.
+# The verifier observes the loaded plugin service in the offline sandbox and
+# cleans it up. The judge checks the service and live-session reminder.
 task_id: pr-11-omp-ready-owner-reminder
 description: A ready pull request has both a detached maintenance service and a live owner continuation.
 tags: [pr, behaviour, fire, omp-only]
@@ -34,7 +34,7 @@ success_criteria:
     skill_name: pr
   - type: run_command
     description: The maintenance service was launched for this pull request and observed alive
-    command: python3 .fixture/verify.py service
+    command: python3 .continuation/verify.py service
     timeout: 30
     weight: 2
   - type: agent_judge
