@@ -2755,7 +2755,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 							// typed it, rather than a tool the model ran.
 							attribution: "user",
 						},
-						{ deliverAs: "followUp" },
+						{ deliverAs: "followUp", triggerTurn: true },
 					);
 				},
 				params.delaySeconds * 1000,
