@@ -207,6 +207,8 @@ dispatch and cannot be replayed without changing the experiment. The other
 ended before an observed dispatch. Both remain unscored, with unknown duration.
 The [reconciliation](provenance/reviewer-quality/deepseek-resumption.json)
 explains the terminal-only standard record and the preserved interruptions.
+Its near-zero run time in the generated index measures the resume aggregation,
+not the cohort. Use the per-attempt durations below instead.
 
 | Measure | GLM | DeepSeek |
 | --- | ---: | ---: |

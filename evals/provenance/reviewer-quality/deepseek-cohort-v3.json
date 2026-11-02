@@ -1766,7 +1766,7 @@
   },
   "cohort_complete": false,
   "coverage_complete": false,
-  "created_at": "2026-11-02T12:47:45.566147+00:00",
+  "created_at": "2026-11-02T12:49:39.011339+00:00",
   "planned": {
     "attempts": 40,
     "cases": [
@@ -1786,7 +1786,7 @@
       "run_dir": "evals/runs/reviewer-quality-deepseek-cohort-v3",
       "run_id": "reviewer-quality-deepseek-cohort-v3",
       "run_record": "evals/provenance/omp-reviewer-deepseek-v4-pro-go-2026-11-02-reviewer-quality-deepseek-cohort-v3.json",
-      "run_record_sha256": "cda0b76e95c0b8fe18ff9265d089e9dab53c627d93a88254f1601a8236051f3b"
+      "run_record_sha256": "d5504b74e3335f256e83f2844810292b0237f952b9365b1e5384ea7fa8e43491"
     }
   ],
   "schema_version": 1,
