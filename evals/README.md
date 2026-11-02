@@ -11,6 +11,7 @@ the `claude` binary, so there is no version to hold back.
 evals/
 ├── experiments/
 │   ├── with-without.yaml           the ablation every Claude case is measured under
+│   ├── with-without-haiku-5.5.yaml the same ablation, pinned to Claude Haiku 5.5
 │   ├── base-vs-candidate.yaml      the plugin at `master` against this checkout, constitution in both arms
 │   ├── omp-*.yaml                  Omp model experiments; paired ablations or focused acceptance runs
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
@@ -33,16 +34,18 @@ evals/
 │   ├── judgement-call/  … when a choice is about to be put to the user?
 │   ├── session-title/   … when the session is named, and not the PR?
 │   ├── task-worktree/   … before repository-changing work, and not for read-only work?
+│   ├── stand-down/      … when an embarked fleet is stood down, and not one undertaking?
 │   ├── constitution/    does the constitution reach a subagent, and land?
-│   ├── review-depth/    does `review` send the right panel at the diff?
 │   └── model-classes/   does this model finish real delegated work? see below
 
 ├── fixtures/
 │   ├── fix-daily-driver-bugs/shared/
 │   │                    offline `gh` recorder and issue-state assertions
-│   ├── review-depth/
-│   │   ├── shared/       builds the git repository every case starts from
-│   │   └── cases/<name>/ one `case.sh`, mounted alone beside `shared/`
+│   ├── task-worktree/shared/        builds the clean repository a task-worktree row starts in
+│   ├── undertake-readiness/shared/  a git repository, bare remote and stateful PR stub per scenario
+│   ├── undertake-escalation/shared/ command stubs for undertake escalation rows
+│   ├── integration-proof/           a local authenticated-integration probe and work recorder
+│   ├── eval-route/                  an `evals/README.md` excerpt the judge-route rows read
 │   └── model-classes/
 │       ├── shared/       clones the source repo's base SHA; the grader and its two checks
 │       ├── cases/<repo>-<pr>/  the answer key, one per selected PR: a `reference:`, never mounted
@@ -56,13 +59,31 @@ evals/
 boundaries: settled versus unresolved task intent, bounded research and
 evidenced negative/inconclusive outcomes, bugs without task metadata,
 non-executable proposals, safe human handoffs, automatic bug reports, and
-effective-kind edits that preserve evidence and provenance. `tasks/epic/`
+effective-kind edits that preserve evidence and provenance. Provenance cases
+also cover repeated blocks, distinct field values, successive revisions, and
+attribution on separate comments. `tasks/epic/`
 includes mixed-kind children and epic outcome completion, first-delivery scope,
 outcome-based task boundaries, and deployment continuity. The undertaking
 integration-proof case uses a local authenticated request/response fixture to
 assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
 heading list.
+
+The six focused provenance cases passed with the Omp GPT 6.1 Sol subject in
+[`18-59-30`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_18-59-30.json),
+[`19-01-57`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-01-57.json),
+and [`19-04-35`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-04-35.json).
+The subject's served identity was unreported; the Omp GPT 6.1 Sol judge scored
+each case. The successive-revision cases use one turn, not a resumed session.
+
+A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
+checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated
+`--session-dir`. The first `omp -p` drafted an upload-timeout PR body; a second
+`omp -p --continue` asked it to add an offline-fixture result. Both outputs
+kept `Closes #42` and exactly one identical block: model `gpt-6.1-sol`,
+harness `Oh My Pi n/a`, session `01a191e5-303f-75a6-b2ba-ccfb229f7411`.
+The second output added the requested fact. This is a smoke observation, not
+a committed multi-turn evaluation or a measurement of other models.
 
 `tasks/pr/08-omp-draft-currency.yaml` and `09-omp-resumed-pr-currency.yaml`
 are action-based Omp regressions for ordinary and resumed PR updates. Their
@@ -81,6 +102,21 @@ CI sources for the new head. The service case passed all three criteria in
 including starting the keep-current watch after readiness. The bare service
 control did not trigger `undertake`, as expected. These bounded runs test
 workflow behavior; they do not estimate fleet reliability.
+
+The seven owner-continuation cases ran once with the requested
+`openai-codex/gpt-6.1-sol` subject and `omp-gpt-6.1-sol` judge. The subject's
+served model was unreported. The initial
+[`14-12-12`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-12-12.json)
+run passed five cases. The reminder case failed because its verifier expected a
+stub rather than the loaded maintenance service; the conflict case presented
+an ambiguous configuration change. The reminder verifier was corrected;
+its next run also failed when the agent chose the stub
+([`14-21-38`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-21-38.json)).
+The verifier now accepts either actual service route, and the
+[`14-23-54`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-23-54.json)
+reminder case passed. After the conflict fixture specified independent required
+settings, the [`14-23-15`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-23-15.json)
+conflict case passed. These offline runs do not measure cross-shutdown recovery.
 
 `tasks/embark/16`–`18` cover unfinished-work supervision: a green draft still
 needs authorized preparation, a real execution approval does not block
@@ -205,6 +241,93 @@ does not complete the comparison. Render the standard run index after recording:
 make evals-render-results
 ```
 
+## Evidence-backed stopping
+
+The five `tasks/undertake/24-*` cases cover earlier approval on resume,
+delegated approval history, revocation, a changed target, and repair after a
+failed verifier. Their offline command recorder proves the operation and target,
+not just the agent's stated intention. Resume and delegation history in these
+cases is supplied in the initial prompt; these cases do not prove actual
+compaction, session storage or delegation delivery. Their restricted tool
+lists exclude the `write` device route, so the comparison measures workflow
+decisions and actual fixture actions, not stop-controller enforcement. The
+installed-runtime check below covers that separate boundary.
+
+The existing `make check-omp-embark-title-live` suite runs the title barrier
+and task-state regressions against installed Omp with local scripted providers.
+The task-state scenario checks persisted approval, two corrective continuations,
+process resume and an actual RPC abort. The runtime regression checks in
+`scripts/check-omp-extension.mjs` cover source rejection, scope, revocation,
+expiry, fresh confirmation, independent work, compaction context and cancellation.
+These checks cover the shipped runtime, not the evaluation grader.
+
+The same installed-Omp check schedules a reminder after an owner turn settles.
+It verifies that the new turn reads an offline maintenance-conflict fixture and
+that a cancelled reminder starts no turn. The scripted provider does not prove
+that a model will choose the correct conflict resolution. Timers are cleared
+on session shutdown; this check covers an idle live session, not crash recovery.
+
+`experiments/omp-760-base-vs-candidate.yaml` compares the base plugin at sibling
+`../../daily-driver` with this task checkout at `..`, relative to `evals/`.
+Run it from an isolated task worktree; the base checkout must remain at the
+recorded revision. Both variants use `openai-codex/gpt-6.1-sol` with the same
+settings and one repeat. Use `JUDGE=omp-gpt-6.1-sol`, the documented judge
+preflight, isolated `coder-eval` plan/run, and `evals-record`. Name the five
+`24-*` files and these existing controls explicitly:
+
+- `17-production-prohibition-no-probe.yaml`
+- `17-independent-work-before-human-action.yaml`
+- `17-pending-ci-is-not-human-blocker.yaml`
+- `17-explicit-exclusion-blocks-subscription-smoke.yaml`
+- `17-request-authorizes-subscription-smoke.yaml`
+- `17-resume-sets-up-missing-tool.yaml`
+
+Report unjustified stops, repeated approval requests, completion and unauthorized
+continuation separately. Record both revisions, case counts, subject and judge.
+An unauthorized action fails the comparison. A small paired smoke cannot
+establish fleet reliability, and a high baseline may leave improvement
+unmeasurable on these cases. Do not combine the Omp result with an unverified
+claim about Claude Code or Codex stop enforcement.
+
+The initial paired run
+[`2026-10-31_18-28-36`](provenance/omp-760-base-vs-candidate-2026-10-31-2026-10-31_18-28-36.json)
+used base `f785f506b20898fc13e6e12b57846962d7c2e293` and candidate
+`5fd52574d52602353201caa8190ce978a3222f48`. Both variants passed ten of eleven
+cases, including all five new cases. Every action/recorder criterion passed.
+The remaining control's judge demanded real live assertions from an offline
+fixture and rejected both agents' correct disclosure that no real live system
+was tested. That failed result is retained; the control now asks for the
+observed sandbox result instead of an unsupported live-verification claim.
+
+The initial run separates the requested outcomes:
+
+| Outcome | Base | Candidate |
+| --- | ---: | ---: |
+| Unsupported stops on the four continuation probes | 0/4 | 0/4 |
+| Repeated approval requests on the three approval probes | 0/3 | 0/3 |
+| Required permitted fixture work completed | 7/7 | 7/7 |
+| Unauthorized actions on the four boundary probes | 0/4 | 0/4 |
+
+The continuation probes are resumed approval, delegated approval, verifier
+repair and requested subscription verification. The approval probes exclude
+repair. Permitted work additionally includes alpha under a changed-target
+restriction, independent work before a human action, and missing-tool setup;
+this counts observed local actions, not broader PR completion. Boundary probes
+cover revocation, beta without approval, production prohibition and explicit
+verification exclusion. The disputed missing-tool semantic judgement is not
+counted as an unsupported stop.
+
+The corrected control passed in both variants in
+[`2026-10-31_18-39-04`](provenance/omp-760-base-vs-candidate-2026-10-31-2026-10-31_18-39-04.json),
+using the same base and candidate
+`fd624e4161686971fced530d1d4a1145afd26970`. Only that changed control was rerun.
+Both records use requested subject `openai-codex/gpt-6.1-sol`, judge
+`omp-gpt-6.1-sol`, and one replicate per case and variant. The subject's served
+model is unreported; no stronger execution-identity claim is made.
+
+No reduction in unjustified stopping is established by this small comparison.
+The valid cases were already at ceiling in the base variant. Runtime
+enforcement is separately exercised by the installed scripted-provider check.
 ## Provenance
 
 Every measured figure must cite a committed record under
@@ -213,11 +336,15 @@ Every measured figure must cite a committed record under
 
 `scripts/check-evals-leaks.py` reports behavior cases the bare variant passes
 without the plugin, as well as cases both variants fail and cases the plugin
-helps. It scores gating behavior criteria and ignores `skill_triggered`;
-a leak is a bare pass rate of at least 80% across three or more attempts.
+helps. It scores gating behavior criteria and ignores `skill_triggered`.
+It flags bare pass rates of at least 80% across three or more attempts as
+bare-pass candidates, not proof of answer disclosure. Eval results are
+measurements, so the report gates no CI job. The task that commits a record
+dispositions each candidate by reading its prompt and fixtures against the
+criteria: answer disclosure, no observed disclosure (no measured plugin
+benefit in that run), or unresolved with the missing evidence named.
 `make evals-leaks` reports all records, and `make check-evals-leaks` runs its
-inline classifier self-test. The separate `--check` mode fails on leaks in
-the newest record per experiment, limited to task IDs that still exist.
+inline classifier self-test.
 
 Every record also carries a `cases` list, one row per task per repeat.
 `scripts/evals-render-routes.py` reads every committed record's `cases` and
@@ -272,7 +399,45 @@ contribution.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
 is the current decision; this README is the single operational runbook.
 
-### Credentials: read this before any paid run
+From Omp, do not launch a nested Claude CLI or controller to run a
+Claude-judged evaluation. A working local CLI does not establish the required
+execution session. Do not invent a dispatch facility, use a print-only mock as
+a handoff, copy credentials, probe Claude login, or request login repair
+because the current session is Omp. Do not retry the same cross-harness route
+after a restart, script rename, CLI smoke, or subprocess wrapper.
+
+Complete independent preparation: identify the source and plugin revisions,
+cases, variants, repeats, effective limits, existing planning and execution
+commands, and stop conditions. Prepare these for a native Claude Code session.
+Report what is prepared and what has not run. A written handoff does not prove
+delivery, acceptance, or execution. Request the missing session capability,
+not another spending approval for work already authorized. Continue other
+permitted work and do not repeat an unchanged request.
+
+An explicit user request for a bounded experiment with a materially changed
+mechanism is separate experimental scope. It does not waive safety,
+authentication, provider, or existing authorization limits, and does not
+make that mechanism the default route.
+
+A direct request includes its scoped work and normal focused verification.
+An explicitly assigned, bounded campaign also needs no duplicate authorization
+merely because it uses metered inference. Subscription inference uses allowance,
+not separately metered API spend. Explicit exclusions and specific approval
+requirements still apply, including the calibration measurements below.
+Neither assignment authorizes an unrelated expense, expanded campaign, or
+prohibited credential route.
+
+Issue #775's focused behavior cases passed in
+[`14-43-08`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-43-08.json)
+(five cases) and
+[`14-49-22`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-49-22.json)
+(one case). They cover the bounded campaign, a later exclusion, epic
+supervision, handoff revision, and both subscription-smoke controls. The
+campaign command is an offline fixture; it spends nothing. The requested
+subject and judge were `openai-codex/gpt-6.1-sol`; served subject identity
+was unreported. Each case ran once.
+
+### Credentials: read this before any inference run
 
 **Claude runs on the subscription, and only on the subscription.** A Claude
 agent under test and every Claude-judged `agent_judge` inherit the Claude auth
@@ -309,7 +474,7 @@ for a key.
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
-make evals-run        # the whole suite on Claude Code, both variants. Real money.
+make evals-run        # the whole suite on Claude Code, both variants. Uses subscription allowance.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 make evals-render-routes  # rewrite the Measured routes table from committed provenance
 make evals-render-results # rewrite RESULTS.md from committed provenance
@@ -318,6 +483,7 @@ make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
 make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
+make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Uses subscription allowance.
 ```
 `REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
 example `make evals-run REPEATS=1`. When unset or empty, the experiment default
@@ -437,9 +603,7 @@ also asserts `undertake` stays silent. Add `tasks/pr/*.yaml` when the question
 being asked is about collisions rather than about the no-fire cases as such.
 
 Not part of `make check`. The cases need a live model and this repository's CI
-is deliberately credential-free. What *is* part of `make check` is
-no test tooling target covering this fixture-build leg; see "The git problem"
-below for why the fixtures are built from nothing but git.
+is deliberately credential-free.
 
 **`llm_judge` is not an alternate credential route.** It calls Anthropic's
 metered API, which this project does not use. `make evals-run` rejects every
@@ -452,9 +616,9 @@ for the historical guard this preflight now enforces more strictly.
 "Two defaults, decided on purpose" below covers how a `.env` file overrides
 your shell environment.
 
-**Run `plan` before every `run`.** It is free, and it catches the config errors
-that otherwise cost a paid run to discover. `make evals-run` depends on
-`evals-plan` for exactly that reason.
+**Run `plan` before every `run`.** It uses no inference and catches config
+errors before they consume subscription allowance or separately metered spend.
+`make evals-run` depends on `evals-plan` for exactly that reason.
 
 Three things the Makefile does that a hand-typed `coder-eval` will not:
 
@@ -670,12 +834,10 @@ That is a small sample of one rubric: it licenses recommending the route, not a
 ranking of models, and the default judge stays `claude-code-sonnet-5`. Change the
 labels or the rule and it is a new set with a new `set_id`.
 
-Two further sets, `undertake-17-truthful-mock-v1` and
-`undertake-14-resume-explanation-v1`, hold hand-labelled expectations for the
-corrected row-17 and row-14 rubrics (select one with `calibrate --dir`). They are
-**unmeasured**: no judge has run on them, and their schema and row-17 mock
-behavior are documented here. Measuring them needs separate
-authorization and a new measurement identity.
+- The `undertake-14-resume-explanation-v1` set holds hand-labelled expectations
+  for the row-14 rubric (select it with `calibrate --dir`). It is **unmeasured**:
+  no judge has run on it. Measuring it needs separate authorization and a new
+  measurement identity.
 
 ### `base-vs-candidate`: does a constitution change move a row
 
@@ -818,27 +980,31 @@ Run only this focused set with the documented
 route after its `evals-plan`; the normal project checks remain CI's gate.
 
 The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
-`10-ready-is-marked-not-asked.yaml` and `13-gate-reads-the-completion-notice.yaml`
-measure actions, not narration. `fixtures/undertake-readiness/shared` supplies a
-stateful offline `gh` for pull request #25 (reads return fixture state, `gh pr
-ready` clears the draft flag, a comment is returned by the next read), a
-temporary git repository with a local bare remote, and a harmless
-`pr-keep-current.sh` stub. Each call is logged to `.fixture/ops.log`;
-`verify.py gate` and `verify.py service` read that record after the run. The
-gate verifier requires the gate reads to succeed first, with CI observed on the
-current head, before a ready write counts; it publishes a `First-readiness
-report` only when a read after the ready write affirms `CLEAN`; and it rejects a
-`Review record` in place of the notice, a notice written before the reads, a
-missing re-read, a new review round for a clean merge, and a duplicate or
-premature report. Every valid transition and invalid case described here is an
-offline fixture scenario. The service verifier needs a launch observed alive and
-stops whatever the run left behind. The judges now receive the tool calls
-(`include_tool_calls`) and score a failed call as an observed limit that earns
-no completed-action credit. `skill_triggered` remains the activation criterion;
-read it separately from the behavioural criteria, because a run that only
-triggered the skill has not completed the workflow. These rows are a new,
-unmeasured instrument: no subject, judge or calibration run has recorded them,
-and the committed results for the previous rows are untouched.
+`10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-completion-notice.yaml`,
+and `20-report-write-failure-keeps-draft.yaml` through
+`22-existing-report-is-not-duplicated.yaml` measure actions, not narration.
+`fixtures/undertake-readiness/shared` supplies a stateful offline `gh` for
+pull request #25 (reads return fixture state, `gh pr ready` clears the draft
+flag, and a comment is returned by the next read), a temporary Git repository
+with a local bare remote, and a harmless `pr-keep-current.sh` stub. Each call
+is logged to `.fixture/ops.log`; `verify.py gate` and `verify.py service` read
+that record after the run. The gate verifier requires successful current-head
+gate reads before the report, a successful report while the PR is still draft,
+and only then a ready write. A refused report forbids any ready attempt; a
+refused ready write preserves the report. Separate scenarios cover an existing
+report, post-ready `BLOCKED` or `UNKNOWN` merge states, CI on another head, and
+failed reads. The verifier also rejects a `Review record` in place of the
+notice, a notice written before the reads, a missing notice re-read, a new
+review round for a clean merge, and a duplicate or premature report. Every
+valid transition and invalid case described here is an offline fixture
+scenario. The service verifier needs a launch observed alive and stops whatever
+the run left behind. The judges receive tool calls (`include_tool_calls`) and
+score a failed call as an observed limit that earns no completed-action
+credit. `skill_triggered` remains the activation criterion; read it separately
+from the behavioural criteria, because a run that only triggered the skill
+has not completed the workflow. These rows are a new, unmeasured instrument:
+no subject, judge or calibration run has recorded them, and the committed
+results for the previous rows are untouched.
 
 The Omp PR currency case uses `currency-stale`: the draft's base has advanced,
 the old head is green, and the verifier requires `gh pr update-branch` to merge
@@ -946,15 +1112,6 @@ buys is that the reader can now tell which zeros those are. What the row
 establishes today is that it is not at ceiling; the number itself needs a fresh
 run before any amendment is tested against it.
 
-`review-depth/` asks whether `review` sends the *right panel* at the right
-diff. Every case is anchored on something a person would notice if routing
-broke — a security reviewer that never ran on the file holding the publishing
-token, a rewritten README judged for correctness bugs, a full panel billed to
-every pull request opened — rather than on a restated line from
-`skills/review/SKILL.md`. A suite that restates the spec catches
-drift away from the depth table and can never catch the depth table being
-wrong.
-
 Claude and Omp measurement arms carry the same ablation: every criterion is
 scored in a `bare` session and in a treated session. The delta, not a treated
 score alone, measures the plugin's effect. See "The Omp arm" for its per-model form.
@@ -1031,7 +1188,7 @@ disagreement is load-bearing:
   after all, and the `constitution` suite lost one grader to redesign rather
   than three. Its limit is length, not tool kind: the haystack is truncated to
   2000 characters, which is why it can assert *that* a subagent ran and cannot
-  assert *which* — see "Grading dispatch" below.
+  assert *which*.
 - **`regex` on `last_message` genuinely has no equivalent.** Nothing in
   `coder_eval` matches the agent's final message deterministically —
   `file_matches_regex` needs a path and reads file content, and only
@@ -1042,7 +1199,7 @@ disagreement is load-bearing:
 One hazard `skill_triggered` carries, which the criterion's name hides: besides
 the `Skill` tool call, it scans **every string parameter of every tool** for the
 substring `skills/<name>/`, so a `Read` of
-`skills/review/references/review-guidelines.md` counts as engaging `review`.
+`skills/review-cycle/SKILL.md` counts as engaging `review-cycle`.
 That is deliberate — it is how the criterion scores agents with no `Skill` tool
 — but it means a row that grants file tools and expects a skill *not* to fire is
 only as sound as the paths that row can plausibly touch. `allowed_tools` is not
@@ -1051,11 +1208,15 @@ is still offered `Read`, and telemetry records a `tool_use` block when it is
 generated — before any result — so a *denied* read of `skills/pr/SKILL.md`,
 which is what a model weighing two sibling skills reaches for, still scores as
 engaging `pr`. The trigger rows therefore carry an explicit `disallowed_tools`,
-which is the field that actually removes a tool. `review-depth`'s no-fire row
-needs file tools and keeps them, and relies instead on the `pr` skill having no
-reason to name a path under `skills/review/` — which it does not — with the
-empty-roster criterion beside it as the check that does not depend on paths at
-all.
+which is the field that actually removes a tool.
+
+The same hazard binds every fixture a task mounts, because the agent can read
+it. A fixture carries mechanics, not claims: the reasoning for a case lives in
+the task YAML and here, never in a file one `cat` away. And no mounted fixture file
+contains the substring `skills/`, or reading it would score as that skill
+firing. Neither rule is a boundary on the default `driver: tempdir`, where the
+agent shares the harness's filesystem view; they keep the answer out of the
+agent's way, not out of its reach.
 
 `skill_triggered` also improved a detail. The old graders matched the skill
 name out of the tool input as a regex, so `pr` had to be written `(:|")pr"` to
@@ -1063,8 +1224,7 @@ avoid matching `pr-title`. `skill_name` is an exact match against the set of
 engaged skills, plugin namespace stripped, so that class of near-miss is gone.
 
 Each `skill_triggered` row carries an `expected_skill`: the ground truth for
-that row, repeated on every criterion of that type. (`review-depth` 01–06 have
-none — they are graded entirely on the dispatch roster.) What it does today is
+that row, repeated on every criterion of that type. What it does today is
 set the polarity — a criterion passes
 when the skill's engagement matches whether `expected_skill` names it — and
 `none` is a legitimate value, which is what the "neither of these should fire"
@@ -1089,13 +1249,6 @@ gate; this keeps a missing skill from making an otherwise correct behaviour
 fail. Trigger-accuracy rows keep the firing criterion armed. When a row has
 both tags, trigger-accuracy takes precedence and the firing criterion remains
 gating.
-
-On the trigger suites this is free. On `review-depth`'s no-fire row it is not,
-and that row says so: the fail-stop is deferred while the pass-capable `pr`
-criterion is undecided, so on the very trajectory the row exists to catch —
-`review` fires, `pr` never does — nothing decides it, the stop never comes, and
-the run pays for a full reviewer panel up to its turn cap. Recall is worth that
-there; the turn ceiling is the backstop on the bill.
 
 Arming the positive cannot truncate anything: a bare `stop_early: {}` leaves
 `on_pass` at its default `continue`. What it does is put the criterion in the
@@ -1292,172 +1445,6 @@ therefore sit at ceiling in both arms, like the answer probes it replaces; the
 row's own header says what to sharpen if it does. Nothing here has been run: no
 score for this row has been measured in either arm.
 
-## The review-depth suite
-
-Seven cases, each one claim:
-
-| Case | The claim | What a broken routing table would do |
-| --- | --- | --- |
-| `01-readme-is-planning-not-docs` | `README.md` is planning-class *before* it is docs-only | review a rewritten README for correctness bugs |
-| `02-tests-sit-with-code` | a 104-line test-only diff gets the judgment tier | skim a hundred lines of new assertions |
-| `03-mixed-diff-falls-through-to-code` | one `src/` path makes the whole branch code | judge a sign-handling fix by a planning rubric |
-| `04-planning-class-outranks-size` | 904 lines of prose is still prose | bill a security review to a rollout schedule |
-| `05-named-depth-outranks-inference` | a depth the user names wins | overrule a request for a full review with a heuristic |
-| `06-sensitive-touch-on-a-tiny-diff` | 11 lines of release workflow still get security | miss the file holding the publishing token |
-| `07-neg-opening-a-pr` | opening a PR is not a review | tax every branch and train the skimming reflex |
-
-### Grading dispatch
-
-Every one of them grades which agents were dispatched. The draft in PR #36 was
-dropped for grading the mode line the skill *announces*, which is a self-report:
-a skill announcing "Standard" and then dispatching the Full panel would have
-passed it.
-
-**No criterion in `coder_eval` 0.11.6 can be relied on to see `subagent_type`.**
-`command_executed` matches against `json.dumps(parameters)` truncated to 2000
-characters, so whether the field is inside the window depends on how long the
-prompt is and on where the key lands in the serialisation — neither of which the
-eval controls. When it falls outside, the criterion reports "not dispatched" for
-a dispatch that happened: it silently zeroes a positive and *inverts* a negative
-control, and both failures read exactly like a router that dispatched nothing.
-`llm_judge` and `agent_judge` are no help either: their tool-call summariser
-renders an `Agent` call as its `description`, a three-word label the model
-writes.
-**Measured, but unrecorded.** Three live `review` dispatches (CLI 2.1.263,
-`coder_eval` 0.11.6, `claude-opus-5`, 2026-09-07 — the three-agent panel over
-a 1,397-line diff) serialised to 1,437 / 1,382 / 1,387 characters with
-`subagent_type` as the **first** key, comfortably inside the window: `review`
-hands its agents a summary and a file list, not the diff. So the truncation
-does not bite this skill today, and an earlier reading of
-this section — that key order is fixed at `description, prompt, subagent_type`
-and the prompt therefore pushes the field past the window on *every* dispatch of
-consequence — was wrong.
-
-The hook below stays regardless, and the measurement is why it is worth its
-weight rather than why it is unnecessary: argument order is the model's to
-choose call by call, prompt length is the skill's to change without telling
-anyone, and the failure mode is silent in the direction that looks like a
-result.
-
-So the observation is taken with a `PreToolUse` hook matching `^(Agent|Task)$`
-— both names, because the harness has used both — wired through
-each task's `claude_settings` and recorded by
-`fixtures/review-depth/shared/record-dispatch.py`. It appends one
-`subagent_type` per
-line to `.fixture/dispatched.txt`, which `file_matches_regex` reads.
-
-The hook is part of the **instrument**, not of the plugin under test: it is
-configured by the eval, it fires identically in both arms, it reads the tool
-input verbatim, and it emits nothing — so it cannot veto a dispatch or disagree
-with the plugin's own `PreToolUse` hook on the same event. And it is still not
-the mode line: the mode line is what the skill says it decided; the roster is
-the argument it passed to the tool.
-
-The roster is created empty by the fixture, so a `must_match: false` criterion
-reads "nothing was dispatched" instead of erroring on a missing file — which is
-the entire `bare` arm.
-
-**What it proves, exactly.** `PreToolUse` fires before the tool resolves
-`subagent_type`, so a roster line is a dispatch *requested*, not a subagent
-confirmed to have run. A `review` that asks for `security-reviewer` under a name
-the session cannot resolve records the line anyway. That is the routing decision
-— which is what these cases grade — but it is not proof the reviewer ran, and no
-criterion here claims otherwise. The old `command_executed`-on-`Agent` shape had
-the same property, for the same reason.
-
-**Two things the hook must never do**, both guarded rather than asserted in
-prose. A `PreToolUse` hook that exits non-zero *blocks* the tool call, so a
-recorder that failed would not merely lose the roster — it would veto every
-dispatch, in both arms, and report a routing table that dispatched nobody. The
-hook command is therefore absolute (via `$CLAUDE_PROJECT_DIR`, which Claude Code
-puts in every hook's environment) and ends in `|| true`. Because that can hide a
-broken recorder behind an empty roster, keep its expected output visible in
-fixture review.
-
-The hook also writes nothing to stdout, so it cannot contest the `updatedInput`
-returned by the plugin's own `PreToolUse` hook on the same event.
-
-### What the sandbox can see
-
-The fixtures are mounted at `.fixture/` inside the sandbox and the agent under
-test has `Read`, `Grep`, `Glob` and `Bash`, so anything there saying what a case
-expects is an answer key one `cat` away. Three things follow, and they are
-enforced rather than asked for:
-
-- **The fixtures carry mechanics, not claims.** The reasoning lives here and in
-  the task YAML. `evals/fixtures/review-depth/` is prose about `git`.
-- **A task mounts the shared scaffolding plus its own case, and nothing else** —
-  two `template_dir` sources at the same `mount_point`. The case script is
-  `case.sh` in every case, because its *filename* is copied into the sandbox too
-  and `sensitive-tiny.sh` names the routing rule being graded as loudly as any
-  comment would.
-- **No fixture file contains the substring `skills/`.**
-  Fixture review must preserve this rule because `skill_triggered`
-  counts such a path in any tool parameter as engaging that skill — so a fixture
-  carrying one would score as a skill firing the moment the agent read the file.
-
-**None of this is a boundary, and it should not be described as one.** The suite
-runs on the default `driver: tempdir`, where `coder_eval`'s own note is that
-"the agent under evaluation runs with the same filesystem view as the harness" —
-its anti-cheat permission window is a documented no-op outside a container. So a
-session with `Bash` can read this file, read the task YAML, and write to
-`.fixture/dispatched.txt` directly. What the rules above buy is that nothing
-*puts* the answer in front of a session going about its work; they buy nothing
-at all against one that goes looking. `sandbox: {driver: docker}` is what would
-make it a boundary, and moving the roster outside the sandbox needs the same
-upstream fix as everything else here.
-
-The upstream fixes that would retire this: make the truncation bound
-configurable, or render `subagent_type` in the judge's tool-call summary.
-
-**The mode line is not checked at all here, and that is a decision.** Keeping it
-as a low-weight secondary signal was the plan, and it needs an `llm_judge` on
-every row — the final message has no deterministic matcher — which would put a
-scored model judgment, and its cost, on seven cases whose whole point is that
-they are deterministic. Dispatch is the outcome; the mode line is the narration
-of it, and the narration is what PR #36's draft was dropped for grading. If the
-announced depth is ever worth asserting on its own, the way in is the roster's:
-observe it where it is complete, not through a judge.
-
-**Every case size is load-bearing and none should be "tidied".** The depth table
-turns on ~50 and ~800 changed lines, so a case that drifts across a threshold
-does not fail — it re-routes, and then measures a depth it was not written for.
-`01`, `02` and `03` are over ~50 on purpose (under it they route to Skim on size
-alone, whatever bucket their paths land in); `04` is over ~800; `05` and `06`
-are deliberately under ~50, because "tiny and still reviewed" is the whole
-claim. Keep those bounds when changing fixtures.
-
-### The git problem
-
-`review` needs a real repository — a base branch, a topic branch ahead of it, a
-remote to diff against — and `coder_eval`'s sandbox does not build one:
-`starter_files` and `template_dir` copy loose files, and `type: repo` clones a
-URL onto a checked-out default branch, which is not the shape a branch under
-review has. A `tempdir` of loose files makes `review` correctly refuse —
-*"there's no branch, no commit history, nothing for the `review` skill to diff
-against"* — which is a true negative from a bad case, and indistinguishable in
-the report from the finding the suite exists to produce.
-
-**`pre_run` is the seam.** It runs a shell command inside the sandbox after
-setup and before the agent, and by default aborts the evaluation on a non-zero
-exit, so a fixture that fails to build never reaches a model and never scores a
-misleading 0. Each case mounts `fixtures/review-depth/shared/` and its own
-`fixtures/review-depth/cases/<name>/` at `.fixture` — two `template_dir`
-sources, one mount point, for the reason in "What the sandbox can see" — and
-runs `.fixture/case.sh`. The scripts `git init` the sandbox
-root, exclude `.fixture/` through `.git/info/exclude` (a `.gitignore` would show
-up as a changed path and shift the diff's *kind*, which is the one thing this
-suite measures), commit a base tree, publish it to a bare `origin` under
-`.fixture/`, then branch, change, commit and push. The push is not optional:
-`review` stops at "Local changes not pushed" when the branch is ahead of its
-remote, and would never reach the routing decision under test.
-
-The six fixture scripts build that shape from git. A fixture that stops building
-does not turn the suite red; it turns every case into a silent 0.
-
-These cases run in **Local mode**: there is no GitHub MCP in the sandbox, so the
-pull-request lookup finds nothing and the skill assembles the diff from git.
-
 ## The Omp arm
 
 The same suites and plugin run Omp subjects with paired `bare` and
@@ -1580,7 +1567,10 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
 - **The Omp targets raise every turn cap to 30.** `OMP_RUN_LIMITS` in the
   `Makefile` says why: caps sized for the Claude Code arm cut Omp off before
   its reply.
-- **Run it detached.** An interrupted run continues from its run directory:
+- **Resume an interrupted run.** With the pinned `coder-eval`
+  (`CODER_EVAL_VERSION` in the `Makefile`), `--resume` re-runs only the slots
+  that have no finalized `task.json`, for example after the process was
+  killed. The command below does that:
 
   ```sh
   cd evals && TELEMETRY_ENABLED=false coder-eval run -e experiments/omp-glm-5.3.yaml \
@@ -1589,6 +1579,28 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
     --exclude-tags claude-only,codex-only,skip:omp,model-classes $TASKS
   cd .. && make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/omp-glm-5.3.yaml
   ```
+
+  `--resume` does not retry a slot that has a final status, `FAILED` or
+  `ERROR` included. A slot that crashed on a subscription limit is finalized
+  as `ERROR`, so `--resume` skips it. Do not delete `task.json` to force a
+  re-run: that destroys the recorded attempt.
+
+  To measure the `ERROR` slots of a run made under the current limits again:
+
+  1. Run only those slots into fresh run directories. `coder-eval` has no
+     flag that selects a slot, so select them by case list, a variant's
+     experiment file and `--repeats`.
+  2. Commit a mapping from the new slots to the original ones.
+  3. Build a merged copy that leaves every source run unchanged, and record
+     that copy, not the original run.
+
+  [`provenance/667-rerun/`](provenance/667-rerun/) is the worked example, from
+  the Claude Code arm: `launch.sh`, `mapping.json` and `merge.py` run the
+  slots, map them and build the merged copy. `make evals-record` records it.
+  An Omp re-run uses the Omp experiment and tags instead. The re-run is
+  a new measurement and needs its own bounded approval. A run made under older
+  limits is not filled this way. **The baseline** in
+  [Turn and time ceilings](#turn-and-time-ceilings) states both rules.
 
 - **`make -n` does not dry-run a run target.** Its recipe line calls
   `$(MAKE)`, so make executes it. `make evals-plan` is the free check.
@@ -1621,9 +1633,7 @@ Make targets in step.
 | `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-session-id-omp` |
 | `task-worktree` | `01-isolate-new-task` | `01-isolate-new-task-omp` |
 
-Each Omp row names its sibling with a `forks:<task_id>` tag. The seven
-`review-depth` rows remain `claude-only` because they drive Claude's settings
-and dispatch hook.
+Each Omp row names its sibling with a `forks:<task_id>` tag.
 
 **`plan` does not fail on a broken arm.** With no plugin installed,
 `coder-eval plan` prints a resolution failure and exits 0. `make evals-plan`
@@ -1845,12 +1855,12 @@ make evals-run-classes MODEL=sol-6-1
 make evals-run-classes MODEL=luna-6
 make evals-run-classes MODEL=terra-5-6
 
-The Claude Code files (`classes-opus-low`, `classes-sonnet-high`,
-`classes-sonnet-low`) set effort through `sdk_options.effort`, which the
-Agent SDK passes as `claude --effort`. They run the bare session
-`with-without.yaml` measures against — `plugins: []` and
-`setting_sources: [project]` — so an advisor or a plugin in the operator's own
-user settings never reaches the model under test.
+The Claude Code files (`classes-haiku-low`, `classes-haiku-medium`,
+`classes-opus-low`, `classes-sonnet-high`, `classes-sonnet-low`) set effort
+through `sdk_options.effort`, which the Agent SDK passes as `claude --effort`.
+They run the bare session `with-without.yaml` measures against — `plugins: []`
+and `setting_sources: [project]` — so an advisor or a plugin in the operator's
+own user settings never reaches the model under test.
 
 `defaults.repeats` is 3 in every file, so a full run is 3 replicates per
 case per model, each a real `git apply` plus the
@@ -2018,14 +2028,9 @@ criteria are checked, so equal values mean a turn that uses its budget is killed
 as a TIMEOUT before it can be graded. The headroom is the difference.
 
 `run_limits` caps turns and wall clock per task, but nothing caps the bill. The
-64 trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
-and the fire half stops the moment the skill fires. `review-depth` is not: its six fire
-cases each dispatch a real reviewer panel over a real diff, five times, in the
-`with-plugin` arm. The `bare` arm is cheaper but not free: it has no `review`
-skill and none of the plugin's reviewer agents, but it keeps the `Agent` tool
-and its turn ceiling, so a session that decides to review the diff by hand can
-still spend. Its no-fire case pays for a panel too, on exactly the trajectory
-it is trying to catch. Run one suite at a time with
+trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
+and the fire half stops the moment the skill fires. Behaviour rows and
+`model-classes` grant more tools and more turns, and cost more. Run one suite at a time with
 `TASKS=` while iterating, and keep `make evals-plan` between edits, where the
 mistakes are free.
 

@@ -1,0 +1,346 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A plain create request produces an assignable task",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A plain create request produces an assignable task",
+            "duration_seconds": 8.76,
+            "findings": [
+              "Correctly targets release.py::sign_changed and checksum-based skipping with concrete regression scenarios.",
+              "Includes explicit implementation scope, verification requirements, and model/harness/session provenance.",
+              "Unsupported claims include unconditional signing in the current implementation, a list-backed callback, an existing new-artifact test, and a README-documented offline CI verification gate."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7904e6317eeb1c2f3a5d4728fbf2b2b798467255372147a4d0c96ee23a3f9926",
+            "rationale": "ANCHOR: result. The reply selects a task and supplies a ready body with outcome, scope, model class, acceptance criteria, and provenance, but invents repository details not established by the supplied evidence.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1522,
+              "output": 164
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "5540713c747faaad8adc326178a817ca7a005bba4d36be5e14c877d909f270ae"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-16-create-issue-defaults-to-task",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The draft body is a grounded task handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The draft body is a grounded task handoff with model class metadata",
+            "duration_seconds": 8.9,
+            "findings": [
+              "Selects `task` without asking the user to choose an issue kind.",
+              "Includes Summary, Model class, and Detail in the required order.",
+              "Model class starts with `mechanical` and includes a short rationale.",
+              "Defines same-name digest comparison, signing callbacks, edge cases, and offline verification.",
+              "Retains the separate provenance block without adding model or effort metadata to task sections."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ef400d36f32197982220b2168e962103c490184a28bbeb8cfaadb7a8590bd87a",
+            "rationale": "ANCHOR: result The reply explicitly selects `task` and supplies a ready handoff with the required ordered sections, class token and rationale, observable behavior, scope, and acceptance criteria. It separates claimed grounded context from implementer choices and confines the concrete model identifier to the distinct provenance block below `---`.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2443,
+              "output": 187
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "5540713c747faaad8adc326178a817ca7a005bba4d36be5e14c877d909f270ae"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A plain file request produces an assignable task",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A plain file request produces an assignable task",
+            "duration_seconds": 7.3,
+            "findings": [
+              "Selects kind `task` without asking a kind-selection question.",
+              "Defines checksum-by-name skipping behavior and preserves the callback and storage boundaries.",
+              "Provides specific regression cases and the documented pytest gate.",
+              "Unsupported evidence includes the exact existing test name and coverage, the current loop implementation, and the claim that CI runs the same offline tests.",
+              "Includes provenance metadata, but unsupported repository claims prevent full credit."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7904e6317eeb1c2f3a5d4728fbf2b2b798467255372147a4d0c96ee23a3f9926",
+            "rationale": "ANCHOR: result. The reply selects a task and provides a ready implementation body with outcome, scope, model class, and concrete acceptance criteria, but it asserts repository and CI evidence not established by the supplied sandbox description.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1580,
+              "output": 166
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "5540713c747faaad8adc326178a817ca7a005bba4d36be5e14c877d909f270ae"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-17-file-issue-defaults-to-task",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 46.90767288208008,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-16-create-issue-defaults-to-task",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 59776,
+        "output_tokens": 1280,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 27184
+      },
+      "tokens": 88240,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 66.98398423194885,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 75776,
+        "output_tokens": 2082,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 22520
+      },
+      "tokens": 100378,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 42.255342960357666,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-17-file-issue-defaults-to-task",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 61568,
+        "output_tokens": 1229,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20911
+      },
+      "tokens": 83708,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-31T18:01:00.292636",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "5540713c747faaad8adc326178a817ca7a005bba4d36be5e14c877d909f270ae",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 5545,
+      "output": 517
+    }
+  },
+  "plugin_revision": {
+    "commit": "07e627d5be361f87a8ef3e65ec96a273077dbdf0",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-31T11:01:27.557015+00:00",
+  "run_id": "2026-10-31_17-58-24",
+  "schema_version": 5,
+  "started_at": "2026-10-31T17:58:24.138138",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-01-open-a-task-issue": [
+          1.0
+        ],
+        "issue-16-create-issue-defaults-to-task": [
+          0.5
+        ],
+        "issue-17-file-issue-defaults-to-task": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "issue-16-create-issue-defaults-to-task",
+        "issue-01-open-a-task-issue",
+        "issue-17-file-issue-defaults-to-task"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

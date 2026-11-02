@@ -40,7 +40,7 @@ The graph
 harness it has two rather than three to pick from. Read that skill's routes
 before `Write the graph`.
 
-Apply `issue-deps`' pre-link task-readiness gate before every parent or
+Apply `issue-deps`' pre-link assignability gate before every parent or
 sub-issue write to the epic, including when linking an existing issue.
 
 

@@ -55,9 +55,9 @@ exists to reach.
 | `Close the epic` | Comment with child outcome evidence or an unsupported claim | `gh issue comment <number> --body-file <path>` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-`Land the pull request` uses the same readiness fields as `undertake`'s `The
-milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
-`headRefOid` is the head the merge binds to. The labels and body answer the
+`Land the pull request` reads its own state: `isDraft` must be false,
+`mergeStateStatus` must be `CLEAN`, and `headRefOid` is the head the merge
+binds to. The labels and body answer the
 human-action read in the same call. The complete thread graph is the paginated
 GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
 
@@ -83,7 +83,9 @@ the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
 task session pushes after the read.
 `Close the epic` posts its evidence comment before `gh issue close`, and never
 calls the latter when a child outcome is unsupported or landing is by hand.
-Read the delivered outcome against the task's acceptance criteria.
+Read the delivered outcome against the story's own completion contract: a
+pull request for a task or bug, the evidenced answer recorded on the issue for
+research.
 An issue's closed state alone does not prove the epic outcome was met.
 
 Each delegation's prompt is the child issue number and the instruction to
@@ -104,7 +106,7 @@ Route assessment limits
 
 The delegation namespace has not been driven. No model or effort argument is
 measured, so do not invent either. Every epic story must pass `Take the wave`'s
-task-readiness gate. Resolve its required class only where the offered
+assignability gate. Resolve its required class only where the offered
 configured route and its actual capabilities can be established. Otherwise
 stop that child and report the configuration gap. The muster roll records
 each task's required class and selected implementor route, and the actual
@@ -116,6 +118,10 @@ approval and its exact work envelope. Do not invent a provider identifier or
 assume an API route. Since this delegation surface does not report a measured
 model argument, stop the affected task with a configuration gap unless the
 configured route and its class can be established.
+The exact class and all visible fallbacks must retain the current family,
+provider, backend, and authentication route. If the unmeasured surface cannot
+constrain and verify them, stop that task before dispatch. Do not rewrite shared
+roles or assume that a model identifier proves the route.
 
 A frontier session may only route ordinary work to an eligible non-frontier
 implementor; it must not retain or supervise implementation on frontier.

@@ -15,11 +15,17 @@ reads, and a failing read exits non-zero:
 
 It accepts these writes and changes its own state: `gh pr ready 25`,
 `gh pr edit 25`, `gh pr comment 25 --body TEXT` (or `--body-file PATH`), and
-`gh pr update-branch 25`. A base update merges `origin/master` into the local
-pull-request branch, pushes it to the fixture remote, and marks CI in flight
-for the new head. Every call is recorded in `.fixture/ops.log` with its
-outcome. Read each reply before you decide what it means: a refused write or a
-failed read is the observed limit, not a success.
+`gh pr update-branch 25`. A successful report comment must precede the ready
+write; a refused report leaves the PR draft, and a refused ready write
+preserves the report. `ready-blocked` and `ready-unknown` exercise
+post-ready BLOCKED/UNKNOWN outcomes hidden while draft, `ready-write-fails`
+exercises the report-before-ready failure path, `report-write-fails` forbids
+a ready attempt, and `existing-report` checks once-per-undertaking behavior.
+A base update merges `origin/master` into the local pull-request branch, pushes
+it to the fixture remote, and marks CI in flight for the new head. Every call
+is recorded in `.fixture/ops.log`
+with its outcome. Read each reply before you decide what it means: a refused
+write or a failed read is the observed limit, not a success.
 
 Use `bash .fixture/setup.sh currency-stale` for the Omp PR regression: the open
 draft's old head is green, but the branch's base has advanced. `python3

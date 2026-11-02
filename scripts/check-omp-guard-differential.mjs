@@ -55,17 +55,20 @@ const { default: dailyDriverExtension } = await import(
 	pathToFileURL(EXTENSION).href
 );
 
-/** The tool_call handler, with the rest of the extension surface stubbed. */
+/** Compose the tool_call handlers with the rest of the extension surface stubbed. */
 function guardHandler() {
-	let handler = null;
-	const schema = new Proxy(() => schema, {
-		get: () => () => schema,
-		apply: () => schema,
-	});
+	const handlers = [];
+	const schema = {
+		describe: () => schema,
+		min: () => schema,
+		max: () => schema,
+		int: () => schema,
+		optional: () => schema,
+	};
 	dailyDriverExtension({
 		zod: { object: (spec) => spec, string: () => schema, number: () => schema },
 		on(event, fn) {
-			if (event === "tool_call") handler = fn;
+			if (event === "tool_call") handlers.push(fn);
 		},
 		registerTool() {},
 		setSessionName() {},
@@ -73,8 +76,16 @@ function guardHandler() {
 		setTimeout: () => 0,
 		clearTimer() {},
 	});
-	if (handler === null) throw new Error("extension registered no tool_call handler");
-	return handler;
+	if (handlers.length === 0) throw new Error("extension registered no tool_call handler");
+	return (event, ctx) => {
+		let firstResult;
+		for (const handler of handlers) {
+			const result = handler(event, ctx);
+			if (result?.block) return result;
+			firstResult ??= result;
+		}
+		return firstResult;
+	};
 }
 
 const onToolCall = guardHandler();

@@ -66,30 +66,46 @@ The route an implementor runs
 =============================
 
 The `task` surface selects an `agent`, not a model. Every epic story must pass
-`Take the wave`'s task-readiness gate before dispatch. Select the agent named
-for its required class (`mechanical`, `implementation`, `reasoning`, or
-`frontier`). Each batch item sets only `agent`; it carries no per-item model
-argument. Resolve the effective route under [`issue-body`'s required-class
-policy](../../issue-body/references/omp.md#the-required-class):
+`Take the wave`'s assignability gate before dispatch. For mapped families,
+select the agent named for its required class (`mechanical`, `implementation`,
+`reasoning`, or `frontier`). Each batch item sets only `agent`; it carries no
+per-item model argument. Resolve the effective route under
+[`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
 frontmatter, including a tagged-role assignment such as `@implementation` or
 `@frontier`. Resolve configured prewalk and retry fallbacks under the same policy.
 
+For a mapped family, undertaking issue workers and every visible execution
+fallback must resolve to the exact required class within the parent's family
+and provider, preserving backend and authentication route. An incompatible
+explicit override is a gap, not a selector to rewrite. The worker routes alone
+in its assistant tool batch and verifies a pending change on its next response
+before worktree or claim. Normal verification is informative status, not an error.
+
+If the known family is absent from the class table, prominently warn with the
+family, requested class, and retained provider/model. Continue immediately on
+the invoking model, provider, and effort without confirmation; class suitability
+is unverified. Do not dispatch a replacement to obtain a mapping. If a child
+cannot retain the route, work in the invoking session. Unknown identity, a
+missing class in a mapped family, and actual route violations remain gaps.
+Reviewer and scout specialization and host helper inference remain independent.
+
 A current measured class outranks handwritten guidance, and a measured class
 below the task's requirement excludes that route. An unmeasured, unreported,
-or stale row is unknown, not proof of suitability. Use the
-operator's configured eligible preference without claiming measured
-capability. That preference never waives class capability, tools, context,
-modality, availability, or credential requirements. Do not invent a freshness
-cutoff or use `modelRoles.task` as a universal implementor route.
+or stale row is unknown, not proof of suitability. For mapped families, use the
+operator's configured eligible preference without claiming measured capability.
+The absent-family continuation above explicitly leaves class suitability
+unverified; it does not waive tools, context, modality, availability, or
+credential requirements. Do not invent a freshness cutoff or use
+`modelRoles.task` as a universal implementor route.
 
 Reassess a visible parent-model authentication fallback or any other runtime
 model mismatch before work continues. Never assume parent inheritance meets
-the required class. Missing assignments, unavailable credentials, or
-unsuitable effective routes stop only the affected issue with a configuration
-gap; launch other eligible issues in the single concurrent batch. Never lower
-a task's class, alter shared roles, or restore a role the operator cleared to
-make a wave launch.
+the required class. Missing assignments in a mapped family, unavailable
+credentials, or unsuitable effective routes stop only the affected issue with
+a configuration gap; launch other eligible issues in the single concurrent
+batch. Never lower a task's class, alter shared roles, or restore a role the
+operator cleared to make a wave launch.
 
 Treat an effective astra/fable route as frontier, regardless of whether an
 override, retry fallback, or visible parent inheritance selects it through
@@ -147,9 +163,9 @@ The watch
 | `Close the epic` | Comment with the landed pull requests or missing claim | `gh issue comment <number> --body-file <path>` |
 | `Close the epic` | Close as completed | `gh issue close <number> --reason completed` |
 
-`Land the pull request` uses the same readiness fields as `undertake`'s `The
-milestone`: `isDraft` must be false, `mergeStateStatus` must be `CLEAN`, and
-`headRefOid` is the head the merge binds to. The labels and body answer the
+`Land the pull request` reads its own state: `isDraft` must be false,
+`mergeStateStatus` must be `CLEAN`, and `headRefOid` is the head the merge
+binds to. The labels and body answer the
 human-action read in the same call. The complete thread graph is the paginated
 GraphQL read named by `review-cycle`; a REST comments page is not a substitute.
 
@@ -175,7 +191,9 @@ the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
 task session pushes after the read.
 `Close the epic` posts its evidence comment before `gh issue close`, and never
 calls the latter when a child outcome is unsupported or landing is by hand.
-Read the delivered outcome against the task's acceptance criteria.
+Read the delivered outcome against the story's own completion contract: a
+pull request for a task or bug, the evidenced answer recorded on the issue for
+research.
 An issue's closed state alone does not prove the epic outcome was met.
 
 **A live subagent's result or failure arrives as a wake of its own.** The
@@ -194,10 +212,15 @@ named-service mode. If persistence fails, stop the service and report the
 failure; do not claim that CI remains watched.
 
 This durability does not turn the process into an agent. A persistent service
-can continue its bounded CI command after the client exits, but it cannot
-reopen or resume a terminated orchestrator, interpret the result, mark the
-wave `done`, or launch the next wave. A later `embark` invocation must read the
-graph and pull requests before continuing agent work.
+can continue its bounded command after a client exits, but cannot reopen a
+terminated owner. While the session is live, each implementor retains `pr`'s
+owner reminder across renewable CI windows. An implementor result that says
+only a detached service remains is unfinished, not an active agent watch.
+Inspect its lifecycle and recover an ended owner on the same branch under
+`Recovering an implementor`; do not wait for a user status request. Preserve
+genuine prerequisites and avoid a second writer alongside a live owner.
+After actual session shutdown, a later invocation must read the graph and
+PR evidence; do not claim cross-shutdown recovery.
 
 While the orchestrator lives, the backstop is the timer pair:
 `daily_driver_schedule` arms it ten minutes out, and

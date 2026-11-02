@@ -12,12 +12,12 @@ SHELL := /bin/bash
 	check-omp-extension check-omp-guard-differential check-omp-plugin check-model-class-roles \
 	check-omp-cache-clean check-omp-embark-title-live check-step-names \
 	check-worktrunk-install check-labels check-infra check-plugin-validity check-runtime check-pr-keep-current \
-	check-issue-infra check-model-telemetry model-telemetry check-checkov \
+	check-issue-infra check-model-telemetry model-telemetry check-checkov check-zizmor \
 	evals-install evals-setup-claude evals-setup-omp evals-plan evals-judge-preflight evals-judge-calibrate \
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-deepseek-v4-1-flash \
 	check-claude-dependency evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna \
-	evals-run-codex evals-run-comparison evals-run-classes mcp-usage
+	evals-run-codex evals-run-comparison evals-run-classes evals-run-haiku-5-5 mcp-usage
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -259,16 +259,17 @@ check-omp-cache-clean:
 check-scripts:
 	shellcheck -x --source-path=SCRIPTDIR \
 		skills/*/scripts/*.sh scripts/*.sh \
-		evals/fixtures/*/shared/*.sh evals/fixtures/*/cases/*/*.sh
+		evals/fixtures/*/shared/*.sh
 
 # Exercise the real Omp keep-current loop against an offline GitHub client.
 check-pr-keep-current:
 	python3 scripts/test-pr-keep-current.py
 
-# The live embark barrier needs a real Omp but not the eval guard: issue://
-# must reach its offline fixture client to provide the canonical issue metadata.
+# Exercise live Omp title and task-state regressions with local providers.
+# The title barrier needs native issue:// access rather than the eval guard.
 check-omp-embark-title-live:
 	python3 scripts/check-omp-embark-title-live.py
+	python3 scripts/check-omp-task-state-live.py
 
 
 
@@ -318,6 +319,17 @@ check-infra:
 check-checkov:
 	checkov --config-file .checkov.yaml
 
+# check-zizmor: audit of the GitHub Actions workflows. Not part of `check`, for
+# the same reason as check-checkov. The version pin is checked rather than
+# trusted, so a laptop or CI install of another version fails loudly. With
+# GH_TOKEN set, zizmor also runs its online audits; without it they would
+# fail on an unauthenticated request, so the scan runs offline.
+ZIZMOR_VERSION := 1.31.1
+check-zizmor:
+	@test "$$(zizmor --version)" = "zizmor $(ZIZMOR_VERSION)" || { echo "zizmor $(ZIZMOR_VERSION) is required; found: $$(zizmor --version 2>&1)" >&2; exit 1; }
+	@[ -n "$$GH_TOKEN" ] || echo 'GH_TOKEN is unset: running the offline audits only; CI also runs the online ones.'
+	zizmor $$([ -n "$$GH_TOKEN" ] || echo --offline) --config .github/zizmor.yml .github/workflows
+
 # evals-install: the pinned harness, from PyPI. `uv` fetches Python 3.13 itself,
 # so this is the whole setup.
 # Each `--with` puts an agent kind in the same environment as the pinned
@@ -354,9 +366,9 @@ evals-setup-claude:
 evals-setup-omp:
 	scripts/evals-setup-omp.sh evals/experiments/omp-*.yaml
 
-# evals-plan: validate every eval case without calling a model. Free, and it
-# catches the config errors that otherwise cost a paid run to discover -- so
-# run it before every `evals-run`.
+# evals-plan: validate every eval case without calling a model. It catches
+# config errors before they consume subscription allowance or metered spend.
+# Run it before every `evals-run`.
 #
 # Both eval targets `cd evals` first, and that is load-bearing twice over. The
 # plugin path in the experiment is relative and resolves against the process
@@ -369,6 +381,7 @@ evals-setup-omp:
 # repository's CI is deliberately credential-free.
 evals-plan: evals-setup-claude evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/with-without-haiku-5.5.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
@@ -388,6 +401,8 @@ evals-plan: evals-setup-claude evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.gpts-choice.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-low.yaml tasks/*/*.yaml
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-medium.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml
@@ -412,9 +427,9 @@ evals-plan-reviewer-quality: evals-setup-claude
 evals-variants:
 	uv run --frozen python3 scripts/evals-variants.py evals/experiments/*.yaml
 
-# evals-run: the whole suite on Claude Code, both variants. Costs real money --
-# see evals/README.md for what and why. Narrow it with TASKS=, e.g.
-#   make evals-run TASKS='tasks/pr/*.yaml'
+# evals-run: the whole suite on the Claude Code subscription, both variants.
+# See evals/README.md for credential and authorization boundaries. Narrow it
+# with TASKS=, e.g. make evals-run TASKS='tasks/pr/*.yaml'.
 TASKS ?= tasks/*/*.yaml
 
 # JOBS: max concurrent subject or judge replicates. Subject runs use `coder-eval
@@ -488,11 +503,11 @@ evals-render-routes:
 evals-render-results:
 	python3 scripts/evals-render-results.py
 
-# evals-leaks: report behavior leaks and failures from every committed record.
+# evals-leaks: report bare-pass candidates and failures from every committed record.
 evals-leaks:
 	python3 scripts/check-evals-leaks.py
 
-# check-evals-leaks: exercise the leak classifier; #662 wires it into `check`.
+# check-evals-leaks: exercise the bare-pass classifier. Eval results gate no CI job.
 check-evals-leaks:
 	python3 scripts/check-evals-leaks.py --selftest
 
@@ -508,6 +523,14 @@ evals-run: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) -e experiments/with-without.yaml \
 		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without.yaml; \
+	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
+
+# evals-run-haiku-5-5: the same ablation on Claude Haiku 5.5. Same exclusions as
+# `evals-run`; only the experiment, and so the model pin, differs.
+evals-run-haiku-5-5: evals-judge-preflight evals-plan evals-preflight
+	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) -e experiments/with-without-haiku-5.5.yaml \
+		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
+	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without-haiku-5.5.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
 # evals-run-omp: run every registered Omp experiment. Ablation targets compare

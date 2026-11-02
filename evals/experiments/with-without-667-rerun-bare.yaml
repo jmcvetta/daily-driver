@@ -1,0 +1,20 @@
+experiment_id: with-without-667-rerun-bare
+description: Trigger accuracy and constitution delivery, with
+  the daily-driver plugin loaded and without it.
+defaults:
+  repeats: 5
+  run_limits:
+    max_turns: 60
+    task_timeout: 1080
+    turn_timeout: 900
+  agent:
+    type: claude-code
+    model: claude-sonnet-5
+    permission_mode: acceptEdits
+    allowed_tools:
+    - Skill
+variants:
+- variant_id: bare
+  description: A session with no plugin loaded.
+  agent:
+    plugins: []

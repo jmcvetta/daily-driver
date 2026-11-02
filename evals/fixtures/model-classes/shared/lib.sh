@@ -27,8 +27,7 @@ fixture_clone_base() {
 	fi
 
 	git init -q .
-	# Keep the fixture's own scripts out of the checked-out tree's status, the
-	# same way review-depth's fixture keeps `.fixture/` out of its diff.
+	# Keep the fixture's own scripts out of the checked-out tree's status.
 	printf '/.fixture/\n' >>.git/info/exclude
 	git config user.email "eval@example.invalid"
 	git config user.name "Eval Fixture"

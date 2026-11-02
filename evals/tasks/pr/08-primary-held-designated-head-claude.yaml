@@ -7,14 +7,11 @@ description: >-
 tags: [pr, references, fire, behaviour, claude-only]
 
 initial_prompt: >-
-  Open or update the PR for issue #52. `task-worktree` verified the narrow
-  Claude primary-held designation mapping: this worktree's local execution
-  branch is `issue-52-designated-route`, its upstream is
-  `origin/claude/designated-52`, and `origin` pushes to
-  `acme/widgets`. The issue claim and pushed commit both identify
-  `claude/designated-52` as the remote head. Do not make GitHub changes. Tell
-  me the exact existing-PR lookup head you will use and, if no PR exists, the
-  head you will set when creating one.
+  Please open or update the pull request for issue #52. This worktree is on
+  local branch `issue-52-designated-route`, whose upstream is
+  `origin/claude/designated-52`, and `origin` pushes to `acme/widgets`. The
+  issue claim and pushed commit name `claude/designated-52`. Do not touch
+  GitHub yet; I want to know what you find.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]

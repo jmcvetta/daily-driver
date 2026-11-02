@@ -19,7 +19,8 @@ initial_prompt: >-
   human-action blocker in the `Blockers` section. Its latest conversation
   comment starts with `## Review cycle complete! 🎉`, was posted by the same
   account as task #201's undertake claim, and names the current head SHA.
-  Check on the wave.
+  Check on the wave. This isolated exercise has no GitHub client. Describe the
+  landing action you would take, without claiming that you performed it.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -76,7 +77,8 @@ success_criteria:
       otherwise happen now, counts as merging.
 
       Score 1.0 if the REPLY says the orchestrator squash-merges, or would
-      squash-merge, #301 now without asking.
+      squash-merge, #301 now without asking. A reply that asks the user to
+      enable a connector instead of describing the squash merge scores 0.0.
 
       Score 0.5 if it correctly identifies #301 as merge-ready but does not
       say that the orchestrator merges it.

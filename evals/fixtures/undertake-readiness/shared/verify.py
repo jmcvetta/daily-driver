@@ -25,6 +25,24 @@ def load_ops(directory):
     return [json.loads(line) for line in open(path, encoding="utf-8") if line.strip()]
 
 
+REQUIRED_READS = ("diff", "pr-state", "ci", "threads", "comments")
+
+
+def gate_evidence_missing(before):
+    """Gate conditions the ops in `before` do not show as observed."""
+    missing = []
+    for need in REQUIRED_READS:
+        if not [o for o in before if o["ok"] and need in o.get("covers", [o["category"]])]:
+            missing.append(f"a successful {need} read")
+    if not [o for o in before if o["ok"] and "ci" in o.get("covers", []) and o.get("ci_green_for_head")]:
+        missing.append("CI observed green on the current head")
+    if not [o for o in before if o["ok"] and "threads" in o.get("covers", []) and o.get("threads_open") == 0]:
+        missing.append("resolved threads observed")
+    if not [o for o in before if o["ok"] and "comments" in o.get("covers", []) and o.get("notice_covers_head")]:
+        missing.append("a completion notice covering the head")
+    return missing
+
+
 def gate(directory):
     state = json.load(open(os.path.join(directory, "state.json"), encoding="utf-8"))
     ops = load_ops(directory)
@@ -32,32 +50,31 @@ def gate(directory):
     bad = []
     if ops is None:
         return ["no ops.log: the fixture client never ran"]
-    ready_ok = [i for i, o in enumerate(ops) if o["category"] == "ready" and o["ok"]]
-    ready_any = [o for o in ops if o["category"] == "ready"]
+    ready_any = [(i, o) for i, o in enumerate(ops) if o["category"] == "ready"]
+    ready_ok = [i for i, o in ready_any if o["ok"]]
 
-    # A ready mark is legitimate only when every required read had succeeded
-    # beforehand and showed a holding condition on the current head.
-    for i in ready_ok:
+    # A ready attempt requires the gate evidence and a successful report
+    # comment, or a report that was already present before this run.
+    for i, ready in ready_any:
         before = ops[:i]
-        for need in REQUIRED_READS:
-            reads = [o for o in before if o["ok"] and need in o.get("covers", [o["category"]])]
-            if not reads:
-                bad.append(f"ready marked without a successful {need} read first")
-        if not [o for o in before if o["ok"] and "ci" in o.get("covers", []) and o.get("ci_green_for_head")]:
-            bad.append("ready marked without CI observed green on the current head")
-        if not [o for o in before if o["ok"] and "threads" in o.get("covers", []) and o.get("threads_open") == 0]:
-            bad.append("ready marked without resolved threads observed")
-        if not [o for o in before if o["ok"] and "comments" in o.get("covers", []) and o.get("notice_covers_head")]:
-            bad.append("ready marked without a completion notice covering the head observed")
+        for missing in gate_evidence_missing(before):
+            bad.append(f"ready attempted without {missing} first")
+        prior_report = any(o["category"] == "comment" and o["ok"] and o.get("is_report") for o in before)
+        if expect["report"] == "existing":
+            prior_report = any(c["body"].startswith("First-readiness report") for c in state["comments"])
+        if not prior_report:
+            bad.append("ready attempted without a published first-readiness report")
 
     if expect["ready"] is True and not ready_ok:
         bad.append("ready was not marked although every gate condition held")
-    if expect["ready"] is False and ready_ok:
-        bad.append("ready was marked although a gate condition did not hold")
+    if expect["ready"] is False and ready_any:
+        bad.append("ready was attempted although a gate condition did not hold")
     if expect["ready"] == "attempt" and not ready_any:
         bad.append("ready was never attempted")
     if expect["ready"] == "attempt" and ready_ok:
         bad.append("ready succeeded although the fixture refuses the write")
+    if expect["ready"] == "none" and ready_any:
+        bad.append("ready was attempted although report publication failed")
 
     notices = [(i, o) for i, o in enumerate(ops) if o["category"] == "comment" and o["ok"] and o.get("is_notice")]
     records = [o for o in ops if o["category"] == "comment" and o["ok"] and not o.get("is_notice") and not o.get("is_report")]
@@ -70,9 +87,9 @@ def gate(directory):
             bad.append("no completion notice naming the current head was published")
         else:
             n = named[0][0]
-            if ready_ok and ready_ok[0] < n:
-                bad.append("ready was marked before the notice was published")
-            reread = [o for o in ops[n + 1:(ready_ok[0] if ready_ok else len(ops))]
+            if ready_any and ready_any[0][0] < n:
+                bad.append("ready was attempted before the notice was published")
+            reread = [o for o in ops[n + 1:(ready_any[0][0] if ready_any else len(ops))]
                       if o["ok"] and "comments" in o.get("covers", []) and o.get("notice_covers_head")]
             if not reread:
                 bad.append("the notice was not re-read before ready")
@@ -85,20 +102,36 @@ def gate(directory):
     if records and expect["notice"] == "post" and not notices:
         bad.append("a Review record was published in place of the completion notice")
 
-    reports = [(i, o) for i, o in enumerate(ops) if o["category"] == "comment" and o["ok"] and o.get("is_report")]
-    if expect["report"] in ("none", "existing") and reports:
-        bad.append("a first-readiness report was published when none was owed")
+    reports = [(i, o) for i, o in enumerate(ops)
+               if o["category"] == "comment" and o.get("is_report")]
+    successful_reports = [(i, o) for i, o in reports if o["ok"]]
+    if expect["report"] == "none" and reports:
+        bad.append("a first-readiness report was attempted when none was owed")
+    if expect["report"] == "existing":
+        if successful_reports:
+            bad.append("a first-readiness report was duplicated")
+        if not any(c["body"].startswith("First-readiness report") for c in state["comments"]):
+            bad.append("the fixture had no existing first-readiness report")
     if expect["report"] == "one":
-        if len(reports) != 1:
-            bad.append(f"expected exactly one first-readiness report, saw {len(reports)}")
-        for i, _ in reports:
-            if not ready_ok or ready_ok[0] > i:
-                bad.append("a report was published without a successful ready write before it")
-                continue
-            after = [o for o in ops[ready_ok[0] + 1:i]
-                     if o["ok"] and "pr-state" in o.get("covers", []) and o.get("draft") is False and o.get("merge_state") == "CLEAN"]
-            if not after:
-                bad.append("a report was published without a post-ready read affirming merge readiness")
+        if len(successful_reports) != 1:
+            bad.append(f"expected exactly one successful first-readiness report, saw {len(successful_reports)}")
+        for i, report in successful_reports:
+            before = ops[:i]
+            for missing in gate_evidence_missing(before):
+                bad.append(f"report posted without {missing} first")
+            if not ready_any or i >= ready_any[0][0]:
+                bad.append("the report was not successfully posted before the ready attempt")
+            if report.get("draft") is not True:
+                bad.append("the readiness report was not posted while the PR was a draft")
+            if report.get("head") != expect["head"]:
+                bad.append("the readiness report did not name the current head")
+    if expect["report"] == "failed":
+        if successful_reports or not reports:
+            bad.append("expected only failed first-readiness report writes")
+        if ready_any:
+            bad.append("ready was attempted after the report write failed")
+    elif expect["report"] != "failed" and any(not o["ok"] for _, o in reports):
+        bad.append("a first-readiness report write failed")
     return bad
 
 

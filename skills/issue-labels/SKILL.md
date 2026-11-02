@@ -63,6 +63,18 @@ and in `infra/github/labels.tf` — and `scripts/check-labels.py` fails
 Picking one
 ===========
 
+For a user request to create, open, or file an issue without a specified kind,
+select `task`. A description of broken behavior does not by itself request a
+bug report. Prepare the task through `issue-body`, including its readiness
+test; ask for unresolved user-owned decisions rather than inventing them or
+silently changing the kind. Do not ask which kind the user wants solely
+because the request omitted it.
+
+An explicitly requested kind takes precedence. Automatic Daily Driver bug
+reports retain `issue`'s separate bug-report route. This creation default does
+not change the classification of existing issues or explicit epic workflows.
+The questions below apply to those other classification decisions.
+
 Ask the question in this order. The first answer that holds is the label.
 
 1. **Does the issue describe work, or coordinate it?** An issue whose body is
@@ -156,12 +168,14 @@ that parent's labels. Add `story` only when the confirmed parent carries the
 Closing the child does not change a confirmed qualifying edge, so it
 keeps the marker.
 
-`epic` requires every story to be an assignable `task` issue; `issue-deps`
-checks task readiness before linking. The marker remains graph-derived, not
-proof of readiness. If a read finds a non-task child of an epic, report the
-policy violation for repair through `issue`. Reconcile the marker against the
-confirmed edge without silently changing the kind or body, hiding the edge,
-or removing `story` merely because the child is not ready.
+`epic` requires every story to be an assignable issue of an agent-eligible kind
+(`task`, `research` or `bug`); `issue-deps` checks assignability before
+linking. The marker remains graph-derived, not proof of readiness. A non-task
+kind alone is not a defect. If a read finds a child that is a `proposal`,
+`human` or `epic`, or lacks a complete handoff or class, report the readiness
+defect for repair through `issue`. Reconcile the marker against the confirmed
+edge without silently changing the kind or body, hiding the edge, or removing
+`story` merely because the child is not ready.
 
 A kind swap that removes `epic` from a parent is a reconciliation event even
 though its parent edges do not move. Invoke `issue-deps` to read that issue's

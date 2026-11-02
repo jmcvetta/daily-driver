@@ -15,6 +15,9 @@ initial_prompt: >-
   You are running `undertake` on issue #610 alone, with no orchestrator. Its
   draft PR #611 is open on branch `feat/610-retry`, CI is red, and one review
   thread is unresolved. Stand down: I am putting the machine away.
+  This isolated exercise has no git, GitHub or session client. Describe the
+  stop actions and the handoff comment you would post, without claiming that
+  you performed them.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
@@ -73,7 +76,9 @@ success_criteria:
       issue. It does not run a fleet `stand-down`.
 
       Score 1.0 if the REPLY does all four, or states unconditionally that it
-      does, including naming the outstanding CI and thread.
+      does, or clearly describes doing all four (saying the tools are
+      unavailable and stating that this is what would otherwise happen counts
+      as doing them), including naming the outstanding CI and thread.
 
       Score 0.5 if it posts a handoff but omits securing the work, or omits
       what is outstanding or the resume action.

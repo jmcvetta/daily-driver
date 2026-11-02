@@ -1,0 +1,349 @@
+import { createHash, randomUUID } from "node:crypto";
+
+const STATE = "daily-driver.task-state";
+const SOURCE = "daily-driver.task-source";
+const OBSERVATION = "daily-driver.task-observation";
+const RULE = "Continue authorized unfinished work. Diagnose ordinary failures and use permitted alternatives. Before asking for approval, inspect applicable original sources and their limits. A record does not grant permission or override harness or safety restrictions. Stop only for reported completion, cancellation, an evidenced external prerequisite after independent work, or the bounded execution failure.";
+const REQUEST = /^(?:\s*(?:please\s+)?(?:implement|fix|update|add|remove|refactor|complete|resolve|undertake|build|create|change|investigate|debug|repair|migrate|address|test|verify)\b|\s*\/(?:skill:)?undertake\b|\s*(?:can|could|would) you\s+(?:please\s+)?(?:implement|fix|update|add|remove|refactor|complete|resolve|build|create|change|investigate|debug|repair|migrate|address|test|verify)\b)/iu;
+const CANCEL = /^\s*(?:please\s+)?(?:\/(?:skill:)?stand-down\b|stand[ -]down\b|wrap\s+up\b|cancel(?:[.!\s]*$|\s+(?:(?:this|the)\s+)?(?:task|work|undertaking)(?=\s|[.!;,]|$))|stop(?:[.!\s]*$|\s+(?:work(?:ing)?(?=\s|[.!;,]|$)|now\b|here\b|(?:this|the)\s+(?:task|work|undertaking)(?=\s|[.!;,]|$))))/iu;
+const EVIDENCE_TEXT_LIMIT = 8192;
+const EVIDENCE_INPUT_LIMIT = 2048;
+const AUTHORIZATION_KINDS = ["user", "workflow"];
+const BLOCKER_KINDS = ["external", "authorization", "safety", "execution"];
+const ROUTE_DISPOSITIONS = ["failed", "prohibited", "unavailable"];
+// Renders an enum as prose for the device description so it cannot drift from validation.
+const oneOf = (items) => items.length === 2 ? items.map((item) => `"${item}"`).join(" or ")
+	: `${items.slice(0, -1).map((item) => `"${item}"`).join(", ")}, or "${items.at(-1)}"`;
+
+function digest(value) {
+	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+}
+
+function text(content) {
+	return typeof content === "string" ? content : Array.isArray(content)
+		? content.filter((part) => part?.type === "text").map((part) => part.text).join("\n") : "";
+}
+
+function required(value, name) {
+	if (typeof value !== "string" || !value.trim()) throw new Error(`${name} must be nonblank`);
+	return value;
+}
+
+/** Create the Omp task lifecycle controller. */
+function createTaskStateController(pi) {
+	let pendingStop;
+
+	function releaseStop() {
+		if (!pendingStop) return;
+		pendingStop.signal.removeEventListener("abort", pendingStop.onAbort);
+		pendingStop = undefined;
+	}
+
+	function agentEnd(event, ctx) {
+		if (ctx?.agent?.kind !== "sub" && !event.willContinue) releaseStop();
+	}
+	const available = (ctx) => ctx?.agent?.kind === "main" &&
+		typeof ctx.sessionManager?.getBranch === "function" &&
+		typeof ctx.sessionManager?.getSessionId === "function";
+
+	function capability() {
+		if (typeof pi.getActiveTools !== "function") return { enforced: false, reason: "Active tool visibility is unavailable." };
+		const active = pi.getActiveTools();
+		if (active.includes("daily_driver_task_state")) return { enforced: true, route: "direct" };
+		if (active.includes("write") && typeof pi.getAllTools === "function" &&
+			pi.getAllTools().some((tool) => tool.name === "daily_driver_task_state")) {
+			return { enforced: true, route: "write-device" };
+		}
+		return { enforced: false, reason: "The task-state tool is not exposed directly and its write device is unavailable in this tool scope." };
+	}
+	const branch = (ctx) => available(ctx) ? ctx.sessionManager.getBranch() : [];
+	const sessionId = (ctx) => ctx.sessionManager.getSessionId();
+	const entries = (ctx, type) => branch(ctx).filter((entry) => entry.type === "custom" &&
+		entry.customType === type && entry.data?.sessionId === sessionId(ctx));
+	const read = (ctx) => entries(ctx, STATE).at(-1)?.data?.state ?? null;
+	const save = (ctx, state) => pi.appendEntry(STATE, { sessionId: sessionId(ctx), state });
+	const sources = (ctx) => entries(ctx, SOURCE).map((entry) => entry.data.source);
+	const observations = (ctx) => entries(ctx, OBSERVATION).map((entry) => entry.data.observation);
+
+	function reference(ctx, ref, authority = false) {
+		if (!ref || typeof ref.sourceId !== "string") throw new Error("A real sourceId and exact quote are required");
+		const source = sources(ctx).find((item) => item.sourceId === ref.sourceId) ??
+			(!authority && observations(ctx).find((item) => item.sourceId === ref.sourceId));
+		const retained = source?.kind === "tool" && source.textTruncated
+			? [source.text.slice(0, source.prefixLength), source.text.slice(source.prefixLength + 1)]
+			: [source?.text ?? ""];
+		if (!source || !required(ref.quote, "source quote").trim() || !retained.some((part) => part.includes(ref.quote))) {
+			throw new Error(`Source reference ${ref.sourceId} does not match active-branch evidence`);
+		}
+		return source;
+	}
+
+	function authorizationStatus(ctx, state, item) {
+		try { reference(ctx, item.source, true); } catch { return "source-unavailable"; }
+		if (item.taskId !== state.taskId || item.operation !== state.operation || item.target !== state.target) return "out-of-scope";
+		if (state.authorizations.some((other) => other.revokes === item.id)) return "revoked";
+		if (state.authorizations.some((other) => other.supersedes === item.id)) return "superseded";
+		if (item.revokes || item.supersedes) return "amendment";
+		if (item.expiresAt && Date.parse(item.expiresAt) <= Date.now()) return "expired";
+		if (item.freshConfirmation) return "fresh-confirmation-required";
+		return "source-anchored-review-conditions";
+	}
+
+	function status(ctx, request = {}) {
+		const state = read(ctx);
+		const excerpt = (item) => ({ ...item, text: item.text.slice(0, 2000), truncated: item.text.length > 2000 });
+		const source = request.sourceId
+			? [...sources(ctx), ...observations(ctx)].find((item) => item.sourceId === request.sourceId) : undefined;
+		return {
+			state,
+			capability: capability(),
+			authorizations: state?.authorizations.map((item) => ({ ...item, applicability: authorizationStatus(ctx, state, item) })) ?? [],
+			sources: sources(ctx).slice(-8).map(excerpt),
+			evidence: observations(ctx).filter((item) => item.taskSourceId === state?.externalSourceId).slice(-8).map(excerpt),
+			...(request.sourceId ? { source: source ?? null } : {}),
+			limits: "References prove provenance, not semantic approval or route exhaustion. Prose limits and conditions require review against the original source. Completion is agent-reported, not independently proven. Handoffs must carry original source, task, operation, target and conditions; copied agent text cannot create authority in another session.",
+		};
+	}
+
+	function begin(ctx, record, source) {
+		const current = read(ctx);
+		if (current?.status === "cancelled" && current.externalSourceId === source.sourceId) {
+			throw new Error("Cancelled work requires fresh external user input");
+		}
+		if (current?.externalSourceId === source.sourceId) {
+			if (current.status !== "active") throw new Error("A settled task requires fresh external user input");
+			// Refining labels does not renew the correction allowance or discard evidence.
+			save(ctx, { ...current, taskId: record.taskId ?? current.taskId,
+				operation: record.operation ?? current.operation, target: record.target ?? current.target });
+			return;
+		}
+		save(ctx, {
+			taskId: record.taskId ?? source.sourceId, operation: record.operation ?? source.text,
+			target: record.target ?? ctx.cwd, externalSourceId: source.sourceId,
+			status: "active", authorizations: [], blocker: null, corrections: 0, condition: null,
+		});
+	}
+
+	function input(event, ctx) {
+		if (!available(ctx) || !["interactive", "rpc"].includes(event.source)) return;
+		const sourceId = `user:${randomUUID()}`;
+		const source = { sourceId, kind: "user", text: event.text,
+			taskSourceId: REQUEST.test(event.text) ? sourceId : read(ctx)?.externalSourceId ?? sourceId };
+		pi.appendEntry(SOURCE, { sessionId: sessionId(ctx), source });
+		const current = read(ctx);
+		if (CANCEL.test(event.text)) {
+			if (current) save(ctx, { ...current, status: "cancelled", cancellationSource: source.sourceId });
+			return;
+		}
+		if (REQUEST.test(event.text)) begin(ctx, {}, source);
+	}
+
+	function toolResult(event, ctx) {
+		if (!available(ctx) || !read(ctx) ||
+			["daily_driver_task_state", "daily_driver_get_session", "daily_driver_set_session_title"].includes(event.toolName) ||
+			event.input?.path === "xd://daily_driver_task_state") return;
+		const output = text(event.content);
+		const input = JSON.stringify(event.input ?? {});
+		const textTruncated = output.length > EVIDENCE_TEXT_LIMIT;
+		const prefixLength = EVIDENCE_TEXT_LIMIT / 2;
+		const observation = {
+			sourceId: `tool:${event.toolCallId}`, kind: "tool", toolName: event.toolName,
+			input: input.slice(0, EVIDENCE_INPUT_LIMIT), inputTruncated: input.length > EVIDENCE_INPUT_LIMIT,
+			text: textTruncated ? `${output.slice(0, prefixLength)}\n${output.slice(-(EVIDENCE_TEXT_LIMIT - prefixLength - 1))}` : output,
+			textTruncated, prefixLength, originalTextLength: output.length,
+			fingerprint: digest([event.toolName, event.input, output]), isError: Boolean(event.isError),
+			taskSourceId: read(ctx).externalSourceId,
+		};
+		if (!observations(ctx).some((item) => item.sourceId === observation.sourceId)) {
+			pi.appendEntry(OBSERVATION, { sessionId: sessionId(ctx), observation });
+		}
+	}
+
+	function instructions(ctx) {
+		const state = read(ctx);
+		const handoff = state ? {
+			taskId: state.taskId, operation: state.operation, target: state.target, status: state.status,
+			externalSourceId: state.externalSourceId, authorizations: state.authorizations,
+			blocker: state.blocker, corrections: state.corrections, stopFailure: state.stopFailure,
+		} : null;
+		const support = capability();
+		if (!support.enforced) return `${RULE}\nRuntime task-state stop enforcement is unavailable: ${support.reason} The shared continuation rule still applies. Do not expand tool permissions, invent a human blocker, or claim record-based enforcement. Retain authorization and blocker evidence in the normal handoff.\nCurrent private task handoff:\n${JSON.stringify(handoff)}`;
+		return `${RULE}\nUse daily_driver_task_state(action: status) before an unfinished stop or another approval request. For explicit repository work not already active, call begin with {taskId,operation,target,source:{sourceId,quote}} as a JSON record. Do not activate ordinary Q&A. Authorization records keep user approval separate from workflow; exact source anchoring does not verify arbitrary prose meaning. Keep revocations, expiry and fresh-confirmation conditions. Record a structured blocker before an external pause; complete only when reporting completion. Cancelled state must not restart without fresh external user input. Status returns bounded source/evidence excerpts; status with record {sourceId} returns the original authority source or retained tool evidence. Truncated tool evidence retains separate prefix and suffix fragments; quotes cannot cross the omitted region.\nCurrent private task handoff (never publish conversation sources):\n${JSON.stringify(handoff)}`;
+	}
+
+	const shouldExpose = (ctx) => available(ctx) && ["active", "cancelled"].includes(read(ctx)?.status);
+
+	function beforeAgentStart(event, ctx) {
+		if (!available(ctx)) return;
+		const systemPrompt = event.systemPrompt ?? [];
+		const policy = systemPrompt.join("\n\n");
+		const source = { sourceId: `system:${digest(policy)}`, kind: "workflow", text: policy };
+		if (policy && !sources(ctx).some((item) => item.sourceId === source.sourceId)) {
+			pi.appendEntry(SOURCE, { sessionId: sessionId(ctx), source });
+		}
+		if (!shouldExpose(ctx)) return;
+		return { systemPrompt: [...systemPrompt, instructions(ctx)] };
+	}
+	function context(event, ctx) {
+		if (!shouldExpose(ctx)) return;
+		return { messages: [...event.messages, {
+			role: "custom", customType: STATE, content: instructions(ctx), display: false, timestamp: Date.now(),
+		}] };
+	}
+	const compacting = (_event, ctx) => shouldExpose(ctx) ? { context: [instructions(ctx)] } : undefined;
+
+	async function execute(_id, params, _signal, _update, ctx) {
+			try {
+				if (!available(ctx)) throw new Error("Durable task state requires the main Omp session branch API");
+				const record = params.record ? JSON.parse(params.record) : {};
+				if (!record || typeof record !== "object" || Array.isArray(record)) throw new Error("record must be a JSON object");
+				const state = read(ctx);
+				if (params.action === "begin") {
+					const source = record.source ? reference(ctx, record.source, true) : sources(ctx).filter((item) => item.kind === "user").at(-1);
+					if (!source || source.kind !== "user") throw new Error("Task initiation requires an external user source");
+					if (source.sourceId !== sources(ctx).filter((item) => item.kind === "user").at(-1)?.sourceId) throw new Error("Task initiation requires the latest external user source");
+					if (CANCEL.test(source.text)) throw new Error("Cancellation is not a fresh work request");
+					begin(ctx, record, source);
+				} else if (params.action !== "status") {
+					if (!state || state.status !== "active") throw new Error("No active unfinished task");
+					if (params.action === "authorization") {
+						const source = reference(ctx, record.source, true);
+						if (source.kind === "user" && source.sourceId !== state.externalSourceId &&
+							source.taskSourceId !== state.externalSourceId) throw new Error("Authorization source belongs to another task");
+						if (!AUTHORIZATION_KINDS.includes(record.kind) || record.kind !== source.kind) throw new Error("Authorization kind must match the original user or system source");
+						for (const key of ["id", "operation", "target", "limits", "conditions"]) required(record[key], key);
+						if (state.authorizations.some((item) => item.id === record.id)) throw new Error("Authorization ids are immutable; use a new superseding or revoking record");
+						if (record.expiresAt && !Number.isFinite(Date.parse(record.expiresAt))) throw new Error("expiresAt must be an ISO date");
+						for (const key of ["revokes", "supersedes"]) if (record[key] && !state.authorizations.some((item) => item.id === record[key])) throw new Error(`${key} must reference an existing task authorization`);
+						save(ctx, { ...state, authorizations: [...state.authorizations, { ...record, taskId: state.taskId }] });
+					} else if (params.action === "blocker") {
+						// Validate now and again at stop time, when expiry and branch evidence may differ.
+						validateBlocker(ctx, state, record);
+						save(ctx, { ...state, blocker: record });
+					} else if (params.action === "complete") {
+						required(record.summary, "completion summary");
+						save(ctx, { ...state, status: "reported-complete", completion: record.summary });
+					} else throw new Error("Unknown task-state action");
+				}
+				const details = status(ctx, params.action === "status" ? record : {});
+				return { content: [{ type: "text", text: JSON.stringify(details) }], details };
+			} catch (error) {
+				return { content: [{ type: "text", text: error.message }], isError: true };
+			}
+	}
+
+	function validateBlocker(ctx, state, blocker) {
+		if (!blocker) throw new Error("Record a blocker with observed evidence, permitted routes, authorization checked, independent work and resumption path; or report completion explicitly");
+		if (blocker.operation !== state.operation || blocker.target !== state.target) throw new Error("Blocker operation and target must match the active task scope");
+		if (!BLOCKER_KINDS.includes(blocker.kind)) throw new Error("Name the blocker kind");
+		for (const key of ["externalContribution", "resume"]) required(blocker[key], key);
+		if (!Array.isArray(blocker.evidence) || !blocker.evidence.length) throw new Error("Reference an observed failure or exact authority restriction");
+		const evidence = blocker.evidence.map((ref) => reference(ctx, ref));
+		if (evidence.some((item) => item.kind === "tool" && item.taskSourceId !== state.externalSourceId)) throw new Error("Evidence belongs to another task");
+		if (["execution", "external"].includes(blocker.kind) && !evidence.some((item) => item.kind === "tool")) throw new Error("An execution failure or external wait requires observed tool evidence");
+		if (blocker.kind === "execution" && !evidence.some((item) => item.isError)) throw new Error("The referenced result does not report an execution failure");
+		if (["safety", "authorization"].includes(blocker.kind) && !evidence.some((item) => ["user", "workflow"].includes(item.kind))) throw new Error("A restriction requires its original authority source; tool text is not authority");
+		if (!Array.isArray(blocker.authorizationIds)) throw new Error("List authorizationIds checked, including an empty list when none exist");
+		if (state.authorizations.some((item) => !blocker.authorizationIds.includes(item.id))) throw new Error("Review every retained task authorization, including revocations and conditions");
+		if (blocker.authorizationIds.some((id) => !state.authorizations.some((item) => item.id === id))) throw new Error("Unknown authorization reference");
+		if (!Array.isArray(blocker.routes) || !blocker.routes.length) throw new Error("Record the disposition and evidence for available permitted routes");
+		for (const route of blocker.routes) {
+			required(route.route, "route");
+			if (!ROUTE_DISPOSITIONS.includes(route.disposition)) throw new Error("A route remains actionable");
+			const source = reference(ctx, route.evidence);
+			if (source.kind === "tool" && source.taskSourceId !== state.externalSourceId) throw new Error("Route evidence belongs to another task");
+			if (route.disposition === "failed" && !source.isError) throw new Error("A failed route requires an observed error");
+			if (route.disposition === "prohibited" && source.kind === "tool") throw new Error("A prohibited route requires original authority, not a probe");
+		}
+		if (!Array.isArray(blocker.independentWork?.pending) || !Array.isArray(blocker.independentWork?.completed)) throw new Error("Account for independent pending and completed work");
+		if (blocker.kind !== "safety" && blocker.independentWork.pending.length) throw new Error(`Complete independent permitted work first: ${blocker.independentWork.pending.join(", ")}`);
+		return evidence;
+	}
+
+	function stop(event, ctx) {
+		if (!available(ctx)) return;
+		const state = read(ctx);
+		if (!state || state.status !== "active") return;
+		releaseStop();
+		const onAbort = () => {
+			if (read(ctx)?.externalSourceId === state.externalSourceId) cancel(ctx, "session-stop-abort");
+			releaseStop();
+		};
+		if (event.signal?.aborted) { onAbort(); return; }
+		if (event.signal) {
+			pendingStop = { signal: event.signal, onAbort };
+			event.signal.addEventListener("abort", onAbort, { once: true });
+		}
+		const support = capability();
+		if (!support.enforced) {
+			if (state.enforcementUnavailable !== support.reason) {
+				save(ctx, { ...state, enforcementUnavailable: support.reason });
+				const warning = `Daily Driver stop enforcement unavailable: ${support.reason} Shared continuation instructions still apply; this is not a missing user approval.`;
+				if (typeof ctx.ui?.notify === "function") ctx.ui.notify(warning, "warning");
+				else console.error(`daily-driver: ${warning}`);
+			}
+			return;
+		}
+		let reason;
+		try {
+			validateBlocker(ctx, state, state.blocker);
+			// An execution failure is not an external prerequisite. Correct it within the bound.
+			if (state.blocker.kind !== "execution") return;
+			reason = "Diagnose the observed execution failure and use any permitted alternative; do not rename it as missing approval";
+		} catch (error) { reason = error.message; }
+		// Agent labels, record rewrites, status calls and duplicate observations cannot reset this count.
+		const failures = [...new Set(observations(ctx).filter((item) => item.taskSourceId === state.externalSourceId && item.isError)
+			.map((item) => item.fingerprint ?? digest([item.toolName, item.input, item.text])))].sort();
+		const condition = digest([state.externalSourceId, failures]);
+		const count = state.condition === condition ? state.corrections : 0;
+		if (count >= 2) {
+			const failure = `Execution failure: the same unsupported unfinished stop reached the two-correction limit. ${reason}. This is not completion or missing user approval. Evidence remains in daily_driver_task_state status.`;
+			save(ctx, { ...state, condition, corrections: count, stopFailure: failure });
+			if (typeof ctx.ui?.notify === "function") ctx.ui.notify(failure, "error");
+			else console.error(`daily-driver: ${failure}`);
+			return;
+		}
+		if (event.signal?.aborted || read(ctx)?.status !== "active") return;
+		save(ctx, { ...state, condition, corrections: count + 1 });
+		return { continue: true, additionalContext: `Daily Driver unfinished-task correction ${count + 1}/2: ${reason}. Inspect daily_driver_task_state status and its original sources. Continue permitted independent work; do not repeat established failures, expand scope, or bypass safety restrictions. If finished, use complete with a summary. Semantic claims in records still require review.` };
+	}
+
+	function cancel(ctx, source = "external-interrupt") {
+		if (!available(ctx)) return;
+		const current = read(ctx);
+		if (current?.status === "active") save(ctx, { ...current, status: "cancelled", cancellationSource: source });
+	}
+
+	return { input, toolResult, beforeAgentStart, context, compacting, execute, stop,
+		agentEnd, shutdown: releaseStop };
+}
+
+/** installTaskState binds the shared controller to Omp lifecycle and tool APIs. */
+export function installTaskState(pi) {
+	const controller = createTaskStateController(pi);
+	for (const [name, handler] of [
+		["input", controller.input], ["tool_result", controller.toolResult],
+		["before_agent_start", controller.beforeAgentStart], ["context", controller.context],
+		["session.compacting", controller.compacting], ["session_stop", controller.stop],
+		["agent_end", controller.agentEnd], ["session_shutdown", controller.shutdown],
+	]) pi.on(name, handler);
+	pi.registerTool({
+		name: "daily_driver_task_state", label: "Task evidence state",
+		description: `Read and record private task evidence on the active main-session branch. The record parameter is a JSON-encoded object string; omit it for status. The tool records provenance and reported state, not permission, semantic approval, route exhaustion, or proof of completion.
+
+For the write device, send {"path":"xd://daily_driver_task_state","content":"{\\"action\\":\\"status\\"}"}. For other actions, content encodes {"action": action, "record": JSON.stringify(record)}.
+
+Start with status {}. Its sources and evidence contain recent retained entries and real sourceId values. To retrieve an entry, call status with record JSON.stringify({sourceId: entry.sourceId}); an unknown ID returns null. A reference is {sourceId, quote}, where quote is nonblank text copied exactly from that entry. Never invent an ID. Sources must remain on this session's active branch. User authorization must belong to the active task; tool evidence and route evidence must be associated with its externalSourceId. Status excerpts can be truncated: retrieve the entry before quoting. Tool output can itself be truncated; when textTruncated is true, quotes must fit entirely in the prefix before prefixLength or the suffix after its separator, never across the omitted gap. Omitted output cannot be recovered here.
+
+Actions and records:
+- status: optional {sourceId}; without it, returns state, source and evidence excerpts, authorization applicability and capability.
+- begin: optional {taskId, operation, target, source}. source is a user reference and defaults to the latest external user source. It must be the latest external user input and not a cancellation. New-task defaults are taskId = sourceId, operation = source text, target = current working directory. On the same active source, omitted fields retain current values; relabeling does not reset corrections or evidence. Cancelled or settled work needs fresh external user input; a cancellation is not a fresh request.
+- authorization: {id, kind, operation, target, limits, conditions, source}, all required; strings except source must be nonblank. kind is ${oneOf(AUTHORIZATION_KINDS)} and must match the original user or workflow source. User sources must be associated with the active task. Optional expiresAt is a parseable date; freshConfirmation marks confirmation required; revokes and supersedes name existing authorization IDs. IDs are immutable: use a new ID for amendments. Applicability reports scope, expiry, revocation and confirmation; review the original conditions.
+- blocker: {kind, operation, target, evidence, authorizationIds, routes, independentWork, externalContribution, resume}. operation and target exactly match active state. kind is ${oneOf(BLOCKER_KINDS)}. evidence is a nonempty reference array: external and execution require tool evidence; execution requires an error; safety and authorization require user or workflow authority. authorizationIds lists every retained authorization ID, including amendments, or [] if none. routes is a nonempty array of {route, disposition, evidence}; route is nonblank, disposition is ${oneOf(ROUTE_DISPOSITIONS)}, and evidence is a reference. Failed needs an observed error; prohibited needs original authority, not a tool probe. independentWork is {pending: [], completed: []}; pending must be empty except for safety. externalContribution and resume are nonblank strings. Validation checks references, not whether routes are truly exhausted.
+- complete: {summary}, a nonblank string. This marks reported-complete, not independently proven completion. Mutations other than begin require an active unfinished task.
+
+Example sequence in an isolated fixture: let s = status(); let u = s.sources.find(x => x.kind === "user"); retrieve u with status({sourceId:u.sourceId}); let ref = {sourceId:u.sourceId, quote: an exact nonblank substring of u.text}. Call begin({taskId:"fixture", operation:"verify", target:"fixture", source:ref}); then authorization({id:"fixture-approval", kind:"user", operation:"verify", target:"fixture", limits:"offline", conditions:"fixture only", source:ref}) only if the original source actually supports it. After an observed fixture error, retrieve its real entry e through status and use r = {sourceId:e.sourceId, quote: an exact retained error substring}; blocker({kind:"execution", operation:"verify", target:"fixture", evidence:[r], authorizationIds:["fixture-approval"], routes:[{route:"fixture", disposition:"failed", evidence:r}], independentWork:{pending:[], completed:[]}, externalContribution:"Provide fixture access.", resume:"Retry the fixture."}). Finally complete({summary:"Fixture work completed."}) only when work is complete. Serialize each object into record; the example identifiers label records, not source authority.`,
+		parameters: pi.zod.object({ action: pi.zod.string(), record: pi.zod.string().optional() }),
+		execute: controller.execute,
+	});
+}

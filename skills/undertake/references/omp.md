@@ -35,19 +35,61 @@ makes further down this file.
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
 read-first and the Claude route does.
 
-For a `task`, validate its `Model class` section and rationale through
+For a `task` or a classed `research` or `bug`, validate its `Model class`
+section and rationale through
 [`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
 claim, repairing an old or invalid body where its handoff is otherwise
 grounded. A frontier task also needs explicit approval and its exact work
 envelope. A frontier `research` issue keeps that label and its narrow metadata
 exception; do not impose the task template.
 
-Use `daily_driver_get_session` to read the current model before branch creation
-or claim when needed for the frontier restriction. If its effective route is
-frontier and the issue is ordinary work, resolve a non-frontier agent using
-[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs).
-Hand off the full undertaking through `task`, or stop with the exact route gap;
-the receiving session owns its branch and claim.
+Before worktree creation or claim, call `daily_driver_route_undertaking` with
+`{ issue: <positive issue number>, modelClass: "mechanical" | "implementation" |
+"reasoning" | "frontier", frontierApproval?: <recorded approval and envelope> }`.
+Validate readiness and frontier approval first; the approval argument is evidence,
+not authorization by itself. Call the routing tool alone in its assistant tool
+batch. Do not batch discovery, worktree creation, claim, or other tool calls with
+it. The tool selects within the invoking family and provider without rewriting
+shared roles.
+
+Read `details.undertaking` from the result or `daily_driver_get_session`:
+`issue`, `modelClass`, `selectedModel`, `observedModel`, `status`, and
+`capability`, with optional `reason` and `warning`. The session result also
+reports provider and non-secret authentication route. `status` is `pending`,
+`verified`, or `blocked`; `capability` is `mapped` or `unverified`.
+`verified` permits the undertaking to proceed, but execution identity is not
+proof of class suitability. `pending` means a mapped switch was requested but
+actual worker execution is not yet confirmed. Show informative status, not an
+error; wait for the next worker assistant response and read the state again
+before worktree creation, claim, or implementation. A matching model and effort
+can verify without a switch. Read-only discovery and route/session recovery
+remain available while pending; queued mutating calls are blocked.
+
+If the known family is absent from the class table, a prominent warning names the
+family, class, and retained provider/model. Continue immediately on the invoking
+model, provider, and effort without confirmation. The route is observed but class
+suitability remains unverified; do not claim qualification. Preserve this
+disposition on re-entry, reload, and permitted worker dispatch. If a child cannot
+retain the route, work in the invoking session.
+
+The effective route must retain the current model family, provider, backend
+and authentication route, including visible child and fallback candidates.
+Account refresh or eligible rotation does not change that invariant. A known
+mapped family with a missing or cleared class, unavailable target, or incompatible
+assignment is a configuration gap. Unknown identity and actual route violations
+are gaps, not absent-family continuation. A rejected route reports its gap and
+must allow explanation and recovery; `blocked` is not success. Independently
+configured `reviewer`, `scout`, `security-reviewer`, and `seance` helpers are
+not issue implementation workers and retain their configured routes.
+
+After the pull request is ready, or answer-only research is completed and
+recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
+for the completed undertaking before reusing the session for another issue.
+Do not finish a stopped or incomplete undertaking. Selecting a different issue
+returns an error and preserves the existing owner and route. Finish the
+completed undertaking or resume the existing one before selecting another.
+A finish call with the wrong issue also returns an error and preserves the
+existing state.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -61,15 +103,28 @@ stays open.
 The implementor
 ===============
 
-Ordinary non-frontier implementation stays in the session running this
-sequence. The frontier-only handoff exception runs before branch creation and
-claim: resolve a supported non-frontier agent route using
-[`embark`'s Omp class-routing rules](../../embark/references/omp.md#the-route-an-implementor-runs),
-then use the `task` surface to dispatch a full `undertake #<issue>` to that
-agent. The receiving session owns its worktree, claim, implementation, and
-pull request. Do not dispatch if the route is unavailable or frontier; report
-the exact configuration gap. A supported model switch may continue here only
-after Omp reports a non-frontier execution identity.
+Prefer the in-session route. A full `undertake #<issue>` handoff through `task`
+is permitted only if the effective child route and every visible fallback can
+be constrained to the same family, provider, backend, authentication route,
+and exact class. The receiving session verifies its own execution and owns the
+worktree, claim, implementation, and pull request. The sender stops rather
+than repeating the handoff or supervising duplicate work. If the surface cannot
+establish those constraints, stop and report the precise gap.
+
+After manual escalation of an existing task, first repair the plan under the
+constitution's *Manual frontier escalation*. Use the route above only when
+its constraints are established; transfer the existing work and authority,
+not a new claim. Otherwise deliver the plan and report the missing return route.
+
+The adapter admits explicit top-level frontier selection and native
+`^provider/model` consultations without changing the undertaking worker.
+Consultation responses do not verify a pending worker. Its tools remain
+available for diagnosis, plan repair, and reporting; this is not a frontier
+implementation exception. Native mention dispatch pins the branch-authorized
+model and constrains the child's actual requests, including after resume.
+Retry-fallback and prewalk markers do not establish operator authorization.
+The adapter guards its routing tool and observed dispatch, not arbitrary
+trusted extensions that call Omp's top-level model setter.
 
 
 The pull request
@@ -87,12 +142,12 @@ The pull request
 | `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
 | `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |
+| `The milestone` | Read the draft state and report head | `gh pr view <number> --json isDraft,headRefOid` |
+| `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
+| `The milestone` | Post the report | `gh pr comment <number> --body-file <path>` |
 | `Ready for review` | Take it out of draft | `gh pr ready <number>` |
 | `Keep it current` | Merge the base branch in | `gh pr update-branch <number>` |
 | `A round after ready goes back to draft` | Return it to draft | `gh pr ready <number> --undo` |
-| `The milestone` | Read the readiness state | `gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid` |
-| `The milestone` | Read the existing comments | `gh pr view <number> --json comments` |
-| `The milestone` | Post the report | `gh pr comment <number> --body-file <path>` |
 
 `Review the head`, `Fix, answer, resolve, push`, and `Verify the fix delta` are
 `review-cycle`'s. Its `references/omp.md` names the reviewer task, durable
@@ -117,6 +172,48 @@ resolved, never from an assumed `origin`.
 Omp uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
 
+Task evidence state
+-------------------
+
+`daily_driver_task_state` stores private, active-branch task records. Call
+`{action: "status"}` before another approval request or an unfinished stop.
+For ordinary repository work not already active, call `begin`; do not activate
+an ordinary question. Mutating calls take a JSON-string `record`. `status`
+with `record: "{\"sourceId\":\"<id>\"}"` reads the original authority source
+or retained tool evidence rather than the default bounded excerpts.
+
+The record shapes, defaults, source discovery and exact-quote limits are
+documented once, in the device itself: read `xd://daily_driver_task_state`.
+Use the latest external user source returned by `status` to begin, never a
+copied handoff. Sources must resolve to original user input or workflow
+instructions. Exact quotes establish provenance, not semantic permission, so
+read conditions against the original source before acting. `complete` records
+reported completion, not independent proof that acceptance criteria passed.
+
+The tool never grants permission or replaces harness approval. Original
+sources and tool evidence stay in session entries through compaction and
+process resume. Cross-session handoffs carry source references and applicable
+scope; copied agent text is not an original approval source in a new session.
+Revalidate through the original source or existing workflow authorization.
+
+The `session_stop` adapter checks active unfinished tasks and returns at most
+two corrections for an unchanged observed condition. The count survives
+resume; rewriting record labels does not renew it. Exhaustion persists an
+execution failure and emits an error notification without another model turn.
+It does not complete the task or invent an approval requirement. User stop
+input and an aborted stop event prevent continuation. The adapter does not
+prove arbitrary prose claims about approval or exhausted routes.
+
+Enforcement requires direct access to the task-state tool or Omp's active
+`write` device route. If both are unavailable, the adapter records and warns
+about that capability limit instead of demanding an inaccessible tool. It
+does not enable tools or invent a human blocker; the shared continuation rule
+still applies.
+
+Omp exposes an external-input origin on `input`, so scheduled reminders and
+tool output do not become user authority. These semantics do not establish
+equivalent hook provenance on another harness.
+
 
 The milestone
 =============
@@ -124,20 +221,17 @@ The milestone
 `SKILL.md` owns what the report says and when it is owed; these are the calls
 that read the readiness state, find the claim's timestamp, and post it.
 
-**The readiness state is one read:**
+**The report is posted while the pull request is still a draft.** Read the
+state and head with:
 
-    gh pr view <number> --json isDraft,mergeable,mergeStateStatus,headRefOid
+    gh pr view <number> --json isDraft,headRefOid
 
-`isDraft` false and `mergeable` `MERGEABLE` are two of the answers the report
-needs, and neither is sufficient alone. `mergeStateStatus` answers the rest,
-and here — after the draft is cleared — `CLEAN` is the only yes: `BEHIND` is
-a base the branch does not carry, `UNSTABLE` a check that is no longer green,
-`DIRTY` a conflict, and `UNKNOWN` and `BLOCKED` are states `SKILL.md` rules
-out as readiness outright. Each is a wait, not a milestone. **`The gate` reads
-the same field for less**, because a draft reports `DRAFT` or `BLOCKED` there
-whatever its branch and checks are doing: only `BEHIND`, `DIRTY` and `UNKNOWN`
-are that read's, and CI at the gate comes from `statusCheckRollup` instead.
-`headRefOid` is the SHA the report binds to.
+`isDraft` must be true, and `headRefOid` is the SHA the report binds to. The
+gate already establishes branch currency, current-head CI, review completion,
+resolved threads, the completion notice and absence of human blockers.
+`mergeable` and `mergeStateStatus` are not readiness prerequisites here:
+draft states can mask the underlying result, and a post-ready `CLEAN` read
+would put the report after the transition it must precede.
 
 **The start is the claim comment's `createdAt`.** `issue://<issue>` carries
 the comments, so `Read the issue and its edges` already has them; `gh issue
@@ -148,101 +242,49 @@ that shape, the earliest of them is the start — a later claim does not restart
 the clock. A resumed session finds the start with the same read. An issue
 with no recoverable claim leaves the timing `n/a`, per `SKILL.md`.
 
-**The report posts as a pull-request comment** — a pull request's comments
-are issue comments, so the write is the claim's own:
+**Post the report before marking ready.** Read the existing comments with
+`gh pr view <number> --json comments` and look for the fixed
+`First-readiness report` marker. If none exists and the gate holds, write the
+report as a pull-request comment:
 
     gh pr comment <number> --body-file <path>
 
-`--body-file` for the reason `Claim the issue`'s row gives: the report
-carries backticks, a SHA, and timestamps, and a double-quoted shell argument
-substitutes the backticks before `gh` sees them.
-
-**Read the existing comments before posting** — `gh pr view <number> --json
-comments` again, the report found by its opening line, `First-readiness
-report`, the marker `SKILL.md` fixes; a resumed sequence that finds it posts
-nothing.
+Only after that write succeeds, run `gh pr ready <number>`. A failed report
+write leaves the PR draft. A failed ready write preserves the report; on
+retry, revalidate the current gate and do not duplicate or rewrite the
+existing report.
 
 **The provenance** is `provenance`'s block, read the way its
 [`references/omp.md`](../../provenance/references/omp.md) names: the same
 `daily_driver_get_session` call `The session` above uses.
 
 
-The watch is a detached Omp service
-===================================
+Common PR maintenance
+=====================
 
-**The merge is mechanical, so the watch that runs it can be too.** Omp's
-named Bash service owns the process lifecycle. Start the plugin's
-`scripts/pr-keep-current.sh` with `bash` service mode, `name`
-`keep-current-<number>`, its script path and pull-request number as the
-command, and `cwd` set to a checkout of this repository. Prefix the command
-with `printf 'keep-current-started\n'; exec` and set
-`ready: {"log": "keep-current-started"}`. This launch marker is deterministic
-even when the script's first tick produces no output; it means only that the
-service command launched, not that the pull request was updated. `exec`
-preserves the script's exit status as the service status. Service mode rejects
-`async` and `timeout`; do not supply either field. Read `proc://<name>` before
-starting so a resumed session does not restart an existing loop.
+Use [`pr`'s Omp route](../../pr/references/omp.md) for the currency checkpoint,
+detached watch, catch-up look, and cancellation. `Open the draft` starts or
+reuses that watch, including while CI or review is pending. `Ready for review`
+does not start another one.
 
-After readiness, immediately inspect `read proc://<name>`. If it has exited,
-read its logs and report the observed exit instead of requesting persistence or
-calling it durable. Otherwise request `detached` through
-`write proc://<name>/mode` with content `detached`, then confirm
-`read proc://<name>` reports `detached=true`. Detached mode lets the process
-survive broker shutdown and Omp exits. If the mode write fails or the status
-does not confirm it, stop the service with `write proc://<name>/kill` and
-report the exact failure; do not claim the watch is durable.
+The undertaking catch-up look
+-----------------------------
 
-The script runs every two minutes. It reads the pull request's state, merge
-status, and check rollup; skips the tick while a run on the head is in flight;
-merges the base branch in when the branch is behind; and logs each move to
-`proc://<name>`. Read that status and output with `read proc://<name>`.
-
-Its exits are `Keep it current`'s three, and nothing narrower. It exits 0
-when the pull request is merged or closed. It exits 3 on a conflict — the
-call fails and changes nothing, and the stop is left for the session's
-catch-up look below, whose `DIRTY` row restarts the loop once the conflict is
-resolved and pushed. When the user says to stop, use
-`write proc://<name>/kill`. Thirty consecutive failed reads exit 2: a watch
-polling a repository it cannot read is noise, not a watch.
-
-**`daily_driver_schedule` is not this cadence's vehicle.** The managed timer
-is unref'd and cleared on `session_shutdown`, so a cadence it carried lived
-only as long as the session — the failure that left ready pull requests
-behind their bases indefinitely. The CI wait uses `review-cycle`'s bounded,
-persistent named service, not a shell wait.
-
-The catch-up look
------------------
-
-**The first read of every turn that lands back on an open undertaking pull
-request is the base-currency read.** The detached service merges without a
-session, but it does not judge: red CI, a review wall, a conflict, and the
-milestone still need an agent turn. Read the service state and logs with
-`read proc://keep-current-<number>`, then run:
-
-    gh pr view <number> --json state,mergeStateStatus,mergeable,headRefOid
-
-Merged and closed pull requests end continuation. Read `statusCheckRollup` and
-`review-cycle`'s check, status and workflow-run reads before a currency merge; if any
-reports a run in flight, skip that merge. Otherwise `BEHIND`, `DRAFT`,
-`BLOCKED`, and `UNKNOWN` run `gh pr update-branch <number>`, whose own reply
-settles draft-masked or indeterminate currency. `DIRTY` is the conflict stop;
-`CLEAN` and `UNSTABLE` need no currency action.
+Take the common catch-up look first, then continue this sequence:
 
 **Currency is not completion.** After a currency test that can move the head,
 read `gh pr view <number> --json statusCheckRollup` for the resulting
 `headRefOid`; `review-cycle`'s three-source read remains the CI verdict.
-Pending or unregistered checks use its persistent bounded watcher. Failed
-checks return to `Fix, answer, resolve, push`; unavailable logs are a named
-evidence blocker, not green. When CI on the current head is green and the
-gate's notice read finds no completion notice, post the notice before
-continuing the ready-gate work. A durable Omp service preserves its process,
-but does not resume the owner: where no owner turn is running, report unfinished
-work and the owner-resume requirement rather than claiming autonomous review.
+Pending or unregistered checks retain its renewable bounded observation and
+the common PR owner reminder. Window expiration is not a task blocker.
+Failed checks return to `Fix, answer, resolve, push`; unavailable logs require
+diagnosis, not a green verdict. When CI on the current head is green and the
+gate's notice read finds no completion notice, post it before continuing the
+ready gate. A live idle owner must retain the common reminder. Process
+persistence alone does not resume an owner after session shutdown.
 
-The detached `keep-current-<number>` merge loop still starts at ready and
-remains mechanical. It is not pre-ready CI supervision and never marks a
-draft ready.
+The common merge loop remains mechanical. It does not assess the gate or
+mark a draft ready.
 
 
 The stop
@@ -253,6 +295,7 @@ The stop
 | Operation | Call |
 | --------- | ---- |
 | Read the issue's comments, for the claim and any equivalent handoff | `gh issue view <number> --json comments` |
+| Cancel the owner reminder | `daily_driver_cancel_schedule({triggerId})`, using the common PR slot |
 | End the merge watch | `write proc://keep-current-<number>/kill`, the service name it was started under |
 | Post the handoff | `gh issue comment <number> --body-file <path>` |
 

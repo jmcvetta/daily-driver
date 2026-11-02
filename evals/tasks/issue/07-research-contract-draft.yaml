@@ -15,7 +15,7 @@ initial_prompt: >-
   metrics, but must not access production or make external requests. Deliver
   an answer on the issue, including a recommendation and limitations. Bound
   the work to those three alternatives and available repository evidence.
-  Do not post; show the exact issue body.
+  Do not post; show the issue kind and exact body.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]
@@ -47,9 +47,10 @@ success_criteria:
       disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
-      Grade the final reply's proposed research issue body. Begin rationale with
+      Grade the final reply's proposed research issue. Begin rationale with
       `ANCHOR: result` or `ANCHOR: none`; score 0 if no final result exists.
-      The body must state the exact question and practical purpose, separate
+      The reply must select the `research` kind. The body must state the exact
+      question and practical purpose, separate
       supplied facts from missing measurements, define scope and non-goals,
       permit only repository inspection and available metrics, and prohibit
       production access or external requests. It must compare the three named
@@ -61,5 +62,5 @@ success_criteria:
       Normal trailing provenance is required; a `Model:` line inside provenance
       is not task class metadata. Score 1.0 when the body covers these needs
       without invented facts; 0.5 for a useful but materially incomplete body;
-      0.0 if it preselects the answer, authorizes forbidden access, or uses a
-      settled implementation design.
+      0.0 if it selects a non-research kind, preselects the answer, authorizes
+      forbidden access, or uses a settled implementation design.

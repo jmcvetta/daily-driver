@@ -11,7 +11,7 @@
 
 experiment_id: omp-deepseek-v4-1-flash
 description: >-
-  Trigger accuracy, constitution delivery and review-depth routing on DeepSeek
+  Trigger accuracy and constitution delivery on DeepSeek
   V4.1 Flash 1017, with daily-driver loaded and without it.
 
 defaults:
