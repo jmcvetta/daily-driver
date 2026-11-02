@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "run_id": "reviewer-quality-deepseek-cohort-v3",
+  "freeze": "freeze-v3.json",
+  "previous_checkpoint": "deepseek-cohort-v3-interrupted.json",
+  "reconciliation": {
+    "terminal_evaluator_records_before_resume": 3,
+    "interrupted_case": "reviewer-quality-01-boundary",
+    "interrupted_repeat": 0,
+    "observed": "The preserved task log records reviewer dispatch but no reviewer result or evaluator terminal record.",
+    "recovery": "A clearly labelled synthetic ERROR task.json records the interruption and prevents coder-eval --resume from replaying that slot. Its iteration count and duration are not a measurement. The original task log is retained locally.",
+    "completion_and_backend_identity": "unreported",
+    "remaining_unattempted_slots": 36
+  },
+  "runtime": {
+    "frozen_omp_version": "18.14.1",
+    "resumed_omp_version": "18.14.1",
+    "resumed_installation": "Isolated @oh-my-pi/pi-coding-agent@18.14.1 npm package, executed by isolated Bun 1.4.4; the session's installed Omp was 18.15.0.",
+    "binary_equivalence_to_original": "unverified",
+    "coder_eval_version": "0.11.6",
+    "subject_input_hashes": "Matched freeze-v3.json, including the recorded collector analysis amendment, before resumption."
+  },
+  "dispatch": {
+    "max_parallel": 1,
+    "resume": "coder-eval --resume retains finalized task records and the synthetic interrupted-slot marker; it dispatches only unattempted slots.",
+    "pushback": "The temporary resumption wrapper uses the frozen runner's pushback expression and stops the process group on a match.",
+    "routes_and_limits": "Unchanged from freeze-v3.json"
+  }
+}
