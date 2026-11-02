@@ -1454,7 +1454,10 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
 - **The Omp targets raise every turn cap to 30.** `OMP_RUN_LIMITS` in the
   `Makefile` says why: caps sized for the Claude Code arm cut Omp off before
   its reply.
-- **Run it detached.** An interrupted run continues from its run directory:
+- **Resume an interrupted run.** With the pinned `coder-eval`
+  (`CODER_EVAL_VERSION` in the `Makefile`), `--resume` re-runs only the slots
+  that have no finalized `task.json`, for example after the process was
+  killed. The command below does that:
 
   ```sh
   cd evals && TELEMETRY_ENABLED=false coder-eval run -e experiments/omp-glm-5.3.yaml \
@@ -1463,6 +1466,28 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
     --exclude-tags claude-only,codex-only,skip:omp,model-classes $TASKS
   cd .. && make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/omp-glm-5.3.yaml
   ```
+
+  `--resume` does not retry a slot that has a final status, `FAILED` or
+  `ERROR` included. A slot that crashed on a subscription limit is finalized
+  as `ERROR`, so `--resume` skips it. Do not delete `task.json` to force a
+  re-run: that destroys the recorded attempt.
+
+  To measure the `ERROR` slots of a run made under the current limits again:
+
+  1. Run only those slots into fresh run directories. `coder-eval` has no
+     flag that selects a slot, so select them by case list, a variant's
+     experiment file and `--repeats`.
+  2. Commit a mapping from the new slots to the original ones.
+  3. Build a merged copy that leaves every source run unchanged, and record
+     that copy, not the original run.
+
+  [`provenance/667-rerun/`](provenance/667-rerun/) is the worked example, from
+  the Claude Code arm: `launch.sh`, `mapping.json` and `merge.py` run the
+  slots, map them and build the merged copy. `make evals-record` records it.
+  An Omp re-run uses the Omp experiment and tags instead. The re-run is
+  a new measurement and needs its own bounded approval. A run made under older
+  limits is not filled this way. **The baseline** in
+  [Turn and time ceilings](#turn-and-time-ceilings) states both rules.
 
 - **`make -n` does not dry-run a run target.** Its recipe line calls
   `$(MAKE)`, so make executes it. `make evals-plan` is the free check.
