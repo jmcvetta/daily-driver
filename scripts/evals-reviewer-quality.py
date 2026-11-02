@@ -43,8 +43,8 @@ def json_file(path: Path) -> dict[str, Any]:
     return value
 
 
-def bounded_text(path: Path | None) -> str | None:
-    """Return the bounded final reviewer response, never the full transcript."""
+def final_response(path: Path | None) -> str | None:
+    """Return the complete final response, never the full transcript."""
     if path is None or not path.is_file():
         return None
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -63,9 +63,14 @@ def bounded_text(path: Path | None) -> str | None:
         if not isinstance(value, dict) or not {"reviewer_reported_identity", "verdict", "findings"} <= value.keys():
             return None
     text = "".join(ch for ch in text if ch in "\n\t" or ord(ch) >= 32)
-    if len(text) > MAX_FINDINGS_CHARS:
-        text = text[:MAX_FINDINGS_CHARS] + "\n...[truncated]"
     return text.strip()
+
+
+def bounded_response(text: str) -> str:
+    """Limit recorded response text after verifying its complete content."""
+    if len(text) > MAX_FINDINGS_CHARS:
+        return text[:MAX_FINDINGS_CHARS] + "\n...[truncated]"
+    return text
 
 def reviewer_delivery_observed(path: Path | None, final: str | None) -> bool:
     """Require the parent's JSON to match a captured completed reviewer result."""
@@ -100,7 +105,7 @@ def reviewer_delivery_observed(path: Path | None, final: str | None) -> bool:
 
 
 def reviewer_result_fields(text: str | None) -> tuple[str, str]:
-    """Read explicit reported identity and verdict from the bounded reviewer result."""
+    """Read explicit reported identity and verdict from the final response."""
     if not text:
         return "unreported", "unreported"
     try:
@@ -408,11 +413,11 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 provider_error = bool(re.search(r"rate[ -]?limit|quota|too many requests|(?:HTTP|status)[ :=]+429", error_text, re.IGNORECASE))
                 harness_error = bool(row) and not provider_error and row_status in {"ERROR", "TIMEOUT", "TIMED_OUT", "CRASHED"}
                 result_path = result_text(run_dir, args.variant, case, repeat) if row else None
-                text = bounded_text(result_path)
+                text = final_response(result_path)
                 reviewer_identity, reviewer_verdict = reviewer_result_fields(text)
                 delivery_observed = reviewer_delivery_observed(artifact, text)
                 reviewer_completed = bool(text) and reviewer_verdict in {"clear", "defects"} and delivery_observed
-                parent_reported_identity = reviewer_identity
+                parent_reported_reviewer_identity = reviewer_identity
                 if not delivery_observed:
                     reviewer_identity = "unreported"
                 run_record_attempt = next((v for v in (record or {}).get("attempts", []) if v.get("task_id") == case and v.get("variant_id") == args.variant and v.get("replicate_index") == repeat), {})
@@ -462,13 +467,13 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "judge_status": judge["status"],
                     "judge_error": judge.get("error", "unavailable"),
                     "score": judge.get("score", "unavailable"),
-                    "reviewer_result": text if delivery_observed and text is not None else "unavailable",
-                    "parent_final_response": text if not delivery_observed and text is not None else "unavailable",
+                    "reviewer_result": bounded_response(text) if delivery_observed and text is not None else "unavailable",
+                    "parent_final_response": bounded_response(text) if not delivery_observed and text is not None else "unavailable",
                     "reviewer_verdict": reviewer_verdict if delivery_observed else "unreported",
                     "judge_classifications": classifications,
                     "reviewer_requested": requested,
                     "reviewer_delivery_observed": delivery_observed,
-                    "parent_reported_identity": parent_reported_identity,
+                    "parent_reported_reviewer_identity": parent_reported_reviewer_identity,
                     "reviewer_reported_identity": reviewer_identity,
                     "reviewer_backend_served": "unreported",
                     "identity": reported_identity(record, case, repeat, parent_requested, helper_requested),

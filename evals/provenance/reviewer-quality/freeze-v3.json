@@ -109,5 +109,10 @@
     "collector_sha256": "0dc8f421ed3f90e5f21cc548813c976237cf0fed39a2dc44c8c9530af9cf5b5e",
     "change": "Require a captured completed reviewer response that matches the parent final JSON. Parent assertions alone do not establish reviewer identity or findings.",
     "measurement_effect": "Analysis only. Original attempts and judge sidecars are unchanged; interrupted slots and separately authorized replacements remain distinct."
+  },
+  "delivery_length_analysis_amendment": {
+    "collector_sha256": "fc5e525cca3a83a3743044e7279b2a97c2e82f1f3bf3abd051b850e77ce7f7e4",
+    "change": "Compare the complete final response before bounding its stored text, and name the parent-reported reviewer identity explicitly.",
+    "measurement_effect": "Analysis only; no subject or judge attempts were rerun."
   }
 }
