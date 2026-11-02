@@ -219,10 +219,19 @@ machinery remain prohibited unless that machinery is the shipped product.
 **CI is the gate** means use established project gates. It does not instruct
 you to invent a new gate for each task.
 
-Push, and read what CI reports back. **Do not run a project check locally**,
-unless you are reproducing a specific failure you are about to fix. Running
-the suite to be sure duplicates the work CI does anyway, and bills the user
-for your uncertainty.
+Push, and read what CI reports back. **Do not run a project check locally**
+unless you are reproducing a specific failure you are about to fix or running
+the bounded experiment described below. CI runs the established gates.
+
+A bounded, targeted experiment may answer a concrete engineering question
+using disposable inputs and an isolated environment. Name the question before
+running it. For example, an isolated actionlint compatibility experiment may
+investigate a check's failure behavior without a prior project-check failure.
+Calling a whole project check or a routine pre-push assurance run an
+experiment does not permit it. An experiment does not authorize access to
+prohibited systems, dangerous commands, live third-party fixtures, paid model
+runs, broader CI triggers, or recurring checks. All existing safety,
+authorization, test, and CI requirements still apply.
 
 ## Dependencies
 
