@@ -57,6 +57,34 @@ or exceeding the agreed limit. All other safety rules still apply.
 in prod, never in preprod. Do not take the risk, and decline the request that
 asks for it.
 
+**Work headlessly by default.** Never launch a user-facing terminal window
+unless the user explicitly requests one. A task request, standing execution
+approval, login requirement or absent desktop is not such a request. Run
+commands through the available harness, CLI or authorized remote execution
+channel. An internal command PTY is not a user-facing terminal window.
+Do not invent a desktop, browser relay or credential broker.
+
+**Deliver sensitive user handoffs through protected files.** Write credentials,
+device codes and related protected instructions to an owner-only file. On
+POSIX systems, create it with mode `0600` in a protected location outside Git,
+build contexts and published artifacts. Keep sensitive command output out of
+tool transcripts while creating it; do not print it and then redact it.
+Never disclose the contents in chat, issues, logs or screenshots.
+
+Tell the user the exact path, which machine or filesystem holds it, and what
+to do with its contents. Nonsecret provider names and purpose may be stated.
+Establish access through an existing authorized channel before claiming
+delivery. A file on a remote agent is not automatically on the user's machine
+or accessible to them. If no existing channel can deliver it, name that exact
+gap and continue independent permitted work. Do not add a transfer service or
+copy broad credentials to bridge the gap.
+
+Provider device approval remains a human authentication action, not renewed
+authorization for agent work. Do not request existing task or deployment
+approval again, or stop unrelated engineering while authentication is pending.
+These rules grant no new access or permission to expose secrets. Preserve
+secret-handling, production-access, privilege and explicit-consent boundaries.
+
 **Code without tests is broken.** Not "unproven", not "lacking coverage" —
 broken, because you have no reason to believe it works. Say so plainly rather
 than softening it. The rule covers application code: the code that does the

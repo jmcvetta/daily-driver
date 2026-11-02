@@ -30,6 +30,31 @@ Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
 
+## Sensitive handoff examples
+
+The [constitution](../rules/constitution.md#non-negotiables) owns the headless
+default and protected-file handoff contract. These are example user notices
+after creating an owner-only file with POSIX mode `0600` outside the repository,
+build contexts and published artifacts. Paths are illustrative, not deliveries.
+
+- **Workstation, existing local access confirmed:** “On your workstation
+  `atlas`, read `/home/alex/.local/state/daily-driver/github-login.txt` in your
+  existing local session. Use its GitHub device-login instructions to approve
+  the pending login. I have not opened a terminal window.”
+- **Cloud, existing SSH access confirmed:** “On remote host `builder-7`,
+  read `/home/alex/.local/state/daily-driver/openai-login.txt` through your
+  existing authorized SSH connection as `alex`. Use its OpenAI device-login
+  instructions to approve the pending login. This path is on `builder-7`,
+  not your laptop.”
+- **No existing delivery route:** “The protected file is
+  `/home/agent/.local/state/daily-driver/github-login.txt` on remote host
+  `worker-9`. No existing authorized channel gives you access to that
+  filesystem, so the handoff is not delivered. I need an authorized way for
+  you to read that file. Independent permitted engineering continues.”
+
+These notices disclose neither credentials nor device codes. Device approval
+is the user's authentication action; it does not renew task approval.
+
 ## Task continuation and approval evidence
 
 The constitution requires agents to diagnose ordinary failures, preserve
