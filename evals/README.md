@@ -690,12 +690,10 @@ That is a small sample of one rubric: it licenses recommending the route, not a
 ranking of models, and the default judge stays `claude-code-sonnet-5`. Change the
 labels or the rule and it is a new set with a new `set_id`.
 
-Two further sets, `undertake-17-truthful-mock-v1` and
-`undertake-14-resume-explanation-v1`, hold hand-labelled expectations for the
-corrected row-17 and row-14 rubrics (select one with `calibrate --dir`). They are
-**unmeasured**: no judge has run on them, and their schema and row-17 mock
-behavior are documented here. Measuring them needs separate
-authorization and a new measurement identity.
+- The `undertake-14-resume-explanation-v1` set holds hand-labelled expectations
+  for the row-14 rubric (select it with `calibrate --dir`). It is **unmeasured**:
+  no judge has run on it. Measuring it needs separate authorization and a new
+  measurement identity.
 
 ### `base-vs-candidate`: does a constitution change move a row
 
