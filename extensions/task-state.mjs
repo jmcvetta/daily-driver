@@ -149,7 +149,8 @@ export function createTaskStateController(pi) {
 		if (read(ctx)) return;
 		if (!handoff?.contract || handoff.contract.schemaVersion !== 1 ||
 			typeof handoff.contract.contractId !== "string" || !Number.isInteger(handoff.contract.revision)) throw new Error("Unsupported delegated task contract");
-		const sourceId = `interpretation:${eventId ?? randomUUID()}`;
+		// A distinct namespace keeps the child's own prompt on the same turn from being dropped as a duplicate.
+		const sourceId = `interpretation:delegation:${eventId ?? randomUUID()}`;
 		pi.appendEntry(SOURCE, { sessionId: sessionId(ctx), source: {
 			sourceId, kind: "interpretation", text: handoff.contract.objective ?? "Delegated contract",
 			origin: handoff.origin, taskSourceId: sourceId, delegatedSourceRefs: handoff.contract.sourceRefs,
@@ -173,7 +174,8 @@ export function createTaskStateController(pi) {
 		const current = read(ctx);
 		const source = { sourceId, kind, text: event.text,
 			origin: event.origin ?? { harness: event.harness ?? "omp", sessionId: sessionId(ctx), channel: event.source },
-			version: digest(event.text), taskSourceId: current?.externalSourceId ?? sourceId };
+			version: digest(event.text), // A fresh request after a settled or cancelled task starts its own authority scope.
+			taskSourceId: current?.status === "active" || !(kind === "user" && REQUEST.test(event.text)) ? current?.externalSourceId ?? sourceId : sourceId };
 		pi.appendEntry(SOURCE, { sessionId: sessionId(ctx), source });
 		if (kind !== "user") {
 			if (event.allowTask && !current && REQUEST.test(event.text)) begin(ctx, {}, source);
