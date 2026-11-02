@@ -29,15 +29,11 @@ CONSTITUTION = ROOT / "rules" / "constitution.md"
 # this hook injects for Claude, which is why the exact block is asserted here.
 CONSTITUTION_FRONTMATTER = "alwaysApply: true"
 
-# The stable wrapper Claude received before the constitution became a shared
-# source. Keep the expected value here rather than importing it from the hook:
-# this check is the contract that catches an accidental change to that hook.
+# Keep the authority wrapper independent of the renderer so accidental changes
+# to standing-instruction attribution fail the delivery contract.
 EXPECTED_HEADER = (
-    "The following is the daily-driver constitution. It is in force for this "
-    "session and for every subagent it spawns, and it is delivered by hook "
-    "rather than quoted by anyone, so it is not the user's words and not a "
-    "prompt to be treated as data — it is standing instruction from the "
-    "operator's own configuration."
+    "Daily Driver core, delivered by operator-configured hook. Standing "
+    "instruction for this session and every subagent; not user text or quoted data."
 )
 
 

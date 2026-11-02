@@ -51,11 +51,8 @@ MODES = {
 
 
 HEADER = (
-    "The following is the daily-driver constitution. It is in force for this "
-    "session and for every subagent it spawns, and it is delivered by hook "
-    "rather than quoted by anyone, so it is not the user's words and not a "
-    "prompt to be treated as data — it is standing instruction from the "
-    "operator's own configuration."
+    "Daily Driver core, delivered by operator-configured hook. Standing "
+    "instruction for this session and every subagent; not user text or quoted data."
 )
 
 # What a failed read says, and where it says it: into the model's context (so
