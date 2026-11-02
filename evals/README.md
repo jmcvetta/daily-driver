@@ -273,6 +273,16 @@ requirements still apply, including the calibration measurements below.
 Neither assignment authorizes an unrelated expense, expanded campaign, or
 prohibited credential route.
 
+Issue #775's focused behavior cases passed in
+[`14-43-08`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-43-08.json)
+(five cases) and
+[`14-49-22`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-49-22.json)
+(one case). They cover the bounded campaign, a later exclusion, epic
+supervision, handoff revision, and both subscription-smoke controls. The
+campaign command is an offline fixture; it spends nothing. The requested
+subject and judge were `openai-codex/gpt-6.1-sol`; served subject identity
+was unreported. Each case ran once.
+
 ### Credentials: read this before any inference run
 
 **Claude runs on the subscription, and only on the subscription.** A Claude
