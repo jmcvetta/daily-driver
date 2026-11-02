@@ -107,6 +107,11 @@ credentials. Use `/model` → Roles to assign models. Existing `omp_configs/`
 files remain process overlays; assignments present at startup take precedence,
 and later edits may require an Omp restart.
 
+An operator's manual escalation during a failing task authorizes the
+consultation. Follow the constitution's *Manual frontier escalation*: repair
+the plan and return the existing work to a verified eligible non-frontier
+route. The escalation does not authorize frontier implementation or supervision.
+
 `dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
 and `classes`, for example `{ referenceModel: "provider/model", classes: {
 implementation: "provider/variant:high" } }`. Omp resolves the reference

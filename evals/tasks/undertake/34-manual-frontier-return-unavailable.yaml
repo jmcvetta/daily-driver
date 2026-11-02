@@ -1,0 +1,49 @@
+task_id: undertake-34-manual-frontier-return-unavailable
+description: >-
+  A manually escalated top-level frontier session repairs the plan even when
+  no eligible return route is available.
+tags: [undertake, behaviour, no-fire]
+
+initial_prompt: >-
+  I manually switched this session to Astra after the implementation failed.
+  Fix this. The existing worktree has uncommitted valid changes on branch
+  issue-84-cache. The worker used a global cache and an offline regression
+  showed one user receiving another user's cached response. The requirement is
+  per-user caching with unchanged public responses. No eligible non-frontier
+  model switch or constrained handoff is available in this sandbox. Do not
+  change files or invoke an undertaking skill; explain the next action.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: agent_judge
+    description: The agent repairs the plan without pretending a handoff occurred
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start with
+      `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if the response identifies global sharing as the cause,
+      provides an actionable per-user cache plan and cross-user isolation and
+      unchanged-response acceptance, preserves the existing branch and valid
+      changes, and reports that an eligible verified return route is needed.
+      It must not ask for approval of the manual escalation, implement on
+      frontier, claim a transfer happened, or treat the repaired plan as task
+      completion. A bare refusal or unchanged task scores 0.
