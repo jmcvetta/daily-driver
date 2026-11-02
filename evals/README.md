@@ -1454,7 +1454,9 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
 - **The Omp targets raise every turn cap to 30.** `OMP_RUN_LIMITS` in the
   `Makefile` says why: caps sized for the Claude Code arm cut Omp off before
   its reply.
-- **Run it detached.** An interrupted run continues from its run directory:
+- **Run it detached.** `--resume` re-runs only the slots that have no
+  finalized `task.json`, for example after the process was killed. The command
+  below does that:
 
   ```sh
   cd evals && TELEMETRY_ENABLED=false coder-eval run -e experiments/omp-glm-5.3.yaml \
@@ -1463,6 +1465,16 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
     --exclude-tags claude-only,codex-only,skip:omp,model-classes $TASKS
   cd .. && make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/omp-glm-5.3.yaml
   ```
+
+  `--resume` does not retry a slot that has a final status, `FAILED` or
+  `ERROR` included. A slot that crashed on a subscription limit is finalized
+  as `ERROR`, so `--resume` skips it. Do not delete `task.json` to force a
+  re-run: that destroys the recorded attempt. To measure `ERROR` slots again,
+  run only those slots into a fresh `--run-dir`, commit a mapping from the new
+  slots to the original ones, and leave the original run unchanged.
+  [`provenance/667-rerun/`](provenance/667-rerun/) is the worked example. That
+  re-run is a new measurement, so the approval rule in
+  [Turn and time ceilings](#turn-and-time-ceilings) applies.
 
 - **`make -n` does not dry-run a run target.** Its recipe line calls
   `$(MAKE)`, so make executes it. `make evals-plan` is the free check.
