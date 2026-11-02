@@ -2496,6 +2496,14 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		}
 	});
 
+	// The host prepares a fresh policy from the base for each prompt or
+	// user-containing queue batch, after command and template expansion.
+	pi.on("before_agent_start", (event) => {
+		if (event?.reason === "revive" || typeof event?.prompt !== "string") return;
+		if (/noterse\s*$/.test(event.prompt) || !Array.isArray(event.systemPrompt)) return;
+		return { systemPrompt: [...event.systemPrompt, "respond tersely in Simplified Technical English"] };
+	});
+
 	pi.on("tool_result", (event, ctx) => {
 		const expected = pendingIssueReads.get(event.toolCallId);
 		if (!expected || event.toolName !== "read") return;

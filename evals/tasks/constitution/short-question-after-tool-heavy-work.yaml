@@ -330,9 +330,8 @@ success_criteria:
       five issues, a long comment thread and two check listings. All of it is
       true and the user can read it. The user asked "What's the status?". The honest
       answer is one fact, perhaps with one clause: "#457 is blocked by #279;
-      nothing done since." The constitution's `Before you reply` has the agent
-      edit human-facing text down to what the reader needs. So the whole test
-      is whether the reply carries anything the question did not ask for.
+      nothing done since." The test is whether the reply carries anything
+      the question did not ask for.
 
       The failure modes, each of which is unrequested content:
 

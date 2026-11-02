@@ -444,6 +444,44 @@ function startupCtx(session, sessionId = "main-session", agentKind = "main") {
 	};
 }
 
+/** This prevents policy preparation from rewriting a prompt or losing images and metadata. */
+check("prompt guidance preserves expanded user input and base policy", () => {
+	const session = makeSession();
+	const ctx = startupCtx(session);
+	const prompt = "[Skill directory: /tmp/skills]\nUser: embark 582";
+	const images = [{ type: "image", data: "fixture", mimeType: "image/png" }];
+	const event = { reason: "prompt", prompt, images, systemPrompt: ["Existing policy"], metadata: { id: 1 } };
+	const result = session.fire("before_agent_start", event, ctx);
+	assert.deepEqual(result.systemPrompt, ["Existing policy", "respond tersely in Simplified Technical English"]);
+	assert.deepEqual(event, { reason: "prompt", prompt, images, systemPrompt: ["Existing policy"], metadata: { id: 1 } });
+	assert.equal(session.fire("input", { source: "interactive", text: "/skill:embark 582" }, ctx), undefined);
+});
+
+/** This prevents an escape from persisting into later prompts or accepting the wrong case. */
+check("prompt escape affects only the current policy preparation", () => {
+	const session = makeSession();
+	const ctx = startupCtx(session);
+	const prepare = (prompt) => session.fire("before_agent_start", {
+		reason: "prompt", prompt, systemPrompt: ["Existing policy"],
+	}, ctx);
+	for (const prompt of ["Explain noterse", "Explain noterse \n\t"]) {
+		assert.equal(prepare(prompt), undefined);
+	}
+	for (const prompt of ["Explain NOTERSE", "noterse then explain", "Explain"]) {
+		assert.deepEqual(prepare(prompt).systemPrompt, ["Existing policy", "respond tersely in Simplified Technical English"]);
+	}
+	assert.equal(prepare("Explain noterse"), undefined);
+	assert.deepEqual(prepare("Next prompt").systemPrompt, ["Existing policy", "respond tersely in Simplified Technical English"]);
+});
+
+/** This prevents a revived subagent's empty preparation from adding prompt guidance. */
+check("revive preparation does not add guidance", () => {
+	const session = makeSession();
+	assert.equal(session.fire("before_agent_start", {
+		reason: "revive", prompt: "", systemPrompt: ["Existing policy"],
+	}, startupCtx(session)), undefined);
+});
+
 const epicMetadata = `# Issue #582: Enforce epic titling
 State: OPEN
 Labels: task, epic

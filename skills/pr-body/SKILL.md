@@ -55,9 +55,9 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   model, harness and session that wrote the body — placed and retained as
   that skill defines.
 
-**The body is human-facing, and the constitution's audience rule governs
-it.** Keep every essential fact — the change, the reason, the verification
-evidence, the material risk — and say each one once. Length is not detail.
+**The body is human-facing.** Keep every essential fact — the change, the
+reason, the verification evidence and the material risk — and say each one
+once. Length is not detail.
 
 **The call that sets the body is per harness, and it lives beside this
 file.** [`references/claude.md`](references/claude.md) is the route for

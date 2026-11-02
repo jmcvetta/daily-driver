@@ -53,6 +53,10 @@ implement the issue, gather verification evidence, and open a pull request for
 review. Results depend on the task and the active harness; a request does not
 guarantee success or a merge.
 
+Replies receive a terse-style instruction on each prompt. End a prompt with
+`noterse` to skip it for that prompt. See
+[Prompt guidance](docs/harness-integration.md#prompt-guidance) for harness behavior.
+
 ## Local maintenance
 
 In this repository, ask Omp to `fix-daily-driver-bugs` to triage open automatic
@@ -81,7 +85,7 @@ or name a skill; the [skill catalog](skills/README.md) explains when to use each
 The [constitution](rules/constitution.md) supplies the shared engineering rules
 that apply across tasks, while skills describe individual workflows. It covers
 safe system access, isolated worktrees, tests for application code, CI
-verification, focused commits, and concise communication. The
+verification, focused commits, and complete deliverables. The
 [runtime integrations](docs/harness-integration.md) load these instructions;
 their enforcement and subagent coverage vary by harness.
 

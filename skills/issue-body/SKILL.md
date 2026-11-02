@@ -103,8 +103,7 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    three 5-7-5 lines, italicised line by line, as
    [`HAIKU.md`](../../HAIKU.md) shows.
 3. **`## Summary`.** A short paragraph or two describing the change and
-   reason, without duplicating `Detail`. It is human-facing, so the
-   constitution's audience rule governs it.
+   reason for a human reader, without duplicating `Detail`.
 4. **`## Model class`.** Immediately after `Summary`, before `Detail`. Its
    first paragraph is exactly one backtick-wrapped lowercase class token;
    one short rationale paragraph follows.

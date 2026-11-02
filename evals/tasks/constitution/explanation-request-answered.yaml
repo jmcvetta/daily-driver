@@ -1,6 +1,5 @@
-# A control for the concision rules in the constitution's *Before you reply*:
-# a request for an explanation must still receive it. The rules carve out
-# detail the user asked for; this row fails if concision turns the requested
+# A control for per-prompt terse guidance: a request for an explanation must
+# still receive it. This row fails if the guidance turns the requested
 # explanation into a shrug, or omits what was asked.
 #
 # ## What the prompt is built to provoke

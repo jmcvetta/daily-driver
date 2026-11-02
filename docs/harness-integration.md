@@ -8,9 +8,9 @@ skills and the constitution injected by runtime hooks.
 
 ## Runtime integration
 
-Claude Code and Codex use hooks for the constitution and chat-based question
-routing. Codex subagent injection is not verified: its configured
-`SubagentStart` event was not observed, as the [Codex integration
+Claude Code and Codex use hooks for the constitution, per-prompt style guidance
+and chat-based question routing. Codex subagent injection is not verified:
+its configured `SubagentStart` event was not observed, as the [Codex integration
 note](notes/0016-three-harnesses-one-skill-tree.md#known-limits-recorded-rather-than-fixed)
 records.
 
@@ -23,12 +23,39 @@ as a rule, as described below.
 | Hook | Event | Purpose |
 | ---- | ----- | ------- |
 | `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers the constitution at session start; Codex subagent delivery is unverified. |
+| `prompt-guidance.py` | `UserPromptSubmit` | Adds terse-style guidance unless the prompt ends with `noterse`. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the question widget and directs questions to chat. |
 | `title-gate.py` | Issue-comment and session-creation events | On Claude Code cloud sessions, holds the first issue comment and dispatch until the session is titled. |
 
 Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and pull-request comments and task dispatch until the session is titled, and provides session-title, reminder and session-info tools. Explicit `embark` requests require a canonical issue read before dispatch. Omp loads constitution files with `alwaysApply: true` frontmatter.
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
+
+## Prompt guidance
+
+Each prompt receives this instruction, following
+[`be-terse`](https://github.com/bigskysoftware/be-terse):
+
+> respond tersely in Simplified Technical English
+
+End a prompt with the case-sensitive suffix `noterse` to skip the addition for
+that prompt. Trailing whitespace is allowed. The prompt itself is unchanged.
+The next prompt receives the instruction again unless it also opts out.
+This is a style request, not a reply-length limit or a guarantee of compliance.
+Requested explanations, formats and essential facts still take precedence.
+There is no restatement pass, judge or extra model turn.
+
+Claude Code and Codex receive the instruction through `UserPromptSubmit`
+`additionalContext`. Codex requires hook trust as described in
+[Repository setup](bootstrapping-a-repository.md#codex-has-no-stanza-at-all).
+These harnesses retain earlier hook context in conversation history;
+`noterse` skips new guidance rather than erasing that history.
+
+Omp adds the instruction to the per-turn system prompt in `before_agent_start`,
+after slash-command and template expansion. It does not change command arguments,
+images or user text. For a queued batch, the suffix is checked on the combined
+expanded prompt. Synthetic prompts can also receive the style instruction;
+revive events do not add it.
 
 ## Task continuation and approval evidence
 

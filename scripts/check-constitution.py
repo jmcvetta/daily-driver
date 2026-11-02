@@ -59,21 +59,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 HOOKS_JSON = ROOT / "hooks" / "hooks.json"
 SCRIPT = ROOT / "hooks" / "inject-constitution.py"
+PROMPT_GUIDANCE = ROOT / "hooks" / "prompt-guidance.py"
 CONSTITUTION = ROOT / "rules" / "constitution.md"
-EVALS = ROOT / "evals"
-
-# The live half needs one string that a session can only have got from the
-# constitution, and this is it: a phrase the file actually says, rather than a
-# token planted in it for the test to find. A session running without the
-# constitution cannot produce it, which is what makes the subagent's answer
-# evidence. The guard below keeps the two ends honest -- the phrase must still
-# be in the constitution, and only a grader may name it.
-#
-# The constitution and the eval files wrap their prose, so the phrase can
-# straddle a line break there, and every search below collapses whitespace
-# first. The grader does not need to: the subagent reports on a single line,
-# which its prompt asks for and `file_matches_regex` reads as one.
-MARKER = "Doubt outranks the register"
 
 # The frontmatter the canonical file must carry so Omp injects it everywhere.
 # Omp's rule provider reads `rules/*.md`, strips the frontmatter and — because
@@ -534,38 +521,6 @@ def check_one_loud_failure(errors: list[str], label: str, content: bytes | None)
                 )
 
 
-def top_level_blocks(text: str) -> dict[str, str]:
-    """Split a task YAML into its top-level keys, without a YAML parser.
-
-    `check_eval_marker` needs one thing out of a case file — the criteria it is
-    scored by, which is the only place the marker may appear — and that is a
-    column-0 key. A real parser would be more correct and would cost this
-    script the "no third-party imports" property that lets it run identically
-    from a Makefile, from CI and from a web worker. Recognising a top-level key
-    is a job for a regex.
-
-    Text before the first top-level key is the file's comment header and is not
-    returned. That is not an exemption: the caller subtracts the criteria block
-    from the whole file and searches what is left, so the marker written into a
-    header comment is still caught — it simply is not `success_criteria`, which
-    is the only thing this function is asked to find.
-    """
-    blocks: dict[str, str] = {}
-    key: str | None = None
-    lines: list[str] = []
-    for line in text.splitlines(keepends=True):
-        match = re.match(r"^([A-Za-z_][A-Za-z0-9_]*):", line)
-        if match:
-            if key is not None:
-                blocks[key] = "".join(lines)
-            key, lines = match.group(1), [line]
-        elif key is not None:
-            lines.append(line)
-    if key is not None:
-        blocks[key] = "".join(lines)
-    return blocks
-
-
 def collapse(text: str) -> str:
     """Whitespace-collapsed text, so a phrase that straddles a line break matches."""
     return " ".join(text.split())
@@ -617,69 +572,6 @@ def check_omp_metadata(errors: list[str]) -> None:
 
     if not body.strip():
         errors.append("rules/constitution.md is empty after frontmatter")
-
-
-def check_eval_marker(errors: list[str]) -> None:
-    """The live half asserts on a phrase the constitution still says.
-
-    The marker is written in two places by necessity — once as prose in the
-    constitution, once in the criterion that looks for it coming back — and two
-    copies of a constant is how the live suite comes to be testing a sentence
-    that was edited away. So both ends are checked here: the phrase is still in
-    the constitution, and some `success_criteria` block still asserts on it.
-
-    Where the marker may appear is the other half of the rule. A `coder_eval`
-    task is one file holding the prompt and the graders, so only a criterion
-    may name it; no other text in any `.yaml`, `.yml`, `.md`, `.sh` or `.py`
-    file under `evals/` may — not a description, not an `agent.system_prompt`,
-    not a `pre_run` command, not a fixture script, not this repository's own
-    eval README. Anywhere else is handing the session the answer.
-    """
-    if MARKER not in collapse(CONSTITUTION.read_text(encoding="utf-8")):
-        errors.append(
-            f"rules/constitution.md no longer says {MARKER!r}, which the "
-            f"live half asserts a subagent got; pick a phrase the file does "
-            f"say and change MARKER and the grader together"
-        )
-
-    if not EVALS.is_dir():
-        errors.append(
-            f"{EVALS.relative_to(ROOT)}/ is missing; the live half of the "
-            f"acceptance test is where `updatedInput` is actually proven"
-        )
-        return
-
-    asserted = False
-    for path in sorted(EVALS.rglob("*")):
-        if not path.is_file() or path.suffix not in {".yaml", ".yml", ".md", ".sh", ".py"}:
-            continue
-        text = path.read_text(encoding="utf-8")
-        where = path.relative_to(ROOT)
-        # Collapsed, because every file here is wrapped at about 79 columns and
-        # a leak is likeliest in prose, where the phrase straddles a line break.
-        # A raw search would miss exactly the form the leak arrives in.
-        if MARKER not in collapse(text):
-            continue
-
-        criteria = (
-            top_level_blocks(text).get("success_criteria", "")
-            if path.suffix in {".yaml", ".yml"}
-            else ""
-        )
-        if MARKER in collapse(criteria):
-            asserted = True
-        if MARKER in collapse(text.replace(criteria, "")):
-            errors.append(
-                f"{where}: names the marker outside success_criteria. Only a "
-                f"criterion may name it; anywhere else is telling the session "
-                f"what the subagent was supposed to have been told."
-            )
-
-    if not asserted:
-        errors.append(
-            f"no success_criteria under {EVALS.relative_to(ROOT)}/ asserts on "
-            f"the marker {MARKER!r}, so the live half proves nothing"
-        )
 
 
 # Stdin the harness should never send, in the two kinds it comes in: input that
@@ -778,6 +670,78 @@ def check_bad_argv(errors: list[str]) -> None:
             )
 
 
+def check_prompt_guidance(errors: list[str]) -> None:
+    """A raw-JSON suffix check can mistake metadata for an opted-out prompt."""
+    cases = (
+        ("Claude prompt", {"prompt": "Explain this."}, True),
+        (
+            "Codex prompt",
+            codex("UserPromptSubmit", turn_id="turn", prompt="Explain this."),
+            True,
+        ),
+        ("metadata suffix", {"prompt": "Explain this.", "metadata": "noterse"}, True),
+        ("escaped prompt", {"prompt": "Explain this. noterse \n\t"}, False),
+        (
+            "escaped Codex prompt",
+            codex("UserPromptSubmit", turn_id="turn", prompt="Explain this. noterse"),
+            False,
+        ),
+        ("later prompt", {"prompt": "Explain the next topic."}, True),
+        ("case-sensitive escape", {"prompt": "Explain this. Noterse"}, True),
+        ("escape inside prompt", {"prompt": "noterse then explain this"}, True),
+        ("missing prompt", {"metadata": "noterse"}, False),
+        ("non-string prompt", {"prompt": ["noterse"]}, False),
+        ("null prompt", {"prompt": None}, False),
+    )
+    for label, event, expected in cases:
+        check_one_prompt_guidance(errors, label, json.dumps(event), expected)
+
+    # Parsing errors and valid non-object JSON must not disrupt the turn.
+    for stdin in BAD_STDIN:
+        check_one_prompt_guidance(errors, f"malformed event {stdin!r}", stdin, False)
+
+
+def check_one_prompt_guidance(
+    errors: list[str], label: str, stdin: str, expected: bool
+) -> None:
+    """An invalid event or opt-out must not inject guidance or block the turn."""
+    try:
+        result = subprocess.run(
+            [str(PROMPT_GUIDANCE)],
+            input=stdin,
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+    except OSError as error:
+        errors.append(f"prompt guidance {label}: could not execute: {error}")
+        return
+    if result.returncode != 0:
+        errors.append(
+            f"prompt guidance {label}: exited {result.returncode}: {result.stderr}"
+        )
+        return
+    if not expected:
+        if result.stdout.strip():
+            errors.append(
+                f"prompt guidance {label}: unexpected output {result.stdout!r}"
+            )
+        return
+    try:
+        payload = json.loads(result.stdout)
+        output = hook_specific(payload, "UserPromptSubmit", f"prompt guidance {label}")
+    except (json.JSONDecodeError, AttributeError, Failed) as error:
+        errors.append(f"prompt guidance {label}: invalid output: {error}")
+        return
+    if output.get("additionalContext") != "respond tersely in Simplified Technical English":
+        errors.append(f"prompt guidance {label}: response instruction was not delivered")
+    if set(payload) != {"hookSpecificOutput"} or set(output) != {
+        "hookEventName",
+        "additionalContext",
+    }:
+        errors.append(f"prompt guidance {label}: output may alter or block the prompt")
+
+
 def main() -> int:
     errors: list[str] = []
     try:
@@ -785,9 +749,9 @@ def main() -> int:
         check_delivery(errors)
         check_loud_failure(errors)
         check_omp_metadata(errors)
-        check_eval_marker(errors)
         check_bad_input(errors)
         check_bad_argv(errors)
+        check_prompt_guidance(errors)
     except Failed as failure:
         errors.append(str(failure))
 

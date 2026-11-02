@@ -676,14 +676,12 @@ corrected row-17 and row-14 rubrics (select one with `calibrate --dir`). They ar
 behavior are documented here. Measuring them needs separate
 authorization and a new measurement identity.
 
-### `base-vs-candidate`: does a constitution change move a row
+### `base-vs-candidate`: does a plugin change move a row
 
-`with-without.yaml` compares the plugin with no plugin, so its control carries
-no constitution. It cannot isolate a change to the constitution's text. The
-comparison experiment loads the plugin in both arms and varies only the
-revision: `base` is `master`, `candidate` is this checkout. It answers one
-question the ablation cannot: does the new text change a reply once a
-constitution is already delivered?
+`with-without.yaml` compares the plugin with no plugin. The comparison
+experiment loads the plugin in both arms and varies only the revision:
+`base` is `master`, `candidate` is this checkout. Use it to compare prompt
+guidance or constitution changes while retaining the other plugin behavior.
 
 The base arm needs a second checkout that the experiment cannot create:
 `git worktree add ../daily-driver-base <base-revision>`. Run it narrowed to
@@ -699,8 +697,8 @@ with it.
 
 | Row | Role |
 | --- | ---- |
-| `constitution/answer-selects-from-findings.yaml` | finding: the "one contrast" sentence must raise the selection score |
-| `constitution/short-question-after-tool-heavy-work.yaml` | finding: fails on `master` by construction; the restatement hook must raise it |
+| `constitution/answer-selects-from-findings.yaml` | finding: selects the requested finding without repeating the audit |
+| `constitution/short-question-after-tool-heavy-work.yaml` | finding: answers a short question without repeating the preceding tool-heavy work |
 | `constitution/explanation-request-answered.yaml` | control: a requested explanation must still arrive |
 
 Report replicates marked `ANCHOR: no-question` or `ANCHOR: tainted-question`
@@ -1150,9 +1148,9 @@ Two `agent_judge` criteria. The floor, at weight 1, wants the one fact. The
 unrequested-content criterion, at weight 2, scores recap, narration, offers,
 menus and headings or bullets around a one-fact answer, and never counts
 length. Each rubric carries a calibration pair, so neither compensates for the
-other. The acceptance bar is a mean at or below 0.6 on the second criterion on
-`master` with the plugin loaded; a probe that passes there cannot show the
-restatement hook working.
+other. For a comparison, first establish verbosity on the chosen base revision.
+A probe already at ceiling cannot demonstrate an improvement. These rows do
+not establish prompt-hook delivery; verify that separately in each harness.
 
 ### `answer-selects-from-findings`, the row that is not at ceiling
 

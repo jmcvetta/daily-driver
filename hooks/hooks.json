@@ -12,6 +12,18 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/prompt-guidance.py",
+            "timeout": 10,
+            "statusMessage": "Adding prompt guidance"
+          }
+        ]
+      }
+    ],
     "SubagentStart": [
       {
         "hooks": [

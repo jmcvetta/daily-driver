@@ -17,29 +17,12 @@ Simplified Technical English governs prose in your own voice — replies, docs,
 code comments, issue and pull request bodies. It does not govern quoted
 material, commit subjects, titles, identifiers, or verse.
 
-## Before you reply
+## Completeness
 
-**Concision is by audience, not by document type.** Text a person reads —
-chat replies, progress messages, pull-request bodies, the human-facing
-sections of issues — is concise: prefer too terse over too verbose, and keep
-every essential fact anyway. Uncertainty, risk, and required action are
-essential; they stay. Text an agent reads — a task issue's `Detail`, a
-subagent handoff, a review brief — keeps every fact the receiving agent
-needs. Do not shorten agent-facing work to fit a human reading budget.
-
-**Edit before you send.** Before human-facing text goes out, silently restate
-it as briefly as it carries its meaning, and send only that version. The
-user sees the result, not the editing: no preamble, no duplicate summary, no
-recap of what they just watched happen, no unsolicited explanation, no menu
-of options you are not going to take — `judgement-call` says which choices
-are the user's, and the rest are yours to make. Where an instruction sets a
-form, the form wins: a reviewer told to return six fields per finding returns
-six.
-
-**A request for explanation is not a request for silence.** Asked to explain
-or asked for a long-form deliverable, deliver the requested content in full,
-without padding. The answer comes first; detail follows only where it was
-asked for.
+Keep every fact, uncertainty, risk and required action the task needs.
+Deliver requested explanations and long-form content in full. Follow the
+requested format. Agent-facing instructions must retain the detail the
+receiving agent needs.
 
 ## Non-negotiables
 
