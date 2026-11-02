@@ -33,9 +33,18 @@ def _main() -> None:
     parser.add_argument("--harness", choices=("claude", "codex"), required=True)
     parser.add_argument("--session")
     parser.add_argument("--agent", default="")
+    parser.add_argument("--tool", action="store_true",
+                        help="Task-state command route: accepts only {action, record}, never a hook event")
     args = parser.parse_args()
     data = json.load(sys.stdin)
-    tool = isinstance(data, dict) and "action" in data
+    if not isinstance(data, dict):
+        raise ValueError("Task-state input must be a JSON object")
+    tool = args.tool
+    # The command route the model is given must not be able to inject a user prompt, Stop or Interrupt event.
+    if tool and ("action" not in data or {"hook_event_name", "name"} & data.keys()):
+        raise ValueError("The task-state command accepts only {action, record}")
+    if not tool and "action" in data:
+        raise ValueError("Hook events cannot carry task-state actions; use the --tool route")
     session = args.session if tool else data.get("session_id", args.session)
     agent = args.agent if tool else data.get("agent_id", args.agent)
     if not isinstance(session, str) or not session or not isinstance(agent, str):
@@ -45,7 +54,7 @@ def _main() -> None:
     base.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(base, 0o700)
     path = _path(base, args.harness, session, agent)
-    command = ["python3", str(Path(__file__).resolve()), "--harness", args.harness, "--session", session]
+    command = ["python3", str(Path(__file__).resolve()), "--harness", args.harness, "--tool", "--session", session]
     if agent:
         command += ["--agent", agent]
     with path.with_suffix(".lock").open("a", encoding="utf-8") as lock:

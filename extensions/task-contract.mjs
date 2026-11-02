@@ -51,13 +51,14 @@ export function amendContract(state, record, reference) {
 	}
 	if (!Array.isArray(next.criteria) || !next.criteria.length) throw new Error("A contract needs stable acceptance-criterion ids");
 	const ids = new Set();
+	const previousById = new Map((state.contract.criteria ?? []).map((criterion) => [criterion.id, JSON.stringify(criterion)]));
 	for (const criterion of next.criteria) {
 		if (!nonblank(criterion.id) || !nonblank(criterion.description) || ids.has(criterion.id)) throw new Error("Criterion ids must be nonblank and unique");
 		ids.add(criterion.id);
 		if (!Array.isArray(criterion.sourceRefs) || !criterion.sourceRefs.length) throw new Error("Every criterion requires retained source references");
-		criterion.sourceRefs = criterion.sourceRefs.map(normalize);
+		// An unchanged criterion keeps its recorded references; a delegated child may not hold the parent's sources.
+		if (previousById.get(criterion.id) !== JSON.stringify(criterion)) criterion.sourceRefs = criterion.sourceRefs.map(normalize);
 	}
-	const changedKnown = FIELDS.some((key) => state.contract[key] !== null && JSON.stringify(state.contract[key]) !== JSON.stringify(next[key]));
 	const previous = state.contract.criteria ?? [];
 	const removed = previous.filter((criterion) => !ids.has(criterion.id));
 	const changedCriteria = previous.some((criterion) => ids.has(criterion.id) && JSON.stringify(criterion) !== JSON.stringify(next.criteria.find((item) => item.id === criterion.id)));
@@ -73,7 +74,7 @@ export function amendContract(state, record, reference) {
 		if (authority.taskSourceId !== state.externalSourceId && authority.sourceId !== state.resumeSource?.sourceId) throw new Error("The amendment decision belongs to another task");
 	}
 	if (removed.length && (!Array.isArray(record.removedCriteria) || removed.some((criterion) => !record.removedCriteria.some((item) => item.id === criterion.id && nonblank(item.reason))))) throw new Error("Record each removed criterion and its user-authorized reason");
-	if (!changesBinding && !changedKnown && FIELDS.every((key) => JSON.stringify(state.contract[key]) === JSON.stringify(next[key]))) return state;
+	if (!changesBinding && FIELDS.every((key) => JSON.stringify(state.contract[key]) === JSON.stringify(next[key]))) return state;
 	next.revision += 1;
 	next.sourceRefs = [...state.contract.sourceRefs, ...sourceRefs];
 	return {

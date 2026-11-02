@@ -26,17 +26,24 @@ function required(value, name) {
 
 /** createTaskStateController applies shared contract, authority and continuation transitions to a native session ledger. */
 export function createTaskStateController(pi) {
-	let pendingStop;
+	// Each native session keeps its own pending stop, so a subagent cannot release the main session's abort listener.
+	const pendingStops = new Map();
 
-	function releaseStop() {
-		if (!pendingStop) return;
-		pendingStop.signal.removeEventListener("abort", pendingStop.onAbort);
-		pendingStop = undefined;
+	function releaseStop(key) {
+		const pending = pendingStops.get(key);
+		if (!pending) return;
+		pending.signal.removeEventListener("abort", pending.onAbort);
+		pendingStops.delete(key);
 	}
 
 	function agentEnd(event, ctx) {
-		if (ctx?.agent?.kind === "sub" && event.messages?.at(-1)?.stopReason === "aborted") cancel(ctx, "subagent-abort");
-		if (!event.willContinue) releaseStop();
+		if (!available(ctx)) return;
+		if (ctx.agent.kind === "sub" && event.messages?.at(-1)?.stopReason === "aborted") cancel(ctx, "subagent-abort");
+		if (!event.willContinue) releaseStop(sessionId(ctx));
+	}
+
+	function shutdown() {
+		for (const key of [...pendingStops.keys()]) releaseStop(key);
 	}
 	const available = (ctx) => ["main", "sub"].includes(ctx?.agent?.kind) &&
 		typeof ctx.sessionManager?.getBranch === "function" &&
@@ -115,7 +122,8 @@ export function createTaskStateController(pi) {
 		if (current?.status === "cancelled" && current.externalSourceId === source.sourceId) {
 			throw new Error("Cancelled work requires fresh external user input");
 		}
-		if (current && !record.newTask) {
+		// A newTask begin on the request that already opened the task binds it rather than duplicating it.
+		if (current && (!record.newTask || current.externalSourceId === source.sourceId)) {
 			if (current.status !== "active") throw new Error("A settled task requires an explicit sourced resume or newTask");
 			if ((current.executionBound || current.contract.scope !== null) && ["taskId", "operation", "target"].some((key) => record[key] && record[key] !== current[key])) {
 				throw new Error("begin cannot rewrite contracted scope; use a sourced contract amendment");
@@ -185,7 +193,7 @@ export function createTaskStateController(pi) {
 			if (current) save(ctx, { ...current, status: "cancelled", cancellationSource: source.sourceId });
 			return;
 		}
-		if (REQUEST.test(event.text) && !current) begin(ctx, {}, source);
+		if (REQUEST.test(event.text) && current?.status !== "active") begin(ctx, current ? { newTask: true } : {}, source);
 	}
 
 	function toolResult(event, ctx) {
@@ -230,15 +238,8 @@ export function createTaskStateController(pi) {
 		if (ctx.agent.kind === "sub" && !read(ctx) && event.prompt) {
 			const delegatedContext = [...(event.systemPrompt ?? []), event.prompt].join("\n");
 			const encoded = delegatedContext.match(/<daily-driver-task-contract>([A-Za-z0-9_-]+)<\/daily-driver-task-contract>/u)?.[1];
-			if (encoded) {
-				adopt(ctx, JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")));
-			}
-			if (!read(ctx)) {
-				const delegated = { sourceId: `interpretation:${randomUUID()}`, kind: "interpretation", text: event.prompt,
-					origin: { harness: "omp", sessionId: sessionId(ctx), parentAgentId: ctx.agent.parentId, channel: "delegation" } };
-				pi.appendEntry(SOURCE, { sessionId: sessionId(ctx), source: delegated });
-				begin(ctx, {}, delegated);
-			}
+			// Only a parent contract makes a child a task; a delegated prompt alone is not a user request.
+			if (encoded) adopt(ctx, JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")));
 		}
 		const systemPrompt = event.systemPrompt ?? [];
 		const policy = systemPrompt.join("\n\n");
@@ -282,7 +283,9 @@ export function createTaskStateController(pi) {
 					const selected = record.contractId ? entries(ctx, STATE).map((entry) => entry.data.state).filter((item) => item.contract?.contractId === record.contractId).at(-1) : state;
 					if (!selected || source.kind !== "user" || source.sourceId === selected.externalSourceId || CANCEL.test(source.text) ||
 						source.sourceId !== sources(ctx).filter((item) => item.kind === "user").at(-1)?.sourceId) throw new Error("Resume requires fresh original user input and an existing task");
-					save(ctx, { ...selected, status: "active", resumeSource: record.source });
+					// Correction counts survive; the old blocker, completion and failure describe the previous run.
+					save(ctx, { ...selected, status: "active", resumeSource: record.source,
+						blocker: null, completion: undefined, stopFailure: undefined, cancellationSource: undefined });
 				} else if (params.action !== "status") {
 					if (!state || state.status !== "active") throw new Error("No active unfinished task");
 					if (params.action === "contract") {
@@ -352,14 +355,15 @@ export function createTaskStateController(pi) {
 		if (!available(ctx)) return;
 		const state = read(ctx);
 		if (!state || state.status !== "active") return;
-		releaseStop();
+		const key = sessionId(ctx);
+		releaseStop(key);
 		const onAbort = () => {
 			if (read(ctx)?.externalSourceId === state.externalSourceId) cancel(ctx, "session-stop-abort");
-			releaseStop();
+			releaseStop(key);
 		};
 		if (event.signal?.aborted) { onAbort(); return; }
 		if (event.signal) {
-			pendingStop = { signal: event.signal, onAbort };
+			pendingStops.set(key, { signal: event.signal, onAbort });
 			event.signal.addEventListener("abort", onAbort, { once: true });
 		}
 		const support = capability();
@@ -403,7 +407,7 @@ export function createTaskStateController(pi) {
 	}
 
 	return { input, toolResult, beforeAgentStart, context, compacting, execute, stop, cancel, adopt, delegateCall,
-		agentEnd, shutdown: releaseStop, instructions };
+		agentEnd, shutdown, instructions };
 }
 
 /** installTaskState binds the shared controller to Omp lifecycle and tool APIs. */

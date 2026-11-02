@@ -146,6 +146,11 @@ Codex uses `.codex-plugin/plugin.json` to load the common hooks and
 `hooks/task-state-codex.json`. Only the Codex file registers `Interrupt`.
 Claude never parses that event. The model receives a task-state command bound
 to its native session and actor; it supplies `{action, record}` on stdin.
+That command carries `--tool`, which accepts only `{action, record}` and
+rejects hook events. The hook entry rejects actions. A command hook cannot
+prove its caller, so this split protects the advertised route only. A model
+with unrestricted shell access to `task-state.py` or the private ledger is
+outside this boundary.
 The implementation requires Python 3, POSIX process locks and Node.js.
 Trust the installed hooks through Codex's supported hook review.
 
