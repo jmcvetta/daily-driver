@@ -20,16 +20,21 @@ mkdir -p "${HOME}" "${TMPDIR}"
 unset CARGO_HOME
 
 # A directory holding only the tools the helper needs, so a wt, brew or cargo on the
-# machine running this check cannot leak in. Extra arguments name tools to leave out; a
-# tool the machine lacks (xz and sha256sum on stock macOS) is left out too.
+# machine running this check cannot leak in. Extra arguments name tools to leave out.
+# Stock macOS has shasum but no sha256sum, and its tar reads .tar.xz without an xz binary;
+# there the helper's Linux xz check is satisfied by a no-op xz stub.
 make_tools() {
 	local dir="$1" tool path
 	shift
 	mkdir -p "${dir}"
-	for tool in mktemp tar xz sha256sum install rm mkdir cat chmod; do
+	for tool in mktemp tar xz sha256sum shasum install rm mkdir cat chmod; do
 		case " $* " in *" ${tool} "*) continue ;; esac
-		path="$(command -v "${tool}")" || continue
-		ln -s "${path}" "${dir}/${tool}"
+		if path="$(command -v "${tool}")"; then
+			ln -s "${path}" "${dir}/${tool}"
+		elif [ "${tool}" = xz ]; then
+			printf '#!/bin/sh\nexit 0\n' >"${dir}/xz"
+			chmod +x "${dir}/xz"
+		fi
 	done
 }
 
@@ -271,7 +276,7 @@ done
 # Without sha256sum or shasum the archive cannot be verified, so nothing is installed.
 reset_install
 NO_SUM_TOOLS="${TEMP}/no-sum-tools"
-make_tools "${NO_SUM_TOOLS}" sha256sum
+make_tools "${NO_SUM_TOOLS}" sha256sum shasum
 run_failure "${STUBS}:${NO_SUM_TOOLS}" 'sha256sum or shasum is required'
 assert_nothing_installed
 
