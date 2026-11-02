@@ -7,6 +7,7 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-constitution.py session-start",
             "timeout": 10,
+            "additionalContextLimit": 5000,
             "statusMessage": "Loading the daily-driver constitution"
           }
         ]
@@ -19,23 +20,13 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-constitution.py subagent-start",
             "timeout": 10,
+            "additionalContextLimit": 5000,
             "statusMessage": "Handing the subagent the constitution"
           }
         ]
       }
     ],
     "PreToolUse": [
-      {
-        "matcher": "^(Agent|Task)$",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/inject-constitution.py pre-tool-use",
-            "timeout": 10,
-            "statusMessage": "Handing the subagent the constitution"
-          }
-        ]
-      },
       {
         "matcher": "^(AskUserQuestion|request_user_input)$",
         "hooks": [

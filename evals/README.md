@@ -215,6 +215,36 @@ No reduction in unjustified stopping is established by this small comparison.
 The valid cases were already at ceiling in the base variant. Runtime
 enforcement is separately exercised by the installed scripted-provider check.
 
+## Progressive disclosure comparison
+
+The [runtime integration guide](../docs/harness-integration.md#core-delivery-and-workflow-retrieval)
+records complete-source and actual-delivery byte counts for the compact core.
+The base is `42b5bddb42cffffeab14678b446eed52a3c6bb23`. Installed local-provider
+captures prove delivery, not voluntary model compliance.
+
+The new `constitution/disclosure-ordinary-commit.yaml` and
+`constitution/disclosure-ci-policy.yaml` cases cover ordinary requests without
+an issue, PR, or slash command. They record workflow retrieval separately from
+semantic outcomes: the base already carries those requirements in its core.
+Use them with the existing production refusal, authorized public search,
+approval-resume, worktree isolation, pending-CI, delegated-delivery,
+requested-explanation, and read-only negative controls. Freeze both revisions,
+the exact cases, tool boundaries, replicates, and execution limits before a
+comparison. No model run for this change is authorized or recorded yet.
+
+Keep the Codex exclusions until its comparative route delivers hooks and
+enforces the declared boundary in an installed-runtime proof. The SDK adapter's
+linked skill files do not establish core delivery. Do not count an omitted arm
+as passing, or a scripted provider as a behavioral comparison.
+
+Report raw startup and delegated bytes separately from complete-delivery
+normalization. Claude's broken baseline delivers a small preview at startup;
+restoring its missing safety core increases actual startup bytes. Normalized
+source reduction does not satisfy a literal raw-startup-decrease criterion.
+Report retrieval volume/counts, latency, reported usage and cost limitations.
+Do not infer lower total cost or reliability from a smaller core.
+
+
 ## Provenance
 
 Every measured figure must cite a committed record under
@@ -1162,8 +1192,9 @@ pass.
 The case no longer grades a token planted in the constitution for it to find.
 It grades a phrase the constitution says in its own prose, and every
 file-reading tool is closed, so the injected copy is the only route to it.
-`scripts/check-constitution.py` holds the two ends together: the phrase is
-still in the file, and no text outside a criterion may name it.
+The offline delivery suite now checks the shipped hook output, metadata,
+finite delivery budget, and absence of prompt rewriting. It no longer tests
+the evaluation grader or scans evaluation files for a marker.
 
 Its negative control survives intact — `command_executed` on `Agent` with
 `max_count: 0` and that phrase as the pattern, asserting the parent did not
@@ -1589,8 +1620,8 @@ grades `--body`.
 **`tasks/constitution/*` is not in this arm**, and carries `skip:codex` to say
 so. That tag takes a row out of one arm and leaves it in the rest, which an arm
 tag cannot express. The reason is that `coder_eval`'s Codex agent links skills
-and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` and no
-`PreToolUse` on the `Agent` tool, and no constitution in the session. Every row
+and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` or
+`SubagentStart` context and no constitution in the session. Every row
 there would score 0 for a reason that has nothing to do with the constitution. #181
 measured that a *real* Codex session does load the hook file and does deliver
 the constitution, behind persisted hook trust and an exactly-echoed

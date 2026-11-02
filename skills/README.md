@@ -37,7 +37,7 @@ limits; a shared skill does not imply identical capabilities on every harness.
 
 | Skill | When to use it |
 | ----- | -------------- |
-| [pr](pr/SKILL.md) | Open a pull request for the current branch or update the existing one. |
+| [pr](pr/SKILL.md) | Open or update a pull request; read its recurring CI policy before changing enforcement, even without a PR. |
 | [pr-title](pr-title/SKILL.md) | Write or revise a Conventional Commits PR title. |
 | [conventional-commits-type](conventional-commits-type/SKILL.md) | Choose the change type from its effect, including the resulting release significance. |
 | [pr-body](pr-body/SKILL.md) | Write a PR description with linked issues, a summary and relevant detail. |
@@ -50,9 +50,13 @@ limits; a shared skill does not imply identical capabilities on every harness.
 | ----- | -------------- |
 | [readme](readme/SKILL.md) | Explain what a project or directory provides and how to use it. |
 | [judgement-call](judgement-call/SKILL.md) | Distinguish engineering choices the agent should settle from tradeoffs that need the user's decision. |
-| [provenance](provenance/SKILL.md) | Record the model, harness and session responsible for GitHub contributions and commits. |
+| [provenance](provenance/SKILL.md) | Read commit discipline before the first repository edit; attribute GitHub contributions and commits. |
 | [session-title](session-title/SKILL.md) | Give the current session a short, recognizable title. |
 
-The [constitution](../rules/constitution.md) supplies the shared engineering rules
-across these workflows. Return to the [project README](../README.md) for
-installation and a task-to-PR example.
+The [constitution](../rules/constitution.md) keeps universal safety, authority,
+isolation, evidence, and execution rules always available. The skills above
+own workflow details. Retrieve them before their action, including plain-language
+requests, task transitions, resumed sessions, and delegated work. Reuse
+instructions still in context; retrieve them again if compaction removed them.
+Return to the [project README](../README.md) for installation and a task-to-PR
+example.

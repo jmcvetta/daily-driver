@@ -10,6 +10,9 @@ description: >-
   guard, the existing-PR check, draft state, ongoing base-branch maintenance,
   and the call on whether there is an issue to reference; the title comes
   from `pr-title` and the body, issue reference included, from `pr-body`.
+  Also use its recurring CI policy before proposing or changing enforcement,
+  even for ordinary repository work with no issue or pull request; that does
+  not start the PR-opening sequence.
 ---
 
 # PR Workflow
@@ -121,3 +124,45 @@ Github Issues
 If this PR was created to fix/implement a Github Issue, reference it. Deciding
 that there is an issue to reference is this skill's call; the section's format
 and placement in the body belong to `pr-body`.
+
+
+Recurring CI costs
+==================
+
+This policy applies before proposing or changing CI enforcement. Read it at
+that action, not only when opening a PR. Reading the policy does not authorize
+opening a PR.
+
+New CI checks add recurring execution, review, failure-triage and maintenance
+costs. More checks are not inherently better. Prefer established checks and
+necessary regression coverage in existing suites. Do not add a job, workflow,
+tool, matrix entry or standalone check when existing tooling can catch the
+defect; placing a standalone check inside an existing job does not change this.
+
+Before proposing an additional check, name the concrete failure it catches and
+the gap in existing coverage. Extra confidence, best practice or completeness
+alone is not a reason. Keep enforcement proportional to the task; do not make
+a task-local problem repository-wide or keep a one-time migration check
+permanently without a recurring need.
+
+The constitution retains the approval boundary for paid services, recurring
+checks, broader triggers, and matrix dimensions.
+
+Proposals use only these three short fields: **Failure caught**, **Existing
+coverage gap**, and **Recurring cost**. State trigger frequency,
+runner/matrix footprint, expected runtime, external charges and what the
+check replaces, where applicable. Mark unknowns and distinguish estimates
+from measurements. Do not run paid benchmarks to fill these fields.
+
+For authorized additions, use appropriate timeouts, safe cancellation of
+superseded runs and relevant-change selection that preserves coverage and
+required-status reporting. Avoid duplicate enforcement. When a new check
+replaces an old one, remove the obsolete check in the same change without
+losing required coverage.
+
+This policy does not permit skipping required tests, weakening security,
+hiding failures or disabling established gates to save cost. Tests of testing
+machinery remain prohibited unless that machinery is the shipped product.
+
+**CI is the gate** means use established project gates. It does not instruct
+you to invent a new gate for each task.

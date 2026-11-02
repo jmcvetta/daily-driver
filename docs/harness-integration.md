@@ -8,27 +8,93 @@ skills and the constitution injected by runtime hooks.
 
 ## Runtime integration
 
-Claude Code and Codex use hooks for the constitution and chat-based question
-routing. Codex subagent injection is not verified: its configured
-`SubagentStart` event was not observed, as the [Codex integration
-note](notes/0016-three-harnesses-one-skill-tree.md#known-limits-recorded-rather-than-fixed)
-records.
+Claude Code and Codex use startup hooks for the shared core and chat-based
+question routing. Omp's rule provider loads the same core directly.
 
-The constitution source is `rules/constitution.md`. Both the hooks and Omp's
-rule provider deliver its complete Markdown body after removing the
-`alwaysApply: true` frontmatter; they do not select individual sections.
-The hook table below describes the hook routes. Omp loads the file directly
-as a rule, as described below.
+The source is `rules/constitution.md`. Each route delivers its Markdown body
+without the `alwaysApply: true` frontmatter. Task-specific detail stays in its
+owning skill; the [existing catalog](../skills/README.md) maps those workflows.
 
 | Hook | Event | Purpose |
 | ---- | ----- | ------- |
-| `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers the constitution at session start; Codex subagent delivery is unverified. |
+| `inject-constitution.py` | `SessionStart` and `SubagentStart` | Delivers the complete core without rewriting delegated prompts. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the question widget and directs questions to chat. |
 | `title-gate.py` | Issue-comment and session-creation events | On Claude Code cloud sessions, holds the first issue comment and dispatch until the session is titled. |
 
 Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and pull-request comments and task dispatch until the session is titled, and provides session-title, reminder and session-info tools. Explicit `embark` requests require a canonical issue read before dispatch. Omp loads constitution files with `alwaysApply: true` frontmatter.
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
+
+## Core delivery and workflow retrieval
+
+The always-loaded core retains production and dangerous-command prohibitions,
+approval authority, cancellation, isolation, evidence, and execution boundaries.
+Detailed commit discipline lives in `provenance`; detailed recurring CI policy
+lives in `pr`. Duplicate worktree and Daily Driver bug-reporting detail is
+replaced by references to `task-worktree` and `issue`, which already owned it.
+The core and skill descriptions require retrieval before the relevant action,
+including ordinary work with no issue, PR, or slash command. Reuse instructions
+still in context; re-evaluate routing after task transitions, resume, and
+compaction. Delegated workers retrieve their own required workflows.
+
+`SubagentStart` supplies standing context on both hook harnesses. The obsolete
+`PreToolUse` prompt rewrite is removed; it duplicated Claude child context and
+did not reach the former Codex delegation route. Native Codex 0.160.0 child
+delivery is now observed with a local scripted Responses provider. Its function
+call uses `namespace: "multi_agent_v1"` and `name: "spawn_agent"`.
+
+### Measured delivery boundary
+
+Offline installed-runtime captures used Omp 18.15.0, Claude Code 2.1.267, and
+Codex 0.160.0. Providers listened on loopback only and used disposable homes
+with no external credentials. Scripted replies exercised actual native tools
+and request construction; they do not establish model compliance or behavioral
+parity.
+
+The recorded base is `42b5bddb42cffffeab14678b446eed52a3c6bb23`.
+UTF-8 byte counts, not tokenizer counts, are used:
+
+| Complete source/delivery unit | Base | Candidate |
+| --- | ---: | ---: |
+| Constitution file, including frontmatter | 13,913 | 8,429 |
+| Omp body, excluding frontmatter | 13,883 | 8,399 |
+| Rendered hook core, including standing-authority header | 14,197 | 8,713 |
+
+Actual delivery differs from the complete-source comparison:
+
+- Omp main and native child requests each contained one complete core in both
+  arms. Candidate native task completion, task transition, manual RPC compaction,
+  and a new resumed process were observed. The resumed request retained the
+  complete core and executed the CI-policy read.
+- Claude baseline startup supplied a roughly 2 KB preview of a persisted hook
+  output, not the full core. Its startup hook wrapper occupied 2,532 UTF-8 bytes
+  in the recorded request; candidate complete delivery occupied 8,770 bytes.
+  Baseline child requests carried a full prompt-prepended core plus another
+  startup preview. Candidate child requests carried one complete core and the
+  original delegated prompt without a rewrite. Startup delivery grows when the
+  missing safety instructions are restored; source reduction does not satisfy
+  a literal decrease in actual startup bytes.
+- Codex baseline main and child requests each carried one truncated hook block
+  of 10,107 bytes. Candidate main and child requests each carried the complete
+  8,713-byte core once. Its default `additionalContext` threshold is 2,500
+  approximate tokens; the manifest explicitly uses a finite 5,000-token budget.
+
+Claude also persists oversized hook output and sends a preview. The existing
+offline delivery suite bounds the rendered core to 9,000 UTF-8 bytes. The
+observed complete payload is 8,713 bytes; the ceiling leaves 287 bytes of
+headroom, not a guarantee about a larger payload on every harness. Do not
+raise that budget or restore a longer core without a new installed-runtime
+proof of complete delivery. Reintroducing a preview is not a context saving.
+If a safety or workflow comparison regresses, restore or relocate its control;
+do not weaken the rubric.
+
+Workflow retrieval has a cost: ordinary edits now retrieve `provenance`, and CI
+changes retrieve the larger `pr` skill. The byte reduction alone establishes
+neither lower total inference cost nor higher reliability. Behavioral model
+comparisons remain unexecuted pending bounded authorization and a working Codex
+evaluation route. The existing SDK adapter links skills but does not load these
+hooks; installed CLI delivery is not proof of SDK delivery.
+
 
 ## Task continuation and approval evidence
 

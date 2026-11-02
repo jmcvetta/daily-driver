@@ -3,8 +3,9 @@ name: provenance
 description: >-
   This skill should be used before any GitHub write an agent makes — a pull
   request, issue or epic body; a comment; a review or review reply — and
-  before any commit, so the artifact and the commit both name the model,
-  harness and session that produced them. Supplies the trailing provenance
+  before the first repository edit or any commit, so commit discipline starts
+  with the work and each artifact names its author. Supplies focused commits,
+  the trailing provenance
   block's shape and placement, the rule for reading the model that served the
   turn against the one the session was set to, the harness name and version,
   the session identifier or `n/a`, the rule for retaining distinct attribution
@@ -98,6 +99,20 @@ every other body and comment.
 Commits
 =======
 
+Commit discipline applies to ordinary repository work as well as issue and PR
+work. Read it before the first edit, not only when a commit is ready.
+
+- **Frequent, focused commits.** One logical task per commit, spanning as many
+  files as that takes. Commit as you work without asking permission. Plan where
+  the commits fall and leave no uncommitted changes when a task is finished.
+- **Commit messages are not Conventional Commits.** Use concise, scannable
+  detail. PR titles follow `pr-title`.
+- **Stage named files.** Never use `git add -A` or `git add .`.
+- **Do not commit junk.** Keep agent logs, compressed log archives, scratch
+  files, and other disposable artifacts out of Git. Compression does not give
+  disposable output a lasting purpose. Check that every staged file has one.
+
+
 Every commit an agent makes keeps GitHub's `Co-Authored-By: <name> <address>`
 trailer for the model, and adds a session trailer beside it. **Where the
 harness already appends both on its own, the agent adds nothing and never
@@ -111,9 +126,9 @@ inventing a domain, and the commit carries the session trailer alone.
 Non-goals
 =========
 
-- **Does not decide when a write happens.** Every other skill still decides
-  what to write and when; this skill only says what the write carries once
-  it happens.
+- **Does not decide when a GitHub write happens.** The owning workflow decides
+  what to write and when. This skill supplies attribution and local commit
+  discipline; reading it does not authorize a GitHub write.
 - **Does not gate anything on the block's presence.** No readiness test,
   review finding, or merge gate gains a new condition from this skill — a
   write made before this skill existed carries no block, and that is

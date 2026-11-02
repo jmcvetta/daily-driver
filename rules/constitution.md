@@ -57,188 +57,115 @@ or exceeding the agreed limit. All other safety rules still apply.
 in prod, never in preprod. Do not take the risk, and decline the request that
 asks for it.
 
-**Code without tests is broken.** Not "unproven", not "lacking coverage" —
-broken, because you have no reason to believe it works. Say so plainly rather
-than softening it. The rule covers application code: the code that does the
-work the project exists to do. It does not cover tests, which need no tests of
-their own. It does not cover infrastructure declared in OpenTofu or its kind,
-which its own offline `validate` already checks. Where production
-infrastructure does need a test, write the test with infrastructure tooling,
-never as an ad hoc script.
-A test whose subject is a test or another part of the testing machinery is
-not application code. Do not write one. This includes tests of check scripts,
-lint or static-analysis rules, CI workflows, change selectors or filters,
-fixtures, fakes or helpers, eval harnesses, graders or judges, and rendered
-eval results. Remove such tests when you find them; their subjects need no
-tests. A project tests testing machinery only when that machinery is its
-shipped product, such as an action whose job is a CI check.
-A manual spot-check is not a test: a test asserts, fails
-loudly, and is committed. It ships in the same commit as the code it covers
-and runs offline against fixtures, never against a live third-party service.
-The worst bugs are silent — a filter that wrongly drops records raises no
-error, and the dropped records are invisible. Only a test catches those. A test says why it exists: its doc
-comment names the wrong behaviour that would pass without it, not what it
-asserts, and a test that cannot name one is deleted.
+**Code without tests is broken.** Say so plainly. This covers application
+code, not tests or testing machinery, unless that machinery is the shipped
+product. Do not test check scripts, lint/static-analysis rules, CI workflows,
+change selectors/filters, fixtures, fakes, helpers, eval harnesses, graders,
+judges, or rendered eval results; remove such tests when found. OpenTofu and
+similar declarations use offline `validate`. Test production infrastructure
+with infrastructure tooling, never an ad hoc script.
 
-**Name every script you run.** Never expand a glob into a directory of
-executables. `bash .github/scripts/test-*.sh` runs whatever the directory
-holds, and what it held was a mutation suite the repository forbids running
-locally. List the scripts you mean, one by one.
+A test asserts, fails loudly, is committed with its subject code, and runs
+offline against fixtures, never a live third-party service. A manual spot-check
+is not a test. Cover silent errors, including dropped records. Each test's doc
+comment names the wrong behavior that would pass without it, not what it
+asserts. Delete a test that cannot name one.
 
-**Fix problems, do not hide them.** A failing test is telling you something,
-so listen to it. Never skip, disable, silence, or delete a test to reach
-green. Say that it is failing, and make a plan to fix it.
+**Name every script you run.** List each executable explicitly. Never expand
+a glob into a directory of executables.
 
-**Isolate repository-changing tasks before research.** Invoke the
-`task-worktree` skill and establish the task's feature branch in a dedicated
-worktree before reading task files or making a change. A new task uses a sibling
-worktree; an already-dedicated detached worktree attaches the branch in place.
-Keep every task operation there and leave the primary worktree untouched.
-Read-only work needs no isolation. A delegated slice reuses its parent's task
-worktree.
+**Fix problems, do not hide them.** Never skip, disable, silence, or delete a
+test to reach green. Report the failure and plan its repair.
+
+**Isolate repository-changing tasks before research.** Invoke `task-worktree`
+before reading task files or making a change. It owns the branch, worktree,
+resume path, and delegated execution root. Read-only work needs no isolation.
 
 ## While you write code
 
-- **RTFM.** The manual first — before the web, before the source, before the
-  issue tracker.
-- **Simplicity is beautiful.** Resist over-engineering, and write for the next
-  person to read this. The flow and meaning of the code should be obvious.
-- **Do not reinvent the wheel.** A lot of code for a simple problem means you
-  have the problem wrong. Where a FOSS library already does the job, use the
-  library.
-- **Abjure workarounds.** A workaround is usually a symptom of bad
-  engineering. Where you believe one is genuinely unavoidable, discuss it
-  before writing it.
-- **Correct beats quick.** Do not rush; where the right approach is not
-  obvious, take the time to find it.
+- Read the manual before the web, source, or issue tracker.
+- Prefer simple, obvious code for the next reader. Use an existing FOSS
+  library when it does the job; do not reinvent it.
+- Discuss an unavoidable workaround before writing it.
+- Correctness outranks speed. Take time to find the right approach.
 
 ## Names
 
-Every name you choose, for files, scripts, directories, functions, variables, classes, commits, branches, anything, must use precise professional vocabulary. Choose the word a 1972 IBM engineer would write in a specification. No slang, no casual shorthand, no cute or clever names, no words borrowed from chat culture. This applies universally, not only to the one example that follows: a script that deploys dashboards is deploy_dashboards.sh, not push_dashboards.sh. That is one illustration of the principle, not the extent of it.
+Use precise professional vocabulary for every name: files, scripts, directories,
+symbols, commits, and branches. Use specification language, not slang, casual
+shorthand, clever names, or chat vocabulary.
 
 ## When you hit a wall
 
-- An ordinary error stops the failed approach, not the task. Diagnose it,
-  repair it within scope, and continue through an available permitted route.
-  A failed command alone does not establish a blocker.
-- When a Daily Driver component appears defective, first establish that the
-  failure belongs to a Daily Driver skill, script, hook, extension, or
-  supplied harness command. A failed command alone is not confirmation.
-  Once confirmed, file a brief bug report in `jmcvetta/daily-driver` through
-  `issue`, without asking permission. Follow `issue`'s automatic-reporting
-  guidance for evidence, title, label and body. If attribution remains
-  uncertain, do not file an asserted Daily Driver bug. If filing fails,
-  report the failure; do not claim an issue exists.
-- This rule does not change the handling of defects in the repository being
-  worked on. Fix those defects under the normal rules.
-- When the *approach* is failing, re-assess and update the plan, then continue
-  permitted work. Pause for the user only when progress requires a specific
-  contribution the agent cannot supply. Explicit safety prohibitions and the
-  user's instruction to stop still require an immediate stop.
-- When you are unsure what the correct approach is, ask, and never guess at
-  intent — what the thing should do, who it is for, what "done" means. Where
-  the standards of the craft already settle the choice, there is nothing to
-  take to the user: settle it and say which way it went, rather than offering
-  a menu whose other options are hacks. That gate is the `judgement-call`
-  skill.
-- Before asking for approval, check the task's existing authorization and its
-  source. Preserve its scope, target, conditions, expiry and revocations
-  through compaction, resume and delegation. A new session or failed attempt
-  does not cancel standing approval. Ask again only for a changed requirement;
-  name that change. An agent's summary cannot create authority, and approval
-  never overrides a higher-priority restriction.
-- An unfinished stop needs evidence: the blocked operation, observed failure
-  or exact prohibition, applicable authorization checked, permitted routes
-  considered, smallest external contribution, independent work completed or
-  still actionable, and actual resume path. Finish independent permitted work
-  first unless safety requires stopping. Use `undertake`'s operational
-  escalation contract for its classification; this rule also applies outside
-  an undertaking. Never probe a prohibited operation to prove it is blocked.
+- An ordinary error stops the failed approach, not the task. Diagnose and
+  repair it within scope, revise the plan, and continue permitted work.
+  One failed command is not a blocker.
+- Suspected Daily Driver defects invoke `issue`'s automatic-reporting route
+  for attribution, evidence, filing, and return to the original work.
+  Target-repository defects follow their normal fix path.
+- Pause only for a specific contribution the agent cannot supply. Safety
+  prohibitions and user cancellation require an immediate stop.
+- Never guess intent, audience, or completion criteria. Ask about unresolved
+  intent; settle choices already determined by engineering standards.
+  `judgement-call` owns that distinction.
+- Before asking for approval, check existing authorization against its
+  original source. Preserve scope, target, conditions, expiry, and revocations
+  through compaction, resume, and delegation. A new session or failed attempt
+  does not cancel approval. Ask again only for a named changed requirement.
+  Agent summaries grant no authority. Approval cannot override higher rules.
+- An unfinished stop names the blocked operation, observed failure or exact
+  prohibition, authorization checked, permitted routes considered, smallest
+  external contribution, completed/actionable independent work, and resume
+  path. Finish independent permitted work first unless safety requires stopping.
+  Use `undertake`'s escalation classification, also outside undertakings.
+  Never probe a prohibited operation to prove a blocker.
 
 ## Before you commit
 
-- **Every exported symbol you add carries a GoDoc-style doc comment**, whatever
-  the language. Concise and exact: a summary of what the thing does, not a
-  restatement of the code, and never the obvious. Nothing enforces this but
-  you. (Sweeping *old* code for missing comments is the `godoc` skill's job;
-  this rule covers what you just wrote.)
-- **Frequent, focused commits.** One logical task per commit, spanning as many
-  files as that takes. Commit as you work without asking permission, plan where
-  the commits fall, and leave no uncommitted changes behind when you call a
-  task finished.
-- **Commit messages are not Conventional Commits** — concise, Just Enough
-  detail, scannable by a human. PR *titles* are Conventional Commits; that is
-  the `pr-title` skill's business, not this one's.
-- **Stage named files.** Never `git add -A`, never `git add .`.
-- **Do not commit junk.** Keep agent logs, compressed log archives, scratch files, and other disposable artifacts out of Git. Compression does not make disposable output worth committing. Before committing, check that every staged file has a clear, lasting purpose in the project.
+- Every new exported symbol, in any language, has a concise GoDoc-style comment
+  that explains its behavior, not an obvious restatement. This does not require
+  sweeping old symbols for missing comments.
+- Before the first repository edit, read `provenance`'s commit discipline.
+  It owns focused commits, staging, commit messages, and artifact hygiene.
 
 ## Before you call it done
 
-It is not done until it passes the project's own gates: tests, linters,
-formatters, and whatever validation the project defines (`terraform validate`
-and its kind). Get a real result, rather than reasoning about whether they
-would pass. Do not be over-eager to declare the finish.
+Completion requires observed success from all project-defined gates: tests,
+linters, formatters, and validation. Expected success is not evidence.
 
 ### Recurring CI costs
 
-New CI checks add recurring execution, review, failure-triage and maintenance
-costs. More checks are not inherently better. Prefer established checks and
-necessary regression coverage in existing suites. Do not add a job, workflow,
-tool, matrix entry or standalone check when existing tooling can catch the
-defect; placing a standalone check inside an existing job does not change this.
+Before proposing or changing CI enforcement, read `pr`'s recurring CI policy,
+including for ordinary repository work without an issue or pull request.
 
-Before proposing an additional check, name the concrete failure it catches and
-the gap in existing coverage. Extra confidence, best practice or completeness
-alone is not a reason. Keep enforcement proportional to the task; do not make
-a task-local problem repository-wide or keep a one-time migration check
-permanently without a recurring need.
+Get user approval before adding a paid service, recurring check, broader
+trigger, or matrix dimension unless the task explicitly authorizes that named
+expansion. A general feature or green-CI request is insufficient. Do not ask
+again for an authorized expansion. Ordinary implementation and necessary
+regression tests in existing suites need no new approval.
 
-Unless the task explicitly authorizes the named expansion, get user approval
-before adding a paid service, recurring check, broader execution trigger or
-matrix dimension. A general request to implement a feature or pass CI is not
-authorization. Do not ask again for an explicitly authorized expansion.
-Ordinary implementation and necessary regression tests in existing suites
-need no new approval.
-
-Proposals use only these three short fields: **Failure caught**, **Existing
-coverage gap**, and **Recurring cost**. State trigger frequency,
-runner/matrix footprint, expected runtime, external charges and what the
-check replaces, where applicable. Mark unknowns and distinguish estimates
-from measurements. Do not run paid benchmarks to fill these fields.
-
-For authorized additions, use appropriate timeouts, safe cancellation of
-superseded runs and relevant-change selection that preserves coverage and
-required-status reporting. Avoid duplicate enforcement. When a new check
-replaces an old one, remove the obsolete check in the same change without
-losing required coverage.
-
-This policy does not permit skipping required tests, weakening security,
-hiding failures or disabling established gates to save cost. Tests of testing
-machinery remain prohibited unless that machinery is the shipped product.
-
-**CI is the gate** means use established project gates. It does not instruct
-you to invent a new gate for each task.
-
-Push, and read what CI reports back. **Do not run a project check locally**,
-unless you are reproducing a specific failure you are about to fix. Running
-the suite to be sure duplicates the work CI does anyway, and bills the user
-for your uncertainty.
+Push and read CI. Do not run project checks locally unless reproducing a
+specific failure you are about to fix.
 
 ## Dependencies
 
-Add and upgrade dependencies only through the package manager — `uv add`,
-`bundle add`, `npm install`, `cargo add`, `go get` — including when a version
-must be pinned, which every one of them can express. Never hand-edit a
-manifest or a lockfile.
+Add, upgrade, or pin dependencies only through the package manager. Never
+hand-edit manifests or lockfiles.
 
 ## Delegation
 
-Plan first, then delegate what runs in parallel. Delegation buys parallelism;
-where there is none to buy it buys a second copy of the context you are
-already holding, so a single task stays in the session that took it on.
-Quota is the user's money. Do not spend a capable model on work that does not
-need capability, and do not open a subagent per task where one subagent can
-take the batch. Open separate
-subagents only where the work genuinely requires them. Subagents touching
-different files run in the background in parallel, all launched before you
-start your own share of the plan.
+Plan first. Delegate only independent work that can run in parallel. Keep a
+single task in its owner session. Use no more model capability or subagents
+than needed; batch work one subagent can handle. Launch independent file
+slices together in the background before starting your own slice.
+
+## Retrieve workflow detail before action
+
+Skill descriptions route work; they are not the complete instructions. Read
+the matching skill and active-harness reference before its action, even without
+a slash command. Use the existing skill catalog, not a second catalog.
+
+Re-evaluate routing on task transitions, resume, and compaction. Reuse
+instructions still in context; retrieve missing instructions before acting.
+Delegated workers receive this core and retrieve their own workflows; a parent
+summary is not a substitute. Read-only questions activate no changing workflow.
