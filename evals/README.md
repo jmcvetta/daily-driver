@@ -216,7 +216,7 @@ not the cohort. Use the per-attempt durations below instead.
 | Full-review true positives / eligible positives | 8/8 | 13/13 |
 | Full-review false positives | 0 | 0 |
 | Clean-case false alarms / eligible | 0/5 | 0/5 |
-| Correct delta verdicts / eligible | 3/3 | 3/3 |
+| Correct delta verdicts / eligible | 3/3 | 1/3 |
 | Attempt duration median, range (seconds) | 57.8, 26.2–905.0 | 106.2, 57.2–906.3 |
 
 The full-review precision and recall are each 100% on eligible results, not

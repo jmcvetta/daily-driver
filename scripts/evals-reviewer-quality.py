@@ -245,7 +245,7 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
     delta = [entry for entry in classes if entry["case_id"].endswith(("07-delta-fixed", "08-delta-incomplete"))]
     delta_correct = sum(
         1 for entry in delta
-        if (
+        if isinstance(entry["score"], (int, float)) and entry["score"] >= 0.7 and (
             (entry["case_id"].endswith("07-delta-fixed") and "DELTA:clear" in entry["judge_classifications"] and entry["reviewer_verdict"] == "clear")
             or (entry["case_id"].endswith("08-delta-incomplete") and "TP:still-open" in entry["judge_classifications"] and entry["reviewer_verdict"] == "defects")
         )

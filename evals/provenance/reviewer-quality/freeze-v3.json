@@ -99,5 +99,10 @@
     "collector_sha256": "ae6c0fddcce14168acba4d4a945686eb860ed6920dee3a4936f9e17dc303fce0",
     "change": "Classify explicitly marked synthetic recovery records as interrupted, exclude their invented zero durations and do not report coverage or cohort completion for them.",
     "measurement_effect": "None: no subject inputs, routes, rubric, limits, reviewer attempts, or judge calls changed."
+  },
+  "delta_analysis_amendment": {
+    "collector_sha256": "23047e2f7ba6c2422858d30cc70c8eecea2588c67ae3a0b4ee5745218d356a6a",
+    "change": "Count a delta verdict as correct only when its independent judge score passes the rubric as well as matching the expected verdict and classification.",
+    "measurement_effect": "Analysis only, applied to both arms using the original judge sidecars; no subjects or judges were rerun."
   }
 }

@@ -1766,7 +1766,7 @@
   },
   "cohort_complete": false,
   "coverage_complete": false,
-  "created_at": "2026-11-02T12:49:39.011339+00:00",
+  "created_at": "2026-11-02T13:01:04.375456+00:00",
   "planned": {
     "attempts": 40,
     "cases": [
@@ -1805,8 +1805,8 @@
         "planned_denominator": 10
       },
       "delta": {
-        "accuracy": 1.0,
-        "correct": 3,
+        "accuracy": 0.3333333333333333,
+        "correct": 1,
         "eligible_denominator": 3,
         "planned_denominator": 10
       },
