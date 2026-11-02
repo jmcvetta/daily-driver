@@ -286,6 +286,26 @@ contribution.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
 is the current decision; this README is the single operational runbook.
 
+From Omp, do not launch a nested Claude CLI or controller to run a
+Claude-judged evaluation. A working local CLI does not establish the required
+execution session. Do not invent a dispatch facility, use a print-only mock as
+a handoff, copy credentials, probe Claude login, or request login repair
+because the current session is Omp. Do not retry the same cross-harness route
+after a restart, script rename, CLI smoke, or subprocess wrapper.
+
+Complete independent preparation: identify the source and plugin revisions,
+cases, variants, repeats, effective limits, existing planning and execution
+commands, and stop conditions. Prepare these for a native Claude Code session.
+Report what is prepared and what has not run. A written handoff does not prove
+delivery, acceptance, or execution. Request the missing session capability,
+not another spending approval for work already authorized. Continue other
+permitted work and do not repeat an unchanged request.
+
+An explicit user request for a bounded experiment with a materially changed
+mechanism is separate experimental scope. It does not waive safety,
+authentication, provider, or existing authorization limits, and does not
+make that mechanism the default route.
+
 A direct request includes its scoped work and normal focused verification.
 An explicitly assigned, bounded campaign also needs no duplicate authorization
 merely because it uses metered inference. Subscription inference uses allowance,
@@ -701,12 +721,10 @@ That is a small sample of one rubric: it licenses recommending the route, not a
 ranking of models, and the default judge stays `claude-code-sonnet-5`. Change the
 labels or the rule and it is a new set with a new `set_id`.
 
-Two further sets, `undertake-17-truthful-mock-v1` and
-`undertake-14-resume-explanation-v1`, hold hand-labelled expectations for the
-corrected row-17 and row-14 rubrics (select one with `calibrate --dir`). They are
-**unmeasured**: no judge has run on them, and their schema and row-17 mock
-behavior are documented here. Measuring them needs separate
-authorization and a new measurement identity.
+- The `undertake-14-resume-explanation-v1` set holds hand-labelled expectations
+  for the row-14 rubric (select it with `calibrate --dir`). It is **unmeasured**:
+  no judge has run on it. Measuring it needs separate authorization and a new
+  measurement identity.
 
 ### `base-vs-candidate`: does a constitution change move a row
 
