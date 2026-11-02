@@ -123,7 +123,7 @@ discipline each mechanism needs. What follows holds whichever one is in use.
 - **An empty answer is not an answer.** Nothing from either endpoint, on a head
   pushed seconds ago, means nothing has registered yet rather than that
   everything passed — *every check has reported* is otherwise vacuously true of
-  a pull request nothing has looked at. Keep waiting, and let the cap decide.
+  a pull request nothing has looked at. Keep an actual continuation for another read.
   **The exception is a partial watch that cannot observe registration and
   cannot wake itself.** Its reference must say so; it rejects the empty result
   and stops under *A surface that can neither block nor wake itself cannot
@@ -134,10 +134,13 @@ discipline each mechanism needs. What follows holds whichever one is in use.
   of it moves the wait — read, find nothing changed, and go on with what the
   turn was doing. A wake arriving after the wait is over is a no-op for the
   same reason.
-- **Cap the loop at fifteen minutes.** On the cap, stop and name the checks
-  that have not reported. Do not review: an unreported check is the thing this
-  wait exists not to guess at, and a check stuck for fifteen minutes is a
-  report to the user rather than a longer wait.
+- **Bound each observation window to fifteen minutes, not task ownership.**
+  On expiration, read the head and CI again. If work is still nonterminal,
+  renew the bounded observation through the harness's supported continuation.
+  Do not review, mark it human-blocked, or require another user prompt merely
+  because a window ended. Report changed conditions, not repeated timeout
+  notices. A genuine observation failure requires diagnosis; a surface without
+  a working continuation reports that precise limit under the rule below.
 
 **Never a `sleep`, in the foreground or in the background.** A sleep is a
 timer, not a test of the thing waited on — it expires while the checks are
@@ -432,8 +435,8 @@ Where it stops and waits
 
 - **CI still running**, before `Review the head`. A wait, not a question —
   nothing is asked, and nothing proceeds on a check that has not reported.
-  `How to wait` is the mechanism, and its fifteen-minute cap is where the wait
-  turns into a stop that reports.
+  `How to wait` keeps ownership across bounded observation windows where the
+  harness supports continuation. A window timeout is not a task blocker.
 - **A finding whose fix is a real trade-off**, in the sense `judgement-call`
   gives that phrase: two defensible approaches differing in something the user
   owns. That skill owns the gate, and it is the gate for every question this
