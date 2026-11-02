@@ -402,6 +402,12 @@ apply. Ask only for authorization that is actually missing, including fresh
 or narrower approval when an applicable instruction specifically requires it.
 The request does not authorize unrelated spend or scope expansion.
 
+Before an evaluation, select its judge and execution session using the
+[evaluation runbook](../../evals/README.md#choose-the-execution-session-first).
+Its Omp restriction concerns Claude-judged evaluation controllers, not the
+ordinary issue-implementation handoff described above. Prepare permitted work
+without treating a missing execution session as missing spending approval.
+
 **Start with the smallest proof that can invalidate the route.** Before
 investing in implementation that depends on an uncertain integration, identify
 and exercise the actual relevant integration and authentication path. Startup

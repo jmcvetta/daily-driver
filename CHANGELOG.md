@@ -10,6 +10,7 @@
 
 ### Fixed
 
+* Prevent improvised Omp controllers for Claude-judged evaluations while preserving native Claude and non-Claude judge routes ([#791](https://github.com/jmcvetta/daily-driver/issues/791)).
 * Honor assigned, bounded evaluation work without requesting duplicate execution approval ([#775](https://github.com/jmcvetta/daily-driver/issues/775)).
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
 
