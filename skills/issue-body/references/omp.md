@@ -19,25 +19,27 @@ The required class
 Task bodies and the narrow frontier research exception use the
 provider-neutral `Model class` section defined in [`model-classes.md`](model-classes.md).
 An Omp task issue does not carry a Claude identifier or an Omp agent/model
-selector. Before dispatch, `embark` selects the implementation agent named for
-the required class (`mechanical`, `implementation`, `reasoning`, or `frontier`)
-and checks its effective route.
-For that agent, `task.agentModelOverrides[agentName]` takes precedence over its
-discovered frontmatter model, which can select a tagged role such as
-`@implementation` or `@frontier`. Resolve configured prewalk and retry
-fallbacks too; they must meet the same class, tools, context, modality,
-availability, and credential requirements. A model name, catalog entry, effort
-setting, or price does not prove class suitability or working credentials.
-Omp's parent-model authentication fallback needs the same reassessment and
-cannot be assumed to satisfy the class.
+selector. For mapped undertaking families, select the required class within the
+invoking family and provider, including effective delegated worker routes.
+`task.agentModelOverrides[agentName]` takes precedence over discovered
+frontmatter; resolve configured prewalk and retry fallbacks too. They must meet
+the same route, tools, context, modality, availability, and credential
+requirements. A model name, catalog entry, effort setting, or price does not
+prove class suitability or working credentials. Reassess Omp's parent-model
+authentication fallback; do not assume it satisfies the class.
 
-For classed undertaking, `daily_driver_route_undertaking` resolves the exact
-`@class` mapping before worktree or claim. Its same-family, provider, backend,
-and authentication invariant also applies to delegated issue workers and their
-visible fallbacks. Wait for `verified` execution identity; `pending` is not
-confirmation. A missing, cleared, incompatible, or unverifiable route is a
-configuration gap. Do not rewrite shared roles or credentials. Independently
-configured host helper inference is outside this undertaking policy.
+For classed undertaking, call `daily_driver_route_undertaking` alone in its
+assistant tool batch before worktree or claim. A mapped selection preserves
+family, provider, backend, and authentication across workers and fallbacks.
+For a pending change, show non-error status and wait for the next worker response
+to verify execution before mutations. Matching model and effort need no switch.
+If the known family is absent from the class table, warn prominently and
+continue immediately on the invoking model, provider, and effort; suitability
+remains unverified. Retain the invoking session if a child cannot retain the
+route. A missing or cleared class in a mapped family, incompatible assignment,
+unknown identity, or actual route violation is a configuration gap. Do not
+rewrite shared roles or credentials. Independently configured host helpers are
+outside this undertaking policy.
 
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or

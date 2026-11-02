@@ -6,6 +6,52 @@ export const MODEL_CLASS_ROLE_DEFAULTS = Object.freeze({
 	frontier: "openai-codex/gpt-6-astra:high",
 });
 
+/** Provider-scoped class routes, identified by a catalog model from each family. */
+export const MODEL_CLASS_ROUTES = Object.freeze([
+	Object.freeze({ referenceModel: "openai-codex/gpt-6-luna", classes: MODEL_CLASS_ROLE_DEFAULTS }),
+]);
+
+const installedRoles = new WeakMap();
+
+/** Return an operator class assignment without mistaking our installed default for one. */
+export function explicitModelClassRole(settings, role) {
+	const value = settings?.getModelRole(role);
+	const installed = installedRoles.get(settings);
+	if (installed?.has(role) && installed.get(role) === value) return { assigned: false };
+	const provenance = settings?.getModelRoleProvenance?.(role);
+	return { assigned: value !== undefined || (provenance !== undefined && provenance !== "default"), value };
+}
+
+/** Read provider-scoped routes through Omp's typed settings registry without persisting changes. */
+export async function readModelClassRoutes(settings) {
+	const { lookup, register } = await import("@oh-my-pi/pi-coding-agent/config/registry");
+	const handle = lookup("dailyDriver.modelClassRoutes") ?? register({
+		id: "dailyDriver.modelClassRoutes",
+		type: "array",
+		default: MODEL_CLASS_ROUTES,
+		validate: validateModelClassRoutes,
+	});
+	const routes = handle.get(settings);
+	validateModelClassRoutes(routes);
+	return routes;
+}
+
+function validateModelClassRoutes(routes) {
+	if (!Array.isArray(routes)) throw new Error("Model class routes must be an array");
+	const references = new Set();
+	for (const row of routes) {
+		if (!row || typeof row.referenceModel !== "string" || !row.referenceModel.includes("/") ||
+			!row.classes || typeof row.classes !== "object" || Array.isArray(row.classes) ||
+			references.has(row.referenceModel)) throw new Error("Each class route needs a unique provider/model reference and class map");
+		references.add(row.referenceModel);
+		for (const [name, value] of Object.entries(row.classes)) {
+			if (!Object.hasOwn(MODEL_CLASS_ROLE_DEFAULTS, name) || (value !== null && typeof value !== "string")) {
+				throw new Error("Class routes accept only known classes with string or cleared selectors");
+			}
+		}
+	}
+}
+
 /** Display metadata for task capability roles in the Omp Roles view. */
 export const MODEL_CLASS_ROLE_TAGS = Object.freeze({
 	mechanical: Object.freeze({ name: "Mechanical" }),
@@ -16,9 +62,15 @@ export const MODEL_CLASS_ROLE_TAGS = Object.freeze({
 
 /** Install only absent class selectors and role tags on one Omp settings instance. */
 export function installModelClassDefaults(settings, modelTagsSetting) {
+	const installed = installedRoles.get(settings) ?? new Map();
+	installedRoles.set(settings, installed);
 	const missingRoles = {};
 	for (const [role, selector] of Object.entries(MODEL_CLASS_ROLE_DEFAULTS)) {
-		if (!settings.getModelRole(role)) missingRoles[role] = selector;
+		if (settings.getModelRole(role) === undefined &&
+			(!settings.getModelRoleProvenance || settings.getModelRoleProvenance(role) === "default")) {
+			missingRoles[role] = selector;
+			installed.set(role, selector);
+		}
 	}
 	if (Object.keys(missingRoles).length > 0) settings.overrideModelRoles(missingRoles);
 

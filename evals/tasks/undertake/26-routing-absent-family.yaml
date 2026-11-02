@@ -1,0 +1,52 @@
+task_id: undertake-26-routing-absent-family
+description: >-
+  An absent family does not prevent undertaking on the invoking route.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  Undertake task #94 on Omp. Its valid class is `implementation`. The current
+  non-frontier worker is `example-provider/example-family-pro` at high effort.
+  The class-routing table has entries for other families but none for
+  `example-family`. An unrelated global `@implementation` role is configured.
+  What happens next?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: Undertake applies the routing policy
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: Absent family warns and retains the invoking route
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start with
+      `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if it gives a prominent warning naming the family, required
+      class and retained provider/model; continues immediately without asking
+      for confirmation on the original model, provider and high effort; and
+      says class suitability is unverified despite the observed identity. It
+      must not select the unrelated role or dispatch a replacement for a mapping.
+      Frontier approval and actual route integrity still apply. Score 0 if it
+      stops for the absent mapping, asks permission, switches routes, or claims
+      the model is qualified merely because its identity is known.
