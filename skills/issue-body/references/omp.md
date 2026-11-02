@@ -50,6 +50,14 @@ when selected through `reasoning`, an agent override, a configured prewalk or
 retry fallback, or visible parent-model inheritance. Such a route still
 requires explicit approval and the approved work envelope.
 
+An operator's manual frontier selection or native `^provider/model`
+consultation is not an agent-initiated class assignment. The adapter admits
+that consultation without issue-level frontier approval and without changing
+the assigned worker or verifying it. Native dispatch is pinned to the branch's
+exact mentioned model; overrides and automatic fallback acquire no permission.
+The runtime guarantee covers Daily Driver routing and observed dispatch, not
+the origin of every trusted extension's top-level model change.
+
 The plugin provides runtime defaults only for roles without an effective
 assignment. A global/project setting or CLI overlay present before plugin
 startup wins; explicit role assignments remain authoritative. Operators may
