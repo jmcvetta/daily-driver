@@ -391,10 +391,10 @@ ordinary undertakings.
 
 **A direct request authorizes its scoped work and normal verification.** This
 includes focused behavioral evaluation through the configured subscription.
-Do not ask the user to authorize that work again merely because verification
-uses inference or subscription allowance. A focused smoke is not a broad
-evaluation campaign or separately metered spend. Check applicable user
-authorization before declaring an approval gap.
+An explicitly assigned, bounded evaluation campaign or separately metered
+run is also within the assignment; do not request a second grant for the same
+operation, target, route and bound merely because it incurs spend. Check the
+original authority and applicable limits before declaring an approval gap.
 
 Actual higher-priority restrictions, explicit scope exclusions, production
 and dangerous-operation prohibitions, and required frontier approval still

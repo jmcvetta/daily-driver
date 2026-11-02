@@ -265,12 +265,13 @@ contribution.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
 is the current decision; this README is the single operational runbook.
 
-A direct request includes normal focused verification through the configured
-subscription; do not request authorization for the same work again.
-Subscription inference uses allowance, not separately metered API spend.
-Explicit exclusions and specific approval requirements still apply, including
-the calibration measurements below. A focused smoke does not authorize a broad
-evaluation campaign, an unrelated expense, or a prohibited credential route.
+A direct request includes its scoped work and normal focused verification.
+An explicitly assigned, bounded campaign also needs no duplicate authorization
+merely because it uses metered inference. Subscription inference uses allowance,
+not separately metered API spend. Explicit exclusions and specific approval
+requirements still apply, including the calibration measurements below.
+Neither assignment authorizes an unrelated expense, expanded campaign, or
+prohibited credential route.
 
 ### Credentials: read this before any inference run
 
