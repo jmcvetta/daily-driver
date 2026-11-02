@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Catch setup that skips conditional install, upgrades an existing wt, or hides install failures.
+# Catch setup that skips conditional install, upgrades an existing wt, compiles Worktrunk,
+# skips checksum verification, or hides install failures. Makes no network calls: curl
+# and uname are stubs, and the release archive is a local fixture.
 
 set -euo pipefail
 
@@ -7,10 +9,82 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEMP="$(mktemp -d)"
 trap 'rm -rf "${TEMP}"' EXIT
 HELPER="${ROOT}/scripts/ensure-worktrunk.sh"
+VERSION="$(sed -n 's/^WORKTRUNK_VERSION=//p' "${HELPER}")"
+BASE_URL="https://github.com/max-sixty/worktrunk/releases/download/v${VERSION}"
+
+# Nothing below may reach the real home directory, temp directory or install location.
+export HOME="${TEMP}/home"
+export TMPDIR="${TEMP}/tmp"
+export WORKTRUNK_INSTALL_DIR="${TEMP}/install/bin"
+mkdir -p "${HOME}" "${TMPDIR}"
+unset CARGO_HOME
+
+# A directory holding only the tools the helper needs, so a wt, brew or cargo on the
+# machine running this check cannot leak in. Extra arguments name tools to leave out.
+make_tools() {
+	local dir="$1" tool
+	shift
+	mkdir -p "${dir}"
+	for tool in mktemp tar xz sha256sum install rm mkdir cat chmod; do
+		case " $* " in *" ${tool} "*) continue ;; esac
+		ln -s "$(command -v "${tool}")" "${dir}/${tool}"
+	done
+}
 
 make_wt() {
-	printf '#!/bin/sh\nprintf "wt vtest\\n"\n' >"$1"
+	printf '#!/bin/sh\nprintf "wt v%s\\n"\n' "${VERSION}" >"$1"
 	chmod +x "$1"
+}
+
+make_stubs() {
+	local dir="$1"
+	mkdir -p "${dir}"
+	cat >"${dir}/uname" <<'EOF'
+#!/bin/sh
+case "$1" in
+	-s) printf '%s\n' "${FAKE_OS:-Linux}" ;;
+	-m) printf '%s\n' "${FAKE_ARCH:-x86_64}" ;;
+	*) exit 64 ;;
+esac
+EOF
+	# Serves ${FIXTURE}/<basename of the URL> and records every URL it is asked for.
+	cat >"${dir}/curl" <<'EOF'
+#!/bin/sh
+out="" url=""
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		-o) out="$2"; shift ;;
+		-*) ;;
+		*) url="$1" ;;
+	esac
+	shift
+done
+printf '%s\n' "${url}" >>"${CURL_LOG}"
+[ -z "${FAKE_CURL_FAIL:-}" ] || exit 22
+[ -f "${FIXTURE}/${url##*/}" ] || exit 22
+/bin/cp "${FIXTURE}/${url##*/}" "${out}"
+EOF
+	chmod +x "${dir}/uname" "${dir}/curl"
+}
+
+# Pack the staged release directory for one target into an archive, with its .sha256.
+pack_release() {
+	local fixture="$1" target="$2"
+	mkdir -p "${fixture}"
+	tar -C "${TEMP}/stage-${target}" -cJf "${fixture}/worktrunk-${target}.tar.xz" "worktrunk-${target}"
+	(cd "${fixture}" && sha256sum --binary "worktrunk-${target}.tar.xz" >"worktrunk-${target}.tar.xz.sha256")
+}
+
+# Build a release archive and its .sha256 for one target triple, as Worktrunk publishes them.
+make_release() {
+	local fixture="$1" target="$2" stage
+	stage="${TEMP}/stage-${target}/worktrunk-${target}"
+	rm -rf "${TEMP}/stage-${target}"
+	mkdir -p "${stage}"
+	make_wt "${stage}/wt"
+	make_wt "${stage}/git-wt"
+	printf 'README\n' >"${stage}/README.md"
+	pack_release "${fixture}" "${target}"
 }
 
 run_success() {
@@ -30,154 +104,198 @@ run_failure() {
 	esac
 }
 
-make_retry_fixture() {
-	local fixture="$1"
-	mkdir -p "${fixture}/bin"
-	cat >"${fixture}/cargo" <<'EOF'
-#!/bin/sh
-printf '%s\n' "$*" >>"${CARGO_LOG}"
-count=0
-[ ! -e "${CARGO_COUNT}" ] || count="$(cat "${CARGO_COUNT}")"
-count=$((count + 1))
-printf '%s\n' "${count}" >"${CARGO_COUNT}"
-if [ "${count}" -eq 1 ] && [ "${FAIL_FIRST:-0}" -eq 1 ]; then
-	exit 17
-fi
-if [ "$*" = "+stable install --locked worktrunk" ] && [ "${FAIL_RETRY:-0}" -eq 1 ]; then
-	exit 18
-fi
-[ "$*" = "install --locked worktrunk" ] || [ "$*" = "+stable install --locked worktrunk" ] || exit 32
-printf '#!/bin/sh\nprintf "wt vtest\\n"\n' >"${CARGO_HOME}/bin/wt"
-/bin/chmod +x "${CARGO_HOME}/bin/wt"
-EOF
-	cat >"${fixture}/rustup" <<'EOF'
-#!/bin/sh
-printf '%s\n' "$*" >>"${RUSTUP_LOG}"
-[ "$*" = "update stable" ] || exit 33
-exit "${RUSTUP_STATUS:-0}"
-EOF
-	chmod +x "${fixture}/cargo" "${fixture}/rustup"
+reset_install() {
+	rm -rf "${TEMP}/install" "${TMPDIR}"
+	mkdir -p "${TMPDIR}"
+	: >"${CURL_LOG}"
 }
 
-# Existing wt is verified, but must not trigger package installation.
+assert_nothing_installed() {
+	[ ! -e "${WORKTRUNK_INSTALL_DIR}/wt" ]
+	[ ! -e "${WORKTRUNK_INSTALL_DIR}/git-wt" ]
+}
+
+assert_temp_clean() {
+	[ -z "$(ls -A "${TMPDIR}")" ]
+}
+
+export CURL_LOG="${TEMP}/curl-log"
+TOOLS="${TEMP}/tools"
+make_tools "${TOOLS}"
+STUBS="${TEMP}/stubs"
+make_stubs "${STUBS}"
+export FIXTURE="${TEMP}/fixture"
+for target in x86_64-unknown-linux-musl aarch64-unknown-linux-musl x86_64-apple-darwin aarch64-apple-darwin; do
+	make_release "${FIXTURE}" "${target}"
+done
+RUN_PATH="${STUBS}:${TOOLS}"
+
+# Missing wt installs the pinned release archive after verifying its checksum, exposes the
+# installed binary on PATH, verifies it, and leaves no temporary files behind.
+reset_install
+output="$(run_success "${RUN_PATH}")"
+case "${output}" in *"wt v${VERSION}"*) ;; *) printf 'unexpected output: %s\n' "${output}" >&2; exit 1 ;;esac
+[ -x "${WORKTRUNK_INSTALL_DIR}/wt" ]
+[ -x "${WORKTRUNK_INSTALL_DIR}/git-wt" ]
+[ "$(stat -c '%a' "${WORKTRUNK_INSTALL_DIR}/wt" 2>/dev/null || stat -f '%Lp' "${WORKTRUNK_INSTALL_DIR}/wt")" = 755 ]
+[ "$(cat "${CURL_LOG}")" = "$(printf '%s\n%s' "${BASE_URL}/worktrunk-x86_64-unknown-linux-musl.tar.xz" "${BASE_URL}/worktrunk-x86_64-unknown-linux-musl.tar.xz.sha256")" ]
+assert_temp_clean
+
+# The installed binary is reused on the next call, without another download.
+: >"${CURL_LOG}"
+run_success "${RUN_PATH}" >/dev/null
+[ ! -s "${CURL_LOG}" ]
+
+# Each supported platform maps to its own release archive.
+for platform in "Linux aarch64 aarch64-unknown-linux-musl" "Darwin x86_64 x86_64-apple-darwin" "Darwin arm64 aarch64-apple-darwin"; do
+	# shellcheck disable=SC2086
+	set -- ${platform}
+	reset_install
+	FAKE_OS="$1" FAKE_ARCH="$2" run_success "${RUN_PATH}" >/dev/null
+	[ -x "${WORKTRUNK_INSTALL_DIR}/wt" ]
+	[ "$(head -n 1 "${CURL_LOG}")" = "${BASE_URL}/worktrunk-$3.tar.xz" ]
+done
+
+# Without sha256sum, shasum -a 256 verifies the archive.
+SHASUM_TOOLS="${TEMP}/shasum-tools"
+make_tools "${SHASUM_TOOLS}" sha256sum
+SHASUM_STUBS="${TEMP}/shasum-stubs"
+make_stubs "${SHASUM_STUBS}"
+# shellcheck disable=SC2016  # the stub script keeps its own $-expansions
+printf '#!/bin/sh\n[ "$1 $2 $3" = "-a 256 -c" ] || exit 64\nexec %s -c "$4"\n' "$(command -v sha256sum)" >"${SHASUM_STUBS}/shasum"
+chmod +x "${SHASUM_STUBS}/shasum"
+reset_install
+run_success "${SHASUM_STUBS}:${SHASUM_TOOLS}" >/dev/null
+[ -x "${WORKTRUNK_INSTALL_DIR}/wt" ]
+
+# A wrong checksum fails with the mismatch, names the release, and installs nothing.
+BAD_SUM="${TEMP}/bad-sum"
+make_release "${BAD_SUM}" x86_64-unknown-linux-musl
+printf '%064d *worktrunk-x86_64-unknown-linux-musl.tar.xz\n' 0 >"${BAD_SUM}/worktrunk-x86_64-unknown-linux-musl.tar.xz.sha256"
+reset_install
+FIXTURE="${BAD_SUM}" run_failure "${RUN_PATH}" 'checksum mismatch for worktrunk-x86_64-unknown-linux-musl.tar.xz'
+FIXTURE="${BAD_SUM}" run_failure "${RUN_PATH}" "https://github.com/max-sixty/worktrunk/releases/tag/v${VERSION}"
+assert_nothing_installed
+assert_temp_clean
+
+# A tampered archive no longer matches its checksum.
+TAMPERED="${TEMP}/tampered"
+make_release "${TAMPERED}" x86_64-unknown-linux-musl
+printf 'tampered' >>"${TAMPERED}/worktrunk-x86_64-unknown-linux-musl.tar.xz"
+reset_install
+FIXTURE="${TAMPERED}" run_failure "${RUN_PATH}" 'checksum mismatch'
+assert_nothing_installed
+
+# A failed download stops with the cause and the release URL, and installs nothing.
+reset_install
+FAKE_CURL_FAIL=1 run_failure "${RUN_PATH}" "downloading ${BASE_URL}/worktrunk-x86_64-unknown-linux-musl.tar.xz failed"
+assert_nothing_installed
+assert_temp_clean
+
+# A missing checksum file is a failed download, not a skipped verification.
+NO_SUM="${TEMP}/no-sum"
+make_release "${NO_SUM}" x86_64-unknown-linux-musl
+rm "${NO_SUM}/worktrunk-x86_64-unknown-linux-musl.tar.xz.sha256"
+reset_install
+FIXTURE="${NO_SUM}" run_failure "${RUN_PATH}" '.sha256 failed'
+assert_nothing_installed
+
+# An unsupported platform fails with the platform and the release URL.
+reset_install
+FAKE_OS=FreeBSD run_failure "${RUN_PATH}" 'no prebuilt release archive for FreeBSD x86_64'
+FAKE_ARCH=riscv64 run_failure "${RUN_PATH}" 'no prebuilt release archive for Linux riscv64'
+FAKE_OS=FreeBSD run_failure "${RUN_PATH}" "https://github.com/max-sixty/worktrunk/releases/tag/v${VERSION}"
+[ ! -s "${CURL_LOG}" ]
+assert_nothing_installed
+
+# A missing download or extraction tool names the requirement and never falls back to compiling.
+for tool in curl tar xz; do
+	reset_install
+	MISSING_TOOLS="${TEMP}/missing-${tool}-tools"
+	make_tools "${MISSING_TOOLS}" "${tool}"
+	MISSING_STUBS="${TEMP}/missing-${tool}-stubs"
+	make_stubs "${MISSING_STUBS}"
+	[ "${tool}" != curl ] || rm "${MISSING_STUBS}/curl"
+	run_failure "${MISSING_STUBS}:${MISSING_TOOLS}" "${tool} is required"
+	assert_nothing_installed
+done
+
+# Without sha256sum or shasum the archive cannot be verified, so nothing is installed.
+reset_install
+NO_SUM_TOOLS="${TEMP}/no-sum-tools"
+make_tools "${NO_SUM_TOOLS}" sha256sum
+run_failure "${STUBS}:${NO_SUM_TOOLS}" 'sha256sum or shasum is required'
+assert_nothing_installed
+
+# An existing wt is verified, but must not trigger a download.
 EXISTING="${TEMP}/existing"
 mkdir -p "${EXISTING}"
 make_wt "${EXISTING}/wt"
-printf '#!/bin/sh\nprintf called >"%s"\nexit 99\n' "${TEMP}/unexpected-installer" >"${EXISTING}/brew"
-chmod +x "${EXISTING}/brew"
-run_success "${EXISTING}"
-[ ! -e "${TEMP}/unexpected-installer" ]
+reset_install
+run_success "${EXISTING}:${RUN_PATH}" >/dev/null
+[ ! -s "${CURL_LOG}" ]
+assert_nothing_installed
 
-# Missing wt uses Homebrew, exposes the installed user binary on PATH, then verifies it.
+# An existing Homebrew wt is used as-is, without a download.
 BREW="${TEMP}/brew"
 mkdir -p "${BREW}/bin"
+make_wt "${BREW}/bin/wt"
 cat >"${BREW}/brew" <<'EOF'
 #!/bin/sh
 case "$*" in
-	"install worktrunk")
-		printf installed >>"${FAKE_LOG}"
-		printf '#!/bin/sh\nprintf "wt vtest\\n"\n' >"${FAKE_PREFIX}/bin/wt"
-		/bin/chmod +x "${FAKE_PREFIX}/bin/wt"
-		;;
 	--prefix) printf '%s\n' "${FAKE_PREFIX}" ;;
 	*) exit 31 ;;
 esac
 EOF
 chmod +x "${BREW}/brew"
-FAKE_LOG="${TEMP}/brew-called" FAKE_PREFIX="${BREW}" run_success "${BREW}:/usr/bin:/bin"
-FAKE_LOG="${TEMP}/brew-called" FAKE_PREFIX="${BREW}" run_success "${BREW}:/usr/bin:/bin"
-[ "$(cat "${TEMP}/brew-called")" = installed ]
-[ -e "${TEMP}/brew-called" ]
+reset_install
+FAKE_PREFIX="${BREW}" run_success "${BREW}:${RUN_PATH}" >/dev/null
+[ ! -s "${CURL_LOG}" ]
+assert_nothing_installed
 
-# Missing wt uses Cargo when Homebrew is absent.
+# An existing Cargo wt is used as-is, without a download or a compile.
 CARGO="${TEMP}/cargo"
 mkdir -p "${CARGO}/bin"
-cat >"${CARGO}/cargo" <<'EOF'
-#!/bin/sh
-[ "$*" = "install --locked worktrunk" ] || exit 32
-printf installed >>"${FAKE_LOG}"
-printf '#!/bin/sh\nprintf "wt vtest\\n"\n' >"${FAKE_PREFIX}/bin/wt"
-/bin/chmod +x "${FAKE_PREFIX}/bin/wt"
-EOF
+make_wt "${CARGO}/bin/wt"
+printf '#!/bin/sh\nprintf called >"%s"\nexit 99\n' "${TEMP}/unexpected-cargo" >"${CARGO}/cargo"
 chmod +x "${CARGO}/cargo"
-HOME="${TEMP}" CARGO_HOME="${CARGO}" FAKE_LOG="${TEMP}/cargo-called" FAKE_PREFIX="${CARGO}" run_success "${CARGO}:/usr/bin:/bin"
-HOME="${TEMP}" CARGO_HOME="${CARGO}" FAKE_LOG="${TEMP}/cargo-called" FAKE_PREFIX="${CARGO}" run_success "${CARGO}:/usr/bin:/bin"
-[ "$(cat "${TEMP}/cargo-called")" = installed ]
-[ -e "${TEMP}/cargo-called" ]
+reset_install
+CARGO_HOME="${CARGO}" run_success "${CARGO}:${RUN_PATH}" >/dev/null
+[ ! -s "${CURL_LOG}" ]
+[ ! -e "${TEMP}/unexpected-cargo" ]
+assert_nothing_installed
 
-# A failed Cargo install updates stable once and retries through that toolchain.
-RETRY="${TEMP}/retry"
-make_retry_fixture "${RETRY}"
-HOME="${TEMP}" CARGO_HOME="${RETRY}" CARGO_LOG="${TEMP}/retry-cargo" CARGO_COUNT="${TEMP}/retry-count" RUSTUP_LOG="${TEMP}/retry-rustup" FAIL_FIRST=1 run_success "${RETRY}:/usr/bin:/bin"
-[ "$(cat "${TEMP}/retry-cargo")" = "$(printf 'install --locked worktrunk\n+stable install --locked worktrunk')" ]
-[ "$(cat "${TEMP}/retry-rustup")" = "update stable" ]
-[ "$(cat "${TEMP}/retry-count")" = 2 ]
+# A missing wt never reaches Homebrew, Cargo or rustup to install it.
+INSTALLERS="${TEMP}/installers"
+mkdir -p "${INSTALLERS}"
+for installer in brew cargo rustup; do
+	# The helper may ask brew for its prefix; only an install is unexpected.
+	# shellcheck disable=SC2016  # the stub script keeps its own $-expansions
+	printf '#!/bin/sh\n[ "$1" = --prefix ] && exit 1\nprintf called >"%s/%s"\nexit 99\n' "${TEMP}" "unexpected-${installer}" >"${INSTALLERS}/${installer}"
+	chmod +x "${INSTALLERS}/${installer}"
+done
+reset_install
+run_success "${INSTALLERS}:${RUN_PATH}" >/dev/null
+[ ! -e "${TEMP}/unexpected-brew" ]
+[ ! -e "${TEMP}/unexpected-cargo" ]
+[ ! -e "${TEMP}/unexpected-rustup" ]
 
-# A failed Cargo install without rustup keeps the original failure.
-NO_RUSTUP="${TEMP}/no-rustup"
-mkdir -p "${NO_RUSTUP}/bin"
-cat >"${NO_RUSTUP}/cargo" <<'EOF'
-#!/bin/sh
-printf '%s\n' "$*" >>"${CARGO_LOG}"
-exit 17
-EOF
-chmod +x "${NO_RUSTUP}/cargo"
-HOME="${TEMP}" CARGO_HOME="${NO_RUSTUP}" CARGO_LOG="${TEMP}/no-rustup-cargo" run_failure "${NO_RUSTUP}:/usr/bin:/bin" 'cargo install --locked worktrunk returned a failure'
-[ "$(cat "${TEMP}/no-rustup-cargo")" = "install --locked worktrunk" ]
-
-# A failed stable update stops before retrying Cargo.
-RUSTUP_FAIL="${TEMP}/rustup-fail"
-make_retry_fixture "${RUSTUP_FAIL}"
-HOME="${TEMP}" CARGO_HOME="${RUSTUP_FAIL}" CARGO_LOG="${TEMP}/rustup-fail-cargo" CARGO_COUNT="${TEMP}/rustup-fail-count" RUSTUP_LOG="${TEMP}/rustup-fail-rustup" FAIL_FIRST=1 RUSTUP_STATUS=19 run_failure "${RUSTUP_FAIL}:/usr/bin:/bin" 'rustup update stable'
-[ "$(cat "${TEMP}/rustup-fail-cargo")" = "install --locked worktrunk" ]
-[ "$(cat "${TEMP}/rustup-fail-rustup")" = "update stable" ]
-
-# A failed retry is reported, and the update and retry each run once.
-RETRY_FAIL="${TEMP}/retry-fail"
-make_retry_fixture "${RETRY_FAIL}"
-HOME="${TEMP}" CARGO_HOME="${RETRY_FAIL}" CARGO_LOG="${TEMP}/retry-fail-cargo" CARGO_COUNT="${TEMP}/retry-fail-count" RUSTUP_LOG="${TEMP}/retry-fail-rustup" FAIL_FIRST=1 FAIL_RETRY=1 run_failure "${RETRY_FAIL}:/usr/bin:/bin" 'cargo +stable install --locked worktrunk returned a failure'
-[ "$(cat "${TEMP}/retry-fail-cargo")" = "$(printf 'install --locked worktrunk\n+stable install --locked worktrunk')" ]
-[ "$(cat "${TEMP}/retry-fail-rustup")" = "update stable" ]
-[ "$(cat "${TEMP}/retry-fail-count")" = 2 ]
-
-# No supported installer and a failing installer both stop with the cause.
-EMPTY="${TEMP}/empty"
-mkdir -p "${EMPTY}"
-run_failure "${EMPTY}" 'Worktrunk is unavailable'
-FAIL="${TEMP}/fail"
-mkdir -p "${FAIL}"
-printf '#!/bin/sh\nexit 17\n' >"${FAIL}/brew"
-chmod +x "${FAIL}/brew"
-run_failure "${FAIL}" 'brew install worktrunk returned a failure'
-
-# An installer that reports success without exposing a binary must not continue.
+# An archive without wt must not continue.
 NO_BINARY="${TEMP}/no-binary"
-mkdir -p "${NO_BINARY}/bin"
-cat >"${NO_BINARY}/brew" <<'EOF'
-#!/bin/sh
-case "$*" in
-	"install worktrunk") exit 0 ;;
-	--prefix) printf '%s\n' "${FAKE_PREFIX}" ;;
-	*) exit 33 ;;
-esac
-EOF
-chmod +x "${NO_BINARY}/brew"
-FAKE_PREFIX="${NO_BINARY}" run_failure "${NO_BINARY}:/usr/bin:/bin" 'did not put wt on PATH'
+make_release "${NO_BINARY}" x86_64-unknown-linux-musl
+rm "${TEMP}/stage-x86_64-unknown-linux-musl/worktrunk-x86_64-unknown-linux-musl/wt"
+pack_release "${NO_BINARY}" x86_64-unknown-linux-musl
+reset_install
+FIXTURE="${NO_BINARY}" run_failure "${RUN_PATH}" 'does not contain wt'
+assert_nothing_installed
 
 # An installed binary with a failing version check is not accepted.
 BAD_VERSION="${TEMP}/bad-version"
-mkdir -p "${BAD_VERSION}/bin"
-cat >"${BAD_VERSION}/brew" <<'EOF'
-#!/bin/sh
-case "$*" in
-	"install worktrunk")
-		printf '#!/bin/sh\nexit 19\n' >"${FAKE_PREFIX}/bin/wt"
-		/bin/chmod +x "${FAKE_PREFIX}/bin/wt"
-		;;
-	--prefix) printf '%s\n' "${FAKE_PREFIX}" ;;
-	*) exit 34 ;;
-esac
-EOF
-chmod +x "${BAD_VERSION}/brew"
-FAKE_PREFIX="${BAD_VERSION}" run_failure "${BAD_VERSION}:/usr/bin:/bin" 'wt --version returned a failure'
-printf 'Worktrunk installer fixtures verify existing CLI, Homebrew, Cargo and failure paths\n'
+make_release "${BAD_VERSION}" x86_64-unknown-linux-musl
+printf '#!/bin/sh\nexit 19\n' >"${TEMP}/stage-x86_64-unknown-linux-musl/worktrunk-x86_64-unknown-linux-musl/wt"
+chmod +x "${TEMP}/stage-x86_64-unknown-linux-musl/worktrunk-x86_64-unknown-linux-musl/wt"
+pack_release "${BAD_VERSION}" x86_64-unknown-linux-musl
+reset_install
+FIXTURE="${BAD_VERSION}" run_failure "${RUN_PATH}" 'wt --version returned a failure after installation'
+
+printf 'Worktrunk installer fixtures verify the release install, checksum, platform, tool, reuse and failure paths offline\n'

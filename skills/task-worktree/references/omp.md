@@ -13,15 +13,15 @@ root. Resolve
 readable, then source that quoted absolute path and run `ensure_worktrunk`.
 If the file is unavailable, report the resolved path and stop. Do not fall
 back to a helper under the target repository. The helper returns without
-installing when `wt` exists. If missing, it uses Homebrew or Cargo in user
-scope, adds the installed bin directory to this shell's `PATH`, and verifies
-`wt --version`. If the Cargo install fails and `rustup` is available, it updates
-the stable toolchain once and retries with `cargo +stable install --locked
-worktrunk`. Resolve, source and run the helper again in each later shell
-invocation that uses `wt`; it restores the installed bin path without
-reinstalling. It never upgrades an existing `wt`; if neither installer works,
-stop with the helper's cause and actionable installation requirement. Do not
-use bare Git worktree creation as a fallback.
+installing when `wt` exists. If missing, it downloads the pinned Worktrunk
+release archive, verifies its SHA-256 checksum, and installs `wt` into
+`${WORKTRUNK_INSTALL_DIR:-$HOME/.local/bin}`. It adds that directory to this
+shell's `PATH` and verifies `wt --version`. It never compiles Worktrunk.
+Resolve, source and run the helper again in each later shell invocation that
+uses `wt`; it restores the installed bin path without reinstalling. It never
+upgrades an existing `wt`; if the install fails, stop with the helper's cause
+and actionable installation requirement. Do not use bare Git worktree creation
+as a fallback.
 
 Use the `bash` tool for Git boundary reads and Worktrunk:
 

@@ -22,10 +22,10 @@ The worktree is the task's execution root, not only the place where edits land.
 
 Worktrunk (`wt`) owns worktree creation and selection. Before inspecting
 Worktrunk worktrees, check for `wt`; if it is missing, install it through the
-user-scoped Homebrew or Cargo route in the harness reference, then verify it
-with `wt --version`. Never upgrade an existing installation, fall back to
-`git worktree add`, or install software from a task-start hook. If no supported
-installer works, stop with the cause and an actionable installation requirement.
+user-scoped release-binary route in the harness reference, then verify it with
+`wt --version`. Never upgrade an existing installation, compile Worktrunk, fall
+back to `git worktree add`, or install software from a task-start hook. If the
+install fails, stop with the cause and an actionable installation requirement.
 
 **The execution routes differ by harness.** Read the reference for the harness
 in use before the first repository read or change:
