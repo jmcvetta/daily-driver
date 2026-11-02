@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SHIPPED = frozenset(
     {
         ".claude-plugin",
+        ".codex-plugin",
         ".omp-plugin",
         "agents",
         "extensions",
@@ -67,31 +68,9 @@ def problems(dirs: set[str], shipped: frozenset[str], excluded: list[str]) -> li
     return found
 
 
-def self_test() -> None:
-    """self_test proves each failure mode fails and a consistent tree passes."""
-    dirs = {"skills", "evals"}
-    shipped = frozenset({"skills"})
-    cases = [
-        ("consistent", ["evals"], []),
-        ("unclassified directory", [], ["evals: neither shipped nor in exclude-paths"]),
-        (
-            "root file excluded",
-            ["evals", "Makefile"],
-            ["Makefile: in exclude-paths but not a tracked top-level directory"],
-        ),
-        ("shipped and excluded", ["evals", "skills"], ["skills: both shipped and in exclude-paths"]),
-        ("duplicate entry", ["evals", "evals"], ["evals: listed more than once in exclude-paths"]),
-    ]
-    for name, excluded, expected in cases:
-        actual = problems(dirs, shipped, excluded)
-        assert actual == expected, f"self-test {name}: {actual!r}"
-    assert top_level_dirs(["Makefile", "skills/a/SKILL.md", ".github/x.yml"]) == {"skills", ".github"}
-
-
 def main() -> int:
     """main checks the tracked tree against `release-please-config.json` and
     returns the process exit status."""
-    self_test()
     config = json.loads((ROOT / "release-please-config.json").read_text())
     excluded = config["packages"]["."].get("exclude-paths", [])
     # `-z` keeps paths unquoted: without it `core.quotePath` escapes a

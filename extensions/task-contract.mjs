@@ -70,7 +70,7 @@ export function amendContract(state, record, reference) {
 	if (requiresDecision) {
 		const authority = reference(record.authoritySource, true);
 		if (authority.kind !== "user" || authority.sourceId === state.externalSourceId) throw new Error("A material contract amendment requires the applicable later original user decision");
-		if (authority.taskSourceId !== state.externalSourceId && authority.sourceId !== state.externalSourceId) throw new Error("The amendment decision belongs to another task");
+		if (authority.taskSourceId !== state.externalSourceId && authority.sourceId !== state.resumeSource?.sourceId) throw new Error("The amendment decision belongs to another task");
 	}
 	if (removed.length && (!Array.isArray(record.removedCriteria) || removed.some((criterion) => !record.removedCriteria.some((item) => item.id === criterion.id && nonblank(item.reason))))) throw new Error("Record each removed criterion and its user-authorized reason");
 	if (!changesBinding && !changedKnown && FIELDS.every((key) => JSON.stringify(state.contract[key]) === JSON.stringify(next[key]))) return state;

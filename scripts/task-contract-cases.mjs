@@ -104,6 +104,24 @@ export default function registerTaskContractChecks(check, root) {
 		assert.equal((await resumed.status()).state.contract.contractId, original.contractId);
 	});
 
+	/** Selecting an earlier task must accept only its exact fresh resume decision, not the other task's authority. */
+	check("resuming another task binds the fresh decision without importing unrelated approvals", async () => {
+		const s = session(); s.input("Fix the parser.");
+		await s.command("begin", { taskId: "parser", operation: "repair", target: "parser" });
+		const parser = (await s.status()).state.contract.contractId;
+		s.controller.cancel(s.ctx);
+		s.input("Fix the scanner.");
+		await s.command("begin", { taskId: "scanner", operation: "repair", target: "scanner", newTask: true });
+		const unrelated = (await s.status()).sources.filter((item) => item.kind === "user").at(-1);
+		s.input("Resume the parser and allow offline verification.");
+		const source = (await s.status()).sources.filter((item) => item.kind === "user").at(-1);
+		const decision = { sourceId: source.sourceId, quote: source.text };
+		assert.equal((await s.command("resume", { contractId: parser, source: decision })).isError, undefined);
+		const grant = { id: "resumed-offline", kind: "user", operation: "repair", target: "parser", limits: "offline only", conditions: "parser only", source: decision };
+		assert.equal((await s.command("authorization", grant)).isError, undefined);
+		assert.equal((await s.command("authorization", { ...grant, id: "unrelated", source: { sourceId: unrelated.sourceId, quote: unrelated.text } })).isError, true);
+	});
+
 	/** Historical completion must not become verified acceptance during a schema migration. */
 	check("legacy task migration preserves history completion claims and unknown requirements", async () => {
 		const legacy = { taskId: "legacy", operation: "repair", target: "parser", externalSourceId: "missing-source", status: "reported-complete",
@@ -128,7 +146,7 @@ export default function registerTaskContractChecks(check, root) {
 		await parent.command("authorization", { id: "offline", kind: "user", operation: "repair", target: "parser", limits: "offline only", conditions: "parser only", source: { sourceId: source.sourceId, quote: source.text } });
 		const call = parent.controller.delegateCall({ toolName: "task", input: { context: "Inspect one independent parser component.", tasks: [] } }, parent.ctx);
 		const child = session([], "child-session", "sub");
-		child.controller.beforeAgentStart({ prompt: call.input.context, systemPrompt: ["Workflow policy"] }, child.ctx);
+		child.controller.beforeAgentStart({ prompt: "Inspect the delegated parser component.", systemPrompt: ["Workflow policy", call.input.context] }, child.ctx);
 		const childState = await child.status();
 		assert.equal(childState.state.contract.contractId, (await parent.status()).state.contract.contractId);
 		assert.equal(childState.sources.some((item) => item.kind === "user"), false);
@@ -188,7 +206,7 @@ export default function registerTaskContractChecks(check, root) {
 		} finally { rmSync(home, { recursive: true, force: true }); }
 	});
 
-	/** Claude plugin prompts and aborts must retain their engine origin when crossing the process boundary. */
+	/** Claude plugin prompts, child restoration and aborts must not lose origin or contract state across processes. */
 	check("Claude mod routes original inputs tool access and cancellation through the shared controller", async () => {
 		const home = mkdtempSync(resolve(tmpdir(), "daily-driver-claude-contract-"));
 		const handlers = new Map();
@@ -207,6 +225,18 @@ export default function registerTaskContractChecks(check, root) {
 			const result = JSON.parse((await handlers.get("tool.call")($, call, next)).result);
 			assert.equal(result.sources.filter((item) => item.kind === "user").length, 1);
 			assert.equal(result.sources.at(-1).kind, "interpretation");
+			const restoration = await handlers.get("classic.SessionStart")($, {}, async () => ({ additionalContext: ["other extension"] }));
+			assert.equal(restoration.additionalContext[0], "other extension");
+			assert.match(restoration.additionalContext[1], /contract/);
+			const childRestoration = await handlers.get("classic.SubagentStart")($, { agent_id: "native-child" }, async () => ({ additionalContext: ["child instructions"] }));
+			assert.equal(childRestoration.additionalContext[0], "child instructions");
+			assert.match(childRestoration.additionalContext[1], /contract/);
+			const child = JSON.parse((await handlers.get("tool.call")($, { ...call, agentId: "native-child" }, next)).result);
+			assert.deepEqual(child.state.contract, result.state.contract);
+			assert.equal(child.sources.some((item) => item.kind === "user"), false);
+			const correction = await handlers.get("classic.Stop")($, { turn_id: "original" }, next);
+			assert.equal(typeof correction.block, "string");
+			assert.equal(correction.decision, undefined);
 			await handlers.get("turn.complete")($, { turnId: "cancel", isAborted: true }, next);
 			assert.equal(JSON.parse((await handlers.get("tool.call")($, call, next)).result).state.status, "cancelled");
 		} finally { rmSync(home, { recursive: true, force: true }); }

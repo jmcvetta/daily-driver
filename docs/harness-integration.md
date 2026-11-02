@@ -9,10 +9,10 @@ skills and the constitution injected by runtime hooks.
 ## Runtime integration
 
 Claude Code and Codex use hooks for the constitution and chat-based question
-routing. Codex subagent injection is not verified: its configured
-`SubagentStart` event was not observed, as the [Codex integration
+routing. Native Codex CLI and app-server runs now establish `SubagentStart`
+delivery. The earlier [Codex integration
 note](notes/0016-three-harnesses-one-skill-tree.md#known-limits-recorded-rather-than-fixed)
-records.
+records the historical unverified route.
 
 The constitution source is `rules/constitution.md`. Both the hooks and Omp's
 rule provider deliver its complete Markdown body after removing the
@@ -22,7 +22,7 @@ as a rule, as described below.
 
 | Hook | Event | Purpose |
 | ---- | ----- | ------- |
-| `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers the constitution at session start; Codex subagent delivery is unverified. |
+| `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers the constitution at session and native child start. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the question widget and directs questions to chat. |
 | `title-gate.py` | Issue-comment and session-creation events | On Claude Code cloud sessions, holds the first issue comment and dispatch until the session is titled. |
 
@@ -135,7 +135,9 @@ Claude Code requires native mods support: terminal version 2.1.287 or later.
 The measured version is 2.1.316. `.claude-plugin/plugin.json` adds
 `hooks/task-state-claude.json`; Claude still loads common `hooks/hooks.json`.
 The mod uses engine-stamped `prompt.submit.origin`, native tool registration,
-`classic.Stop` and `turn.complete.isAborted`. A settings
+`classic.SessionStart`, `classic.SubagentStart`, `classic.Stop` and
+`turn.complete.isAborted`. Native classic handlers return `additionalContext`
+arrays or a `block` reason, not settings-hook response envelopes. A settings
 `UserPromptSubmit` hook alone cannot distinguish user, scheduler and peer
 input. The adapter does not use that unsafe classification.
 SDK-host requests can create interpreted contracts, but are not user approval.
@@ -156,22 +158,30 @@ After compaction, the documented `SessionStart(source: compact)` route
 restores the contract before the next request. `PostCompact` has no supported
 additional-context output and is not used as a substitute.
 
+Codex app-server clients must request the supported lifecycle explicitly:
+`thread/start` with `sessionStartSource: "startup"` (Python SDK
+`session_start_source=ThreadStartSource.startup`). The default `None` source
+can execute model and tool requests without these lifecycle hooks, even when
+`hooks/list` reports trusted definitions. A bounded native app-server run
+with the startup source observed root and child hooks.
+
 ### Installed-runtime capability checkpoint
 
 The bounded checkpoint on 2026-11-02 used no external model:
 
 | Harness | Registration and local response route | Observed native events |
 | --- | --- | --- |
-| Omp 18.15.0 | Installed extension, scripted loopback provider, RPC | Original request and approval, bounded corrections, process resume and abort; `scripts/check-omp-task-state-live.py` passed. |
-| Claude Code 2.1.316 | Task-private npm installation; `--plugin-dir` mod; local `turn.step` response fixture | Terminal `composer` input, a separate plugin's non-user input, retained source/criterion after actual process resume, registered tool execution, and Esc aborting a pending stop correction with `turn.complete.isAborted: true`. |
-| Codex CLI 0.160.0 | Reviewed task-private hooks; local Responses provider; `exec` and `exec resume` | Original prompt, real tool execution, Stop-generated request without a prompt-source event, SIGINT during a pending Stop firing `Interrupt`, and process resume retaining cancelled state and correction count 2. |
+| Omp 18.15.0 | Installed/linked extension, scripted loopback provider, RPC | The live task-state probe passed original approval/tool-source recovery, two-correction bounds and native abort. A separate shipped-extension run retained equal parent/child contracts, zero child user sources, criteria and correction counts through native compaction and process resume. |
+| Claude Code 2.1.316 | Task-private npm installation; shipped `--plugin-dir` mod; local `turn.step` response fixture and loopback compaction provider | Genuine terminal `composer` input and a separate plugin's non-user input remained distinct. The shipped tool ran. Actual process resume and `/compact` preserved the contract and criterion IDs. Esc cancelled a pending correction with `turn.complete.isAborted: true`; cancellation and count 2 persisted. |
+| Codex CLI 0.160.0 | Task-private native marketplace/plugin installation and private CLI hook fixtures; local Responses provider | The unchanged shipped manifest captured one original user source and stopped at two corrections after three local requests. The shipped-controller lifecycle run exercised native tool access, child delegation with zero child user sources, SIGINT/`Interrupt`, process resume and `/compact`; contract, criteria, cancellation and count 2 survived. |
 
 The workstation's Claude Code 2.1.267 is too old for the mod route. The
 task-private 2.1.316 install did not change shared configuration or credentials.
-The Codex app-server route executed model/tool requests but did not execute
-these hooks in this environment, even when `hooks/list` reported them trusted.
-That route is not claimed as proven. CLI hook registration is the measured
-route.
+A separate Codex 0.160.0 app-server checkpoint used trusted hooks and the
+explicit startup source. Six local Responses requests exercised
+`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `SubagentStart` and `Stop`.
+The earlier default-source attempt omitted lifecycle hooks; it did not
+establish an unsupported capability.
 
 These native-event observations establish the adapter route. Offline
 controller/adapter regressions run in the existing `check-omp-extension`

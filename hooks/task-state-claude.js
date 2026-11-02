@@ -41,8 +41,12 @@ export function register(on) {
 		const original = await next(e);
 		const result = await request($, { name: "session.start" });
 		if (!result.context) return original;
-		return { ...original, hookSpecificOutput: { ...original?.hookSpecificOutput, hookEventName: "SessionStart",
-			additionalContext: [original?.hookSpecificOutput?.additionalContext, result.context].filter(Boolean).join("\n") } };
+		return { ...original, additionalContext: [...(original?.additionalContext ?? []), result.context] };
+	});
+	on("classic.SubagentStart", async ($, e, next) => {
+		const original = await next(e);
+		const result = await request($, { hook_event_name: "SubagentStart" }, e.agent_id);
+		return result.context ? { ...original, additionalContext: [...(original?.additionalContext ?? []), result.context] } : original;
 	});
 	on("classic.Stop", async ($, e, next) => {
 		if (next.signal.aborted) return {};
@@ -51,7 +55,8 @@ export function register(on) {
 			await request($, { name: "turn.aborted", id: e.turn_id }, e.agent_id);
 			return {};
 		}
-		return result.decision ? result : next(e);
+		if (result.systemMessage) await $.ui.log(result.systemMessage);
+		return result.decision ? { block: result.reason } : next(e);
 	});
 	on("classic.SubagentStop", async ($, e, next) => {
 		if (next.signal.aborted) return {};
@@ -60,7 +65,8 @@ export function register(on) {
 			await request($, { name: "turn.aborted", id: e.turn_id }, e.agent_id);
 			return {};
 		}
-		return result.decision ? result : next(e);
+		if (result.systemMessage) await $.ui.log(result.systemMessage);
+		return result.decision ? { block: result.reason } : next(e);
 	});
 	on("turn.complete", async ($, e, next) => {
 		if (e.isAborted) await request($, { name: "turn.aborted", id: e.turnId }, e.agentId);

@@ -226,7 +226,8 @@ export function createTaskStateController(pi) {
 	function beforeAgentStart(event, ctx) {
 		if (!available(ctx)) return;
 		if (ctx.agent.kind === "sub" && !read(ctx) && event.prompt) {
-			const encoded = event.prompt.match(/<daily-driver-task-contract>([A-Za-z0-9_-]+)<\/daily-driver-task-contract>/u)?.[1];
+			const delegatedContext = [...(event.systemPrompt ?? []), event.prompt].join("\n");
+			const encoded = delegatedContext.match(/<daily-driver-task-contract>([A-Za-z0-9_-]+)<\/daily-driver-task-contract>/u)?.[1];
 			if (encoded) {
 				adopt(ctx, JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")));
 			}
@@ -293,7 +294,7 @@ export function createTaskStateController(pi) {
 					} else
 					if (params.action === "authorization") {
 						const source = reference(ctx, record.source, true);
-						if (source.kind === "user" && source.sourceId !== state.externalSourceId &&
+						if (source.kind === "user" && source.sourceId !== state.externalSourceId && source.sourceId !== state.resumeSource?.sourceId &&
 							source.taskSourceId !== state.externalSourceId && !state.authorityTaskIds?.includes(source.taskSourceId)) throw new Error("Authorization source belongs to another task");
 						if (!["user", "workflow"].includes(record.kind) || record.kind !== source.kind) throw new Error("Authorization kind must match the original user or system source");
 						for (const key of ["id", "operation", "target", "limits", "conditions"]) required(record[key], key);
