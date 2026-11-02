@@ -786,6 +786,24 @@ the candidate checkout dirty. All scores were identical
 to the first comparison across five replicates per arm. This placement also
 did not establish an improvement.
 
+A [two-turn probe](probes/terse-multiturn-2026-11-02.json) used the same
+tracker fixture and base against candidate
+`0f03d77ecf94259e57f7a5f6a2e11327aa70fcc0`. Each session first read and
+summarized the tracker, then received the fixed question “What is blocking
+#457?” in the same Omp RPC session. The Omp evaluation agent loaded each
+plugin in an isolated home; the fixed turns were sent directly, not through
+the simulated-user facility. The same OpenAI model was requested for the
+subject and the `omp-gpt-6.1-sol` judge; Omp did not report the served
+subject model.
+
+All ten answers identified #279. Under the existing irrelevant-content rubric,
+the judge scored zero of five base answers and two of five candidate answers
+as free of unrelated details. Three candidate answers still scored zero. This
+is a positive signal in one small, selected scenario, not proof of a general
+improvement. The first-turn summaries differed between arms, so they also
+changed the context for the follow-up. The probe has no multi-turn
+requested-explanation control.
+
 The [initial run](provenance/omp-terse-base-vs-candidate-2026-11-02-2026-11-02_16-03-04.json)
 also had a ceiling on its shorter blocker case. Its explanation results are
 invalid for comparison: both arms attempted broad discovery that the Omp read
