@@ -404,8 +404,8 @@ The request does not authorize unrelated spend or scope expansion.
 
 Before an evaluation, select its judge and execution session using the
 [evaluation runbook](../../evals/README.md#choose-the-execution-session-first).
-Its Omp restriction concerns Claude-judged evaluation controllers, not the
-ordinary issue-implementation handoff described above. Prepare permitted work
+Its Omp restriction concerns evaluation controllers on the specified judge
+route, not the ordinary issue-implementation handoff described above. Prepare
 without treating a missing execution session as missing spending approval.
 
 **Start with the smallest proof that can invalidate the route.** Before
