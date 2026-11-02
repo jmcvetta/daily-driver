@@ -110,6 +110,11 @@ worktree, claim, implementation, and pull request. The sender stops rather
 than repeating the handoff or supervising duplicate work. If the surface cannot
 establish those constraints, stop and report the precise gap.
 
+After manual escalation of an existing task, first repair the plan under the
+constitution's *Manual frontier escalation*. Use the route above only when
+its constraints are established; transfer the existing work and authority,
+not a new claim. Otherwise deliver the plan and report the missing return route.
+
 
 The pull request
 ================

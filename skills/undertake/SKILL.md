@@ -498,9 +498,15 @@ route, even when research produced the recommendation.
 the full undertaking to an eligible non-frontier session before creating a
 branch or claim, unless a supported model switch changes the verified
 execution identity to a non-frontier route. It does not implement or supervise
-that work on frontier. The receiving session runs this sequence and owns the
-branch and claim. This is routing, not parallelism across issues; `embark` still
-owns wave dispatch.
+that work on frontier. The receiving session owns the undertaking. This is
+routing, not parallelism across issues; `embark` still owns wave dispatch.
+
+For a manual escalation during an existing undertaking, follow the
+constitution's *Manual frontier escalation*: repair the failed plan first,
+then return the existing work and its authorization to a verified eligible
+worker. Preserve the branch, worktree and claim; do not start a competing
+undertaking. If no return route is available, deliver the repaired plan and
+report the capability needed to resume.
 
 **The review round has its own dispatch.** `review-cycle`'s `Verify the fix
 delta` sends a briefed subagent because the author of a delta cannot be an
