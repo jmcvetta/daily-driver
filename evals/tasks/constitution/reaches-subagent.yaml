@@ -7,9 +7,8 @@
 # the `Agent` tool. A subagent can quote the constitution's rule on admitting
 # uncertainty only if that `PreToolUse` hook rewrote the prompt in flight —
 # nobody typed it, and the file-reading tools are closed below, so there is no
-# other route to it. The phrase graded on is `MARKER` in
-# `scripts/check-constitution.py`, which asserts the constitution still says it
-# and that no text outside a criterion here names it.
+# other route to it. The criterion must match a phrase still in the
+# constitution, and the phrase must not appear in the agent's inputs.
 #
 # ## What changed in the port, and why
 #
