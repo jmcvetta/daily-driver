@@ -121,6 +121,23 @@ close as `completed` or `duplicate` carries no elegy: the work was done, or
 lives on elsewhere.
 
 
+Reporting a newly opened issue
+==============================
+
+After an issue is created, report its link and issue-kind label. For a `task`
+whose body assigns a model class, report that exact class beside the label.
+Use the `Model class` section in `issue-body` as the source; do not substitute
+the authoring model, selected route, or provenance. For other issue kinds,
+report the label without a model class. Do not infer or fabricate a class when
+the task body has none.
+
+For example: `Opened [#123](https://github.com/OWNER/REPO/issues/123) —
+label: task; model class: implementation.`
+
+When a workflow creates several issues, report each issue with its own label
+and, for each classed task, its own assigned model class.
+
+
 Non-goals
 =========
 
