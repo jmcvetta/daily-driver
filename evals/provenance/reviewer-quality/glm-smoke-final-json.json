@@ -1,5 +1,5 @@
 {
-  "analysis_valid": true,
+  "analysis_valid": null,
   "arm": "glm",
   "attempts": [
     {
@@ -31,18 +31,21 @@
       "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
       "judge_status": "judged",
       "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Any call to page(items, offset, limit) after this change. The slice end is now offset + limit - 1, so the function returns at most limit-1 records instead of limit (verified: page([1,2,3,4,5],0,3) returns [1,2]; page([1,2,3,4,5],2,3) returns [3,4]; page(items,0,1) returns []). Additionally, when limit=0 and offset=0 the stop index becomes -1, which Python slicing treats as relative to the end, so page([1,2,3,4,5],0,0) returns [1,2,3,4] instead of [].\",\"impact\":\"The cursor-based listing endpoint drops the last record of every page, so pagination skips records silently (record loss). The limit=0 edge case returns nearly the whole collection instead of nothing, a silent wrong-result path that can duplicate or leak records across pages. Both contradict the docstring 'Return up to limit records beginning at offset'.\",\"severity\":\"high\"}]}",
+      "parent_reported_identity": "glm-5.3",
       "provider_error": false,
       "repeat": 0,
       "reviewer_backend_served": "unreported",
-      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_delivery_observed": false,
+      "reviewer_reported_identity": "unreported",
       "reviewer_requested": "opencode-go/glm-5.3:high",
-      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Any call to page(items, offset, limit) after this change. The slice end is now offset + limit - 1, so the function returns at most limit-1 records instead of limit (verified: page([1,2,3,4,5],0,3) returns [1,2]; page([1,2,3,4,5],2,3) returns [3,4]; page(items,0,1) returns []). Additionally, when limit=0 and offset=0 the stop index becomes -1, which Python slicing treats as relative to the end, so page([1,2,3,4,5],0,0) returns [1,2,3,4] instead of [].\",\"impact\":\"The cursor-based listing endpoint drops the last record of every page, so pagination skips records silently (record loss). The limit=0 edge case returns nearly the whole collection instead of nothing, a silent wrong-result path that can duplicate or leak records across pages. Both contradict the docstring 'Return up to limit records beginning at offset'.\",\"severity\":\"high\"}]}",
-      "reviewer_status": "completed",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "delivery_unverified",
       "reviewer_usage": "unavailable",
-      "reviewer_verdict": "defects",
+      "reviewer_verdict": "unreported",
       "run_id": "reviewer-quality-glm-smoke-final-json",
       "score": 1.0,
-      "status": "completed",
+      "status": "reviewer_unverified",
       "task_status": "SUCCESS",
       "variant_id": "reviewer"
     },
@@ -73,38 +76,37 @@
       "judge_freeze_sha": "3b96ba4fde869fffe6e24793e564b230e5d0ec5057c7fa67fb2fc17136549d22",
       "judge_status": "judged",
       "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "parent_reported_identity": "glm-5.3",
       "provider_error": false,
       "repeat": 0,
       "reviewer_backend_served": "unreported",
-      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_delivery_observed": false,
+      "reviewer_reported_identity": "unreported",
       "reviewer_requested": "opencode-go/glm-5.3:high",
-      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
-      "reviewer_status": "completed",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "delivery_unverified",
       "reviewer_usage": "unavailable",
-      "reviewer_verdict": "clear",
+      "reviewer_verdict": "unreported",
       "run_id": "reviewer-quality-glm-smoke-final-json",
       "score": 1.0,
-      "status": "completed",
+      "status": "reviewer_unverified",
       "task_status": "SUCCESS",
       "variant_id": "reviewer"
     }
   ],
   "attribution": {
-    "basis": "reviewer-reported session identity only; backend-served identity is unreported",
+    "basis": "captured reviewer delivery and reported session identity; backend-served identity is unreported",
     "expected_model_id": "glm-5.3",
     "expected_reviewer_selector": "opencode-go/glm-5.3:high",
     "mismatches": [],
-    "reported_model_ids": [
-      "glm-5.3"
-    ],
-    "reviewer_reported_identities": [
-      "glm-5.3"
-    ],
-    "valid": true
+    "reported_model_ids": [],
+    "reviewer_reported_identities": [],
+    "valid": null
   },
   "cohort_complete": true,
   "coverage_complete": true,
-  "created_at": "2026-10-31T08:53:37.654535+00:00",
+  "created_at": "2026-11-02T14:27:50.753318+00:00",
   "planned": {
     "attempts": 2,
     "cases": [
@@ -132,7 +134,7 @@
     "attempts": 2,
     "classification": {
       "clean": {
-        "eligible_denominator": 1,
+        "eligible_denominator": 0,
         "false_alarms": 0,
         "planned_denominator": 1
       },
@@ -145,16 +147,16 @@
       "full_review": {
         "fn": 0,
         "fp": 0,
-        "precision": 1.0,
-        "precision_denominator": 1,
-        "recall": 1.0,
-        "recall_eligible_denominator": 1,
+        "precision": null,
+        "precision_denominator": 0,
+        "recall": null,
+        "recall_eligible_denominator": 0,
         "recall_planned_denominator": 1,
-        "tp": 1
+        "tp": 0
       },
       "unexpected_valid": []
     },
-    "eligible": 2,
+    "eligible": 0,
     "harness_errors": 0,
     "judge_errors": 0,
     "judge_unavailable": 0,
@@ -168,28 +170,29 @@
     },
     "per_case": {
       "reviewer-quality-01-boundary": {
-        "eligible": 1,
+        "eligible": 0,
         "judge_errors": 0,
         "misses": 0,
         "missing": 0,
         "planned": 1,
-        "reviewer_completed": 1,
-        "reviewer_errors": 0
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 0
       },
       "reviewer-quality-05-clean-boundary": {
-        "eligible": 1,
+        "eligible": 0,
         "judge_errors": 0,
         "misses": 0,
         "missing": 0,
         "planned": 1,
-        "reviewer_completed": 1,
-        "reviewer_errors": 0
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 0
       }
     },
     "provider_errors": 0,
-    "reviewer_completed": 2,
-    "reviewer_completion_rate": 1.0,
-    "unattempted": 0
+    "reviewer_delivery_unverified": 2,
+    "unattempted": 0,
+    "verified_reviewer_completion_rate": 0.0,
+    "verified_reviewer_completions": 0
   },
   "winner": null
 }

@@ -104,5 +104,10 @@
     "collector_sha256": "23047e2f7ba6c2422858d30cc70c8eecea2588c67ae3a0b4ee5745218d356a6a",
     "change": "Count a delta verdict as correct only when its independent judge score passes the rubric as well as matching the expected verdict and classification.",
     "measurement_effect": "Analysis only, applied to both arms using the original judge sidecars; no subjects or judges were rerun."
+  },
+  "delivery_analysis_amendment": {
+    "collector_sha256": "0dc8f421ed3f90e5f21cc548813c976237cf0fed39a2dc44c8c9530af9cf5b5e",
+    "change": "Require a captured completed reviewer response that matches the parent final JSON. Parent assertions alone do not establish reviewer identity or findings.",
+    "measurement_effect": "Analysis only. Original attempts and judge sidecars are unchanged; interrupted slots and separately authorized replacements remain distinct."
   }
 }

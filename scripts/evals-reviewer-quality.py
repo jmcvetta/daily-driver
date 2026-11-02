@@ -67,6 +67,37 @@ def bounded_text(path: Path | None) -> str | None:
         text = text[:MAX_FINDINGS_CHARS] + "\n...[truncated]"
     return text.strip()
 
+def reviewer_delivery_observed(path: Path | None, final: str | None) -> bool:
+    """Require the parent's JSON to match a captured completed reviewer result."""
+    if path is None or path.name != "task.json" or not path.is_file() or final is None:
+        return False
+    try:
+        expected = json.loads(final)
+    except json.JSONDecodeError:
+        return False
+    task = json_file(path)
+    for iteration in task.get("iterations", []):
+        for command in iteration.get("commands", []):
+            if command.get("tool_name") not in {"Agent", "Task", "Wait", "Read"}:
+                continue
+            if str(command.get("result_status", "")).lower() not in {"ok", "success"}:
+                continue
+            result = str(command.get("result_summary") or "")
+            match = re.search(r'<task-result\b[^>]*\bagent="reviewer"[^>]*\bstatus="completed"[^>]*>.*?<output>(.*?)</output>', result, re.DOTALL)
+            if not match:
+                continue
+            output = match.group(1)
+            for index, character in enumerate(output):
+                if character != "{":
+                    continue
+                try:
+                    value, _ = json.JSONDecoder().raw_decode(output[index:])
+                except json.JSONDecodeError:
+                    continue
+                if value == expected:
+                    return True
+    return False
+
 
 def reviewer_result_fields(text: str | None) -> tuple[str, str]:
     """Read explicit reported identity and verdict from the bounded reviewer result."""
@@ -268,7 +299,7 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
         per_case[case] = {
             "planned": len(group),
             "eligible": len(eligible),
-            "reviewer_completed": sum(entry["reviewer_status"] == "completed" for entry in group),
+            "verified_reviewer_completions": sum(entry["reviewer_status"] == "completed" for entry in group),
             "reviewer_errors": sum(entry["reviewer_status"] in {"incomplete", "provider_error", "harness_error"} for entry in group),
             "judge_errors": sum(entry["judge_status"] == "error" for entry in group),
             "missing": sum(entry["status"] == "unattempted" for entry in group),
@@ -278,12 +309,13 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
     return {
         "attempts": len(entries),
         "eligible": len(classes),
-        "reviewer_completed": reviewer_completed,
-        "reviewer_completion_rate": reviewer_completed / len(entries) if entries else None,
+        "verified_reviewer_completions": reviewer_completed,
+        "verified_reviewer_completion_rate": reviewer_completed / len(entries) if entries else None,
         "provider_errors": sum(entry["provider_error"] for entry in entries),
         "harness_errors": sum(entry["harness_error"] for entry in entries),
         "judge_errors": sum(entry["judge_status"] == "error" for entry in entries),
         "judge_unavailable": sum(entry["judge_status"] == "unavailable" for entry in entries),
+        "reviewer_delivery_unverified": sum(entry["status"] == "reviewer_unverified" for entry in entries),
         "unattempted": sum(entry["status"] == "unattempted" for entry in entries),
         "classification": {
             "unexpected_valid": [
@@ -378,7 +410,11 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 result_path = result_text(run_dir, args.variant, case, repeat) if row else None
                 text = bounded_text(result_path)
                 reviewer_identity, reviewer_verdict = reviewer_result_fields(text)
-                reviewer_completed = bool(text) and reviewer_verdict in {"clear", "defects"}
+                delivery_observed = reviewer_delivery_observed(artifact, text)
+                reviewer_completed = bool(text) and reviewer_verdict in {"clear", "defects"} and delivery_observed
+                parent_reported_identity = reviewer_identity
+                if not delivery_observed:
+                    reviewer_identity = "unreported"
                 run_record_attempt = next((v for v in (record or {}).get("attempts", []) if v.get("task_id") == case and v.get("variant_id") == args.variant and v.get("replicate_index") == repeat), {})
                 judge = judge_evidence(run_dir, record, args.variant, case, repeat) if row else {"status": "unavailable", "classifications": [], "score": "unavailable"}
                 if reviewer_identity != "unreported":
@@ -395,6 +431,8 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     status = "provider_error"
                 elif harness_error:
                     status = "harness_error"
+                elif text and not delivery_observed:
+                    status = "reviewer_unverified"
                 elif not reviewer_completed:
                     status = "reviewer_error"
                 elif judge["status"] == "error":
@@ -418,16 +456,19 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "case_id": case, "repeat": repeat, "arm": args.arm, "variant_id": args.variant,
                     "run_id": run_id, "status": status,
                     "task_status": row.get("status", "unreported") if row else "unattempted",
-                    "reviewer_status": "completed" if reviewer_completed else ("interrupted" if interrupted else ("provider_error" if provider_error else ("harness_error" if harness_error else ("unattempted" if not row else "incomplete")))),
+                    "reviewer_status": "completed" if reviewer_completed else ("interrupted" if interrupted else ("provider_error" if provider_error else ("harness_error" if harness_error else ("unattempted" if not row else ("delivery_unverified" if text and not delivery_observed else "incomplete"))))),
                     "provider_error": provider_error,
                     "harness_error": harness_error and not interrupted,
                     "judge_status": judge["status"],
                     "judge_error": judge.get("error", "unavailable"),
                     "score": judge.get("score", "unavailable"),
-                    "reviewer_result": text if text is not None else "unavailable",
-                    "reviewer_verdict": reviewer_verdict,
+                    "reviewer_result": text if delivery_observed and text is not None else "unavailable",
+                    "parent_final_response": text if not delivery_observed and text is not None else "unavailable",
+                    "reviewer_verdict": reviewer_verdict if delivery_observed else "unreported",
                     "judge_classifications": classifications,
                     "reviewer_requested": requested,
+                    "reviewer_delivery_observed": delivery_observed,
+                    "parent_reported_identity": parent_reported_identity,
                     "reviewer_reported_identity": reviewer_identity,
                     "reviewer_backend_served": "unreported",
                     "identity": reported_identity(record, case, repeat, parent_requested, helper_requested),
@@ -454,7 +495,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "reported_model_ids": sorted({normalize_model(value) for value in observed_identities}),
             "valid": attribution_valid,
             "mismatches": attribution_mismatches,
-            "basis": "reviewer-reported session identity only; backend-served identity is unreported",
+            "basis": "captured reviewer delivery and reported session identity; backend-served identity is unreported",
         },
         "analysis_valid": attribution_valid,
         "settings": {

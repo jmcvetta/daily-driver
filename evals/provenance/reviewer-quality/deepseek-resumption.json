@@ -27,6 +27,19 @@
     "judge_errors": "Two terminal records have no final agent output and cannot be judged. The two interruptions also have no judgeable turn records. These four errors are not scored failures.",
     "cohort_complete": false
   },
+  "authorized_replacements": {
+    "cases": [
+      {"case_id": "reviewer-quality-01-boundary", "interrupted_repeat": 0, "replacement_repeat": 0},
+      {"case_id": "reviewer-quality-03-authorization", "interrupted_repeat": 4, "replacement_repeat": 0}
+    ],
+    "run_id": "reviewer-quality-deepseek-replacements",
+    "terminal_records": 2,
+    "source_commit": "3341a0e258fd6ccc4bffd2d3fe8fe7bbe7fdc881",
+    "source": "A local archive of the frozen source commit matched all frozen input hashes. Both replacement cases ran once, sequentially, on the pinned Omp 18.14.1 runtime with the same provider route.",
+    "recorded_plugin_revision": "The standard recorder initially recorded the checkout HEAD rather than the archived plugin source. The standard record was corrected to the archived source commit.",
+    "result_evidence": "Both evaluator tasks report SUCCESS and their parent final JSON received judge scores. Neither preserved transcript contains the delivered reviewer result; the eval guard rejected the parent's agent:// read. The parent-attributed reviewer identity and output remain unverified, not quality scores.",
+    "original_interruptions": "Preserved separately; not overwritten or counted as terminal reviewer outcomes."
+  },
   "runtime": {
     "frozen_omp_version": "18.14.1",
     "resumed_omp_version": "18.14.1",

@@ -201,39 +201,41 @@ not cash spend; unknown cash spend is not zero.
 
 ### Observed comparison
 
-The frozen cohort is incomplete. Of 40 DeepSeek slots, 38 have evaluator
-terminal records and two were interrupted. One interruption followed reviewer
-dispatch and cannot be replayed without changing the experiment. The other
-ended before an observed dispatch. Both remain unscored, with unknown duration.
-The [reconciliation](provenance/reviewer-quality/deepseek-resumption.json)
-explains the terminal-only standard record and the preserved interruptions.
-Its near-zero run time in the generated index measures the resume aggregation,
-not the cohort. Use the per-attempt durations below instead.
+Both interrupted DeepSeek slots were rerun once with the user's authorization.
+The [replacement record](provenance/reviewer-quality/deepseek-replacements.json)
+preserves their terminal evaluator results and independent judge scores. The
+original interruptions remain in the
+[reconciliation](provenance/reviewer-quality/deepseek-resumption.json).
 
-| Measure | GLM | DeepSeek |
-| --- | ---: | ---: |
-| Reviewer results meeting the contract / planned | 16/40 | 21/40 |
-| Full-review true positives / eligible positives | 8/8 | 13/13 |
-| Full-review false positives | 0 | 0 |
-| Clean-case false alarms / eligible | 0/5 | 0/5 |
-| Correct delta verdicts / eligible | 3/3 | 1/3 |
-| Attempt duration median, range (seconds) | 57.8, 26.2–905.0 | 106.2, 57.2–906.3 |
+**Reviewer attribution is incomplete.** In both replacements, the parent
+dispatched a reviewer but the eval guard rejected its `agent://` result read.
+The retained records do not show delivery of a completed reviewer result.
+The parent's final JSON and the judge's scores do not prove that the reviewer
+produced that JSON. Both replacements are therefore excluded from reviewer
+quality metrics, even though their evaluator records say `SUCCESS`.
 
-The full-review precision and recall are each 100% on eligible results, not
-on the planned 20 positive cases per arm. The denominators exclude failed,
-interrupted, and unjudgeable attempts. GLM produced no eligible result for
-the fixed-delta case; DeepSeek produced two. There were 11 GLM and 12 DeepSeek
-terminal harness errors, plus two DeepSeek interruptions. Four DeepSeek judge
-errors cover those interruptions and two empty outputs; none is a scored
-review failure. The per-case records show repeat variability and any findings:
-[GLM](provenance/reviewer-quality/glm-cohort-v3.json) and
-[DeepSeek](provenance/reviewer-quality/deepseek-cohort-v3.json).
+The same attribution check applies to the original cohorts. A captured
+completed reviewer result must match the parent's final JSON. Under that rule,
+the GLM cohort has no verified reviewer results and the DeepSeek cohort has
+five; 16 additional final responses in each arm have unverified delivery.
+The two smoke results for each arm also lack captured delivery. This does not
+prove those reviewers failed; it means the retained evidence cannot attribute
+their parent responses to them. The standard run index scores parent responses,
+not necessarily reviewer output.
 
-Attempt duration includes orchestration and is not reviewer latency. Reviewer
-usage and backend-served identity are unavailable. The resumed Omp installation
-has the frozen version, but binary equivalence to the earlier installation is
-unverified. These gaps and the small, selected samples do not distinguish the
-reviewers reliably. Keep the current default; this is not a promotion.
+The five verified DeepSeek responses are too few to establish a comparison.
+Their original task records include three positive full reviews, one clean
+full review, and one fix-delta review. Details, verdicts, errors, and the
+original two interruption markers remain in the
+[GLM record](provenance/reviewer-quality/glm-cohort-v3.json) and
+[DeepSeek record](provenance/reviewer-quality/deepseek-cohort-v3.json).
+Do not use the earlier unverified precision, recall, or delta accuracy claims.
+
+Attempt duration includes orchestration and is not reviewer latency. The
+DeepSeek cohort's near-zero duration in the standard index measures its resume
+aggregation, not the cohort. Reviewer usage and backend-served identity are
+unavailable. The evidence does not distinguish the reviewers. Keep the current
+default; this is not a promotion.
 
 `scripts/evals-reviewer-quality.py` collects bounded per-case evidence from
 explicit run directories and their committed records. An incomplete cohort
