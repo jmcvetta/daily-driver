@@ -16,7 +16,7 @@ Write the body to a file and hand over the path.
 The required class
 ==================
 
-Task bodies and the narrow frontier research exception use the
+Task bodies, assignable epic stories of any eligible kind, and the narrow frontier research exception use the
 provider-neutral `Model class` section defined in [`model-classes.md`](model-classes.md).
 An Omp task issue does not carry a Claude identifier or an Omp agent/model
 selector. For mapped undertaking families, select the required class within the

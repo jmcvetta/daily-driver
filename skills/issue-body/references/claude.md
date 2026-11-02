@@ -14,7 +14,7 @@ Codex's in [`codex.md`](codex.md).
 The required class
 ==================
 
-Task bodies and frontier research assignments use the provider-neutral
+Task bodies, assignable epic stories of any eligible kind, and frontier research assignments use the provider-neutral
 `Model class` section defined in [`model-classes.md`](model-classes.md). Before
 creating a session, `embark` resolves that class to a currently valid concrete
 identifier. It never passes a class name, configured alias, or suffixed

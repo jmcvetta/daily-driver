@@ -9,7 +9,7 @@ description: >-
   one pull request to writing issues for it. It is also where `undertake`
   sends work too big for the one issue it takes in, and it fires on an attempt
   to undertake an epic, which carries no code. Supplies the two gates that
-  decide whether an epic fits, assignable task stories, task class, the
+  decide whether an epic fits, assignable stories, model class, the
   plan-agreement gate, and the epic body — its sequencing and waves, which the
   sub-issue panel and dependency graph do not render. The graph writes are
   `issue-deps`'. Not for taking one child issue to a pull request, which is
@@ -129,21 +129,29 @@ spending approvals.
 These checks add no approval step or universal checklist. Scope agreement
 remains `Agree the plan`; true dependency edges remain `issue-deps`.
 
-**Every story is an assignable `task` issue.** This applies to new children
-and existing issues selected for linking. Each must carry exactly the `task`
-kind and pass `issue-body`'s task-readiness test, including its required model
-class and rationale. A `story` marker or parent edge proves neither.
+**Every story is an assignable issue.** This applies to new children and
+existing issues selected for linking. An assignable story has exactly one
+agent-eligible kind — `task`, `research` or `bug` — and passes `issue-body`'s
+readiness test for that kind. It also carries exactly one valid `## Model class`
+section with a rationale, as `issue-body` defines. The kind stays what it is: a
+research or bug story keeps its own contract and completion test, and does not
+take the task template, haiku or implementation map. A `story` marker, a
+parent edge or a kind label alone proves no readiness.
 
 Assignable means a complete handoff for the required agent class. Legitimate
 open blockers may delay dispatch without preventing inclusion in the epic.
 It does not require a GitHub assignee or an available concrete model in the
 authoring session. Do not assign anyone as part of planning.
 
-Each task records what was asked and no more. Scope invented to round out a
+`proposal`, `human` and nested `epic` issues are not assignable stories. A
+research story whose question is not yet settled is a `proposal`, not a story.
+Do not relabel any of them to manufacture readiness. A research story's answer
+is unknown by definition; that is not a readiness defect.
+
+Each story records what was asked and no more. Scope invented to round out a
 plan is scope every pull request is then measured against. A plan padded to
 look thorough is this skill's manufacturing failure, and it is the same
-instinct `issue-deps` names for edges. Unsettled research and human actions
-remain outside the story set; do not relabel them to manufacture readiness.
+instinct `issue-deps` names for edges.
 
 **Cut for parallelism, before there is a graph to read it off.** How much of
 the work can run abreast is decided here, when the tasks are defined — not
@@ -169,19 +177,20 @@ edge means and what it must not be used to record.
 it to be true. What the epic body carries is the *reading* of it, under
 `The epic body` below.
 
-**Each task records its required model class.** Sizing is when the remaining
-implementation difficulty is known. `issue-body` owns the task taxonomy,
-section format, readiness test, and routing guidance; `embark` resolves a
-concrete implementer later.
+**Each story records its required model class**, whatever its kind. Sizing is
+when the remaining difficulty is known. `issue-body` owns the class taxonomy,
+section format, per-kind readiness tests, and routing guidance; `embark`
+resolves a concrete worker later. A missing or invalid class, or a missing
+rationale, never defaults to `implementation`.
 
-When any task in a plan needs `frontier`, `Agree the plan` must explicitly
+When any story in a plan needs `frontier`, `Agree the plan` must explicitly
 confirm that exact assignment and its work envelope. State why the cheaper
 classes are insufficient, the question, known input scope, deliverable, and
 proposed frontier sessions or passes; separate facts from estimates and
 unknowns. Do not research the frontier question to estimate it. A general
 agreement to the epic is not frontier approval. Record the approval and
-approved scope in that task issue; material expansion needs a new confirmation.
-If the task asks frontier to implement, the user must explicitly authorize that
+approved scope in that story's issue; material expansion needs a new confirmation.
+If the story asks frontier to implement, the user must explicitly authorize that
 implementation exception and its bounded scope; research approval is not enough.
 
 2 — Agree the plan
@@ -211,12 +220,12 @@ writes them and reports each one, and asks nothing a second time.
 a change described in a prompt has often been described in an issue already,
 and a second issue for it splits the trail in two.
 
-Every child body follows `issue-body`'s task contract, with its `Model class`
-section settled at `Draft the plan`. Read reused issues before changing them.
-Resolve repository-answerable gaps through `issue`; preserve valid requirements,
-evidence, and provenance under `issue-body`'s update rule and follow
-`issue-labels`' kind-conflict rules. Leave an already-ready task unchanged.
-Do not blindly relabel another kind or invent scope to fit the epic. If a
+Every child body follows `issue-body`'s contract for its kind, with its
+`Model class` section settled at `Draft the plan`. Read reused issues before
+changing them. Resolve repository-answerable gaps through `issue`; preserve
+valid requirements, evidence, and provenance under `issue-body`'s update rule
+and follow `issue-labels`' kind-conflict rules. Leave an already-ready story
+unchanged. Do not blindly relabel a kind or invent scope to fit the epic. If a
 required decision or prerequisite is unavailable, report the exact gap and
 continue independent preparation. Do not attach the issue or present the epic
 as ready until every story passes. Replacement issues need the applicable
@@ -243,15 +252,16 @@ numbers that do not exist yet, which is why `Fill in the epic` is a step of its
 own.
 
 **Every issue this step writes carries one issue kind.** The epic gets `epic`;
-every child gets `task`, under `issue-labels`. Apply task readiness before any
-create call that also sets a parent. After that call, verify the edge and
-invoke `issue-labels` to add `story`. The marker supplements the task kind;
-it is never sent in place of one.
+every child gets its own agent-eligible kind (`task`, `research` or `bug`),
+under `issue-labels`. Apply the assignability test before any create call that
+also sets a parent. After that call, verify the edge and invoke `issue-labels`
+to add `story`. The marker supplements the kind; it is never sent in place of
+one.
 
 When this step creates a new epic, report its link and the `epic` label under
 [`issue`'s reporting rule](../issue/SKILL.md#reporting-a-newly-opened-issue).
 
-After each child is created, report its link, the `task` label, and the exact
+After each child is created, report its link, its kind label, and the exact
 class from its `Model class` section. Apply
 [`issue`'s reporting rule](../issue/SKILL.md#reporting-a-newly-opened-issue)
 to each child. Do not report the epic's label or another child's class as its
@@ -274,7 +284,7 @@ Two relationships, and `issue-deps` picks a client for each. They are not
 always the same client, and on a web worker they are not.
 
 - **Parent.** Every child issue is a sub-issue of the epic. Apply `issue-deps`'
-  pre-link task-readiness gate to every new or reused child before writing the
+  pre-link assignability gate to every new or reused child before writing the
   edge. Where the create call already set the parent, that gate ran at `Open
   the issues`; otherwise write it here. After every parent write, verify the
   direct edge, then invoke `issue-labels` to reconcile `story`.
@@ -291,15 +301,15 @@ response is the issue you modified, so it confirms nothing.
 --------------------
 
 Replace the epic's body with the whole of `The epic body`, now that every child
-issue has a number to put in it. Confirm every story passes task readiness
+issue has a number to put in it. Confirm every story passes the assignability test
 before presenting the epic as ready.
 
 6 — Hand off
 ------------
 
-Every ready task child whose blockers are closed can start now, each in its
+Every assignable story whose blockers are closed can start now, each in its
 own session, each through `undertake`. Name them, rather than leaving the reader
-to derive the list the first time. A task with open blockers remains a valid
+to derive the list the first time. A story with open blockers remains a valid
 story but does not start yet.
 
 **Putting that wave to sea is `embark`'s**: one ship per eligible child — a
@@ -311,8 +321,9 @@ is what it takes in.
 `Where it stops and waits`. It carries no code; the child issues named above
 are what a session takes.
 
-**No single child pull request closes the epic.** Each implements one task;
-none closes the epic merely by closing. When the fleet runs through `embark`,
+**No single child result closes the epic.** Each completes one story — by pull
+request, or by an evidenced answer for research; none closes the epic merely
+by closing. When the fleet runs through `embark`,
 its `Close the epic` step checks the coordinated outcome against the children.
 Without an embarked fleet, a person applies the same test.
 
@@ -440,7 +451,7 @@ Non-goals
 - **Does not fire on work that fits one pull request.** That is `Size the
   work`'s first gate, and it is first for this reason. An epic over a two-file
   change costs a reader more than the change does.
-- **Does not nest.** A task too big for one pull request is split again, never
+- **Does not nest.** A story too big for one pull request is split again, never
   promoted to a second epic.
 - **Does not keep a second copy of what the panel shows.** A wave heading
   carries its own state, because a wave is not something the sub-issue panel

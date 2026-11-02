@@ -4,6 +4,7 @@
 
 ### Changed
 
+* Admit ready, classed `task`, `research` and `bug` issues as assignable epic stories, preserving each kind's contract and completion evidence, and align linking, dispatch and epic completion to match ([#785](https://github.com/jmcvetta/daily-driver/issues/785)).
 * Retire the print-only Claude evaluation handoff case; preserve its historical records and the separate no-handoff case ([#789](https://github.com/jmcvetta/daily-driver/issues/789)).
 * Report a newly opened task issue's assigned model class beside its issue-kind label ([#783](https://github.com/jmcvetta/daily-driver/issues/783)).
 * Route classed undertaking work to the exact configured class before ownership, preserving its provider, backend, family, and authentication route; retain independent specialist helper routes and finish completed undertakings before session reuse ([#755](https://github.com/jmcvetta/daily-driver/issues/755)).

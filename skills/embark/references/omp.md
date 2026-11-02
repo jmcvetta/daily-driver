@@ -66,7 +66,7 @@ The route an implementor runs
 =============================
 
 The `task` surface selects an `agent`, not a model. Every epic story must pass
-`Take the wave`'s task-readiness gate before dispatch. For mapped families,
+`Take the wave`'s assignability gate before dispatch. For mapped families,
 select the agent named for its required class (`mechanical`, `implementation`,
 `reasoning`, or `frontier`). Each batch item sets only `agent`; it carries no
 per-item model argument. Resolve the effective route under
@@ -191,7 +191,9 @@ the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
 task session pushes after the read.
 `Close the epic` posts its evidence comment before `gh issue close`, and never
 calls the latter when a child outcome is unsupported or landing is by hand.
-Read the delivered outcome against the task's acceptance criteria.
+Read the delivered outcome against the story's own completion contract: a
+pull request for a task or bug, the evidenced answer recorded on the issue for
+research.
 An issue's closed state alone does not prove the epic outcome was met.
 
 **A live subagent's result or failure arrives as a wake of its own.** The
