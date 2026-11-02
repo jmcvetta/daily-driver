@@ -804,6 +804,17 @@ improvement. The first-turn summaries differed between arms, so they also
 changed the context for the follow-up. The probe has no multi-turn
 requested-explanation control.
 
+A [five-turn probe](probes/terse-five-turn-2026-11-02.json) used the same
+fixture and base against candidate
+`dc180f0ae1380f17c5640d3897f8cff4e34f18e1`. After the initial summary,
+each session answered three fixed questions about other tracker items before
+the same blocker question. The judge used the same two rubrics on the final
+answer. All ten answers identified #279; all ten scored zero for irrelevant
+content. This scenario showed no improvement across five replicates per arm.
+The intermediate questions changed the conversation, so this is not a
+controlled estimate of the effect of turn count alone. It has no five-turn
+requested-explanation control.
+
 The [initial run](provenance/omp-terse-base-vs-candidate-2026-11-02-2026-11-02_16-03-04.json)
 also had a ceiling on its shorter blocker case. Its explanation results are
 invalid for comparison: both arms attempted broad discovery that the Omp read
