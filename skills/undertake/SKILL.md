@@ -231,6 +231,14 @@ requires the recorded approval and exact envelope; frontier implementation
 also requires the explicit user exception above. Concrete `Model:` lines in
 claim provenance record the observed model, not task metadata.
 
+Operator selection is different from an agent assignment. Do not reject a
+manual frontier switch or native model-mention consultation for missing
+issue-level frontier approval. Preserve the assigned worker, class, approval
+record, and verification state. Follow the constitution's *Manual frontier
+escalation* for plan repair and return to the ordinary worker; consultation
+does not authorize implementation. Agent-initiated routes and automatic
+fallbacks still require their own authorization.
+
 **An issue carrying no label is labelled here rather than merely noted.** It
 runs through — unlabelled is not blocked. `issue` repairs an unlabelled
 issue in passing too; what is special here is that nothing unlabelled gets

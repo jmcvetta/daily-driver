@@ -13,6 +13,7 @@
 
 ### Fixed
 
+* Allow operator frontier selection and native caret consultations without reassigning the undertaking worker or authorizing agent-controlled frontier fallback ([#805](https://github.com/jmcvetta/daily-driver/issues/805)).
 * Require manually escalated frontier sessions to repair the plan and return implementation to an eligible cheaper worker ([#798](https://github.com/jmcvetta/daily-driver/issues/798)).
 * Prevent improvised Omp controllers for Claude-judged evaluations while preserving native Claude and non-Claude judge routes ([#791](https://github.com/jmcvetta/daily-driver/issues/791)).
 * Honor assigned, bounded evaluation work without requesting duplicate execution approval ([#775](https://github.com/jmcvetta/daily-driver/issues/775)).

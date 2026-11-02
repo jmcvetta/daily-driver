@@ -9,7 +9,16 @@ const SPECIALISTS = new Set(["reviewer", "scout", "security-reviewer", "seance"]
 // Agent names are process-local, not globally unique. A shared auth store and
 // an unambiguous live parent session are both required for inheritance.
 const roots = new WeakMap();
-const pendingChildren = new Map();
+const pendingChildren = new Set();
+const retiredChildren = new WeakMap();
+
+function retireChild(record) {
+	pendingChildren.delete(record);
+	let retired = retiredChildren.get(record.auth);
+	if (!retired) { retired = new Set(); retiredChildren.set(record.auth, retired); }
+	// Retain denial, not the parent's state or authorization, for a late startup.
+	retired.add(JSON.stringify([record.parentId, record.key]));
+}
 
 function selector(model) {
 	return model && typeof model.provider === "string" && typeof model.id === "string"
@@ -26,6 +35,33 @@ function origin(model) {
 		provider: model.provider, model: model.id, api: model.api, baseUrl: model.baseUrl,
 		headersDigest: createHash("sha256").update(JSON.stringify(Object.entries(model.headers ?? {}).sort())).digest("hex"),
 	};
+}
+
+function sameOrigin(left, right) {
+	return left.provider === right.provider && left.model === right.model && left.api === right.api &&
+		left.baseUrl === right.baseUrl && left.headersDigest === right.headersDigest;
+}
+
+function modelMention(ctx, agent) {
+	const agents = new Set();
+	const selectors = new Set();
+	for (const entry of ctx.sessionManager.getBranch?.() ?? []) {
+		if (entry.type !== "custom" || entry.customType !== "model_mention") continue;
+		const mention = entry.data;
+		if (!mention || typeof mention.agent !== "string" || !/^m\d+$/u.test(mention.agent) ||
+			typeof mention.selector !== "string" || typeof mention.name !== "string" ||
+			agents.has(mention.agent) || selectors.has(mention.selector)) continue;
+		agents.add(mention.agent);
+		selectors.add(mention.selector);
+		if (mention.agent === agent) return mention;
+	}
+	return null;
+}
+
+function automaticSelection(ctx, model) {
+	const entry = (ctx.sessionManager.getBranch?.() ?? []).filter(item => item.type === "model_change").at(-1);
+	if (!entry || entry.model?.replace(EFFORT, "") !== selector(model)) return null;
+	return entry.resolvedModelIsFallback === true || entry.role === "fallback" || entry.role === "prewalk";
 }
 
 function source(ctx, provider) {
@@ -117,7 +153,7 @@ function installPool(ctx, state) {
 }
 
 function publicState(state) {
-	if (!state) return null;
+	if (!state || state.consultation) return null;
 	return {
 		issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
 		observedModel: state.observedModel ?? null, status: state.status,
@@ -187,46 +223,58 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			...(state.recovery ? { recovery: true, reason: state.reason } : {}),
 			...(state.identities ? { identities: state.identities } : {}),
 			...(state.frontierApproval ? { frontierApproval: state.frontierApproval } : {}),
+			...(state.consultation ? { consultation: true } : {}),
 		});
 	}
 
-	async function start(_event, ctx) {
+	async function start(event, ctx) {
 		const sessionId = ctx.sessionManager?.getSessionId?.();
-		if (!sessionId || states.has(sessionId)) return;
+		if (!sessionId) return;
+		const previous = current(ctx);
+		if (event.type !== "session_start" && previous) release(ctx, previous);
+		if (states.has(sessionId)) return;
 		let state;
 		try {
 			const sessions = scope(ctx);
-			const expected = ctx.agent?.kind === "sub" ? pendingChildren.get(ctx.agent.id) : undefined;
+			const matches = ctx.agent?.kind === "sub" ? [...pendingChildren].filter(record =>
+				record.key === ctx.agent.id && record.auth === ctx.modelRegistry.authStorage &&
+				record.parentId === ctx.agent.parentId) : [];
+			if (matches.length > 1) throw new Error("Child consultation identity is ambiguous");
+			const expected = matches[0];
 			const parents = ctx.agent?.kind === "sub" && ctx.agent.parentId
 				? [...(sessions?.values() ?? [])].filter(record => record.agentId === ctx.agent.parentId) : [];
 			if (parents.length > 1) throw new Error("Parent undertaking identity is ambiguous");
 			const saved = storedState(ctx);
-			if (expected && (expected.auth !== ctx.modelRegistry.authStorage || expected.parentId !== ctx.agent.parentId)) {
-				throw new Error("Child cannot inherit an undertaking from another root or authentication scope");
-			}
-			if (!expected && parents.length && !saved) throw new Error("Child undertaking handoff identity is missing");
+			if (!expected && !saved && ctx.agent?.kind === "sub" &&
+				([...pendingChildren].some(record => record.key === ctx.agent.id) ||
+					retiredChildren.get(ctx.modelRegistry.authStorage)?.has(JSON.stringify([ctx.agent.parentId, ctx.agent.id])) ||
+					parents.length)) throw new Error("Child undertaking handoff identity is missing or belongs to another root");
 			if (expected?.specialist) {
 				if (expected.state.status !== "verified") throw new Error("Parent undertaking route is not verified");
-				pendingChildren.delete(ctx.agent.id);
+				pendingChildren.delete(expected);
 				return;
 			}
 			const parent = expected?.state;
 			if (!parent && !saved) return;
-			if (expected) pendingChildren.delete(ctx.agent.id);
+			if (expected) pendingChildren.delete(expected);
 			state = {
 				...(parent ?? saved), sessionId, lease: undefined,
-				status: saved?.recovery ? "blocked" : "pending", observedModel: null,
+				...(expected?.consultation ?? {}),
+				status: (expected?.consultation || saved?.consultation) ? "consultation" : saved?.recovery ? "blocked" : "pending", observedModel: null,
 				workerModels: ctx.models,
-				selectedModel: parent ? selector(ctx.models.current()) : saved.selectedModel,
-				selectedEffort: parent ? pi.getThinkingLevel() : saved.selectedEffort,
-				identities: (parent ?? saved).identities ? [...(parent ?? saved).identities] : undefined,
+				selectedModel: expected?.consultation?.selectedModel ?? (parent ? selector(ctx.models.current()) : saved.selectedModel),
+				selectedEffort: expected?.consultation ? undefined : parent ? pi.getThinkingLevel() : saved.selectedEffort,
+				identities: (expected?.consultation ?? parent ?? saved).identities ? [...(expected?.consultation ?? parent ?? saved).identities] : undefined,
 			};
 			publish(ctx, state);
-			if (parent?.status !== undefined && parent.status !== "verified") throw new Error("Parent undertaking route is not verified");
-			checkModel(ctx, state, ctx.models.current(), Boolean(state.recovery));
-			if (parent?.capability === "unverified" && selector(ctx.models.current()) !== parent.selectedModel) {
-				throw new Error("An unmapped-family worker must retain the invoking model");
+			if (!state.consultation && !consultation(ctx, state)) {
+				if (parent?.status !== undefined && parent.status !== "verified") throw new Error("Parent undertaking route is not verified");
+				checkModel(ctx, state, ctx.models.current(), Boolean(state.recovery));
+				if (parent?.capability === "unverified" && selector(ctx.models.current()) !== parent.selectedModel) {
+					throw new Error("An unmapped-family worker must retain the invoking model");
+				}
 			}
+			if (state.consultation && !sameOrigin(origin(ctx.models.current()), state.origin)) throw new Error("Consultation model differs from the operator's native selection");
 			if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Authentication route changed before session recovery");
 			installPool(ctx, state);
 			if (parent) await save(state);
@@ -255,6 +303,9 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		execute: async (_id, params, _signal, _update, ctx) => {
 			const previous = current(ctx);
 			const sessionId = ctx.sessionManager.getSessionId();
+			if (previous?.consultation) return {
+				isError: true, content: [{ type: "text", text: "A model consultation cannot reassign the parent undertaking worker." }], details: describe(ctx),
+			};
 			if (previous && previous.issue !== params.issue) {
 				selecting.delete(sessionId);
 				return {
@@ -369,6 +420,22 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		},
 	});
 
+	function consultation(ctx, state) {
+		const live = state.workerModels.current();
+		return !state.consultation && ctx.agent?.kind === "main" && frontier(live) &&
+			selector(live) !== state.selectedModel && automaticSelection(ctx, live) === false;
+	}
+
+	function workerReady(ctx, state) {
+		if (state.status !== "verified" || state.consultation ||
+			selector(state.workerModels.current()) !== state.selectedModel ||
+			(state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort)) return false;
+		try {
+			checkModel(ctx, state, state.workerModels.current());
+			return source(ctx, state.origin.provider) === state.authenticationRoute;
+		} catch { return false; }
+	}
+
 	pi.on("before_provider_request", (_event, ctx) => {
 		const state = current(ctx);
 		if (!state) return;
@@ -377,7 +444,11 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		// both model accessors to the request model, including helper requests.
 		if (selector(ctx.model) !== selector(state.workerModels.current())) return;
 		try {
-			if (state.recovery) {
+			if (consultation(ctx, state)) return;
+			if (state.consultation) {
+				if (state.status === "blocked") throw new Error(state.reason);
+				if (!sameOrigin(origin(ctx.model), state.origin)) throw new Error("Consultation model differs from the operator's native selection");
+			} else if (state.recovery) {
 				checkModel(ctx, state, ctx.model, true);
 			} else {
 				if (state.status === "blocked") throw new Error(state.reason);
@@ -419,9 +490,16 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	pi.on("tool_call", (event, ctx) => {
 		const state = current(ctx);
 		const failure = failures.get(ctx.sessionManager?.getSessionId?.());
-		if (!failure && (!state || state.status === "verified") && !selecting.has(ctx.sessionManager?.getSessionId?.())) return;
+		// Operator consultation tools do not verify or reassign the undertaking worker.
+		if (state && consultation(ctx, state) && !selecting.has(ctx.sessionManager?.getSessionId?.())) return;
+		if (!failure && (!state || workerReady(ctx, state) || state.consultation && state.status === "consultation") &&
+			!selecting.has(ctx.sessionManager?.getSessionId?.())) return;
 		if (["read", "grep", "glob", "daily_driver_get_session", "daily_driver_route_undertaking", "daily_driver_finish_undertaking"].includes(event.toolName)) return;
 		if (event.toolName === "write" && ["xd://daily_driver_get_session", "xd://daily_driver_route_undertaking", "xd://daily_driver_finish_undertaking"].includes(event.input?.path)) return;
+		// A pending worker may still carry the operator's native consultation.
+		const tasks = event.input?.tasks ?? (event.input?.agent ? [event.input] : []);
+		if (!failure && state && !selecting.has(ctx.sessionManager?.getSessionId?.()) &&
+			event.toolName === "task" && tasks.length && tasks.every(task => modelMention(ctx, task.agent))) return;
 		return { block: true, reason: failure ?? state?.reason ?? "Task work requires the selected worker's verified identity. Call routing alone and wait for its next response." };
 	});
 
@@ -429,10 +507,21 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		const state = current(ctx);
 		if (!state) return;
 		try {
-			if (state.status !== "verified") throw new Error("Parent undertaking route is not verified");
+			const mention = modelMention(ctx, event.agent);
+			if (!mention && !workerReady(ctx, state)) throw new Error("Parent undertaking route is not verified on the selected worker");
 			if (!event.patterns?.length) throw new Error("Child effective model route is unavailable");
-			const specialist = SPECIALISTS.has(event.agent);
-			if (!specialist) for (const pattern of event.patterns) {
+			const specialist = !mention && SPECIALISTS.has(event.agent);
+			let selected;
+			if (mention) {
+				if (/[*?,]/u.test(mention.selector)) throw new Error("Native consultation must select one concrete model");
+				const model = ctx.models.resolve(mention.selector);
+				if (!model || selector(model) !== mention.selector.replace(EFFORT, "")) throw new Error("Native consultation model cannot be resolved exactly");
+				selected = {
+					consultation: true, origin: origin(model), selectedModel: selector(model), recovery: undefined,
+					authenticationRoute: source(ctx, model.provider),
+					identities: model.provider === state.origin.provider ? state.identities : undefined,
+				};
+			} else if (!specialist) for (const pattern of event.patterns) {
 				if (typeof pattern !== "string" || /[*?,]/u.test(pattern)) throw new Error("Child route must use concrete, verifiable candidates");
 				const model = ctx.models.resolve(pattern);
 				if (!model) throw new Error("Child model route cannot be resolved");
@@ -442,14 +531,18 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			const parents = [...(scope(ctx)?.values() ?? [])].filter(record => record.agentId === ctx.agent?.id);
 			if (parents.length !== 1) throw new Error("Parent undertaking identity is ambiguous");
 			if (!event.spawnKey) throw new Error("Child stable handoff identity is unavailable");
-			const previous = pendingChildren.get(event.spawnKey);
-			if (previous && previous.state !== state && previous.state.status !== "closed") throw new Error("Child handoff identity belongs to another undertaking");
-			pendingChildren.set(event.spawnKey, { state, specialist, parentId: ctx.agent?.id, auth: ctx.modelRegistry.authStorage });
+			const previous = [...pendingChildren].find(record => record.key === event.spawnKey &&
+				record.auth === ctx.modelRegistry.authStorage && record.parentId === ctx.agent?.id);
+			if (previous) pendingChildren.delete(previous);
+			retiredChildren.get(ctx.modelRegistry.authStorage)?.delete(JSON.stringify([ctx.agent?.id, event.spawnKey]));
+			pendingChildren.add({ key: event.spawnKey, state, specialist, consultation: selected, parentId: ctx.agent?.id, auth: ctx.modelRegistry.authStorage });
+			if (mention) return { model: [mention.selector], note: "Use the operator's exact native model selection." };
 		} catch (error) { return { block: true, reason: `Undertaking route gap: ${error.message}` }; }
 	});
 
 	function release(ctx, state) {
 		if (state.lease) ctx.modelRegistry.authStorage.sessions.unrestrict(state.origin.provider, state.sessionId, state.lease);
+		for (const record of pendingChildren) if (record.state === state) retireChild(record);
 		state.status = "closed";
 		scope(ctx)?.delete(state.sessionId);
 		states.delete(state.sessionId);
@@ -457,6 +550,13 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		failures.delete(state.sessionId);
 		status(ctx, undefined);
 	}
+
+	pi.on("tool_result", (event, ctx) => {
+		if (event.toolName !== "task" || !event.isError) return;
+		for (const record of pendingChildren) {
+			if (record.auth === ctx.modelRegistry.authStorage && record.parentId === ctx.agent?.id) retireChild(record);
+		}
+	});
 
 	pi.on("session_shutdown", (_event, ctx) => {
 		const state = current(ctx);
