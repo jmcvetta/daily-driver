@@ -171,22 +171,34 @@ when its agreed deliverable is answer-only. Bounded inconclusive research is
 complete only with the evidence, limitation, and resolution path required by
 `issue-body`; failed access or abandoned work is not completion.
 
-**Only a `task` carries a required model class.** Validate its one
+**A `task`, and any classed `research` or `bug`, carries a required model
+class.** A `task` always does. A `research` or `bug` does when it is an epic
+story (it carries the `story` marker or is a child of an epic), when it carries
+a `## Model class` section, or when it is assigned `frontier`. Validate its one
 `## Model class` section and rationale through `issue-body` before the claim,
 repairing an old or invalid body to the current contract where the handoff is
-otherwise grounded. `bug` and routine `research` use their kind-specific
-readiness tests, not task class metadata. A research assignment using
-`frontier` follows `issue-body`'s narrow exception: it keeps the `research`
-label and must carry its single class section, rationale, explicit approval,
-and exact work envelope before claim or substantive work. Do not impose the
-task template on it. The class states the capability a dispatcher such as
-`embark` selects a route for.
+otherwise grounded. A story linked before the class was required is such an
+old body: where the handoff is grounded, repair its class through `issue` under
+`issue-body`'s update rule, choosing the lowest class that can deliver the
+settled work. Otherwise a missing or invalid class, or a missing rationale, is a
+gap to report; never default it to `implementation`. A classed
+`research` or `bug` keeps its kind: it uses its own readiness and completion
+tests, not the task template. A standalone `bug` or `research` with no story
+role and no class section uses its kind-specific readiness test alone. A
+research assignment using `frontier` follows `issue-body`'s narrow exception:
+it keeps the `research` label and must carry its single class section,
+rationale, explicit approval, and exact work envelope before claim or
+substantive work. The class states the capability a dispatcher such as `embark`
+selects a route for.
 
 A frontier assignment must carry explicit approval and its exact work envelope
 before execution. Frontier implementation also needs an explicit user
 exception recorded for that implementation scope.
 
-**Route classed undertaking work before the worktree or claim.** Resolve the
+**Route classed undertaking work before the worktree or claim.** This covers a
+classed `task`, `research` and `bug` alike, by the same route; there is no
+second router. Branch-free answer-only research keeps its route after routing.
+Resolve the
 exact class within the invoking model family and provider, including effort and
 visible fallbacks. Preserve backend and authentication route where supported.
 Never substitute another provider. An eligible account may refresh or rotate;

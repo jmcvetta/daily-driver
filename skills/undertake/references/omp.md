@@ -35,7 +35,8 @@ makes further down this file.
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
 read-first and the Claude route does.
 
-For a `task`, validate its `Model class` section and rationale through
+For a `task` or a classed `research` or `bug`, validate its `Model class`
+section and rationale through
 [`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
 claim, repairing an old or invalid body where its handoff is otherwise
 grounded. A frontier task also needs explicit approval and its exact work

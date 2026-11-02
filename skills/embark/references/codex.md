@@ -83,7 +83,9 @@ the gate holds. `--match-head-commit <headRefOid>` makes it fail closed if the
 task session pushes after the read.
 `Close the epic` posts its evidence comment before `gh issue close`, and never
 calls the latter when a child outcome is unsupported or landing is by hand.
-Read the delivered outcome against the task's acceptance criteria.
+Read the delivered outcome against the story's own completion contract: a
+pull request for a task or bug, the evidenced answer recorded on the issue for
+research.
 An issue's closed state alone does not prove the epic outcome was met.
 
 Each delegation's prompt is the child issue number and the instruction to
@@ -104,7 +106,7 @@ Route assessment limits
 
 The delegation namespace has not been driven. No model or effort argument is
 measured, so do not invent either. Every epic story must pass `Take the wave`'s
-task-readiness gate. Resolve its required class only where the offered
+assignability gate. Resolve its required class only where the offered
 configured route and its actual capabilities can be established. Otherwise
 stop that child and report the configuration gap. The muster roll records
 each task's required class and selected implementor route, and the actual

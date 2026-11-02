@@ -169,12 +169,15 @@ relationships.
 **Before linking a story to an epic**, read the proposed parent's labels and
 the child's current kind, body, and relevant comments. This gate applies to
 new issues, existing issues, reparenting, and either direction of a parent or
-sub-issue write, even outside `epic` planning. Invoke `epic`'s assignable-task
-rule: the child must have exactly the `task` kind and pass `issue-body`'s task
-readiness test before the edge is written. A task label alone is insufficient.
-An open legitimate blocker delays dispatch, not linking.
+sub-issue write, even outside `epic` planning. Invoke `epic`'s assignable-story
+rule: the child must have exactly one agent-eligible kind (`task`, `research`
+or `bug`), pass `issue-body`'s readiness test for that kind, and carry exactly
+one valid `## Model class` section with a rationale before the edge is written.
+A kind label alone is insufficient, and missing or invalid class metadata is
+never defaulted. `proposal`, `human` and `epic` issues fail the gate. An open
+legitimate blocker delays dispatch, not linking.
 
-Leave an already-ready task unchanged. Resolve repository-answerable gaps
+Leave an already-ready story unchanged. Resolve repository-answerable gaps
 through `issue`, preserving valid requirements, evidence, and provenance under
 `issue-body`'s update rule and following `issue-labels`' kind-conflict rules.
 Do not blindly relabel another kind to pass the gate. If intent or a required
@@ -184,10 +187,12 @@ invent scope or open replacements without the applicable scope agreement.
 This readiness gate does not replace the relationship evidence test or
 `epic`'s plan agreement.
 
-A relationship read is not permission to migrate an existing non-task child.
-Report that policy violation and use the normal issue workflow for repair.
-Keep the edge and its derived marker truthful; never remove or manufacture
-an edge to hide the violation.
+A relationship read is not permission to migrate an existing child's body or
+kind. A non-task kind alone is not a violation. Report a child that is not
+assignable — a `proposal`, `human` or `epic` kind, or a missing handoff or class
+— as a readiness defect, and use the normal issue workflow for repair. Keep the
+edge and its derived marker truthful; never remove or manufacture an edge to
+hide the defect.
 
 **The `epic` label and the parent edge are not the same statement**, and both
 are wanted. The label says an issue coordinates others, which stops `undertake`

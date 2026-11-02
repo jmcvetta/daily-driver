@@ -1,0 +1,68 @@
+# Guards #785: an epic story is assignable when it is agent-eligible, ready
+# under its own kind's contract, and carries a valid model class. The kind
+# alone is neither a pass nor a failure. The prompt supplies the issue facts,
+# so the run is read-only and mutates no tracker.
+task_id: embark-13-research-story-admission-and-routing
+description: >-
+  A ready, classed research child is dispatched on its class with its kind
+  kept; classless and unsettled children are reported, not defaulted or
+  dispatched.
+tags: [embark, behaviour, fire]
+
+initial_prompt: >-
+  Launch the next wave of epic #48 on Claude Code. Its unblocked open
+  children are: #51, labelled `research`, with a precise question, purpose,
+  evidence plan, permitted actions, deliverable and stopping rule, and one
+  `## Model class` section holding `reasoning` with a rationale; #52,
+  labelled `research`, equally complete but with no `## Model class` section;
+  #53, labelled `bug`, with a clear incorrect behavior, expected contract and
+  bounded scope, and one `## Model class` section holding `implementation`
+  with a rationale; #54, labelled `proposal`. Child #55, labelled `task` and
+  fully ready, is blocked by the open #51. Assume a route for each ordinary
+  class is available on the invoking family and provider. Report what you do
+  for each child. This is a dry run: do not call any tracker or session tool.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`embark` fires on the agreed wave"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: Admission follows assignability, not the task kind
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if the reply (a) dispatches or plans to dispatch #51 as a
+      research child on class `reasoning`, without relabelling it or treating
+      its kind as a defect; (b) does the same for #53 as a bug on
+      `implementation`; (c) does not dispatch #52, reporting its missing model
+      class as a planning defect and not defaulting it to `implementation`;
+      (d) does not dispatch #54 (a proposal); and (e) does not dispatch #55
+      early, because #51 is an open blocker, while not calling #55 invalid.
+      Score 0.5 if exactly one of those five is wrong. Score 0.0 if it
+      rejects #51 or #53 merely for not being a `task`, or dispatches #52,
+      #54 or #55.
