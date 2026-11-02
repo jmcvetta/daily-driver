@@ -20,15 +20,26 @@ mkdir -p "${HOME}" "${TMPDIR}"
 unset CARGO_HOME
 
 # A directory holding only the tools the helper needs, so a wt, brew or cargo on the
-# machine running this check cannot leak in. Extra arguments name tools to leave out.
+# machine running this check cannot leak in. Extra arguments name tools to leave out; a
+# tool the machine lacks (xz and sha256sum on stock macOS) is left out too.
 make_tools() {
-	local dir="$1" tool
+	local dir="$1" tool path
 	shift
 	mkdir -p "${dir}"
 	for tool in mktemp tar xz sha256sum install rm mkdir cat chmod; do
 		case " $* " in *" ${tool} "*) continue ;; esac
-		ln -s "$(command -v "${tool}")" "${dir}/${tool}"
+		path="$(command -v "${tool}")" || continue
+		ln -s "${path}" "${dir}/${tool}"
 	done
+}
+
+# Write the checksum file the way Worktrunk publishes it: "<hex> *<file>".
+write_checksum() {
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum --binary "$1" >"$1.sha256"
+	else
+		shasum -a 256 --binary "$1" >"$1.sha256"
+	fi
 }
 
 make_wt() {
@@ -51,9 +62,11 @@ EOF
 	cat >"${dir}/curl" <<'EOF'
 #!/bin/sh
 out="" url=""
+printf '%s\n' "$*" >>"${CURL_LOG}.args"
 while [ "$#" -gt 0 ]; do
 	case "$1" in
 		-o) out="$2"; shift ;;
+		--connect-timeout | --retry | --retry-delay) shift ;;
 		-*) ;;
 		*) url="$1" ;;
 	esac
@@ -72,7 +85,7 @@ pack_release() {
 	local fixture="$1" target="$2"
 	mkdir -p "${fixture}"
 	tar -C "${TEMP}/stage-${target}" -cJf "${fixture}/worktrunk-${target}.tar.xz" "worktrunk-${target}"
-	(cd "${fixture}" && sha256sum --binary "worktrunk-${target}.tar.xz" >"worktrunk-${target}.tar.xz.sha256")
+	(cd "${fixture}" && write_checksum "worktrunk-${target}.tar.xz")
 }
 
 # Build a release archive and its .sha256 for one target triple, as Worktrunk publishes them.
@@ -105,7 +118,7 @@ run_failure() {
 }
 
 reset_install() {
-	rm -rf "${TEMP}/install" "${TMPDIR}"
+	rm -rf "${TEMP}/install" "${TMPDIR}" "${CURL_LOG}.args"
 	mkdir -p "${TMPDIR}"
 	: >"${CURL_LOG}"
 }
@@ -140,6 +153,8 @@ case "${output}" in *"wt v${VERSION}"*) ;; *) printf 'unexpected output: %s\n' "
 [ "$(stat -c '%a' "${WORKTRUNK_INSTALL_DIR}/wt" 2>/dev/null || stat -f '%Lp' "${WORKTRUNK_INSTALL_DIR}/wt")" = 755 ]
 [ "$(cat "${CURL_LOG}")" = "$(printf '%s\n%s' "${BASE_URL}/worktrunk-x86_64-unknown-linux-musl.tar.xz" "${BASE_URL}/worktrunk-x86_64-unknown-linux-musl.tar.xz.sha256")" ]
 assert_temp_clean
+# Every download bounds its connection and retries a transient failure.
+[ "$(grep -c -- '--connect-timeout 20 --retry 3' "${CURL_LOG}.args")" = 2 ]
 
 # The installed binary is reused on the next call, without another download.
 : >"${CURL_LOG}"
@@ -156,17 +171,20 @@ for platform in "Linux aarch64 aarch64-unknown-linux-musl" "Darwin x86_64 x86_64
 	[ "$(head -n 1 "${CURL_LOG}")" = "${BASE_URL}/worktrunk-$3.tar.xz" ]
 done
 
-# Without sha256sum, shasum -a 256 verifies the archive.
-SHASUM_TOOLS="${TEMP}/shasum-tools"
-make_tools "${SHASUM_TOOLS}" sha256sum
-SHASUM_STUBS="${TEMP}/shasum-stubs"
-make_stubs "${SHASUM_STUBS}"
-# shellcheck disable=SC2016  # the stub script keeps its own $-expansions
-printf '#!/bin/sh\n[ "$1 $2 $3" = "-a 256 -c" ] || exit 64\nexec %s -c "$4"\n' "$(command -v sha256sum)" >"${SHASUM_STUBS}/shasum"
-chmod +x "${SHASUM_STUBS}/shasum"
-reset_install
-run_success "${SHASUM_STUBS}:${SHASUM_TOOLS}" >/dev/null
-[ -x "${WORKTRUNK_INSTALL_DIR}/wt" ]
+# Without sha256sum, shasum -a 256 verifies the archive. The stub is backed by sha256sum,
+# so a machine that only has shasum (stock macOS) skips this case.
+if command -v sha256sum >/dev/null 2>&1; then
+	SHASUM_TOOLS="${TEMP}/shasum-tools"
+	make_tools "${SHASUM_TOOLS}" sha256sum
+	SHASUM_STUBS="${TEMP}/shasum-stubs"
+	make_stubs "${SHASUM_STUBS}"
+	# shellcheck disable=SC2016  # the stub script keeps its own $-expansions
+	printf '#!/bin/sh\n[ "$1 $2 $3" = "-a 256 -c" ] || exit 64\nexec %s -c "$4"\n' "$(command -v sha256sum)" >"${SHASUM_STUBS}/shasum"
+	chmod +x "${SHASUM_STUBS}/shasum"
+	reset_install
+	run_success "${SHASUM_STUBS}:${SHASUM_TOOLS}" >/dev/null
+	[ -x "${WORKTRUNK_INSTALL_DIR}/wt" ]
+fi
 
 # A wrong checksum fails with the mismatch, names the release, and installs nothing.
 BAD_SUM="${TEMP}/bad-sum"
@@ -174,6 +192,8 @@ make_release "${BAD_SUM}" x86_64-unknown-linux-musl
 printf '%064d *worktrunk-x86_64-unknown-linux-musl.tar.xz\n' 0 >"${BAD_SUM}/worktrunk-x86_64-unknown-linux-musl.tar.xz.sha256"
 reset_install
 FIXTURE="${BAD_SUM}" run_failure "${RUN_PATH}" 'checksum mismatch for worktrunk-x86_64-unknown-linux-musl.tar.xz'
+# The verifier's own output rides along, so a malformed .sha256 is not mistaken for tampering.
+FIXTURE="${BAD_SUM}" run_failure "${RUN_PATH}" 'FAILED'
 FIXTURE="${BAD_SUM}" run_failure "${RUN_PATH}" "https://github.com/max-sixty/worktrunk/releases/tag/v${VERSION}"
 assert_nothing_installed
 assert_temp_clean
@@ -207,6 +227,34 @@ FAKE_ARCH=riscv64 run_failure "${RUN_PATH}" 'no prebuilt release archive for Lin
 FAKE_OS=FreeBSD run_failure "${RUN_PATH}" "https://github.com/max-sixty/worktrunk/releases/tag/v${VERSION}"
 [ ! -s "${CURL_LOG}" ]
 assert_nothing_installed
+
+# The xz binary is required only on Linux: macOS tar reads .tar.xz itself, so a Mac without
+# xz must get past the tool check. (GNU tar still needs xz here, so extraction may fail.)
+reset_install
+XZ_TOOLS="${TEMP}/darwin-no-xz-tools"
+make_tools "${XZ_TOOLS}" xz
+darwin_output="$(FAKE_OS=Darwin FAKE_ARCH=arm64 PATH="${STUBS}:${XZ_TOOLS}" /bin/bash -c 'source "$1"; ensure_worktrunk' _ "${HELPER}" 2>&1 || true)"
+case "${darwin_output}" in *'xz is required'*) printf 'Darwin must not require xz: %s\n' "${darwin_output}" >&2; exit 1 ;; esac
+
+# A failed git-wt install must not leave wt behind to be reused as a finished install.
+PARTIAL_TOOLS="${TEMP}/partial-tools"
+make_tools "${PARTIAL_TOOLS}" install
+# shellcheck disable=SC2016  # the stub script keeps its own $-expansions
+printf '#!/bin/sh\nfor last; do :; done\ncase "$last" in */git-wt) exit 1 ;; esac\nexec %s "$@"\n' "$(command -v install)" >"${PARTIAL_TOOLS}/install"
+chmod +x "${PARTIAL_TOOLS}/install"
+reset_install
+run_failure "${STUBS}:${PARTIAL_TOOLS}" 'cannot install git-wt'
+assert_nothing_installed
+assert_temp_clean
+
+# A caller that runs with HOME unset still reaches an existing wt.
+NO_HOME="${TEMP}/no-home"
+mkdir -p "${NO_HOME}"
+make_wt "${NO_HOME}/wt"
+reset_install
+# shellcheck disable=SC2016  # the inner script expands its own $1
+env -u HOME PATH="${NO_HOME}:${RUN_PATH}" /bin/bash -uc 'source "$1"; ensure_worktrunk' _ "${HELPER}" >/dev/null
+[ ! -s "${CURL_LOG}" ]
 
 # A missing download or extraction tool names the requirement and never falls back to compiling.
 for tool in curl tar xz; do

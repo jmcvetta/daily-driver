@@ -29,7 +29,10 @@ _worktrunk_install_release() {
 		*) fail "no prebuilt release archive for ${os} ${arch}" ;;
 		esac
 
-		for tool in curl tar xz; do
+		# GNU tar calls the xz binary; macOS tar reads .tar.xz itself.
+		tools="curl tar"
+		[ "${os}" != Linux ] || tools="${tools} xz"
+		for tool in ${tools}; do
 			command -v "${tool}" >/dev/null 2>&1 || fail "${tool} is required to install the release archive"
 		done
 		if command -v sha256sum >/dev/null 2>&1; then
@@ -46,24 +49,24 @@ _worktrunk_install_release() {
 		trap 'rm -rf "${temp}"' EXIT
 
 		cd "${temp}" || fail "cannot enter the temporary directory"
-		curl -fsSL -o "${archive}" "${base_url}/${archive}" || fail "downloading ${base_url}/${archive} failed"
-		curl -fsSL -o "${archive}.sha256" "${base_url}/${archive}.sha256" || fail "downloading ${base_url}/${archive}.sha256 failed"
-		verify "${archive}.sha256" >/dev/null 2>&1 || fail "checksum mismatch for ${archive}"
+		curl -fsSL --connect-timeout 20 --retry 3 --retry-delay 2 -o "${archive}" "${base_url}/${archive}" || fail "downloading ${base_url}/${archive} failed"
+		curl -fsSL --connect-timeout 20 --retry 3 --retry-delay 2 -o "${archive}.sha256" "${base_url}/${archive}.sha256" || fail "downloading ${base_url}/${archive}.sha256 failed"
+		check_output="$(verify "${archive}.sha256" 2>&1)" || fail "checksum mismatch for ${archive} (${check_output//$'\n'/; })"
 		tar -xJf "${archive}" || fail "extracting ${archive} failed"
 
 		src="${temp}/worktrunk-${target}"
 		[ -f "${src}/wt" ] || fail "${archive} does not contain wt"
 		mkdir -p "${install_dir}" || fail "cannot create ${install_dir}"
-		install -m 755 "${src}/wt" "${install_dir}/wt" || fail "cannot install wt into ${install_dir}"
+		# wt goes last: a reused wt must mean the whole install finished.
 		if [ -f "${src}/git-wt" ]; then
 			install -m 755 "${src}/git-wt" "${install_dir}/git-wt" || fail "cannot install git-wt into ${install_dir}"
 		fi
+		install -m 755 "${src}/wt" "${install_dir}/wt" || fail "cannot install wt into ${install_dir}"
 	)
 }
 
 ensure_worktrunk() {
 	local install_bin brew_prefix release_bin
-	release_bin="${WORKTRUNK_INSTALL_DIR:-${HOME}/.local/bin}"
 	if command -v wt >/dev/null 2>&1; then
 		wt --version || {
 			printf 'Worktrunk verification failed: wt --version returned a failure.\n' >&2
@@ -71,6 +74,7 @@ ensure_worktrunk() {
 		}
 		return 0
 	fi
+	release_bin="${WORKTRUNK_INSTALL_DIR:-${HOME}/.local/bin}"
 
 	install_bin=""
 	if command -v brew >/dev/null 2>&1; then
