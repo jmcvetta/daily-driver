@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { MODEL_CLASS_ROUTES, explicitModelClassRole } from "./role-default-helper.mjs";
 
 const ENTRY = "daily-driver-undertaking-route";
 const CLASSES = ["mechanical", "implementation", "reasoning", "frontier"];
@@ -73,6 +74,32 @@ function checkModel(ctx, state, model, routingOnly = false) {
 	if (!routingOnly && frontier(model) && state.modelClass !== "frontier") throw new Error("Ordinary work cannot use a frontier fallback");
 }
 
+function classSelection(ctx, settings, routes, model, modelClass) {
+	const family = ctx.models.family(model);
+	if (!family) throw new Error("Invoking model family is unavailable");
+	const sameFamily = reference => {
+		const resolved = ctx.models.resolve(reference);
+		return resolved && ctx.models.family(resolved) === family;
+	};
+	const familyRows = routes.filter(row => sameFamily(row.referenceModel));
+	// Explicit roles can qualify an operator's family without changing plugin defaults.
+	const operatorFamily = CLASSES.some(name => {
+		const role = explicitModelClassRole(settings, name);
+		return role.assigned && typeof role.value === "string" && sameFamily(role.value);
+	});
+	if (!familyRows.length && !operatorFamily) return { target: model, capability: "unverified" };
+	const role = explicitModelClassRole(settings, modelClass);
+	const providerRows = familyRows.filter(row => ctx.models.resolve(row.referenceModel)?.provider === model.provider);
+	if (providerRows.length > 1) throw new Error("Model class routes are ambiguous for the invoking family and provider");
+	const configured = role.assigned ? role.value : providerRows[0]?.classes[modelClass];
+	if (typeof configured !== "string" || !configured.trim()) throw new Error("Required class has no configured model route on the invoking family and provider");
+	const target = ctx.models.resolve(configured);
+	if (!target || !ctx.models.list().some(available => selector(available) === selector(target))) {
+		throw new Error("Configured class model is unavailable");
+	}
+	return { target, configured, capability: "mapped" };
+}
+
 function installPool(ctx, state) {
 	const auth = ctx.modelRegistry.authStorage;
 	if (state.authenticationRoute !== "oauth") return;
@@ -95,6 +122,8 @@ function publicState(state) {
 		issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
 		observedModel: state.observedModel ?? null, status: state.status,
 		...(state.reason ? { reason: state.reason } : {}),
+		capability: state.capability ?? "mapped",
+		...(state.warning ? { warning: state.warning } : {}),
 	};
 }
 
@@ -111,14 +140,28 @@ function storedState(ctx) {
 }
 
 /** Install undertaking selection and enforce its worker route without changing host helper roles. */
-export function installUndertakingRouting(pi, getSettings) {
+export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES) {
 	const states = new Map();
 	const selecting = new Set();
+	const failures = new Map();
+
+	function status(ctx, text) { ctx.ui?.setStatus?.("daily-driver-routing", text); }
+
+	pi.on("before_agent_start", (event, ctx) => {
+		if (!current(ctx) && !/(?:^|\n)(?:\/skill:|\/)?undertake\b/iu.test(event.prompt ?? "")) return;
+		return {
+			systemPrompt: [...event.systemPrompt, "Undertaking routing: call daily_driver_route_undertaking alone, with no other tool calls in that assistant response (including device calls). If pending, report normal verification status, then let the selected worker respond before task work. A pending switch is not an error. Never batch routing with worktree creation, claims, or implementation."],
+		};
+	});
 
 	function current(ctx) { return states.get(ctx.sessionManager?.getSessionId?.()); }
 
 	function publish(ctx, state) {
 		state.workerModels ??= ctx.models;
+		const previous = states.get(state.sessionId);
+		for (const handoff of pendingChildren.values()) {
+			if (handoff.state === previous) handoff.state = state;
+		}
 		states.set(state.sessionId, state);
 		const sessions = scope(ctx);
 		if (sessions) sessions.set(state.sessionId, { agentId: ctx.agent?.id, state });
@@ -139,6 +182,9 @@ export function installUndertakingRouting(pi, getSettings) {
 			schema: 1, issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
 			origin: state.origin, authenticationRoute: state.authenticationRoute,
 			selectedEffort: state.selectedEffort,
+			capability: state.capability ?? "mapped",
+			...(state.warning ? { warning: state.warning } : {}),
+			...(state.recovery ? { recovery: true, reason: state.reason } : {}),
 			...(state.identities ? { identities: state.identities } : {}),
 			...(state.frontierApproval ? { frontierApproval: state.frontierApproval } : {}),
 		});
@@ -168,7 +214,8 @@ export function installUndertakingRouting(pi, getSettings) {
 			if (!parent && !saved) return;
 			if (expected) pendingChildren.delete(ctx.agent.id);
 			state = {
-				...(parent ?? saved), sessionId, lease: undefined, status: "pending", observedModel: null,
+				...(parent ?? saved), sessionId, lease: undefined,
+				status: saved?.recovery ? "blocked" : "pending", observedModel: null,
 				workerModels: ctx.models,
 				selectedModel: parent ? selector(ctx.models.current()) : saved.selectedModel,
 				selectedEffort: parent ? pi.getThinkingLevel() : saved.selectedEffort,
@@ -176,7 +223,10 @@ export function installUndertakingRouting(pi, getSettings) {
 			};
 			publish(ctx, state);
 			if (parent?.status !== undefined && parent.status !== "verified") throw new Error("Parent undertaking route is not verified");
-			checkModel(ctx, state, ctx.models.current());
+			checkModel(ctx, state, ctx.models.current(), Boolean(state.recovery));
+			if (parent?.capability === "unverified" && selector(ctx.models.current()) !== parent.selectedModel) {
+				throw new Error("An unmapped-family worker must retain the invoking model");
+			}
 			if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Authentication route changed before session recovery");
 			installPool(ctx, state);
 			if (parent) await save(state);
@@ -196,72 +246,108 @@ export function installUndertakingRouting(pi, getSettings) {
 	pi.registerTool({
 		name: "daily_driver_route_undertaking",
 		label: "Select undertaking model class",
-		description: "Select the issue's required worker class on the current model family, provider and authentication route. A pending switch must be verified by the next worker response before branch creation, claim or implementation.",
+		description: "Route the issue on its invoking family and provider. Call this tool ALONE in an assistant response, never batched with other tools. Pending identity verification is normal progress; the next worker response must verify before task work. An unmapped family warns and retains the invoking model.",
 		parameters: pi.zod.object({
 			issue: pi.zod.number().int().min(1),
 			modelClass: pi.zod.string(),
 			frontierApproval: pi.zod.string().optional(),
 		}),
 		execute: async (_id, params, _signal, _update, ctx) => {
-			let state = current(ctx);
-			if (state && state.issue !== params.issue) return {
-				isError: true,
-				content: [{ type: "text", text: "Another undertaking owns this session; finish or resume it before selecting a different issue." }],
-				details: describe(ctx),
-			};
+			const previous = current(ctx);
+			const sessionId = ctx.sessionManager.getSessionId();
+			if (previous && previous.issue !== params.issue) {
+				selecting.delete(sessionId);
+				return {
+					isError: true,
+					content: [{ type: "text", text: "Another undertaking owns this session; finish or resume it before selecting a different issue." }],
+					details: describe(ctx),
+				};
+			}
+			const invoking = ctx.models.current();
+			const invokingEffort = pi.getThinkingLevel();
+			let state;
+			let switching = false;
+			selecting.add(sessionId);
 			try {
 				if (!Number.isSafeInteger(params.issue) || params.issue < 1 || !CLASSES.includes(params.modelClass)) {
 					throw new Error("A valid issue and required model class are mandatory");
 				}
-				const model = ctx.models.current();
-				const settings = await getSettings(ctx);
-				const configured = settings?.getModelRole(params.modelClass);
-				if (typeof configured !== "string" || !configured.trim()) throw new Error("Required class has no configured model route");
-				const target = ctx.models.resolve(`@${params.modelClass}`);
-				if (!target || !ctx.models.list().some(available => selector(available) === selector(target))) {
-					throw new Error("Configured class model is unavailable");
-				}
-				if (state?.issue !== params.issue) {
-					state = {
-						issue: params.issue, modelClass: params.modelClass, origin: origin(model),
-						authenticationRoute: source(ctx, model.provider), sessionId: ctx.sessionManager.getSessionId(),
-						status: "pending", selectedModel: selector(target), observedModel: null,
-						workerModels: ctx.models,
-					};
-					publish(ctx, state);
-				}
-				state.modelClass = params.modelClass;
-				state.frontierApproval = params.frontierApproval?.trim() || undefined;
-				checkModel(ctx, state, model, true);
-				checkModel(ctx, state, target);
-				if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Authentication route must remain unchanged");
-				if (!state.lease) installPool(ctx, state);
-				if (!(await ctx.modelRegistry.getApiKey(model, state.sessionId))) throw new Error("Current route has no available credentials");
-				const effort = configured.match(EFFORT)?.[1];
-				const nextEffort = effort === "inherit" ? undefined : effort;
-				const changed = selector(model) !== selector(target) || (nextEffort && nextEffort !== pi.getThinkingLevel());
-				if (state.status === "verified" && state.selectedModel === selector(target) && !changed) return {
-					content: [{ type: "text", text: "Undertaking route is already verified." }], details: describe(ctx),
+				// A retained unmapped route is a decision, not a fresh global-role lookup.
+				const selection = previous?.capability === "unverified" && previous.modelClass === params.modelClass
+					? { target: ctx.models.resolve(previous.selectedModel), capability: "unverified" }
+					: classSelection(ctx, await getSettings(ctx), await getRoutes(ctx), invoking, params.modelClass);
+				const { target, configured, capability } = selection;
+				if (!target) throw new Error("Invoking model is unavailable");
+				state = {
+					...previous,
+					issue: params.issue, modelClass: params.modelClass, sessionId,
+					origin: previous?.origin ?? origin(invoking),
+					authenticationRoute: previous?.authenticationRoute ?? source(ctx, invoking.provider),
+					workerModels: ctx.models, capability, recovery: undefined,
+					frontierApproval: params.frontierApproval?.trim() || previous?.frontierApproval,
 				};
+				checkModel(ctx, state, invoking, true);
+				checkModel(ctx, state, target);
+				if (params.modelClass === "frontier" && !state.frontierApproval) throw new Error("Frontier execution requires recorded approval and its bounded envelope");
+				if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Authentication route must remain unchanged");
+				if (!(await ctx.modelRegistry.getApiKey(invoking, sessionId))) throw new Error("Current route has no available credentials");
+				const effort = configured?.match(EFFORT)?.[1];
+				const nextEffort = effort && effort !== "inherit" ? effort : invokingEffort;
+				const changed = selector(invoking) !== selector(target) || nextEffort !== invokingEffort;
+				if (changed && typeof pi.setModel !== "function") throw new Error("Model selection control is unavailable");
+				if (nextEffort !== invokingEffort && typeof pi.setThinkingLevel !== "function") throw new Error("Effort selection control is unavailable");
+				if (!state.lease) installPool(ctx, state);
 				state.selectedModel = selector(target);
-				state.selectedEffort = nextEffort ?? pi.getThinkingLevel();
-				state.status = "pending";
+				state.selectedEffort = nextEffort;
+				state.observedModel = changed ? null : selector(invoking);
+				state.status = changed ? "pending" : "verified";
 				state.reason = undefined;
-				state.observedModel = null;
+				state.warning = capability === "unverified"
+					? previous?.warning ?? `WARNING: Family ${ctx.models.family(invoking)} has no model-class mapping. Suitability for ${params.modelClass} is unverified. Continuing with the invoking model: ${selector(invoking)}.`
+					: undefined;
 				await save(state);
-				if (selector(model) !== selector(target) && !(await pi.setModel(target))) throw new Error("Harness rejected the session model switch");
-				if (nextEffort && nextEffort !== pi.getThinkingLevel()) await pi.setThinkingLevel(nextEffort);
-				if (!changed) { state.status = "verified"; state.observedModel = selector(model); }
+				publish(ctx, state);
+				switching = changed;
+				if (selector(invoking) !== selector(target) && !(await pi.setModel(target))) throw new Error("Harness rejected the session model switch");
+				if (nextEffort !== invokingEffort) await pi.setThinkingLevel(nextEffort);
+				failures.delete(sessionId);
+				selecting.delete(sessionId);
+				if (state.warning && !previous?.warning) ctx.ui?.notify?.(state.warning, "warning");
+				status(ctx, state.status === "pending" ? `Waiting for ${state.selectedModel} identity verification` : undefined);
 				return {
-					content: [{ type: "text", text: state.status === "verified" ? "Undertaking route is verified." : "Model selection is pending. Wait for the selected worker's next response, then read session info before creating a branch, claiming, or implementing." }],
+					content: [{ type: "text", text: state.warning ?? (changed
+						? "Model selected. Waiting for the selected worker's next response to verify execution before task work."
+						: "Undertaking execution identity is verified.") }],
 					details: describe(ctx),
 				};
 			} catch (error) {
-				if (!state) {
-					state = { sessionId: ctx.sessionManager.getSessionId(), issue: params.issue, modelClass: params.modelClass, selectedModel: null };
-					publish(ctx, state);
+				// A failed selection blocks task admission, not the conversation needed to repair it.
+				failures.set(sessionId, error.message);
+				selecting.delete(sessionId);
+				status(ctx, undefined);
+				let restored = !switching;
+				if (switching) {
+					try {
+						if (selector(ctx.models.current()) !== selector(invoking) && !(await pi.setModel(invoking))) throw new Error("Model restoration rejected");
+						if (pi.getThinkingLevel() !== invokingEffort) await pi.setThinkingLevel(invokingEffort);
+						restored = true;
+					} catch { /* Retain the actual route for recovery, never certify implementation. */ }
 				}
-				routeError(state, error.message);
+				if (restored) {
+					if (state?.lease && state.lease !== previous?.lease) ctx.modelRegistry.authStorage.sessions.unrestrict(state.origin.provider, sessionId, state.lease);
+					if (previous) publish(ctx, previous);
+					else { states.delete(sessionId); scope(ctx)?.delete(sessionId); }
+					if (state?.selectedModel) {
+						if (previous) await save(previous);
+						else await pi.appendEntry(ENTRY, { schema: 1, issue: params.issue, completed: true });
+					}
+				} else {
+					state.status = "blocked";
+					state.reason = error.message;
+					state.recovery = true;
+					publish(ctx, state);
+					await save(state);
+				}
 				return { isError: true, content: [{ type: "text", text: `Undertaking route gap: ${error.message}` }], details: describe(ctx) };
 			}
 		},
@@ -291,10 +377,14 @@ export function installUndertakingRouting(pi, getSettings) {
 		// both model accessors to the request model, including helper requests.
 		if (selector(ctx.model) !== selector(state.workerModels.current())) return;
 		try {
-			if (state.status === "blocked") throw new Error(state.reason);
-			checkModel(ctx, state, ctx.model);
-			if (selector(ctx.model) !== state.selectedModel) throw new Error("Execution fallback does not match the selected worker class route");
-			if (state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort) throw new Error("Worker effort no longer matches its selected class route");
+			if (state.recovery) {
+				checkModel(ctx, state, ctx.model, true);
+			} else {
+				if (state.status === "blocked") throw new Error(state.reason);
+				checkModel(ctx, state, ctx.model);
+				if (selector(ctx.model) !== state.selectedModel) throw new Error("Execution fallback does not match the selected worker class route");
+				if (state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort) throw new Error("Worker effort no longer matches its selected class route");
+			}
 			if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Worker authentication route changed");
 		} catch (error) {
 			routeError(state, error.message);
@@ -322,15 +412,17 @@ export function installUndertakingRouting(pi, getSettings) {
 			state.status = "verified";
 			state.observedModel = state.selectedModel;
 			if (!requestsSelection) selecting.delete(sessionId);
+			status(ctx, undefined);
 		}
 	});
 
 	pi.on("tool_call", (event, ctx) => {
 		const state = current(ctx);
-		if ((!state || state.status === "verified") && !selecting.has(ctx.sessionManager?.getSessionId?.())) return;
+		const failure = failures.get(ctx.sessionManager?.getSessionId?.());
+		if (!failure && (!state || state.status === "verified") && !selecting.has(ctx.sessionManager?.getSessionId?.())) return;
 		if (["read", "grep", "glob", "daily_driver_get_session", "daily_driver_route_undertaking", "daily_driver_finish_undertaking"].includes(event.toolName)) return;
 		if (event.toolName === "write" && ["xd://daily_driver_get_session", "xd://daily_driver_route_undertaking", "xd://daily_driver_finish_undertaking"].includes(event.input?.path)) return;
-		return { block: true, reason: state?.reason ?? "Undertaking model selection is pending actual worker identity verification." };
+		return { block: true, reason: failure ?? state?.reason ?? "Task work requires the selected worker's verified identity. Call routing alone and wait for its next response." };
 	});
 
 	pi.on("before_subagent_spawn", (event, ctx) => {
@@ -345,6 +437,7 @@ export function installUndertakingRouting(pi, getSettings) {
 				const model = ctx.models.resolve(pattern);
 				if (!model) throw new Error("Child model route cannot be resolved");
 				checkModel(ctx, state, model);
+				if (state.capability === "unverified" && selector(model) !== state.selectedModel) throw new Error("An unmapped-family worker must retain the invoking model");
 			}
 			const parents = [...(scope(ctx)?.values() ?? [])].filter(record => record.agentId === ctx.agent?.id);
 			if (parents.length !== 1) throw new Error("Parent undertaking identity is ambiguous");
@@ -361,6 +454,8 @@ export function installUndertakingRouting(pi, getSettings) {
 		scope(ctx)?.delete(state.sessionId);
 		states.delete(state.sessionId);
 		selecting.delete(state.sessionId);
+		failures.delete(state.sessionId);
+		status(ctx, undefined);
 	}
 
 	pi.on("session_shutdown", (_event, ctx) => {

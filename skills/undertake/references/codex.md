@@ -47,12 +47,18 @@ frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Before worktree creation or claim, classed work requires the exact class on the
-same family, provider, backend, and authentication route. This surface exposes
-no measured agent-callable in-session model switch. Continue only when the
-current execution identity and all route constraints are established; do not
-invent a switch tool. Otherwise report the unsupported control or configuration
-gap before work begins.
+Before worktree creation or claim, resolve classed work within the invoking
+family and provider. Preserve backend, authentication route, and fallbacks where
+the surface supports them; never deliberately substitute a provider. If the
+known family is absent from the class table, prominently warn with the family,
+class, and retained provider/model, then continue immediately on the invoking
+model and effort without confirmation. Identity does not establish class
+suitability. Frontier approval and actual route constraints still apply.
+
+For a mapped family, a missing or cleared class, unavailable target, or
+incompatible assignment is a gap. Unknown family or identity is not an absent
+family. This surface exposes no measured agent-callable in-session model switch;
+do not invent one. Report unsupported controls and do not claim verification.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -85,13 +91,15 @@ enforcement or a durable wake mechanism.
 The implementor
 ===============
 
-Prefer a verified in-session route. A full `undertake #<issue>` handoff through
-`multi_agent_v1` is allowed only if it can constrain and verify the exact class
-and same family, provider, backend, authentication route, and fallbacks. Its
-model selection is unmeasured; do not assume that constraint exists. The
-receiving session owns the worktree, claim, implementation, and pull request;
-the sender stops without recursively handing off or duplicating ownership.
-When neither route can be established, stop and report the exact gap.
+For a mapped family, prefer a verified in-session route. A full undertaking
+handoff through `multi_agent_v1` is allowed only if it can constrain and verify
+the exact class and same family, provider, backend, authentication
+route, and fallbacks. Its model selection is unmeasured; do not assume that
+constraint exists. The receiving session owns the undertaking and the sender
+stops without recursively handing off. When neither route can be established,
+report the exact gap. For an absent family, retain the invoking session if a
+child cannot retain its route; do not spawn a replacement merely to obtain a
+mapping.
 
 
 The pull request

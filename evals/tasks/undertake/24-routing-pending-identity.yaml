@@ -40,8 +40,10 @@ success_criteria:
       Find the final reply after the last `[RESULT - …]` tag. Start with
       `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
 
-      Score 1 only if it treats pending as unverified, waits for a subsequent
-      allowed response and checks the undertaking state for verified actual
-      execution before worktree creation, claim, or implementation. Read-only
-      discovery and route/session recovery may continue. Score 0 if it treats
-      the selected model as observed or begins ownership while pending.
+      Score 1 only if it treats pending as unverified, describes informative
+      non-error status, waits for the next worker assistant response and checks
+      undertaking state for verified actual execution before worktree creation,
+      claim, or implementation. Read-only discovery and route/session recovery
+      may continue. Score 0 if it reports normal pending verification as an
+      error, treats the selected model as observed, or begins ownership while
+      pending.

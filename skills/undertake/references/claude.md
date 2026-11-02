@@ -49,13 +49,20 @@ frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Before worktree creation or claim, classed work requires the exact class on the
-same family, provider, backend, and authentication route. The Claude Agent SDK's
-host-side `Query.setModel` is not an agent-callable switch tool. Do not invent
-one or assume that a session-creation model selector also constrains backend,
-authentication, and fallbacks. Continue only when the current execution identity
-and all route constraints are established; otherwise report the unsupported
-control or configuration gap before work begins.
+Before worktree creation or claim, resolve classed work within the invoking
+family and provider. Preserve backend, authentication route, and fallbacks where
+the surface supports them; never deliberately substitute a provider. If the
+known family is absent from the class table, prominently warn with the family,
+class, and retained provider/model, then continue immediately on the invoking
+model and effort without confirmation. Identity does not establish class
+suitability. Frontier approval and actual route constraints still apply.
+
+For a mapped family, a missing or cleared class, unavailable target, or
+incompatible assignment is a gap. Unknown family or identity is not an absent
+family. The Claude Agent SDK's host-side `Query.setModel` is not an
+agent-callable switch tool. Do not invent one or assume that a session selector
+constrains backend, authentication, and fallbacks. Report any unsupported
+control and do not claim it is verified.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -92,13 +99,15 @@ cancellation semantics before it may supply trusted events to the controller.
 The implementor
 ===============
 
-Prefer a verified in-session route. A full `undertake #<issue>` handoff through
-`mcp__Claude_Code_Remote__create_session` or `Agent` is allowed only if that
-surface can constrain and verify the exact class and same family, provider,
-backend, authentication route, and fallbacks. The receiving session owns the
-worktree, claim, implementation, and pull request; the sender stops. Do not
-assume an unmeasured constraint or recursively hand off. If neither route can
-be established, stop and report the exact gap.
+For a mapped family, prefer a verified in-session route. A full undertaking
+handoff through `mcp__Claude_Code_Remote__create_session` or `Agent` is
+allowed only if that surface can constrain and verify the exact class and
+same family, provider, backend, authentication route, and fallbacks. The
+receiving session owns the undertaking and the sender stops. Do not assume an
+unmeasured constraint or recursively hand off. If neither route can be
+established, report the exact gap. For an absent family, retain the invoking
+session if a child cannot retain its route; do not spawn a replacement merely
+to obtain a mapping.
 
 
 The pull request
