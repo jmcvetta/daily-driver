@@ -12,6 +12,14 @@
     "completion_and_backend_identity": "unreported",
     "remaining_unattempted_slots": 36
   },
+  "second_interruption": {
+    "case_id": "reviewer-quality-03-authorization",
+    "repeat": 4,
+    "observed": "The retained task log ends during a parent turn after reading the review diffs. It contains no reviewer dispatch, reviewer result, or evaluator terminal record.",
+    "recovery": "A separately labelled synthetic ERROR task.json preserves the interrupted slot and prevents replay. Its iteration count is not a measurement. The task log remains local.",
+    "completion_and_backend_identity": "unreported",
+    "reconciliation": "The other 38 slots have evaluator terminal records, including 12 failures. The original boundary interruption is a separate synthetic record. A resume assembled all 40 slots and dispatched zero tasks; its 26/40 success count includes neither interruption."
+  },
   "runtime": {
     "frozen_omp_version": "18.14.1",
     "resumed_omp_version": "18.14.1",
