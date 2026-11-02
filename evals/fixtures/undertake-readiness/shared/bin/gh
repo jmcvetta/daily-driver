@@ -37,7 +37,12 @@ def save(state):
 
 
 def record(argv, category, ok, covers=None, **seen):
-    entry = {"t": time.time(), "argv": argv, "category": category, "covers": covers or [category], "ok": ok, **seen}
+    try:
+        with open(f"/proc/{os.getppid()}/cmdline", "rb") as process:
+            parent_command = process.read().replace(b"\0", b" ").decode(errors="replace")
+    except OSError:
+        parent_command = ""
+    entry = {"t": time.time(), "argv": argv, "category": category, "covers": covers or [category], "ok": ok, "parent_pid": os.getppid(), "parent_command": parent_command, **seen}
     with open(LOG, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry) + "\n")
 
