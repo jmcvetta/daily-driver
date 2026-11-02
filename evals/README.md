@@ -286,6 +286,26 @@ contribution.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
 is the current decision; this README is the single operational runbook.
 
+From Omp, do not launch a nested Claude CLI or controller to run a
+Claude-judged evaluation. A working local CLI does not establish the required
+execution session. Do not invent a dispatch facility, use a print-only mock as
+a handoff, copy credentials, probe Claude login, or request login repair
+because the current session is Omp. Do not retry the same cross-harness route
+after a restart, script rename, CLI smoke, or subprocess wrapper.
+
+Complete independent preparation: identify the source and plugin revisions,
+cases, variants, repeats, effective limits, existing planning and execution
+commands, and stop conditions. Prepare these for a native Claude Code session.
+Report what is prepared and what has not run. A written handoff does not prove
+delivery, acceptance, or execution. Request the missing session capability,
+not another spending approval for work already authorized. Continue other
+permitted work and do not repeat an unchanged request.
+
+An explicit user request for a bounded experiment with a materially changed
+mechanism is separate experimental scope. It does not waive safety,
+authentication, provider, or existing authorization limits, and does not
+make that mechanism the default route.
+
 A direct request includes its scoped work and normal focused verification.
 An explicitly assigned, bounded campaign also needs no duplicate authorization
 merely because it uses metered inference. Subscription inference uses allowance,
