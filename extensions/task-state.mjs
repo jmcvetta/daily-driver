@@ -226,9 +226,9 @@ export function createTaskStateController(pi) {
 	function beforeAgentStart(event, ctx) {
 		if (!available(ctx)) return;
 		if (ctx.agent.kind === "sub" && !read(ctx) && event.prompt) {
-			const encoded = event.prompt.match(/<daily-driver-task-contract>(.*?)<\/daily-driver-task-contract>/su)?.[1];
+			const encoded = event.prompt.match(/<daily-driver-task-contract>([A-Za-z0-9_-]+)<\/daily-driver-task-contract>/u)?.[1];
 			if (encoded) {
-				adopt(ctx, JSON.parse(encoded));
+				adopt(ctx, JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")));
 			}
 			if (!read(ctx)) {
 				const delegated = { sourceId: `interpretation:${randomUUID()}`, kind: "interpretation", text: event.prompt,
@@ -259,12 +259,12 @@ export function createTaskStateController(pi) {
 		const state = available(ctx) ? read(ctx) : null;
 		if (event.toolName !== "task" || !state || state.status !== "active") return;
 		const handoff = contractHandoff(state, { harness: "omp", sessionId: sessionId(ctx), sourceId: state.externalSourceId });
-		return { input: { ...event.input, context: `${event.input?.context ?? ""}\n<daily-driver-task-contract>${JSON.stringify(handoff)}</daily-driver-task-contract>` } };
+		return { input: { ...event.input, context: `${event.input?.context ?? ""}\n<daily-driver-task-contract>${Buffer.from(JSON.stringify(handoff)).toString("base64url")}</daily-driver-task-contract>` } };
 	}
 
 	async function execute(_id, params, _signal, _update, ctx) {
 			try {
-				if (!available(ctx)) throw new Error("Durable task state requires the main Omp session branch API");
+				if (!available(ctx)) throw new Error("Durable task state requires the native session branch API");
 				const record = params.record ? JSON.parse(params.record) : {};
 				if (!record || typeof record !== "object" || Array.isArray(record)) throw new Error("record must be a JSON object");
 				const state = read(ctx);
