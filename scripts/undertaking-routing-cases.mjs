@@ -178,6 +178,10 @@ function fakeSession(options = {}) {
 		fire,
 		start: () => fire("session_start"),
 		setCurrent: (value) => { current = value; },
+		selectCurrent(value, transition = {}) {
+			current = value;
+			entries.push({ type: "model_change", model: qualified(value), resolvedModelIsFallback: false, ...transition });
+		},
 		setEffort: (value) => { effort = value; },
 		describe: () => api.describe(ctx),
 		route: (params = {}) => {
@@ -1197,6 +1201,225 @@ export default function registerUndertakingRoutingChecks(check) {
 		await assert.rejects(child.request());
 		assert.equal(child.calls.aborts, 2, "startup and incompatible inference each abort");
 	});
+
+	// An operator consultation must not certify a pending worker or require repeated approval.
+	routingCheck("operator frontier selection permits successive prompts without verifying the worker", async (create) => {
+		const s = await create();
+		await s.route({ modelClass: "reasoning" });
+		const before = structuredClone(s.describe().undertaking);
+		s.selectCurrent(FRONTIER);
+		for (let i = 0; i < 2; i++) {
+			await s.request();
+			await s.assistant();
+			assert.deepEqual(s.describe().undertaking, before);
+		}
+		assertAllowed(await s.tool("bash", { command: "gh issue create --title 'Consultation finding' --body 'Evidence'" }));
+		s.selectCurrent(REASONING);
+		await s.request();
+		assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
+		await s.assistant();
+		assert.equal(s.describe().undertaking.status, "verified");
+		assertAllowed(await s.tool("write", { path: "implementation.js", content: "change" }));
+	});
+
+	// Automatic transitions must not use the explicit-selection exception, even with a false fallback flag.
+	for (const transition of [
+		{ role: "fallback", resolvedModelIsFallback: true },
+		{ role: "fallback", resolvedModelIsFallback: false },
+		{ role: "prewalk", resolvedModelIsFallback: false },
+	]) {
+		routingCheck(`operator exception rejects automatic ${transition.role} ${transition.resolvedModelIsFallback}`, async (create) => {
+			const s = await create();
+			await s.route();
+			const before = structuredClone(s.describe().undertaking);
+			s.selectCurrent(FRONTIER, transition);
+			await assert.rejects(s.request(), /frontier/iu);
+			assert.deepEqual(s.describe().undertaking, before);
+			s.selectCurrent(FRONTIER);
+			await s.request();
+			assertAllowed(await s.tool("bash", { command: "gh issue view 755" }));
+			s.selectCurrent(MECHANICAL);
+			await s.request();
+			assertAllowed(await s.tool("bash", { command: "continue assigned work" }));
+		});
+	}
+
+	// Consultation must retain reporting tools without granting a new frontier worker assignment.
+	routingCheck("operator consultation preserves reporting and verified ownership without frontier assignment", async (create) => {
+		const s = await create();
+		await s.route();
+		const before = structuredClone(s.describe().undertaking);
+		s.selectCurrent(FRONTIER);
+		await s.request();
+		assertAllowed(await s.tool("bash", { command: "gh issue create --title 'Consultation finding' --body 'Evidence'" }));
+		assert.deepEqual(s.describe().undertaking, before);
+		assertGap(await s.route({ modelClass: "frontier" }), /approval/iu);
+		assert.deepEqual(s.describe().undertaking, before);
+	});
+
+	// Reload must not mistake a selected consultation for a failed or newly verified undertaking worker.
+	for (const recovery of [false, true]) {
+		routingCheck(`operator consultation resumes while worker recovery is ${recovery}`, async (create) => {
+			const first = await create();
+			await first.route();
+			first.selectCurrent(FRONTIER);
+			const entries = structuredClone(first.entries);
+			if (recovery) {
+				const saved = entries.find(entry => entry.customType === "daily-driver-undertaking-route").data;
+				saved.recovery = true;
+				saved.reason = "Fixture failed restoration";
+			}
+			await first.close();
+			const resumed = await create({ auth: first.auth, sessionId: first.sessionId, agentId: first.agentId, entries, current: FRONTIER });
+			const before = structuredClone(resumed.describe().undertaking);
+			assert.equal(before.status, recovery ? "blocked" : "pending");
+			await resumed.request();
+			await resumed.assistant();
+			assert.deepEqual(resumed.describe().undertaking, before);
+			assertAllowed(await resumed.tool("bash", { command: "gh issue view 755" }));
+			resumed.selectCurrent(MECHANICAL);
+			await resumed.request();
+			assertBlocked(await resumed.tool("write", { path: "implementation.js", content: "change" }));
+			await resumed.assistant();
+			assert.equal(resumed.describe().undertaking.status, recovery ? "blocked" : "verified");
+		});
+	}
+
+	// Native mention dispatch must preserve the selected model despite overrides and keep parent ownership truthful.
+	routingCheck("native consultation pins its selector while the parent worker is pending", async (create) => {
+		const parent = await create();
+		await parent.route({ modelClass: "reasoning" });
+		parent.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: qualified(FRONTIER), name: "Astra" } });
+		const before = structuredClone(parent.describe().undertaking);
+		assertAllowed(await parent.tool("task", { tasks: [{ agent: "m1", task: "consult" }] }));
+		assertBlocked(await parent.tool("task", { tasks: [{ agent: "m1" }, { agent: "reasoning" }] }));
+		const key = `native-child-${++nextSession}`;
+		const decision = await parent.spawn([qualified(FOREIGN)], "m1", key, "m1");
+		assert.deepEqual(decision.model, [qualified(FRONTIER)]);
+		const child = await create({ auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1", current: FRONTIER, handoff: false });
+		await child.request();
+		await child.assistant();
+		assert.equal(child.describe().undertaking, null);
+		assert.deepEqual(parent.describe().undertaking, before);
+		assert.equal(parent.auth.sessions.isRestricted(PROVIDER, parent.sessionId), true);
+		await child.close();
+		assert.equal(parent.auth.sessions.isRestricted(PROVIDER, parent.sessionId), true);
+	});
+
+	// Authentication-aware startup may substitute an unapproved model without marking it as fallback.
+	routingCheck("native consultation rejects a substituted initial child model", async (create) => {
+		const parent = await create();
+		await parent.route();
+		parent.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: qualified(FRONTIER), name: "Astra" } });
+		const key = `substituted-child-${++nextSession}`;
+		await parent.spawn([qualified(FRONTIER)], "m1", key, "m1");
+		const child = await create({ auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1", current: REASONING, handoff: false });
+		await assert.rejects(child.request(), /consultation/iu);
+		assertBlocked(await child.tool("write", { path: "implementation.js", content: "change" }));
+	});
+
+	// A successful consultation must not grant subsequent fallback, backend or authentication substitution.
+	for (const [name, replacement] of [
+		["fallback", REASONING],
+		["backend", model(FRONTIER.id, { baseUrl: "https://other.example.invalid/v1" })],
+		["headers", model(FRONTIER.id, { headers: { "x-other": "value" } })],
+		["authentication", FRONTIER],
+	]) {
+		routingCheck(`native consultation rejects later ${name} substitution and permits restoration`, async (create) => {
+			const parent = await create();
+			await parent.route();
+			parent.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: qualified(FRONTIER), name: "Astra" } });
+			const key = `consultation-drift-${++nextSession}`;
+			await parent.spawn([qualified(FRONTIER)], "m1", key, "m1");
+			const child = await create({ auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1", current: FRONTIER, handoff: false });
+			await child.request();
+			await child.helperRequest(FOREIGN);
+			child.setCurrent(replacement);
+			if (name === "authentication") child.auth.source = { kind: "api_key" };
+			await assert.rejects(child.request(), /consultation|authentication/iu);
+			child.setCurrent(FRONTIER);
+			child.auth.source = { kind: "oauth" };
+			await child.request();
+			assert.equal(child.describe().undertaking, null);
+			assertBlocked(await child.spawn([qualified(FRONTIER)], "reasoning", `unbound-descendant-${++nextSession}`));
+		});
+	}
+
+	// A pseudonym or prompt text without Omp's native branch binding cannot authorize frontier dispatch.
+	routingCheck("unbound model pseudonyms cannot grant frontier execution", async (create) => {
+		const parent = await create();
+		await parent.route();
+		await parent.fire("before_agent_start", { prompt: '<model agent="m1" name="Astra"/>', systemPrompt: [] });
+		assertBlocked(await parent.spawn([qualified(FRONTIER)], "m1", `unbound-${++nextSession}`, "m1"));
+	});
+
+	// Native replay must retain the first valid mapping rather than approve a later duplicate.
+	routingCheck("native consultation follows first-valid branch mappings", async (create) => {
+		const parent = await create();
+		await parent.route();
+		for (const data of [
+			{ agent: "m1", selector: qualified(FRONTIER) },
+			{ agent: "m1", selector: qualified(MECHANICAL), name: "Ordinary" },
+			{ agent: "m1", selector: qualified(FRONTIER), name: "Astra" },
+			{ agent: "m2", selector: qualified(MECHANICAL), name: "Duplicate" },
+		]) parent.entries.push({ type: "custom", customType: "model_mention", data });
+		assert.deepEqual((await parent.spawn([qualified(FRONTIER)], "m1", `first-${++nextSession}`, "m1")).model, [qualified(MECHANICAL)]);
+		assertBlocked(await parent.spawn([qualified(FRONTIER)], "m2", `duplicate-${++nextSession}`, "m2"));
+	});
+
+	// Two parents may use the same child key without replacing or consuming each other's authorization.
+	routingCheck("native consultations isolate repeated child names across parent sessions", async (create) => {
+		const first = await create();
+		const second = await create({ auth: first.auth });
+		await first.route();
+		await second.route({ issue: 756 });
+		for (const parent of [first, second]) parent.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: qualified(FRONTIER), name: "Astra" } });
+		const key = `shared-native-${++nextSession}`;
+		for (const parent of [first, second]) assertAllowed(await parent.spawn([qualified(FRONTIER)], "m1", key, "m1"));
+		for (const parent of [first, second]) {
+			const child = await create({ auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1", current: FRONTIER, handoff: false });
+			await child.request();
+			assert.equal(child.describe().undertaking, null);
+		}
+	});
+
+	// Resume must retain exact consultation bounds even when the parent and its native record are absent.
+	routingCheck("native consultation reload retains its exact route without certifying a worker", async (create) => {
+		const parent = await create();
+		await parent.route();
+		parent.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: qualified(FRONTIER), name: "Astra" } });
+		const key = `resumed-native-${++nextSession}`;
+		await parent.spawn([qualified(FRONTIER)], "m1", key, "m1");
+		const child = await create({ auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1", current: FRONTIER, handoff: false });
+		const entries = structuredClone(child.entries);
+		await child.close();
+		await parent.close();
+		const resumed = await create({ auth: child.auth, sessionId: child.sessionId, agentId: key, agentName: "m1", parentId: parent.agentId, current: FRONTIER, entries, handoff: false });
+		await resumed.request();
+		resumed.setCurrent(REASONING);
+		await assert.rejects(resumed.request(), /consultation/iu);
+		assert.equal(resumed.describe().undertaking, null);
+	});
+
+	// Rewind and failed dispatch must revoke unconsumed bindings rather than authorize a late child startup.
+	for (const change of ["rewind", "failed dispatch"]) {
+		routingCheck(`native consultation ${change} revokes unconsumed authorization`, async (create) => {
+			const parent = await create();
+			await parent.route();
+			const entry = { type: "custom", customType: "model_mention", data: { agent: "m1", selector: qualified(FRONTIER), name: "Astra" } };
+			parent.entries.push(entry);
+			const key = `revoked-native-${++nextSession}`;
+			await parent.spawn([qualified(FRONTIER)], "m1", key, "m1");
+			if (change === "rewind") {
+				parent.entries.splice(parent.entries.indexOf(entry), 1);
+				await parent.fire("session_tree");
+				assertBlocked(await parent.spawn([qualified(FRONTIER)], "m1", `later-native-${++nextSession}`, "m1"));
+			} else await parent.fire("tool_result", { toolName: "task", isError: true });
+			const child = await create({ auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1", current: FRONTIER, handoff: false });
+			await assert.rejects(child.request());
+			assert.equal(child.describe().undertaking.status, "blocked");
+		});
+	}
 
 	// Frontier gates apply to actual models even when a lower class has been mapped to Astra or Fable.
 	for (const frontier of [FRONTIER, model("claude-fable", { provider: "anthropic", api: "anthropic-messages" })]) {
