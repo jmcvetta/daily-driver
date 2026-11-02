@@ -112,6 +112,12 @@ process resume and an actual RPC abort. The runtime regression checks in
 expiry, fresh confirmation, independent work, compaction context and cancellation.
 These checks cover the shipped runtime, not the evaluation grader.
 
+The same installed-Omp check schedules a reminder after an owner turn settles.
+It verifies that the new turn reads an offline maintenance-conflict fixture and
+that a cancelled reminder starts no turn. The scripted provider does not prove
+that a model will choose the correct conflict resolution. Timers are cleared
+on session shutdown; this check covers an idle live session, not crash recovery.
+
 `experiments/omp-760-base-vs-candidate.yaml` compares the base plugin at sibling
 `../../daily-driver` with this task checkout at `..`, relative to `evals/`.
 Run it from an isolated task worktree; the base checkout must remain at the
