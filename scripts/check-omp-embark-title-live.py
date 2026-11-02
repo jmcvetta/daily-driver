@@ -57,14 +57,17 @@ def text_of(content) -> str:
     return ""
 
 
-def target_from(messages) -> int:
-    """Find the issue number from the latest request, outside skill examples."""
-    latest = next((m for m in reversed(messages) if m.get("role") == "user"), {})
-    text = text_of(latest.get("content"))
-    matches = re.findall(r"(?:issue://(?:[^/]+/[^/]+/)?|issues/|#?)(58[23])\b", text)
-    if not matches:
-        raise CheckFailed(f"scripted model cannot identify a target in latest user message: {text[:300]!r}")
-    return int(matches[-1])
+def target_from(messages) -> tuple[int, str, int]:
+    """Find the latest scenario request, excluding additional context messages."""
+    for index in range(len(messages) - 1, -1, -1):
+        message = messages[index]
+        if message.get("role") != "user":
+            continue
+        text = text_of(message.get("content"))
+        matches = re.findall(r"(?:issue://(?:[^/]+/[^/]+/)?|issues/|#?)(58[23])\b", text)
+        if matches:
+            return index, text, int(matches[-1])
+    raise CheckFailed("scripted model cannot identify a target in user messages")
 
 
 def tool_call(number: int, index: int, repository_qualified: bool) -> tuple[str, dict]:
@@ -102,14 +105,11 @@ class MockModel(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))))
         messages = body.get("messages", [])
-        number = target_from(messages)
-        latest_user = next((m for m in reversed(messages) if m.get("role") == "user"), {})
-        user_text = text_of(latest_user.get("content"))
+        last_user, user_text, number = target_from(messages)
         reminder = "watch backstop" in user_text
         repository_qualified = bool(
             re.search(rf"\nUser:\s*issue://example/project/{number}\b", user_text)
         )
-        last_user = max((i for i, m in enumerate(messages) if m.get("role") == "user"), default=-1)
         index = sum(
             len(message.get("tool_calls", []))
             for message in messages[last_user + 1 :]
@@ -165,7 +165,13 @@ class OwnerModel(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         messages = body["messages"]
-        last_user = max(i for i, message in enumerate(messages) if message.get("role") == "user")
+        last_user = next(
+            i for i in range(len(messages) - 1, -1, -1)
+            if messages[i].get("role") == "user"
+            and any(marker in text_of(messages[i].get("content")) for marker in (
+                "Observe the offline owner fixture.", "OWNER_WAKE", "CANCEL_PROBE"
+            ))
+        )
         prompt = text_of(messages[last_user].get("content"))
         calls = sum(len(message.get("tool_calls", [])) for message in messages[last_user + 1 :])
         self.requests.append((prompt, messages))

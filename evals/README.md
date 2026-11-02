@@ -778,6 +778,14 @@ These results do not establish an improvement. The tracker case is a single
 turn with nine reads, not a follow-up after an earlier turn. It does not
 measure Claude Code or Codex.
 
+A [second comparison](provenance/omp-terse-base-vs-candidate-2026-11-02-2026-11-02_16-34-41.json)
+used the same base and cases against candidate
+`3ca23d034a3dcc34815c20920aa0768e8dc3b8cb`, which puts the guidance in
+prompt-adjacent hidden context instead of the system prompt. The record marks
+the candidate checkout dirty. All scores were identical
+to the first comparison across five replicates per arm. This placement also
+did not establish an improvement.
+
 The [initial run](provenance/omp-terse-base-vs-candidate-2026-11-02-2026-11-02_16-03-04.json)
 also had a ceiling on its shorter blocker case. Its explanation results are
 invalid for comparison: both arms attempted broad discovery that the Omp read

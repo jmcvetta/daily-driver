@@ -1,0 +1,2486 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 5.04,
+            "findings": [
+              "Explains the exclusive stop-index mechanism and its off-by-one effect.",
+              "Provides `values[start:end + 1]` and a concrete example."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, causing the documented inclusive endpoint to be omitted, and supplies the corrected expression `values[start:end + 1]`. Both required parts are present.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1342,
+              "output": 92
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 9.66,
+            "findings": [
+              "Explains exclusive slice endpoints and supplies the inclusive-end expression.",
+              "Includes a relevant example illustrating the missing item.",
+              "Adds a minor compliance/status note beyond the requested explanation."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression, but adds the minor status note \u201cNo code was changed.\u201d It contains no unsolicited offer, plan, or second telling.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1277,
+              "output": 120
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 4.48,
+            "findings": [
+              "Explains the exclusive-stop slicing mechanism and its mismatch with the inclusive-end documentation.",
+              "Provides the required corrected expression and an illustrative example."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, omitting the documented inclusive end, and explicitly provides `values[start:end + 1]` as the correction.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1211,
+              "output": 83
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 4.82,
+            "findings": [
+              "The example and negative-index caveat support the explanation.",
+              "The closing status statement is extra content, not an unsolicited act or second telling."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression, but adds the minor padding \u201cNo code changed.\u201d",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1148,
+              "output": 72
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 6.01,
+            "findings": [
+              "The answer states that #457 is blocked by #279\u2019s unfinished policy comparison."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply after the last result tag explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 959,
+              "output": 60
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 10.99,
+            "findings": [
+              "Identifies #279 and its unfinished policy comparison.",
+              "Adds prior probe measurements and fixture details.",
+              "Includes unrelated facts about #472, check results, review threads, #301, #312, #318, and #473."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply correctly identifies #279\u2019s unresolved policy comparison as the blocker, but includes unrelated tracker facts and prior measurements, which the grading prompt explicitly scores 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1023,
+              "output": 101
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 9.82,
+            "findings": [
+              "States that #457 is blocked by #279\u2019s missing policy comparison result."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply after the last result tag explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 875,
+              "output": 59
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 9.42,
+            "findings": [
+              "Identifies #279\u2019s missing policy comparison result as blocking #457.",
+              "Adds prior measurements, PR #472 check and review status, and unrelated issues #301, #312, #318, and #473."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply correctly identifies unresolved #279 as the blocker, but includes unrelated tracker facts and check results, which require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 937,
+              "output": 95
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 8.28,
+            "findings": [
+              "Explains the exclusive stop-index mechanism and its conflict with the inclusive endpoint.",
+              "Provides `values[start:end + 1]` and a concrete example illustrating the missing item."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result \u2014 The reply explains that Python slices exclude the stop index, making the documented inclusive endpoint one item short, and supplies the corrected expression `values[start:end + 1]`. Both required parts are present in the final result.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1349,
+              "output": 102
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 11.53,
+            "findings": [
+              "Explains exclusive slice endpoints and supplies values[start:end + 1].",
+              "The example directly supports the explanation.",
+              "The closing compliance statement is minor extra content."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression without proposing additional work or repeating its explanation, but adds the minor padding of a closing \u201cNo code changed.\u201d",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1282,
+              "output": 87
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 8.14,
+            "findings": [
+              "Explains the exclusive-stop slicing mechanism and illustrates the missing endpoint.",
+              "Provides the required corrected expression."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, conflicting with the documented inclusive end, and gives the corrected expression `values[start:end + 1]`. Both required parts are present.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1220,
+              "output": 80
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 5.95,
+            "findings": [
+              "Explains exclusive slice endpoints and gives the corrected expression.",
+              "Adds a brief compliance statement beyond the requested explanation.",
+              "Does not offer to apply a fix or propose further work."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression, but adds the minor padding \u201cNo code changed.\u201d",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1154,
+              "output": 78
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 4.51,
+            "findings": [
+              "The answer states that #457 is blocked by #279\u2019s missing policy-comparison result."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 995,
+              "output": 57
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 6.29,
+            "findings": [
+              "Includes PR #472 draft status, check results, and review-thread status.",
+              "Adds unrelated facts about #301, #312, #318, and #473.",
+              "Reports prior probe measurements beyond the blocker and its unresolved state."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply identifies #279 and its unresolved state, but includes unrelated tracker facts and prior measurements that explicitly require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1058,
+              "output": 96
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 5.0,
+            "findings": [
+              "The reply states: \u201c#457 is blocked by #279\u2019s missing policy-comparison result.\u201d"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply after the last result tag explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 844,
+              "output": 63
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 5.09,
+            "findings": [
+              "Correctly identifies #279\u2019s missing policy-comparison result as the blocker.",
+              "Adds prior comparison measurements and PR #472 check results.",
+              "Includes unrelated status information about #301, #312, #318, and #473."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply identifies #279 and its unresolved state, but includes unrelated tracker facts, prior measurements, and check results that require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 907,
+              "output": 99
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 5.37,
+            "findings": [
+              "Explains exclusive slice-stop semantics and the resulting missing item.",
+              "Provides `values[start:end + 1]` as the correction.",
+              "Includes a concrete example demonstrating the bug."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, causing the documented inclusive end to be omitted, and supplies the corrected expression `values[start:end + 1]`. Both required parts are present.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1336,
+              "output": 97
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 6.87,
+            "findings": [
+              "Explains the exclusive slice stop and illustrates the missing item.",
+              "Provides `values[start:end + 1]` as the corrected expression for nonnegative indices.",
+              "Ends with the unnecessary assurance, \"No code was changed.\""
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression without offering an unsolicited action, but adds minor padding with the closing assurance that no code was changed.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1268,
+              "output": 120
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 4.76,
+            "findings": [
+              "Explains the exclusive-stop slicing mechanism and its conflict with the inclusive-end documentation.",
+              "Provides `values[start:end + 1]` and an example demonstrating inclusion of the final index."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, omitting the documented inclusive end, and provides the corrected expression `values[start:end + 1]`. Both required parts are present.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1148,
+              "output": 97
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 6.3,
+            "findings": [
+              "Explains exclusive slice endpoints and supplies `values[start:end + 1]`.",
+              "The final status statement is extra content, not an unsolicited act or second telling."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression, but adds the minor padding \u201cNo code changed.\u201d",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1077,
+              "output": 78
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 4.2,
+            "findings": [
+              "The answer states that #457 is blocked by #279\u2019s unfinished policy comparison."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 952,
+              "output": 55
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 5.59,
+            "findings": [
+              "Identifies #279 and its unfinished comparison as blocking #457.",
+              "Includes prior probe measurements and PR #472 draft, check, and review status.",
+              "Adds unrelated information about #301, #312, #318, and #473."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply correctly identifies #279\u2019s unresolved policy comparison as the blocker, but includes unrelated tracker facts and prior measurements, which require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1017,
+              "output": 102
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 4.66,
+            "findings": [
+              "States that #457 is blocked by #279\u2019s missing policy-comparison result."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply after the last result tag explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 862,
+              "output": 60
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 7.49,
+            "findings": [
+              "Identifies #279\u2019s missing policy-comparison result as the blocker.",
+              "Includes prior probe measurements and PR #472 draft, checks, and review status.",
+              "Adds unrelated facts about #301, #312, #318, and #473."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply identifies #279 and its unresolved state, but includes unrelated tracker facts and prior measurements, which explicitly require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 927,
+              "output": 100
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 5.58,
+            "findings": [
+              "Explains the exclusive slice stop with an example.",
+              "Provides `values[start:end + 1]` as the correction."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, contradicting the documented inclusive end, and supplies the corrected expression `values[start:end + 1]`. Both required parts are present.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1265,
+              "output": 85
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 8.85,
+            "findings": [
+              "Explains exclusive slice endpoints and gives the corrected inclusive-end expression.",
+              "Adds a brief confirmation that no code changed beyond the requested explanation."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression without offering additional work, but adds the minor status padding \u201cNo code changed.\u201d",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1199,
+              "output": 104
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 4.75,
+            "findings": [
+              "Explains the exclusive slice stop and the omitted endpoint.",
+              "Provides values[start:end + 1] as the correction."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, conflicting with the documented inclusive end, and provides the corrected expression values[start:end + 1]. Both required parts are present.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1130,
+              "output": 82
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 5.59,
+            "findings": [
+              "Explains exclusive slice endpoints and supplies the inclusive-end expression.",
+              "Adds a minor closing assurance beyond the requested explanation."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression, but adds the minor closing assurance \u201cNo code changed.\u201d It does not offer unsolicited work or repeat the explanation in a summary.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1064,
+              "output": 100
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 4.36,
+            "findings": [
+              "The reply states that #457 is blocked by #279\u2019s missing policy-comparison result."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 990,
+              "output": 57
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 6.3,
+            "findings": [
+              "Correctly identifies #279 as the blocker.",
+              "Includes prior scores and probe details.",
+              "Adds unrelated status and check results for #472 and other tracker items."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply identifies #279 and its unresolved policy-comparison result, but includes unrelated tracker facts and prior measurements, which require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1053,
+              "output": 85
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 3.87,
+            "findings": [
+              "The final reply states that #457 is blocked by #279\u2019s missing policy comparison."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply after the last result tag explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 843,
+              "output": 61
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 6.39,
+            "findings": [
+              "Correctly identifies #279\u2019s unresolved policy comparison as blocking #457.",
+              "Adds PR #472 status and check results, policy scores, and facts about #301, #312, #318, and #473."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply identifies #279 as the unresolved blocker but includes unrelated tracker facts, prior measurements, and check results, which require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 907,
+              "output": 97
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 5.01,
+            "findings": [
+              "Explains the exclusive slice-stop mechanism and its mismatch with the inclusive-end documentation.",
+              "Provides `values[start:end + 1]` and an example illustrating the missing final item."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, contrary to the documented inclusive end, and supplies the corrected expression `values[start:end + 1]`. It therefore includes both required parts.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1277,
+              "output": 97
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 5.61,
+            "findings": [
+              "Explains exclusive slice endpoints and supplies the corrected expression.",
+              "The final code-change reassurance is minor padding beyond the requested explanation."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression without offering further work, but adds the minor status padding \u201cNo code changed.\u201d",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1211,
+              "output": 74
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply explains the mechanism and gives the corrected expression",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply adds nothing the request did not ask for",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply explains the mechanism and gives the corrected expression",
+            "duration_seconds": 4.67,
+            "findings": [
+              "Explains why `values[start:end]` omits the inclusive end item.",
+              "Provides `values[start:end + 1]` as the correction."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "3cef3da03acb9d89ddc6d83f303e8da8a952af8fc9439dd53ceecf3a3954ab85",
+            "rationale": "ANCHOR: result The reply explains that Python slices exclude the stop index, conflicting with the documented inclusive end, and gives the corrected expression `values[start:end + 1]`. Both required parts are present.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1176,
+              "output": 91
+            },
+            "weight": 2
+          },
+          {
+            "description": "The reply adds nothing the request did not ask for",
+            "duration_seconds": 9.07,
+            "findings": [
+              "Explains exclusive slice stops and gives the corrected expression.",
+              "The final compliance note is minor padding beyond the requested explanation."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2d93b8f68ddc17bba3a777ce30550b2c10bebc828eb4555917435d1d1cc10be7",
+            "rationale": "ANCHOR: result. The reply provides the requested explanation and corrected expression without offering further action or repeating its explanation, but adds the minor compliance note \u201cNo code was changed.\u201d",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1110,
+              "output": 124
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.833333,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "constitution-explanation-source-specified",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 4.3,
+            "findings": [
+              "The reply states that #457 is blocked by #279\u2019s unfinished policy comparison."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 997,
+              "output": 55
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 6.48,
+            "findings": [
+              "Identifies #279\u2019s unfinished policy comparison as blocking #457.",
+              "Adds prior measurements, PR #472, passing checks, review status, and facts about #301, #312, #318, and #473."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply correctly identifies unresolved #279 as the blocker, but includes unrelated tracker facts and check results, which require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1059,
+              "output": 96
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer identifies the actual blocker",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer omits irrelevant tracker details and unsolicited additions",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer identifies the actual blocker",
+            "duration_seconds": 4.31,
+            "findings": [
+              "The answer states that #457 is blocked by #279\u2019s missing reply-policy decision."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eddf3e3f37e5e31e2e8840a80d24088572a6c620e3cbb417353c160e3e93e02e",
+            "rationale": "ANCHOR: result. The final reply after the last result tag explicitly identifies issue #279 as the blocker of #457.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 815,
+              "output": 61
+            },
+            "weight": 1
+          },
+          {
+            "description": "The answer omits irrelevant tracker details and unsolicited additions",
+            "duration_seconds": 5.49,
+            "findings": [
+              "Correctly identifies #279 as the unresolved blocker for #457.",
+              "Adds prior measurements and unrelated facts about #472, #301, #312, #318, and #473, including CI and review status."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dd075351e1a8058af33682673a706940c127df462bb44847b60e5220d0685100",
+            "rationale": "ANCHOR: result. The final reply identifies #279 and its unresolved reply-policy decision, but adds unrelated tracker facts and check results, which require a score of 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 881,
+              "output": 96
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 19.103644132614136,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 7040,
+        "output_tokens": 441,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7337
+      },
+      "tokens": 14818,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 10.052551746368408,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 182,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 13899
+      },
+      "tokens": 14081,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 26.306818962097168,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 22400,
+        "output_tokens": 554,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11075
+      },
+      "tokens": 34029,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 23.08877682685852,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 7168,
+        "output_tokens": 560,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 14706
+      },
+      "tokens": 22434,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 16.18421959877014,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 1,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 7040,
+        "output_tokens": 323,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7321
+      },
+      "tokens": 14684,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 13.56625771522522,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 1,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 13312,
+        "output_tokens": 194,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 597
+      },
+      "tokens": 14103,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 29.180537462234497,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 1,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 17152,
+        "output_tokens": 650,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 12252
+      },
+      "tokens": 30054,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 21.751654386520386,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 1,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 7040,
+        "output_tokens": 531,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18477
+      },
+      "tokens": 26048,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 15.842296838760376,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 2,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 7040,
+        "output_tokens": 324,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7333
+      },
+      "tokens": 14697,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 16.79743790626526,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 2,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6784,
+        "output_tokens": 232,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7106
+      },
+      "tokens": 14122,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 16.447376489639282,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 2,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 17152,
+        "output_tokens": 553,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 12262
+      },
+      "tokens": 29967,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 21.225924491882324,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 2,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 9984,
+        "output_tokens": 507,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18718
+      },
+      "tokens": 29209,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 17.96766757965088,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 3,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 7040,
+        "output_tokens": 347,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7321
+      },
+      "tokens": 14708,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 10.994406700134277,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 3,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6784,
+        "output_tokens": 140,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7102
+      },
+      "tokens": 14026,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 17.904679775238037,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 3,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 17152,
+        "output_tokens": 566,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 12205
+      },
+      "tokens": 29923,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 21.772976875305176,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 3,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6784,
+        "output_tokens": 559,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21924
+      },
+      "tokens": 29267,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 16.987525939941406,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 4,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 7040,
+        "output_tokens": 298,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7325
+      },
+      "tokens": 14663,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 13.6316556930542,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 4,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-explanation-source-specified",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 251,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 13899
+      },
+      "tokens": 14150,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 25.85790729522705,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 4,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 10112,
+        "output_tokens": 668,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 19292
+      },
+      "tokens": 30072,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 22.308918237686157,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 4,
+      "settings": "omp-terse-base-vs-candidate",
+      "task_id": "constitution-tracker-blocker-after-reads",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 9856,
+        "output_tokens": 519,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18801
+      },
+      "tokens": 29176,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.15.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-02T16:37:50.548842",
+  "experiment_id": "omp-terse-base-vs-candidate",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "46440d48e4f05c5494331902b689d2b001fff8d9acbad39a4cc5695c3dca109c",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 43145,
+      "output": 3418
+    }
+  },
+  "plugin_revision": {
+    "commit": "3ca23d034a3dcc34815c20920aa0768e8dc3b8cb",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-02T09:40:04.828086+00:00",
+  "run_id": "2026-11-02_16-34-41",
+  "schema_version": 5,
+  "started_at": "2026-11-02T16:34:41.460928",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-explanation-source-specified": [
+          0.833333,
+          0.833333,
+          0.833333,
+          0.833333,
+          0.833333
+        ],
+        "constitution-tracker-blocker-after-reads": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "task_ids": [
+        "constitution-explanation-source-specified",
+        "constitution-tracker-blocker-after-reads"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-explanation-source-specified": [
+          0.833333,
+          0.833333,
+          0.833333,
+          0.833333,
+          0.833333
+        ],
+        "constitution-tracker-blocker-after-reads": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "task_ids": [
+        "constitution-explanation-source-specified",
+        "constitution-tracker-blocker-after-reads"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}
