@@ -51,11 +51,12 @@ Claude Code and Codex receive the instruction through `UserPromptSubmit`
 These harnesses retain earlier hook context in conversation history;
 `noterse` skips new guidance rather than erasing that history.
 
-Omp adds the instruction to the per-turn system prompt in `before_agent_start`,
-after slash-command and template expansion. It does not change command arguments,
-images or user text. For a queued batch, the suffix is checked on the combined
-expanded prompt. Synthetic prompts can also receive the style instruction;
-revive events do not add it.
+Omp adds the instruction as hidden context after the prompt in
+`before_agent_start`, after slash-command and template expansion. It does not
+change command arguments, images or user text. For a queued batch, the suffix
+is checked on the combined expanded prompt. Synthetic prompts can also receive
+the style instruction; revive events do not add it. Earlier context remains in
+the conversation when a later prompt uses `noterse`.
 
 ## Task continuation and approval evidence
 

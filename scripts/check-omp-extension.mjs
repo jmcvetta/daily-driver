@@ -452,7 +452,7 @@ check("prompt guidance preserves expanded user input and base policy", () => {
 	const images = [{ type: "image", data: "fixture", mimeType: "image/png" }];
 	const event = { reason: "prompt", prompt, images, systemPrompt: ["Existing policy"], metadata: { id: 1 } };
 	const result = session.fire("before_agent_start", event, ctx);
-	assert.deepEqual(result.systemPrompt, ["Existing policy", "respond tersely in Simplified Technical English"]);
+	assert.equal(result.message.content, "respond tersely in Simplified Technical English");
 	assert.deepEqual(event, { reason: "prompt", prompt, images, systemPrompt: ["Existing policy"], metadata: { id: 1 } });
 	assert.equal(session.fire("input", { source: "interactive", text: "/skill:embark 582" }, ctx), undefined);
 });
@@ -468,10 +468,10 @@ check("prompt escape affects only the current policy preparation", () => {
 		assert.equal(prepare(prompt), undefined);
 	}
 	for (const prompt of ["Explain NOTERSE", "noterse then explain", "Explain"]) {
-		assert.deepEqual(prepare(prompt).systemPrompt, ["Existing policy", "respond tersely in Simplified Technical English"]);
+		assert.equal(prepare(prompt).message.content, "respond tersely in Simplified Technical English");
 	}
 	assert.equal(prepare("Explain noterse"), undefined);
-	assert.deepEqual(prepare("Next prompt").systemPrompt, ["Existing policy", "respond tersely in Simplified Technical English"]);
+	assert.equal(prepare("Next prompt").message.content, "respond tersely in Simplified Technical English");
 });
 
 /** This prevents a revived subagent's empty preparation from adding prompt guidance. */

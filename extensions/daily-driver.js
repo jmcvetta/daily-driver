@@ -2496,12 +2496,11 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		}
 	});
 
-	// The host prepares a fresh policy from the base for each prompt or
-	// user-containing queue batch, after command and template expansion.
+	// The host appends this context after the expanded user prompt or batch.
 	pi.on("before_agent_start", (event) => {
 		if (event?.reason === "revive" || typeof event?.prompt !== "string") return;
-		if (/noterse\s*$/.test(event.prompt) || !Array.isArray(event.systemPrompt)) return;
-		return { systemPrompt: [...event.systemPrompt, "respond tersely in Simplified Technical English"] };
+		if (/noterse\s*$/.test(event.prompt)) return;
+		return { message: { customType: "daily-driver.prompt-guidance", content: "respond tersely in Simplified Technical English", display: false } };
 	});
 
 	pi.on("tool_result", (event, ctx) => {
