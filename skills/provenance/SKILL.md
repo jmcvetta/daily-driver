@@ -1,11 +1,9 @@
 ---
 name: provenance
 description: >-
-  This skill should be used before any GitHub write an agent makes — a pull
-  request, issue or epic body; a comment; a review or review reply — and
-  before the first repository edit or any commit, so commit discipline starts
-  with the work and each artifact names its author. Supplies focused commits,
-  the trailing provenance
+  Read before repository edits, commits, or GitHub writes. Owns focused commit
+  discipline and attribution for PRs, issues, comments, reviews, and replies.
+  Supplies the trailing provenance
   block's shape and placement, the rule for reading the model that served the
   turn against the one the session was set to, the harness name and version,
   the session identifier or `n/a`, the rule for retaining distinct attribution

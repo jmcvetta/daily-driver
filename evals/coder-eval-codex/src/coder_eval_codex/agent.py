@@ -37,6 +37,7 @@ Nothing here can be exercised without a `coder_eval` install and the Codex SDK.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any, Literal
 
@@ -62,11 +63,16 @@ SKILLS_DIR = Path(".agents") / "skills"
 class CodexDailyDriverAgentConfig(CodexAgentConfig):
     """Configuration for the `codex-daily-driver` kind.
 
-    Every field is `CodexAgentConfig`'s. Only the discriminator differs, because
-    `coder_eval` routes a raw config dict to its class by the registered kind.
+    The inherited fields keep their existing meaning. Focused delivery
+    comparisons opt into trusted lifecycle hooks and offline fixture confinement.
     """
 
     type: Literal["codex-daily-driver"]  # type: ignore[assignment]
+
+    #: Activate native lifecycle hooks in an explicitly prepared CODEX_HOME.
+    lifecycle_hooks: bool = False
+    #: Confine fixture writes and disable non-fixture native capabilities.
+    offline_fixture: bool = False
 
 
 class CodexDailyDriverAgent(CodexAgent):
@@ -88,6 +94,7 @@ class CodexDailyDriverAgent(CodexAgent):
             instance_name: Short label prefixing this instance's log records.
         """
         super().__init__(config, route, instance_name=instance_name)
+        self.config: CodexDailyDriverAgentConfig
         self._linked_skills: list[str] = []
         self._retagged_turns = 0
         self._already_tagged_turns = 0
@@ -121,6 +128,13 @@ class CodexDailyDriverAgent(CodexAgent):
         what was taken up. Requiring a readable `SKILL.md` is what makes it an
         answer at all rather than a count of directory entries.
         """
+        if self.config.lifecycle_hooks:
+            home = os.environ.get("CODEX_HOME")
+            if not home or not (Path(home) / "hooks.json").is_file():
+                raise AgentConfigError(
+                    "codex-daily-driver: lifecycle_hooks needs an explicit, "
+                    "pre-reviewed CODEX_HOME/hooks.json for this frozen arm"
+                )
         if self.config.plugins:
             try:
                 self.config.plugins = resolve_local_plugins(list(self.config.plugins), base=Path.cwd())
@@ -146,6 +160,47 @@ class CodexDailyDriverAgent(CodexAgent):
                 "codex-daily-driver: plugins were declared but no skill with a readable SKILL.md is under "
                 f"{SKILLS_DIR}; the arm would run untreated"
             )
+
+    def _build_thread_options(self) -> dict[str, Any]:
+        """Activate trusted hooks and native confinement only for opted-in fixtures."""
+        from openai_codex import Sandbox
+        from openai_codex.generated.v2_all import ThreadStartSource
+
+        options = super()._build_thread_options()
+        if self.config.lifecycle_hooks:
+            options["session_start_source"] = ThreadStartSource.startup
+        if self.config.offline_fixture:
+            if self.config.allowed_tools is None:
+                raise AgentConfigError("offline_fixture requires an explicit allowed_tools list")
+            allowed = set(self.config.allowed_tools) - set(self.config.disallowed_tools or [])
+            shell = bool(allowed & {"Read", "Grep", "Glob", "Skill", "Bash", "Write", "Edit"})
+            write = bool(allowed & {"Bash", "Write", "Edit"})
+            options["sandbox"] = Sandbox.workspace_write if write else Sandbox.read_only
+            native = dict(options.get("config") or {})
+            native.pop("enabled_tools", None)
+            native.pop("disabled_tools", None)
+            native["web_search"] = "disabled"
+            native["features"] = {
+                **native.get("features", {}),
+                "shell_tool": shell,
+                "multi_agent": bool(allowed & {"Agent", "Task"}),
+                **dict.fromkeys(
+                    ("goals", "view_image", "apps", "computer_use", "browser_use",
+                     "image_generation", "skill_search", "sleep_tool"), False
+                ),
+            }
+            options["config"] = native
+        return options
+
+    def _log_config_enforcement(self) -> None:
+        """Avoid the inherited full-access claim when native fixture confinement applies."""
+        if self.config.offline_fixture:
+            self._log.info(
+                "Offline fixture: native read-only/workspace-write sandbox; network and "
+                "non-fixture tools disabled. Read/Skill share the native shell capability."
+            )
+        else:
+            super()._log_config_enforcement()
 
     async def communicate(self, user_input: str, **kwargs: Any) -> TurnRecord:
         """Run one turn, and hand back its transcript with the judge's anchor in it.
@@ -188,6 +243,8 @@ class CodexDailyDriverAgent(CodexAgent):
         return {
             **super().get_environment_info(),
             "codex_skills_linked": list(self._linked_skills),
+            "codex_lifecycle_hooks_requested": self.config.lifecycle_hooks,
+            "codex_offline_fixture": self.config.offline_fixture,
         }
 
     # --- internals ---------------------------------------------------------

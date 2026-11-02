@@ -1,18 +1,16 @@
 ---
 name: pr
 description: >-
-  This skill should be used whenever a GitHub pull request is being opened for
-  the current branch, or an existing one is being brought up to date as a
-  whole — including when the user says "/pr", "open a PR", "create a PR",
+  Read before proposing or changing CI enforcement, or opening or updating a
+  pull request. The CI policy also applies without an issue or PR; reading it
+  does not start PR creation. For the current branch, triggers include
+  "/pr", "open a PR", "create a PR",
   "raise a pull request", or "update the PR", and including any call the agent
   makes on its own initiative before creating a pull request, or updating an
   existing pull request beyond its title or body alone. Supplies the branch
   guard, the existing-PR check, draft state, ongoing base-branch maintenance,
   and the call on whether there is an issue to reference; the title comes
   from `pr-title` and the body, issue reference included, from `pr-body`.
-  Also use its recurring CI policy before proposing or changing enforcement,
-  even for ordinary repository work with no issue or pull request; that does
-  not start the PR-opening sequence.
 ---
 
 # PR Workflow
