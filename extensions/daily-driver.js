@@ -47,7 +47,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
-import { installModelClassDefaults } from "./role-default-helper.mjs";
+import { installModelClassDefaults, readModelClassRoutes } from "./role-default-helper.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
 import { installTaskState } from "./task-state.mjs";
 
@@ -2368,7 +2368,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 		));
 		return routingSettings.get(ctx.cwd);
 	}
-	const undertakingRouting = installUndertakingRouting(pi, settingsFor);
+	const undertakingRouting = installUndertakingRouting(pi, settingsFor, async ctx => readModelClassRoutes(await settingsFor(ctx)));
 	pi.on("session_start", async (_event, ctx) => {
 		invalidateStartupState();
 		if (typeof ctx?.cwd !== "string") return;

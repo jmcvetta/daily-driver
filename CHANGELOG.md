@@ -4,8 +4,10 @@
 
 ### Changed
 
+* Retire the print-only Claude evaluation handoff case; preserve its historical records and the separate no-handoff case ([#789](https://github.com/jmcvetta/daily-driver/issues/789)).
 * Report a newly opened task issue's assigned model class beside its issue-kind label ([#783](https://github.com/jmcvetta/daily-driver/issues/783)).
 * Route classed undertaking work to the exact configured class before ownership, preserving its provider, backend, family, and authentication route; retain independent specialist helper routes and finish completed undertakings before session reuse ([#755](https://github.com/jmcvetta/daily-driver/issues/755)).
+* Select undertaking classes within the invoking family and provider; warn and continue on the invoking model when its family has no mapping, with suitability unverified ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Require assignable task issues for all new and reused epic stories, with task readiness checked before linking and dispatch ([#723](https://github.com/jmcvetta/daily-driver/issues/723)).
 
 ### Fixed
@@ -13,6 +15,7 @@
 * Prevent improvised Omp controllers for Claude-judged evaluations while preserving native Claude and non-Claude judge routes ([#791](https://github.com/jmcvetta/daily-driver/issues/791)).
 * Honor assigned, bounded evaluation work without requesting duplicate execution approval ([#775](https://github.com/jmcvetta/daily-driver/issues/775)).
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
+* Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 
 ## [0.56.0](https://github.com/jmcvetta/daily-driver/compare/v0.55.0...v0.56.0) (2026-11-02)
 

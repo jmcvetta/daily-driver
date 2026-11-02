@@ -187,23 +187,39 @@ before execution. Frontier implementation also needs an explicit user
 exception recorded for that implementation scope.
 
 **Route classed undertaking work before the worktree or claim.** Resolve the
-issue's exact class through the harness route, including the effective model,
-effort, and all visible fallbacks. Keep the current model family, provider,
-backend, and authentication route. An eligible account may refresh or rotate;
+exact class within the invoking model family and provider, including effort and
+visible fallbacks. Preserve backend and authentication route where supported.
+Never substitute another provider. An eligible account may refresh or rotate;
 do not change shared roles or credentials to make a route available. This
 policy covers undertaking workers, delegated issue work, and their execution
 fallbacks. Independently configured `reviewer`, `scout`, `security-reviewer`,
 and `seance` helpers are not issue implementation workers.
 
-Prefer a supported in-session switch. Continue only when the harness confirms
-the selected execution identity, not merely when it accepts a switch. While
-confirmation is pending, do not establish a worktree, claim, or implement.
-If an in-session switch is unavailable, a full handoff is allowed only on a
-surface that can constrain and verify the same route. The receiving session
-owns the whole undertaking, including its worktree and claim. The sender stops:
-it must not recursively hand off, claim again, or supervise a duplicate.
-If neither route can enforce the invariant, stop before the worktree or claim
-and report the precise configuration or unsupported-surface gap.
+When the known invoking family is absent from the class-routing table, issue a
+prominent WARNING naming the family, required class, and retained provider/model.
+Continue immediately on the invoking model, provider, and effort without
+confirmation. Its suitability for the class is unverified; an observed
+execution identity does not establish suitability. Keep that disposition for
+the same undertaking and its permitted workers. Do not dispatch a replacement
+worker merely to obtain a mapping. If a child cannot retain the route, work in
+the invoking session instead. Frontier approval and route integrity still apply.
+
+A known mapped family with a missing or cleared class, unavailable target, or
+incompatible assignment is a configuration gap. Unknown family or execution
+identity is not evidence of an absent family. Report actual route violations
+and unsupported controls without claiming verification. Preserve provider where
+the harness supports it; state any limitation and never deliberately substitute
+another provider.
+
+For a mapped family, prefer a supported in-session switch. Continue only when
+the worker confirms the selected execution identity, not merely when a setter
+accepts a switch. While confirmation is pending, show informative status, not
+an error, and do not establish a worktree, claim, or implement. Sequence routing
+alone in its assistant tool batch and wait for the next worker response to verify
+a pending change before mutations. If an in-session switch is unavailable, a
+full handoff is allowed only on a surface that can constrain and verify the
+same route. The receiving session owns the undertaking; the sender stops.
+If neither route can enforce the invariant, report the precise gap before work.
 
 In Omp, an attempt to select another issue does not replace the existing
 undertaking owner. Finish the completed undertaking or resume the existing one
