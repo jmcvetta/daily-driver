@@ -11,7 +11,7 @@
 
 experiment_id: omp-gpt-5-6-sol
 description: >-
-  Trigger accuracy, constitution delivery and review-depth routing on GPT 5.6
+  Trigger accuracy and constitution delivery on GPT 5.6
   Sol, with daily-driver loaded and without it.
 
 defaults:

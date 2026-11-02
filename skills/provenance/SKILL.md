@@ -7,9 +7,9 @@ description: >-
   harness and session that produced them. Supplies the trailing provenance
   block's shape and placement, the rule for reading the model that served the
   turn against the one the session was set to, the harness name and version,
-  the session identifier or `n/a`, the rule that a body edited later gains a
-  second block rather than losing the first, and the commit trailer each
-  harness adds. Not for the claim comment's branch line or haiku, which are
+  the session identifier or `n/a`, the rule for retaining distinct attribution
+  across body edits, and the commit trailer each harness adds. Not for the claim
+  comment's branch line or haiku, which are
   `undertake`'s, and not for a task issue's `Model class` section, which is
   implementation metadata `issue-body` owns.
 ---
@@ -71,17 +71,24 @@ lookup silently, on every issue it has ever run against.
 Bodies edited later
 ====================
 
-**An existing block is never removed, and never rewritten in place.** A
-session that edits a body, or replies in a thread, it did not start adds its
-own block beneath whatever is already there, so the record reads as a
-sequence of writers rather than a single overwritten claim.
+**Each body retains one block per distinct attribution.** Compare the
+complete recorded `Model:`, `Harness:`, and `session:` field values exactly,
+across all existing complete blocks in that body. Include any configured and
+served model distinction and the harness version in the comparison. Treat
+`n/a` as a literal value; do not infer identities, aliases, or equivalent
+session links.
 
-**A repeat write by the same session, in the same turn, changes nothing.**
-One block per write, not one per line touched — a body revised twice in one
-turn carries the block once, at the end of the final version. Where the same
-session returns in a later turn to revise its own earlier write, that is a
-new write and earns its own block under the rule above: the earlier one
-stays, and the body now carries two.
+On an edit, retain the first occurrence of each distinct tuple, in its
+original order and with its field values unchanged. Remove exact duplicate
+blocks. Append the current writer's block only if its complete tuple is not
+already present, regardless of turn. A changed model, harness or version, or
+session is distinct and remains recorded. Do not rewrite incomplete or
+nonstandard historical records to deduplicate them. Preserve substantive
+body content, closing references, and unrelated footers.
+
+The scope is one artifact, not a thread. A new comment or review carries its
+own block even when another comment has the same attribution. Do not copy the
+thread's history into a reply or suppress the reply's own attribution.
 
 `undertake`'s claim comment and first-readiness report keep their own timing
 and once-per-undertaking rules for the block they carry; this section governs

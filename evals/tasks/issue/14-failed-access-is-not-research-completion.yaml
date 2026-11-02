@@ -5,14 +5,12 @@ description: >-
 tags: [issue, behaviour, fire]
 
 initial_prompt: >-
-  Update research issue #81. It asks whether the billing provider supports
-  partial refunds. The only action taken was opening a provider dashboard;
-  access was denied. No documentation, API response, or other source was
-  examined. The issue's stopping rule requires checking the API docs and a
-  sandbox request, neither of which has been attempted. Record the failed
-  access, but tell me if this completes the research issue. Do not claim a
-  bounded inconclusive result or request production access. Show the proposed
-  update; do not post.
+  I tried to open the provider dashboard while investigating whether the
+  billing provider supports partial refunds, but access was denied. No
+  documentation, API response, or other source was examined. The issue's
+  stopping rule requires checking the API docs and a sandbox request, and
+  neither has been attempted. Please draft a status update for research issue
+  #81 and tell me whether this investigation is complete; do not post it.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill, Bash]

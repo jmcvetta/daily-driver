@@ -22,6 +22,9 @@ initial_prompt: >-
   Epic #200 is at sea with `Landing: orchestrator`. Its first wave — #201,
   #202 and #203 — each has an open pull request from its own task session.
   Check on the wave.
+  This isolated exercise has no GitHub or session client. Describe the
+  check-in and the prompt you would arm, without claiming that you performed
+  them.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]

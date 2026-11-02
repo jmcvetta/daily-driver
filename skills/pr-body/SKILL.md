@@ -52,10 +52,8 @@ The body of a pull request, whether it is being opened or rewritten. In order:
 - **Unopinionated**: This is a short description of the branch, NOT a code
   review. Do NOT do opine on code quality or security.
 - **Provenance**: Last, below all of the above, `provenance`'s block — the
-  model, harness and session that wrote the body — placed and read the way
-  that skill defines. A rewrite of a body someone else wrote adds a second
-  block beneath the first rather than replacing it, per `provenance`'s own
-  rule.
+  model, harness and session that wrote the body — placed and retained as
+  that skill defines.
 
 **The body is human-facing, and the constitution's audience rule governs
 it.** Keep every essential fact — the change, the reason, the verification
