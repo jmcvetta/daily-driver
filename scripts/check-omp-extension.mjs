@@ -798,7 +798,7 @@ check("background command text cannot activate or replace the startup gate", () 
 		const before = startupState(s);
 		assert.equal(before?.status, status);
 		for (const prompt of ["Embark #582 watch backstop", "embark 999", "undertake 583", "/stand-down"]) {
-			s.fire("before_agent_start", { prompt }, ctx);
+			s.fire("before_agent_start", { prompt, systemPrompt: [] }, ctx);
 			s.fire("input", { text: prompt, source: "extension" }, ctx);
 			assert.deepEqual(startupState(s), before, `${status}: ${prompt}`);
 		}

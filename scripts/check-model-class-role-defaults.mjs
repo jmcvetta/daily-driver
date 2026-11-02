@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { installModelClassDefaults, MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS } from "../extensions/role-default-helper.mjs";
+import { explicitModelClassRole, installModelClassDefaults, MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS } from "../extensions/role-default-helper.mjs";
 
 function settingsFixture(initialRoles = {}, initialTags = {}) {
   const roles = { ...initialRoles };
@@ -66,9 +66,23 @@ const mutationCount = operator.mutations.length;
 installModelClassDefaults(operator.settings, operator.modelTagsSetting);
 assert.equal(operator.mutations.length, mutationCount, "repeated installation must not rewrite established settings");
 
+// Clearing a role must not silently reinstate the plugin's selector.
 const cleared = settingsFixture({ implementation: "" });
 installModelClassDefaults(cleared.settings, cleared.modelTagsSetting);
-assert.equal(cleared.roles.implementation, MODEL_CLASS_ROLE_DEFAULTS.implementation);
+assert.equal(cleared.roles.implementation, "");
+assert.deepEqual(explicitModelClassRole(cleared.settings, "implementation"), { assigned: true, value: "" });
+
+// Plugin defaults must not be mistaken for explicit operator assignments in another family.
+const tracked = settingsFixture();
+installModelClassDefaults(tracked.settings, tracked.modelTagsSetting);
+assert.deepEqual(explicitModelClassRole(tracked.settings, "implementation"), { assigned: false });
+tracked.roles.implementation = "operator/selected:high";
+assert.deepEqual(explicitModelClassRole(tracked.settings, "implementation"), { assigned: true, value: "operator/selected:high" });
+tracked.roles.implementation = undefined;
+tracked.settings.getModelRoleProvenance = () => "user";
+installModelClassDefaults(tracked.settings, tracked.modelTagsSetting);
+assert.equal(tracked.roles.implementation, undefined);
+assert.deepEqual(explicitModelClassRole(tracked.settings, "implementation"), { assigned: true, value: undefined });
 
 console.log(JSON.stringify({
   installedSelectors: clean.roles,
