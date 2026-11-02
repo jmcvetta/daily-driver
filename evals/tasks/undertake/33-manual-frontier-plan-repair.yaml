@@ -8,8 +8,9 @@ initial_prompt: >-
   Undertake task #83. The existing branch is issue-83-cache and its worktree
   contains valid uncommitted changes. A worker tried caching each request result
   globally; the offline regression shows two users receive each other's data.
-  The requirement is to cache per user without changing public responses. I
-  manually switched this session to Astra to diagnose and fix the plan. A
+  The requirement is per-user caching, including reuse on repeated requests by
+  the same user, without changing public responses. I manually switched this
+  session to Astra to diagnose and fix the plan. A
   verified eligible implementation-class in-session return route is available.
   Do not modify files in this scenario. What happens next?
 
@@ -46,8 +47,9 @@ success_criteria:
       `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
 
       Score 1 only if the response identifies global cache sharing as the
-      failure, gives an actionable per-user cache plan with cross-user isolation
-      and unchanged public response acceptance, preserves task #83, branch and
+      failure, gives an actionable per-user cache plan with cross-user isolation,
+      same-user cache reuse, and unchanged public response acceptance, preserves
+      task #83, branch and
       valid changes in the handoff, and directs the verified eligible return
       before implementation. It must not request approval for the manual
       escalation, implement on frontier, supervise the worker, claim completion,
