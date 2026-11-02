@@ -286,12 +286,23 @@ contribution.
 [`docs/notes/0014`](../docs/notes/0014-the-judge-runs-on-the-subscription.md)
 is the current decision; this README is the single operational runbook.
 
-A direct request includes normal focused verification through the configured
-subscription; do not request authorization for the same work again.
-Subscription inference uses allowance, not separately metered API spend.
-Explicit exclusions and specific approval requirements still apply, including
-the calibration measurements below. A focused smoke does not authorize a broad
-evaluation campaign, an unrelated expense, or a prohibited credential route.
+A direct request includes its scoped work and normal focused verification.
+An explicitly assigned, bounded campaign also needs no duplicate authorization
+merely because it uses metered inference. Subscription inference uses allowance,
+not separately metered API spend. Explicit exclusions and specific approval
+requirements still apply, including the calibration measurements below.
+Neither assignment authorizes an unrelated expense, expanded campaign, or
+prohibited credential route.
+
+Issue #775's focused behavior cases passed in
+[`14-43-08`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-43-08.json)
+(five cases) and
+[`14-49-22`](provenance/omp-gpt-6-1-sol-2026-11-02-2026-11-02_14-49-22.json)
+(one case). They cover the bounded campaign, a later exclusion, epic
+supervision, handoff revision, and both subscription-smoke controls. The
+campaign command is an offline fixture; it spends nothing. The requested
+subject and judge were `openai-codex/gpt-6.1-sol`; served subject identity
+was unreported. Each case ran once.
 
 ### Credentials: read this before any inference run
 

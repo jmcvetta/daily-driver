@@ -11,6 +11,7 @@
 
 ### Fixed
 
+* Honor assigned, bounded evaluation work without requesting duplicate execution approval ([#775](https://github.com/jmcvetta/daily-driver/issues/775)).
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
 
 ## [0.56.0](https://github.com/jmcvetta/daily-driver/compare/v0.55.0...v0.56.0) (2026-11-02)
