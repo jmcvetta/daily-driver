@@ -147,14 +147,21 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 
 	function status(ctx, text) { ctx.ui?.setStatus?.("daily-driver-routing", text); }
 
-	pi.on("before_agent_start", event => ({
-		systemPrompt: `${event.systemPrompt}\nUndertaking routing: call daily_driver_route_undertaking alone, with no other tool calls in that assistant response (including device calls). If pending, report normal verification status, then let the selected worker respond before task work. A pending switch is not an error. Never batch routing with worktree creation, claims, or implementation.`,
-	}));
+	pi.on("before_agent_start", (event, ctx) => {
+		if (!current(ctx) && !/(?:^|\n)(?:\/skill:|\/)?undertake\b/iu.test(event.prompt ?? "")) return;
+		return {
+			systemPrompt: `${event.systemPrompt}\nUndertaking routing: call daily_driver_route_undertaking alone, with no other tool calls in that assistant response (including device calls). If pending, report normal verification status, then let the selected worker respond before task work. A pending switch is not an error. Never batch routing with worktree creation, claims, or implementation.`,
+		};
+	});
 
 	function current(ctx) { return states.get(ctx.sessionManager?.getSessionId?.()); }
 
 	function publish(ctx, state) {
 		state.workerModels ??= ctx.models;
+		const previous = states.get(state.sessionId);
+		for (const handoff of pendingChildren.values()) {
+			if (handoff.state === previous) handoff.state = state;
+		}
 		states.set(state.sessionId, state);
 		const sessions = scope(ctx);
 		if (sessions) sessions.set(state.sessionId, { agentId: ctx.agent?.id, state });

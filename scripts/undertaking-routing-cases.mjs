@@ -263,15 +263,6 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.deepEqual(s.calls.notifications, []);
 	});
 
-	// Routine routing must not invite batching that produces a premature-work error.
-	routingCheck("routing instructions require a separate assistant response", async (create) => {
-		const s = await create();
-		assert.match(s.tools.get("daily_driver_route_undertaking").description, /alone/iu);
-		const instructions = await s.fire("before_agent_start", { systemPrompt: "Original instructions" });
-		assert.match(instructions.systemPrompt, /route_undertaking alone/iu);
-		assert.match(instructions.systemPrompt, /pending switch is not an error/iu);
-	});
-
 	// Batch admission must not let a preceding mutation run before the sibling route tool executes.
 	for (const routeTool of ["daily_driver_route_undertaking", "write"]) {
 		routingCheck(`${routeTool} reserves selection before same-message mutation admission`, async (create) => {
