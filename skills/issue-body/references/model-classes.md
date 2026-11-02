@@ -82,6 +82,10 @@ For an operator's manual escalation during a failing task, apply the
 constitution's *Manual frontier escalation*: repair the plan and return the
 existing work to an eligible ordinary worker. Manual escalation is authorized;
 it is not a frontier implementation exception or an agent-initiated assignment.
+Keep this consultation separate from the task's required class, assigned worker,
+approval evidence, and execution verification. Operator model selection must
+not be vetoed for missing assignment approval. It does not authorize unrelated
+delegation or later automatic fallback.
 
 A row in the harness reference's `Measured routes` table outranks this file's
 hand-written `Classes` table. A missing row, or one marked `unmeasured` or
