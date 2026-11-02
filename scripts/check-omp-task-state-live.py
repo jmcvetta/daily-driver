@@ -56,7 +56,7 @@ class Model(BaseHTTPRequestHandler):
         if phase is None:
             raise AssertionError(f"No external probe phrase in provider messages: {repr(messages[-5:])[:16000]}")
         index = REQUESTS.get(phase, 0)
-        if phase == "first" and index < 3:
+        if phase == "first" and index < 4:
             if index == 0:
                 params = {"action": "status"}
             elif index == 1:
@@ -92,6 +92,10 @@ class Model(BaseHTTPRequestHandler):
                     "path": "xd://daily_driver_task_state", "content": json.dumps(params),
                 })},
             }]}
+            if index == 3:
+                message["tool_calls"][0]["function"] = {
+                    "name": "read", "arguments": json.dumps({"path": str(ROOT / "extensions/task-contract.mjs")}),
+                }
             finish = "tool_calls"
         else:
             message = {"role": "assistant", "content": "I stopped without evidence or reported completion."}
@@ -205,23 +209,33 @@ export default function(pi) {
             for key in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
                 env[key] = str(home / key.lower())
             first = run(omp, base, env, "first", observer)
+            session = next((base / "persistent-session").glob("*.jsonl"))
+            first_entries = [json.loads(line) for line in session.read_text().splitlines()]
+            first_state = [entry["data"]["state"] for entry in first_entries if entry.get("customType") == "daily-driver.task-state"][-1]
             run(omp, base, env, "resume", observer)
             run(omp, base, env, "cancel", observer)
             rows = [json.loads(line) for line in (base / "state.log").read_text().splitlines()]
             assert all(row["corrections"] <= 2 for row in rows if "corrections" in row), rows
-            # Three state commands and three model stops prove exactly two corrective turns;
+            # Three state commands, one ordinary tool result and three stops prove two corrective turns;
             # shutdown may emit extra stop notifications without another model request.
-            assert REQUESTS["first"] == 6, REQUESTS
+            assert REQUESTS["first"] == 7, REQUESTS
             assert any(row.get("cancelled") and row.get("status") == "cancelled" for row in rows), rows
             assert REQUESTS["cancel"] == 1, REQUESTS
             assert REQUESTS["resume"] == 1, REQUESTS
             results = [frame for frame in first if frame.get("type") == "tool_execution_end"]
-            assert len(results) == 3 and all(not frame.get("isError") for frame in results), results
+            assert len(results) == 4 and all(not frame.get("isError") for frame in results), results
             session = next((base / "persistent-session").glob("*.jsonl"))
             saved = [json.loads(line) for line in session.read_text().splitlines()]
             state = [entry["data"]["state"] for entry in saved if entry.get("customType") == "daily-driver.task-state"][-1]
             assert state["authorizations"][0]["id"] == "offline-fixture", state
             assert state["status"] == "active" and state.get("stopFailure"), state
+            assert state["contract"] == first_state["contract"], state
+            assert state["contract"]["schemaVersion"] == 1, state
+            assert [criterion["id"] for criterion in state["contract"]["criteria"]] == ["request"], state
+            assert state["contract"]["sourceRefs"][0]["sourceClass"] == "user", state
+            assert state["contract"]["sourceRefs"][0]["origin"]["channel"] == "rpc", state
+            assert state["corrections"] == first_state["corrections"] == 2, state
+            assert any(isinstance(entry.get("data"), dict) and entry["data"].get("observation") for entry in saved), saved
             print("check-omp-task-state-live: PASS; durable approval, two-correction cap, process resume and RPC abort exercised offline")
     finally:
         server.shutdown()

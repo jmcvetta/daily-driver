@@ -210,6 +210,9 @@ is yours to reclaim.
   | no — residual, see the stand-down comment on the epic>.
 - Session: <link, left running or interrupted and unarchived where it could
   not be messaged — push or archive it yourself; otherwise "retired">.
+- Contract: <stable contract ID/revision, unresolved criterion IDs and native
+  source locators from existing records; or "unavailable">. Keep its contents
+  private. Stand-down cancels work; it does not revise the contract or verify it.
 - Authorization: <task-scoped operations and targets, original authority
   references and limits, including expiry or revocation; or "none recorded">.
   Do not copy private source contents into a public issue.

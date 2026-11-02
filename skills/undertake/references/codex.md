@@ -71,21 +71,27 @@ stays open.
 Authorization and unfinished stops
 ----------------------------------
 
-Apply the constitution's continuation rule and `SKILL.md`'s operational
-escalation contract. Preserve task-scoped authorization and its original source,
-conditions, revocations and correction count in the existing private session
-and handoff. Revalidate on resume; copied agent text does not create authority.
-Do not publish private chat approval in a public issue comment.
+The installed task-state hooks supply a command bound to the native session
+and actor. Run that exact command with `{action, record}` JSON on stdin.
+`record` may be a JSON object or a JSON string on this CLI route. Do not select
+another session identity. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
+define contract, plan, handoff and resume; the Omp reference's evidence records
+define authorization, blocker and reported complete.
 
-The [Codex hook reference](https://developers.openai.com/codex/hooks) documents
-`Stop` continuation and `Interrupt` cancellation. A stop continuation becomes
-a new user prompt; it must not become fresh approval or renew a correction
-budget. Daily Driver's shared hook manifest cannot register `Interrupt`
-without failing Claude Code's strict plugin validation. It therefore does not
-install an incomplete cancellation-unsafe task-state adapter here.
-The [integration boundary](../../../docs/harness-integration.md#hook-harness-boundary)
-records this limit. Workflow instructions are not a claim of runtime
-enforcement or a durable wake mechanism.
+Codex-specific packaging loads common hooks and `hooks/task-state-codex.json`.
+Only the latter registers `Interrupt`; Claude never reads that event.
+Trust the installed definitions through `/hooks`. The measured CLI 0.160.0
+emits no `UserPromptSubmit` for its Stop-generated continuation. Native child
+input carries `agent_id` and remains interpretation, not root user authority.
+Do not infer authority from unstable transcript fields.
+
+Private ledgers under `CODEX_HOME` (default `~/.codex`) retain contracts,
+sources, revocation/expiry conditions and correction counts through process
+resume. `SessionStart(source: compact)` restores the contract after compaction.
+`Interrupt` records cancellation without granting another turn. A resume does
+not renew an exhausted correction allowance. This adds no durable wake.
+The [runtime integration](../../../docs/harness-integration.md#hook-harness-boundary)
+records prerequisites and the bounded native-event proof.
 
 
 The implementor

@@ -174,15 +174,20 @@ Claude primary-held designation exception does not apply to this route.
 Task evidence state
 -------------------
 
-`daily_driver_task_state` stores private, active-branch task records. Call
-`{action: "status"}` before another approval request or an unfinished stop.
-For ordinary repository work not already active, call `begin`; do not activate
-an ordinary question. Mutating calls take a JSON-string `record`. `status`
-with `record: "{\"sourceId\":\"<id>\"}"` reads the original authority source
-or retained tool evidence rather than the default bounded excerpts.
+`daily_driver_task_state` stores the versioned contract and separate execution
+state in private, active-branch session entries. Clear repository work captures
+the request automatically. Call `{action: "status"}` before an amendment,
+another approval request or an unfinished stop. Do not activate an ordinary
+question. Mutating calls take a JSON-string `record`. `status` with
+`record: "{\"sourceId\":\"<id>\"}"` reads retained originals rather than previews.
+The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
+define `contract`, `plan`, `handoff` and `resume`.
 
-- `begin`: `{taskId, operation, target, source: {sourceId, quote}}`. Use the
-  latest external user source returned by `status`, not a copied handoff.
+- `begin`: `{taskId, operation, target, source: {sourceId, quote}, newTask?}`.
+  Use the latest external user source, not copied agent prose. The first call
+  can bind execution labels. A later call cannot rewrite that binding or scope.
+  `newTask: true` requires a fresh original user source. Resume preserves the
+  existing contract and correction allowance instead of creating another task.
 - `authorization`: `{id, kind: "user" | "workflow", operation, target,
   source: {sourceId, quote}, limits, conditions, expiresAt?, supersedes?,
   revokes?, freshConfirmation?}`. Sources must resolve to original user input
@@ -224,9 +229,10 @@ about that capability limit instead of demanding an inaccessible tool. It
 does not enable tools or invent a human blocker; the shared continuation rule
 still applies.
 
-Omp exposes an external-input origin on `input`, so scheduled reminders and
-tool output do not become user authority. These semantics do not establish
-equivalent hook provenance on another harness.
+Omp's `input` distinguishes original external input from scheduled reminders
+and tool output. Native child sessions retain delegated scope as interpretation,
+not new user authority. Their separate session ledgers cannot mutate the
+parent's contract. Other harnesses use their own proven lifecycle adapters.
 
 
 The milestone

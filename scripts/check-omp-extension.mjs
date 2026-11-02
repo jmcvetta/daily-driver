@@ -45,6 +45,7 @@ import { MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS, installModelClassDefa
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import registerUndertakingRoutingChecks from "./undertaking-routing-cases.mjs";
+import registerTaskContractChecks from "./task-contract-cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, "..");
@@ -3673,9 +3674,16 @@ check("task authorizations retain scope expiry revocation supersession and confi
 	assert.equal(states.expired, "expired");
 	assert.equal(states.fresh, "fresh-confirmation-required");
 	assert.equal(states.revoked, "revoked");
-	await session.command("begin", { operation: "deploy", target: "other" });
+	assert.equal((await session.command("begin", { operation: "deploy", target: "other" })).isError, true);
+	await session.input("Change this task to deploy the other fixture.");
+	const decision = (await session.command("status")).details.sources.filter((item) => item.kind === "user").at(-1);
+	const ref = { sourceId: decision.sourceId, quote: decision.text };
+	const revision = (await session.command("status")).details.state.contract.revision;
+	assert.ok(!(await session.command("contract", { expectedRevision: revision, change: "User changes the operation and target",
+		sourceRefs: [ref], authoritySource: ref, operation: "deploy", target: "other", contract: { scope: ["Deploy the other fixture"] } })).isError);
 	assert.ok((await session.command("status")).details.authorizations.every((item) => item.applicability === "out-of-scope"));
 	await session.input("Fix an unrelated repository.");
+	await session.command("begin", { newTask: true });
 	assert.equal((await session.command("status")).details.authorizations.length, 0);
 	assert.equal((await session.command("authorization", { ...base, id: "cross-task" })).isError, true);
 });
@@ -3755,6 +3763,8 @@ check("task cancellation and abort prevent queued continuation and synthetic res
 		await resumed.input("Fix the parser.", "extension");
 		assert.equal(await resumed.stop(), undefined);
 		await resumed.input("Fix the parser.");
+		const source = (await resumed.command("status")).details.sources.filter((item) => item.kind === "user").at(-1);
+		await resumed.command("resume", { source: { sourceId: source.sourceId, quote: source.text } });
 		assert.equal((await resumed.stop()).continue, true);
 	}
 	const session = taskSession();
@@ -3869,6 +3879,8 @@ check("task completion is an explicit report rather than a runtime proof", async
 	assert.equal(await session.fire("before_agent_start", { systemPrompt: ["Policy"] }, session.ctx), undefined);
 	assert.equal(await session.fire("session.compacting", {}, session.ctx), undefined);
 });
+registerTaskContractChecks(check, ROOT);
+
 await Promise.all(checks);
 rmSync(worktrees.root, { recursive: true, force: true });
 rmSync(staleWorktrees.root, { recursive: true, force: true });

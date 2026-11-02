@@ -96,6 +96,11 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    For research, frontier is the only class exception and does not add the task
    template.
 
+Execution retains these requirements in a versioned task contract. Stable
+criterion IDs belong to that runtime record; this template needs no new
+headings. Later issue edits do not silently cancel unmet criteria in an active
+contract. An issue body is a requirement source, not original user approval.
+
 **A task body opens in a fixed shape.** Its parts appear in this order:
 
 1. **A one-line summary.** The first line states the observable outcome.
