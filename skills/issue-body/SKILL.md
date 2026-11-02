@@ -248,9 +248,11 @@ adapter pattern.
 ```
 
 `undertake` validates and, where grounded, migrates the section before routing.
-Classed undertaking selects the exact class before worktree creation or claim,
-on the same family, provider, backend, and authentication route. It prefers a
-verified in-session switch; a constrained full handoff is the fallback.
-Unavailable control or route evidence is a stop, not a standalone bypass.
-Any frontier assignment still needs explicit user approval and its exact
-envelope. Claim comments and execution records retain the observed model.
+For a mapped family it selects the exact class within the invoking family and
+provider before worktree creation or claim, preserving backend and authentication
+where supported. If the known family is absent from the class table, it warns
+prominently and continues on the invoking model, provider, and effort without
+confirmation; class suitability remains unverified. Missing classes in mapped
+families, unknown identity, and actual route violations remain gaps. Any
+frontier assignment still needs explicit user approval and its exact envelope.
+Claim comments and execution records retain the observed model.

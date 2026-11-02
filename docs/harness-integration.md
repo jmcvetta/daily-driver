@@ -134,16 +134,38 @@ credentials. Use `/model` → Roles to assign models. Existing `omp_configs/`
 files remain process overlays; assignments present at startup take precedence,
 and later edits may require an Omp restart.
 
-Classed undertaking routes through `daily_driver_route_undertaking` before
-worktree creation or claim. It selects the exact class on the same model family,
-provider, backend, and authentication route, including delegated issue workers
-and visible fallbacks. The tool reports `pending`, `verified`, or `blocked`;
-only an observed, verified execution identity permits work. An unavailable or
-incompatible mapping is a configuration gap, not permission to rewrite roles.
-Eligible OAuth account refresh or rotation is allowed. Independently configured
-`reviewer`, `scout`, `security-reviewer`, and `seance` helpers are not issue
-implementation workers and retain their configured routes; implementation
-workers and their execution fallbacks retain the strict route.
+`dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
+and `classes`, for example `{ referenceModel: "provider/model", classes: {
+implementation: "provider/variant:high" } }`. Omp resolves the reference
+through its model catalog to identify the family and provider. A family entry
+does not authorize a different provider. The built-in OpenAI Codex entry
+preserves the existing defaults; explicit same-family class roles remain
+operator assignments. Plugin-installed global defaults do not establish a
+mapping for unrelated families. A mapping is not measurement evidence.
+
+Classed undertaking calls `daily_driver_route_undertaking` alone in its
+assistant tool batch before worktree creation or claim. For a mapped family it
+selects the exact class within the invoking family and provider, preserving
+backend and authentication route across workers and visible fallbacks. A model
+or effort change remains `pending` until the next worker assistant response
+confirms actual execution. Show informative status during this normal
+verification, not an error; do not batch mutations with routing or start work
+while pending. An already matching model and effort needs no switch.
+
+When the known family is absent from the class table, a prominent warning names
+the family, required class, and retained provider/model. Work continues
+immediately on the invoking model, provider, and effort without confirmation.
+The route's execution identity can be verified while class suitability remains
+unverified. A missing or cleared class in a mapped family, unavailable or
+incompatible target, unknown identity, or actual route violation remains a
+configuration gap. Failed preflight must permit explanation and retry without
+discarding an existing valid route. The public route `status` remains `pending`,
+`verified`, or `blocked`; `capability` separately reports `mapped` or
+`unverified`. An absent-family result may also carry a `warning`. Frontier
+authorization and OAuth restrictions remain
+in force. Independently configured `reviewer`, `scout`, `security-reviewer`,
+and `seance` helpers retain their routes. A delegated worker must retain the
+undertaking route; otherwise work stays in the invoking session.
 
 After the pull request is ready, or answer-only research is completed and
 recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`

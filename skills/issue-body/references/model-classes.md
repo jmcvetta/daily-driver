@@ -47,13 +47,20 @@ apply the task template to other issue kinds.
 
 ## Selection
 
-For classed undertaking, select the exact required class before worktree or
-claim, within the current family, provider, backend, and authentication route.
-Assess tools, context, modalities, availability, and visible fallbacks as well.
-The configured class mapping does not itself prove capability. Do not replace
-an incompatible or cleared mapping, change shared roles, or infer an eligible
-route from price. If no eligible route exists, stop that task and report the
-configuration gap.
+For classed undertaking, select the exact required class within the invoking
+family and provider before worktree or claim. Preserve backend and authentication
+where supported; never deliberately substitute another provider. Assess tools,
+context, modalities, availability, and visible fallbacks. A configured mapping
+does not itself prove capability. Do not change shared roles or infer an
+eligible route from price.
+
+If the known family is absent from the class table, prominently warn with the
+family, requested class, and retained provider/model. Continue immediately on
+the invoking model, provider, and effort without confirmation. Class suitability
+is unverified, even if execution identity is observed. Frontier authorization
+and actual route constraints still apply. Do not use this exception for unknown
+identity or for a mapped family with a missing or cleared class, unavailable
+target, or incompatible assignment: report those configuration gaps.
 
 An effective route that runs frontier requires explicit approval for that
 assignment, even when a lower-class role, configured retry fallback, prewalk
@@ -61,9 +68,11 @@ fallback, or visible parent-model inheritance selects it. Resolve the effective
 execution route, not only the requested role name. A harness-resolved
 astra/fable route is frontier for this authorization check.
 
-Prefer a verified in-session switch; use a full handoff only where the surface
-can constrain and verify the same route. The receiving session owns the
-undertaking and the sender stops. An approved frontier research pass returns
+For a mapped family, prefer a verified in-session switch; use a full handoff
+only where the surface can constrain and verify the same route. The receiving
+session owns the undertaking and the sender stops. For an absent family, keep
+the invoking session if a child cannot retain the route. An approved frontier
+research pass returns
 only its bounded deliverable; implementation requires a separately authorized
 frontier exception or an eligible ordinary class. Frontier implementation
 requires explicit user authorization and its bounded scope; research approval
