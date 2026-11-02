@@ -540,6 +540,39 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(s.calls.aborts, 0);
 	});
 
+	// Reload must not certify a partially applied switch whose model rollback also failed.
+	routingCheck("failed restoration remains recovery-only after reload", async (create) => {
+		const s = await create({
+			effort: "low",
+			setModel: async (selected, update) => {
+				if (selected === MECHANICAL) throw new Error("fixture model restoration failure");
+				update(selected);
+				return true;
+			},
+			setThinkingLevel: () => { throw new Error("fixture effort setter failure"); },
+		});
+		const failed = await s.route({ modelClass: "reasoning" });
+		assert.equal(failed.isError, true);
+		assert.equal(failed.details.undertaking.status, "blocked");
+		assert.equal(s.ctx.models.current(), REASONING);
+		const entries = structuredClone(s.entries);
+		await s.close();
+		const resumed = await create({
+			auth: s.auth, sessionId: s.sessionId, agentId: s.agentId,
+			entries, current: REASONING, effort: "low",
+		});
+		await resumed.request();
+		await resumed.assistant();
+		assert.equal(resumed.calls.aborts, 0, "recovery must still permit explanation");
+		assertBlocked(await resumed.tool("write", { path: "implementation.js", content: "change" }));
+		assert.equal(resumed.describe().undertaking.status, "blocked");
+		assert.notEqual((await resumed.route({ modelClass: "reasoning" })).isError, true);
+		await resumed.request();
+		await resumed.assistant();
+		assert.equal(resumed.pi.getThinkingLevel(), "high");
+		assertAllowed(await resumed.tool("write", { path: "implementation.js", content: "change" }));
+	});
+
 	// Same-provider routing must not cross a backend, transport, header route, or model family.
 	for (const [name, target, family] of [
 		["backend", model(MECHANICAL.id, { baseUrl: "https://other.example.invalid/v1" })],

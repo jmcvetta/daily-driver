@@ -184,7 +184,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			selectedEffort: state.selectedEffort,
 			capability: state.capability ?? "mapped",
 			...(state.warning ? { warning: state.warning } : {}),
-			...(state.recovery ? { recovery: true } : {}),
+			...(state.recovery ? { recovery: true, reason: state.reason } : {}),
 			...(state.identities ? { identities: state.identities } : {}),
 			...(state.frontierApproval ? { frontierApproval: state.frontierApproval } : {}),
 		});
@@ -214,7 +214,8 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			if (!parent && !saved) return;
 			if (expected) pendingChildren.delete(ctx.agent.id);
 			state = {
-				...(parent ?? saved), sessionId, lease: undefined, status: "pending", observedModel: null,
+				...(parent ?? saved), sessionId, lease: undefined,
+				status: saved?.recovery ? "blocked" : "pending", observedModel: null,
 				workerModels: ctx.models,
 				selectedModel: parent ? selector(ctx.models.current()) : saved.selectedModel,
 				selectedEffort: parent ? pi.getThinkingLevel() : saved.selectedEffort,
@@ -222,7 +223,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			};
 			publish(ctx, state);
 			if (parent?.status !== undefined && parent.status !== "verified") throw new Error("Parent undertaking route is not verified");
-			checkModel(ctx, state, ctx.models.current());
+			checkModel(ctx, state, ctx.models.current(), Boolean(state.recovery));
 			if (parent?.capability === "unverified" && selector(ctx.models.current()) !== parent.selectedModel) {
 				throw new Error("An unmapped-family worker must retain the invoking model");
 			}
