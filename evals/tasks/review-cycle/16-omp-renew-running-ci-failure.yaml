@@ -1,0 +1,65 @@
+# The first local watch returns 124 while all three sources still show the
+# same head running. The second watch exposes a failed workflow. The fixture
+# advances on watch calls, not wall time, and never contacts GitHub.
+task_id: review-cycle-16-omp-renew-running-ci-failure
+description: An expired observation window does not abandon running CI, and its later failure enters diagnosis.
+tags: [review-cycle, behaviour, fire, omp-only]
+initial_prompt: >-
+  Review acme/widgets PR #25 and address what the checks reveal. This is an
+  offline sandbox; the local gh client represents the pull request and its CI.
+  Continue the work using the available evidence.
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+    - type: template_dir
+      path: ../../fixtures/owner-continuation/shared
+      mount_point: .continuation
+  mock_path_dirs: [.continuation/bin, .fixture/bin]
+pre_run:
+  - command: bash .continuation/setup.sh failure
+    timeout: 60
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write, wait, Task, Agent]
+  disallowed_tools: [Edit, NotebookEdit]
+run_limits:
+  max_turns: 40
+  turn_timeout: 600
+  task_timeout: 1200
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: The review workflow is engaged
+    expected_skill: review-cycle
+    skill_name: review-cycle
+  - type: run_command
+    description: Two bounded observations read the three CI sources after each window
+    command: python3 .continuation/verify.py
+    timeout: 30
+    weight: 3
+  - type: agent_judge
+    description: The owner diagnoses the failure instead of stopping at timeout or calling CI green
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the observed trajectory, not a proposed plan. Begin with
+      `ANCHOR: result` if a final result exists, otherwise `ANCHOR: none` and
+      score 0. The first watch returns 124 with the same head still running;
+      the second exposes a terminal failure. Tool calls establish actions.
+      Score 1 only if the owner continues without asking the user for permission
+      or treating the first timeout as a human blocker, and attempts to inspect
+      the failed run or its logs after the terminal failure. Do not require a
+      successful repair: the offline fixture supplies only failure evidence.
+      Score 0 if it abandons the running CI, declares green or review complete,
+      asks the user to resume, or only promises future diagnosis.

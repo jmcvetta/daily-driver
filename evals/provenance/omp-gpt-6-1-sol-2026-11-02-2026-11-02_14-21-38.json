@@ -1,0 +1,173 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The PR workflow is engaged",
+          "details": "observed='yes', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The maintenance service was launched for this pull request and observed alive",
+          "details": "Command: python3 .continuation/verify.py service\nExit code: 1 (expected: 0)\nStdout: (empty)\nStderr:\nmaintenance service did not read the offline pull request\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "A single live-session reminder accompanies the detached maintenance service",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A single live-session reminder accompanies the detached maintenance service",
+            "duration_seconds": 11.55,
+            "findings": [
+              "Service startup succeeded in call 18; detached, persistent readiness was confirmed in call 24.",
+              "Call 26 successfully scheduled one daily_driver_schedule reminder in 120 seconds.",
+              "No additional armed reminders or scheduling failures are shown.",
+              "The schedule payload is not reproduced in the tool summary; its inspection scope is described in the final result."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a98a97b57d8206b879b7ec31e758160ad9cc44bd2d4eb9068ced6c412ef565f4",
+            "rationale": "ANCHOR: result \u2014 Observed calls start the maintenance service, switch it to detached persistence, and confirm it ready, then successfully arm exactly one reminder for 120 seconds. The reported reminder scope covers service health, branch currency, CI, and continued review work, without claiming it survives session shutdown.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2495,
+              "output": 194
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "0dd25ac95cf174bf1c2472c979f39f0b9079c265b8d85e0b873bfca9a5b82123"
+      },
+      "measured_score": 0.6,
+      "raw_weighted_score": 0.6,
+      "replicate_index": 0,
+      "task_id": "pr-11-omp-ready-owner-reminder",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 102.34719657897949,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-11-omp-ready-owner-reminder",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 283392,
+        "output_tokens": 2364,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 39218
+      },
+      "tokens": 324974,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.15.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-02T14:23:20.585860",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "0dd25ac95cf174bf1c2472c979f39f0b9079c265b8d85e0b873bfca9a5b82123",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 2495,
+      "output": 194
+    }
+  },
+  "plugin_revision": {
+    "commit": "e45c51c5c93cf2fe132630c34bb99cbf1d49409c",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-02T07:23:57.602616+00:00",
+  "run_id": "2026-11-02_14-21-38",
+  "schema_version": 5,
+  "started_at": "2026-11-02T14:21:38.234722",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-11-omp-ready-owner-reminder": [
+          0.6
+        ]
+      },
+      "task_ids": [
+        "pr-11-omp-ready-owner-reminder"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
