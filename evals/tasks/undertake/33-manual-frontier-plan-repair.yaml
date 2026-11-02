@@ -1,0 +1,57 @@
+task_id: undertake-33-manual-frontier-plan-repair
+description: >-
+  A manually escalated frontier session repairs the failed plan and returns
+  the existing undertaking rather than implementing it.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  Undertake task #83. The existing branch is issue-83-cache and its worktree
+  contains valid uncommitted changes. A worker tried caching each request result
+  globally; the offline regression shows two users receive each other's data.
+  The requirement is per-user caching, including reuse on repeated requests by
+  the same user, without changing public responses. I manually switched this
+  session to Astra to diagnose and fix the plan. A
+  verified eligible implementation-class in-session return route is available.
+  Do not modify files in this scenario. What happens next?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: Undertake handles a manual frontier escalation
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The repaired plan preserves user isolation and returns existing work
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Start with
+      `ANCHOR: result` or `ANCHOR: none`; no result means score 0.
+
+      Score 1 only if the response identifies global cache sharing as the
+      failure, gives an actionable per-user cache plan with cross-user isolation,
+      same-user cache reuse, and unchanged public response acceptance, preserves
+      task #83, branch and
+      valid changes in the handoff, and directs the verified eligible return
+      before implementation. It must not request approval for the manual
+      escalation, implement on frontier, supervise the worker, claim completion,
+      or pretend a switch occurred when the sandbox cannot perform one. Score 0
+      if it merely refuses, returns the unchanged task, or violates a boundary.

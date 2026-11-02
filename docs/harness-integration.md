@@ -135,6 +135,11 @@ credentials. Use `/model` → Roles to assign models. Existing `omp_configs/`
 files remain process overlays; assignments present at startup take precedence,
 and later edits may require an Omp restart.
 
+An operator's manual escalation during a failing task authorizes the
+consultation. Follow the constitution's *Manual frontier escalation*: repair
+the plan and return the existing work to a verified eligible non-frontier
+route. The escalation does not authorize frontier implementation or supervision.
+
 `dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
 and `classes`, for example `{ referenceModel: "provider/model", classes: {
 implementation: "provider/variant:high" } }`. Omp resolves the reference
@@ -152,6 +157,12 @@ or effort change remains `pending` until the next worker assistant response
 confirms actual execution. Show informative status during this normal
 verification, not an error; do not batch mutations with routing or start work
 while pending. An already matching model and effort needs no switch.
+
+Rejecting an inference request does not replace the selected worker's route
+with a permanent blocked disposition. After restoring the selected model,
+effort, and authentication route, the session can continue without a restart.
+A partially applied selection whose restoration failed remains recovery-only;
+an ordinary response does not verify that route.
 
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues

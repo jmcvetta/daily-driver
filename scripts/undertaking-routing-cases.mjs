@@ -643,42 +643,56 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(s.describe().undertaking.status, "verified");
 	});
 
-	// A thrown hook alone is swallowed by Omp, so mismatched inference must explicitly abort.
+	// Rejected inference must not prevent the selected worker from explaining or repairing the failure.
 	for (const [name, drift] of [
 		["class", MECHANICAL],
 		["provider", model(REASONING.id, { provider: "other-provider" })],
+		["frontier", FRONTIER],
 		["backend", model(REASONING.id, { baseUrl: "https://other.example.invalid/v1" })],
 		["transport", model(REASONING.id, { api: "openai-completions" })],
 		["headers", model(REASONING.id, { headers: { "x-routing-region": "other-region" } })],
 	]) {
-		routingCheck(`${name} request drift explicitly aborts`, async (create) => {
+		routingCheck(`${name} request drift aborts without poisoning recovery`, async (create) => {
 			const s = await create();
 			await s.route({ modelClass: "reasoning" });
+			const selected = structuredClone(s.describe().undertaking);
 			s.setCurrent(drift);
 			await assert.rejects(s.request());
 			assert.equal(s.calls.aborts, 1);
-			assert.equal(s.describe().undertaking.status, "blocked");
+			assert.deepEqual(s.describe().undertaking, selected);
+			s.setCurrent(REASONING);
+			await s.request();
+			await s.assistant();
+			assert.equal(s.calls.aborts, 1, "the restored worker must reach inference");
+			assertAllowed(await s.tool("bash", { command: "gh issue comment 755 --body-file recovery.md" }));
 		});
 	}
 
-	// A lower effort on the same model must not silently weaken the configured class route.
+	// Refusing an effort mismatch must not require a process restart after the configured effort is restored.
 	routingCheck("same-model effort drift aborts before inference", async (create) => {
 		const s = await create();
 		await s.route();
 		s.setEffort("low");
 		await assert.rejects(s.request(), /effort/iu);
 		assert.equal(s.calls.aborts, 1);
-		assert.equal(s.describe().undertaking.status, "blocked");
+		s.setEffort("high");
+		await s.request();
+		assert.equal(s.calls.aborts, 1, "restoring the effort must allow the selected worker to continue");
+		assertAllowed(await s.tool("write", { path: "recovery.md", content: "Selected route restored." }));
 	});
 
-	// Refreshable OAuth is allowed, but retrying through a configured API key is not.
+	// A rejected authentication change must not poison the unchanged route after its source is restored.
 	routingCheck("authentication source drift explicitly aborts", async (create) => {
 		const s = await create();
 		await s.route();
+		const originalSource = s.auth.source;
 		s.auth.source = { kind: "config", concrete: true };
 		await assert.rejects(s.request());
 		assert.equal(s.calls.aborts, 1);
-		assert.equal(s.describe().undertaking.status, "blocked");
+		s.auth.source = originalSource;
+		await s.request();
+		assert.equal(s.calls.aborts, 1, "the original authentication route must remain usable");
+		assertAllowed(await s.tool("write", { path: "recovery.md", content: "Authentication route restored." }));
 	});
 
 	// Supported non-OAuth routes must remain usable without pretending to own an OAuth pool.

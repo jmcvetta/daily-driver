@@ -78,6 +78,11 @@ frontier exception or an eligible ordinary class. Frontier implementation
 requires explicit user authorization and its bounded scope; research approval
 does not cover it. Ordinary workers cannot fall back to frontier.
 
+For an operator's manual escalation during a failing task, apply the
+constitution's *Manual frontier escalation*: repair the plan and return the
+existing work to an eligible ordinary worker. Manual escalation is authorized;
+it is not a frontier implementation exception or an agent-initiated assignment.
+
 A row in the harness reference's `Measured routes` table outranks this file's
 hand-written `Classes` table. A missing row, or one marked `unmeasured` or
 `unreported`, means the model is unmeasured. A stale row, judged from its
