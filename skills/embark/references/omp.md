@@ -66,37 +66,46 @@ The route an implementor runs
 =============================
 
 The `task` surface selects an `agent`, not a model. Every epic story must pass
-`Take the wave`'s task-readiness gate before dispatch. Select the agent named
-for its required class (`mechanical`, `implementation`, `reasoning`, or
-`frontier`). Each batch item sets only `agent`; it carries no per-item model
-argument. Resolve the effective route under [`issue-body`'s required-class
-policy](../../issue-body/references/omp.md#the-required-class):
+`Take the wave`'s task-readiness gate before dispatch. For mapped families,
+select the agent named for its required class (`mechanical`, `implementation`,
+`reasoning`, or `frontier`). Each batch item sets only `agent`; it carries no
+per-item model argument. Resolve the effective route under
+[`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
 frontmatter, including a tagged-role assignment such as `@implementation` or
 `@frontier`. Resolve configured prewalk and retry fallbacks under the same policy.
 
-Undertaking issue workers and every visible execution fallback must resolve to
-the exact required class on the parent's family, provider, backend, and
-authentication route. An incompatible explicit override is a gap, not a
-selector to rewrite. The worker verifies its route before worktree or claim.
-This constraint does not recast reviewer or scout specialization or change
-independently configured host helper inference.
+For a mapped family, undertaking issue workers and every visible execution
+fallback must resolve to the exact required class within the parent's family
+and provider, preserving backend and authentication route. An incompatible
+explicit override is a gap, not a selector to rewrite. The worker routes alone
+in its assistant tool batch and verifies a pending change on its next response
+before worktree or claim. Normal verification is informative status, not an error.
+
+If the known family is absent from the class table, prominently warn with the
+family, requested class, and retained provider/model. Continue immediately on
+the invoking model, provider, and effort without confirmation; class suitability
+is unverified. Do not dispatch a replacement to obtain a mapping. If a child
+cannot retain the route, work in the invoking session. Unknown identity, a
+missing class in a mapped family, and actual route violations remain gaps.
+Reviewer and scout specialization and host helper inference remain independent.
 
 A current measured class outranks handwritten guidance, and a measured class
 below the task's requirement excludes that route. An unmeasured, unreported,
-or stale row is unknown, not proof of suitability. Use the
-operator's configured eligible preference without claiming measured
-capability. That preference never waives class capability, tools, context,
-modality, availability, or credential requirements. Do not invent a freshness
-cutoff or use `modelRoles.task` as a universal implementor route.
+or stale row is unknown, not proof of suitability. For mapped families, use the
+operator's configured eligible preference without claiming measured capability.
+The absent-family continuation above explicitly leaves class suitability
+unverified; it does not waive tools, context, modality, availability, or
+credential requirements. Do not invent a freshness cutoff or use
+`modelRoles.task` as a universal implementor route.
 
 Reassess a visible parent-model authentication fallback or any other runtime
 model mismatch before work continues. Never assume parent inheritance meets
-the required class. Missing assignments, unavailable credentials, or
-unsuitable effective routes stop only the affected issue with a configuration
-gap; launch other eligible issues in the single concurrent batch. Never lower
-a task's class, alter shared roles, or restore a role the operator cleared to
-make a wave launch.
+the required class. Missing assignments in a mapped family, unavailable
+credentials, or unsuitable effective routes stop only the affected issue with
+a configuration gap; launch other eligible issues in the single concurrent
+batch. Never lower a task's class, alter shared roles, or restore a role the
+operator cleared to make a wave launch.
 
 Treat an effective astra/fable route as frontier, regardless of whether an
 override, retry fallback, or visible parent inheritance selects it through

@@ -46,26 +46,38 @@ Before worktree creation or claim, call `daily_driver_route_undertaking` with
 `{ issue: <positive issue number>, modelClass: "mechanical" | "implementation" |
 "reasoning" | "frontier", frontierApproval?: <recorded approval and envelope> }`.
 Validate readiness and frontier approval first; the approval argument is evidence,
-not authorization by itself. The tool resolves the configured exact `@class`
-and optional effort without rewriting shared roles.
+not authorization by itself. Call the routing tool alone in its assistant tool
+batch. Do not batch discovery, worktree creation, claim, or other tool calls with
+it. The tool selects within the invoking family and provider without rewriting
+shared roles.
 
 Read `details.undertaking` from the result or `daily_driver_get_session`:
-`issue`, `modelClass`, `selectedModel`, `observedModel`, and `status`, with
-optional `reason`. `verified` permits the undertaking to proceed. `pending`
-means a switch was requested but actual execution is not yet confirmed; wait
-for a subsequent allowed response and read the state again. Do not create the
-worktree, claim, or implement while pending. A rejected route is an error with
-a named gap; `blocked` is not success. The session result also reports provider
-and non-secret `authenticationRoute`. A matching model and effort can verify
-without a switch. Read-only discovery and route/session recovery remain available
-while pending; queued mutating calls are blocked.
+`issue`, `modelClass`, `selectedModel`, `observedModel`, `status`, and
+`capability`, with optional `reason` and `warning`. The session result also
+reports provider and non-secret authentication route. `status` is `pending`,
+`verified`, or `blocked`; `capability` is `mapped` or `unverified`.
+`verified` permits the undertaking to proceed, but execution identity is not
+proof of class suitability. `pending` means a mapped switch was requested but
+actual worker execution is not yet confirmed. Show informative status, not an
+error; wait for the next worker assistant response and read the state again
+before worktree creation, claim, or implementation. A matching model and effort
+can verify without a switch. Read-only discovery and route/session recovery
+remain available while pending; queued mutating calls are blocked.
+
+If the known family is absent from the class table, a prominent warning names the
+family, class, and retained provider/model. Continue immediately on the invoking
+model, provider, and effort without confirmation. The route is observed but class
+suitability remains unverified; do not claim qualification. Preserve this
+disposition on re-entry, reload, and permitted worker dispatch. If a child cannot
+retain the route, work in the invoking session.
 
 The effective route must retain the current model family, provider, backend
 and authentication route, including visible child and fallback candidates.
-Account refresh or eligible rotation does not change that invariant. Missing,
-cleared, incompatible, or unverifiable mappings are configuration gaps.
-Delegated implementation workers and their execution fallbacks inherit the
-constraints; do not override incompatible explicit worker roles. Independently
+Account refresh or eligible rotation does not change that invariant. A known
+mapped family with a missing or cleared class, unavailable target, or incompatible
+assignment is a configuration gap. Unknown identity and actual route violations
+are gaps, not absent-family continuation. A rejected route reports its gap and
+must allow explanation and recovery; `blocked` is not success. Independently
 configured `reviewer`, `scout`, `security-reviewer`, and `seance` helpers are
 not issue implementation workers and retain their configured routes.
 

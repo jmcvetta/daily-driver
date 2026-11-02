@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { installUndertakingRouting } from "../extensions/undertaking-routing.mjs";
+import { installModelClassDefaults } from "../extensions/role-default-helper.mjs";
 
 const PROVIDER = "openai-codex";
 const qualified = (model) => `${model.provider}/${model.id}`;
@@ -17,12 +18,12 @@ const REASONING = model("gpt-6.1-sol");
 const FRONTIER = model("gpt-6-astra");
 const FOREIGN = model("claude-sonnet", { provider: "anthropic" });
 const MODELS = [MECHANICAL, REASONING, FRONTIER, FOREIGN];
-const DEFAULT_ROLES = {
-	mechanical: `${qualified(MECHANICAL)}:low`,
-	implementation: `${qualified(MECHANICAL)}:high`,
-	reasoning: `${qualified(REASONING)}:high`,
-	frontier: `${qualified(FRONTIER)}:high`,
-};
+const DEEPSEEK_PRO = model("deepseek-v4-pro", { provider: "deepseek-go", api: "openai-completions" });
+const DEEPSEEK_FLASH = model("deepseek-v4-flash", { provider: "deepseek-go", api: "openai-completions" });
+const GATEWAY_FLASH = model("deepseek/deepseek-v4-flash", { provider: "vercel-ai-gateway", api: "openai-completions" });
+const GATEWAY_OTHER = model("other/variant", { provider: "vercel-ai-gateway", api: "openai-completions" });
+const deepseekFamily = (candidate) => candidate.id.includes("deepseek") ? "deepseek" : "other";
+const deepseekRoutes = [{ referenceModel: qualified(DEEPSEEK_PRO), classes: { implementation: `${qualified(DEEPSEEK_FLASH)}:low` } }];
 let nextSession = 0;
 
 function deferred() {
@@ -79,14 +80,21 @@ function fakeSession(options = {}) {
 	const sessionId = options.sessionId ?? `routing-session-${++nextSession}`;
 	const agentId = options.agentId ?? `routing-agent-${sessionId}`;
 	const auth = options.auth ?? fakeAuth();
-	const roles = { ...DEFAULT_ROLES, ...options.roles };
+	const roles = { ...options.roles };
+	const settings = {
+		getModelRole: (role) => roles[role],
+		getModelRoleProvenance: (role) => Object.hasOwn(options.roles ?? {}, role) ? "user" : "default",
+		overrideModelRoles: (values) => Object.assign(roles, values),
+	};
+	installModelClassDefaults(settings, { get: () => ({}), override() {} });
 	const entries = options.entries ?? [];
 	const models = options.models ?? MODELS;
 	const tools = new Map();
 	const handlers = new Map();
-	const calls = { models: [], effort: [], aborts: 0, keyLookups: [] };
+	const calls = { models: [], effort: [], aborts: 0, keyLookups: [], resolutions: [], notifications: [], statuses: [] };
 	let current = options.current ?? MECHANICAL;
 	let effort = options.effort ?? "high";
+	if (!options.auth) for (const row of auth.rows) row.provider = current.provider;
 	let closed = false;
 	const schema = () => ({
 		describe() { return this; },
@@ -131,6 +139,7 @@ function fakeSession(options = {}) {
 			current: () => current,
 			list: () => models,
 			resolve(selector) {
+				calls.resolutions.push(selector);
 				const value = selector.startsWith("@") ? roles[selector.slice(1)] : selector;
 				if (!value) return undefined;
 				const base = value.replace(/:(?:off|minimal|low|medium|high|xhigh)$/, "");
@@ -149,10 +158,13 @@ function fakeSession(options = {}) {
 		},
 		abort: () => { calls.aborts++; },
 		isIdle: () => false,
-		ui: { notify() {}, setStatus() {} },
+		ui: {
+			notify: (message, type) => calls.notifications.push({ message, type }),
+			setStatus: (key, value) => calls.statuses.push({ key, value }),
+		},
 	};
 	Object.defineProperty(ctx, "model", { get: () => current });
-	const api = installUndertakingRouting(pi, async () => ({ getModelRole: (role) => roles[role] }));
+	const api = installUndertakingRouting(pi, async () => settings, options.routes ? () => options.routes : undefined);
 	async function fire(event, payload = {}, selected = current) {
 		const eventContext = event === "before_provider_request"
 			? { ...ctx, model: selected, models: { ...ctx.models, current: () => selected } }
@@ -162,7 +174,7 @@ function fakeSession(options = {}) {
 		return results.find((result) => result !== undefined);
 	}
 	return {
-		ctx, pi, api, auth, roles, entries, calls, sessionId, agentId,
+		ctx, pi, api, auth, roles, entries, calls, sessionId, agentId, tools,
 		fire,
 		start: () => fire("session_start"),
 		setCurrent: (value) => { current = value; },
@@ -195,9 +207,8 @@ function fakeSession(options = {}) {
 
 function assertGap(result, pattern) {
 	assert.equal(result.isError, true, "unsupported route must return an error tool result");
-	if (result.details?.undertaking) assert.equal(result.details.undertaking.status, "blocked");
-	const reason = result.details?.undertaking?.reason
-		?? result.content?.filter((item) => item.type === "text").map((item) => item.text).join("\n");
+	assert.notEqual(result.details?.undertaking?.status, "blocked", "preflight failure must not publish a blocked route");
+	const reason = result.content?.filter((item) => item.type === "text").map((item) => item.text).join("\n");
 	assert.equal(typeof reason, "string");
 	assert.ok(reason.length > 0, "blocked route must name the configuration gap");
 	if (pattern) assert.match(reason, pattern);
@@ -242,13 +253,23 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.notEqual(result.isError, true);
 		assert.deepEqual(result.details.undertaking, {
 			issue: 755, modelClass: "implementation", selectedModel: qualified(MECHANICAL),
-			observedModel: qualified(MECHANICAL), status: "verified",
+			observedModel: qualified(MECHANICAL), status: "verified", capability: "mapped",
 		});
 		assert.equal(result.details.provider, PROVIDER);
 		assert.equal(result.details.authenticationRoute, "oauth");
 		assert.equal(s.calls.models.length, 0);
 		assert.equal(s.calls.effort.length, 0);
 		assert.equal(s.describe().undertaking.status, "verified");
+		assert.deepEqual(s.calls.notifications, []);
+	});
+
+	// Routine routing must not invite batching that produces a premature-work error.
+	routingCheck("routing instructions require a separate assistant response", async (create) => {
+		const s = await create();
+		assert.match(s.tools.get("daily_driver_route_undertaking").description, /alone/iu);
+		const instructions = await s.fire("before_agent_start", { systemPrompt: "Original instructions" });
+		assert.match(instructions.systemPrompt, /route_undertaking alone/iu);
+		assert.match(instructions.systemPrompt, /pending switch is not an error/iu);
 	});
 
 	// Batch admission must not let a preceding mutation run before the sibling route tool executes.
@@ -277,7 +298,7 @@ export default function registerUndertakingRoutingChecks(check) {
 			const result = await s.route();
 			assert.notEqual(result.isError, true);
 			assert.equal(result.details.undertaking.status, "verified", "matching route needs no model switch");
-			assertBlocked(await s.tool("bash", { command: "git worktree add ../task -b task" }));
+			assertAllowed(await s.tool("bash", { command: "git worktree add ../task -b task" }));
 			await s.assistant();
 			assertAllowed(await s.tool("bash", { command: "git worktree add ../task -b task" }));
 			assert.equal(s.calls.models.length, 0);
@@ -291,6 +312,8 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.notEqual(result.isError, true);
 		assert.equal(result.details.undertaking.selectedModel, qualified(REASONING));
 		assert.equal(result.details.undertaking.status, "pending");
+		assert.ok(s.calls.statuses.some(({ value }) => /verif/iu.test(value ?? "")));
+		assert.deepEqual(s.calls.notifications, []);
 		assert.equal(s.calls.models.length, 1);
 		assert.equal(s.calls.models[0], REASONING);
 		assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
@@ -326,6 +349,8 @@ export default function registerUndertakingRoutingChecks(check) {
 		await s.response();
 		await s.assistant();
 		assert.equal(s.describe().undertaking.status, "verified");
+		assert.ok(s.calls.statuses.some(({ value }) => /verif/iu.test(value ?? "")));
+		assert.deepEqual(s.calls.notifications, []);
 	});
 
 	// Missing and cleared roles must not silently restore defaults or fabricate a selector.
@@ -337,6 +362,109 @@ export default function registerUndertakingRoutingChecks(check) {
 		});
 	}
 
+	// A gateway copy must not replace the mapped Flash model on the invoking provider.
+	routingCheck("mapped family selects its provider-specific variant", async (create) => {
+		const s = await create({ current: DEEPSEEK_PRO, models: [DEEPSEEK_PRO, GATEWAY_FLASH, DEEPSEEK_FLASH], family: deepseekFamily, routes: deepseekRoutes });
+		const result = await s.route();
+		assert.notEqual(result.isError, true);
+		assert.equal(result.details.undertaking.capability, "mapped");
+		assert.equal(result.details.undertaking.selectedModel, qualified(DEEPSEEK_FLASH));
+		assert.deepEqual(s.calls.models, [DEEPSEEK_FLASH]);
+		assert.deepEqual(s.calls.effort, ["low"]);
+		await s.request();
+		await s.assistant();
+		assert.equal(s.describe().undertaking.status, "verified");
+	});
+
+	// A shared gateway must not make a different model family an eligible class target.
+	routingCheck("gateway provider equality cannot substitute for family equality", async (create) => {
+		const routes = [{ referenceModel: qualified(GATEWAY_FLASH), classes: { implementation: `${qualified(GATEWAY_OTHER)}:high` } }];
+		const s = await create({ current: GATEWAY_FLASH, models: [GATEWAY_FLASH, GATEWAY_OTHER], family: deepseekFamily, routes });
+		assertGap(await s.route(), /family/iu);
+		assert.equal(s.calls.models.length, 0);
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
+	});
+
+	// Plugin-installed Codex roles must not interrupt or silently redirect an unmapped family.
+	routingCheck("unmapped family continues on the invoking model across reentry and reload", async (create) => {
+		const options = { current: DEEPSEEK_PRO, models: [DEEPSEEK_PRO, DEEPSEEK_FLASH, ...MODELS], family: deepseekFamily, effort: "medium" };
+		const s = await create(options);
+		const result = await s.route();
+		assert.notEqual(result.isError, true);
+		assert.equal(result.details.undertaking.status, "verified");
+		assert.equal(result.details.undertaking.capability, "unverified");
+		assert.equal(result.details.undertaking.selectedModel, qualified(DEEPSEEK_PRO));
+		assert.match(result.details.undertaking.warning, /family\s+deepseek/iu);
+		assert.match(result.details.undertaking.warning, /implementation/iu);
+		assert.match(result.details.undertaking.warning, /deepseek-go\/deepseek-v4-pro/iu);
+		assert.equal(s.calls.notifications.length, 1);
+		assert.equal(s.calls.notifications[0].type, "warning");
+		assert.deepEqual(s.calls.models, []);
+		assert.deepEqual(s.calls.effort, []);
+		assertAllowed(await s.tool("task", { tasks: [{ task: "implement" }] }));
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
+		assert.notEqual((await s.route()).isError, true);
+		assert.equal(s.calls.notifications.length, 1);
+		assert.equal(s.describe().undertaking.capability, "unverified");
+		assert.equal(s.calls.resolutions.some((value) => value.startsWith("@")), false);
+		assertBlocked(await s.spawn([qualified(DEEPSEEK_FLASH)]));
+		const child = await create({ ...options, auth: s.auth, parentId: s.agentId });
+		await child.request();
+		await child.assistant();
+		assert.equal(child.describe().undertaking.capability, "unverified");
+		assert.equal(child.describe().undertaking.selectedModel, qualified(DEEPSEEK_PRO));
+		assert.equal(child.calls.aborts, 0);
+		const entries = structuredClone(s.entries);
+		await s.close();
+		const resumed = await create({ ...options, auth: s.auth, sessionId: s.sessionId, agentId: s.agentId, entries });
+		await resumed.request();
+		await resumed.assistant();
+		assert.equal(resumed.describe().undertaking.capability, "unverified");
+		assert.equal(resumed.describe().undertaking.selectedModel, qualified(DEEPSEEK_PRO));
+		assert.equal(resumed.calls.aborts, 0);
+		assert.notEqual((await resumed.route()).isError, true);
+		assert.equal(resumed.calls.notifications.length, 0);
+		assert.deepEqual(resumed.calls.models, []);
+	});
+
+	// Explicit operator mappings must be honored, but must not authorize an incompatible provider.
+	routingCheck("explicit family assignment selects its variant and rejects another provider", async (create) => {
+		const options = { current: DEEPSEEK_PRO, models: [DEEPSEEK_PRO, DEEPSEEK_FLASH, GATEWAY_FLASH, ...MODELS], family: deepseekFamily };
+		const good = await create({ ...options, roles: { implementation: `${qualified(DEEPSEEK_FLASH)}:low` } });
+		const selected = await good.route();
+		assert.notEqual(selected.isError, true);
+		assert.equal(selected.details.undertaking.capability, "mapped");
+		assert.deepEqual(good.calls.models, [DEEPSEEK_FLASH]);
+		const bad = await create({ ...options, roles: { implementation: `${qualified(GATEWAY_FLASH)}:low` } });
+		assertGap(await bad.route(), /provider/iu);
+		assert.deepEqual(bad.calls.models, []);
+		await bad.request();
+		assert.equal(bad.calls.aborts, 0);
+	});
+
+	// Failed preflight must not poison inference or retain a lease when the operator corrects the route.
+	routingCheck("preflight failure permits manual model changes and a corrective retry", async (create) => {
+		const s = await create({ roles: { implementation: "" } });
+		assertGap(await s.route(), /class|route/iu);
+		assert.equal(s.describe().undertaking, null);
+		assertBlocked(await s.tool("task", { tasks: [{ task: "implement" }] }));
+		await s.request();
+		s.setCurrent(REASONING);
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
+		assert.equal(s.auth.calls.restrict.length, 0);
+		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+		s.roles.implementation = `${qualified(MECHANICAL)}:high`;
+		const corrected = await s.route();
+		assert.notEqual(corrected.isError, true);
+		assert.equal(corrected.details.undertaking.status, "pending");
+		await s.request();
+		await s.assistant();
+		assertAllowed(await s.tool("task", { tasks: [{ task: "implement" }] }));
+	});
+
 	// Direct tool callers must not bypass the finite class set by skipping schema validation.
 	routingCheck("unknown model class cannot select arbitrary models", async (create) => {
 		const s = await create();
@@ -346,21 +474,79 @@ export default function registerUndertakingRoutingChecks(check) {
 
 	// A rejected or throwing model setter must not let implementation continue on the old route.
 	for (const failure of ["false", "throw"]) {
-		routingCheck(`model setter ${failure} leaves a blocked route`, async (create) => {
+		routingCheck(`model setter ${failure} blocks work without blocking conversation`, async (create) => {
 			const s = await create({ setModel: async () => {
 				if (failure === "throw") throw new Error("fixture model setter failure");
 				return false;
 			} });
 			assertGap(await s.route({ modelClass: "reasoning" }));
 			assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
+			assert.equal(s.ctx.models.current(), MECHANICAL);
+			assert.equal(s.pi.getThinkingLevel(), "high");
+			assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+			await s.request();
+			assert.equal(s.calls.aborts, 0);
 		});
 	}
+
+	// A setter that changes the model before rejecting must not leave recovery on the unintended model.
+	routingCheck("rejected model switch restores the invoking model", async (create) => {
+		const s = await create({ setModel: async (selected, update) => {
+			update(selected);
+			return selected === MECHANICAL;
+		} });
+		assertGap(await s.route({ modelClass: "reasoning" }));
+		assert.deepEqual(s.calls.models, [REASONING, MECHANICAL]);
+		assert.equal(s.ctx.models.current(), MECHANICAL);
+		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+		assertBlocked(await s.tool("task", { tasks: [{ task: "implement" }] }));
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
+	});
 
 	// An effort setter failure must not verify a model with the wrong reasoning budget.
 	routingCheck("effort setter failure is a configuration gap", async (create) => {
 		const s = await create({ setThinkingLevel: () => { throw new Error("fixture effort setter failure"); } });
 		assertGap(await s.route({ modelClass: "mechanical" }));
 		assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
+		assert.equal(s.ctx.models.current(), MECHANICAL);
+		assert.equal(s.pi.getThinkingLevel(), "high");
+		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
+	});
+
+	// A failed replacement must not discard the previous valid owner or prevent its inference.
+	routingCheck("failed preflight preserves a verified undertaking", async (create) => {
+		const s = await create();
+		assert.notEqual((await s.route()).isError, true);
+		const previous = s.describe().undertaking;
+		s.roles.reasoning = "";
+		assertGap(await s.route({ modelClass: "reasoning" }), /class|route/iu);
+		assert.deepEqual(s.describe().undertaking, previous);
+		assert.equal(s.auth.calls.restrict.length, 1);
+		assert.equal(s.auth.calls.unrestrict.length, 0);
+		assertBlocked(await s.tool("task", { tasks: [{ task: "implement" }] }));
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
+		s.roles.reasoning = `${qualified(REASONING)}:high`;
+		assert.notEqual((await s.route({ modelClass: "reasoning" })).isError, true);
+		await s.request();
+		await s.assistant();
+		assertAllowed(await s.tool("task", { tasks: [{ task: "implement" }] }));
+	});
+
+	// A failed effort switch after model selection must restore the invoking identity before recovery.
+	routingCheck("effort failure restores an already switched model", async (create) => {
+		const s = await create({ current: REASONING, setThinkingLevel: () => { throw new Error("fixture effort setter failure"); } });
+		assertGap(await s.route({ modelClass: "mechanical" }));
+		assert.deepEqual(s.calls.models, [MECHANICAL, REASONING]);
+		assert.equal(s.ctx.models.current(), REASONING);
+		assert.equal(s.pi.getThinkingLevel(), "high");
+		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+		assertBlocked(await s.tool("task", { tasks: [{ task: "implement" }] }));
+		await s.request();
+		assert.equal(s.calls.aborts, 0);
 	});
 
 	// Same-provider routing must not cross a backend, transport, header route, or model family.
