@@ -150,7 +150,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	pi.on("before_agent_start", (event, ctx) => {
 		if (!current(ctx) && !/(?:^|\n)(?:\/skill:|\/)?undertake\b/iu.test(event.prompt ?? "")) return;
 		return {
-			systemPrompt: `${event.systemPrompt}\nUndertaking routing: call daily_driver_route_undertaking alone, with no other tool calls in that assistant response (including device calls). If pending, report normal verification status, then let the selected worker respond before task work. A pending switch is not an error. Never batch routing with worktree creation, claims, or implementation.`,
+			systemPrompt: [...event.systemPrompt, "Undertaking routing: call daily_driver_route_undertaking alone, with no other tool calls in that assistant response (including device calls). If pending, report normal verification status, then let the selected worker respond before task work. A pending switch is not an error. Never batch routing with worktree creation, claims, or implementation."],
 		};
 	});
 
