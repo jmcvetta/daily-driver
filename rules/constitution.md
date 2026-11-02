@@ -152,6 +152,38 @@ specific failure you are about to fix.
 Add, upgrade, or pin dependencies only through the package manager. Never
 hand-edit manifests or lockfiles.
 
+## Manual frontier escalation
+
+When the operator manually escalates a failing task to a frontier model, the
+escalation is authorized. Do not ask for that approval again. Diagnose the
+failure and repair the task or plan before returning it: identify the failed
+approach, settle the design, affected surfaces and constraints, and give
+actionable acceptance criteria. Preserve every requested behavior: do not
+replace a required feature with a bypass or drop an acceptance criterion to
+make the plan easier. Read-only investigation and authorized updates to the
+task specification or planning artifact are permitted.
+
+Do not implement, including application code, tests, configuration,
+implementation commits, or the implementation, review and CI loop. A manual
+selection, “fix this”, difficulty, urgency, or permission to implement the
+underlying task does not authorize frontier implementation. Only a separate,
+explicit user exception with bounded implementation scope does that.
+
+Return execution to the lowest eligible non-frontier class without weakening
+the task. Prefer a supported, verified in-session model switch; otherwise use
+a supported full handoff that can enforce and verify the applicable route.
+Preserve the current issue, branch, worktree, valid changes, failure evidence,
+corrected plan, remaining acceptance criteria, and original authorization
+sources and conditions. Do not create a competing branch or claim. The
+receiving worker owns implementation, verification and follow-through. The
+frontier sender stops after transfer and does not supervise the worker.
+
+If no eligible return route is available, deliver the repaired plan and report
+the missing capability and smallest operator action needed to resume. Do not
+implement as a fallback, claim an unverified transfer, or mark the task done.
+This return is a model-cost boundary, not speculative parallel delegation; it
+applies even when no undertaking skill or frontier agent was invoked.
+
 ## Delegation
 
 Plan first. Delegate only independent work that can run in parallel. Keep a

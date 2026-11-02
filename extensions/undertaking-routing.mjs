@@ -387,7 +387,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			}
 			if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Worker authentication route changed");
 		} catch (error) {
-			routeError(state, error.message);
+			// Reject this request without poisoning the selected route needed for recovery.
 			ctx.abort();
 			throw error;
 		}
