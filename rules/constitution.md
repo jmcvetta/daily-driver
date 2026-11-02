@@ -237,8 +237,10 @@ When the operator manually escalates a failing task to a frontier model, the
 escalation is authorized. Do not ask for that approval again. Diagnose the
 failure and repair the task or plan before returning it: identify the failed
 approach, settle the design, affected surfaces and constraints, and give
-actionable acceptance criteria. Read-only investigation and authorized
-updates to the task specification or planning artifact are permitted.
+actionable acceptance criteria. Preserve every requested behavior: do not
+replace a required feature with a bypass or drop an acceptance criterion to
+make the plan easier. Read-only investigation and authorized updates to the
+task specification or planning artifact are permitted.
 
 Do not implement, including application code, tests, configuration,
 implementation commits, or the implementation, review and CI loop. A manual
