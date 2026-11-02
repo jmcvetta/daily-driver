@@ -94,5 +94,10 @@
     "change": "Accept rubric labels followed by judge explanations, such as TP:still-open followed by an em dash. Preserve the original grade and explanation. Apply the same extraction to both arms.",
     "reason": "Bare-label-only parsing dropped correct classifications from saved judge responses.",
     "measurement_effect": "None: no subject inputs, routes, rubric, limits, reviewer attempts, or judge calls changed or reran."
+  },
+  "interruption_analysis_amendment": {
+    "collector_sha256": "ae6c0fddcce14168acba4d4a945686eb860ed6920dee3a4936f9e17dc303fce0",
+    "change": "Classify explicitly marked synthetic recovery records as interrupted, exclude their invented zero durations and do not report coverage or cohort completion for them.",
+    "measurement_effect": "None: no subject inputs, routes, rubric, limits, reviewer attempts, or judge calls changed."
   }
 }

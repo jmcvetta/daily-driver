@@ -163,6 +163,40 @@ Reviewer usage and latency are `unavailable` unless directly exposed.
 Parent usage is not reviewer usage. Subscription allowance consumption is
 not cash spend; unknown cash spend is not zero.
 
+### Observed comparison
+
+The frozen cohort is incomplete. Of 40 DeepSeek slots, 38 have evaluator
+terminal records and two were interrupted. One interruption followed reviewer
+dispatch and cannot be replayed without changing the experiment. The other
+ended before an observed dispatch. Both remain unscored, with unknown duration.
+The [reconciliation](provenance/reviewer-quality/deepseek-resumption.json)
+explains the terminal-only standard record and the preserved interruptions.
+
+| Measure | GLM | DeepSeek |
+| --- | ---: | ---: |
+| Reviewer results meeting the contract / planned | 16/40 | 21/40 |
+| Full-review true positives / eligible positives | 8/8 | 13/13 |
+| Full-review false positives | 0 | 0 |
+| Clean-case false alarms / eligible | 0/5 | 0/5 |
+| Correct delta verdicts / eligible | 3/3 | 3/3 |
+| Attempt duration median, range (seconds) | 57.8, 26.2–905.0 | 106.2, 57.2–906.3 |
+
+The full-review precision and recall are each 100% on eligible results, not
+on the planned 20 positive cases per arm. The denominators exclude failed,
+interrupted, and unjudgeable attempts. GLM produced no eligible result for
+the fixed-delta case; DeepSeek produced two. There were 11 GLM and 12 DeepSeek
+terminal harness errors, plus two DeepSeek interruptions. Four DeepSeek judge
+errors cover those interruptions and two empty outputs; none is a scored
+review failure. The per-case records show repeat variability and any findings:
+[GLM](provenance/reviewer-quality/glm-cohort-v3.json) and
+[DeepSeek](provenance/reviewer-quality/deepseek-cohort-v3.json).
+
+Attempt duration includes orchestration and is not reviewer latency. Reviewer
+usage and backend-served identity are unavailable. The resumed Omp installation
+has the frozen version, but binary equivalence to the earlier installation is
+unverified. These gaps and the small, selected samples do not distinguish the
+reviewers reliably. Keep the current default; this is not a promotion.
+
 `scripts/evals-reviewer-quality.py` collects bounded per-case evidence from
 explicit run directories and their committed records. An incomplete cohort
 does not complete the comparison. Render the standard run index after recording:

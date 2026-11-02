@@ -368,6 +368,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         for case in cases:
             for repeat in range(args.repeats):
                 row = rows.get((args.variant, case, repeat))
+                artifact = run_dir / args.variant / case / f"{repeat:02d}" / "task.json"
+                details = json_file(artifact).get("error_details", {}) if artifact.is_file() else {}
+                interrupted = isinstance(details, dict) and details.get("origin") == "manual interruption reconciliation"
                 row_status = str(row.get("status", "unreported")).upper() if row else "unattempted"
                 error_text = str(row.get("error_message", "") or "") if row else ""
                 provider_error = bool(re.search(r"rate[ -]?limit|quota|too many requests|(?:HTTP|status)[ :=]+429", error_text, re.IGNORECASE))
@@ -386,6 +389,8 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                         attribution_mismatches.append({"run_id": run_id, "case_id": case, "repeat": str(repeat), "reported": reviewer_identity, "expected_selector": requested})
                 if not row:
                     status = "unattempted"
+                elif interrupted:
+                    status = "interrupted"
                 elif provider_error:
                     status = "provider_error"
                 elif harness_error:
@@ -413,9 +418,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "case_id": case, "repeat": repeat, "arm": args.arm, "variant_id": args.variant,
                     "run_id": run_id, "status": status,
                     "task_status": row.get("status", "unreported") if row else "unattempted",
-                    "reviewer_status": "completed" if reviewer_completed else ("provider_error" if provider_error else ("harness_error" if harness_error else ("unattempted" if not row else "incomplete"))),
+                    "reviewer_status": "completed" if reviewer_completed else ("interrupted" if interrupted else ("provider_error" if provider_error else ("harness_error" if harness_error else ("unattempted" if not row else "incomplete")))),
                     "provider_error": provider_error,
-                    "harness_error": harness_error,
+                    "harness_error": harness_error and not interrupted,
                     "judge_status": judge["status"],
                     "judge_error": judge.get("error", "unavailable"),
                     "score": judge.get("score", "unavailable"),
@@ -427,7 +432,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "reviewer_backend_served": "unreported",
                     "identity": reported_identity(record, case, repeat, parent_requested, helper_requested),
                     "latency_reviewer_seconds": "unavailable",
-                    "attempt_seconds": attempt_seconds if isinstance(attempt_seconds, (int, float)) else None,
+                    "attempt_seconds": attempt_seconds if not interrupted and isinstance(attempt_seconds, (int, float)) else None,
                     "reviewer_usage": "unavailable",
                     "judge_freeze_sha": judge.get("freeze_sha", "unreported"),
                     "artifact_sha256": sha256_file(result_path) if result_path and result_path.is_file() else "unavailable",
@@ -459,8 +464,8 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "route_overlay_sha256": overlay_sha,
         },
         "planned": {"cases": cases, "repeats_per_case": args.repeats, "attempts": len(cases) * args.repeats * len(args.run_dir)},
-        "coverage_complete": all(entry["task_status"] != "unattempted" for entry in entries),
-        "cohort_complete": all(str(entry["task_status"]).upper() not in {"UNATTEMPTED", "UNREPORTED", "PENDING", "RUNNING"} for entry in entries),
+        "coverage_complete": all(entry["status"] not in {"unattempted", "interrupted"} for entry in entries),
+        "cohort_complete": all(entry["status"] not in {"unattempted", "interrupted"} and str(entry["task_status"]).upper() not in {"UNREPORTED", "PENDING", "RUNNING"} for entry in entries),
         "runs": links,
         "summary": summarize(entries, cases),
         "attempts": entries,

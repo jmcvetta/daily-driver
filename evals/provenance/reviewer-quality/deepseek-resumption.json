@@ -20,6 +20,13 @@
     "completion_and_backend_identity": "unreported",
     "reconciliation": "The other 38 slots have evaluator terminal records, including 12 failures. The original boundary interruption is a separate synthetic record. A resume assembled all 40 slots and dispatched zero tasks; its 26/40 success count includes neither interruption."
   },
+  "recording": {
+    "terminal_records": 38,
+    "interrupted_without_terminal_records": 2,
+    "method": "The standard recorder rejects synthetic markers because their wall times are unknown. A derived terminal-only run view excluded both markers and reused the preserved task artifacts and judge sidecars. The standard record contains 38 evaluator records; the supplementary cohort record retains all 40 planned slots and marks the two interruptions explicitly.",
+    "judge_errors": "Two terminal records have no final agent output and cannot be judged. The two interruptions also have no judgeable turn records. These four errors are not scored failures.",
+    "cohort_complete": false
+  },
   "runtime": {
     "frozen_omp_version": "18.14.1",
     "resumed_omp_version": "18.14.1",

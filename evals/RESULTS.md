@@ -111,3 +111,4 @@ One row per committed record, oldest first.
 | 2026-10-31 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | not recorded | not recorded | 1m 49s |
 | 2026-10-31 | omp-reviewer-deepseek-v4-pro-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | not recorded | not recorded | 7m 17s |
 | 2026-10-31 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 40 | 18/40 | not recorded | not recorded | 3h 22m 37s |
+| 2026-11-02 | omp-reviewer-deepseek-v4-pro-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 38 | 19/38 | not recorded | not recorded | 0m 00s |
