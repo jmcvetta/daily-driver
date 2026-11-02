@@ -1,0 +1,749 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The stale wake causes no new PR work or scheduled continuation",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The stale wake causes no new PR work or scheduled continuation",
+            "duration_seconds": 7.91,
+            "findings": [
+              "Tool calls only read stop and reminder-handling skills.",
+              "No watcher launch or restart, reminder scheduling, PR mutation, or implementation activity is shown.",
+              "The final result confirms PR #25 remains stopped."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "84fceca9a7f5fc50ce9809585cc05d852e47558fd8f858f2a7d32ccdc62b2240",
+            "rationale": "ANCHOR: result. The agent respected the existing stop, explicitly treated the reminder as stale, and did not resume work or create any new task resources.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 708,
+              "output": 89
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "cb8794b96e629687b4f0392d39f89ec6eb81139644765de3436c821ade468fee"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-13-omp-stopped-owner-stale-wake",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The review workflow is engaged",
+          "details": "observed='yes', expected='yes' (skill_name='review-cycle')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Two bounded observations read the three CI sources after each window",
+          "details": "Command: python3 .continuation/verify.py\nExit code: 0 (expected: 0)\nStdout:\ntwo watch windows and all three current-head sources observed after each\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The owner diagnoses the failure instead of stopping at timeout or calling CI green",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The owner diagnoses the failure instead of stopping at timeout or calling CI green",
+            "duration_seconds": 8.4,
+            "findings": [
+              "Started a second bounded CI watch rather than treating the first timeout as a human blocker.",
+              "Tool call 47 inspected workflow run 901 and exposed the uploader retry failure diagnostic.",
+              "Reported unresolved failure and limited fixture evidence without claiming green CI or review completion."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f99c90b8bb21f0811cdcd8563ab5e71a1575ad6b3595a5e4ae3386368d4c0940",
+            "rationale": "ANCHOR: result. The agent renewed CI observation after the first timeout without requesting permission, then attempted to inspect failed workflow run 901 after the terminal failure; successful repair is not required by the grading prompt.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 7808,
+              "output": 110
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "cb8794b96e629687b4f0392d39f89ec6eb81139644765de3436c821ade468fee"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "review-cycle-16-omp-renew-running-ci-failure",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The PR workflow is engaged",
+          "details": "observed='yes', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The maintenance service was launched for this pull request and observed alive",
+          "details": "Command: python3 .fixture/verify.py service\nExit code: 1 (expected: 0)\nStdout:\nFAIL: the keep-current service was never launched with pull request 25\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "A single live-session reminder accompanies the detached maintenance service",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A single live-session reminder accompanies the detached maintenance service",
+            "duration_seconds": 8.18,
+            "findings": [
+              "Service launch succeeded, and a subsequent read confirmed persistent detached ready state.",
+              "Exactly one successful daily_driver_schedule write scheduled a reminder in 120 seconds.",
+              "Reminder instructions cover service status, branch currency, current-head CI, review feedback, and continued work.",
+              "The reminder explicitly does not survive session shutdown."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "a98a97b57d8206b879b7ec31e758160ad9cc44bd2d4eb9068ced6c412ef565f4",
+            "rationale": "ANCHOR: result. Observed tool calls started the maintenance service, detached it, and confirmed it ready, then successfully armed exactly one 120-second reminder with live-session-only continuation instructions.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2946,
+              "output": 115
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "cb8794b96e629687b4f0392d39f89ec6eb81139644765de3436c821ade468fee"
+      },
+      "measured_score": 0.6,
+      "raw_weighted_score": 0.6,
+      "replicate_index": 0,
+      "task_id": "pr-11-omp-ready-owner-reminder",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The answer distinguishes a surviving process from an active owner",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The answer distinguishes a surviving process from an active owner",
+            "duration_seconds": 7.32,
+            "findings": [
+              "Mechanical maintenance is clearly distinguished from live ownership.",
+              "Code fixes, conflict resolution, and review responses require an owner to resume or take over.",
+              "Shutdown clears owner reminders; the detached process cannot restore or replace the session."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "009d3c28749c6fb4415cc4625462f973fcb21d208a7e8096b9a5dadac1196ac0",
+            "rationale": "ANCHOR: result. The final answer explicitly says the detached process is not an active implementor or supervisor and cannot perform implementation, review response, or conflict diagnosis without a live owner; it also denies automatic restoration after shutdown.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 958,
+              "output": 106
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "cb8794b96e629687b4f0392d39f89ec6eb81139644765de3436c821ade468fee"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-12-omp-detached-service-without-owner",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The review workflow is engaged",
+          "details": "observed='yes', expected='yes' (skill_name='review-cycle')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Two bounded observations read the three CI sources after each window",
+          "details": "Command: python3 .continuation/verify.py\nExit code: 0 (expected: 0)\nStdout:\ntwo watch windows and all three current-head sources observed after each\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The owner starts review only after terminal success",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The owner starts review only after terminal success",
+            "duration_seconds": 7.42,
+            "findings": [
+              "The first expired watch was followed by a same-head status check and a second bounded watch rather than abandonment.",
+              "After terminal success, tool calls show ReviewPrHead was spawned and completed.",
+              "The agent submitted a COMMENT review using gh pr review after the review completed."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5c1779c1b621b92a165cf5a8d1c1dfe513312e078e69f159f0e4e8ce0b20d716",
+            "rationale": "ANCHOR: result. The agent renewed observation after the first timeout without asking the user to resume, observed terminal success, and then actually dispatched an independent review.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 6715,
+              "output": 102
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "cb8794b96e629687b4f0392d39f89ec6eb81139644765de3436c821ade468fee"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "review-cycle-17-omp-renew-running-ci-success",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "All current-head inventories are read without repeated watches",
+          "details": "Command: python3 .continuation/verify.py empty\nExit code: 0 (expected: 0)\nStdout:\nempty current-head CI sources observed\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Empty CI evidence is not declared green or known-running",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Empty CI evidence is not declared green or known-running",
+            "duration_seconds": 18.89,
+            "findings": [
+              "Rechecked check runs, commit statuses, and workflow runs for the unchanged head.",
+              "Final answer states that CI registration remains unresolved and no review was started or submitted.",
+              "No completion notice or passing-CI claim was published."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "b899a8e43b3abd4b3165552f94dfd4a291a26962443c2a56b38640990ae75065",
+            "rationale": "ANCHOR: result. The agent correctly identified CI as unregistered based on empty current-head CI inventories and explicitly reported that review remained blocked, without claiming green or treating a timeout as evidence of a running workflow.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2926,
+              "output": 104
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "cb8794b96e629687b4f0392d39f89ec6eb81139644765de3436c821ade468fee"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "review-cycle-18-omp-empty-ci-is-not-running",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The PR workflow is engaged",
+          "details": "observed='yes', expected='yes' (skill_name='pr')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The live owner acts on the conflict and does not claim that the service resolved it",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The live owner acts on the conflict and does not claim that the service resolved it",
+            "duration_seconds": 6.07,
+            "findings": [
+              "Read .fixture/service.log and inspected uploader.txt on both branches with git show.",
+              "No merge or conflict-resolution attempt was made; no files changed or commits were pushed.",
+              "Accurately reported the unresolved conflict but deferred resolution to the user and scheduled a reminder."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "af07588f89e78786eaa03c21b224dca98fb1b3fbbcbdcafc788d0ae1a51cc70f",
+            "rationale": "ANCHOR: result. The agent inspected the recorded failure and compared the conflicting file versions, but ultimately asked the user to decide a resolvable conflict rather than acting to resolve it, which the grading prompt explicitly scores 0.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2458,
+              "output": 116
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "cb8794b96e629687b4f0392d39f89ec6eb81139644765de3436c821ade468fee"
+      },
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-10-omp-owner-maintenance-conflict",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 17.249756813049316,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-13-omp-stopped-owner-stale-wake",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 13568,
+        "output_tokens": 106,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 32282
+      },
+      "tokens": 45956,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 346.3838930130005,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "review-cycle-16-omp-renew-running-ci-failure",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 1154816,
+        "output_tokens": 8778,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 50602
+      },
+      "tokens": 1214196,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 122.02064847946167,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-11-omp-ready-owner-reminder",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 363520,
+        "output_tokens": 2334,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 27774
+      },
+      "tokens": 393628,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 22.941116094589233,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-12-omp-detached-service-without-owner",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 33536,
+        "output_tokens": 329,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 15943
+      },
+      "tokens": 49808,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 288.28740191459656,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "review-cycle-17-omp-renew-running-ci-success",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 898688,
+        "output_tokens": 6629,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 66815
+      },
+      "tokens": 972132,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 112.00877523422241,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "review-cycle-18-omp-empty-ci-is-not-running",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 248704,
+        "output_tokens": 2300,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 41028
+      },
+      "tokens": 292032,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 148.63603615760803,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-10-omp-owner-maintenance-conflict",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 317952,
+        "output_tokens": 2287,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 27627
+      },
+      "tokens": 347866,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.15.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-02T14:18:37.919725",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "cb8794b96e629687b4f0392d39f89ec6eb81139644765de3436c821ade468fee",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 24519,
+      "output": 742
+    }
+  },
+  "plugin_revision": {
+    "commit": "e45c51c5c93cf2fe132630c34bb99cbf1d49409c",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-02T07:20:28.938183+00:00",
+  "run_id": "2026-11-02_14-12-12",
+  "schema_version": 5,
+  "started_at": "2026-11-02T14:12:12.822140",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "pr-10-omp-owner-maintenance-conflict": [
+          0.0
+        ],
+        "pr-11-omp-ready-owner-reminder": [
+          0.6
+        ],
+        "pr-12-omp-detached-service-without-owner": [
+          1.0
+        ],
+        "pr-13-omp-stopped-owner-stale-wake": [
+          1.0
+        ],
+        "review-cycle-16-omp-renew-running-ci-failure": [
+          1.0
+        ],
+        "review-cycle-17-omp-renew-running-ci-success": [
+          1.0
+        ],
+        "review-cycle-18-omp-empty-ci-is-not-running": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "pr-13-omp-stopped-owner-stale-wake",
+        "review-cycle-16-omp-renew-running-ci-failure",
+        "pr-11-omp-ready-owner-reminder",
+        "pr-12-omp-detached-service-without-owner",
+        "review-cycle-17-omp-renew-running-ci-success",
+        "review-cycle-18-omp-empty-ci-is-not-running",
+        "pr-10-omp-owner-maintenance-conflict"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
