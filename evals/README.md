@@ -227,6 +227,18 @@ prove those reviewers failed; it means the retained evidence cannot attribute
 their parent responses to them. The standard run index scores parent responses,
 not necessarily reviewer output.
 
+The revised capture smoke used source commit `74660927775deeb0a1f6719b51e6d96145df4027`
+and Omp 18.14.1. Each model reviewed the defective and clean boundary once.
+All four reviewer deliveries matched the final responses; the independent judge
+scored each response 1. Both models reported the boundary defect and cleared
+the clean case. The
+[GLM record](provenance/reviewer-quality/glm-capture-smoke.json) and
+[DeepSeek record](provenance/reviewer-quality/deepseek-capture-smoke.json)
+preserve the outcomes. GLM's defective-case identity was an object rather than
+the requested string, so the collector marks that identity unreported.
+Backend-served identity remains unreported for all four. These two cases do
+not establish which reviewer is better.
+
 The five verified DeepSeek responses are too few to establish a comparison.
 Their original task records include three positive full reviews, one clean
 full review, and one fix-delta review. Details, verdicts, errors, and the
