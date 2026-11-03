@@ -83,7 +83,7 @@ def reviewer_delivery_observed(path: Path | None, final: str | None) -> bool:
     task = json_file(path)
     for iteration in task.get("iterations", []):
         for command in iteration.get("commands", []):
-            if command.get("tool_name") not in {"Agent", "Task", "Wait", "Read"}:
+            if command.get("tool_name") not in {"Agent", "Task", "Wait", "wait", "Read"}:
                 continue
             if str(command.get("result_status", "")).lower() not in {"ok", "success"}:
                 continue

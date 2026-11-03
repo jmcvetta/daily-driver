@@ -13,7 +13,7 @@ defaults:
     type: omp
     model: openai-codex/gpt-6.1-sol:low
     permission_mode: acceptEdits
-    allowed_tools: [Read, Bash, Task, Write]
+    allowed_tools: [Read, Bash, Task, Write, wait]
     record_task_dispatches: true
     settle_on_async_handoff: false
     extra_args: [--config, routes/deepseek.yml]
