@@ -26,6 +26,8 @@ FIXTURE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(FIXTURE)
 REQUESTS: dict[str, int] = {}
 SOURCES: dict[str, dict] = {}
+REVIEWER_MODEL = "independent-reviewer"
+REVIEWER_REQUESTS: list[str] = []
 PROBES = {
     "first": "Fix smoke-first. Verify the fixture offline only.",
     "resume": "Report smoke-resume current state without starting a new task.",
@@ -59,15 +61,22 @@ class Model(BaseHTTPRequestHandler):
         if phase is None:
             raise AssertionError(f"No external probe phrase in provider messages: {repr(messages[-5:])[:16000]}")
         index = REQUESTS.get(phase, 0)
-        if phase == "routing" and index < 3:
-            if index == 1:
+        if phase == "routing" and index < 5:
+            if index == 3:
+                name, args = "wait", {"i": "Waiting for offline reviewer"}
+            elif index == 2:
                 name, args = "task", {
-                    "tasks": [{"agent": "reviewer", "name": "RouteProbe", "task": PROBES["reviewer"]}],
+                    "tasks": [{"agent": "reviewer", "name": "RouteProbe", "task": PROBES["reviewer"],
+                               "solutionSpace": "Review the isolated routing fixture."}],
                     "context": "Offline routing regression. Return ROUTE_REVIEW_OK without tools.",
+                    "i": "Dispatching offline reviewer",
                 }
             else:
-                tool = "daily_driver_route_undertaking" if index == 0 else "daily_driver_finish_undertaking"
-                params = {"issue": 819, **({"modelClass": "implementation"} if index == 0 else {})}
+                tool, params = (
+                    ("daily_driver_set_session_title", {"title": "#819 Reviewer routing fixture"}) if index == 0 else
+                    ("daily_driver_route_undertaking", {"issue": 819, "modelClass": "implementation"}) if index == 1 else
+                    ("daily_driver_finish_undertaking", {"issue": 819})
+                )
                 name, args = "write", {"path": f"xd://{tool}", "content": json.dumps(params)}
             message = {"role": "assistant", "tool_calls": [{
                 "index": 0, "id": f"routing-{index}", "type": "function",
@@ -75,6 +84,7 @@ class Model(BaseHTTPRequestHandler):
             }]}
             finish = "tool_calls"
         elif phase == "reviewer":
+            REVIEWER_REQUESTS.append(body["model"])
             message = {"role": "assistant", "content": "ROUTE_REVIEW_OK"}
             finish = "stop"
         elif phase == "contract" and index < 10:
@@ -205,7 +215,7 @@ def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -
     stderr_path = base / f"{phase}.stderr"
     argv = [omp, "--mode", "rpc", "--extension", str(ROOT / "extensions/daily-driver.js"),
             "--extension", str(observer), "--session-dir", str(storage), *resume, "--tools",
-            "read,write,task" if phase == "routing" else "read,write"]
+            "read,write,task,wait" if phase == "routing" else "read,write"]
     with stderr_path.open("w", encoding="utf-8") as stderr:
         process = subprocess.Popen(argv, cwd=base / "sandbox", env=env, stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE, stderr=stderr, text=True, bufsize=1)
@@ -269,6 +279,13 @@ def main() -> None:
             models_config = home / ".omp" / "agent" / "models.yml"
             models_config.write_text(models_config.read_text().replace(
                 "    auth: none\n", "    apiKey: offline-routing-fixture\n",
+            ) + (
+                f"      - id: {REVIEWER_MODEL}\n"
+                "        name: Independent reviewer\n"
+                "        api: openai-completions\n"
+                "        contextWindow: 131072\n"
+                "        maxTokens: 1024\n"
+                "        cost: {input: 0, output: 0, cacheRead: 0, cacheWrite: 0}\n"
             ), encoding="utf-8")
             observer = base / "observer.mjs"
             # Unset route configuration used to poison later settings clones and reviewer dispatch.
@@ -320,15 +337,16 @@ export default function(pi) {
             agents.mkdir(exist_ok=True)
             (agents / "reviewer.md").write_text(
                 "---\nname: reviewer\ndescription: Offline routing regression\n"
-                f"model: {FIXTURE.PROVIDER}/{FIXTURE.MODEL}\n---\nReturn ROUTE_REVIEW_OK without tools.\n",
+                f"model: {FIXTURE.PROVIDER}/{REVIEWER_MODEL}\n---\nReturn ROUTE_REVIEW_OK without tools.\n",
                 encoding="utf-8",
             )
             routing = run(omp, base, env, "routing", routing_observer)
             route_calls = [frame for frame in routing if frame.get("type") == "tool_execution_end"]
-            assert len(route_calls) == 3 and all(not frame.get("isError") for frame in route_calls), route_calls
-            assert "verified" in json.dumps(route_calls[0]), route_calls[0]
-            assert "ROUTE_REVIEW_OK" in json.dumps(route_calls[1]), route_calls[1]
+            assert len(route_calls) == 5 and all(not frame.get("isError") for frame in route_calls), route_calls
+            assert "verified" in json.dumps(route_calls[1]), route_calls[1]
+            assert "ROUTE_REVIEW_OK" in json.dumps(route_calls[3]), route_calls[3]
             assert REQUESTS["reviewer"] == 1, REQUESTS
+            assert REVIEWER_REQUESTS == [REVIEWER_MODEL], REVIEWER_REQUESTS
             print("Default class routes: real settings clones and verified-undertaking reviewer dispatch passed")
             if sys.argv[1:] == ["--routing-only"]:
                 return
