@@ -26,11 +26,15 @@ FIXTURE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(FIXTURE)
 REQUESTS: dict[str, int] = {}
 SOURCES: dict[str, dict] = {}
+REVIEWER_MODEL = "independent-reviewer"
+REVIEWER_REQUESTS: list[str] = []
 PROBES = {
     "first": "Fix smoke-first. Verify the fixture offline only.",
     "resume": "Report smoke-resume current state without starting a new task.",
     "cancel": "Fix smoke-cancel abort fixture.",
     "contract": "Fix smoke-contract. Verify the fixture offline only.",
+    "routing": "Exercise smoke-routing with the offline reviewer.",
+    "reviewer": "ROUTE_REVIEW_CHILD",
 }
 
 
@@ -57,7 +61,33 @@ class Model(BaseHTTPRequestHandler):
         if phase is None:
             raise AssertionError(f"No external probe phrase in provider messages: {repr(messages[-5:])[:16000]}")
         index = REQUESTS.get(phase, 0)
-        if phase == "contract" and index < 10:
+        if phase == "routing" and index < 5:
+            if index == 3:
+                name, args = "wait", {"i": "Waiting for offline reviewer"}
+            elif index == 2:
+                name, args = "task", {
+                    "tasks": [{"agent": "reviewer", "name": "RouteProbe", "task": PROBES["reviewer"],
+                               "solutionSpace": "Review the isolated routing fixture."}],
+                    "context": "Offline routing regression. Return ROUTE_REVIEW_OK without tools.",
+                    "i": "Dispatching offline reviewer",
+                }
+            else:
+                tool, params = (
+                    ("daily_driver_set_session_title", {"title": "#819 Reviewer routing fixture"}) if index == 0 else
+                    ("daily_driver_route_undertaking", {"issue": 819, "modelClass": "implementation"}) if index == 1 else
+                    ("daily_driver_finish_undertaking", {"issue": 819})
+                )
+                name, args = "write", {"path": f"xd://{tool}", "content": json.dumps(params)}
+            message = {"role": "assistant", "tool_calls": [{
+                "index": 0, "id": f"routing-{index}", "type": "function",
+                "function": {"name": name, "arguments": json.dumps(args)},
+            }]}
+            finish = "tool_calls"
+        elif phase == "reviewer":
+            REVIEWER_REQUESTS.append(body["model"])
+            message = {"role": "assistant", "content": "ROUTE_REVIEW_OK"}
+            finish = "stop"
+        elif phase == "contract" and index < 10:
             def latest_status() -> dict:
                 decoder = json.JSONDecoder()
                 for candidate in reversed(messages):
@@ -179,12 +209,13 @@ class Model(BaseHTTPRequestHandler):
 
 def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -> list[dict]:
     """Reject lost resume state and corrections delivered after a real RPC abort."""
-    storage = base / (f"{phase}-session" if phase in ("cancel", "contract") else "persistent-session")
+    storage = base / (f"{phase}-session" if phase in ("cancel", "contract", "routing") else "persistent-session")
     storage.mkdir(exist_ok=True)
     resume = ["--resume", str(next(storage.glob("*.jsonl")))] if phase == "resume" else []
     stderr_path = base / f"{phase}.stderr"
     argv = [omp, "--mode", "rpc", "--extension", str(ROOT / "extensions/daily-driver.js"),
-            "--extension", str(observer), "--session-dir", str(storage), *resume, "--tools", "read,write"]
+            "--extension", str(observer), "--session-dir", str(storage), *resume, "--tools",
+            "read,write,task,wait" if phase == "routing" else "read,write"]
     with stderr_path.open("w", encoding="utf-8") as stderr:
         process = subprocess.Popen(argv, cwd=base / "sandbox", env=env, stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE, stderr=stderr, text=True, bufsize=1)
@@ -245,7 +276,41 @@ def main() -> None:
             home = base / "home"
             (base / "sandbox").mkdir()
             FIXTURE.write_home(home, server.server_address[1])
+            models_config = home / ".omp" / "agent" / "models.yml"
+            models_config.write_text(models_config.read_text().replace(
+                "    auth: none\n", "    apiKey: offline-routing-fixture\n",
+            ) + (
+                f"      - id: {REVIEWER_MODEL}\n"
+                "        name: Independent reviewer\n"
+                "        api: openai-completions\n"
+                "        contextWindow: 131072\n"
+                "        maxTokens: 1024\n"
+                "        cost: {input: 0, output: 0, cacheRead: 0, cacheWrite: 0}\n"
+            ), encoding="utf-8")
             observer = base / "observer.mjs"
+            # Unset route configuration used to poison later settings clones and reviewer dispatch.
+            routing_observer = base / "routing-observer.mjs"
+            routing_observer.write_text('''import assert from "node:assert/strict";
+import { readModelClassRoutes, MODEL_CLASS_ROUTES } from "''' + os.path.relpath(ROOT / "extensions/role-default-helper.mjs", base) + '''";
+import { lookup } from "@oh-my-pi/pi-coding-agent/config/registry";
+export default function(pi) {
+ pi.on("session_start", async (_event, ctx) => {
+  const settings = pi.pi.settings;
+  assert.deepEqual(await readModelClassRoutes(settings), MODEL_CLASS_ROUTES, "parent defaults");
+  const clone = await settings.cloneForCwd(ctx.cwd);
+  assert.deepEqual(await readModelClassRoutes(clone), MODEL_CLASS_ROUTES, "cloned defaults");
+  const routes = lookup("dailyDriver.modelClassRoutes");
+  for (const value of [[], [{referenceModel:"fixture/model",classes:{implementation:"fixture/worker"}}]]) {
+   const explicit = settings.overlay();
+   routes.override(explicit, value);
+   assert.deepEqual(await readModelClassRoutes(await explicit.cloneForCwd(ctx.cwd)), value, "explicit clone");
+  }
+  for (const value of [null, {}, "invalid", [{referenceModel:"fixture/model",classes:{unknown:"fixture/worker"}}],
+    [MODEL_CLASS_ROUTES[0], MODEL_CLASS_ROUTES[0]]]) {
+   assert.throws(() => routes.override(settings.overlay(), value));
+  }
+ });
+}''', encoding="utf-8")
             observer.write_text('''import { appendFileSync, writeFileSync } from "node:fs";
 export default function(pi) {
  pi.on("session_stop", async (event, ctx) => {
@@ -268,6 +333,23 @@ export default function(pi) {
             env.update(HOME=str(home), STATE_LOG=str(base / "state.log"), ABORT_READY=str(base / "abort-ready"))
             for key in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
                 env[key] = str(home / key.lower())
+            agents = home / ".omp" / "agent" / "agents"
+            agents.mkdir(exist_ok=True)
+            (agents / "reviewer.md").write_text(
+                "---\nname: reviewer\ndescription: Offline routing regression\n"
+                f"model: {FIXTURE.PROVIDER}/{REVIEWER_MODEL}\n---\nReturn ROUTE_REVIEW_OK without tools.\n",
+                encoding="utf-8",
+            )
+            routing = run(omp, base, env, "routing", routing_observer)
+            route_calls = [frame for frame in routing if frame.get("type") == "tool_execution_end"]
+            assert len(route_calls) == 5 and all(not frame.get("isError") for frame in route_calls), route_calls
+            assert "verified" in json.dumps(route_calls[1]), route_calls[1]
+            assert "ROUTE_REVIEW_OK" in json.dumps(route_calls[3]), route_calls[3]
+            assert REQUESTS["reviewer"] == 1, REQUESTS
+            assert REVIEWER_REQUESTS == [REVIEWER_MODEL], REVIEWER_REQUESTS
+            print("Default class routes: real settings clones and verified-undertaking reviewer dispatch passed")
+            if sys.argv[1:] == ["--routing-only"]:
+                return
             first = run(omp, base, env, "first", observer)
             run(omp, base, env, "resume", observer)
             run(omp, base, env, "cancel", observer)
