@@ -24,6 +24,29 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.57.0](https://github.com/jmcvetta/daily-driver/compare/v0.56.0...v0.57.0) (2026-11-02)
+
+
+### Features
+
+* **constitution:** default to headless sensitive handoffs ([#818](https://github.com/jmcvetta/daily-driver/issues/818)) ([733564f](https://github.com/jmcvetta/daily-driver/commit/733564f3f17b6cee1c706b99dd97a00663384f56))
+* **issue:** report task classes after creation ([#784](https://github.com/jmcvetta/daily-driver/issues/784)) ([ebb605a](https://github.com/jmcvetta/daily-driver/commit/ebb605af48a1a84ff1adb3687a00c0cae6d1dc08))
+* **undertake:** select class variants within the invoking route ([#787](https://github.com/jmcvetta/daily-driver/issues/787)) ([8d14f61](https://github.com/jmcvetta/daily-driver/commit/8d14f61617438d5f3a3814bb11bc3a42b552f78e))
+
+
+### Bug Fixes
+
+* admit classed research and bug as assignable epic stories ([#815](https://github.com/jmcvetta/daily-driver/issues/815)) ([153277f](https://github.com/jmcvetta/daily-driver/commit/153277fa0fd80863683efac89cfcfc84365b3c5b))
+* **constitution:** permit targeted disposable experiments ([#811](https://github.com/jmcvetta/daily-driver/issues/811)) ([b3dd9ee](https://github.com/jmcvetta/daily-driver/commit/b3dd9ee9f7246422c96c0fdc65831583713ed04f))
+* honor assigned bounded evaluation work ([#786](https://github.com/jmcvetta/daily-driver/issues/786)) ([1139a56](https://github.com/jmcvetta/daily-driver/commit/1139a56f6d18a2f05af7a6e1fb71815e5de3444e))
+* **omp:** expose task-state action records ([#812](https://github.com/jmcvetta/daily-driver/issues/812)) ([ad14018](https://github.com/jmcvetta/daily-driver/commit/ad14018e52344dbc59f35bbf050e8d2b65153f31))
+* prevent unsupported Claude evaluation controllers ([#795](https://github.com/jmcvetta/daily-driver/issues/795)) ([42b5bdd](https://github.com/jmcvetta/daily-driver/commit/42b5bddb42cffffeab14678b446eed52a3c6bb23))
+* retain Omp owner continuation across CI waits ([#781](https://github.com/jmcvetta/daily-driver/issues/781)) ([acd6431](https://github.com/jmcvetta/daily-driver/commit/acd6431e742336ca62b6c4d86d30861aa02c77d2))
+* return implementation after frontier plan repair ([#799](https://github.com/jmcvetta/daily-driver/issues/799)) ([0fcf2d9](https://github.com/jmcvetta/daily-driver/commit/0fcf2d987d1761b2172d77e2491afbf746df65f2))
+* **task-worktree:** install Worktrunk from its release binary ([#813](https://github.com/jmcvetta/daily-driver/issues/813)) ([c2e8de1](https://github.com/jmcvetta/daily-driver/commit/c2e8de1161fefe475a48e19e82ff4a61f815a110))
+* **undertake:** allow operator frontier consultations ([#808](https://github.com/jmcvetta/daily-driver/issues/808)) ([25b7214](https://github.com/jmcvetta/daily-driver/commit/25b72145e82d8ca3a019dea59f63d5a0684cfabf))
+* **undertake:** preserve session recovery after rejected inference ([#797](https://github.com/jmcvetta/daily-driver/issues/797)) ([559b187](https://github.com/jmcvetta/daily-driver/commit/559b1877d0716b2c222df7fb9a3cece79febb1b4))
+
 ## [0.56.0](https://github.com/jmcvetta/daily-driver/compare/v0.55.0...v0.56.0) (2026-11-02)
 
 
