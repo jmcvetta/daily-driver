@@ -202,10 +202,10 @@ Every name you choose, for files, scripts, directories, functions, variables, cl
 
 ## Before you call it done
 
-It is not done until it passes the project's own gates: tests, linters,
-formatters, and whatever validation the project defines (`terraform validate`
-and its kind). Get a real result, rather than reasoning about whether they
-would pass. Do not be over-eager to declare the finish.
+It is not done until it passes the project's remaining applicable gates:
+tests, linters, formatters, and whatever validation the project defines
+(`terraform validate` and its kind). Get a real result, rather than reasoning
+about whether they would pass. Do not be over-eager to declare the finish.
 
 ### Recurring CI costs
 
@@ -240,9 +240,12 @@ required-status reporting. Avoid duplicate enforcement. When a new check
 replaces an old one, remove the obsolete check in the same change without
 losing required coverage.
 
-This policy does not permit skipping required tests, weakening security,
-hiding failures or disabling established gates to save cost. Tests of testing
-machinery remain prohibited unless that machinery is the shipped product.
+Agents must not remove or bypass established validation on their own to save
+cost or effort. An explicit owner instruction may reduce the specified CI
+validation scope and spending. Disclose the coverage lost, and never claim
+removed or unrun checks passed. This does not permit hiding failures,
+weakening security, or skipping required tests. Tests of testing machinery
+remain prohibited unless that machinery is the shipped product.
 
 **CI is the gate** means use established project gates. It does not instruct
 you to invent a new gate for each task.
