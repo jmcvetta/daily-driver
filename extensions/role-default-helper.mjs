@@ -29,7 +29,8 @@ export async function readModelClassRoutes(settings) {
 		id: "dailyDriver.modelClassRoutes",
 		type: "array",
 		default: MODEL_CLASS_ROUTES,
-		validate: validateModelClassRoutes,
+		// The registry validates configured values before applying the default.
+		validate: routes => { if (routes !== undefined) validateModelClassRoutes(routes); },
 	});
 	const routes = handle.get(settings);
 	validateModelClassRoutes(routes);

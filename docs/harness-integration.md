@@ -163,6 +163,10 @@ preserves the existing defaults; explicit same-family class roles remain
 operator assignments. Plugin-installed global defaults do not establish a
 mapping for unrelated families. A mapping is not measurement evidence.
 
+An unset route configuration uses the registered default, including when Omp
+clones settings for a task. An explicit empty array stays empty; malformed
+explicit values are rejected rather than replaced with defaults.
+
 Classed undertaking calls `daily_driver_route_undertaking` alone in its
 assistant tool batch before worktree creation or claim. For a mapped family it
 selects the exact class within the invoking family and provider, preserving
