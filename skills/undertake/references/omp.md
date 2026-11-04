@@ -91,6 +91,21 @@ completed undertaking or resume the existing one before selecting another.
 A finish call with the wrong issue also returns an error and preserves the
 existing state.
 
+**Operator recovery does not require a model turn.** Run `/undertaking status`
+locally to inspect the owner, selected model and effort, host selection, last
+observed execution identity, authentication route category, and last rejection.
+The command remains available after provider rejection or malformed saved state.
+Run `/undertaking cancel <issue>` with the exact owner reported by status to
+cancel unfinished routing. When status reports `cancelOwner: invalid`, use
+`/undertaking cancel invalid` for that malformed current-session record.
+Cancellation aborts and waits for local work, releases only the owned lease,
+retires pending handoffs, and revokes owned children. It persists cancellation
+without completing the issue or task state. It preserves transcript, worktree,
+branch, and approval evidence. A later undertaking requires fresh normal
+admission. Repeated cancellation with no owner is a no-op. Use the workflow's
+stop handoff separately when work must be stood down.
+
+
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
 resume branch exists, `task-worktree` attaches it, but the research route

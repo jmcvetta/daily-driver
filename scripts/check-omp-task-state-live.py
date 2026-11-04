@@ -28,6 +28,7 @@ REQUESTS: dict[str, int] = {}
 SOURCES: dict[str, dict] = {}
 REVIEWER_MODEL = "independent-reviewer"
 REVIEWER_REQUESTS: list[str] = []
+TOTAL_REQUESTS = 0
 PROBES = {
     "first": "Fix smoke-first. Verify the fixture offline only.",
     "resume": "Report smoke-resume current state without starting a new task.",
@@ -45,6 +46,8 @@ class Model(BaseHTTPRequestHandler):
         pass
 
     def do_POST(self) -> None:
+        global TOTAL_REQUESTS
+        TOTAL_REQUESTS += 1
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         messages = body.get("messages", [])
         phase = None
@@ -207,6 +210,121 @@ class Model(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
 
+def run_routing_controls(omp: str, base: Path, env: dict[str, str]) -> None:
+    """Prevent a rejected worker or malformed route from stranding local cancellation."""
+    observer = base / "controls-observer.mjs"
+    observer.write_text('''import { createHash } from "node:crypto";
+export default function(pi) {
+ pi.registerCommand("seed-controls", {handler: async (args,ctx) => {
+  const model = ctx.models.current();
+  const auth = ctx.modelRegistry.authStorage.keys.source(model.provider, {env:"aliases"});
+  const data = args === "malformed" ? {schema:1,issue:828} : {
+   schema:1,issue:828,modelClass:"implementation",
+   selectedModel: model.provider + "/independent-reviewer", selectedEffort:pi.getThinkingLevel(),
+   origin:{provider:model.provider,model:model.id,api:model.api,baseUrl:model.baseUrl,
+    headersDigest:createHash("sha256").update(JSON.stringify(Object.entries(model.headers ?? {}).sort())).digest("hex")},
+   authenticationRoute:auth.kind === "env" ? "env:" + auth.envVar : auth.kind
+  };
+  await ctx.newSession({setup:async manager => {
+   manager.appendMessage({role:"user",content:[{type:"text",text:"CONTROL_CONVERSATION_RETAINED"}],timestamp:Date.now()});
+   manager.appendCustomEntry("daily-driver-undertaking-route",data);
+   await manager.ensureOnDisk();
+  }});
+  await ctx.reload();
+ }});
+}''', encoding="utf-8")
+    requests_before = TOTAL_REQUESTS
+    for malformed in (False, True):
+        storage = base / ("controls-malformed-session" if malformed else "controls-rejected-session")
+        storage.mkdir()
+        for resume in (False, True):
+            session_file = next(storage.glob("*.jsonl")) if resume else None
+            argv = [omp, "--mode", "rpc", "--extension", str(ROOT / "extensions/daily-driver.js"),
+                    "--extension", str(observer), "--session-dir", str(storage), "--tools", "read,write"]
+            if session_file:
+                argv.extend(["--resume", str(session_file)])
+            stderr_path = base / f"controls-{malformed}-{resume}.stderr"
+            with stderr_path.open("w", encoding="utf-8") as stderr:
+                process = subprocess.Popen(argv, cwd=base / "sandbox", env=env, stdin=subprocess.PIPE,
+                                           stdout=subprocess.PIPE, stderr=stderr, text=True, bufsize=1)
+                frames: queue.Queue = queue.Queue()
+                threading.Thread(target=FIXTURE.read_frames, args=(process.stdout, frames), daemon=True).start()
+                captured = []
+                deadline = time.monotonic() + 60
+
+                def wait(predicate):
+                    while time.monotonic() < deadline:
+                        try:
+                            frame = frames.get(timeout=max(0.1, deadline - time.monotonic()))
+                        except queue.Empty:
+                            break
+                        if frame is None:
+                            raise AssertionError(f"Control session exited: {stderr_path.read_text()}")
+                        captured.append(frame)
+                        if predicate(frame):
+                            return frame
+                    raise AssertionError(f"Control deadline: {captured}; {stderr_path.read_text()}")
+
+                def send(value):
+                    process.stdin.write(json.dumps(value) + "\n")
+                    process.stdin.flush()
+
+                def command(identifier, text):
+                    start = len(captured)
+                    send({"id": identifier, "type": "prompt", "message": text})
+                    result = wait(lambda frame: frame.get("type") == "response" and frame.get("id") == identifier)
+                    assert result.get("success"), result
+                    settled = wait(lambda frame: frame.get("type") == "prompt_result" and frame.get("id") == identifier)
+                    assert settled.get("status") == "completed" and not settled.get("agentInvoked"), settled
+                    return captured[start:]
+
+                def status(identifier):
+                    output = command(identifier, "/undertaking status")
+                    messages = [frame.get("message", "") for frame in output]
+                    return next(json.loads(message) for message in messages if message.startswith("{") and '"cancelOwner"' in message)
+
+                try:
+                    wait(lambda frame: frame.get("type") == "ready")
+                    send({"id": "controls-model", "type": "set_model", "provider": FIXTURE.PROVIDER, "modelId": FIXTURE.MODEL})
+                    assert wait(lambda frame: frame.get("id") == "controls-model").get("success")
+                    if resume:
+                        assert status("resumed-status")["state"] == "cancelled"
+                        command("repeat-cancel", "/undertaking cancel 828")
+                    else:
+                        command("seed", "/seed-controls " + ("malformed" if malformed else "active"))
+                        seeded = status("seeded-status")
+                        assert seeded["state"] == ("blocked" if malformed else "pending"), seeded
+                        if not malformed:
+                            send({"id": "blocked-worker", "type": "prompt", "message": "CONTROL_CONVERSATION_RETAINED"})
+                            wait(lambda frame: frame.get("type") == "agent_end" and frame.get("isTerminal", True))
+                        info = status("blocked-status")
+                        assert info["issue"] == 828, info
+                        assert info["state"] == ("blocked" if malformed else "pending"), info
+                        assert info["observedModel"] == "unreported", info
+                        assert info["lastRejection"], info
+                        command("wrong-owner", "/undertaking cancel 829")
+                        assert status("still-owned")["issue"] == 828
+                        command("cancel-owner", "/undertaking cancel 828")
+                        assert status("cancelled-status")["state"] == "cancelled"
+                    assert TOTAL_REQUESTS == requests_before, "local recovery must never reach inference"
+                    assert not any(frame.get("type") == "tool_execution_start" for frame in captured), captured
+                finally:
+                    process.stdin.close()
+                    try:
+                        process.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait()
+            session_file = next(storage.glob("*.jsonl"))
+            entries = [json.loads(line) for line in session_file.read_text().splitlines()]
+            routes = [entry["data"] for entry in entries if entry.get("customType") == "daily-driver-undertaking-route"]
+            assert routes[-1] == {"schema": 2, "issue": 828, "lifecycle": "cancelled"}, routes
+            assert not any(route.get("completed") or route.get("lifecycle") == "completed" for route in routes)
+            if not malformed:
+                assert "CONTROL_CONVERSATION_RETAINED" in session_file.read_text()
+    print("Local undertaking controls: rejected worker, malformed restore, exact owner and cancellation reload passed with zero inference requests")
+
+
 def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -> list[dict]:
     """Reject lost resume state and corrections delivered after a real RPC abort."""
     storage = base / (f"{phase}-session" if phase in ("cancel", "contract", "routing") else "persistent-session")
@@ -348,6 +466,7 @@ export default function(pi) {
             assert REQUESTS["reviewer"] == 1, REQUESTS
             assert REVIEWER_REQUESTS == [REVIEWER_MODEL], REVIEWER_REQUESTS
             print("Default class routes: real settings clones and verified-undertaking reviewer dispatch passed")
+            run_routing_controls(omp, base, env)
             if sys.argv[1:] == ["--routing-only"]:
                 return
             first = run(omp, base, env, "first", observer)
