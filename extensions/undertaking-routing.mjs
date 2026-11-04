@@ -155,7 +155,10 @@ function candidateDecision(ctx, state, patterns, effort) {
 			effort: configuredEffort && configuredEffort !== "inherit" ? configuredEffort : effort,
 		};
 	});
-	return { candidates, authenticationRoute: state.authenticationRoute, modelClass: state.modelClass };
+	return {
+		candidates, authenticationRoute: state.authenticationRoute, modelClass: state.modelClass,
+		family: ctx.models.family(state.workerModels.current()), frontierApproval: state.frontierApproval ?? null,
+	};
 }
 
 function workerDecision(ctx, state) {
@@ -166,7 +169,7 @@ function workerDecision(ctx, state) {
 function checkDecision(ctx, decision, model, effort) {
 	const actual = origin(model);
 	const candidate = decision.candidates.find(candidate => sameOrigin(candidate.origin, actual));
-	if (!candidate) throw new Error("Unauthorized model/provider/backend/frontier execution fallback does not match the admitted worker class route");
+	if (!candidate) throw new Error("Execution fallback does not match the selected worker class route (model, provider, backend or frontier authorization)");
 	if (candidate.effort !== undefined && candidate.effort !== effort) throw new Error("Worker effort no longer matches its admitted class route");
 	if (source(ctx, actual.provider) !== decision.authenticationRoute) throw new Error("Worker authentication route changed");
 }
@@ -250,9 +253,10 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		const selection = state.capability === "unverified" ? null : resolvedSelection ??
 			classSelection(ctx, settings, await getRoutes(ctx), state.workerModels.current(), modelClass);
 		const visible = await getCandidates(ctx, settings, patterns, modelClass, agent);
-		const decision = candidateDecision(ctx, state, visible, effort);
-		decision.modelClass = modelClass;
 		const selectedEffort = selection?.configured?.match(EFFORT)?.[1];
+		const effectiveEffort = selectedEffort && selectedEffort !== "inherit" ? selectedEffort : effort ?? state.selectedEffort;
+		const decision = candidateDecision(ctx, state, visible, effectiveEffort);
+		decision.modelClass = modelClass;
 		for (const candidate of decision.candidates) {
 			if (selection && (!sameOrigin(candidate.origin, origin(selection.target)) ||
 				selectedEffort && selectedEffort !== "inherit" && candidate.effort !== undefined && candidate.effort !== selectedEffort)) {
@@ -439,7 +443,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				status: (expected?.consultation || saved?.consultation) ? "consultation" : saved?.recovery ? "blocked" : "pending", observedModel: null,
 				workerModels: ctx.models,
 				selectedModel: expected?.consultation?.selectedModel ?? (parent ? selector(ctx.models.current()) : saved.selectedModel),
-				selectedEffort: expected?.consultation ? undefined : parent ? pi.getThinkingLevel() : saved.selectedEffort,
+				selectedEffort: expected?.consultation ? expected.consultation.selectedEffort : parent ? pi.getThinkingLevel() : saved.selectedEffort,
 				identities: (expected?.consultation ?? parent ?? saved).identities ? [...(expected?.consultation ?? parent ?? saved).identities] : undefined,
 			};
 			publish(ctx, state);
@@ -515,10 +519,11 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			const invokingEffort = pi.getThinkingLevel();
 			let state;
 			let switching = false;
+			const admissionRevoked = () => ctx.sessionManager.getSessionId() !== sessionId ||
+				isCancelled(previous) || isCancelled(state) ||
+				(current(ctx) !== previous && current(ctx) !== state);
 			const checkAdmission = () => {
-				if (ctx.sessionManager.getSessionId() !== sessionId || isCancelled(previous) || isCancelled(state)) {
-					throw new Error("Undertaking admission was cancelled or its session changed");
-				}
+				if (admissionRevoked()) throw new Error("Undertaking admission was cancelled or its owner changed");
 			};
 			admissions.add(sessionId);
 			selecting.add(sessionId);
@@ -582,7 +587,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				};
 			} catch (error) {
 				// A failed selection blocks task admission, not the conversation needed to repair it.
-				if (isCancelled(previous) || isCancelled(state) || ctx.sessionManager.getSessionId() !== sessionId) {
+				if (admissionRevoked()) {
 					if (state?.lease && state.lease !== previous?.lease && current(ctx) !== state) {
 						ctx.modelRegistry.authStorage.sessions.unrestrict(state.origin.provider, sessionId, state.lease);
 					}
@@ -599,6 +604,9 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 						restored = true;
 					} catch { /* Retain the actual route for recovery, never certify implementation. */ }
 				}
+				if (admissionRevoked()) return {
+					isError: true, content: [{ type: "text", text: "Undertaking admission cancelled during restoration; ownership was not restored." }], details: describe(ctx),
+				};
 				if (restored) {
 					if (state?.lease && state.lease !== previous?.lease) ctx.modelRegistry.authStorage.sessions.unrestrict(state.origin.provider, sessionId, state.lease);
 					if (previous) publish(ctx, previous);
@@ -667,6 +675,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			if (state.consultation) {
 				if (state.status === "blocked") throw new Error(state.reason);
 				if (!sameOrigin(origin(ctx.model), state.origin)) throw new Error("Consultation model differs from the operator's native selection");
+				if (state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort) throw new Error("Consultation effort differs from the operator's native selection");
 			} else if (state.recovery) {
 				checkModel(ctx, state, ctx.model, true);
 			} else {
@@ -747,13 +756,16 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				if (/[*?,]/u.test(mention.selector)) throw new Error("Native consultation must select one concrete model");
 				const model = ctx.models.resolve(mention.selector);
 				if (!model || selector(model) !== mention.selector.replace(EFFORT, "")) throw new Error("Native consultation model cannot be resolved exactly");
+				const effort = mention.selector.match(EFFORT)?.[1];
 				const visible = await getCandidates(ctx, await getSettings(ctx), [mention.selector], event.modelRole, event.agent);
 				if (visible.some(pattern => {
 					const candidate = ctx.models.resolve(pattern);
-					return !candidate || !sameOrigin(origin(candidate), origin(model));
+					return !candidate || !sameOrigin(origin(candidate), origin(model)) ||
+						(pattern.match(EFFORT)?.[1] ?? effort) !== effort;
 				})) throw new Error("Native consultation automatic candidate differs from the operator's exact selection");
 				selected = {
 					consultation: true, origin: origin(model), selectedModel: selector(model), recovery: undefined,
+					selectedEffort: effort && effort !== "inherit" ? effort : undefined,
 					authenticationRoute: source(ctx, model.provider),
 					identities: model.provider === state.origin.provider ? state.identities : undefined,
 				};

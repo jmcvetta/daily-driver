@@ -1702,4 +1702,50 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(s.describe().undertaking, null);
 		assert.equal(s.entries.at(-1).data.lifecycle, "cancelled");
 	});
+
+	// Two async route calls could otherwise overwrite each other's selected class and lease.
+	routingCheck("concurrent route admissions retain one owner", async (create) => {
+		const pending = deferred();
+		const entered = deferred();
+		const s = await create({ candidates: async (_ctx, _settings, patterns) => {
+			entered.resolve();
+			await pending.promise;
+			return patterns;
+		} });
+		const first = s.route();
+		await entered.promise;
+		assert.equal((await s.route({ modelClass: "reasoning" })).isError, true);
+		pending.resolve();
+		assert.notEqual((await first).isError, true);
+		assert.equal(s.describe().undertaking.selectedModel, qualified(MECHANICAL));
+	});
+
+	// Unspecified child effort used to inherit a different budget instead of the admitted class budget.
+	routingCheck("child startup cannot substitute a lower effort", async (create) => {
+		const parent = await create();
+		await parent.route();
+		const childId = `effort-child-${++nextSession}`;
+		assertAllowed(await parent.spawn([qualified(REASONING)], "reasoning", childId));
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentId: childId, current: REASONING, effort: "low", handoff: false,
+		});
+		assert.equal(child.describe().undertaking.status, "blocked");
+		await assert.rejects(child.request(), /effort/iu);
+	});
+
+	// A native consultation's explicit effort must not become permission for another budget.
+	routingCheck("native consultation keeps its explicit effort", async (create) => {
+		const parent = await create();
+		await parent.route();
+		const selected = `${qualified(FRONTIER)}:low`;
+		parent.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: selected, name: "Astra" } });
+		const key = `effort-consultation-${++nextSession}`;
+		assertAllowed(await parent.spawn([selected], "m1", key, "m1"));
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1", current: FRONTIER, effort: "low", handoff: false,
+		});
+		await child.request();
+		child.setEffort("high");
+		await assert.rejects(child.request(), /effort/iu);
+	});
 }
