@@ -266,10 +266,10 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			selectedModel: state?.selectedModel ?? null,
 			selectedEffort: state?.selectedEffort ?? null,
 			hostModel: selector(ctx.models?.current?.() ?? ctx.model),
-			hostEffort: pi.getThinkingLevel(),
+			hostEffort: pi.getThinkingLevel() ?? "unreported",
 			observedModel: state?.observedModel ?? "unreported",
 			authenticationRoute,
-			state: state?.status ?? (saved?.lifecycle === "cancelled" ? "cancelled" : "none"),
+			state: state?.status ?? (selecting.has(ctx.sessionManager.getSessionId()) ? "selecting" : saved?.lifecycle === "cancelled" ? "cancelled" : "none"),
 			lastRejection: rejections.get(ctx.sessionManager.getSessionId()) ?? state?.reason ?? null,
 			cancelOwner: state ? String(state.issue ?? "invalid") : null,
 		};
@@ -289,12 +289,22 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			}
 			const state = current(ctx);
 			if (!state) {
+				if (selecting.has(ctx.sessionManager.getSessionId())) {
+					ctx.ui.notify("Cancellation refused: route selection is in progress and ownership is not yet established. Use /undertaking status after selection stops.", "warning");
+					return;
+				}
 				ctx.ui.notify("No active undertaking owns this session. Nothing was cancelled.", "info");
 				return;
 			}
 			const sessionId = ctx.sessionManager.getSessionId();
-			if (state.sessionId !== sessionId || parts[1] !== String(state.issue ?? "invalid") || state.cancelling) {
+			const shared = scope(ctx)?.get(sessionId);
+			if (state.sessionId !== sessionId || shared && shared.state !== state ||
+				parts[1] !== String(state.issue ?? "invalid") || state.cancelling) {
 				ctx.ui.notify("Cancellation refused: ownership does not match this session. Use /undertaking status.", "warning");
+				return;
+			}
+			if (state.retired) {
+				ctx.ui.notify("This child is already retired by cancellation. Execution remains denied; start a fresh session for a new undertaking.", "info");
 				return;
 			}
 			if (typeof ctx.waitForIdle !== "function") {
@@ -318,8 +328,15 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					record.ctx.abort();
 					await record.persistCancellation();
 				}
-				await pi.appendEntry(ENTRY, { schema: 2, issue: state.issue, lifecycle: "cancelled" });
+				const retired = Boolean(state.ownerState) || ctx.agent?.kind === "sub";
+				await pi.appendEntry(ENTRY, { schema: 2, issue: state.issue, lifecycle: "cancelled", ...(retired ? { retired: true } : {}) });
 				release(ctx, state);
+				if (retired) {
+					state.retired = true;
+					state.status = "blocked";
+					state.reason = "This child was cancelled and cannot resume execution";
+					publish(ctx, state);
+				}
 				ctx.ui.notify("Undertaking cancelled, not completed. Transcript, worktree, approval evidence, and unfinished task state are unchanged. A new undertaking requires normal admission.", "info");
 			} catch (error) {
 				reportRejection(ctx, state, error);
@@ -680,6 +697,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 
 	function release(ctx, state) {
 		if (state.lease) ctx.modelRegistry.authStorage.sessions.unrestrict(state.origin.provider, state.sessionId, state.lease);
+		state.lease = undefined;
 		for (const record of pendingChildren) if (record.state === state) retireChild(record);
 		state.status = "closed";
 		scope(ctx)?.delete(state.sessionId);
