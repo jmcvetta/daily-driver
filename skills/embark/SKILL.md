@@ -638,7 +638,8 @@ dependency.** Leave the epic open and classify the gap before selecting a stop:
 - **Missing evidence:** gather it through available permitted routes.
 - **Repairable defect within agreed scope:** route repair through the existing
   task workflow. Do not reopen correctly completed children merely because
-  integration work is missing. The orchestrator does not implement or review.
+  integration work is missing. The orchestrator does not implement the repair;
+  `review-cycle` owns review, including the fallback exception below.
 - **Invalidated design assumption:** diagnose the failed premise and prepare a
   bounded repair through `epic`. Do not rotate workers through the unchanged
   disproved plan or automatically escalate to frontier.
