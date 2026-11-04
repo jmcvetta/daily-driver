@@ -1748,4 +1748,43 @@ export default function registerUndertakingRoutingChecks(check) {
 		child.setEffort("high");
 		await assert.rejects(child.request(), /effort/iu);
 	});
+
+	// An in-progress selection with no published owner must not be mistaken for a cancellable issue.
+	routingCheck("local cancellation refuses unresolved selection ownership", async (create) => {
+		const entered = deferred();
+		const proceed = deferred();
+		const s = await create({ getApiKey: async () => {
+			entered.resolve();
+			await proceed.promise;
+			return "offline-fixture-key";
+		} });
+		const routing = s.route();
+		await entered.promise;
+		try {
+			assert.equal((await s.inspection()).state, "selecting");
+			await s.command("cancel 755");
+			assert.match(s.calls.notifications.at(-1).message, /ownership is not yet established/u);
+			assert.equal(s.calls.aborts, 0);
+			assert.equal(s.auth.calls.unrestrict.length, 0);
+		} finally {
+			proceed.resolve();
+			await routing;
+		}
+	});
+
+	// A child must not turn cancellation into permission to continue outside its parent's policy.
+	routingCheck("local child cancellation retires execution instead of removing all admission", async (create) => {
+		const parent = await create();
+		await parent.route();
+		const child = await create({ auth: parent.auth, parentId: parent.agentId, current: REASONING });
+		await child.command("cancel 755");
+		assert.equal(child.entries.at(-1).data.retired, true);
+		await assert.rejects(child.request(), /cancelled/iu);
+		assertBlocked(await child.tool("write"));
+		await child.command("cancel 755");
+		assert.match(child.calls.notifications.at(-1).message, /already retired/u);
+		await assert.rejects(child.request(), /cancelled/iu);
+		assert.equal(parent.describe().undertaking.status, "verified");
+		assert.equal(parent.auth.calls.unrestrict.length, 1, "only the quiescent child's lease is released");
+	});
 }
