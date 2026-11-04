@@ -267,6 +267,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				throw new Error("Worker candidate has no available credentials");
 			}
 		}
+		if (source(ctx, state.origin.provider) !== decision.authenticationRoute) throw new Error("Authentication route changed during candidate admission");
 		return decision;
 	}
 
@@ -540,7 +541,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				isCancelled(previous) || isCancelled(state) ||
 				(current(ctx) !== previous && current(ctx) !== state);
 			const checkAdmission = () => {
-				if (admissionRevoked()) throw new Error("Undertaking admission was cancelled or its owner changed");
+				if (_signal?.aborted || admissionRevoked()) throw new Error("Undertaking admission was cancelled or its owner changed");
 			};
 			admissions.add(sessionId);
 			selecting.add(sessionId);
@@ -762,6 +763,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	pi.on("before_subagent_spawn", async (event, ctx) => {
 		const state = current(ctx);
 		if (!state) return;
+		const dispatchEpoch = state.dispatchEpoch ?? 0;
 		try {
 			if (isCancelled(state)) throw new Error("The owning undertaking was cancelled; execution is not authorized");
 			const mention = modelMention(ctx, event.agent);
@@ -790,7 +792,9 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				const modelClass = CLASSES.includes(event.modelRole) ? event.modelRole : state.modelClass;
 				selected = { decision: await admitDecision(ctx, state, event.patterns, undefined, modelClass, event.agent) };
 			}
-			if (isCancelled(state) || current(ctx) !== state) throw new Error("The owning undertaking was cancelled or replaced during child admission");
+			if (isCancelled(state) || current(ctx) !== state || (state.dispatchEpoch ?? 0) !== dispatchEpoch) {
+				throw new Error("The owning undertaking or child dispatch was cancelled or replaced during admission");
+			}
 			const parents = [...(scope(ctx)?.values() ?? [])].filter(record => record.agentId === ctx.agent?.id);
 			if (parents.length !== 1) throw new Error("Parent undertaking identity is ambiguous");
 			if (!event.spawnKey) throw new Error("Child stable handoff identity is unavailable");
@@ -818,6 +822,8 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 
 	pi.on("tool_result", (event, ctx) => {
 		if (event.toolName !== "task" || !event.isError) return;
+		const state = current(ctx);
+		if (state) state.dispatchEpoch = (state.dispatchEpoch ?? 0) + 1;
 		for (const record of pendingChildren) {
 			if (record.auth === ctx.modelRegistry.authStorage && record.parentId === ctx.agent?.id) retireChild(record);
 		}

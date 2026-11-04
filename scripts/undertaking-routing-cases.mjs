@@ -1787,4 +1787,49 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(parent.describe().undertaking.status, "verified");
 		assert.equal(parent.auth.calls.unrestrict.length, 1, "only the quiescent child's lease is released");
 	});
+
+	// An aborted routing tool could otherwise publish a verified route when asynchronous preflight returns.
+	routingCheck("aborted route preflight cannot select or verify a worker", async (create) => {
+		const entered = deferred();
+		const proceed = deferred();
+		const s = await create({ candidates: async (_ctx, _settings, patterns) => {
+			entered.resolve();
+			await proceed.promise;
+			return patterns;
+		} });
+		const controller = new AbortController();
+		const admission = s.tools.get("daily_driver_route_undertaking").execute(
+			"aborted-route", { issue: 755, modelClass: "reasoning" }, controller.signal, undefined, s.ctx);
+		await entered.promise;
+		controller.abort();
+		proceed.resolve();
+		assert.equal((await admission).isError, true);
+		assert.equal(s.describe().undertaking, null);
+		assert.equal(s.calls.models.length, 0);
+		assert.equal(s.auth.calls.restrict.length, 0);
+	});
+
+	// Host dispatch cancellation does not stop an awaiting extension handler, which could leave a late handoff.
+	routingCheck("failed task dispatch invalidates an awaiting child admission", async (create) => {
+		const entered = deferred();
+		const proceed = deferred();
+		let delayed = false;
+		const parent = await create({ candidates: async (_ctx, _settings, patterns) => {
+			if (delayed) { entered.resolve(); await proceed.promise; }
+			return patterns;
+		} });
+		await parent.route();
+		delayed = true;
+		const key = `aborted-child-${++nextSession}`;
+		const admission = parent.spawn([qualified(REASONING)], "reasoning", key);
+		await entered.promise;
+		await parent.fire("tool_result", { toolName: "task", isError: true });
+		proceed.resolve();
+		assertBlocked(await admission);
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentId: key, current: REASONING, handoff: false,
+		});
+		assert.equal(child.describe().undertaking.status, "blocked");
+		await assert.rejects(child.request());
+	});
 }
