@@ -71,6 +71,7 @@ function guardHandler() {
 			if (event === "tool_call") handlers.push(fn);
 		},
 		registerTool() {},
+		registerCommand() {},
 		setSessionName() {},
 		sendMessage() {},
 		setTimeout: () => 0,

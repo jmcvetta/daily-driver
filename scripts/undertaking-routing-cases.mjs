@@ -90,6 +90,7 @@ function fakeSession(options = {}) {
 	const entries = options.entries ?? [];
 	const models = options.models ?? MODELS;
 	const tools = new Map();
+	const commands = new Map();
 	const handlers = new Map();
 	const calls = { models: [], effort: [], aborts: 0, keyLookups: [], resolutions: [], notifications: [], statuses: [] };
 	let current = options.current ?? MECHANICAL;
@@ -110,6 +111,7 @@ function fakeSession(options = {}) {
 			handlers.set(event, registered);
 		},
 		registerTool: (definition) => tools.set(definition.name, definition),
+		registerCommand: (name, definition) => commands.set(name, definition),
 		appendEntry: async (customType, data) => { entries.push({ type: "custom", customType, data: structuredClone(data) }); },
 		async setModel(selected) {
 			calls.models.push(selected);
@@ -157,7 +159,8 @@ function fakeSession(options = {}) {
 			},
 		},
 		abort: () => { calls.aborts++; },
-		isIdle: () => false,
+		isIdle: () => options.isIdle?.() ?? true,
+		waitForIdle: async () => { if (options.waitForIdle) await options.waitForIdle(); },
 		ui: {
 			notify: (message, type) => calls.notifications.push({ message, type }),
 			setStatus: (key, value) => calls.statuses.push({ key, value }),
@@ -185,6 +188,11 @@ function fakeSession(options = {}) {
 		},
 		setEffort: (value) => { effort = value; },
 		describe: () => api.describe(ctx),
+		command: (args) => commands.get("undertaking").handler(args, ctx),
+		inspection: async () => {
+			await commands.get("undertaking").handler("status", ctx);
+			return JSON.parse(calls.notifications.at(-1).message);
+		},
 		route: (params = {}) => {
 			const tool = tools.get("daily_driver_route_undertaking");
 			assert.ok(tool, "undertaking route tool must be registered");
@@ -818,7 +826,7 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(s.describe().undertaking, null);
 		assert.deepEqual(s.entries.at(-1), {
 			type: "custom", customType: "daily-driver-undertaking-route",
-			data: { schema: 1, issue: 755, completed: true },
+			data: { schema: 2, issue: 755, lifecycle: "completed" },
 		});
 		assert.deepEqual(s.auth.calls.unrestrict, [{ provider: PROVIDER, sessionId: s.sessionId, lease: owned.lease }]);
 		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
@@ -1496,5 +1504,202 @@ export default function registerUndertakingRoutingChecks(check) {
 		s.setCurrent(REASONING);
 		await s.assistant();
 		assert.equal(s.describe().undertaking.status, "verified");
+	});
+
+	// A rejected request must leave diagnostics accessible without another model response.
+	routingCheck("local status distinguishes selection, observation, and rejected host drift", async (create) => {
+		const s = await create();
+		await s.route({ modelClass: "reasoning" });
+		s.setCurrent(MECHANICAL);
+		await assert.rejects(s.request(), /selected worker/iu);
+		const info = await s.inspection();
+		assert.equal(info.issue, 755);
+		assert.equal(info.requiredClass, "reasoning");
+		assert.equal(info.selectedModel, qualified(REASONING));
+		assert.equal(info.selectedEffort, "high");
+		assert.equal(info.hostModel, qualified(MECHANICAL));
+		assert.equal(info.observedModel, "unreported");
+		assert.equal(info.authenticationRoute, "oauth");
+		assert.equal(info.state, "pending");
+		assert.match(info.lastRejection, /selected worker/iu);
+		assert.ok(s.calls.notifications.some(row => /\/undertaking status/u.test(row.message)));
+		assert.doesNotMatch(JSON.stringify(info), /account:|credential|headers|fixture-key/u);
+	});
+
+	// An empty session must not require a model turn or raise a recovery exception.
+	routingCheck("local status and repeated cancellation are ordinary without an owner", async (create) => {
+		const s = await create();
+		assert.equal((await s.inspection()).state, "none");
+		await s.command("cancel 755");
+		await s.command("cancel 755");
+		assert.equal(s.entries.length, 0);
+		assert.equal(s.calls.aborts, 0);
+		assert.match(s.calls.notifications.at(-1).message, /No active undertaking/u);
+	});
+
+	// Pending and verified routes must both relinquish only their own lease without claiming completion.
+	for (const modelClass of ["implementation", "reasoning"]) {
+		routingCheck(`local cancellation persists ${modelClass} ownership without completing task state`, async (create) => {
+			const s = await create();
+			await s.route({ modelClass });
+			const task = { type: "custom", customType: "daily-driver.task-state", data: { status: "active", authorizations: ["retained"] } };
+			s.entries.push(task);
+			const modelBefore = s.ctx.models.current();
+			await s.command("cancel 755");
+			assert.equal(s.describe().undertaking, null);
+			assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+			assert.equal(s.calls.aborts, 1);
+			assert.equal(s.ctx.models.current(), modelBefore);
+			assert.deepEqual(s.entries.at(-1).data, { schema: 2, issue: 755, lifecycle: "cancelled" });
+			assert.equal(task.data.status, "active");
+			assert.deepEqual(task.data.authorizations, ["retained"]);
+			const count = s.entries.length;
+			await s.command("cancel 755");
+			assert.equal(s.entries.length, count);
+			const entries = structuredClone(s.entries);
+			await s.close();
+			const resumed = await create({ entries, current: modelBefore, sessionId: s.sessionId, auth: s.auth });
+			assert.equal(resumed.describe().undertaking, null);
+			assert.equal((await resumed.inspection()).state, "cancelled");
+			await resumed.assistant();
+			assert.equal(resumed.describe().undertaking, null, "cancelled worker must never verify after reload");
+			assert.notEqual((await resumed.route({ issue: 756 })).isError, true, "new ownership requires a fresh route call");
+		});
+	}
+
+	// The wrong issue or an ambiguous cancellation must not release any restriction.
+	routingCheck("local cancellation refuses a wrong owner before abort or persistence", async (create) => {
+		const s = await create();
+		await s.route();
+		const entries = structuredClone(s.entries);
+		await s.command("cancel 756");
+		await s.command("cancel");
+		assert.deepEqual(s.entries, entries);
+		assert.equal(s.calls.aborts, 0);
+		assert.equal(s.auth.calls.unrestrict.length, 0);
+		assert.equal(s.describe().undertaking.issue, 755);
+	});
+
+	// Releasing a lease before the active tool stops could authorize a late worker request.
+	routingCheck("local cancellation waits for quiescence before releasing its lease", async (create) => {
+		const idle = deferred();
+		let quiescent = false;
+		const s = await create({ waitForIdle: () => idle.promise, isIdle: () => quiescent });
+		await s.route();
+		const cancelling = s.command("cancel 755");
+		assert.equal(s.auth.calls.unrestrict.length, 0);
+		assertBlocked(await s.tool("write"));
+		await assert.rejects(s.request(), /cancelled/iu);
+		quiescent = true;
+		idle.resolve();
+		await cancelling;
+		assert.equal(s.auth.calls.unrestrict.length, 1);
+	});
+
+	// Restore failures must not strand cancellation behind provider admission or revive invalid state.
+	for (const data of [null, { schema: 99 }, { schema: 1, issue: 755 }, {
+		schema: 1, issue: 755, modelClass: "implementation", selectedModel: qualified(MECHANICAL),
+		origin: { provider: PROVIDER }, authenticationRoute: "changed-auth",
+	}]) {
+		routingCheck(`malformed or failed restoration remains locally cancellable: ${JSON.stringify(data)}`, async (create) => {
+			const s = await create({ entries: [{ type: "custom", customType: "daily-driver-undertaking-route", data }] });
+			const info = await s.inspection();
+			assert.equal(info.state, "blocked");
+			assert.match(info.lastRejection, /invalid|backend|Authentication/iu);
+			await s.command(`cancel ${info.cancelOwner}`);
+			assert.equal(s.describe().undertaking, null);
+			assert.equal(s.entries.at(-1).data.lifecycle, "cancelled");
+		});
+	}
+
+	// Existing schema-1 records must stay readable while all new writes use one lifecycle format.
+	routingCheck("legacy active and completed records retain their recovery meaning", async (create) => {
+		const first = await create();
+		await first.route();
+		const legacy = structuredClone(first.entries);
+		legacy[0].data.schema = 1;
+		delete legacy[0].data.lifecycle;
+		await first.close();
+		const active = await create({ entries: legacy });
+		assert.equal(active.describe().undertaking.status, "pending");
+		const completed = await create({ entries: [...legacy, {
+			type: "custom", customType: "daily-driver-undertaking-route", data: { schema: 1, issue: 755, completed: true },
+		}] });
+		assert.equal(completed.describe().undertaking, null);
+	});
+
+	// Cancelling one owner must not release a replacement operator lease or another session's lease.
+	routingCheck("local cancellation preserves operator and unrelated-session restrictions", async (create) => {
+		const auth = fakeAuth();
+		const s = await create({ auth });
+		const other = await create({ auth });
+		await s.route();
+		await other.route();
+		auth.sessions.restrict(PROVIDER, s.sessionId, ["account:eligible-two"]);
+		const otherBefore = other.describe().undertaking;
+		await s.command("cancel 755");
+		assert.equal(auth.sessions.isRestricted(PROVIDER, s.sessionId), true);
+		assert.equal(auth.sessions.permits(PROVIDER, s.sessionId, 1), false);
+		assert.equal(auth.sessions.isRestricted(PROVIDER, other.sessionId), true);
+		assert.deepEqual(other.describe().undertaking, otherBefore);
+	});
+
+	// Parent cancellation must revoke running children and late handoffs instead of making them unrestricted.
+	routingCheck("local cancellation revokes only owned children and survives child reload", async (create) => {
+		const auth = fakeAuth();
+		const parent = await create({ auth });
+		const other = await create({ auth });
+		await parent.route();
+		await other.route();
+		const child = await create({ auth, parentId: parent.agentId, current: REASONING });
+		await child.request();
+		await child.assistant();
+		const lateId = `cancelled-late-child-${++nextSession}`;
+		await parent.spawn([qualified(REASONING)], "reasoning", lateId);
+		await parent.command("cancel 755");
+		assert.equal(child.calls.aborts, 1);
+		assert.equal(auth.sessions.isRestricted(PROVIDER, child.sessionId), true, "running child retains its lease until shutdown");
+		await assert.rejects(child.request(), /cancelled/iu);
+		assertBlocked(await child.tool("write"));
+		assertBlocked(await child.spawn([qualified(REASONING)]));
+		await child.fire("assistant_message", { message: { role: "assistant", provider: REASONING.provider, model: REASONING.id, content: [] } });
+		assert.equal(child.describe().undertaking.status, "blocked");
+		assert.equal((await child.route()).isError, true);
+		assert.equal((await child.finish()).isError, true);
+		assert.equal(other.describe().undertaking.status, "verified");
+		const late = await create({ auth, parentId: parent.agentId, agentId: lateId, handoff: false });
+		await assert.rejects(late.request());
+		const entries = structuredClone(child.entries);
+		await child.close();
+		const resumed = await create({ auth, entries, sessionId: child.sessionId, current: REASONING });
+		await assert.rejects(resumed.request(), /cancelled/iu);
+		assertBlocked(await resumed.tool("write"));
+	});
+
+	// A lower-class model used to pass child admission whenever its family matched.
+	routingCheck("child class selection rejects a same-family lower-class candidate", async (create) => {
+		const s = await create();
+		await s.route();
+		assertBlocked(await s.spawn([qualified(MECHANICAL)], "reasoning"));
+		assertAllowed(await s.spawn([`${qualified(REASONING)}:high`], "reasoning"));
+	});
+
+	// Cancellation during credential preflight used to publish a new route after its owner was released.
+	routingCheck("cancelled owner cannot be restored by a late route admission", async (create) => {
+		const pending = deferred();
+		let delayed = false;
+		const s = await create({ candidates: async (_ctx, _settings, patterns) => {
+			if (delayed) await pending.promise;
+			return patterns;
+		} });
+		await s.route();
+		delayed = true;
+		const admission = s.route({ modelClass: "reasoning" });
+		await Promise.resolve();
+		await s.command("cancel 755");
+		pending.resolve();
+		assert.equal((await admission).isError, true);
+		assert.equal(s.describe().undertaking, null);
+		assert.equal(s.entries.at(-1).data.lifecycle, "cancelled");
 	});
 }

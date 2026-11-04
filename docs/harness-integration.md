@@ -223,6 +223,32 @@ the existing owner or route; finish the completed undertaking or resume the
 existing one before selecting another. A finish call with the wrong issue also
 returns an error without changing the existing state.
 
+### Local undertaking recovery
+
+Omp registers `/undertaking status` and `/undertaking cancel <issue>` as host
+commands. They do not send a model request. They remain available after a
+rejected inference request or a saved-route restoration error.
+
+Status separates configured model and effort from the host selection and
+last observed execution identity. It reports the authentication route category,
+ownership, state, and last rejection reason without credential identities.
+If a malformed record has no recoverable issue, status reports
+`cancelOwner: invalid`; `/undertaking cancel invalid` explicitly cancels that
+record in the current session.
+
+Cancellation requires the exact current owner. It aborts and waits for local
+work before releasing only the undertaking's OAuth lease. It retires pending
+handoffs and revokes owned children. Running children retain their restrictions
+until shutdown and cannot resume after reload. Other sessions and operator-owned
+leases remain unchanged.
+
+Cancellation writes a schema-2 `cancelled` lifecycle record, not a completion
+record. Existing schema-1 active and completed records remain readable.
+Transcript, worktree, branch, approval evidence, and unfinished task state stay
+intact. A new undertaking requires normal admission. Repeated cancellation with
+no owner is a no-op. This command does not replace the workflow's stop handoff.
+
+
 Omp prefers its extension's in-session switch. A full handoff needs a surface
 that can constrain and verify the same route and has one owner. Claude's
 host-side Agent SDK model setter is not an agent-callable tool; Codex's
