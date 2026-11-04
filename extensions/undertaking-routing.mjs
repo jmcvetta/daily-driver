@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { MODEL_CLASS_ROUTES, explicitModelClassRole } from "./role-default-helper.mjs";
+import { MODEL_CLASS_ROUTES, explicitModelClassRole, readExecutionCandidates } from "./role-default-helper.mjs";
 
 const ENTRY = "daily-driver-undertaking-route";
 const CLASSES = ["mechanical", "implementation", "reasoning", "frontier"];
@@ -136,6 +136,41 @@ function classSelection(ctx, settings, routes, model, modelClass) {
 	return { target, configured, capability: "mapped" };
 }
 
+function candidateDecision(ctx, state, patterns, effort) {
+	if (!patterns.length) throw new Error("Worker effective model route is unavailable");
+	if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Authentication route must remain unchanged");
+	const candidates = patterns.map(pattern => {
+		if (typeof pattern !== "string" || /[*?,]/u.test(pattern)) throw new Error("Worker route must use concrete, verifiable candidates");
+		const model = ctx.models.resolve(pattern);
+		if (!model || !ctx.models.list().some(available => selector(available) === selector(model))) {
+			throw new Error("Worker model route is unavailable");
+		}
+		checkModel(ctx, state, model);
+		if (state.capability === "unverified" && selector(model) !== state.selectedModel) {
+			throw new Error("An unmapped-family worker must retain the invoking model");
+		}
+		const configuredEffort = pattern.match(EFFORT)?.[1];
+		return {
+			origin: origin(model),
+			effort: configuredEffort && configuredEffort !== "inherit" ? configuredEffort : effort,
+		};
+	});
+	return { candidates, authenticationRoute: state.authenticationRoute, modelClass: state.modelClass };
+}
+
+function workerDecision(ctx, state) {
+	// Old saved sessions contain the selected route, not an admission snapshot.
+	return state.decision ??= candidateDecision(ctx, state, [state.selectedModel], state.selectedEffort);
+}
+
+function checkDecision(ctx, decision, model, effort) {
+	const actual = origin(model);
+	const candidate = decision.candidates.find(candidate => sameOrigin(candidate.origin, actual));
+	if (!candidate) throw new Error("Unauthorized model/provider/backend/frontier execution fallback does not match the admitted worker class route");
+	if (candidate.effort !== undefined && candidate.effort !== effort) throw new Error("Worker effort no longer matches its admitted class route");
+	if (source(ctx, actual.provider) !== decision.authenticationRoute) throw new Error("Worker authentication route changed");
+}
+
 function installPool(ctx, state) {
 	const auth = ctx.modelRegistry.authStorage;
 	if (state.authenticationRoute !== "oauth") return;
@@ -176,21 +211,35 @@ function storedState(ctx) {
 }
 
 /** Install undertaking selection and enforce its worker route without changing host helper roles. */
-export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES) {
+export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES, getCandidates = readExecutionCandidates) {
 	const states = new Map();
 	const selecting = new Set();
 	const failures = new Map();
 
 	function status(ctx, text) { ctx.ui?.setStatus?.("daily-driver-routing", text); }
 
-	pi.on("before_agent_start", (event, ctx) => {
-		if (!current(ctx) && !/(?:^|\n)(?:\/skill:|\/)?undertake\b/iu.test(event.prompt ?? "")) return;
-		return {
-			systemPrompt: [...event.systemPrompt, "Undertaking routing: call daily_driver_route_undertaking alone, with no other tool calls in that assistant response (including device calls). If pending, report normal verification status, then let the selected worker respond before task work. A pending switch is not an error. Never batch routing with worktree creation, claims, or implementation."],
-		};
-	});
-
 	function current(ctx) { return states.get(ctx.sessionManager?.getSessionId?.()); }
+
+	async function admitDecision(ctx, state, patterns, effort, modelClass, agent, resolvedSelection) {
+		const settings = await getSettings(ctx);
+		const selection = state.capability === "unverified" ? null : resolvedSelection ??
+			classSelection(ctx, settings, await getRoutes(ctx), state.workerModels.current(), modelClass);
+		const visible = await getCandidates(ctx, settings, patterns, modelClass, agent);
+		const decision = candidateDecision(ctx, state, visible, effort);
+		decision.modelClass = modelClass;
+		const selectedEffort = selection?.configured?.match(EFFORT)?.[1];
+		for (const candidate of decision.candidates) {
+			if (selection && (!sameOrigin(candidate.origin, origin(selection.target)) ||
+				selectedEffort && selectedEffort !== "inherit" && candidate.effort !== undefined && candidate.effort !== selectedEffort)) {
+				throw new Error("Automatic candidate does not match the selected worker class route");
+			}
+			const model = ctx.models.resolve(`${candidate.origin.provider}/${candidate.origin.model}`);
+			if (!(await ctx.modelRegistry.getApiKey(model, ctx.sessionManager.getSessionId()))) {
+				throw new Error("Worker candidate has no available credentials");
+			}
+		}
+		return decision;
+	}
 
 	function publish(ctx, state) {
 		state.workerModels ??= ctx.models;
@@ -260,6 +309,8 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			state = {
 				...(parent ?? saved), sessionId, lease: undefined,
 				...(expected?.consultation ?? {}),
+				decision: expected?.decision,
+				admittedRequest: undefined,
 				status: (expected?.consultation || saved?.consultation) ? "consultation" : saved?.recovery ? "blocked" : "pending", observedModel: null,
 				workerModels: ctx.models,
 				selectedModel: expected?.consultation?.selectedModel ?? (parent ? selector(ctx.models.current()) : saved.selectedModel),
@@ -270,6 +321,15 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			if (!state.consultation && !consultation(ctx, state)) {
 				if (parent?.status !== undefined && parent.status !== "verified") throw new Error("Parent undertaking route is not verified");
 				checkModel(ctx, state, ctx.models.current(), Boolean(state.recovery));
+				if (state.decision) {
+					state.decision = {
+						...state.decision,
+						candidates: state.decision.candidates.map(candidate => ({
+							...candidate, effort: candidate.effort ?? pi.getThinkingLevel(),
+						})),
+					};
+					checkDecision(ctx, state.decision, ctx.models.current(), pi.getThinkingLevel());
+				}
 				if (parent?.capability === "unverified" && selector(ctx.models.current()) !== parent.selectedModel) {
 					throw new Error("An unmapped-family worker must retain the invoking model");
 				}
@@ -345,11 +405,13 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				const effort = configured?.match(EFFORT)?.[1];
 				const nextEffort = effort && effort !== "inherit" ? effort : invokingEffort;
 				const changed = selector(invoking) !== selector(target) || nextEffort !== invokingEffort;
+				state.selectedModel = selector(target);
+				state.selectedEffort = nextEffort;
+				state.admittedRequest = undefined;
+				state.decision = await admitDecision(ctx, state, [`${state.selectedModel}:${nextEffort}`], nextEffort, params.modelClass, undefined, selection);
 				if (changed && typeof pi.setModel !== "function") throw new Error("Model selection control is unavailable");
 				if (nextEffort !== invokingEffort && typeof pi.setThinkingLevel !== "function") throw new Error("Effort selection control is unavailable");
 				if (!state.lease) installPool(ctx, state);
-				state.selectedModel = selector(target);
-				state.selectedEffort = nextEffort;
 				state.observedModel = changed ? null : selector(invoking);
 				state.status = changed ? "pending" : "verified";
 				state.reason = undefined;
@@ -431,8 +493,8 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			selector(state.workerModels.current()) !== state.selectedModel ||
 			(state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort)) return false;
 		try {
-			checkModel(ctx, state, state.workerModels.current());
-			return source(ctx, state.origin.provider) === state.authenticationRoute;
+			checkDecision(ctx, workerDecision(ctx, state), state.workerModels.current(), pi.getThinkingLevel());
+			return true;
 		} catch { return false; }
 	}
 
@@ -452,13 +514,15 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				checkModel(ctx, state, ctx.model, true);
 			} else {
 				if (state.status === "blocked") throw new Error(state.reason);
-				checkModel(ctx, state, ctx.model);
-				if (selector(ctx.model) !== state.selectedModel) throw new Error("Execution fallback does not match the selected worker class route");
-				if (state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort) throw new Error("Worker effort no longer matches its selected class route");
+				checkDecision(ctx, workerDecision(ctx, state), ctx.model, pi.getThinkingLevel());
 			}
 			if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Worker authentication route changed");
+			state.admittedRequest = state.consultation || state.recovery ? undefined : {
+				model: selector(ctx.model), effort: pi.getThinkingLevel(),
+			};
 		} catch (error) {
 			// Reject this request without poisoning the selected route needed for recovery.
+			state.admittedRequest = undefined;
 			ctx.abort();
 			throw error;
 		}
@@ -475,11 +539,17 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				(part.name === "write" && part.arguments?.path === "xd://daily_driver_route_undertaking")));
 		if (requestsSelection) selecting.add(sessionId);
 		const state = current(ctx);
+		const admitted = state?.admittedRequest;
+		if (state) state.admittedRequest = undefined;
 		if (state?.status === "verified" && !requestsSelection &&
 			`${message?.provider}/${message?.model}` === state.selectedModel) selecting.delete(sessionId);
 		if (!state || state.status !== "pending") return;
-		if (message?.role === "assistant" && `${message.provider}/${message.model}` === state.selectedModel &&
-			selector(ctx.models.current()) === state.selectedModel) {
+		if (message?.role === "assistant" && !["error", "aborted"].includes(message.stopReason) &&
+			`${message.provider}/${message.model}` === state.selectedModel &&
+			selector(ctx.models.current()) === state.selectedModel && !state.recovery &&
+			admitted?.model === state.selectedModel && admitted.effort === pi.getThinkingLevel()) {
+			try { checkDecision(ctx, workerDecision(ctx, state), ctx.models.current(), pi.getThinkingLevel()); }
+			catch { return; }
 			state.status = "verified";
 			state.observedModel = state.selectedModel;
 			if (!requestsSelection) selecting.delete(sessionId);
@@ -500,10 +570,10 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		const tasks = event.input?.tasks ?? (event.input?.agent ? [event.input] : []);
 		if (!failure && state && !selecting.has(ctx.sessionManager?.getSessionId?.()) &&
 			event.toolName === "task" && tasks.length && tasks.every(task => modelMention(ctx, task.agent))) return;
-		return { block: true, reason: failure ?? state?.reason ?? "Task work requires the selected worker's verified identity. Call routing alone and wait for its next response." };
+		return { block: true, reason: failure ?? state?.reason ?? "Task work requires the selected worker's verified identity. Wait for an admitted worker response or restore its route." };
 	});
 
-	pi.on("before_subagent_spawn", (event, ctx) => {
+	pi.on("before_subagent_spawn", async (event, ctx) => {
 		const state = current(ctx);
 		if (!state) return;
 		try {
@@ -516,17 +586,19 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				if (/[*?,]/u.test(mention.selector)) throw new Error("Native consultation must select one concrete model");
 				const model = ctx.models.resolve(mention.selector);
 				if (!model || selector(model) !== mention.selector.replace(EFFORT, "")) throw new Error("Native consultation model cannot be resolved exactly");
+				const visible = await getCandidates(ctx, await getSettings(ctx), [mention.selector], event.modelRole, event.agent);
+				if (visible.some(pattern => {
+					const candidate = ctx.models.resolve(pattern);
+					return !candidate || !sameOrigin(origin(candidate), origin(model));
+				})) throw new Error("Native consultation automatic candidate differs from the operator's exact selection");
 				selected = {
 					consultation: true, origin: origin(model), selectedModel: selector(model), recovery: undefined,
 					authenticationRoute: source(ctx, model.provider),
 					identities: model.provider === state.origin.provider ? state.identities : undefined,
 				};
-			} else if (!specialist) for (const pattern of event.patterns) {
-				if (typeof pattern !== "string" || /[*?,]/u.test(pattern)) throw new Error("Child route must use concrete, verifiable candidates");
-				const model = ctx.models.resolve(pattern);
-				if (!model) throw new Error("Child model route cannot be resolved");
-				checkModel(ctx, state, model);
-				if (state.capability === "unverified" && selector(model) !== state.selectedModel) throw new Error("An unmapped-family worker must retain the invoking model");
+			} else if (!specialist) {
+				const modelClass = CLASSES.includes(event.modelRole) ? event.modelRole : state.modelClass;
+				selected = { decision: await admitDecision(ctx, state, event.patterns, undefined, modelClass, event.agent) };
 			}
 			const parents = [...(scope(ctx)?.values() ?? [])].filter(record => record.agentId === ctx.agent?.id);
 			if (parents.length !== 1) throw new Error("Parent undertaking identity is ambiguous");
@@ -535,7 +607,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				record.auth === ctx.modelRegistry.authStorage && record.parentId === ctx.agent?.id);
 			if (previous) pendingChildren.delete(previous);
 			retiredChildren.get(ctx.modelRegistry.authStorage)?.delete(JSON.stringify([ctx.agent?.id, event.spawnKey]));
-			pendingChildren.add({ key: event.spawnKey, state, specialist, consultation: selected, parentId: ctx.agent?.id, auth: ctx.modelRegistry.authStorage });
+			pendingChildren.add({ key: event.spawnKey, state, specialist, consultation: mention ? selected : undefined, decision: selected?.decision, parentId: ctx.agent?.id, auth: ctx.modelRegistry.authStorage });
 			if (mention) return { model: [mention.selector], note: "Use the operator's exact native model selection." };
 		} catch (error) { return { block: true, reason: `Undertaking route gap: ${error.message}` }; }
 	});

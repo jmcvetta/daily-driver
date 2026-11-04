@@ -164,7 +164,8 @@ function fakeSession(options = {}) {
 		},
 	};
 	Object.defineProperty(ctx, "model", { get: () => current });
-	const api = installUndertakingRouting(pi, async () => settings, options.routes ? () => options.routes : undefined);
+	const api = installUndertakingRouting(pi, async () => settings, options.routes ? () => options.routes : undefined,
+		options.candidates ?? (async (_ctx, _settings, patterns) => patterns));
 	async function fire(event, payload = {}, selected = current) {
 		const eventContext = event === "before_provider_request"
 			? { ...ctx, model: selected, models: { ...ctx.models, current: () => selected } }
@@ -198,7 +199,10 @@ function fakeSession(options = {}) {
 		request: () => fire("before_provider_request", { payload: { model: current.id } }),
 		helperRequest: (selected) => fire("before_provider_request", { payload: { model: selected.id } }, selected),
 		response: (status = 200) => fire("after_provider_response", { status, headers: {} }),
-		assistant: (selected = current) => fire("assistant_message", { message: { role: "assistant", provider: selected.provider, model: selected.id, content: [{ type: "text", text: "Offline routing response" }] } }),
+		async assistant(selected = current) {
+			if (selected === current) await fire("before_provider_request", { payload: { model: current.id } });
+			return fire("assistant_message", { message: { role: "assistant", provider: selected.provider, model: selected.id, content: [{ type: "text", text: "Offline routing response" }] } });
+		},
 		spawn: (patterns, modelRole = "implementation", spawnKey = `routing-child-${sessionId}`, agent = modelRole) => fire("before_subagent_spawn", { agent, invocationKind: "task", modelRole, patterns, spawnKey }),
 		async close() {
 			if (!closed) {
@@ -237,7 +241,7 @@ export default function registerUndertakingRoutingChecks(check) {
 				sessions.push(session);
 				const parents = options?.parentId ? sessions.filter((candidate) => candidate.agentId === options.parentId) : [];
 				if (parents.length === 1 && options?.handoff !== false) {
-					await parents[0].spawn([qualified(session.ctx.models.current())], options.agentName ?? "implementation", session.agentId);
+					await parents[0].spawn([qualified(session.ctx.models.current())], options.agentName ?? (session.ctx.models.current() === REASONING ? "reasoning" : "implementation"), session.agentId);
 				}
 				await session.start();
 				return session;
@@ -1452,5 +1456,45 @@ export default function registerUndertakingRoutingChecks(check) {
 		await s.assistant();
 		assert.equal(s.describe().undertaking.status, "verified");
 		assertAllowed(await s.spawn([qualified(FRONTIER)], "frontier"));
+	});
+
+	// A rejected or synthetic response used to certify a pending worker from its model name alone.
+	for (const stopReason of [undefined, "error", "aborted"]) {
+		routingCheck(`unadmitted ${stopReason ?? "ordinary"} response cannot verify a worker`, async (create) => {
+			const s = await create();
+			await s.route({ modelClass: "reasoning" });
+			if (stopReason) await s.request();
+			await s.fire("assistant_message", { message: {
+				role: "assistant", provider: REASONING.provider, model: REASONING.id, stopReason, content: [],
+			} });
+			assert.equal(s.describe().undertaking.status, "pending");
+			assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
+			await s.assistant();
+			assert.equal(s.describe().undertaking.status, "verified");
+		});
+	}
+
+	// A valid primary selector used to hide an unauthorized automatic candidate until inference dispatch.
+	for (const fallback of [qualified(FOREIGN), qualified(FRONTIER), `${qualified(MECHANICAL)}:low`]) {
+		routingCheck(`automatic candidate ${fallback} is rejected before selection`, async (create) => {
+			const s = await create({ candidates: async (_ctx, _settings, patterns) => [...patterns, fallback] });
+			assertGap(await s.route());
+			assert.equal(s.calls.models.length, 0);
+			assert.equal(s.describe().undertaking, null);
+		});
+	}
+
+	// A catalog backend change after admission used to be re-resolved instead of compared to the admitted identity.
+	routingCheck("admitted backend snapshot survives a catalog replacement", async (create) => {
+		const s = await create();
+		await s.route({ modelClass: "reasoning" });
+		const admitted = structuredClone(s.describe().undertaking);
+		s.setCurrent({ ...REASONING, baseUrl: "https://replacement.example.invalid/v1" });
+		await assert.rejects(s.request(), /backend/iu);
+		await s.fire("assistant_message", { message: { role: "assistant", provider: REASONING.provider, model: REASONING.id, content: [] } });
+		assert.deepEqual(s.describe().undertaking, admitted);
+		s.setCurrent(REASONING);
+		await s.assistant();
+		assert.equal(s.describe().undertaking.status, "verified");
 	});
 }
