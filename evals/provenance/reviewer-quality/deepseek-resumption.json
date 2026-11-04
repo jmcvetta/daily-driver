@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "run_id": "reviewer-quality-deepseek-cohort-v3",
+  "freeze": "freeze-v3.json",
+  "previous_checkpoint": "deepseek-cohort-v3-interrupted.json",
+  "reconciliation": {
+    "terminal_evaluator_records_before_resume": 3,
+    "interrupted_case": "reviewer-quality-01-boundary",
+    "interrupted_repeat": 0,
+    "observed": "The preserved task log records reviewer dispatch but no reviewer result or evaluator terminal record.",
+    "recovery": "A clearly labelled synthetic ERROR task.json records the interruption and prevents coder-eval --resume from replaying that slot. Its iteration count and duration are not a measurement. The original task log is retained locally.",
+    "completion_and_backend_identity": "unreported",
+    "remaining_unattempted_slots": 36
+  },
+  "second_interruption": {
+    "case_id": "reviewer-quality-03-authorization",
+    "repeat": 4,
+    "observed": "The retained task log ends during a parent turn after reading the review diffs. It contains no reviewer dispatch, reviewer result, or evaluator terminal record.",
+    "recovery": "A separately labelled synthetic ERROR task.json preserves the interrupted slot and prevents replay. Its iteration count is not a measurement. The task log remains local.",
+    "completion_and_backend_identity": "unreported",
+    "reconciliation": "The other 38 slots have evaluator terminal records, including 12 failures. The original boundary interruption is a separate synthetic record. A resume assembled all 40 slots and dispatched zero tasks; its 26/40 success count includes neither interruption."
+  },
+  "recording": {
+    "terminal_records": 38,
+    "interrupted_without_terminal_records": 2,
+    "method": "The standard recorder rejects synthetic markers because their wall times are unknown. A derived terminal-only run view excluded both markers and reused the preserved task artifacts and judge sidecars. The standard record contains 38 evaluator records; the supplementary cohort record retains all 40 planned slots and marks the two interruptions explicitly.",
+    "judge_errors": "Two terminal records have no final agent output and cannot be judged. The two interruptions also have no judgeable turn records. These four errors are not scored failures.",
+    "cohort_complete": false
+  },
+  "authorized_replacements": {
+    "cases": [
+      {"case_id": "reviewer-quality-01-boundary", "interrupted_repeat": 0, "replacement_repeat": 0},
+      {"case_id": "reviewer-quality-03-authorization", "interrupted_repeat": 4, "replacement_repeat": 0}
+    ],
+    "run_id": "reviewer-quality-deepseek-replacements",
+    "terminal_records": 2,
+    "source_commit": "3341a0e258fd6ccc4bffd2d3fe8fe7bbe7fdc881",
+    "source": "A local archive of the frozen source commit matched all frozen input hashes. Both replacement cases ran once, sequentially, on the pinned Omp 18.14.1 runtime with the same provider route.",
+    "recorded_plugin_revision": "The standard recorder initially recorded the checkout HEAD rather than the archived plugin source. The standard record was corrected to the archived source commit.",
+    "result_evidence": "Both evaluator tasks report SUCCESS and their parent final JSON received judge scores. Neither preserved transcript contains the delivered reviewer result; the eval guard rejected the parent's agent:// read. The parent-attributed reviewer identity and output remain unverified, not quality scores.",
+    "original_interruptions": "Preserved separately; not overwritten or counted as terminal reviewer outcomes."
+  },
+  "runtime": {
+    "frozen_omp_version": "18.14.1",
+    "resumed_omp_version": "18.14.1",
+    "resumed_installation": "Isolated @oh-my-pi/pi-coding-agent@18.14.1 npm package, executed by isolated Bun 1.4.4; the session's installed Omp was 18.15.0.",
+    "binary_equivalence_to_original": "unverified",
+    "coder_eval_version": "0.11.6",
+    "subject_input_hashes": "Matched freeze-v3.json, including the recorded collector analysis amendment, before resumption."
+  },
+  "dispatch": {
+    "max_parallel": 1,
+    "resume": "coder-eval --resume retains finalized task records and the synthetic interrupted-slot marker; it dispatches only unattempted slots.",
+    "pushback": "The temporary resumption wrapper uses the frozen runner's pushback expression and stops the process group on a match.",
+    "routes_and_limits": "Unchanged from freeze-v3.json"
+  }
+}

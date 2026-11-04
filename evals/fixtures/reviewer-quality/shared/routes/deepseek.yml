@@ -1,0 +1,29 @@
+# Both benchmark arms pin every helper to the same Codex route.
+modelRoles:
+  default: openai-codex/gpt-6.1-sol:low
+  smol: openai-codex/gpt-6.1-sol:low
+  slow: openai-codex/gpt-6.1-sol:low
+  vision: openai-codex/gpt-6.1-sol:low
+  plan: openai-codex/gpt-6.1-sol:low
+  commit: openai-codex/gpt-6.1-sol:low
+  tiny: openai-codex/gpt-6.1-sol:low
+  memory: openai-codex/gpt-6.1-sol:low
+  task: openai-codex/gpt-6.1-sol:low
+  advisor: openai-codex/gpt-6.1-sol:low
+  mechanical: openai-codex/gpt-6.1-sol:low
+  implementation: openai-codex/gpt-6.1-sol:low
+  reasoning: openai-codex/gpt-6.1-sol:low
+  review: opencode-go/deepseek-v4-pro:high
+task:
+  maxConcurrency: 1
+  maxRecursionDepth: 1
+  maxRuntimeMs: 600000
+  softRequestBudget: 30
+  enableEffort: false
+  agentModelOverrides:
+    reviewer: "@review"
+retry:
+  enabled: false
+  modelFallback: false
+  usageAwareFallback: false
+  waitForUsageReset: false
