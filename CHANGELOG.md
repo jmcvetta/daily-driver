@@ -28,6 +28,19 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.58.0](https://github.com/jmcvetta/daily-driver/compare/v0.57.1...v0.58.0) (2026-11-04)
+
+
+### Features
+
+* **omp:** add local undertaking recovery controls ([#833](https://github.com/jmcvetta/daily-driver/issues/833)) ([c747289](https://github.com/jmcvetta/daily-driver/commit/c7472894f0c5cc697054815889d3466336383c2d))
+* retain ownership through bounded pauses ([#831](https://github.com/jmcvetta/daily-driver/issues/831)) ([5a1766b](https://github.com/jmcvetta/daily-driver/commit/5a1766b42fa1559d8d453edf65f29f93bfc0c3bb))
+
+
+### Bug Fixes
+
+* **omp:** consolidate undertaking execution boundaries ([#832](https://github.com/jmcvetta/daily-driver/issues/832)) ([dc2d135](https://github.com/jmcvetta/daily-driver/commit/dc2d1352ce3a68c00e37e927c6f10c6be002bd4a))
+
 ## [0.57.1](https://github.com/jmcvetta/daily-driver/compare/v0.57.0...v0.57.1) (2026-11-03)
 
 
