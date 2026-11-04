@@ -4,6 +4,7 @@
 
 ### Changed
 
+* Retain bounded undertaking ownership through pauses and route unsupported epic outcomes to evidence gathering or agreed repair instead of automatic human takeover ([#830](https://github.com/jmcvetta/daily-driver/issues/830)).
 * Make agent workflows headless by default and require protected, user-accessible files for sensitive handoffs without pausing independent permitted work ([#796](https://github.com/jmcvetta/daily-driver/issues/796)).
 * Admit ready, classed `task`, `research` and `bug` issues as assignable epic stories, preserving each kind's contract and completion evidence, and align linking, dispatch and epic completion to match ([#785](https://github.com/jmcvetta/daily-driver/issues/785)).
 * Retire the print-only Claude evaluation handoff case; preserve its historical records and the separate no-handoff case ([#789](https://github.com/jmcvetta/daily-driver/issues/789)).

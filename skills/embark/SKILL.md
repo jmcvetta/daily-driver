@@ -355,6 +355,12 @@ permitted action; do not ask again for authorization the task already carries.
 The implementor still owns commands, code, checks and readiness. This watch
 does not take over its branch or clear its draft.
 
+The orchestrator owns the agreed epic outcome, not each worker's lifetime.
+A worker may complete its component contract without remaining alive until
+the whole epic ships; component completion alone does not evidence that
+outcome. A pause retains diagnosis and the next executable action without
+granting authority beyond the original agreement.
+
 Before pausing for a real prerequisite, require evidence that independent
 permitted work is complete, unless a safety rule requires an immediate stop.
 Preserve production prohibitions, dangerous-action rules, and explicit access
@@ -567,9 +573,13 @@ Reached from `Watch the wave`, and it returns there.
   idle one is interrupted and not reopened: a second session on its branch
   would collide with the first. Record the task as a stop under `Where it
   stops and waits`, naming the task, the session link and its pull request.
-- **A message is sent, not a conversation.** The session receives it and acts
-  on it, but nothing here reads back that it did — the result of a correction
-  is read from the pull request, the same as everything else this watch reads.
+- **A message is sent, not a conversation.** A successful send does not prove
+  the session received or acted on it. Read the result of a correction from
+  the pull request, the same as everything else this watch reads.
+  A sent or unconfirmed message does not transfer ownership. Confirm a
+  receiver through the supported route before treating a handoff as complete;
+  preserve the agreed result, original authority references and recovery
+  counts. Do not create concurrent writers.
 - **Reopen a session that cannot be recovered**: archive it, and open a fresh
   one on the same task issue, pushing to the **same branch** rather than to one
   of its own. The branch is recorded twice already — in the claim comment
@@ -578,6 +588,10 @@ Reached from `Watch the wave`, and it returns there.
   replacement picks the work up where it was left: `pr`'s existing-PR check
   finds the open pull request rather than opening a second one, and the commits
   already pushed are on the branch it is handed.
+  Do not replace an owner after cancellation or exhausted recovery, or reset
+  a bound by changing workers. Report the execution failure and actual resume
+  requirement instead. An unchanged external prerequisite is not a reason to
+  reopen a session.
 - **A fallback implementor is recovered the same way, through the messaging it
   asks for help with.** A correction goes to the subagent's identifier. After
   the harness confirms that it ended, recover an implementor whose open draft
@@ -614,27 +628,54 @@ evidence a task's or bug's contribution; an evidenced answer recorded on the
 issue can evidence a research story's, including its follow-on issue
 specifications. Confirm that each story's specified outcome was delivered.
 Bounded inconclusive research is complete under its own contract but does not
-settle a downstream requirement. Where the epic's acceptance condition depends
-on that requirement, the claim is unsupported: name it, leave the epic open and
-wait for a person, as the stop below says. Closing a child alone does not prove the epic outcome was met. A canceled child does not
-satisfy the outcome unless the epic's accepted condition explicitly permits
-that result. No open-child count stands in for this read.
+settle a downstream requirement. Closing a child alone does not prove the epic
+outcome. A canceled child does not satisfy it unless the accepted condition
+explicitly permits that result. No open-child count stands in for this read.
+
+**An unsupported outcome is unfinished work, not automatically a human
+dependency.** Leave the epic open and classify the gap before selecting a stop:
+
+- **Missing evidence:** gather it through available permitted routes.
+- **Repairable defect within agreed scope:** route repair through the existing
+  task workflow. Do not reopen correctly completed children merely because
+  integration work is missing. The orchestrator does not implement or review.
+- **Invalidated design assumption:** diagnose the failed premise and prepare a
+  bounded repair through `epic`. Do not rotate workers through the unchanged
+  disproved plan or automatically escalate to frontier.
+- **Changed scope, missing authority or required human action:** prepare the
+  diagnosed gap and concrete next action; ask only for the changed decision or
+  contribution. Invoke `epic`'s `Agree the plan` and `Open the issues` where
+  decomposition or replacement issues require agreement. Do not write them
+  or execute a gated operation before its applicable gate clears.
+- **External wait or unavailable capability:** retain a supported continuation
+  when available; otherwise name the precise prerequisite and actual session
+  resumption or authorized-agent handoff route. Do not call all remaining work
+  human-only or promise monitoring or wakeup across shutdown.
+- **Exhausted recovery:** report execution failure and the resume requirement;
+  do not retry automatically or claim completion.
+
+Apply `undertake`'s operational escalation and stop-decision record: preserve
+the owner, evidence, original authority and limits, outstanding requirements,
+recovery counts and next action. Complete independent permitted work first
+unless safety requires an immediate stop. On resume recheck current evidence
+and authority; clear only stale blockers and continue the next permitted action.
+Cancellation prevents continuation. Do not probe a prohibited target or turn
+an agent record into approval.
+
+Keep a supported continuation while permitted recovery is active. When a
+genuine human decision is the only remaining prerequisite, cancel unnecessary
+polling and name the actual resume trigger. An unchanged prerequisite earns no
+duplicate recovery action, issue, message or status comment.
 
 When the acceptance condition is evidenced and the roll says
 `Landing: orchestrator`, post one comment describing the evidence, then close
-the epic with `state_reason: completed`. When a claim is unsupported, post one
-comment that names it and leave the epic open. That report-and-wait path is the
-only outcome here that asks a person for anything. Either comment carries
-`provenance`'s block; the missing-claim comment ends with it.
-**The delivered comment carries a homecoming verse, last** — a short
-stanza in the manner of a sea shanty, after the block, each line italicised
-as [`HAIKU.md`](../../HAIKU.md) shows. The missing-claim comment carries
-none: it asks a person to act, and verse never attaches to a write somebody
-has to act on.
-
-When the roll says `Landing: by hand`, report that the epic is ready and leave
-it open. In every outcome, cancel the backstop and drop every pull-request
-subscription, so the check-ins end here.
+the epic with `state_reason: completed`. The comment carries `provenance`'s
+block and a homecoming verse, last — a short stanza in the manner of a sea
+shanty, each line italicised as [`HAIKU.md`](../../HAIKU.md) shows.
+When the roll says `Landing: by hand`, report that the evidenced epic is ready
+and leave it open. On completion or the by-hand stopping point, cancel the
+backstop and drop every pull-request subscription. Preserve the existing
+conditional merge and archive permissions.
 
 
 Waves launch without confirmation
@@ -661,7 +702,7 @@ touches the constitution's own gates.
 Where it stops and waits
 ========================
 
-Seven, and four of them are reports rather than questions.
+Each pause has a specific cause; missing evidence alone is not one.
 
 - **An issue that is not an epic**, at `Read the epic`. A report: say which
   issue it is and which skill takes it — `undertake` for a single story issue,
@@ -685,9 +726,10 @@ Seven, and four of them are reports rather than questions.
   wave`. The graph wins, so the wave is not in doubt; the body is wrong, and
   fixing it is `epic`'s `Fill in the epic` rather than an edit made in passing
   here.
-- **A `Summary` claim that no merged pull request or evidenced answer
-  delivers**, at `Close the epic`. Name the claim, leave the epic open, cancel the watch, and wait
-  for a person to resolve the mismatch.
+- **An unsupported `Summary` claim**, at `Close the epic`. Diagnose and route
+  it under that step. Ask a person only for a genuinely missing decision or
+  contribution; an exhausted bound is an execution failure, not a request to
+  take over the work.
 - **Landing or archive is denied by the auto-mode classifier.** Do not post a
   record that claims the action happened, and do not seek another route to the
   same effect. Tell the user once which action was denied and the classifier's

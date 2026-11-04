@@ -127,6 +127,17 @@ The bounded one-repeat smoke passed all three cases in
 [`omp-gpt-6-1-sol-workflow-2026-10-18-2026-10-18_15-45-41`](provenance/omp-gpt-6-1-sol-workflow-2026-10-18-2026-10-18_15-45-41.json).
 It is a treated-only smoke, not an ablation or an estimate of fleet reliability.
 
+`tasks/embark/23`–`26` cover unsupported epic outcomes: missing evidence,
+an invalidated plan requiring agreement, unconfirmed transfer after recovery
+exhaustion, and an in-scope integration repair. These client-less cases assess
+decisions, not actual evidence gathering, message delivery, issue creation or
+scheduling.
+The first three epic cases and the consent case passed one focused Omp run
+with `omp-gpt-6.1-sol` as subject and judge. The subject identity was
+unreported; the separate judge observed `gpt-6.1-sol`. The consent fixture
+recorded the smoke attempt. The run record is
+[`2026-11-04_17-52-28`](provenance/omp-gpt-6-1-sol-2026-11-04-2026-11-04_17-52-28.json).
+
 ## Evidence-backed stopping
 
 The five `tasks/undertake/24-*` cases cover earlier approval on resume,
