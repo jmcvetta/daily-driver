@@ -163,16 +163,39 @@ function publicState(state) {
 	};
 }
 
+function savedEntry(ctx) {
+	return (ctx.sessionManager.getBranch?.() ?? [])
+		.filter(entry => entry.type === "custom" && entry.customType === ENTRY).at(-1);
+}
+
 function storedState(ctx) {
-	const entries = ctx.sessionManager.getBranch?.() ?? [];
-	const saved = entries.filter(entry => entry.type === "custom" && entry.customType === ENTRY).at(-1)?.data;
-	if (!saved) return null;
-	if (saved.completed === true && saved.schema === 1) return null;
-	if (saved.schema !== 1 || !CLASSES.includes(saved.modelClass) || !Number.isSafeInteger(saved.issue) ||
+	const entry = savedEntry(ctx);
+	if (!entry) return null;
+	const saved = entry.data;
+	if (saved?.schema === 1 && saved.completed === true) return null;
+	if (saved?.schema === 2 && ["completed", "cancelled"].includes(saved.lifecycle)) {
+		return saved.retired === true ? saved : null;
+	}
+	if (![1, 2].includes(saved?.schema) || saved.schema === 2 && saved.lifecycle !== "active" ||
+		!CLASSES.includes(saved.modelClass) || !Number.isSafeInteger(saved.issue) || saved.issue < 1 ||
 		!saved.origin?.provider || !saved.selectedModel || !saved.authenticationRoute) {
-		throw new Error("Saved undertaking route is invalid; recover the original execution identity before work");
+		throw new Error("Saved undertaking route is invalid; use /undertaking status for local recovery");
 	}
 	return saved;
+}
+
+function isCancelled(state) {
+	for (let owner = state; owner; owner = owner.ownerState) {
+		if (owner.cancelled || owner.cancelling || owner.retired) return true;
+	}
+	return false;
+}
+
+function ownedBy(state, owner) {
+	for (let parent = state.ownerState; parent; parent = parent.ownerState) {
+		if (parent === owner) return true;
+	}
+	return false;
 }
 
 /** Install undertaking selection and enforce its worker route without changing host helper roles. */
@@ -180,6 +203,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	const states = new Map();
 	const selecting = new Set();
 	const failures = new Map();
+	const rejections = new Map();
 
 	function status(ctx, text) { ctx.ui?.setStatus?.("daily-driver-routing", text); }
 
@@ -200,7 +224,17 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		}
 		states.set(state.sessionId, state);
 		const sessions = scope(ctx);
-		if (sessions) sessions.set(state.sessionId, { agentId: ctx.agent?.id, state });
+		if (sessions) {
+			for (const record of sessions.values()) {
+				if (previous && record.state.ownerState === previous) record.state.ownerState = state;
+			}
+			sessions.set(state.sessionId, {
+				agentId: ctx.agent?.id, state, ctx,
+				persistCancellation: () => pi.appendEntry(ENTRY, {
+					schema: 2, issue: state.issue, lifecycle: "cancelled", retired: true,
+				}),
+			});
+		}
 	}
 
 	function describe(ctx) {
@@ -213,9 +247,91 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		};
 	}
 
+	function reportRejection(ctx, state, error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		rejections.set(ctx.sessionManager.getSessionId(), reason);
+		ctx.ui?.notify?.(`Undertaking request rejected: ${reason}. Use /undertaking status; cancel with /undertaking cancel <issue>.`, "warning");
+	}
+
+	function inspect(ctx) {
+		const state = current(ctx);
+		const saved = savedEntry(ctx)?.data;
+		let authenticationRoute = state?.authenticationRoute?.split(":")[0] ?? "unreported";
+		if (authenticationRoute === "unreported") {
+			try { authenticationRoute = source(ctx, ctx.models?.current?.()?.provider).split(":")[0]; } catch { /* Report missing observation. */ }
+		}
+		return {
+			issue: state?.issue ?? null,
+			requiredClass: state?.modelClass ?? null,
+			selectedModel: state?.selectedModel ?? null,
+			selectedEffort: state?.selectedEffort ?? null,
+			hostModel: selector(ctx.models?.current?.() ?? ctx.model),
+			hostEffort: pi.getThinkingLevel(),
+			observedModel: state?.observedModel ?? "unreported",
+			authenticationRoute,
+			state: state?.status ?? (saved?.lifecycle === "cancelled" ? "cancelled" : "none"),
+			lastRejection: rejections.get(ctx.sessionManager.getSessionId()) ?? state?.reason ?? null,
+			cancelOwner: state ? String(state.issue ?? "invalid") : null,
+		};
+	}
+
+	pi.registerCommand("undertaking", {
+		description: "Inspect or cancel this session's undertaking locally: status | cancel <issue|invalid>",
+		handler: async (args, ctx) => {
+			const parts = args.trim().split(/\s+/u);
+			if (parts.length === 1 && parts[0] === "status") {
+				ctx.ui.notify(JSON.stringify(inspect(ctx), null, 2), "info");
+				return;
+			}
+			if (parts.length !== 2 || parts[0] !== "cancel") {
+				ctx.ui.notify("Use /undertaking status or /undertaking cancel <issue>. Use invalid only when status reports cancelOwner: invalid.", "warning");
+				return;
+			}
+			const state = current(ctx);
+			if (!state) {
+				ctx.ui.notify("No active undertaking owns this session. Nothing was cancelled.", "info");
+				return;
+			}
+			const sessionId = ctx.sessionManager.getSessionId();
+			if (state.sessionId !== sessionId || parts[1] !== String(state.issue ?? "invalid") || state.cancelling) {
+				ctx.ui.notify("Cancellation refused: ownership does not match this session. Use /undertaking status.", "warning");
+				return;
+			}
+			if (typeof ctx.waitForIdle !== "function") {
+				ctx.ui.notify("Cancellation unavailable: the host cannot wait for in-flight work to stop. Restrictions remain in place.", "warning");
+				return;
+			}
+			state.cancelling = true;
+			try {
+				ctx.abort();
+				await ctx.waitForIdle();
+				if (current(ctx) !== state || ctx.sessionManager.getSessionId() !== sessionId || !ctx.isIdle()) {
+					throw new Error("Ownership changed or in-flight work is not quiescent; restrictions remain in place");
+				}
+				state.cancelled = true;
+				for (const record of scope(ctx)?.values() ?? []) {
+					if (!ownedBy(record.state, state)) continue;
+					record.state.cancelled = true;
+					record.state.retired = true;
+					record.state.status = "blocked";
+					record.state.reason = "The owning undertaking was cancelled; this child cannot resume execution";
+					record.ctx.abort();
+					await record.persistCancellation();
+				}
+				await pi.appendEntry(ENTRY, { schema: 2, issue: state.issue, lifecycle: "cancelled" });
+				release(ctx, state);
+				ctx.ui.notify("Undertaking cancelled, not completed. Transcript, worktree, approval evidence, and unfinished task state are unchanged. A new undertaking requires normal admission.", "info");
+			} catch (error) {
+				reportRejection(ctx, state, error);
+			} finally {
+				state.cancelling = false;
+			}
+		},
+	});
+
 	async function save(state) {
 		await pi.appendEntry(ENTRY, {
-			schema: 1, issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
+			schema: 2, lifecycle: "active", issue: state.issue, modelClass: state.modelClass, selectedModel: state.selectedModel,
 			origin: state.origin, authenticationRoute: state.authenticationRoute,
 			selectedEffort: state.selectedEffort,
 			capability: state.capability ?? "mapped",
@@ -245,6 +361,13 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				? [...(sessions?.values() ?? [])].filter(record => record.agentId === ctx.agent.parentId) : [];
 			if (parents.length > 1) throw new Error("Parent undertaking identity is ambiguous");
 			const saved = storedState(ctx);
+			if (saved?.retired) {
+				state = { ...saved, sessionId, cancelled: true, status: "blocked", reason: "The owning undertaking was cancelled; this child cannot resume execution" };
+				publish(ctx, state);
+				reportRejection(ctx, state, new Error(state.reason));
+				ctx.abort();
+				return;
+			}
 			if (!expected && !saved && ctx.agent?.kind === "sub" &&
 				([...pendingChildren].some(record => record.key === ctx.agent.id) ||
 					retiredChildren.get(ctx.modelRegistry.authStorage)?.has(JSON.stringify([ctx.agent.parentId, ctx.agent.id])) ||
@@ -260,6 +383,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			state = {
 				...(parent ?? saved), sessionId, lease: undefined,
 				...(expected?.consultation ?? {}),
+				ownerState: parent,
 				status: (expected?.consultation || saved?.consultation) ? "consultation" : saved?.recovery ? "blocked" : "pending", observedModel: null,
 				workerModels: ctx.models,
 				selectedModel: expected?.consultation?.selectedModel ?? (parent ? selector(ctx.models.current()) : saved.selectedModel),
@@ -279,9 +403,15 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			installPool(ctx, state);
 			if (parent) await save(state);
 		} catch (error) {
-			state ??= { sessionId, status: "blocked", issue: null, modelClass: null, selectedModel: null };
+			const saved = savedEntry(ctx)?.data;
+			state ??= {
+				sessionId, status: "blocked",
+				issue: Number.isSafeInteger(saved?.issue) && saved.issue > 0 ? saved.issue : null,
+				modelClass: null, selectedModel: null,
+			};
 			publish(ctx, state);
 			routeError(state, error.message);
+			reportRejection(ctx, state, error);
 			ctx.abort();
 		}
 	}
@@ -303,6 +433,9 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		execute: async (_id, params, _signal, _update, ctx) => {
 			const previous = current(ctx);
 			const sessionId = ctx.sessionManager.getSessionId();
+			if (previous && isCancelled(previous)) return {
+				isError: true, content: [{ type: "text", text: "A cancelled undertaking cannot authorize this child." }], details: describe(ctx),
+			};
 			if (previous?.consultation) return {
 				isError: true, content: [{ type: "text", text: "A model consultation cannot reassign the parent undertaking worker." }], details: describe(ctx),
 			};
@@ -390,7 +523,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					else { states.delete(sessionId); scope(ctx)?.delete(sessionId); }
 					if (state?.selectedModel) {
 						if (previous) await save(previous);
-						else await pi.appendEntry(ENTRY, { schema: 1, issue: params.issue, completed: true });
+						else await pi.appendEntry(ENTRY, { schema: 2, issue: params.issue, lifecycle: "cancelled" });
 					}
 				} else {
 					state.status = "blocked";
@@ -399,7 +532,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					publish(ctx, state);
 					await save(state);
 				}
-				return { isError: true, content: [{ type: "text", text: `Undertaking route gap: ${error.message}` }], details: describe(ctx) };
+				return { isError: true, content: [{ type: "text", text: `Undertaking route gap: ${error.message}. Use /undertaking status for local recovery.` }], details: describe(ctx) };
 			}
 		},
 	});
@@ -411,10 +544,10 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		parameters: pi.zod.object({ issue: pi.zod.number().int().min(1) }),
 		execute: async (_id, params, _signal, _update, ctx) => {
 			const state = current(ctx);
-			if (!state || state.issue !== params.issue) return {
+			if (!state || state.issue !== params.issue || isCancelled(state)) return {
 				isError: true, content: [{ type: "text", text: "No matching undertaking owns this session." }], details: describe(ctx),
 			};
-			await pi.appendEntry(ENTRY, { schema: 1, issue: state.issue, completed: true });
+			await pi.appendEntry(ENTRY, { schema: 2, issue: state.issue, lifecycle: "completed" });
 			release(ctx, state);
 			return { content: [{ type: "text", text: "Undertaking route finished." }], details: describe(ctx) };
 		},
@@ -427,7 +560,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	}
 
 	function workerReady(ctx, state) {
-		if (state.status !== "verified" || state.consultation ||
+		if (isCancelled(state) || state.status !== "verified" || state.consultation ||
 			selector(state.workerModels.current()) !== state.selectedModel ||
 			(state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort)) return false;
 		try {
@@ -442,8 +575,9 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		// Side requests on independently selected helper models are not undertaking workers.
 		// Keep the live query captured outside this request: request contexts bind
 		// both model accessors to the request model, including helper requests.
-		if (selector(ctx.model) !== selector(state.workerModels.current())) return;
+		if (!isCancelled(state) && selector(ctx.model) !== selector(state.workerModels.current())) return;
 		try {
+			if (isCancelled(state)) throw new Error("The owning undertaking was cancelled; execution is not authorized");
 			if (consultation(ctx, state)) return;
 			if (state.consultation) {
 				if (state.status === "blocked") throw new Error(state.reason);
@@ -459,6 +593,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Worker authentication route changed");
 		} catch (error) {
 			// Reject this request without poisoning the selected route needed for recovery.
+			reportRejection(ctx, state, error);
 			ctx.abort();
 			throw error;
 		}
@@ -475,6 +610,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 				(part.name === "write" && part.arguments?.path === "xd://daily_driver_route_undertaking")));
 		if (requestsSelection) selecting.add(sessionId);
 		const state = current(ctx);
+		if (isCancelled(state)) return;
 		if (state?.status === "verified" && !requestsSelection &&
 			`${message?.provider}/${message?.model}` === state.selectedModel) selecting.delete(sessionId);
 		if (!state || state.status !== "pending") return;
@@ -490,6 +626,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	pi.on("tool_call", (event, ctx) => {
 		const state = current(ctx);
 		const failure = failures.get(ctx.sessionManager?.getSessionId?.());
+		if (isCancelled(state)) return { block: true, reason: "The owning undertaking was cancelled; execution is not authorized" };
 		// Operator consultation tools do not verify or reassign the undertaking worker.
 		if (state && consultation(ctx, state) && !selecting.has(ctx.sessionManager?.getSessionId?.())) return;
 		if (!failure && (!state || workerReady(ctx, state) || state.consultation && state.status === "consultation") &&
@@ -507,6 +644,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		const state = current(ctx);
 		if (!state) return;
 		try {
+			if (isCancelled(state)) throw new Error("The owning undertaking was cancelled; execution is not authorized");
 			const mention = modelMention(ctx, event.agent);
 			if (!mention && !workerReady(ctx, state)) throw new Error("Parent undertaking route is not verified on the selected worker");
 			if (!event.patterns?.length) throw new Error("Child effective model route is unavailable");
@@ -548,6 +686,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		states.delete(state.sessionId);
 		selecting.delete(state.sessionId);
 		failures.delete(state.sessionId);
+		rejections.delete(state.sessionId);
 		status(ctx, undefined);
 	}
 
