@@ -27,6 +27,12 @@ skipped in the common case where the work already has an issue. Where it does
 not, that step supplies one: an issue is what this skill takes in, and
 untracked work is what running without one leaves behind.
 
+Each user-facing blocked reply, including a reminder, names the stopped
+operation, the concrete failure or restriction and its source, the smallest
+contribution needed, and what action follows that contribution. Do not reduce
+these facts to “consent pending” or imply unchanged work has progressed. Keep
+private sources and secrets out of public replies.
+
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
 restate**. The task branch and execution root live in `task-worktree`, the
 title convention in `pr-title`, the pull request itself in `pr`, the review
@@ -655,11 +661,6 @@ On resume, revalidate current evidence and authority, then remove only
 satisfied or stale blocker text and the corresponding PR `human` label while
 preserving unrelated labels and every still-valid requirement. Continue the
 next permitted action without repeating unchanged approval requests.
-Each user-facing blocked reply, including a reminder, names the stopped
-operation, the concrete failure or restriction and its source, the smallest
-contribution needed, and the actual resume action. Do not reduce these facts
-to “consent pending” or imply that unchanged work has progressed. Keep private
-sources and secrets out of public replies.
 
 
 **Retain the stop decision, not only its conclusion.** Use the existing claim,
