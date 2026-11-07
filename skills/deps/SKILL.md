@@ -69,8 +69,8 @@ unresolved.** Report the dependency and constraint. Do not call it fixed or
 cross the unattended boundary to take the major upgrade.
 
 A red suite is still answered by finding which upgrade broke what, and never
-by pinning around the failure, skipping the test, or silencing it — the
-constitution's *Fix problems, do not hide them*.
+by pinning around the failure, skipping the test, or silencing it —
+`provenance`'s test discipline.
 
 
 
@@ -133,7 +133,7 @@ The command is whatever that manager calls its bulk upgrade:
 **The table is a convenience, not the rule.** The rule is *the manager that
 wrote the lockfile is the manager that updates it*, and a manager missing from
 the table is looked up in its own manual rather than guessed at — the
-constitution's *RTFM*. Maven, Gradle and Docker are the common ones absent
+constitution's “manuals first” rule. Maven, Gradle and Docker are the common ones absent
 here.
 
 Some ecosystems have no package manager to run at all. A GitHub Actions pin

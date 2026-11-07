@@ -167,11 +167,21 @@ and summarizer requests, and Claude/Codex summarizer/title requests, are not
 subject delivery. These captures prove access, not autonomous policy compliance.
 
 Retrieval is not free. Current full source sizes are 8,493 bytes for `provenance`,
-8,033 for `pr`, and 82,338 for `undertake`. Read only the relevant policy when
+8,033 for `pr`, and 82,334 for `undertake`. Read only the relevant policy when
 the issue sequence is not needed; retain retrieved context instead of repeating
 reads. Report actual returned context, truncation and repeated reads in behavioral
 records. Lower always-loaded bytes do not establish lower total cost or better
 reliability. Scripted usage counters are not inference-cost evidence.
+
+The actual SDK/bundled Codex 0.154.0 adapter also delivered the 2,482-byte core
+once in each of five parent/child loopback requests. Two containment requests
+confirmed read access and denied writes and shell network access. All 16 invalid
+reviewed-payload cases failed as non-retryable configuration errors before any
+provider request. Unrelated host hooks and MCP processes stayed absent, without
+requiring a native-home `hooks.json` or changing shared configuration.
+The frozen `bd089b6` proof is under
+`disclosure-release-20261107/codex-preparation/compact-core-adapter-proof-bd089b6/`
+in ignored `evals/runs/`. It does not prove Git-write capability or model behavior.
 
 ## Sensitive handoff examples
 

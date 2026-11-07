@@ -109,7 +109,7 @@ The sequence
 | 2 | `Read the issue and its edges` | the harness's issue client, `issue-deps`, `issue-labels` |
 | 3 | `Establish task worktree` | `task-worktree` |
 | 4 | `Claim the issue` | this skill |
-| 5 | `Implement` | the constitution |
+| 5 | `Implement` | `provenance` |
 | 6 | `Open the draft` | `pr` |
 | 7 | `Review the head` | `review-cycle` |
 | 8 | `Fix, answer, resolve, push` | `review-cycle` |
