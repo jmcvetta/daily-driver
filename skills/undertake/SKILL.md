@@ -655,6 +655,12 @@ On resume, revalidate current evidence and authority, then remove only
 satisfied or stale blocker text and the corresponding PR `human` label while
 preserving unrelated labels and every still-valid requirement. Continue the
 next permitted action without repeating unchanged approval requests.
+Each user-facing blocked reply, including a reminder, names the stopped
+operation, the concrete failure or restriction and its source, the smallest
+contribution needed, and the actual resume action. Do not reduce these facts
+to “consent pending” or imply that unchanged work has progressed. Keep private
+sources and secrets out of public replies.
+
 
 **Retain the stop decision, not only its conclusion.** Use the existing claim,
 orchestrator and stop-decision records to preserve the current owner, exact
