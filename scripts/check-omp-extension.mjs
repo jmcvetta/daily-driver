@@ -144,6 +144,7 @@ function fakeApi(overrides = {}) {
 		registerTool(def) {
 			tools.set(def.name, def);
 		},
+		registerCommand() {},
 		getActiveTools: () => ["read", "write"],
 		getAllTools: () => [...tools.values()],
 		async appendEntry(customType, data) {
@@ -3219,7 +3220,7 @@ function guardWithPath(binDir, target, env = {}, call = null) {
 				"const handlers = new Map();",
 				"const node = (m) => ({ describe: () => node(m), min: () => node(m), max: () => node(m), int: () => node(m), optional: () => node(m) });",
 				"const pi = { zod: { object: (s) => s, string: () => node({}), number: () => node({}) },",
-				"  on: (e, h) => { const registered = handlers.get(e) ?? []; registered.push(h); handlers.set(e, registered); }, registerTool: () => {}, setSessionName: async () => {},",
+				"  on: (e, h) => { const registered = handlers.get(e) ?? []; registered.push(h); handlers.set(e, registered); }, registerTool: () => {}, registerCommand: () => {}, setSessionName: async () => {},",
 				"  sendMessage: () => {}, setTimeout: () => 1, clearTimer: () => {} };",
 				"mod.default(pi);",
 				`const target = ${JSON.stringify(target)};`,

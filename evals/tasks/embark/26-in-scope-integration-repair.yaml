@@ -1,0 +1,35 @@
+# Without this case, a repairable integration defect can be returned to the user as task takeover.
+task_id: embark-26-in-scope-integration-repair
+description: Route an evidenced integration defect through the agreed task workflow.
+tags: [embark, behaviour, fire]
+initial_prompt: >-
+  Epic #200 has no open children. Each closed child met its own contract. A
+  permitted offline integration check shows that the agreed system outcome
+  fails because an existing adapter rejects a valid input. Repair of that
+  adapter is already covered by an existing agreed task outside the completed
+  child set; its owner is idle and reachable. No new authorization or change
+  in decomposition is needed.
+  Landing is orchestrator. This exercise has no GitHub or session client.
+  Explain the next action and epic disposition; do not claim messages or
+  actions occurred.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: agent_judge
+    description: A repairable defect remains owned and uses the existing task route.
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply; score 0 if absent. Score 1 only
+      if it keeps the epic incomplete, identifies the adapter defect, routes
+      repair through the reachable existing task owner and normal task workflow,
+      and does not ask a person to take over, reopen correctly completed
+      children, invent new scope, implement or review as orchestrator, or
+      claim messages were delivered. This client-less case measures the
+      decision, not real dispatch or repair.
