@@ -154,6 +154,17 @@ lists exclude the `write` device route, so the comparison measures workflow
 decisions and actual fixture actions, not stop-controller enforcement. The
 installed-runtime check below covers that separate boundary.
 
+Issue #835 adds task-authoring, requested-plugin, and blocked-reminder cases.
+The fixture records local operations, not real service changes. The first
+[focused run](provenance/omp-gpt-6-1-sol-2026-11-07-2026-11-07_16-36-19.json)
+passed four of five cases, including revoked and excluded controls. The
+reminder omitted the action after confirmation. After moving the instruction
+to the skill opening, the
+[reminder rerun](provenance/omp-gpt-6-1-sol-2026-11-07-2026-11-07_16-41-39.json)
+passed; that rerun used a dirty checkout. Each case ran once with requested
+Omp `openai-codex/gpt-6.1-sol` subject and judge. The subject identity was
+unreported. These small runs do not establish fleet reliability.
+
 The existing `make check-omp-embark-title-live` suite runs the title barrier
 and task-state regressions against installed Omp with local scripted providers.
 The task-state scenario checks persisted approval, two corrective continuations,
