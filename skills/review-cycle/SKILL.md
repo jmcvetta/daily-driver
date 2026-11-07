@@ -365,7 +365,7 @@ one more targeted pass over that correction delta and its regression risk.
 That repeats while the passes keep finding defects.
 
 **Three consecutive passes that each record defects is the wall**, in the
-sense the constitution's *When you hit a wall* gives it: the corrections are
+sense `undertake`'s operational escalation policy gives it: the corrections are
 not converging, and a fourth attempt is the push-through that rule forbids.
 Stop there. Post the outstanding defects on the pull request, leave (or
 return) the pull request in draft, keep the caller's watch armed, and say in

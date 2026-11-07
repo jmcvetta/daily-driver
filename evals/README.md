@@ -241,6 +241,65 @@ No reduction in unjustified stopping is established by this small comparison.
 The valid cases were already at ceiling in the base variant. Runtime
 enforcement is separately exercised by the installed scripted-provider check.
 
+## Progressive disclosure comparison
+
+The [runtime integration guide](../docs/harness-integration.md#core-delivery-and-workflow-retrieval)
+records complete-source and actual-delivery byte counts for the compact core.
+Current and historical baselines are named in that guide. Installed local-provider
+captures prove delivery, not voluntary model compliance.
+
+The new `constitution/disclosure-ordinary-commit.yaml` and
+`constitution/disclosure-ci-policy.yaml` cases cover ordinary requests without
+an issue, PR, or slash command. They record workflow retrieval separately from
+semantic outcomes: the base already carries those requirements in its core.
+Use them with the existing production refusal, authorized public search,
+approval-resume, worktree isolation, pending-CI, delegated-delivery,
+requested-explanation, and read-only negative controls. Freeze both revisions,
+the exact cases, tool boundaries, replicates, and execution limits before a
+comparison. Preserve every completed or failed attempt when repairing the
+implementation or evaluation boundary; a failed fixture is not behavioral parity.
+
+The Codex comparison opts into `lifecycle_hooks: true` and `offline_fixture:
+true`, with an explicit allowed-tools list. Use either separate reviewed native
+homes or `reviewed_hook_payload` to select frozen hooks while retaining normal
+account lookup. The payload accepts only command hooks with explicit trust,
+MCP entries containing `enabled: false`, and disabled `plugins`, `plugin_hooks`
+and `apps`. It cannot expand sandbox or launch settings. Before each communication,
+the adapter inspects effective native metadata at the actual task directory;
+unexpected managed hooks, inherited capabilities or invalid trust fail before a
+model turn. Inspection changes no shared files and starts no model. The SDK's
+bundled binary can differ from `codex` on PATH; record the one actually launched.
+Skill symlinks alone do not establish treatment.
+`offline_fixture` disables network access and extra writable roots. Read-only
+cases cannot write; write-enabled cases stay within the workspace. Read/Skill
+use the native shell, not exact Claude tool-name filtering. Delegated children
+inherit native confinement. Do not remove `skip:codex` globally: enable only
+declared cases whose actual capabilities and rubric have been checked. A
+source-quotation case that allows native shell writes also permits reads; it
+does not prove exclusive hook delivery on Codex.
+
+The Omp file boundary admits a sibling worktree only after Git proves its
+registration, matching common directory and linked-worktree placement.
+Canonical containment still rejects unrelated repositories, unregistered
+siblings, symlink escapes and undeclared treatment sources. A valid Worktrunk
+worktree must not fail ordinary repository cases solely because it is a sibling.
+
+Native provider retry limits are not a campaign-wide no-retry setting. The
+installed runner permits up to three crash, four API-error, or six rate-limit
+attempts per communication. Include up to six attempts per planned communication
+in the campaign envelope, plus judge/helper work. Attempts and tool-turn ceilings
+are not API-request caps. Preserve failed turns and partial records; do not
+count provider errors as behavioral passes. A scripted provider is not a
+behavioral comparison.
+
+Report raw startup and delegated bytes separately from complete-delivery
+normalization. Claude's broken baseline delivers a small preview at startup;
+restoring its missing safety core increases actual startup bytes. Normalized
+source reduction does not satisfy a literal raw-startup-decrease criterion.
+Report retrieval volume/counts, latency, reported usage and cost limitations.
+Do not infer lower total cost or reliability from a smaller core.
+
+
 ## Provenance
 
 Every measured figure must cite a committed record under
@@ -1188,8 +1247,9 @@ pass.
 The case no longer grades a token planted in the constitution for it to find.
 It grades a phrase the constitution says in its own prose, and every
 file-reading tool is closed, so the injected copy is the only route to it.
-`scripts/check-constitution.py` holds the two ends together: the phrase is
-still in the file, and no text outside a criterion may name it.
+The offline delivery suite now checks the shipped hook output, metadata,
+finite delivery budget, and absence of prompt rewriting. It no longer tests
+the evaluation grader or scans evaluation files for a marker.
 
 Its negative control survives intact — `command_executed` on `Agent` with
 `max_count: 0` and that phrase as the pattern, asserting the parent did not
@@ -1640,8 +1700,8 @@ grades `--body`.
 **`tasks/constitution/*` is not in this arm**, and carries `skip:codex` to say
 so. That tag takes a row out of one arm and leaves it in the rest, which an arm
 tag cannot express. The reason is that `coder_eval`'s Codex agent links skills
-and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` and no
-`PreToolUse` on the `Agent` tool, and no constitution in the session. Every row
+and installs nothing else — no `hooks/hooks.json`, so no `SessionStart` or
+`SubagentStart` context and no constitution in the session. Every row
 there would score 0 for a reason that has nothing to do with the constitution. #181
 measured that a *real* Codex session does load the hook file and does deliver
 the constitution, behind persisted hook trust and an exactly-echoed

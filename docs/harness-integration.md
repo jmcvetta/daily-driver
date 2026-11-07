@@ -8,21 +8,16 @@ skills and the constitution injected by runtime hooks.
 
 ## Runtime integration
 
-Claude Code and Codex use hooks for the constitution and chat-based question
-routing. Codex subagent injection is not verified: its configured
-`SubagentStart` event was not observed, as the [Codex integration
-note](notes/0016-three-harnesses-one-skill-tree.md#known-limits-recorded-rather-than-fixed)
-records.
+Claude Code and Codex use startup hooks for the shared core and chat-based
+question routing. Omp's rule provider loads the same core directly.
 
-The constitution source is `rules/constitution.md`. Both the hooks and Omp's
-rule provider deliver its complete Markdown body after removing the
-`alwaysApply: true` frontmatter; they do not select individual sections.
-The hook table below describes the hook routes. Omp loads the file directly
-as a rule, as described below.
+The source is `rules/constitution.md`. Each route delivers its Markdown body
+without the `alwaysApply: true` frontmatter. Task-specific detail stays in its
+owning skill; the [existing catalog](../skills/README.md) maps those workflows.
 
 | Hook | Event | Purpose |
 | ---- | ----- | ------- |
-| `inject-constitution.py` | `SessionStart`, `SubagentStart`, and `PreToolUse` on `Agent`/`Task` | Delivers the constitution at session start; Codex subagent delivery is unverified. |
+| `inject-constitution.py` | `SessionStart` and `SubagentStart` | Delivers the complete core without rewriting delegated prompts. |
 | `ask-in-chat.py` | `PreToolUse` on `AskUserQuestion`/`request_user_input` | Blocks the question widget and directs questions to chat. |
 | `title-gate.py` | Issue-comment and session-creation events | On Claude Code cloud sessions, holds the first issue comment and dispatch until the session is titled. |
 
@@ -30,9 +25,167 @@ Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
 
+## Core delivery and workflow retrieval
+
+The always-loaded core retains production and dangerous-command prohibitions,
+approval authority, cancellation, isolation, evidence, and execution boundaries.
+Coding, testing, script and commit discipline live in `provenance`. Validation
+and recurring CI policy live in `pr`. Delegation, manual frontier return and
+unfinished-stop detail live in `undertake`'s execution policy. Policy-only reads
+do not create an issue or PR. `task-worktree` and `issue` retain their existing
+isolation and bug-reporting responsibilities. The core and skill descriptions
+require retrieval before action, including ordinary work without slash commands.
+Reuse context still present; reassess after transitions, resume and compaction.
+Delegated workers retrieve their own required workflows.
+
+`SubagentStart` supplies standing context on both hook harnesses. The obsolete
+`PreToolUse` prompt rewrite is removed; it duplicated Claude child context and
+did not reach the former Codex delegation route. Native Codex 0.160.0 child
+delivery is now observed with a local scripted Responses provider. Its function
+call uses `namespace: "multi_agent_v1"` and `name: "spawn_agent"`.
+
+### Initial measurement (superseded)
+
+Offline installed-runtime captures used Omp 18.15.0, Claude Code 2.1.267, and
+Codex 0.160.0. Providers listened on loopback only and used disposable homes
+with no external credentials. Scripted replies exercised actual native tools
+and request construction; they do not establish model compliance or behavioral
+parity.
+
+The recorded base is `42b5bddb42cffffeab14678b446eed52a3c6bb23`.
+UTF-8 byte counts, not tokenizer counts, are used:
+
+| Complete source/delivery unit | Base | Candidate |
+| --- | ---: | ---: |
+| Constitution file, including frontmatter | 13,913 | 8,429 |
+| Omp body, excluding frontmatter | 13,883 | 8,399 |
+| Rendered hook core, including standing-authority header | 14,197 | 8,713 |
+
+Actual delivery differs from the complete-source comparison:
+
+- Omp main and native child requests each contained one complete core in both
+  arms. Candidate native task completion, task transition, manual RPC compaction,
+  and a new resumed process were observed. The resumed request retained the
+  complete core and executed the CI-policy read.
+- Claude baseline startup supplied a roughly 2 KB preview of a persisted hook
+  output, not the full core. Its startup hook wrapper occupied 2,532 UTF-8 bytes
+  in the recorded request; candidate complete delivery occupied 8,770 bytes.
+  Baseline child requests carried a full prompt-prepended core plus another
+  startup preview. Candidate child requests carried one complete core and the
+  original delegated prompt without a rewrite. Startup delivery grows when the
+  missing safety instructions are restored; source reduction does not satisfy
+  a literal decrease in actual startup bytes.
+- Codex baseline main and child requests each carried one truncated hook block
+  of 10,107 bytes. Candidate main and child requests each carried the complete
+  8,713-byte core once. Its default `additionalContext` threshold is 2,500
+  approximate tokens; the manifest explicitly uses a finite 5,000-token budget.
+
+The delivery suite bounds the rendered core to 9,000 UTF-8 bytes. Do not raise
+that budget or lengthen the core without a new installed-runtime proof of
+complete delivery. Reintroducing a preview is not a context saving. Restore or
+relocate any control needed by a failing comparison; do not weaken the rubric.
+
+### Reconciled measurement — 2026-11-07 (superseded)
+
+The current baseline is `f053d4ce63b97ee51abec43da0a86d1df4f8bc6a`.
+The reconciled candidate retains the baseline's headless execution, protected
+handoff, CI-scope, and bounded-experiment requirements. Measurements use UTF-8
+bytes, not estimated tokens. The earlier measurements above remain historical.
+That reconciled candidate core has SHA-256
+`39075eb1cd25647ebc32b84f94ceb10e46251f16a37f263199991ea25ccb1076`.
+
+| Delivered unit | Current base | Reconciled candidate |
+| --- | ---: | ---: |
+| Constitution file | 18,502 | 8,761 |
+| Omp core body, main and child | 18,474 | 8,733 |
+| Claude raw startup hook wrapper | 2,564, preview only | 8,955, complete |
+| Codex startup/child hook block | 10,107, truncated | 8,880, complete |
+
+Loopback providers and disposable credential-free homes exercised Omp 18.18.0,
+Claude Code 2.1.267, and Codex CLI 0.160.0. Candidate captures contain one
+complete core on main and native child subject requests, task switching, and
+Omp/Claude resume after compaction. Codex resume retains two complete hook
+blocks (17,760 bytes); after native compaction both remain. Baseline Codex also
+accumulates two truncated blocks. This is actual repeated delivery, not a
+single-copy measurement. Summarizer and skill-preparation requests are not
+subject-core delivery. Scripted providers prove delivery and workflow access,
+not autonomous compliance; their fabricated usage counters are not inference
+cost evidence.
+Task-private `disclosure_omp_probe.py`, `disclosure_claude_probe.py`, and
+`disclosure_probe.py` produced the captures under ignored `evals/runs/`.
+The candidate runs used 35, 11, and 12 local provider requests respectively.
+Their main, child, switch, compact, and resume phases completed. These are
+request-construction experiments, not inference-cost or model-behavior results.
+
+The opt-in `codex-daily-driver` adapter was also exercised through its actual SDK
+and bundled Codex 0.154.0, with reviewed native hook trust. Its five parent/child
+requests each contained one complete 8,880-byte core. Read-only and
+workspace-write confinement, blocked network access, and disabled shell/child
+tools were observed. Injected HTTP errors and broken streams each produced a
+crashed partial record rather than a false success. Native zero-retry provider
+settings made one request per injected failure, but the unchanged runner made
+four HTTP-error attempts and three broken-stream attempts. Its maximum is six
+communication attempts for rate-limit errors, not an API-request cap.
+The final task-private proof is
+`evals/runs/disclosure-codex-adapter-final-core-isolated/proof-evidence.json`;
+earlier overlapping-home captures are preserved but excluded.
+
+At that checkpoint, the hook payload had 120 bytes below the 9,000-byte ceiling.
+Claude's raw startup grew when the missing safety core was restored. The literal
+startup-decrease criterion was not met. Those captures remain historical; the
+later relocation below addresses the original criterion without an amendment.
+
+
+### Compact delivery — 2026-11-07
+
+The final relocated core has SHA-256
+`ba084cdc07418d019805603a536431e1a0d5f4f286480802248ea7dd7d6c169b`.
+The baseline remains `f053d4ce63b97ee51abec43da0a86d1df4f8bc6a`.
+Counts are UTF-8 bytes from actual request strings, not token estimates:
+
+| Delivered unit | Base | Compact candidate |
+| --- | ---: | ---: |
+| Constitution source | 18,502 | 2,473 |
+| Omp main/child core body | 18,474 | 2,445 |
+| Claude startup hook wrapper | 2,568, preview | 2,557, complete |
+| Codex startup/child hook block | 10,107, truncated | 2,482, complete |
+| Codex resumed/compacted core blocks | 20,214, truncated | 4,964, complete |
+
+The Claude startup reduction is small: 11 bytes in the controlled capture.
+The earlier baseline wrapper was 2,564 bytes; the candidate is also smaller
+than that capture. Persisted-output paths affect preview overhead. Both controlled
+Claude sandboxes are empty Git repositories; native system text is identical in
+length. Do not count an inherited repository's conflict status as an instruction
+saving.
+
+New credential-free loopback captures are `disclosure-{omp,claude,codex}-release-proof`
+under ignored `evals/runs/`. They exercised startup, native children, task
+switching, compaction and resume on Omp 18.18.0, Claude Code 2.1.267 and Codex
+CLI 0.160.0. They used 35, 11 and 12 local requests. Subject requests retain
+one complete core, except Codex resume's two observed blocks. Omp preparation
+and summarizer requests, and Claude/Codex summarizer/title requests, are not
+subject delivery. These captures prove access, not autonomous policy compliance.
+
+Retrieval is not free. Current full source sizes are 8,493 bytes for `provenance`,
+8,033 for `pr`, and 82,334 for `undertake`. Read only the relevant policy when
+the issue sequence is not needed; retain retrieved context instead of repeating
+reads. Report actual returned context, truncation and repeated reads in behavioral
+records. Lower always-loaded bytes do not establish lower total cost or better
+reliability. Scripted usage counters are not inference-cost evidence.
+
+The actual SDK/bundled Codex 0.154.0 adapter also delivered the 2,482-byte core
+once in each of five parent/child loopback requests. Two containment requests
+confirmed read access and denied writes and shell network access. All 16 invalid
+reviewed-payload cases failed as non-retryable configuration errors before any
+provider request. Unrelated host hooks and MCP processes stayed absent, without
+requiring a native-home `hooks.json` or changing shared configuration.
+The frozen `bd089b6` proof is under
+`disclosure-release-20261107/codex-preparation/compact-core-adapter-proof-bd089b6/`
+in ignored `evals/runs/`. It does not prove Git-write capability or model behavior.
+
 ## Sensitive handoff examples
 
-The [constitution](../rules/constitution.md#non-negotiables) owns the headless
+The [constitution](../rules/constitution.md) owns the headless
 default and protected-file handoff contract. These are example user notices
 after creating an owner-only file with POSIX mode `0600` outside the repository,
 build contexts and published artifacts. Paths are illustrative, not deliveries.
@@ -54,7 +207,6 @@ build contexts and published artifacts. Paths are illustrative, not deliveries.
 
 These notices disclose neither credentials nor device codes. Device approval
 is the user's authentication action; it does not renew task approval.
-
 ## Task continuation and approval evidence
 
 The constitution requires agents to diagnose ordinary failures, preserve
@@ -132,7 +284,7 @@ files remain process overlays; assignments present at startup take precedence,
 and later edits may require an Omp restart.
 
 An operator's manual escalation during a failing task authorizes the
-consultation. Follow the constitution's *Manual frontier escalation*: repair
+consultation. Follow `undertake`'s *Manual frontier escalation* policy: repair
 the plan and return the existing work to a verified eligible non-frontier
 route. The escalation does not authorize frontier implementation or supervision.
 

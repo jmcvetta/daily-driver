@@ -1,10 +1,9 @@
 ---
 name: provenance
 description: >-
-  This skill should be used before any GitHub write an agent makes — a pull
-  request, issue or epic body; a comment; a review or review reply — and
-  before any commit, so the artifact and the commit both name the model,
-  harness and session that produced them. Supplies the trailing provenance
+  Read before code, repository edits, script execution, commits, or GitHub
+  writes. Owns coding and commit discipline as well as contribution attribution.
+  Supplies the trailing provenance
   block's shape and placement, the rule for reading the model that served the
   turn against the one the session was set to, the harness name and version,
   the session identifier or `n/a`, the rule for retaining distinct attribution
@@ -95,8 +94,52 @@ and once-per-undertaking rules for the block they carry; this section governs
 every other body and comment.
 
 
+Coding and script discipline
+============================
+
+This policy applies to ordinary work, resumed work and delegated work, not
+only issues or pull requests. Read it before the first code change or script.
+Reading this policy does not authorize repository changes or a GitHub write.
+
+- **Code without tests is broken.** Say so. Application tests assert, fail
+  loudly, ship with their code, and run offline against fixtures, not live third
+  parties. Manual checks are not tests. Cover silent errors. Test doc comments
+  name the wrong behavior that would otherwise pass; delete tests that cannot.
+- OpenTofu-like declarations use offline `validate`. Test production
+  infrastructure with infrastructure tools, not ad hoc scripts. Do not test
+  tests or testing machinery unless it is the shipped product. Remove tests of
+  checks, lint/static analysis, CI, selectors/filters, fixtures/fakes/helpers,
+  eval harnesses, graders/judges, and rendered eval results.
+- **Name every script you run.** List each executable explicitly. Never expand
+  a glob into a directory of executables.
+- Never skip, disable, silence, or delete a test to reach green. Report its
+  failure and plan its repair. `pr` owns validation and CI execution policy.
+- Prefer obvious code and existing FOSS libraries; do not reinvent them.
+  Discuss unavoidable workarounds before writing them. Correctness outranks speed.
+- Use professional specification vocabulary for every name, including files,
+  symbols, commits, and branches. No slang, casual shorthand, or cleverness.
+- New exported symbols in any language need concise GoDoc-style behavioral
+  comments, not obvious restatements. Do not sweep old symbols.
+- Use package managers to add, upgrade, or pin dependencies. Never hand-edit
+  manifests or lockfiles.
+
+
 Commits
 =======
+
+Commit discipline applies to ordinary repository work as well as issue and PR
+work. Read it before the first edit, not only when a commit is ready.
+
+- **Frequent, focused commits.** One logical task per commit, spanning as many
+  files as that takes. Commit as you work without asking permission. Plan where
+  the commits fall and leave no uncommitted changes when a task is finished.
+- **Commit messages are not Conventional Commits.** Use concise, scannable
+  detail. PR titles follow `pr-title`.
+- **Stage named files.** Never use `git add -A` or `git add .`.
+- **Do not commit junk.** Keep agent logs, compressed log archives, scratch
+  files, and other disposable artifacts out of Git. Compression does not give
+  disposable output a lasting purpose. Check that every staged file has one.
+
 
 Every commit an agent makes keeps GitHub's `Co-Authored-By: <name> <address>`
 trailer for the model, and adds a session trailer beside it. **Where the
@@ -111,9 +154,9 @@ inventing a domain, and the commit carries the session trailer alone.
 Non-goals
 =========
 
-- **Does not decide when a write happens.** Every other skill still decides
-  what to write and when; this skill only says what the write carries once
-  it happens.
+- **Does not decide when a GitHub write happens.** The owning workflow decides
+  what to write and when. This skill supplies attribution and local commit
+  discipline; reading it does not authorize a GitHub write.
 - **Does not gate anything on the block's presence.** No readiness test,
   review finding, or merge gate gains a new condition from this skill — a
   write made before this skill existed carries no block, and that is

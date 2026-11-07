@@ -1,15 +1,8 @@
-# The live half of the constitution's acceptance test. The credentials-free half
-# is `scripts/check-constitution.py`, which runs both delivery hooks against
-# synthetic event JSON; this is the half that needs a model.
-#
-# The finding it reproduces (R2): `SessionStart` reaches the main session and
-# does NOT reach subagents, so the plugin carries a second injection point on
-# the `Agent` tool. A subagent can quote the constitution's rule on admitting
-# uncertainty only if that `PreToolUse` hook rewrote the prompt in flight —
-# nobody typed it, and the file-reading tools are closed below, so there is no
-# other route to it. The phrase graded on is `MARKER` in
-# `scripts/check-constitution.py`, which asserts the constitution still says it
-# and that no text outside a criterion here names it.
+# Without this case, startup-only delivery could leave native children without
+# the shared safety core. The child receives SubagentStart context on the hook
+# harnesses and the always-applied rule on Omp. Neither route rewrites the
+# delegated prompt. File-reading tools remain closed, so the injected core is
+# the only source of the graded phrase.
 #
 # ## What changed in the port, and why
 #
@@ -47,13 +40,13 @@
 
 task_id: constitution-reaches-subagent
 description: >-
-  A subagent quotes the constitution's rule on admitting uncertainty, which
-  can only have arrived through the PreToolUse hook on the Agent tool.
+  A native subagent quotes the delivered core's uncertainty rule without
+  receiving the answer in its delegated prompt.
 # `skip:codex` takes this row out of the Codex arm and leaves it in the other
 # two. `coder_eval`'s Codex agent links a plugin root's SKILLS into
 # `.agents/skills/` and installs nothing else — no `hooks/hooks.json`, so no
-# `SessionStart` and no `PreToolUse` on the `Agent` tool, which is the injection
-# point this row exists to measure. Run there it would score 0 for a reason that
+# `SessionStart` or `SubagentStart`. The installed CLI proof is separate.
+# Run there it would score 0 for a reason that
 # has nothing to do with the constitution, which is the failure
 # `docs/notes/0013-the-omp-arm.md` built that arm's plugin install to avoid.
 # What would lift it is in `docs/notes/0015-the-codex-arm.md`.
@@ -126,23 +119,11 @@ success_criteria:
     description: A subagent actually ran
     tool_name: Agent
     min_count: 1
+    max_count: 1
 
-  # R2's control: the prompt Claude *sent* carried no such phrase; the hook injected
-  # it in flight. It holds only while telemetry records PRE-hook input, which
-  # it does — the row is built from the assistant message's `tool_use` block,
-  # emitted before any hook runs.
-  #
-  # Note which way it would break, which inverted when the marker became prose.
-  # `command_executed` matches `json.dumps(parameters)` truncated to 2000
-  # characters, and the phrase sits at offset 1181 of `json.dumps(updatedInput)`
-  # — the post-rewrite input this control asserts is *not* what gets recorded,
-  # measured on this branch — so it is inside the window. If the trace ever
-  # started recording input after the rewrite, this control would fail loudly
-  # rather than pass vacuously, which is the right way round.
-  #
-  # What to re-check is therefore the offset, not the recording point: a
-  # section added ahead of Voice pushes the phrase past 2000 characters, and
-  # the control goes quietly vacuous the way the old token's did.
+  # The parent must not supply the answer in its tool input. Native startup
+  # context leaves that prompt unchanged. This control is about the recorded
+  # tool input, not an assumption that a hook rewrote it after recording.
   - type: command_executed
     description: The parent did not supply the answer
     tool_name: Agent

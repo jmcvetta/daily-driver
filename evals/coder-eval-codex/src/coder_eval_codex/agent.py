@@ -36,7 +36,10 @@ Nothing here can be exercised without a `coder_eval` install and the Codex SDK.
 
 from __future__ import annotations
 
+import json
 import logging
+import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
 
@@ -62,11 +65,18 @@ SKILLS_DIR = Path(".agents") / "skills"
 class CodexDailyDriverAgentConfig(CodexAgentConfig):
     """Configuration for the `codex-daily-driver` kind.
 
-    Every field is `CodexAgentConfig`'s. Only the discriminator differs, because
-    `coder_eval` routes a raw config dict to its class by the registered kind.
+    The inherited fields keep their existing meaning. Focused delivery
+    comparisons opt into trusted lifecycle hooks and offline fixture confinement.
     """
 
     type: Literal["codex-daily-driver"]  # type: ignore[assignment]
+
+    #: Activate native lifecycle hooks in an explicitly prepared CODEX_HOME.
+    lifecycle_hooks: bool = False
+    #: Confine fixture writes and disable non-fixture native capabilities.
+    offline_fixture: bool = False
+    #: Reviewed hook payload selects frozen hooks without changing native account lookup.
+    reviewed_hook_payload: str | None = None
 
 
 class CodexDailyDriverAgent(CodexAgent):
@@ -88,9 +98,11 @@ class CodexDailyDriverAgent(CodexAgent):
             instance_name: Short label prefixing this instance's log records.
         """
         super().__init__(config, route, instance_name=instance_name)
+        self.config: CodexDailyDriverAgentConfig
         self._linked_skills: list[str] = []
         self._retagged_turns = 0
         self._already_tagged_turns = 0
+        self._reviewed_hook_payload: dict[str, Any] | None = None
 
     async def start(
         self,
@@ -121,6 +133,16 @@ class CodexDailyDriverAgent(CodexAgent):
         what was taken up. Requiring a readable `SKILL.md` is what makes it an
         answer at all rather than a count of directory entries.
         """
+        self._reviewed_hook_payload = None
+        if self.config.reviewed_hook_payload is not None:
+            self._reviewed_hook_payload = self._load_reviewed_hook_payload()
+        elif self.config.lifecycle_hooks:
+            home = os.environ.get("CODEX_HOME")
+            if not home or not (Path(home) / "hooks.json").is_file():
+                raise AgentConfigError(
+                    "codex-daily-driver: lifecycle_hooks needs an explicit, "
+                    "pre-reviewed CODEX_HOME/hooks.json for this frozen arm"
+                )
         if self.config.plugins:
             try:
                 self.config.plugins = resolve_local_plugins(list(self.config.plugins), base=Path.cwd())
@@ -147,6 +169,227 @@ class CodexDailyDriverAgent(CodexAgent):
                 f"{SKILLS_DIR}; the arm would run untreated"
             )
 
+    def _load_reviewed_hook_payload(self) -> dict[str, Any]:
+        """Reject settings outside the reviewed hook and native-isolation contract."""
+        if not self.config.lifecycle_hooks or not self.config.offline_fixture:
+            raise AgentConfigError("reviewed_hook_payload requires lifecycle_hooks and offline_fixture")
+        if self.config.allowed_tools is None:
+            raise AgentConfigError("reviewed_hook_payload requires an explicit allowed_tools list")
+        try:
+            payload = json.loads(Path(self.config.reviewed_hook_payload or "").read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, ValueError) as failure:
+            raise AgentConfigError("Unable to read reviewed_hook_payload JSON") from failure
+        if not isinstance(payload, dict) or set(payload) != {"hooks", "mcp_servers", "features"}:
+            raise AgentConfigError("reviewed_hook_payload must contain exactly hooks, mcp_servers, and features")
+        features = payload["features"]
+        if (
+            not isinstance(features, dict)
+            or set(features) != {"plugins", "plugin_hooks", "apps"}
+            or any(value is not False for value in features.values())
+        ):
+            raise AgentConfigError("reviewed_hook_payload may only disable plugins, plugin_hooks, and apps")
+        servers = payload["mcp_servers"]
+        if not isinstance(servers, dict) or any(
+            not isinstance(name, str) or not name
+            or not isinstance(server, dict) or set(server) != {"enabled"}
+            or server["enabled"] is not False
+            for name, server in servers.items()
+        ):
+            raise AgentConfigError("reviewed_hook_payload MCP entries must contain only enabled=false")
+        from openai_codex.generated.v2_all import HookEventName
+
+        hooks = payload["hooks"]
+        events = {event.value[0].upper() + event.value[1:] for event in HookEventName}
+        if (
+            not isinstance(hooks, dict) or not set(hooks) <= events | {"state"}
+            or not hooks.get("SessionStart") or not hooks.get("SubagentStart")
+            or not isinstance(hooks.get("state"), dict)
+        ):
+            raise AgentConfigError("reviewed_hook_payload requires native startup hooks and explicit hook state")
+        count = 0
+        for event, groups in hooks.items():
+            if event == "state":
+                continue
+            if not isinstance(groups, list):
+                raise AgentConfigError("reviewed_hook_payload hook events must contain matcher groups")
+            for group in groups:
+                if (
+                    not isinstance(group, dict) or not set(group) <= {"matcher", "hooks"}
+                    or ("matcher" in group and not isinstance(group["matcher"], str))
+                    or not isinstance(group.get("hooks"), list) or not group["hooks"]
+                ):
+                    raise AgentConfigError("reviewed_hook_payload contains an invalid hook matcher group")
+                for handler in group["hooks"]:
+                    if (
+                        not isinstance(handler, dict)
+                        or not set(handler) <= {"type", "command", "timeout", "statusMessage", "additionalContextLimit"}
+                        or handler.get("type") != "command"
+                        or not isinstance(handler.get("command"), str) or not handler["command"].strip()
+                        or ("statusMessage" in handler and not isinstance(handler["statusMessage"], str))
+                        or any(
+                            key in handler and (type(handler[key]) is not int or handler[key] < 0)
+                            for key in ("timeout", "additionalContextLimit")
+                        )
+                    ):
+                        raise AgentConfigError("reviewed_hook_payload supports only reviewed native command hooks")
+                    count += 1
+        enabled = 0
+        for key, state in hooks["state"].items():
+            if not isinstance(key, str) or not isinstance(state, dict):
+                raise AgentConfigError("reviewed_hook_payload contains invalid hook state")
+            if set(state) == {"enabled"} and state["enabled"] is False:
+                continue
+            digest = state.get("trusted_hash")
+            if (
+                set(state) != {"enabled", "trusted_hash"} or state.get("enabled") is not True
+                or not key.startswith("/<session-flags>/config.toml:")
+                or not isinstance(digest, str) or not digest.startswith("sha256:")
+                or len(digest) != 71 or any(char not in "0123456789abcdef" for char in digest[7:])
+            ):
+                raise AgentConfigError("reviewed_hook_payload may trust only reviewed session-flag hooks")
+            enabled += 1
+        if enabled != count:
+            raise AgentConfigError("reviewed_hook_payload must explicitly trust every selected hook")
+        return payload
+
+    @staticmethod
+    def _native_inline(value: Any) -> str:
+        """Encode the validated payload for metadata-only native config inspection."""
+        if isinstance(value, dict):
+            return "{" + ",".join(
+                json.dumps(key, ensure_ascii=False) + "=" + CodexDailyDriverAgent._native_inline(item)
+                for key, item in value.items()
+            ) + "}"
+        if isinstance(value, list):
+            return "[" + ",".join(CodexDailyDriverAgent._native_inline(item) for item in value) + "]"
+        return json.dumps(value, ensure_ascii=False)
+
+    def _validate_reviewed_hook_isolation(self) -> None:
+        """Inspect effective native hook trust and capabilities at the actual task directory."""
+        from openai_codex.client import CodexClient, CodexConfig
+        from openai_codex.generated.v2_all import ConfigReadResponse, HooksListResponse
+
+        payload = self._reviewed_hook_payload
+        if payload is None or self.working_directory is None:
+            raise AgentConfigError("reviewed_hook_payload requires a started agent")
+        expected = {
+            key: state["trusted_hash"] for key, state in payload["hooks"]["state"].items()
+            if state["enabled"]
+        }
+        # Only this metadata client uses CLI config values. Execution receives
+        # the same restricted values through thread_start(config=...), below.
+        client = CodexClient(CodexConfig(
+            env=self._build_codex_env(), cwd=str(self.working_directory),
+            config_overrides=tuple(
+                key + "=" + self._native_inline(value) for key, value in payload.items()
+            ),
+        ))
+        try:
+            client.start()
+            client.initialize()
+            response = client.request(
+                "hooks/list", {"cwds": [str(self.working_directory)]}, response_model=HooksListResponse
+            )
+            found = set()
+            for row in response.data:
+                if row.errors:
+                    raise AgentConfigError("reviewed_hook_payload failed native hook validation")
+                for wrapped in row.hooks:
+                    hook = wrapped.root
+                    if hook.is_managed:
+                        raise AgentConfigError("reviewed_hook_payload cannot isolate unexpected managed hooks")
+                    if not hook.enabled:
+                        continue
+                    if (
+                        hook.key not in expected or hook.source.value != "sessionFlags"
+                        or hook.trust_status.value != "trusted" or hook.current_hash != expected[hook.key]
+                    ):
+                        raise AgentConfigError("reviewed_hook_payload leaves unreviewed or untrusted hooks enabled")
+                    found.add(hook.key)
+            if found != set(expected):
+                raise AgentConfigError("reviewed_hook_payload did not load every reviewed hook")
+            config = client.request(
+                "config/read", {"cwd": str(self.working_directory), "includeLayers": False},
+                response_model=ConfigReadResponse,
+            ).config.model_dump(mode="json", by_alias=True)
+            # Inspect names and enable flags only. Never retain or log the
+            # host's server settings, environment values, or authentication.
+            if any(server.get("enabled", True) for server in (config.get("mcp_servers") or {}).values()):
+                raise AgentConfigError("reviewed_hook_payload leaves inherited MCP servers enabled")
+            if any((config.get("features") or {}).get(name) is not False for name in payload["features"]):
+                raise AgentConfigError("reviewed_hook_payload did not disable unrelated native features")
+        except AgentConfigError:
+            raise
+        except Exception as failure:
+            raise AgentConfigError("Unable to inspect reviewed native hook/config metadata") from failure
+        finally:
+            client.close()
+
+    def _build_thread_options(self) -> dict[str, Any]:
+        """Activate trusted hooks and native confinement only for opted-in fixtures."""
+        from openai_codex import Sandbox
+        from openai_codex.generated.v2_all import ThreadStartSource
+
+        options = super()._build_thread_options()
+        if self.config.lifecycle_hooks:
+            options["session_start_source"] = ThreadStartSource.startup
+        if self.config.offline_fixture:
+            if self.config.allowed_tools is None:
+                raise AgentConfigError("offline_fixture requires an explicit allowed_tools list")
+            allowed = set(self.config.allowed_tools) - set(self.config.disallowed_tools or [])
+            shell = bool(allowed & {"Read", "Grep", "Glob", "Skill", "Bash", "Write", "Edit"})
+            write = bool(allowed & {"Bash", "Write", "Edit"})
+            options["sandbox"] = Sandbox.workspace_write if write else Sandbox.read_only
+            native = dict(options.get("config") or {})
+            native.pop("enabled_tools", None)
+            native.pop("disabled_tools", None)
+            native["web_search"] = "disabled"
+            native["sandbox_workspace_write"] = {
+                "writable_roots": [],
+                "network_access": False,
+                "exclude_tmpdir_env_var": True,
+                "exclude_slash_tmp": True,
+            }
+            native["features"] = {
+                **native.get("features", {}),
+                "shell_tool": shell,
+                "multi_agent": bool(allowed & {"Agent", "Task"}),
+                **dict.fromkeys(
+                    ("goals", "view_image", "apps", "computer_use", "browser_use",
+                     "image_generation", "skill_search", "sleep_tool"), False
+                ),
+            }
+            options["config"] = native
+        if self._reviewed_hook_payload is not None:
+            payload = self._reviewed_hook_payload
+            native = options["config"]
+            native["hooks"] = payload["hooks"]
+            native["mcp_servers"] = payload["mcp_servers"]
+            native["features"].update(payload["features"])
+        return options
+
+    def _log_config_enforcement(self) -> None:
+        """Avoid the inherited full-access claim when native fixture confinement applies."""
+        if self.config.offline_fixture:
+            self._log.info(
+                "Offline fixture: native read-only/workspace-write sandbox; network and "
+                "non-fixture tools disabled. Read/Skill share the native shell capability."
+            )
+        else:
+            super()._log_config_enforcement()
+
+    async def _run_turn_with_streaming(
+        self, state: Any, should_stop: Callable[[], bool] | None = None
+    ) -> tuple[Any, Any, str]:
+        """Route a failed native turn through the inherited partial-record error path."""
+        result = await super()._run_turn_with_streaming(state, should_stop)
+        turn = result[0]
+        status = getattr(turn, "status", None)
+        if getattr(status, "value", status) == "failed":
+            error = getattr(turn, "error", None)
+            raise RuntimeError(getattr(error, "message", None) or "Codex returned a failed turn")
+        return result
+
     async def communicate(self, user_input: str, **kwargs: Any) -> TurnRecord:
         """Run one turn, and hand back its transcript with the judge's anchor in it.
 
@@ -161,6 +404,8 @@ class CodexDailyDriverAgent(CodexAgent):
         keyword on `Agent.communicate` reaches the built-in without a change
         here.
         """
+        if self._reviewed_hook_payload is not None:
+            await self._run_async(self._validate_reviewed_hook_isolation)
         try:
             record = await super().communicate(user_input, **kwargs)
         except BaseException:
@@ -188,6 +433,8 @@ class CodexDailyDriverAgent(CodexAgent):
         return {
             **super().get_environment_info(),
             "codex_skills_linked": list(self._linked_skills),
+            "codex_lifecycle_hooks_requested": self.config.lifecycle_hooks,
+            "codex_offline_fixture": self.config.offline_fixture,
         }
 
     # --- internals ---------------------------------------------------------

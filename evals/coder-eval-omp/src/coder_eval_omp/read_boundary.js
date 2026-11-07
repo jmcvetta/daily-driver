@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { lstatSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 
@@ -26,6 +27,43 @@ function policyFrom(env) {
 
 function allowed(target, policy) {
 	return policy.roots.some((root) => contained(target, root));
+}
+
+// Discover new task worktrees from the sandbox's Git registration, never from
+// a supplied branch name or a blanket grant to the sandbox's parent directory.
+function admitRegisteredSibling(target, policy, env) {
+	const parent = dirname(policy.taskRoot);
+	if (!contained(target, parent)) return false;
+	const sibling = resolve(parent, relative(parent, target).split("/")[0]);
+	if (sibling === policy.taskRoot || sibling === parent) return false;
+	const gitEnv = Object.fromEntries(Object.entries(env).filter(([key]) => !key.startsWith("GIT_")));
+	const git = (root, args) => execFileSync("git", ["-C", root, ...args], {
+		env: gitEnv, encoding: "utf8", timeout: 2000, maxBuffer: 1024 * 1024,
+		stdio: ["ignore", "pipe", "ignore"],
+	});
+	// An enclosing host repository must not confer authority on a non-repository
+	// sandbox. Strip inherited Git overrides before asking Git about either root.
+	if (realpathSync(git(policy.taskRoot, ["rev-parse", "--show-toplevel"]).trim()) !== policy.taskRoot) return false;
+	const common = realpathSync(git(policy.taskRoot, ["rev-parse", "--path-format=absolute", "--git-common-dir"]).trim());
+	const registrations = git(policy.taskRoot, ["worktree", "list", "--porcelain", "-z"]).split("\0\0");
+	const registered = registrations.some((record) => {
+		const fields = record.split("\0");
+		return fields[0] === `worktree ${sibling}` &&
+			!fields.some((field) => field === "bare" || field.startsWith("prunable"));
+	});
+	if (!registered || realpathSync(sibling) !== sibling) return false;
+	if (realpathSync(git(sibling, ["rev-parse", "--show-toplevel"]).trim()) !== sibling ||
+		realpathSync(git(sibling, ["rev-parse", "--path-format=absolute", "--git-common-dir"]).trim()) !== common) return false;
+	const gitDir = realpathSync(git(sibling, ["rev-parse", "--absolute-git-dir"]).trim());
+	// Only linked task worktrees qualify, not the repository's primary checkout.
+	if (dirname(gitDir) !== resolve(common, "worktrees")) return false;
+	policy.roots.push(sibling);
+	return true;
+}
+
+function safeTarget(target, policy, env) {
+	if (!allowed(target, policy) && !admitRegisteredSibling(target, policy, env)) return false;
+	return safeTree(target, policy);
 }
 
 function normalize(raw, env) {
@@ -106,7 +144,7 @@ function safePath(raw, tool, policy, env, commands) {
 		return ["rule", "xd", "proc", "omp"].includes(scheme);
 	}
 	const target = existingTarget(text, policy);
-	if (target !== null) return safeTree(target, policy);
+	if (target !== null) return safeTarget(target, policy, env);
 	if (tool === "glob" || tool === "grep") {
 		const wildcard = text.search(/[*?\[{]/);
 		if (wildcard >= 0) {
@@ -116,7 +154,7 @@ function safePath(raw, tool, policy, env, commands) {
 			const prefix = text.slice(0, wildcard);
 			const base = prefix.slice(0, prefix.lastIndexOf("/") + 1) || ".";
 			const root = existingTarget(base, policy);
-			return root !== null && safeTree(root, policy);
+			return root !== null && safeTarget(root, policy, env);
 		}
 	}
 	return false;
