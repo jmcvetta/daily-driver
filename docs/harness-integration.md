@@ -178,6 +178,24 @@ consultation. Follow the constitution's *Manual frontier escalation*: repair
 the plan and return the existing work to a verified eligible non-frontier
 route. The escalation does not authorize frontier implementation or supervision.
 
+The Omp adapter admits explicit top-level frontier selection without changing
+the assigned worker, issue class, approval record, or verification state.
+Consultation tools remain available, including reporting while the worker is
+pending or recovery-only. This is not implementation authorization.
+
+Native `^provider/model` delegation uses the active branch's `model_mention`
+binding. The spawn hook pins that exact model despite model overrides; each
+child request must retain its model, backend, and authentication route.
+The binding does not authorize unrelated children or automatic fallback.
+Rewind removes branch-local permission; a resumed consultation retains its
+saved exact-model constraint without becoming an undertaking worker.
+
+Retry-fallback and prewalk journal entries remain automatic transitions, not
+operator approval. Agent-controlled undertaking selection and observed worker
+dispatch still require the configured class and bounded frontier approval.
+Omp 18.15.0 cannot identify every caller of the top-level model setter.
+This adapter is not a security boundary against arbitrary trusted extensions.
+
 `dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
 and `classes`, for example `{ referenceModel: "provider/model", classes: {
 implementation: "provider/variant:high" } }`. Omp resolves the reference

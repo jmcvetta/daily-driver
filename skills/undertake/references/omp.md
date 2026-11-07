@@ -115,6 +115,16 @@ constitution's *Manual frontier escalation*. Use the route above only when
 its constraints are established; transfer the existing work and authority,
 not a new claim. Otherwise deliver the plan and report the missing return route.
 
+The adapter admits explicit top-level frontier selection and native
+`^provider/model` consultations without changing the undertaking worker.
+Consultation responses do not verify a pending worker. Its tools remain
+available for diagnosis, plan repair, and reporting; this is not a frontier
+implementation exception. Native mention dispatch pins the branch-authorized
+model and constrains the child's actual requests, including after resume.
+Retry-fallback and prewalk markers do not establish operator authorization.
+The adapter guards its routing tool and observed dispatch, not arbitrary
+trusted extensions that call Omp's top-level model setter.
+
 
 The pull request
 ================
