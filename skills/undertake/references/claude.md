@@ -42,7 +42,8 @@ issue carrying none of the standard's six is not an issue carrying none.
 `issue-labels`, whose `references/claude.md` states that trap where the label
 write lives.
 
-For a `task`, validate its `Model class` section and rationale through
+For a `task` or a classed `research` or `bug`, validate its `Model class`
+section and rationale through
 [`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
 claim, repairing an old or invalid body where its handoff is grounded. A
 frontier assignment also needs explicit approval and its exact envelope. A
@@ -77,8 +78,8 @@ Authorization and unfinished stops
 
 Use `mcp__daily-driver__task_state` with `action` and an optional JSON-string
 `record`. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
-define `status`, `contract`, `plan`, `handoff` and `resume`; the Omp reference's
-evidence records define `authorization`, `blocker` and reported `complete`.
+define every action and record: `status`, `contract`, `plan`, `handoff`,
+`resume`, `authorization`, `blocker` and reported `complete`.
 Recover the contract before changing a resumed task's plan.
 
 This route requires Claude Code native mods support, terminal version 2.1.287

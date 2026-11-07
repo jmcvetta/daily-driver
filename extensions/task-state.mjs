@@ -9,6 +9,12 @@ const REQUEST = /^(?:\s*(?:please\s+)?(?:implement|fix|update|add|remove|refacto
 const CANCEL = /^\s*(?:please\s+)?(?:\/(?:skill:)?stand-down\b|stand[ -]down\b|wrap\s+up\b|cancel(?:[.!\s]*$|\s+(?:(?:this|the)\s+)?(?:task|work|undertaking)(?=\s|[.!;,]|$))|stop(?:[.!\s]*$|\s+(?:work(?:ing)?(?=\s|[.!;,]|$)|now\b|here\b|(?:this|the)\s+(?:task|work|undertaking)(?=\s|[.!;,]|$))))/iu;
 const EVIDENCE_TEXT_LIMIT = 8192;
 const EVIDENCE_INPUT_LIMIT = 2048;
+const AUTHORIZATION_KINDS = ["user", "workflow"];
+const BLOCKER_KINDS = ["external", "authorization", "safety", "execution"];
+const ROUTE_DISPOSITIONS = ["failed", "prohibited", "unavailable"];
+// Renders an enum as prose for the device description so it cannot drift from validation.
+const oneOf = (items) => items.length === 2 ? items.map((item) => `"${item}"`).join(" or ")
+	: `${items.slice(0, -1).map((item) => `"${item}"`).join(", ")}, or "${items.at(-1)}"`;
 
 function digest(value) {
 	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -301,7 +307,7 @@ export function createTaskStateController(pi) {
 						const source = reference(ctx, record.source, true);
 						if (source.kind === "user" && source.sourceId !== state.externalSourceId && source.sourceId !== state.resumeSource?.sourceId &&
 							source.taskSourceId !== state.externalSourceId && !state.authorityTaskIds?.includes(source.taskSourceId)) throw new Error("Authorization source belongs to another task");
-						if (!["user", "workflow"].includes(record.kind) || record.kind !== source.kind) throw new Error("Authorization kind must match the original user or system source");
+						if (!AUTHORIZATION_KINDS.includes(record.kind) || record.kind !== source.kind) throw new Error("Authorization kind must match the original user or system source");
 						for (const key of ["id", "operation", "target", "limits", "conditions"]) required(record[key], key);
 						if (state.authorizations.some((item) => item.id === record.id)) throw new Error("Authorization ids are immutable; use a new superseding or revoking record");
 						if (record.expiresAt && !Number.isFinite(Date.parse(record.expiresAt))) throw new Error("expiresAt must be an ISO date");
@@ -326,7 +332,7 @@ export function createTaskStateController(pi) {
 	function validateBlocker(ctx, state, blocker) {
 		if (!blocker) throw new Error("Record a blocker with observed evidence, permitted routes, authorization checked, independent work and resumption path; or report completion explicitly");
 		if (blocker.operation !== state.operation || blocker.target !== state.target) throw new Error("Blocker operation and target must match the active task scope");
-		if (!["external", "authorization", "safety", "execution"].includes(blocker.kind)) throw new Error("Name the blocker kind");
+		if (!BLOCKER_KINDS.includes(blocker.kind)) throw new Error("Name the blocker kind");
 		for (const key of ["externalContribution", "resume"]) required(blocker[key], key);
 		if (!Array.isArray(blocker.evidence) || !blocker.evidence.length) throw new Error("Reference an observed failure or exact authority restriction");
 		const evidence = blocker.evidence.map((ref) => reference(ctx, ref));
@@ -340,7 +346,7 @@ export function createTaskStateController(pi) {
 		if (!Array.isArray(blocker.routes) || !blocker.routes.length) throw new Error("Record the disposition and evidence for available permitted routes");
 		for (const route of blocker.routes) {
 			required(route.route, "route");
-			if (!["failed", "prohibited", "unavailable"].includes(route.disposition)) throw new Error("A route remains actionable");
+			if (!ROUTE_DISPOSITIONS.includes(route.disposition)) throw new Error("A route remains actionable");
 			const source = reference(ctx, route.evidence);
 			if (source.kind === "tool" && source.taskSourceId !== state.externalSourceId) throw new Error("Route evidence belongs to another task");
 			if (route.disposition === "failed" && !source.isError) throw new Error("A failed route requires an observed error");
@@ -422,7 +428,24 @@ export function installTaskState(pi) {
 	]) pi.on(name, handler);
 	pi.registerTool({
 		name: "daily_driver_task_state", label: "Task evidence state",
-		description: "Read versioned task contracts, original authority sources and observed evidence. Actions: begin, resume, contract, plan, handoff, status, authorization, blocker, complete. Mutations use a JSON-string record. Contracts and plan state are distinct. Completion remains reported, not verified.",
+		description: `Read and record versioned task contracts and private task evidence on the active main-session branch. The record parameter is a JSON-encoded object string; omit it for status. The tool records provenance and reported state, not permission, semantic approval, route exhaustion, or proof of completion. A contract (objective, scope, exclusions, constraints, stable criterion IDs, required evidence/review kinds, approval requirements and source references) is distinct from the mutable plan; unknown contract fields are null, not fulfilled.
+
+For the write device, send {"path":"xd://daily_driver_task_state","content":"{\\"action\\":\\"status\\"}"}. For other actions, content encodes {"action": action, "record": JSON.stringify(record)}.
+
+Start with status {}. Its sources and evidence contain recent retained entries and real sourceId values. To retrieve an entry, call status with record JSON.stringify({sourceId: entry.sourceId}); an unknown ID returns null. A reference is {sourceId, quote}, where quote is nonblank text copied exactly from that entry. Never invent an ID. Sources must remain on this session's active branch. User authorization must belong to the active task; tool evidence and route evidence must be associated with its externalSourceId. Status excerpts can be truncated: retrieve the entry before quoting. Tool output can itself be truncated; when textTruncated is true, quotes must fit entirely in the prefix before prefixLength or the suffix after its separator, never across the omitted gap. Omitted output cannot be recovered here.
+
+Actions and records:
+- status: optional {sourceId}; without it, returns state, source and evidence excerpts, authorization applicability and capability.
+- begin: optional {taskId, operation, target, source, newTask}. source is a user reference and defaults to the latest external user source. It must be the latest external user input and not a cancellation. New-task defaults are taskId = sourceId, operation = source text, target = current working directory. The first labelled begin binds execution labels to the captured request and creates a contract revision; a later begin cannot rewrite bound labels or contracted scope, so use a contract amendment. newTask: true starts another task and requires fresh external user input. Cancelled or settled work needs resume or newTask; a cancellation is not a fresh request.
+- resume: {source, contractId?}. source references fresh external user input that is not the task's original request or a cancellation. contractId selects an earlier contract; otherwise the current one resumes. Correction counts survive; the old blocker and completion clear.
+- contract: {expectedRevision, change, sourceRefs, contract, authoritySource?, removedCriteria?, operation?, target?}. expectedRevision must equal the current revision. contract holds only the changed fields. sourceRefs is a nonempty reference array. A material scope or authorization change needs authoritySource: a later original user decision for this task. Removing a criterion needs removedCriteria: [{id, reason}].
+- plan: {summary, ...details}. Records execution state without a contract revision.
+- handoff: returns the contract, history, plan, unresolved criterion IDs, authority locators and correction identity/count. It grants no authority.
+- authorization: {id, kind, operation, target, limits, conditions, source}, all required; strings except source must be nonblank. kind is ${oneOf(AUTHORIZATION_KINDS)} and must match the original user or workflow source. User sources must be associated with the active task. Optional expiresAt is a parseable date; freshConfirmation marks confirmation required; revokes and supersedes name existing authorization IDs. IDs are immutable: use a new ID for amendments. Applicability reports scope, expiry, revocation and confirmation; review the original conditions.
+- blocker: {kind, operation, target, evidence, authorizationIds, routes, independentWork, externalContribution, resume}. operation and target exactly match active state. kind is ${oneOf(BLOCKER_KINDS)}. evidence is a nonempty reference array: external and execution require tool evidence; execution requires an error; safety and authorization require user or workflow authority. authorizationIds lists every retained authorization ID, including amendments, or [] if none. routes is a nonempty array of {route, disposition, evidence}; route is nonblank, disposition is ${oneOf(ROUTE_DISPOSITIONS)}, and evidence is a reference. Failed needs an observed error; prohibited needs original authority, not a tool probe. independentWork is {pending: [], completed: []}; pending must be empty except for safety. externalContribution and resume are nonblank strings. Validation checks references, not whether routes are truly exhausted.
+- complete: {summary}, a nonblank string. This marks reported-complete, not independently proven completion. Mutations other than begin and resume require an active unfinished task.
+
+Example sequence in an isolated fixture: let s = status(); let u = s.sources.find(x => x.kind === "user"); retrieve u with status({sourceId:u.sourceId}); let ref = {sourceId:u.sourceId, quote: an exact nonblank substring of u.text}. Call begin({taskId:"fixture", operation:"verify", target:"fixture", source:ref}); then authorization({id:"fixture-approval", kind:"user", operation:"verify", target:"fixture", limits:"offline", conditions:"fixture only", source:ref}) only if the original source actually supports it. After an observed fixture error, retrieve its real entry e through status and use r = {sourceId:e.sourceId, quote: an exact retained error substring}; blocker({kind:"execution", operation:"verify", target:"fixture", evidence:[r], authorizationIds:["fixture-approval"], routes:[{route:"fixture", disposition:"failed", evidence:r}], independentWork:{pending:[], completed:[]}, externalContribution:"Provide fixture access.", resume:"Retry the fixture."}). Finally complete({summary:"Fixture work completed."}) only when work is complete. Serialize each object into record; the example identifiers label records, not source authority.`,
 		parameters: pi.zod.object({ action: pi.zod.string(), record: pi.zod.string().optional() }),
 		execute: controller.execute,
 	});

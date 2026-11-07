@@ -1,8 +1,9 @@
 # Model classes
 
-Task issues name the minimum capability needed to implement their settled
-handoff. The narrow frontier exception lets a `research` issue name a bounded
-research or planning assignment. Classes remain provider-neutral: they do not
+Task issues, and any `research` or `bug` issue proposed as an epic story, name
+the minimum capability needed to deliver their settled handoff. The narrow
+frontier exception lets a `research` issue name a bounded research or planning
+assignment. Classes remain provider-neutral: they do not
 name a provider, price tier, context window, or reasoning-effort setting.
 
 ## Classes
@@ -43,7 +44,9 @@ covers only that assignment. Ask again before material scope expansion.
 `research` may use frontier for a bounded research or planning assignment. In
 that case the issue keeps its `research` label and single `## Model class`
 token and rationale, followed by the approval record and work envelope. Do not
-apply the task template to other issue kinds.
+apply the task template to other issue kinds. A `research` or `bug` epic story
+uses the same section and the ordinary classes' meanings; the class states the
+capability needed to deliver that kind's settled handoff.
 
 ## Selection
 

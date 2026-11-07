@@ -30,6 +30,31 @@ Omp uses `extensions/daily-driver.js`. It blocks the `ask` tool, holds issue and
 
 The exact calls and per-skill differences live in the active harness's reference file. The [architecture notes](notes/0011-two-harnesses-one-skill-tree.md) and [Codex integration note](notes/0016-three-harnesses-one-skill-tree.md) record why the adapters differ.
 
+## Sensitive handoff examples
+
+The [constitution](../rules/constitution.md#non-negotiables) owns the headless
+default and protected-file handoff contract. These are example user notices
+after creating an owner-only file with POSIX mode `0600` outside the repository,
+build contexts and published artifacts. Paths are illustrative, not deliveries.
+
+- **Workstation, existing local access confirmed:** “On your workstation
+  `atlas`, read `/home/alex/.local/state/daily-driver/github-login.txt` in your
+  existing local session. Use its GitHub device-login instructions to approve
+  the pending login. I have not opened a terminal window.”
+- **Cloud, existing SSH access confirmed:** “On remote host `builder-7`,
+  read `/home/alex/.local/state/daily-driver/openai-login.txt` through your
+  existing authorized SSH connection as `alex`. Use its OpenAI device-login
+  instructions to approve the pending login. This path is on `builder-7`,
+  not your laptop.”
+- **No existing delivery route:** “The protected file is
+  `/home/agent/.local/state/daily-driver/github-login.txt` on remote host
+  `worker-9`. No existing authorized channel gives you access to that
+  filesystem, so the handoff is not delivered. I need an authorized way for
+  you to read that file. Independent permitted engineering continues.”
+
+These notices disclose neither credentials nor device codes. Device approval
+is the user's authentication action; it does not renew task approval.
+
 ## Task contracts, continuation and approval evidence
 
 `extensions/task-state.mjs` owns task transitions for all three harnesses.
@@ -89,14 +114,27 @@ tool observation. It does not recover omitted tool-output bytes.
   IDs, authority locators and correction identity/count. It grants no approval.
 - `resume`: `{source: {sourceId, quote}, contractId?}`. A cancelled task needs
   fresh original user input. Resume does not renew an exhausted allowance.
-- `authorization`, `blocker` and `complete` retain the
-  [existing evidence record fields](../skills/undertake/references/omp.md#task-evidence-state).
-  `complete` remains a report. It does not verify acceptance.
+- `authorization`: `{id, kind: "user" | "workflow", operation, target,
+  source: {sourceId, quote}, limits, conditions, expiresAt?, supersedes?,
+  revokes?, freshConfirmation?}`. The source must resolve to original user
+  input or workflow instructions of the same kind.
+- `blocker`: `{operation, target, kind: "external" | "authorization" |
+  "safety" | "execution", evidence: [{sourceId, quote}], authorizationIds: [],
+  routes: [{route, disposition: "failed" | "prohibited" | "unavailable",
+  evidence: {sourceId, quote}}], externalContribution,
+  independentWork: {pending: [], completed: []}, resume}`.
+- `complete`: `{summary}`. It remains a report. It does not verify acceptance.
 
 References establish provenance, not the meaning of arbitrary approval prose.
 Read the original scope, conditions, revocations, expiry and fresh-confirmation
 requirements before acting. The records do not replace harness permissions or
 safety restrictions.
+
+On Omp, read `xd://daily_driver_task_state` for the action records, defaults,
+source discovery, exact-quote limits and an example sequence. Tool
+input/output payloads have bounded previews, truncation metadata and a
+fingerprint; the adapter does not persist a second full copy of every file or
+command result.
 
 ### Persistence and delegation
 
@@ -236,20 +274,42 @@ preserves the existing defaults; explicit same-family class roles remain
 operator assignments. Plugin-installed global defaults do not establish a
 mapping for unrelated families. A mapping is not measurement evidence.
 
-Classed undertaking calls `daily_driver_route_undertaking` alone in its
-assistant tool batch before worktree creation or claim. For a mapped family it
-selects the exact class within the invoking family and provider, preserving
-backend and authentication route across workers and visible fallbacks. A model
-or effort change remains `pending` until the next worker assistant response
-confirms actual execution. Show informative status during this normal
-verification, not an error; do not batch mutations with routing or start work
-while pending. An already matching model and effort needs no switch.
+An unset route configuration uses the registered default, including when Omp
+clones settings for a task. An explicit empty array stays empty; malformed
+explicit values are rejected rather than replaced with defaults.
 
-Rejecting an inference request does not replace the selected worker's route
-with a permanent blocked disposition. After restoring the selected model,
-effort, and authentication route, the session can continue without a restart.
-A partially applied selection whose restoration failed remains recovery-only;
-an ordinary response does not verify that route.
+Classed undertaking calls `daily_driver_route_undertaking` before worktree
+creation or claim. For a mapped family, admission resolves the selected class
+and visible automatic candidates once. It records their concrete backend,
+authentication route and effort. Dispatch and observed worker checks reuse
+that decision. Visible incompatible retry and prewalk candidates fail before
+dispatch. Independent specialist routes remain separate.
+
+Call routing alone and report pending verification as normal progress. These
+are workflow instructions, not conversation-wide runtime failures. The runtime
+still reserves a routing response's whole tool batch before admitting sibling
+mutations. A selected model or effort change stays `pending` until a successful
+response follows an admitted request from that worker. Rejected requests,
+consultations, error responses and cancelled responses do not verify it.
+
+Omp 18.16.0 exposes expanded child patterns at `before_subagent_spawn`. It does
+not expose a veto before every retry or prewalk model transition. The adapter
+therefore retains a final request guard for transitions that dispatch cannot
+guarantee. Agent-definition prewalk targets and later configuration changes
+also require this guard. It rejects unauthorized inference, not host controls.
+Local inspection, cancellation and model restoration do not require worker
+verification.
+
+A disposable loopback-provider experiment on Omp 18.16.0 distinguished the
+selected route, the resolved retry fallback and actual HTTP requests. The host
+reported `retry_fallback_applied` for an incompatible model; its request never
+reached the provider. Local `get_state`, `abort` and `set_model` remained
+available. A restored turn and a reloaded session completed on the original
+route. This is boundary evidence, not evidence of model-class suitability.
+
+Rejecting a request does not replace the stored selected route with a blocked
+disposition. A partially applied selection whose restoration failed remains
+recovery-only; an ordinary response cannot certify it.
 
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
@@ -273,6 +333,32 @@ incomplete work. Selecting a different issue returns an error without replacing
 the existing owner or route; finish the completed undertaking or resume the
 existing one before selecting another. A finish call with the wrong issue also
 returns an error without changing the existing state.
+
+### Local undertaking recovery
+
+Omp registers `/undertaking status` and `/undertaking cancel <issue>` as host
+commands. They do not send a model request. They remain available after a
+rejected inference request or a saved-route restoration error.
+
+Status separates configured model and effort from the host selection and
+last observed execution identity. It reports the authentication route category,
+ownership, state, and last rejection reason without credential identities.
+If a malformed record has no recoverable issue, status reports
+`cancelOwner: invalid`; `/undertaking cancel invalid` explicitly cancels that
+record in the current session.
+
+Cancellation requires the exact current owner. It aborts and waits for local
+work before releasing only the undertaking's OAuth lease. It retires pending
+handoffs and revokes owned children. Running children retain their restrictions
+until shutdown and cannot resume after reload. Other sessions and operator-owned
+leases remain unchanged.
+
+Cancellation writes a schema-2 `cancelled` lifecycle record, not a completion
+record. Existing schema-1 active and completed records remain readable.
+Transcript, worktree, branch, approval evidence, and unfinished task state stay
+intact. A new undertaking requires normal admission. Repeated cancellation with
+no owner is a no-op. This command does not replace the workflow's stop handoff.
+
 
 Omp prefers its extension's in-session switch. A full handoff needs a surface
 that can constrain and verify the same route and has one owner. Claude's

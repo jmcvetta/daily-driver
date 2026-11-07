@@ -8,7 +8,7 @@ description: >-
   each of these", or "how is the epic going", and on the agent's own move from
   a planned epic to opening a session per eligible child — a web session on
   Claude Code, one harness-local subagent per issue on Omp and Codex. Supplies
-  the graph-derived wave, each task's readiness and required-class route, the
+  the graph-derived wave, each story's readiness and required-class route, the
   muster roll, the completion-surface watch, pull-request landing, epic close,
   and quiet-session backstop. Not for decomposing work, which is `epic`, taking
   one issue to a pull request, which is `undertake`, or a single issue.
@@ -130,12 +130,16 @@ The two are not the same question, and `epic` writes both on purpose:
   disagreement. It is the scheduling choice `epic` requires that child line
   to state, and it is honoured: the child waits for its wave.
 
-**Every story must be a ready `task`.** Apply `epic`'s assignable-task rule and
-`issue-body`'s task-readiness test before dispatch. Report a non-task or unready
-child as a planning defect; repair it through `issue` only where the intent is
-settled and the gaps are repository-answerable. Do not dispatch it, silently
-relabel it, or change its edge or marker to conceal the defect. Continue other
-ready tasks, but do not claim the epic is ready while a story fails the gate.
+**Every story must be assignable.** Apply `epic`'s assignable-story rule and
+`issue-body`'s `Assignable stories` test before dispatch: an agent-eligible kind
+(`task`, `research` or `bug`), ready under that kind's own readiness test, with
+exactly one valid `## Model class` section and rationale. A non-task kind alone
+is not a defect. Report a child that is a `proposal`, `human` or `epic`, or that
+lacks a complete handoff or valid class, as a planning defect; repair it through
+`issue` only where the intent is settled and the gaps are repository-answerable.
+Do not dispatch it, silently relabel it, default its class, or change its edge
+or marker to conceal the defect. Continue other assignable stories, but do not
+claim the epic is ready while a story fails the gate.
 
 **Already at sea is read from the record, never assumed.** A child is at sea
 when a muster roll on the epic names a session for it, or when its own issue
@@ -168,9 +172,9 @@ here to be routed again:
 - **Every eligible child still open is blocked by something open.** There is
   no wave. Name the issue that blocks, and wait: that is the stop of that name
   below.
-- **The remaining children fail task readiness.** Name the exact gaps and use
+- **The remaining children fail assignability.** Name the exact gaps and use
   the normal issue workflow for repair. Do not dispatch a stronger model or
-  invent task scope to bypass the defect.
+  invent scope to bypass the defect.
 
 3 — Open the sessions
 ---------------------
@@ -190,11 +194,14 @@ not user approval; preserve applicable original authority references and limits.
 The harness denies the first dispatch until this session is titled, as
 `session-title`'s `When to set it` says; `Title the session` precedes this step.
 
-**Resolve a capable route before dispatch.** Validate every task's required
-`Model class` section and rationale through `issue-body`; migrate a legacy or
-invalid task only on that issue and only when its grounded handoff is otherwise
-ready. A bare `story` marker does not pass this gate. Non-task issues retain
-their standalone contracts but are not epic-story dispatch candidates.
+**Resolve a capable route before dispatch.** Validate every story's required
+`Model class` section and rationale through `issue-body`, whatever its kind;
+migrate a legacy or invalid task only on that issue and only when its grounded
+handoff is otherwise ready. A missing or invalid class on a research or bug
+story is a planning defect, never defaulted. A bare `story` marker does not
+pass this gate. `proposal`, `human` and `epic` issues are not dispatch
+candidates. A story with an open blocker is not dispatched early, and an
+unavailable route stops only that story.
 
 Then resolve the exact required class within the current family, provider,
 backend, and authentication route. Assess tools, context, modalities, and
@@ -296,7 +303,7 @@ fallback roll names the subagent and shared advisor; a web-session row links,
 and its session id is the address `Watch the wave` and `Recover a session` send
 to. Reachability is read from the send, never assumed or recorded here. Do not
 describe an actual model that the harness did not report. Record planning
-defects separately, not as non-task ships in a wave.
+defects separately, not as ships in a wave.
 
 The comment carries `provenance`'s block after the table, naming this
 orchestrating session — never a task session's, which names its own at its
@@ -321,11 +328,18 @@ body outright, so the invention survives exactly until the next edit there.
 5 — Watch the wave
 ------------------
 
-**The watch uses each task's completion surface.** Read the pull request's
-checks, review threads, and merge, then compare the delivered outcome with the
-task's `issue-body` completion contract. Session status or a closed issue alone
-does not prove completion. A non-task child is a planning defect under `Take
-the wave`, not an alternative issue-only completion route.
+**The watch uses each story's completion surface.** For a `task` or a `bug`
+delivered by a pull request, read the pull request's checks, review threads, and
+merge, then compare the delivered outcome with the story's `issue-body`
+completion contract. For `research`, read the evidenced answer recorded on the
+issue — the findings, their sources and limits, and any follow-on issue
+specifications — against its stated deliverable and stopping rule; an
+answer-only result needs no branch or pull request. A bug closed by evidenced
+disposition (duplicate, intended behavior, decision not to fix) is read against
+its recorded evidence. Session status, an ended session or a closed issue alone
+does not prove completion. Bounded inconclusive research is complete only
+under `issue-body`'s existing rule and does not settle an unresolved downstream
+requirement.
 **Messaging is an ordinary tool of this watch, not only of `Recover a
 session`'s.** A session can be opened, interrupted, archived and messaged, and
 a send still reads nothing back — that is why the watch above runs through
@@ -346,6 +360,12 @@ operation. Steer the implementor through `Recover a session` with the next
 permitted action; do not ask again for authorization the task already carries.
 The implementor still owns commands, code, checks and readiness. This watch
 does not take over its branch or clear its draft.
+
+The orchestrator owns the agreed epic outcome, not each worker's lifetime.
+A worker may complete its component contract without remaining alive until
+the whole epic ships; component completion alone does not evidence that
+outcome. A pause retains diagnosis and the next executable action without
+granting authority beyond the original agreement.
 
 Before pausing for a real prerequisite, require evidence that independent
 permitted work is complete, unless a safety rule requires an immediate stop.
@@ -378,7 +398,7 @@ marked `done`, the next one launched — is resumed by the next `embark`
 invocation, and that is said once rather than claimed as a watch.
 So on every wake:
 
-- **Subscribe to each task pull request** as it appears, once. Events start a
+- **Subscribe to each story pull request** as it appears, once. Events start a
   turn on their own.
 - **Read each implementor report that arrived**, as data. A question goes to
   the address the muster roll records. A draft opened is the pull request to
@@ -387,13 +407,16 @@ So on every wake:
 - **Read each open child issue for a visible question or result**, and each
   pull request where one exists. Send visible questions to the address the
   muster roll records.
-- **Send each task pull request through `Land the pull request`.** That step
+- **Send each story pull request through `Land the pull request`.** That step
   reads the gate and returns here, whether it merges or waits.
-- **Read the epic's graph and child evidence.** A task issue closes when the
-  pull request that names it merges. Verify its specified outcome; session
-  status alone never proves a child is done.
+- **Read the epic's graph and child evidence.** A task or bug issue delivered
+  by a pull request closes when the pull request that names it merges. A
+  research issue closes when its evidenced answer is recorded. Verify the
+  story's specified outcome against its own completion contract; session
+  status, an ended session or a closed issue alone never proves a child is
+  done, and a closure without that evidence is reported, not accepted.
 - **The wave is in when every child in it has a completed disposition and the
-  evidence satisfies its task contract.** Mark the wave `done` in the epic's
+  evidence satisfies its kind's contract.** Mark the wave `done` in the epic's
   body, and go back to `Take the wave`, which routes what happens next — the
   following wave, or `Close the epic`.
 - **A completed child has no session left to run, archived once.** Unless
@@ -406,7 +429,7 @@ So on every wake:
   subagent that has already ended, so there is no session to archive. **Post the
   muster-roll archive record only after the archive call returns success**; never
   claim an archive that was denied or failed.
-**A pull request closed without merging is somebody's decision.** Its task
+**A pull request closed without merging is somebody's decision.** Its story
 issue stays open and its session is spent, so nothing here re-dispatches it:
 say which child it was, and leave it to the person who closed it.
 
@@ -462,8 +485,10 @@ the session — said once, not claimed.
 - Its session is no longer running while its pull request is open and unmerged.
 - Its pull request has not moved across two check-ins while its session says it
   is running.
-- **A task has no pull request across two check-ins.** A session that died
-  before its draft leaves nothing to watch.
+- **A pull-request story has no pull request across two check-ins.** A session
+  that died before its draft leaves nothing to watch. Answer-only research and
+  a bug closed by evidenced disposition have no pull request by design; their
+  signal is the answer or the recorded disposition on the issue.
 
 None of the three is a verdict on its own: a session can be running and stuck,
 a pull request can be legitimately waiting on a person, and a large code
@@ -474,8 +499,9 @@ session`.
 6 — Land the pull request
 -------------------------
 
-Reached from `Watch the wave` on every wake, once for every task pull request
-in the wave, and returns there.
+Reached from `Watch the wave` on every wake, once for every story pull request
+in the wave, and returns there. A story with no pull request by design, such as
+answer-only research, has nothing to land here.
 
 **The landing gate is a read, not a judgement.** It follows `undertake`'s
 `Ready is a gate, not a step`: take the reads in order, record the head SHA
@@ -553,9 +579,13 @@ Reached from `Watch the wave`, and it returns there.
   idle one is interrupted and not reopened: a second session on its branch
   would collide with the first. Record the task as a stop under `Where it
   stops and waits`, naming the task, the session link and its pull request.
-- **A message is sent, not a conversation.** The session receives it and acts
-  on it, but nothing here reads back that it did — the result of a correction
-  is read from the pull request, the same as everything else this watch reads.
+- **A message is sent, not a conversation.** A successful send does not prove
+  the session received or acted on it. Read the result of a correction from
+  the pull request, the same as everything else this watch reads.
+  A sent or unconfirmed message does not transfer ownership. Confirm a
+  receiver through the supported route before treating a handoff as complete;
+  preserve the agreed result, original authority references and recovery
+  counts. Do not create concurrent writers.
 - **Reopen a session that cannot be recovered**: archive it, and open a fresh
   one on the same task issue, pushing to the **same branch** rather than to one
   of its own. The branch is recorded twice already — in the claim comment
@@ -564,6 +594,10 @@ Reached from `Watch the wave`, and it returns there.
   replacement picks the work up where it was left: `pr`'s existing-PR check
   finds the open pull request rather than opening a second one, and the commits
   already pushed are on the branch it is handed.
+  Do not replace an owner after cancellation or exhausted recovery, or reset
+  a bound by changing workers. Report the execution failure and actual resume
+  requirement instead. An unchanged external prerequisite is not a reason to
+  reopen a session.
 - **A fallback implementor is recovered the same way, through the messaging it
   asks for help with.** A correction goes to the subagent's identifier. After
   the harness confirms that it ended, recover an implementor whose open draft
@@ -595,28 +629,60 @@ Reached from `Watch the wave`, and it returns there.
 Reached from `Take the wave`, when no child issue of the epic is open.
 
 Read the epic's stated acceptance condition and the disposition evidence for
-every child. A merged task pull request can evidence a task's contribution.
-Confirm that the task's specified outcome was delivered. A non-task child is
-a planning defect, not an alternative completion contract. Closing a child
-alone does not prove the epic outcome was met. A canceled child does not
-satisfy the outcome unless the epic's accepted condition explicitly permits
-that result. No open-child count stands in for this read.
+every child, each by its own kind's evidence. A merged pull request can
+evidence a task's or bug's contribution; an evidenced answer recorded on the
+issue can evidence a research story's, including its follow-on issue
+specifications. Confirm that each story's specified outcome was delivered.
+Bounded inconclusive research is complete under its own contract but does not
+settle a downstream requirement. Closing a child alone does not prove the epic
+outcome. A canceled child does not satisfy it unless the accepted condition
+explicitly permits that result. No open-child count stands in for this read.
+
+**An unsupported outcome is unfinished work, not automatically a human
+dependency.** Leave the epic open and classify the gap before selecting a stop:
+
+- **Missing evidence:** gather it through available permitted routes.
+- **Repairable defect within agreed scope:** route repair through the existing
+  task workflow. Do not reopen correctly completed children merely because
+  integration work is missing. The orchestrator does not implement the repair;
+  `review-cycle` owns review, including the fallback exception below.
+- **Invalidated design assumption:** diagnose the failed premise and prepare a
+  bounded repair through `epic`. Do not rotate workers through the unchanged
+  disproved plan or automatically escalate to frontier.
+- **Changed scope, missing authority or required human action:** prepare the
+  diagnosed gap and concrete next action; ask only for the changed decision or
+  contribution. Invoke `epic`'s `Agree the plan` and `Open the issues` where
+  decomposition or replacement issues require agreement. Do not write them
+  or execute a gated operation before its applicable gate clears.
+- **External wait or unavailable capability:** retain a supported continuation
+  when available; otherwise name the precise prerequisite and actual session
+  resumption or authorized-agent handoff route. Do not call all remaining work
+  human-only or promise monitoring or wakeup across shutdown.
+- **Exhausted recovery:** report execution failure and the resume requirement;
+  do not retry automatically or claim completion.
+
+Apply `undertake`'s operational escalation and stop-decision record: preserve
+the owner, evidence, original authority and limits, outstanding requirements,
+recovery counts and next action. Complete independent permitted work first
+unless safety requires an immediate stop. On resume recheck current evidence
+and authority; clear only stale blockers and continue the next permitted action.
+Cancellation prevents continuation. Do not probe a prohibited target or turn
+an agent record into approval.
+
+Keep a supported continuation while permitted recovery is active. When a
+genuine human decision is the only remaining prerequisite, cancel unnecessary
+polling and name the actual resume trigger. An unchanged prerequisite earns no
+duplicate recovery action, issue, message or status comment.
 
 When the acceptance condition is evidenced and the roll says
 `Landing: orchestrator`, post one comment describing the evidence, then close
-the epic with `state_reason: completed`. When a claim is unsupported, post one
-comment that names it and leave the epic open. That report-and-wait path is the
-only outcome here that asks a person for anything. Either comment carries
-`provenance`'s block; the missing-claim comment ends with it.
-**The delivered comment carries a homecoming verse, last** — a short
-stanza in the manner of a sea shanty, after the block, each line italicised
-as [`HAIKU.md`](../../HAIKU.md) shows. The missing-claim comment carries
-none: it asks a person to act, and verse never attaches to a write somebody
-has to act on.
-
-When the roll says `Landing: by hand`, report that the epic is ready and leave
-it open. In every outcome, cancel the backstop and drop every pull-request
-subscription, so the check-ins end here.
+the epic with `state_reason: completed`. The comment carries `provenance`'s
+block and a homecoming verse, last — a short stanza in the manner of a sea
+shanty, each line italicised as [`HAIKU.md`](../../HAIKU.md) shows.
+When the roll says `Landing: by hand`, report that the evidenced epic is ready
+and leave it open. On completion or the by-hand stopping point, cancel the
+backstop and drop every pull-request subscription. Preserve the existing
+conditional merge and archive permissions.
 
 
 Waves launch without confirmation
@@ -643,15 +709,16 @@ touches the constitution's own gates.
 Where it stops and waits
 ========================
 
-Seven, and four of them are reports rather than questions.
+Each pause has a specific cause; missing evidence alone is not one.
 
 - **An issue that is not an epic**, at `Read the epic`. A report: say which
-  issue it is and which skill takes it — `undertake` for a task issue, `epic`
+  issue it is and which skill takes it — `undertake` for a single story issue,
+  `epic`
   for work not yet decomposed.
-- **No wave to take**, at `Take the wave`. A report: every open task is blocked
+- **No wave to take**, at `Take the wave`. A report: every open story is blocked
   by something open, so name the issue that blocks and wait for it.
-- **A session that stopped to ask**, at `Recover a session`. Name the task,
-  its session and its pull request, and hand the question to the user. A
+- **A session that stopped to ask**, at `Recover a session`. Name the story,
+  its session and its pull request where one exists, and hand the question to the user. A
   fallback implementor's question is the other thing: it arrives through the
   messaging, is readable, and is answered on the advisor route. So is a web
   session's question that arrives in its report. This stop covers the
@@ -666,9 +733,10 @@ Seven, and four of them are reports rather than questions.
   wave`. The graph wins, so the wave is not in doubt; the body is wrong, and
   fixing it is `epic`'s `Fill in the epic` rather than an edit made in passing
   here.
-- **A `Summary` claim that no merged task pull request delivers**, at `Close
-  the epic`. Name the claim, leave the epic open, cancel the watch, and wait
-  for a person to resolve the mismatch.
+- **An unsupported `Summary` claim**, at `Close the epic`. Diagnose and route
+  it under that step. Ask a person only for a genuinely missing decision or
+  contribution; an exhausted bound is an execution failure, not a request to
+  take over the work.
 - **Landing or archive is denied by the auto-mode classifier.** Do not post a
   record that claims the action happened, and do not seek another route to the
   same effect. Tell the user once which action was denied and the classifier's
@@ -697,9 +765,9 @@ Non-goals
   the shared advisor's to run, because the rule exists precisely so the
   implementor does not review itself. Landing is narrower: a mechanical read
   followed by one squash-merge call.
-- **Preserves a task's exact required class.** It resolves that class through
+- **Preserves a story's exact required class.** It resolves that class through
   eligible harness routes on the same family, provider, backend, and
-  authentication route. A missing route is reported for that task; it is never
+  authentication route. A missing route is reported for that story; it is never
   replaced by unchecked inheritance, an identifier copied from the body, or a
   shared-role change.
 - **Does not manage sibling branches.** It does not serialise their merges and
