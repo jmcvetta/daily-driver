@@ -90,26 +90,33 @@ The current baseline is `f053d4ce63b97ee51abec43da0a86d1df4f8bc6a`.
 The reconciled candidate retains the baseline's headless execution, protected
 handoff, CI-scope, and bounded-experiment requirements. Measurements use UTF-8
 bytes, not estimated tokens. The earlier measurements above remain historical.
+The final candidate core has SHA-256
+`39075eb1cd25647ebc32b84f94ceb10e46251f16a37f263199991ea25ccb1076`.
 
 | Delivered unit | Current base | Reconciled candidate |
 | --- | ---: | ---: |
-| Constitution file | 18,502 | 8,716 |
-| Omp core body, main and child | 18,474 | 8,688 |
-| Claude raw startup hook wrapper | 2,564, preview only | 8,910, complete |
-| Codex startup/child hook block | 10,107, truncated | 8,835, complete |
+| Constitution file | 18,502 | 8,761 |
+| Omp core body, main and child | 18,474 | 8,733 |
+| Claude raw startup hook wrapper | 2,564, preview only | 8,955, complete |
+| Codex startup/child hook block | 10,107, truncated | 8,880, complete |
 
 Loopback providers and disposable credential-free homes exercised Omp 18.18.0,
 Claude Code 2.1.267, and Codex CLI 0.160.0. Candidate captures contain one
 complete core on main and native child subject requests, task switching, and
 Omp/Claude resume after compaction. Codex resume retains two complete hook
-blocks (17,670 bytes); after native compaction both remain. Baseline Codex also
+blocks (17,760 bytes); after native compaction both remain. Baseline Codex also
 accumulates two truncated blocks. This is actual repeated delivery, not a
 single-copy measurement. Summarizer and skill-preparation requests are not
 subject-core delivery. Scripted providers prove delivery and workflow access,
 not autonomous compliance; their fabricated usage counters are not inference
 cost evidence.
+Task-private `disclosure_omp_probe.py`, `disclosure_claude_probe.py`, and
+`disclosure_probe.py` produced the captures under ignored `evals/runs/`.
+The candidate runs used 35, 11, and 12 local provider requests respectively.
+Their main, child, switch, compact, and resume phases completed. These are
+request-construction experiments, not inference-cost or model-behavior results.
 
-The candidate hook payload has 165 bytes below the existing 9,000-byte ceiling.
+The candidate hook payload has 120 bytes below the existing 9,000-byte ceiling.
 Claude's raw startup bytes increase when the missing safety core is restored.
 The literal startup-decrease criterion remains unmet; normalization does not
 waive it. Workflow retrieval also costs context: ordinary edits retrieve

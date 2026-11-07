@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
 
@@ -180,6 +181,12 @@ class CodexDailyDriverAgent(CodexAgent):
             native.pop("enabled_tools", None)
             native.pop("disabled_tools", None)
             native["web_search"] = "disabled"
+            native["sandbox_workspace_write"] = {
+                "writable_roots": [],
+                "network_access": False,
+                "exclude_tmpdir_env_var": True,
+                "exclude_slash_tmp": True,
+            }
             native["features"] = {
                 **native.get("features", {}),
                 "shell_tool": shell,
@@ -201,6 +208,18 @@ class CodexDailyDriverAgent(CodexAgent):
             )
         else:
             super()._log_config_enforcement()
+
+    async def _run_turn_with_streaming(
+        self, state: Any, should_stop: Callable[[], bool] | None = None
+    ) -> tuple[Any, Any, str]:
+        """Route a failed native turn through the inherited partial-record error path."""
+        result = await super()._run_turn_with_streaming(state, should_stop)
+        turn = result[0]
+        status = getattr(turn, "status", None)
+        if getattr(status, "value", status) == "failed":
+            error = getattr(turn, "error", None)
+            raise RuntimeError(getattr(error, "message", None) or "Codex returned a failed turn")
+        return result
 
     async def communicate(self, user_input: str, **kwargs: Any) -> TurnRecord:
         """Run one turn, and hand back its transcript with the judge's anchor in it.

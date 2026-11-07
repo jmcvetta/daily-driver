@@ -234,7 +234,7 @@ enforcement is separately exercised by the installed scripted-provider check.
 
 The [runtime integration guide](../docs/harness-integration.md#core-delivery-and-workflow-retrieval)
 records complete-source and actual-delivery byte counts for the compact core.
-The base is `42b5bddb42cffffeab14678b446eed52a3c6bb23`. Installed local-provider
+Current and historical baselines are named in that guide. Installed local-provider
 captures prove delivery, not voluntary model compliance.
 
 The new `constitution/disclosure-ordinary-commit.yaml` and
@@ -247,10 +247,26 @@ requested-explanation, and read-only negative controls. Freeze both revisions,
 the exact cases, tool boundaries, replicates, and execution limits before a
 comparison. No model run for this change is authorized or recorded yet.
 
-Keep the Codex exclusions until its comparative route delivers hooks and
-enforces the declared boundary in an installed-runtime proof. The SDK adapter's
-linked skill files do not establish core delivery. Do not count an omitted arm
-as passing, or a scripted provider as a behavioral comparison.
+The Codex comparison must opt into `lifecycle_hooks: true` and `offline_fixture:
+true`, with an explicit allowed-tools list and a separate reviewed `CODEX_HOME`
+per arm. Install the frozen arm's hook manifest there and retain its native
+trust entries. The SDK's bundled binary can differ from `codex` on PATH; record
+the binary actually launched. Skill symlinks alone do not establish treatment.
+`offline_fixture` disables network access and extra writable roots. Read-only
+cases cannot write; write-enabled cases stay within the workspace. Read/Skill
+use the native shell, not exact Claude tool-name filtering. Delegated children
+inherit native confinement. Do not remove `skip:codex` globally: enable only
+declared cases whose actual capabilities and rubric have been checked. A
+source-quotation case that allows native shell writes also permits reads; it
+does not prove exclusive hook delivery on Codex.
+
+Native provider retry limits are not a campaign-wide no-retry setting. The
+installed runner permits up to three crash, four API-error, or six rate-limit
+attempts per communication. Include up to six attempts per planned communication
+in the campaign envelope, plus judge/helper work. Attempts and tool-turn ceilings
+are not API-request caps. Preserve failed turns and partial records; do not
+count provider errors as behavioral passes. A scripted provider is not a
+behavioral comparison.
 
 Report raw startup and delegated bytes separately from complete-delivery
 normalization. Claude's broken baseline delivers a small preview at startup;
