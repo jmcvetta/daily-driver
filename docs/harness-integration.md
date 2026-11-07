@@ -116,6 +116,19 @@ The candidate runs used 35, 11, and 12 local provider requests respectively.
 Their main, child, switch, compact, and resume phases completed. These are
 request-construction experiments, not inference-cost or model-behavior results.
 
+The opt-in `codex-daily-driver` adapter was also exercised through its actual SDK
+and bundled Codex 0.154.0, with reviewed native hook trust. Its five parent/child
+requests each contained one complete 8,880-byte core. Read-only and
+workspace-write confinement, blocked network access, and disabled shell/child
+tools were observed. Injected HTTP errors and broken streams each produced a
+crashed partial record rather than a false success. Native zero-retry provider
+settings made one request per injected failure, but the unchanged runner retried
+HTTP errors four times and broken streams three times. Its maximum is six
+communication attempts for rate-limit errors, not an API-request cap.
+The final task-private proof is
+`evals/runs/disclosure-codex-adapter-final-core-isolated/proof-evidence.json`;
+earlier overlapping-home captures are preserved but excluded.
+
 The candidate hook payload has 120 bytes below the existing 9,000-byte ceiling.
 Claude's raw startup bytes increase when the missing safety core is restored.
 The literal startup-decrease criterion remains unmet; normalization does not
