@@ -65,8 +65,10 @@ def _main() -> None:
         fcntl.flock(lock, fcntl.LOCK_EX)
         ledger = _load(path)
         parent = _load(_path(base, args.harness, session, args.parent)) if agent else None
+        # A nested child adopts its direct parent's contract but must still resolve the root's original sources.
+        root = _load(_path(base, args.harness, session, "")) if agent and args.parent else None
         request = {"harness": args.harness, "sessionId": session, "agentId": agent or None,
-                   "cwd": data.get("cwd", os.getcwd()), "ledger": ledger, "parentLedger": parent,
+                   "cwd": data.get("cwd", os.getcwd()), "ledger": ledger, "parentLedger": parent, "rootLedger": root,
                    "toolCommand": shlex.join(command)}
         if tool:
             request.update(action=data["action"], record=data.get("record"))

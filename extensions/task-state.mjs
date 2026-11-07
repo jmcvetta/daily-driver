@@ -16,6 +16,14 @@ const ROUTE_DISPOSITIONS = ["failed", "prohibited", "unavailable"];
 const oneOf = (items) => items.length === 2 ? items.map((item) => `"${item}"`).join(" or ")
 	: `${items.slice(0, -1).map((item) => `"${item}"`).join(", ")}, or "${items.at(-1)}"`;
 
+/** stripContractTags removes contract tags from model-written task input, wherever the harness renders it. */
+function stripContractTags(value) {
+	if (typeof value === "string") return value.replace(/<\/?daily-driver-task-contract>/gu, "");
+	if (Array.isArray(value)) return value.map(stripContractTags);
+	if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, stripContractTags(item)]));
+	return value;
+}
+
 function digest(value) {
 	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
@@ -242,8 +250,9 @@ export function createTaskStateController(pi) {
 		if (!available(ctx)) return;
 		if (ctx.agent.kind === "sub" && !read(ctx) && event.prompt) {
 			const delegatedContext = [...(event.systemPrompt ?? []), event.prompt].join("\n");
-			// delegateCall appends the genuine tag after model-written context, so a tag the model wrote earlier never wins.
-			const encoded = [...delegatedContext.matchAll(/<daily-driver-task-contract>([A-Za-z0-9_-]+)<\/daily-driver-task-contract>/gu)].at(-1)?.[1];
+			// delegateCall strips tags from every model-written field, so only a lone tag is genuine; more than one adopts nothing.
+			const tags = [...delegatedContext.matchAll(/<daily-driver-task-contract>([A-Za-z0-9_-]+)<\/daily-driver-task-contract>/gu)];
+			const encoded = tags.length === 1 ? tags[0][1] : undefined;
 			// Only a parent contract makes a child a task; a delegated prompt alone is not a user request.
 			if (encoded) adopt(ctx, JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")));
 		}
@@ -269,7 +278,8 @@ export function createTaskStateController(pi) {
 		const state = available(ctx) ? read(ctx) : null;
 		if (event.toolName !== "task" || !state || state.status !== "active") return;
 		const handoff = contractHandoff(state, { harness: "omp", sessionId: sessionId(ctx), sourceId: state.externalSourceId });
-		return { input: { ...event.input, context: `${event.input?.context ?? ""}\n<daily-driver-task-contract>${Buffer.from(JSON.stringify(handoff)).toString("base64url")}</daily-driver-task-contract>` } };
+		const input = stripContractTags(event.input ?? {});
+		return { input: { ...input, context: `${input.context ?? ""}\n<daily-driver-task-contract>${Buffer.from(JSON.stringify(handoff)).toString("base64url")}</daily-driver-task-contract>` } };
 	}
 
 	async function execute(_id, params, _signal, _update, ctx) {

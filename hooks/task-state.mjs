@@ -8,7 +8,8 @@ const TOOL = "daily_driver_task_state";
 /** isTaskStateCommand recognizes a shell call of the task-state command route. */
 function isTaskStateCommand(input) {
 	const command = typeof input?.command === "string" ? input.command : Array.isArray(input?.command) ? input.command.join(" ") : "";
-	return /hooks\/task-state\.py\b/u.test(command) && /(?:^|\s)--tool(?:\s|$)/u.test(command);
+	// A command chained with other work keeps its evidence; only a standalone (optionally piped) call is excluded.
+	return /hooks\/task-state\.py\b/u.test(command) && /(?:^|\s)--tool(?:\s|$)/u.test(command) && !/;|&&|\|\||\n/u.test(command);
 }
 
 /** handleTaskEvent maps attested harness events onto the shared task controller. */
@@ -17,12 +18,13 @@ export async function handleTaskEvent(request) {
 	if (ledger.schemaVersion !== 1 || !Array.isArray(ledger.entries)) throw new Error("Unsupported private task ledger schema");
 	const session = `${request.harness}:${request.sessionId}:${request.agentId ?? "main"}`;
 	const inherited = request.parentLedger?.entries ?? [];
+	const resolvable = [...inherited, ...(request.rootLedger?.entries ?? [])];
 	const notifications = [];
 	const pi = {
 		appendEntry(customType, data) { ledger.entries.push({ type: "custom", customType, data }); },
 		getActiveTools: () => request.toolAvailable === false ? [] : [TOOL],
 		getAllTools: () => [{ name: TOOL }],
-		resolveSource: (id) => inherited.map((item) => item.data?.source ?? item.data?.observation).find((item) => item?.sourceId === id),
+		resolveSource: (id) => resolvable.map((item) => item.data?.source ?? item.data?.observation).find((item) => item?.sourceId === id),
 	};
 	const ctx = { cwd: request.cwd, agent: { kind: "main" },
 		sessionManager: { getBranch: () => ledger.entries, getSessionId: () => session },
