@@ -1,0 +1,59 @@
+# Guards #785: the pre-link gate admits a ready, classed research issue under
+# an epic and refuses a research issue with no model class, without defaulting
+# it and without relabelling. The prompt supplies the issue facts; the run is
+# read-only and writes no edge.
+task_id: issue-deps-03-links-assignable-research-and-refuses-classless
+description: >-
+  A complete classed research issue passes the epic pre-link gate; the same
+  issue without class metadata does not, and is not silently repaired.
+tags: [issue-deps, behaviour, fire]
+
+initial_prompt: >-
+  Make #769 and #770 sub-issues of epic #662 in this repo. Both are labelled
+  `research` and neither is blocked. #769 states its question, purpose,
+  evidence plan, permitted actions, deliverable and stopping rule, and holds
+  one `## Model class` section with `reasoning` and a rationale. #770 is
+  equally complete but has no `## Model class` section. Say what you do for
+  each issue. This is a dry run: do not call any tracker tool or write any
+  edge, and describe the decision you would make.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`issue-deps` fires on a parent write"
+    expected_skill: issue-deps
+    skill_name: issue-deps
+  - type: agent_judge
+    description: The gate follows assignability, not the task kind
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if the reply links #769 as a sub-issue of #662 while
+      keeping it a `research` issue, with no complaint that it is not a
+      `task`; and does NOT link #770, naming the missing model class as the
+      gap, without defaulting the class to `implementation`, relabelling the
+      issue, or inventing scope. Score 0.5 if exactly one of those holds.
+      Score 0.0 if it refuses #769 only for its kind, or links #770 anyway.

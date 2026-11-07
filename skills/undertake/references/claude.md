@@ -42,7 +42,8 @@ issue carrying none of the standard's six is not an issue carrying none.
 `issue-labels`, whose `references/claude.md` states that trap where the label
 write lives.
 
-For a `task`, validate its `Model class` section and rationale through
+For a `task` or a classed `research` or `bug`, validate its `Model class`
+section and rationale through
 [`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
 claim, repairing an old or invalid body where its handoff is grounded. A
 frontier assignment also needs explicit approval and its exact envelope. A

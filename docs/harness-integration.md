@@ -43,7 +43,7 @@ did not reach the former Codex delegation route. Native Codex 0.160.0 child
 delivery is now observed with a local scripted Responses provider. Its function
 call uses `namespace: "multi_agent_v1"` and `name: "spawn_agent"`.
 
-### Measured delivery boundary
+### Initial measurement (superseded)
 
 Offline installed-runtime captures used Omp 18.15.0, Claude Code 2.1.267, and
 Codex 0.160.0. Providers listened on loopback only and used disposable homes
@@ -79,23 +79,69 @@ Actual delivery differs from the complete-source comparison:
   8,713-byte core once. Its default `additionalContext` threshold is 2,500
   approximate tokens; the manifest explicitly uses a finite 5,000-token budget.
 
-Claude also persists oversized hook output and sends a preview. The existing
-offline delivery suite bounds the rendered core to 9,000 UTF-8 bytes. The
-observed complete payload is 8,713 bytes; the ceiling leaves 287 bytes of
-headroom, not a guarantee about a larger payload on every harness. Do not
-raise that budget or restore a longer core without a new installed-runtime
-proof of complete delivery. Reintroducing a preview is not a context saving.
-If a safety or workflow comparison regresses, restore or relocate its control;
-do not weaken the rubric.
+The delivery suite bounds the rendered core to 9,000 UTF-8 bytes. Do not raise
+that budget or lengthen the core without a new installed-runtime proof of
+complete delivery. Reintroducing a preview is not a context saving. Restore or
+relocate any control needed by a failing comparison; do not weaken the rubric.
 
-Workflow retrieval has a cost: ordinary edits now retrieve `provenance`, and CI
-changes retrieve the larger `pr` skill. The byte reduction alone establishes
-neither lower total inference cost nor higher reliability. Behavioral model
-comparisons remain unexecuted pending bounded authorization and a working Codex
-evaluation route. The existing SDK adapter links skills but does not load these
-hooks; installed CLI delivery is not proof of SDK delivery.
+### Resumed measurement — 2026-11-07
+
+The current baseline is `f053d4ce63b97ee51abec43da0a86d1df4f8bc6a`.
+The reconciled candidate retains the baseline's headless execution, protected
+handoff, CI-scope, and bounded-experiment requirements. Measurements use UTF-8
+bytes, not estimated tokens. The earlier measurements above remain historical.
+
+| Delivered unit | Current base | Reconciled candidate |
+| --- | ---: | ---: |
+| Constitution file | 18,502 | 8,716 |
+| Omp core body, main and child | 18,474 | 8,688 |
+| Claude raw startup hook wrapper | 2,564, preview only | 8,910, complete |
+| Codex startup/child hook block | 10,107, truncated | 8,835, complete |
+
+Loopback providers and disposable credential-free homes exercised Omp 18.18.0,
+Claude Code 2.1.267, and Codex CLI 0.160.0. Candidate captures contain one
+complete core on main and native child subject requests, task switching, and
+Omp/Claude resume after compaction. Codex resume retains two complete hook
+blocks (17,670 bytes); after native compaction both remain. Baseline Codex also
+accumulates two truncated blocks. This is actual repeated delivery, not a
+single-copy measurement. Summarizer and skill-preparation requests are not
+subject-core delivery. Scripted providers prove delivery and workflow access,
+not autonomous compliance; their fabricated usage counters are not inference
+cost evidence.
+
+The candidate hook payload has 165 bytes below the existing 9,000-byte ceiling.
+Claude's raw startup bytes increase when the missing safety core is restored.
+The literal startup-decrease criterion remains unmet; normalization does not
+waive it. Workflow retrieval also costs context: ordinary edits retrieve
+`provenance`, and CI work retrieves `pr`. No lower total-cost or higher-reliability
+claim follows from source reduction. Behavioral comparison remains unexecuted
+pending its required bounded authorization.
 
 
+## Sensitive handoff examples
+
+The [constitution](../rules/constitution.md#non-negotiables) owns the headless
+default and protected-file handoff contract. These are example user notices
+after creating an owner-only file with POSIX mode `0600` outside the repository,
+build contexts and published artifacts. Paths are illustrative, not deliveries.
+
+- **Workstation, existing local access confirmed:** “On your workstation
+  `atlas`, read `/home/alex/.local/state/daily-driver/github-login.txt` in your
+  existing local session. Use its GitHub device-login instructions to approve
+  the pending login. I have not opened a terminal window.”
+- **Cloud, existing SSH access confirmed:** “On remote host `builder-7`,
+  read `/home/alex/.local/state/daily-driver/openai-login.txt` through your
+  existing authorized SSH connection as `alex`. Use its OpenAI device-login
+  instructions to approve the pending login. This path is on `builder-7`,
+  not your laptop.”
+- **No existing delivery route:** “The protected file is
+  `/home/agent/.local/state/daily-driver/github-login.txt` on remote host
+  `worker-9`. No existing authorized channel gives you access to that
+  filesystem, so the handoff is not delivered. I need an authorized way for
+  you to read that file. Independent permitted engineering continues.”
+
+These notices disclose neither credentials nor device codes. Device approval
+is the user's authentication action; it does not renew task approval.
 ## Task continuation and approval evidence
 
 The constitution requires agents to diagnose ordinary failures, preserve
@@ -107,13 +153,12 @@ On Omp, `extensions/task-state.mjs` registers `daily_driver_task_state` and
 uses `session_stop` for bounded correction. Task scope, source-anchored
 authorization, tool evidence and correction counts live in private,
 active-branch session entries. The adapter restores a compact handoff during
-context preparation and compaction. `status` returns bounded source excerpts;
-`status` with a JSON `record` containing `sourceId` returns the original
-authority source or retained tool evidence. Tool input/output payloads have
-bounded previews, truncation metadata and a fingerprint; the adapter does not
-persist a second full copy of every file written or command result.
-The [Omp undertaking reference](../skills/undertake/references/omp.md#task-evidence-state)
-defines the records and exact-quote limits.
+context preparation and compaction. Read `xd://daily_driver_task_state` in Omp
+for the action records, source discovery, exact-quote limits and examples.
+`status` returns bounded source excerpts; retrieval by source ID returns the
+original authority source or retained tool evidence. Tool input/output
+payloads have bounded previews, truncation metadata and a fingerprint; the
+adapter does not persist a second full copy of every file or command result.
 
 An unsupported unfinished stop receives at most two corrective continuations
 per unchanged observed condition. Restarting the process does not renew that
@@ -205,20 +250,42 @@ preserves the existing defaults; explicit same-family class roles remain
 operator assignments. Plugin-installed global defaults do not establish a
 mapping for unrelated families. A mapping is not measurement evidence.
 
-Classed undertaking calls `daily_driver_route_undertaking` alone in its
-assistant tool batch before worktree creation or claim. For a mapped family it
-selects the exact class within the invoking family and provider, preserving
-backend and authentication route across workers and visible fallbacks. A model
-or effort change remains `pending` until the next worker assistant response
-confirms actual execution. Show informative status during this normal
-verification, not an error; do not batch mutations with routing or start work
-while pending. An already matching model and effort needs no switch.
+An unset route configuration uses the registered default, including when Omp
+clones settings for a task. An explicit empty array stays empty; malformed
+explicit values are rejected rather than replaced with defaults.
 
-Rejecting an inference request does not replace the selected worker's route
-with a permanent blocked disposition. After restoring the selected model,
-effort, and authentication route, the session can continue without a restart.
-A partially applied selection whose restoration failed remains recovery-only;
-an ordinary response does not verify that route.
+Classed undertaking calls `daily_driver_route_undertaking` before worktree
+creation or claim. For a mapped family, admission resolves the selected class
+and visible automatic candidates once. It records their concrete backend,
+authentication route and effort. Dispatch and observed worker checks reuse
+that decision. Visible incompatible retry and prewalk candidates fail before
+dispatch. Independent specialist routes remain separate.
+
+Call routing alone and report pending verification as normal progress. These
+are workflow instructions, not conversation-wide runtime failures. The runtime
+still reserves a routing response's whole tool batch before admitting sibling
+mutations. A selected model or effort change stays `pending` until a successful
+response follows an admitted request from that worker. Rejected requests,
+consultations, error responses and cancelled responses do not verify it.
+
+Omp 18.16.0 exposes expanded child patterns at `before_subagent_spawn`. It does
+not expose a veto before every retry or prewalk model transition. The adapter
+therefore retains a final request guard for transitions that dispatch cannot
+guarantee. Agent-definition prewalk targets and later configuration changes
+also require this guard. It rejects unauthorized inference, not host controls.
+Local inspection, cancellation and model restoration do not require worker
+verification.
+
+A disposable loopback-provider experiment on Omp 18.16.0 distinguished the
+selected route, the resolved retry fallback and actual HTTP requests. The host
+reported `retry_fallback_applied` for an incompatible model; its request never
+reached the provider. Local `get_state`, `abort` and `set_model` remained
+available. A restored turn and a reloaded session completed on the original
+route. This is boundary evidence, not evidence of model-class suitability.
+
+Rejecting a request does not replace the stored selected route with a blocked
+disposition. A partially applied selection whose restoration failed remains
+recovery-only; an ordinary response cannot certify it.
 
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
@@ -242,6 +309,32 @@ incomplete work. Selecting a different issue returns an error without replacing
 the existing owner or route; finish the completed undertaking or resume the
 existing one before selecting another. A finish call with the wrong issue also
 returns an error without changing the existing state.
+
+### Local undertaking recovery
+
+Omp registers `/undertaking status` and `/undertaking cancel <issue>` as host
+commands. They do not send a model request. They remain available after a
+rejected inference request or a saved-route restoration error.
+
+Status separates configured model and effort from the host selection and
+last observed execution identity. It reports the authentication route category,
+ownership, state, and last rejection reason without credential identities.
+If a malformed record has no recoverable issue, status reports
+`cancelOwner: invalid`; `/undertaking cancel invalid` explicitly cancels that
+record in the current session.
+
+Cancellation requires the exact current owner. It aborts and waits for local
+work before releasing only the undertaking's OAuth lease. It retires pending
+handoffs and revokes owned children. Running children retain their restrictions
+until shutdown and cannot resume after reload. Other sessions and operator-owned
+leases remain unchanged.
+
+Cancellation writes a schema-2 `cancelled` lifecycle record, not a completion
+record. Existing schema-1 active and completed records remain readable.
+Transcript, worktree, branch, approval evidence, and unfinished task state stay
+intact. A new undertaking requires normal admission. Repeated cancellation with
+no owner is a no-op. This command does not replace the workflow's stop handoff.
+
 
 Omp prefers its extension's in-session switch. A full handoff needs a surface
 that can constrain and verify the same route and has one owner. Claude's

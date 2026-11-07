@@ -35,7 +35,8 @@ makes further down this file.
 `issue-labels`, whose `references/omp.md` says why `--add-label` needs no
 read-first and the Claude route does.
 
-For a `task`, validate its `Model class` section and rationale through
+For a `task` or a classed `research` or `bug`, validate its `Model class`
+section and rationale through
 [`issue-body`'s guidance](../../issue-body/references/model-classes.md) before
 claim, repairing an old or invalid body where its handoff is otherwise
 grounded. A frontier task also needs explicit approval and its exact work
@@ -64,6 +65,19 @@ before worktree creation, claim, or implementation. A matching model and effort
 can verify without a switch. Read-only discovery and route/session recovery
 remain available while pending; queued mutating calls are blocked.
 
+Admission snapshots the effective candidate identities and effort. Worker
+dispatch and observation reuse that decision. A successful response must
+follow an admitted worker request; resolving a selector, rejecting a request,
+or receiving a consultation does not verify the worker. Visible incompatible
+retry and prewalk candidates fail before dispatch.
+
+Routing alone and informative progress wording remain workflow instructions.
+The runtime retains the actual batch admission barrier, not a separate
+conversation-wide procedure check. Omp does not expose every automatic
+transition before resolution, so a final request guard still rejects actual
+unauthorized inference. This guard does not block native host inspection,
+cancellation or model restoration.
+
 If the known family is absent from the class table, a prominent warning names the
 family, class, and retained provider/model. Continue immediately on the invoking
 model, provider, and effort without confirmation. The route is observed but class
@@ -89,6 +103,21 @@ returns an error and preserves the existing owner and route. Finish the
 completed undertaking or resume the existing one before selecting another.
 A finish call with the wrong issue also returns an error and preserves the
 existing state.
+
+**Operator recovery does not require a model turn.** Run `/undertaking status`
+locally to inspect the owner, selected model and effort, host selection, last
+observed execution identity, authentication route category, and last rejection.
+The command remains available after provider rejection or malformed saved state.
+Run `/undertaking cancel <issue>` with the exact owner reported by status to
+cancel unfinished routing. When status reports `cancelOwner: invalid`, use
+`/undertaking cancel invalid` for that malformed current-session record.
+Cancellation aborts and waits for local work, releases only the owned lease,
+retires pending handoffs, and revokes owned children. It persists cancellation
+without completing the issue or task state. It preserves transcript, worktree,
+branch, and approval evidence. A later undertaking requires fresh normal
+admission. Repeated cancellation with no owner is a no-op. Use the workflow's
+stop handoff separately when work must be stood down.
+
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a
@@ -181,34 +210,19 @@ an ordinary question. Mutating calls take a JSON-string `record`. `status`
 with `record: "{\"sourceId\":\"<id>\"}"` reads the original authority source
 or retained tool evidence rather than the default bounded excerpts.
 
-- `begin`: `{taskId, operation, target, source: {sourceId, quote}}`. Use the
-  latest external user source returned by `status`, not a copied handoff.
-- `authorization`: `{id, kind: "user" | "workflow", operation, target,
-  source: {sourceId, quote}, limits, conditions, expiresAt?, supersedes?,
-  revokes?, freshConfirmation?}`. Sources must resolve to original user input
-  or workflow instructions. Exact quotes establish provenance, not semantic
-  permission. Read conditions against the original source before acting.
-- `blocker`: `{operation, target, kind: "external" | "authorization" |
-  "safety" | "execution", evidence: [{sourceId, quote}], authorizationIds: [],
-  routes: [{route, disposition: "failed" | "prohibited" | "unavailable",
-  evidence: {sourceId, quote}}], externalContribution,
-  independentWork: {pending: [], completed: []}, resume}`.
-- `complete`: `{summary}`. This records reported completion, not independent
-  proof that acceptance criteria passed.
+The record shapes, defaults, source discovery and exact-quote limits are
+documented once, in the device itself: read `xd://daily_driver_task_state`.
+Use the latest external user source returned by `status` to begin, never a
+copied handoff. Sources must resolve to original user input or workflow
+instructions. Exact quotes establish provenance, not semantic permission, so
+read conditions against the original source before acting. `complete` records
+reported completion, not independent proof that acceptance criteria passed.
 
 The tool never grants permission or replaces harness approval. Original
 sources and tool evidence stay in session entries through compaction and
 process resume. Cross-session handoffs carry source references and applicable
 scope; copied agent text is not an original approval source in a new session.
 Revalidate through the original source or existing workflow authorization.
-
-Tool observations retain at most 2048 characters of serialized input and
-8192 characters of output, with a fingerprint of the complete original
-input/output. Truncated output retains prefix and suffix fragments;
-`textTruncated` and `prefixLength` identify their boundary. Exact quotes must
-fit wholly within one retained fragment, never across omitted text. A source
-lookup cannot recover the omitted payload. User and workflow authority sources
-are separate and remain available for approval revalidation.
 
 The `session_stop` adapter checks active unfinished tasks and returns at most
 two corrections for an unchanged observed condition. The count survives

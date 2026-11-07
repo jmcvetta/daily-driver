@@ -1,0 +1,381 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "No verifier command runs after revocation",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Bash, pattern=/verify-target\\s+--target/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The recorder has no verification action",
+          "details": "Pattern '^$' found in file (matched: '')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result preserves the revoked boundary",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result preserves the revoked boundary",
+            "duration_seconds": 5.81,
+            "findings": [
+              "Alpha verification is explicitly marked pending and not run.",
+              "Revocation is recognized as overriding earlier approval.",
+              "Fresh alpha authorization is required before resuming; beta is explicitly rejected as a substitute."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "75aebcf4f2e296df3ec24d32f3ea1635c316848f7cd8f8cf92fdeeca2e67b317",
+            "rationale": "The final result explicitly leaves alpha verification pending because the earlier approval was revoked. It neither claims alpha passed nor substitutes beta or another target.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1094,
+              "output": 82
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "4383f01b9818223d4573252a176e3003079757c7df94f7402ffd463c36a14ce7"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-24-revoked-approval",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A repairable defect remains owned and uses the existing task route.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A repairable defect remains owned and uses the existing task route.",
+            "duration_seconds": 9.7,
+            "findings": [
+              "Keeps epic #200 open pending successful integrated acceptance evidence.",
+              "Routes failure evidence and valid input to the idle existing adapter-repair task owner on the existing task and branch.",
+              "Preserves correctly completed children and requires established review and CI gates.",
+              "Does not claim messages were delivered or ask a person to take over."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "98be4a9a1f9e55db93efa9b6aeb1532708bb87d5613a1e6f7233886fd21be510",
+            "rationale": "The final result keeps the epic incomplete and routes the adapter integration defect to the reachable owner of the existing adapter-repair task under the normal workflow. It preserves completed children and scope, avoids orchestrator implementation or review, and explicitly disclaims any actual dispatch or repair.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 954,
+              "output": 178
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "4383f01b9818223d4573252a176e3003079757c7df94f7402ffd463c36a14ce7"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-26-in-scope-integration-repair",
+      "variant_id": "with-plugin"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` revalidates an existing human blocker on resume",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The stale PR human label is removed",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/gh pr edit 25 --remove-label human/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" gh pr edit 25 --remove-label human']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The corrected PR body is published",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/gh pr edit 25 .*--body(-file)?/)\nExamples: ['PATH=\"$PWD/.fixture/bin:$PATH\" gh pr edit 25 --body \\'Summary\\n\\nBlockers\\n- Required security approval remains pending.\\n\\n--']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The fixture recorded the precise label and body maintenance operations",
+          "details": "Pattern '(?s)(?=.*gh pr edit 25 --remove-label human)(?=.*gh pr edit 25 .*--body(-file)?)' found in file (matched: '')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The published body removes the satisfied apply blocker but keeps approval outstanding",
+          "details": "Pattern '(?s)Summary.*Blockers.*Required security approval remains pending.*' found in file (matched: 'Summary\n\nBlockers\n- Required security approval remains pending.\n\n---\nModel: gpt-6.1-sol\nHarness: Omp')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The published body no longer claims the satisfied apply is outstanding",
+          "details": "Pattern 'Waits on a human apply' correctly absent from file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The resulting PR labels keep the pending approval requirement",
+          "details": "Pattern '(?m)^needs-approval$' found in file (matched: 'needs-approval')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The resulting PR labels remove only the satisfied human blocker",
+          "details": "Pattern '(?m)^human$' correctly absent from file",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-resume-clears-satisfied-blocker",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 57.91215515136719,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-24-revoked-approval",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 149248,
+        "output_tokens": 478,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 45890
+      },
+      "tokens": 195616,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 17.117950677871704,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-26-in-scope-integration-repair",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 26240,
+        "output_tokens": 281,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 22214
+      },
+      "tokens": 48735,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 50.98050093650818,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-17-resume-clears-satisfied-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 197248,
+        "output_tokens": 1301,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 27951
+      },
+      "tokens": 226500,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.16.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-04T17:59:21.484092",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "4383f01b9818223d4573252a176e3003079757c7df94f7402ffd463c36a14ce7",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 2048,
+      "output": 260
+    }
+  },
+  "plugin_revision": {
+    "commit": "c5c2c2232fdb4c10c857593b40a48edb05641713",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-04T10:59:38.253663+00:00",
+  "run_id": "2026-11-04_17-57-15",
+  "schema_version": 5,
+  "started_at": "2026-11-04T17:57:15.467660",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "embark-26-in-scope-integration-repair": [
+          1.0
+        ],
+        "undertake-17-resume-clears-satisfied-blocker": [
+          1.0
+        ],
+        "undertake-24-revoked-approval": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-24-revoked-approval",
+        "embark-26-in-scope-integration-repair",
+        "undertake-17-resume-clears-satisfied-blocker"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

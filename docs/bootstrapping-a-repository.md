@@ -46,14 +46,11 @@ limits.
 Claude Code's marketplace installation also enables the official Worktrunk
 plugin as `worktrunk@daily-driver`; it does not install the separate `wt` CLI.
 On desktop, `task-worktree` installs `wt` on demand when repository changes
-need isolation. It uses Homebrew or Cargo in user scope and verifies the binary.
-You can install it ahead of time with Worktrunk's documented
-[Homebrew or Cargo installation][worktrunk-install]:
-
-```sh
-brew install worktrunk
-# or: cargo install --locked worktrunk
-```
+need isolation. It downloads Worktrunk's prebuilt release archive for your
+platform, verifies its SHA-256 checksum, and installs `wt` into
+`~/.local/bin` (or `$WORKTRUNK_INSTALL_DIR`). It never compiles Worktrunk. An
+existing `wt` is used as-is. You can install it ahead of time by following
+Worktrunk's [installation instructions][worktrunk-install].
 
 [worktrunk-install]: https://worktrunk.dev/#install
 

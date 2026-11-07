@@ -98,7 +98,7 @@ stops and waits`.
 Route assessment
 ----------------
 
-Every epic story must pass `Take the wave`'s task-readiness gate. Resolve its
+Every epic story must pass `Take the wave`'s assignability gate. Resolve its
 `Model class` using
 [`issue-body`'s shared guidance](../../issue-body/references/model-classes.md)
 before calling `create_session`.
@@ -230,10 +230,13 @@ session pushes after the read. `merge_method: squash` preserves the
 repository's pull-request-title subject. `Close the epic` uses the issue
 update only after the epic's coordinated acceptance condition is evidenced.
 
-**`closed_by_pull_requests` links a task to its pull request** through the
-`Closes #123` line `pr-body` writes. Compare the delivered outcome with the
-task's acceptance criteria; a closed issue alone is not evidence that the
-epic outcome was met.
+**`closed_by_pull_requests` links a task or bug to its pull request** through
+the `Closes #123` line `pr-body` writes. Compare the delivered outcome with the
+story's own completion contract. A research story has no pull request: read the
+answer recorded on the issue with `get_comments` against its deliverable. A bug
+closed by evidenced disposition has none either: read the recorded evidence and
+reason the same way. A
+closed issue alone is not evidence that the epic outcome was met.
 
 **There is a `mcp__Claude_Code_Remote__subscribe_pr_activity` with the same
 contract.** Where both exist, use the GitHub one, and use one namespace

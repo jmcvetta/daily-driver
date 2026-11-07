@@ -171,22 +171,34 @@ when its agreed deliverable is answer-only. Bounded inconclusive research is
 complete only with the evidence, limitation, and resolution path required by
 `issue-body`; failed access or abandoned work is not completion.
 
-**Only a `task` carries a required model class.** Validate its one
+**A `task`, and any classed `research` or `bug`, carries a required model
+class.** A `task` always does. A `research` or `bug` does when it is an epic
+story (it carries the `story` marker or is a child of an epic), when it carries
+a `## Model class` section, or when it is assigned `frontier`. Validate its one
 `## Model class` section and rationale through `issue-body` before the claim,
 repairing an old or invalid body to the current contract where the handoff is
-otherwise grounded. `bug` and routine `research` use their kind-specific
-readiness tests, not task class metadata. A research assignment using
-`frontier` follows `issue-body`'s narrow exception: it keeps the `research`
-label and must carry its single class section, rationale, explicit approval,
-and exact work envelope before claim or substantive work. Do not impose the
-task template on it. The class states the capability a dispatcher such as
-`embark` selects a route for.
+otherwise grounded. A story linked before the class was required is such an
+old body: where the handoff is grounded, repair its class through `issue` under
+`issue-body`'s update rule, choosing the lowest class that can deliver the
+settled work. Otherwise a missing or invalid class, or a missing rationale, is a
+gap to report; never default it to `implementation`. A classed
+`research` or `bug` keeps its kind: it uses its own readiness and completion
+tests, not the task template. A standalone `bug` or `research` with no story
+role and no class section uses its kind-specific readiness test alone. A
+research assignment using `frontier` follows `issue-body`'s narrow exception:
+it keeps the `research` label and must carry its single class section,
+rationale, explicit approval, and exact work envelope before claim or
+substantive work. The class states the capability a dispatcher such as `embark`
+selects a route for.
 
 A frontier assignment must carry explicit approval and its exact work envelope
 before execution. Frontier implementation also needs an explicit user
 exception recorded for that implementation scope.
 
-**Route classed undertaking work before the worktree or claim.** Resolve the
+**Route classed undertaking work before the worktree or claim.** This covers a
+classed `task`, `research` and `bug` alike, by the same route; there is no
+second router. Branch-free answer-only research keeps its route after routing.
+Resolve the
 exact class within the invoking model family and provider, including effort and
 visible fallbacks. Preserve backend and authentication route where supported.
 Never substitute another provider. An eligible account may refresh or rotate;
@@ -413,6 +425,13 @@ route is confirmed non-frontier, or when the user explicitly authorizes the
 bounded frontier implementation exception. No implementor dispatch is used for
 ordinary undertakings.
 
+**Own the agreed result through a pause.** A review-ready pull request is the
+result when the assignment stops there; ownership does not add deployment or
+first-use acceptance. A component worker may finish its own contract before an
+epic's outcome is evidenced. A genuine pause retains responsibility for
+diagnosis, outstanding requirements and the next executable action; it does
+not make the user responsible for finishing the work or imply completion.
+
 **A direct request authorizes its scoped work and normal verification.** This
 includes focused behavioral evaluation through the configured subscription.
 An explicitly assigned, bounded evaluation campaign or separately metered
@@ -604,6 +623,12 @@ facility, transfer secrets, or call the work human-only. If a person must
 provision access or approve an operation, isolate only that contribution from
 the work an authorized agent can do.
 
+An instruction or unconfirmed message is not a transfer of responsibility.
+Transfer only through a supported route when the receiving worker is confirmed,
+carrying the agreed result, original authority references and recovery counts.
+Do not launch a concurrent writer or restart a live owner. Until transfer is
+confirmed, retain ownership and report the actual resumption path.
+
 An explicit production prohibition or required human approval is enough to
 stop without a probe. Never test a prohibited operation, access production,
 perform a dangerous action to see whether it fails, bypass authentication,
@@ -620,27 +645,37 @@ can supply. Evidence can be linked; do not turn every PR body into a
 transcript. Pending CI and other external waits stay with the existing
 continuation; a recoverable execution failure is not a human blocker.
 Complete independent permitted work before pausing unless a higher-priority
-safety rule requires an immediate stop. On resume, revalidate the dependency
-against current evidence, then remove satisfied or stale blocker text and the
-corresponding PR `human` label while preserving unrelated labels. Keep every
-still-valid apply, state, approval or other requirement.
+safety rule requires an immediate stop. Ask for the contribution, not
+takeover of the remaining workflow. For consent, use the protected handoff
+route and retain verification and subsequent work. State what actually starts
+the next turn: use a supported continuation when the harness can observe the
+prerequisite, otherwise name the user reply or session resumption required.
+Do not promise monitoring across shutdown or cross-session approval transfer.
+On resume, revalidate current evidence and authority, then remove only
+satisfied or stale blocker text and the corresponding PR `human` label while
+preserving unrelated labels and every still-valid requirement. Continue the
+next permitted action without repeating unchanged approval requests.
 
-**Retain the stop decision, not only its conclusion.** Record the exact
+**Retain the stop decision, not only its conclusion.** Use the existing claim,
+orchestrator and stop-decision records to preserve the current owner, exact
 operation, failure evidence or restriction source, authorization checked,
 disposition of available permitted routes, smallest external contribution,
-independent work completed or still actionable, and resumption path. Reuse
-observed failures rather than rerunning them to populate a record. A runtime
-record is not proof of arbitrary claims: source validity and semantic
-sufficiency are separate. The active harness reference names the supported
-storage and stop-time enforcement; never assume another harness has it.
+independent work completed or still actionable, and concrete resumption path.
+Keep private approval and secret material out of public records. Reuse observed
+failures rather than rerunning them to populate a record. A runtime record is
+not proof of arbitrary claims: source validity and semantic sufficiency are
+separate. The active harness reference names the supported storage and
+stop-time enforcement; never assume another harness has it or that private
+active-branch records are a cross-session authority service.
 
 An unsupported unfinished stop earns a targeted correction, not a generic
 request to try harder. Runtime corrections are bounded at two per unchanged
 condition, retained through resume. Agent-rewritten descriptions do not reset
 the bound. Exhaustion is an execution failure, not missing user approval or
-completion. Existing review and retry bounds, explicit safety restrictions,
-and user cancellation take precedence. A queued correction never restarts
-cancelled work.
+completion. Preserve the unfinished result and concrete resume requirement;
+do not reset the bound by launching a replacement. Existing review and retry
+bounds, explicit safety restrictions, and user cancellation take precedence.
+A queued correction never restarts cancelled work.
 
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate
