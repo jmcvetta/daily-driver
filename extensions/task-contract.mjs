@@ -51,14 +51,17 @@ export function amendContract(state, record, reference) {
 	}
 	if (!Array.isArray(next.criteria) || !next.criteria.length) throw new Error("A contract needs stable acceptance-criterion ids");
 	const ids = new Set();
-	const previousById = new Map((state.contract.criteria ?? []).map((criterion) => [criterion.id, JSON.stringify(criterion)]));
-	for (const criterion of next.criteria) {
-		if (!nonblank(criterion.id) || !nonblank(criterion.description) || ids.has(criterion.id)) throw new Error("Criterion ids must be nonblank and unique");
+	// Key order and controller-added fields are not requirement changes.
+	const canonical = (criterion) => JSON.stringify([criterion.id, criterion.description, criterion.sourceRefs.map((ref) => [ref?.sourceId, ref?.quote])]);
+	const previousById = new Map((state.contract.criteria ?? []).map((criterion) => [criterion.id, criterion]));
+	next.criteria = next.criteria.map((criterion) => {
+		if (!nonblank(criterion?.id) || !nonblank(criterion.description) || ids.has(criterion.id)) throw new Error("Criterion ids must be nonblank and unique");
 		ids.add(criterion.id);
 		if (!Array.isArray(criterion.sourceRefs) || !criterion.sourceRefs.length) throw new Error("Every criterion requires retained source references");
-		// An unchanged criterion keeps its recorded references; a delegated child may not hold the parent's sources.
-		if (previousById.get(criterion.id) !== JSON.stringify(criterion)) criterion.sourceRefs = criterion.sourceRefs.map(normalize);
-	}
+		// An unchanged criterion keeps its recorded form; a delegated child may not hold the parent's sources.
+		const previous = previousById.get(criterion.id);
+		return previous && canonical(previous) === canonical(criterion) ? previous : { ...criterion, sourceRefs: criterion.sourceRefs.map(normalize) };
+	});
 	const previous = state.contract.criteria ?? [];
 	const removed = previous.filter((criterion) => !ids.has(criterion.id));
 	const changedCriteria = previous.some((criterion) => ids.has(criterion.id) && JSON.stringify(criterion) !== JSON.stringify(next.criteria.find((item) => item.id === criterion.id)));

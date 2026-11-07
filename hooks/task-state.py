@@ -33,6 +33,7 @@ def _main() -> None:
     parser.add_argument("--harness", choices=("claude", "codex"), required=True)
     parser.add_argument("--session")
     parser.add_argument("--agent", default="")
+    parser.add_argument("--parent", default="", help="Direct parent agent of a nested subagent; the root session when empty")
     parser.add_argument("--tool", action="store_true",
                         help="Task-state command route: accepts only {action, record}, never a hook event")
     args = parser.parse_args()
@@ -57,11 +58,13 @@ def _main() -> None:
     command = ["python3", str(Path(__file__).resolve()), "--harness", args.harness, "--tool", "--session", session]
     if agent:
         command += ["--agent", agent]
+    if agent and args.parent:
+        command += ["--parent", args.parent]
     with path.with_suffix(".lock").open("a", encoding="utf-8") as lock:
         os.chmod(lock.name, 0o600)
         fcntl.flock(lock, fcntl.LOCK_EX)
         ledger = _load(path)
-        parent = _load(_path(base, args.harness, session, "")) if agent else None
+        parent = _load(_path(base, args.harness, session, args.parent)) if agent else None
         request = {"harness": args.harness, "sessionId": session, "agentId": agent or None,
                    "cwd": data.get("cwd", os.getcwd()), "ledger": ledger, "parentLedger": parent,
                    "toolCommand": shlex.join(command)}

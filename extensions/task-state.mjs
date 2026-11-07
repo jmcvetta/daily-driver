@@ -146,7 +146,6 @@ export function createTaskStateController(pi) {
 			save(ctx, next);
 			return;
 		}
-		if (current?.externalSourceId === source.sourceId) throw new Error("Rewriting a task record cannot create a new task or renew its correction allowance");
 		const taskId = record.taskId ?? source.sourceId;
 		const contract = createContract(taskId, source);
 		save(ctx, {
@@ -243,7 +242,8 @@ export function createTaskStateController(pi) {
 		if (!available(ctx)) return;
 		if (ctx.agent.kind === "sub" && !read(ctx) && event.prompt) {
 			const delegatedContext = [...(event.systemPrompt ?? []), event.prompt].join("\n");
-			const encoded = delegatedContext.match(/<daily-driver-task-contract>([A-Za-z0-9_-]+)<\/daily-driver-task-contract>/u)?.[1];
+			// delegateCall appends the genuine tag after model-written context, so a tag the model wrote earlier never wins.
+			const encoded = [...delegatedContext.matchAll(/<daily-driver-task-contract>([A-Za-z0-9_-]+)<\/daily-driver-task-contract>/gu)].at(-1)?.[1];
 			// Only a parent contract makes a child a task; a delegated prompt alone is not a user request.
 			if (encoded) adopt(ctx, JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")));
 		}

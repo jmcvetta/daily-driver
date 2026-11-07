@@ -1,8 +1,16 @@
+/** parentOf names a subagent's direct parent loop, so a nested child adopts its parent's contract, not the root's. */
+async function parentOf($, agentId) {
+	if (!agentId) return null;
+	return (await $.agent.list()).find((agent) => agent.id === agentId)?.parentId ?? null;
+}
+
 async function request($, payload, agentId) {
 	const session = await $.session.id();
 	const cwd = await $.session.cwd();
 	const argv = ["python3", `${$.plugin.root}/hooks/task-state.py`, "--harness", "claude", "--session", session];
 	if (agentId) argv.push("--agent", agentId);
+	const parent = await parentOf($, agentId);
+	if (parent) argv.push("--parent", parent);
 	if (payload.action) argv.push("--tool");
 	const result = await $.process.run(argv, { stdin: JSON.stringify({ ...payload, cwd }), timeoutMs: 10000 });
 	const output = result.stdout ? JSON.parse(result.stdout) : null;
@@ -61,7 +69,10 @@ export function register(on) {
 			return result.isError ? { deny: result.content?.[0]?.text ?? "Task-state command failed" } : { result: JSON.stringify(result.details) };
 		}
 		const result = await next(e);
-		await observe($, { name: "tool.result", id: e.tool_use_id, tool: e.tool, input: e, result: result.result ?? result.deny, isError: Boolean(result.isError || result.deny) }, e.agentId);
+		if (!result) return result;
+		// The tool's arguments sit beside reserved per-call fields; a per-call id in the input would make every failure look new.
+		const { tool, tool_use_id: toolUseId, agentId, requestMeta: _meta, ...input } = e;
+		await observe($, { name: "tool.result", id: toolUseId, tool, input, result: result.result ?? result.deny, isError: Boolean(result.isError || result.deny) }, agentId);
 		return result;
 	});
 	on("classic.SessionStart", async ($, e, next) => {

@@ -150,7 +150,9 @@ No ledger or transcript is written to the repository.
 Native child adapters inherit contract identity, revision, criterion IDs and
 authority locators. Delegated input remains an interpretation. Hook-harness
 children resolve original sources from the parent's private ledger, not from
-copied prose. An Omp handoff retains native session/source locators; a source
+copied prose. On Claude Code the mod reads the engine's `parentId`, so a
+nested child adopts its direct parent's revision; Codex children use the root
+session's ledger. An Omp handoff retains native session/source locators; a source
 unavailable on the child's branch remains `source-unavailable`, not approved.
 The existing workflow handoffs carry those locators across sessions. Never
 publish private quotes in a GitHub handoff.

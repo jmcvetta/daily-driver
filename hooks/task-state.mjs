@@ -5,6 +5,12 @@ import { contractHandoff } from "../extensions/task-contract.mjs";
 
 const TOOL = "daily_driver_task_state";
 
+/** isTaskStateCommand recognizes a shell call of the task-state command route. */
+function isTaskStateCommand(input) {
+	const command = typeof input?.command === "string" ? input.command : Array.isArray(input?.command) ? input.command.join(" ") : "";
+	return /hooks\/task-state\.py\b/u.test(command) && /(?:^|\s)--tool(?:\s|$)/u.test(command);
+}
+
 /** handleTaskEvent maps attested harness events onto the shared task controller. */
 export async function handleTaskEvent(request) {
 	const ledger = request.ledger ?? { schemaVersion: 1, entries: [] };
@@ -40,6 +46,8 @@ export async function handleTaskEvent(request) {
 			const genuine = request.harness === "codex" ? !request.agentId : ["composer", "bridge"].includes(event.origin?.kind);
 			controller.input({ text: event.prompt ?? event.text ?? "", source: genuine ? "rpc" : "delegated",
 				harness: request.harness, origin, eventId: event.turn_id ?? event.id, allowTask: request.harness === "claude" && event.origin?.kind === "sdk" }, ctx);
+		} else if ((name === "PostToolUse" || name === "tool.result") && isTaskStateCommand(event.tool_input ?? event.input)) {
+			// The model's own task-state call is bookkeeping: its errors must not become blocker evidence or reset the correction bound.
 		} else if (name === "PostToolUse" || name === "tool.result") {
 			const response = event.tool_response ?? event.result;
 			controller.toolResult({ toolCallId: event.tool_use_id ?? event.id, toolName: event.tool_name ?? event.tool,
