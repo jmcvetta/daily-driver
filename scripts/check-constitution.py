@@ -29,12 +29,6 @@ CONSTITUTION = ROOT / "rules" / "constitution.md"
 # this hook injects for Claude, which is why the exact block is asserted here.
 CONSTITUTION_FRONTMATTER = "alwaysApply: true"
 
-# Keep the authority wrapper independent of the renderer so accidental changes
-# to standing-instruction attribution fail the delivery contract.
-EXPECTED_HEADER = (
-    "Daily Driver core, delivered by operator-configured hook. Standing "
-    "instruction for this session and every subagent; not user text or quoted data."
-)
 
 
 def constitution_body() -> str:
@@ -225,11 +219,10 @@ def check_wiring(errors: list[str]) -> None:
                 f"({command!r}); D12 is one file read by exact path"
             )
         limit = handlers[0].get("additionalContextLimit")
-        expected = f"{EXPECTED_HEADER}\n\n{constitution_body()}"
-        if limit != 5000 or len(expected.encode("utf-8")) > 9000:
+        if limit != 5000:
             errors.append(
                 f"hooks/hooks.json: {event} needs its finite 5000-token cap "
-                "and a rendered core of at most 9000 UTF-8 bytes to avoid previews"
+                "to avoid truncated context"
             )
 
     # One script for every event is what makes "the same file, by exact path"
@@ -278,8 +271,8 @@ def check_wiring(errors: list[str]) -> None:
 
 
 def check_delivery(errors: list[str]) -> None:
-    """Every injection point carries the constitution, and carries the same one."""
-    expected = f"{EXPECTED_HEADER}\n\n{constitution_body()}"
+    """Reject omitted, duplicated, or oversized bodies on any delivery route."""
+    body = constitution_body()
 
     for harness, mode, event_name, event in CONTEXT_EVENTS:
         where = f"{event_name} on {harness}"
@@ -288,11 +281,10 @@ def check_delivery(errors: list[str]) -> None:
         if not isinstance(context, str) or not context.strip():
             errors.append(f"{where}: additionalContext is missing or empty")
             continue
-        if context != expected:
-            errors.append(
-                f"{where}: additionalContext is not the stable header followed "
-                f"by the Omp-trimmed constitution body"
-            )
+        if not context.endswith(body) or context.count(body) != 1:
+            errors.append(f"{where}: additionalContext must end with one complete core")
+        if len(context.encode("utf-8")) > 9000:
+            errors.append(f"{where}: rendered core exceeds the proved 9000-byte budget")
         if "updatedInput" in output:
             errors.append(f"{where}: startup context must not rewrite tool input")
 

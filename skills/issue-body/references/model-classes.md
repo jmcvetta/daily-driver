@@ -81,10 +81,10 @@ frontier exception or an eligible ordinary class. Frontier implementation
 requires explicit user authorization and its bounded scope; research approval
 does not cover it. Ordinary workers cannot fall back to frontier.
 
-For an operator's manual escalation during a failing task, apply the
-constitution's *Manual frontier escalation*: repair the plan and return the
-existing work to an eligible ordinary worker. Manual escalation is authorized;
-it is not a frontier implementation exception or an agent-initiated assignment.
+For an operator's manual escalation during a failing task, apply `undertake`'s
+*Manual frontier escalation* policy: repair the plan and return the existing
+work to an eligible ordinary worker. Manual escalation is authorized; it is
+not a frontier implementation exception or an agent-initiated assignment.
 Keep this consultation separate from the task's required class, assigned worker,
 approval evidence, and execution verification. Operator model selection must
 not be vetoed for missing assignment approval. It does not authorize unrelated

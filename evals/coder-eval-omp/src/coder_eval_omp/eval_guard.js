@@ -26,7 +26,8 @@
  *    `CODER_EVAL_OMP_TOOLS`. The adapter always sets it, so a guard that finds
  *    it unset is misconfigured, and refuses every `write`, devices included.
  * 3. File-tool targets must pass `read_boundary.js` against the adapter's
- *    task and treatment-document policy. Missing policy fails closed.
+ *    sandbox and treatment-document policy. Git-registered linked worktrees
+ *    beside the sandbox also qualify. Missing policy fails closed.
  *
  * No third-party dependencies.
  */

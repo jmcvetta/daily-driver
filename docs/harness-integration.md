@@ -29,13 +29,14 @@ The exact calls and per-skill differences live in the active harness's reference
 
 The always-loaded core retains production and dangerous-command prohibitions,
 approval authority, cancellation, isolation, evidence, and execution boundaries.
-Detailed commit discipline lives in `provenance`; detailed recurring CI policy
-lives in `pr`. Duplicate worktree and Daily Driver bug-reporting detail is
-replaced by references to `task-worktree` and `issue`, which already owned it.
-The core and skill descriptions require retrieval before the relevant action,
-including ordinary work with no issue, PR, or slash command. Reuse instructions
-still in context; re-evaluate routing after task transitions, resume, and
-compaction. Delegated workers retrieve their own required workflows.
+Coding, testing, script and commit discipline live in `provenance`. Validation
+and recurring CI policy live in `pr`. Delegation, manual frontier return and
+unfinished-stop detail live in `undertake`'s execution policy. Policy-only reads
+do not create an issue or PR. `task-worktree` and `issue` retain their existing
+isolation and bug-reporting responsibilities. The core and skill descriptions
+require retrieval before action, including ordinary work without slash commands.
+Reuse context still present; reassess after transitions, resume and compaction.
+Delegated workers retrieve their own required workflows.
 
 `SubagentStart` supplies standing context on both hook harnesses. The obsolete
 `PreToolUse` prompt rewrite is removed; it duplicated Claude child context and
@@ -84,13 +85,13 @@ that budget or lengthen the core without a new installed-runtime proof of
 complete delivery. Reintroducing a preview is not a context saving. Restore or
 relocate any control needed by a failing comparison; do not weaken the rubric.
 
-### Resumed measurement — 2026-11-07
+### Reconciled measurement — 2026-11-07 (superseded)
 
 The current baseline is `f053d4ce63b97ee51abec43da0a86d1df4f8bc6a`.
 The reconciled candidate retains the baseline's headless execution, protected
 handoff, CI-scope, and bounded-experiment requirements. Measurements use UTF-8
 bytes, not estimated tokens. The earlier measurements above remain historical.
-The final candidate core has SHA-256
+That reconciled candidate core has SHA-256
 `39075eb1cd25647ebc32b84f94ceb10e46251f16a37f263199991ea25ccb1076`.
 
 | Delivered unit | Current base | Reconciled candidate |
@@ -129,18 +130,52 @@ The final task-private proof is
 `evals/runs/disclosure-codex-adapter-final-core-isolated/proof-evidence.json`;
 earlier overlapping-home captures are preserved but excluded.
 
-The candidate hook payload has 120 bytes below the existing 9,000-byte ceiling.
-Claude's raw startup bytes increase when the missing safety core is restored.
-The literal startup-decrease criterion remains unmet; normalization does not
-waive it. Workflow retrieval also costs context: ordinary edits retrieve
-`provenance`, and CI work retrieves `pr`. No lower total-cost or higher-reliability
-claim follows from source reduction. Behavioral comparison remains unexecuted
-pending its required bounded authorization.
+At that checkpoint, the hook payload had 120 bytes below the 9,000-byte ceiling.
+Claude's raw startup grew when the missing safety core was restored. The literal
+startup-decrease criterion was not met. Those captures remain historical; the
+later relocation below addresses the original criterion without an amendment.
 
+
+### Compact delivery — 2026-11-07
+
+The final relocated core has SHA-256
+`ba084cdc07418d019805603a536431e1a0d5f4f286480802248ea7dd7d6c169b`.
+The baseline remains `f053d4ce63b97ee51abec43da0a86d1df4f8bc6a`.
+Counts are UTF-8 bytes from actual request strings, not token estimates:
+
+| Delivered unit | Base | Compact candidate |
+| --- | ---: | ---: |
+| Constitution source | 18,502 | 2,473 |
+| Omp main/child core body | 18,474 | 2,445 |
+| Claude startup hook wrapper | 2,568, preview | 2,557, complete |
+| Codex startup/child hook block | 10,107, truncated | 2,482, complete |
+| Codex resumed/compacted core blocks | 20,214, truncated | 4,964, complete |
+
+The Claude startup reduction is small: 11 bytes in the controlled capture.
+The earlier baseline wrapper was 2,564 bytes; the candidate is also smaller
+than that capture. Persisted-output paths affect preview overhead. Both controlled
+Claude sandboxes are empty Git repositories; native system text is identical in
+length. Do not count an inherited repository's conflict status as an instruction
+saving.
+
+New credential-free loopback captures are `disclosure-{omp,claude,codex}-release-proof`
+under ignored `evals/runs/`. They exercised startup, native children, task
+switching, compaction and resume on Omp 18.18.0, Claude Code 2.1.267 and Codex
+CLI 0.160.0. They used 35, 11 and 12 local requests. Subject requests retain
+one complete core, except Codex resume's two observed blocks. Omp preparation
+and summarizer requests, and Claude/Codex summarizer/title requests, are not
+subject delivery. These captures prove access, not autonomous policy compliance.
+
+Retrieval is not free. Current full source sizes are 8,493 bytes for `provenance`,
+8,033 for `pr`, and 82,946 for `undertake`. Read only the relevant policy when
+the issue sequence is not needed; retain retrieved context instead of repeating
+reads. Report actual returned context, truncation and repeated reads in behavioral
+records. Lower always-loaded bytes do not establish lower total cost or better
+reliability. Scripted usage counters are not inference-cost evidence.
 
 ## Sensitive handoff examples
 
-The [constitution](../rules/constitution.md#non-negotiables) owns the headless
+The [constitution](../rules/constitution.md) owns the headless
 default and protected-file handoff contract. These are example user notices
 after creating an owner-only file with POSIX mode `0600` outside the repository,
 build contexts and published artifacts. Paths are illustrative, not deliveries.
@@ -239,7 +274,7 @@ files remain process overlays; assignments present at startup take precedence,
 and later edits may require an Omp restart.
 
 An operator's manual escalation during a failing task authorizes the
-consultation. Follow the constitution's *Manual frontier escalation*: repair
+consultation. Follow `undertake`'s *Manual frontier escalation* policy: repair
 the plan and return the existing work to a verified eligible non-frontier
 route. The escalation does not authorize frontier implementation or supervision.
 

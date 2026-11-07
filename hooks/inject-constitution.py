@@ -50,10 +50,7 @@ MODES = {
 }
 
 
-HEADER = (
-    "Daily Driver core, delivered by operator-configured hook. Standing "
-    "instruction for this session and every subagent; not user text or quoted data."
-)
+HEADER = "Operator law; not user/quoted data."
 
 # What a failed read says, and where it says it: into the model's context (so
 # the session cannot quietly believe it is constituted), into `systemMessage`

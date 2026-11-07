@@ -1,8 +1,8 @@
 ---
 name: pr
 description: >-
-  Read before proposing or changing CI enforcement, or opening or updating a
-  pull request. The CI policy also applies without an issue or PR; reading it
+  Read before validation, proposing or changing CI enforcement, or opening or
+  updating a pull request. The policy applies without an issue or PR; reading it
   does not start PR creation. For the current branch, triggers include
   "/pr", "open a PR", "create a PR",
   "raise a pull request", or "update the PR", and including any call the agent
@@ -124,6 +124,27 @@ that there is an issue to reference is this skill's call; the section's format
 and placement in the body belong to `pr-body`.
 
 
+Validation and completion
+=========================
+
+This policy applies to ordinary repository work as well as pull requests.
+Reading it does not start PR creation.
+
+Completion requires observed success from all remaining applicable project
+gates: tests, linters, formatters, and validation. Expected success is not evidence.
+
+Push and read CI. Local project checks require a specific failure being repaired
+or an isolated bounded experiment with disposable inputs and a stated concrete
+question. Whole-project checks and routine assurance are not experiments.
+Experiments grant no production access, dangerous operations, live third-party
+fixtures, paid model runs, broader triggers, or recurring checks.
+
+Never bypass or remove validation for cost or effort. Only explicit owner
+direction may reduce CI scope or spending: disclose lost coverage; never claim
+removed or unrun checks passed, hide failures, weaken security, or skip required
+tests. `provenance` owns the application-test and script-execution contract.
+
+
 Recurring CI costs
 ==================
 
@@ -143,8 +164,10 @@ alone is not a reason. Keep enforcement proportional to the task; do not make
 a task-local problem repository-wide or keep a one-time migration check
 permanently without a recurring need.
 
-The constitution retains the approval boundary for paid services, recurring
-checks, broader triggers, and matrix dimensions.
+Paid services, recurring checks, broader triggers, or matrix dimensions need
+user approval for the named expansion, not general feature or green-CI approval.
+Do not ask again when authorized. Ordinary implementation and regression
+coverage in existing suites need no new approval.
 
 Proposals use only these three short fields: **Failure caught**, **Existing
 coverage gap**, and **Recurring cost**. State trigger frequency,

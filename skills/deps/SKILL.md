@@ -22,9 +22,8 @@ Dependabot files one pull request per dependency: a branch each, a CI run
 each, a review each. This skill does the opposite. **One branch carries every
 upgrade, and one CI run says whether the result holds together.**
 
-The upgrades themselves are the package manager's work, never a hand-edited
-manifest or lockfile. That rule is the constitution's, under `Dependencies`,
-and it is not restated here.
+The upgrades themselves follow `provenance`'s package-manager policy, never a
+hand-edited manifest or lockfile. That policy is not restated here.
 
 **The routes are per harness, and they live beside this file.** Every
 operation below is named in words here and resolved to a call there:

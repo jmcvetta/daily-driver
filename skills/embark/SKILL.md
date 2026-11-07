@@ -228,9 +228,9 @@ switch is available, report the gap. Frontier implementation requires explicit
 user authorization for that exception and its bounded scope; planning or
 research approval does not cover it.
 
-For a manual escalation during a task, the constitution's *Manual frontier
-escalation* requires plan repair before returning the existing work. This is
-not permission to retain or supervise the implementation on frontier.
+For a manual escalation during a task, `undertake`'s *Manual frontier escalation*
+policy requires plan repair before returning the existing work. This is not
+permission to retain or supervise the implementation on frontier.
 
 The selected route and actual model are distinct from any task class. Record
 `unreported` when actual identity is unavailable; visible provider fallbacks

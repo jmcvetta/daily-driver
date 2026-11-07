@@ -256,13 +256,20 @@ Use them with the existing production refusal, authorized public search,
 approval-resume, worktree isolation, pending-CI, delegated-delivery,
 requested-explanation, and read-only negative controls. Freeze both revisions,
 the exact cases, tool boundaries, replicates, and execution limits before a
-comparison. No model run for this change is authorized or recorded yet.
+comparison. Preserve every completed or failed attempt when repairing the
+implementation or evaluation boundary; a failed fixture is not behavioral parity.
 
-The Codex comparison must opt into `lifecycle_hooks: true` and `offline_fixture:
-true`, with an explicit allowed-tools list and a separate reviewed `CODEX_HOME`
-per arm. Install the frozen arm's hook manifest there and retain its native
-trust entries. The SDK's bundled binary can differ from `codex` on PATH; record
-the binary actually launched. Skill symlinks alone do not establish treatment.
+The Codex comparison opts into `lifecycle_hooks: true` and `offline_fixture:
+true`, with an explicit allowed-tools list. Use either separate reviewed native
+homes or `reviewed_hook_payload` to select frozen hooks while retaining normal
+account lookup. The payload accepts only command hooks with explicit trust,
+MCP entries containing `enabled: false`, and disabled `plugins`, `plugin_hooks`
+and `apps`. It cannot expand sandbox or launch settings. Before each communication,
+the adapter inspects effective native metadata at the actual task directory;
+unexpected managed hooks, inherited capabilities or invalid trust fail before a
+model turn. Inspection changes no shared files and starts no model. The SDK's
+bundled binary can differ from `codex` on PATH; record the one actually launched.
+Skill symlinks alone do not establish treatment.
 `offline_fixture` disables network access and extra writable roots. Read-only
 cases cannot write; write-enabled cases stay within the workspace. Read/Skill
 use the native shell, not exact Claude tool-name filtering. Delegated children
@@ -270,6 +277,12 @@ inherit native confinement. Do not remove `skip:codex` globally: enable only
 declared cases whose actual capabilities and rubric have been checked. A
 source-quotation case that allows native shell writes also permits reads; it
 does not prove exclusive hook delivery on Codex.
+
+The Omp file boundary admits a sibling worktree only after Git proves its
+registration, matching common directory and linked-worktree placement.
+Canonical containment still rejects unrelated repositories, unregistered
+siblings, symlink escapes and undeclared treatment sources. A valid Worktrunk
+worktree must not fail ordinary repository cases solely because it is a sibling.
 
 Native provider retry limits are not a campaign-wide no-retry setting. The
 installed runner permits up to three crash, four API-error, or six rate-limit
