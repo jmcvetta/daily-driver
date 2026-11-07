@@ -147,11 +147,12 @@ Counts are UTF-8 bytes from actual request strings, not token estimates:
 | --- | ---: | ---: |
 | Constitution source | 18,502 | 2,473 |
 | Omp main/child core body | 18,474 | 2,445 |
-| Claude startup hook wrapper | 2,568, preview | 2,557, complete |
-| Codex startup/child hook block | 10,107, truncated | 2,482, complete |
-| Codex resumed/compacted core blocks | 20,214, truncated | 4,964, complete |
+| Claude PATH CLI 2.1.267 startup wrapper | 2,568, preview | 2,557, complete |
+| Claude SDK CLI 2.1.273 startup wrapper | 2,570, preview | 2,557, complete |
+| Codex CLI 0.160.0 / SDK 0.154.0 startup/child block | 10,107, truncated | 2,482, complete |
+| Codex CLI 0.160.0 resumed/compacted blocks | 20,214, truncated | 4,964, complete |
 
-The Claude startup reduction is small: 11 bytes in the controlled capture.
+The Claude startup reduction is small, but the candidate delivers the full core.
 The earlier baseline wrapper was 2,564 bytes; the candidate is also smaller
 than that capture. Persisted-output paths affect preview overhead. Both controlled
 Claude sandboxes are empty Git repositories; native system text is identical in
@@ -166,8 +167,20 @@ one complete core, except Codex resume's two observed blocks. Omp preparation
 and summarizer requests, and Claude/Codex summarizer/title requests, are not
 subject delivery. These captures prove access, not autonomous policy compliance.
 
+The actual Claude subject SDK selects its bundled 2.1.273 binary, not PATH's
+2.1.267. A separate loopback lifecycle capture used that binary with the SDK's
+empty system-prompt and project-setting options: 11 candidate requests and ten
+baseline requests. Candidate subject requests, including native children and
+post-compaction resume, retained one complete core. The captures are
+`disclosure-claude-sdk-proof-{base,cand}` under ignored `evals/runs/`.
+
+The actual Codex SDK/bundled 0.154.0 baseline was also measured with reviewed
+frozen hooks: five parent/child requests each contained one 10,107-byte truncated
+block, not its complete 18,786-byte rendered core. Its proof is
+`disclosure-release-20261107/codex-preparation/base-sdk-parent-child-delivery/`.
+
 Retrieval is not free. Current full source sizes are 8,493 bytes for `provenance`,
-8,033 for `pr`, and 82,334 for `undertake`. Read only the relevant policy when
+8,033 for `pr`, and 82,361 for `undertake`. Read only the relevant policy when
 the issue sequence is not needed; retain retrieved context instead of repeating
 reads. Report actual returned context, truncation and repeated reads in behavioral
 records. Lower always-loaded bytes do not establish lower total cost or better
@@ -182,6 +195,13 @@ requiring a native-home `hooks.json` or changing shared configuration.
 The frozen `bd089b6` proof is under
 `disclosure-release-20261107/codex-preparation/compact-core-adapter-proof-bd089b6/`
 in ignored `evals/runs/`. It does not prove Git-write capability or model behavior.
+
+The later Omp discovery repair was exercised through the actual `omp/18.18.0`
+RPC executable: nine native traversal cases and 68 guarded cases passed
+(27 admitted, 41 refused), including a real virtual environment. This supersedes
+module-only traversal evidence from a separately installed 18.13.3 package.
+The proof is `omp-executable-discovery-proof-cerftbik/evidence.json` under ignored
+`evals/runs/`. Link names are directory metadata, not permission to read targets.
 
 ## Sensitive handoff examples
 

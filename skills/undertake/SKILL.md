@@ -66,6 +66,7 @@ issue. Reading them does not start the sequence below.
 **Delegation.** Plan first. Delegate only independent parallel work; single
 tasks stay with their owner. Avoid excess capability or workers; batch suitable
 work. Launch independent file slices together before your own work.
+Quota is the user's money.
 
 **Manual frontier escalation.** The escalation authorizes diagnosis and plan
 repair without asking again. Identify the failed approach, design, affected
