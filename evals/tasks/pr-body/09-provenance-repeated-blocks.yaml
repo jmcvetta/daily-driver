@@ -1,0 +1,71 @@
+# Without this case, a routine PR description revision can retain the five
+# identical blocks that obscure the actual change and its closing reference.
+task_id: pr-body-09-provenance-repeated-blocks
+description: A PR body revision retains one copy of repeated provenance.
+tags: [pr-body, behaviour, fire]
+initial_prompt: |
+  Revise this PR description to note that the retry behavior was verified with
+  an offline fixture. Show the complete revised body; do not contact GitHub.
+
+  Retry uploads after timeouts.
+
+  *The waiting batches find their way,*
+  *And failed attempts await the day.*
+
+  ## Issues
+
+  - Closes #42
+
+  ## Summary
+
+  Retry timed-out uploads without dropping their batches.
+
+  ## Details
+
+  Authentication failures remain outside the retry policy.
+
+  ---
+  Model: fixture-model
+  Harness: Fixture 1
+  session: fixture-session
+
+  ---
+  Model: fixture-model
+  Harness: Fixture 1
+  session: fixture-session
+
+  ---
+  Model: fixture-model
+  Harness: Fixture 1
+  session: fixture-session
+
+  ---
+  Model: fixture-model
+  Harness: Fixture 1
+  session: fixture-session
+
+  ---
+  Model: fixture-model
+  Harness: Fixture 1
+  session: fixture-session
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: agent_judge
+    description: The revised body retains its facts and one historical block
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final [RESULT - ...] reply. Score 0 if absent. Judge only the
+      proposed PR body. Score 1 only if the body retains Closes #42, upload
+      timeout retries, the authentication exclusion, and the offline fixture
+      verification; and contains exactly one complete fixture-model / Fixture 1
+      / fixture-session block. The current writer's separate attribution is
+      required; do not assume its identity. Duplicate historical blocks, a
+      missing historical field, or lost substantive content scores 0.

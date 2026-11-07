@@ -36,7 +36,7 @@ field is available, a task opened at `Open the issues` arrives parented and
 write response is the issue you modified and `issue-deps` requires the read
 from the other end regardless of which call made the edge.
 
-Apply `issue-deps`' pre-link task-readiness gate before the create call when it
+Apply `issue-deps`' pre-link assignability gate before the create call when it
 sets `parent_issue_number`. Apply the same gate before linking an existing
 issue through either parent or sub-issue writes.
 

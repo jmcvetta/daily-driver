@@ -1,0 +1,10 @@
+# zizmor configuration for `make check-zizmor`. Every triage below carries its reason.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Actions are pinned to a tag, not a commit hash. Dependabot's weekly
+        # github-actions update (.github/dependabot.yml) moves the major tag, and
+        # the workflows treat the moving major tag as intended. A hash pin needs a
+        # separate decision; this policy still rejects an action on a branch ref.
+        "*": ref-pin

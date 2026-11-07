@@ -1,0 +1,37 @@
+task_id: pr-12-omp-detached-service-without-owner
+description: A detached maintenance process does not establish a live implementor after session shutdown.
+tags: [pr, behaviour, omp-only]
+initial_prompt: >-
+  The PR's detached maintenance process is still running, but the only owner
+  session shut down. Is anyone actively implementing or supervising the PR now?
+  What does that mean for work the process cannot handle?
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Bash, Write, Edit, NotebookEdit, Task, Agent]
+run_limits:
+  max_turns: 15
+  turn_timeout: 300
+  task_timeout: 600
+success_criteria:
+  - type: agent_judge
+    description: The answer distinguishes a surviving process from an active owner
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final answer, not intermediate reasoning. Begin with
+      `ANCHOR: result` if present, or `ANCHOR: none` and score 0. Score 1
+      only if it says the detached process alone is not an active implementor
+      or live owner and that its mechanical work cannot handle implementation,
+      review or conflict diagnosis without a live owner. It must not claim an
+      in-process reminder can wake a shut-down session. A parked but live
+      session is distinct from the shutdown given in this case. Score 0 for
+      claiming active supervision or automatic recovery from shutdown.

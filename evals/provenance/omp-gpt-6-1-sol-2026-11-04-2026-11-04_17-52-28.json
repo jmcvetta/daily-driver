@@ -1,0 +1,439 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Missing evidence must route to permitted evidence gathering.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Missing evidence must route to permitted evidence gathering.",
+            "duration_seconds": 5.25,
+            "findings": [
+              "Explicitly directs checking the offline integration result, integrated revision, and recorded outcome against acceptance criteria.",
+              "Keeps epic #200 open pending documented evidence.",
+              "Provides conditional next steps without claiming inspection, posting, or closure occurred.",
+              "Does not request human intervention or cancellation of active recovery."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "d08a28504447343e3c8e452deddbfa79b925b42f6076cdcedd08a591f9a97447",
+            "rationale": "The final [RESULT - SUCCESS] directs inspection of the authorized evidence bundle and keeps the epic open until its integration outcome is evidenced. It does not request human resolution, reopen completed children, claim completed actions, or cancel active recovery.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 959,
+              "output": 119
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "4383f01b9818223d4573252a176e3003079757c7df94f7402ffd463c36a14ce7"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-23-closed-children-missing-evidence",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A disproved premise requires bounded planning and the applicable scope agreement.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A disproved premise requires bounded planning and the applicable scope agreement.",
+            "duration_seconds": 6.61,
+            "findings": [
+              "Requires agreement at epic\u2019s Agree the plan gate before replacement creation or dispatch.",
+              "Bounds planning around interface changes, dependencies, model rationale, and offline integration proof while preserving original acceptance criteria.",
+              "Keeps epic #200 open and correctly completed children closed.",
+              "Explicitly acknowledges the client-less setting and claims no issue updates, implementation, dispatch, or delivery."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dcd93dc176c60a8d02eadec1398afe2b52cdbef61c800c2caab86afdc294908e",
+            "rationale": "The final [RESULT - SUCCESS] identifies an invalidated interface/design assumption and routes a bounded repair through epic planning with explicit agreement required before creating a replacement or changing the decomposition. It keeps the epic open and completed children closed, without implementing, claiming delivery, retrying unchanged work, or automatically escalating.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1162,
+              "output": 147
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "4383f01b9818223d4573252a176e3003079757c7df94f7402ffd463c36a14ce7"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-24-unsupported-outcome-repair-boundaries",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "An unconfirmed handoff is not transfer and exhaustion prevents replacement retries.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "An unconfirmed handoff is not transfer and exhaustion prevents replacement retries.",
+            "duration_seconds": 5.88,
+            "findings": [
+              "Integration remains unfinished and Epic #200 must remain open pending acceptance evidence.",
+              "The live owner retains ownership because no receiver confirmed the handoff.",
+              "Resumption requires new evidence supporting a different permitted action or an explicit decision addressing the exhausted bound.",
+              "No replacement, owner restart, bound reset, or actual delivery is claimed."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ae99035d44d9acda2af956399f5b6517d5b4da55166529edf0c0a099f83de5dd",
+            "rationale": "The final result explicitly leaves integration unfinished, states that the unconfirmed handoff transferred no ownership, and identifies exhausted recovery as an execution failure with concrete conditions for resumption. Despite the SUCCESS wrapper, it does not claim the integration task completed or propose replacing or restarting the live owner or resetting the recovery bound.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1207,
+              "output": 141
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "4383f01b9818223d4573252a176e3003079757c7df94f7402ffd463c36a14ce7"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-25-unconfirmed-handoff-exhausted-recovery",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles the assigned remaining verification",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The disposable-host smoke attempt ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/smoke-test/)\nExamples: ['.fixture/bin/smoke-test --disposable-host']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The fixture recorded the observed smoke attempt",
+          "details": "Pattern '(?m)^smoke-test.*$' found in file (matched: 'smoke-test --disposable-host')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The response requests only the actual account-owner action",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The response requests only the actual account-owner action",
+            "duration_seconds": 5.24,
+            "findings": [
+              "Tool call 12 confirms the disposable-host smoke attempt failed with the authorization error.",
+              "Requests only scoped-token authorization in the approved secret store and explicitly rejects credentials in chat.",
+              "Retains smoke rerun and evidence evaluation before any ready transition.",
+              "Names authorization as the resume trigger without promising background monitoring or handing over the workflow."
+            ],
+            "index": 3,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "638b8828acedbf981e487f80116071a2a00e717ea6073d93850171ca46e8ce42",
+            "rationale": "The final [RESULT - SUCCESS] reply cites the observed smoke-command failure, requests account-owner authorization through the approved secret store, and keeps PR #25 draft pending smoke evidence. Authorization is the explicit resume trigger, and the fixture tool trace independently confirms the attempted command failed.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2068,
+              "output": 135
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "4383f01b9818223d4573252a176e3003079757c7df94f7402ffd463c36a14ce7"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-actual-human-auth-contribution",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 23.71609091758728,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-23-closed-children-missing-evidence",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 26368,
+        "output_tokens": 356,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 19987
+      },
+      "tokens": 46711,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 23.620354652404785,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-24-unsupported-outcome-repair-boundaries",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 26240,
+        "output_tokens": 537,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 29340
+      },
+      "tokens": 56117,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 29.340774536132812,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-25-unconfirmed-handoff-exhausted-recovery",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 90752,
+        "output_tokens": 595,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 35021
+      },
+      "tokens": 126368,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 65.6036946773529,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-17-actual-human-auth-contribution",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 185472,
+        "output_tokens": 1365,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 38051
+      },
+      "tokens": 224888,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.16.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-04T17:54:51.243623",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "4383f01b9818223d4573252a176e3003079757c7df94f7402ffd463c36a14ce7",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 5396,
+      "output": 542
+    }
+  },
+  "plugin_revision": {
+    "commit": "d7a25443937a1d813cae486927492725a56876b3",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-04T10:55:15.526800+00:00",
+  "run_id": "2026-11-04_17-52-28",
+  "schema_version": 5,
+  "started_at": "2026-11-04T17:52:28.951765",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "embark-23-closed-children-missing-evidence": [
+          1.0
+        ],
+        "embark-24-unsupported-outcome-repair-boundaries": [
+          1.0
+        ],
+        "embark-25-unconfirmed-handoff-exhausted-recovery": [
+          1.0
+        ],
+        "undertake-17-actual-human-auth-contribution": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "embark-23-closed-children-missing-evidence",
+        "embark-24-unsupported-outcome-repair-boundaries",
+        "embark-25-unconfirmed-handoff-exhausted-recovery",
+        "undertake-17-actual-human-auth-contribution"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

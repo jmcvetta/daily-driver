@@ -39,7 +39,7 @@ The graph
 `issue-deps` owns both relationships and picks its own client. Read that
 skill's routes before `Write the graph`.
 
-Apply `issue-deps`' pre-link task-readiness gate before every parent or
+Apply `issue-deps`' pre-link assignability gate before every parent or
 sub-issue write to the epic, including when linking an existing issue.
 
 

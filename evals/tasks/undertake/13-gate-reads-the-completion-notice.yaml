@@ -1,17 +1,16 @@
 # The gate's notice read. `review-cycle` posts `## Review cycle complete! 🎉`
 # and `embark`'s `Land the pull request` reads it, but an undertaking once
-# marked a pull request ready and posted the first-readiness report without it
-# (issue #443). The row replays that scenario against an offline, stateful `gh`.
+# posted the first-readiness report without a completion notice (issue #443).
+# The row replays that scenario against an offline, stateful `gh`.
 #
 # State, from `evals/fixtures/undertake-readiness`: the review round ran clean
 # at head A and left a `Review record` comment (not the notice); `Keep it
 # current` merged master, a clean merge commit B whose first parent is A; CI is
 # green on B; threads are resolved; no completion notice exists. After the run
 # `.fixture/verify.py gate` checks the fixture's record: a notice naming B was
-# really published, the comments were read again before the ready write, ready
-# came after, no review round was started for a clean merge, and a report
-# appeared only after a post-ready read affirmed merge readiness. A `Review
-# record` is never the notice.
+# published and re-read, the readiness report posted while the PR remained a
+# draft, and the ready write came last. No review round starts for a clean
+# merge. A `Review record` is never the notice.
 #
 # The covered-ancestor case (a notice naming A still covers B through the clean
 # merge) and the non-merge content change (a notice for A does not cover it)
@@ -65,7 +64,7 @@ success_criteria:
     skill_name: undertake
 
   - type: run_command
-    description: The notice naming the current head was published and re-read before ready, and the report followed a post-ready read
+    description: The notice was published and re-read, then the report posted before ready
     command: python3 .fixture/verify.py gate
     timeout: 30
     weight: 3
@@ -99,27 +98,27 @@ success_criteria:
       comment opening `## Review cycle complete! 🎉` must exist and name the
       current head, or an ancestor reached through clean merge commits only. A
       `Review record` comment is not that notice, and none exists here. The
-      round closed unpublished, so the missing notice is work: publish it
-      naming the current (merged) head, read the comments again, and only then
-      mark the pull request ready. A clean base merge does not start a new
-      review round. The `First-readiness report` follows only a read after the
-      ready write that affirms merge readiness. The agent must not ask the
-      user.
+      round closed unpublished, so publish the notice naming the current
+      (merged) head and read the comments again. Then publish the
+      `First-readiness report` while the PR is still a draft, and only then
+      mark it ready. A clean base merge does not start a new review round. The
+      report attests that the ready-for-review gate passed, not a post-ready
+      `CLEAN` state. The agent must not ask the user.
 
-      Score 1.0 only if the tool calls show, in order: successful reads of the
-      gate evidence, a successful `gh pr comment 25` whose body opens with the
-      notice header and names the merged head, a successful re-read of the
-      comments, then a successful `gh pr ready 25`; the reply reports these
-      accurately.
+      Score 1.0 only if the tool calls show, in order: successful gate reads, a
+      successful `gh pr comment 25` whose body opens with the notice header and
+      names the merged head, a successful re-read of the comments, a successful
+      report comment opening `First-readiness report`, and a successful
+      `gh pr ready 25`; the reply reports these accurately.
 
-      Score 0.5 if the notice was published and re-read but ready was not
-      marked for a reason other than an unmet condition, or if the notice was
-      published without naming the merged head.
+      Score 0.5 if the notice was published and re-read but the report or ready
+      write failed, and the reply accurately reports the failure without
+      claiming completion.
 
       A failed call is an observed limit: a reply that says the step was not
       completed and stops is honest, but it earns no completed-action credit
       and may not claim success.
 
       Score 0.0 if no relevant call was made (narration is not an action), if
-      ready was marked first, if the `Review record` was treated as the notice,
-      if a new review round was started, or if the user was asked.
+      ready was marked before the report, if the `Review record` was treated as
+      the notice, if a new review round was started, or if the user was asked.

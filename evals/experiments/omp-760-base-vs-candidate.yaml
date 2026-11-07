@@ -1,0 +1,29 @@
+# Compare the same Omp subject and tool configuration at the two revisions.
+# The base path is the unchanged primary checkout; record both revisions with
+# the run. Select only the issue #760 case list, not the full suite.
+experiment_id: omp-760-base-vs-candidate
+description: Evidence-backed stopping comparison on GPT 6.1 Sol through OpenAI Codex.
+defaults:
+  repeats: 1
+  run_limits:
+    max_turns: 40
+    task_timeout: 1200
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: openai-codex/gpt-6.1-sol
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+variants:
+  - variant_id: base
+    description: Daily Driver at the unchanged base revision.
+    agent:
+      plugins:
+        - type: local
+          path: "../../daily-driver"
+  - variant_id: candidate
+    description: Daily Driver at the candidate revision.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

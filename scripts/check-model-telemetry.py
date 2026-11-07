@@ -99,6 +99,15 @@ def main() -> int:
         readiness["elapsed_minutes"] is not None and abs(readiness["elapsed_minutes"] - 31.73) < 0.1,
     )
 
+    gate_report = read_fixture("model-telemetry-readiness-gate.txt")
+    gate_readiness = mt.parse_readiness_report(gate_report)
+    check(
+        "readiness: pre-ready gate timestamp parses without changing the report field shape",
+        gate_readiness["ready_at"] == "2026-09-28T13:07:04Z"
+        and gate_readiness["elapsed_minutes"] is not None
+        and abs(gate_readiness["elapsed_minutes"] - 31.73) < 0.1,
+    )
+
     unavailable_report = read_fixture("model-telemetry-readiness-unavailable.txt")
     unavailable = mt.parse_readiness_report(unavailable_report)
     check(

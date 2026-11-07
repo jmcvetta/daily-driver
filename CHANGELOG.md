@@ -4,11 +4,110 @@
 
 ### Changed
 
+* Consolidate undertaking admission and worker checks around concrete route decisions; remove redundant routing-procedure injection while retaining same-batch mutation protection, truthful worker verification and the final unauthorized-request guard ([#829](https://github.com/jmcvetta/daily-driver/issues/829)).
+* Retain bounded undertaking ownership through pauses and route unsupported epic outcomes to evidence gathering or agreed repair instead of automatic human takeover ([#830](https://github.com/jmcvetta/daily-driver/issues/830)).
+* Add model-independent `/undertaking status` and `/undertaking cancel` controls that preserve unfinished work and revoke only the current undertaking's owned route and children ([#828](https://github.com/jmcvetta/daily-driver/issues/828)).
+* Make agent workflows headless by default and require protected, user-accessible files for sensitive handoffs without pausing independent permitted work ([#796](https://github.com/jmcvetta/daily-driver/issues/796)).
+* Admit ready, classed `task`, `research` and `bug` issues as assignable epic stories, preserving each kind's contract and completion evidence, and align linking, dispatch and epic completion to match ([#785](https://github.com/jmcvetta/daily-driver/issues/785)).
+* Retire the print-only Claude evaluation handoff case; preserve its historical records and the separate no-handoff case ([#789](https://github.com/jmcvetta/daily-driver/issues/789)).
+* Report a newly opened task issue's assigned model class beside its issue-kind label ([#783](https://github.com/jmcvetta/daily-driver/issues/783)).
+* Route classed undertaking work to the exact configured class before ownership, preserving its provider, backend, family, and authentication route; retain independent specialist helper routes and finish completed undertakings before session reuse ([#755](https://github.com/jmcvetta/daily-driver/issues/755)).
+* Select undertaking classes within the invoking family and provider; warn and continue on the invoking model when its family has no mapping, with suitability unverified ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Require assignable task issues for all new and reused epic stories, with task readiness checked before linking and dispatch ([#723](https://github.com/jmcvetta/daily-driver/issues/723)).
 
 ### Fixed
 
+* Preserve default model-class routes when Omp clones settings, allowing independent reviewer dispatch after undertaking routing ([#819](https://github.com/jmcvetta/daily-driver/issues/819)).
+* Permit bounded disposable experiments that answer a concrete engineering question without allowing routine local assurance checks ([#810](https://github.com/jmcvetta/daily-driver/issues/810)).
+* Expose action-specific task-state records and source-discovery guidance in the Omp device ([#806](https://github.com/jmcvetta/daily-driver/issues/806)).
+* Allow operator frontier selection and native caret consultations without reassigning the undertaking worker or authorizing agent-controlled frontier fallback ([#805](https://github.com/jmcvetta/daily-driver/issues/805)).
+* Require manually escalated frontier sessions to repair the plan and return implementation to an eligible cheaper worker ([#798](https://github.com/jmcvetta/daily-driver/issues/798)).
+* Prevent improvised Omp controllers for Claude-judged evaluations while preserving native Claude and non-Claude judge routes ([#791](https://github.com/jmcvetta/daily-driver/issues/791)).
+* Honor assigned, bounded evaluation work without requesting duplicate execution approval ([#775](https://github.com/jmcvetta/daily-driver/issues/775)).
 * Give the live Omp title-barrier fixture enough context for expanded skills without entering unsupported scripted-model compaction ([#726](https://github.com/jmcvetta/daily-driver/issues/726)).
+* Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
+* Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
+
+## [0.58.0](https://github.com/jmcvetta/daily-driver/compare/v0.57.1...v0.58.0) (2026-11-04)
+
+
+### Features
+
+* **omp:** add local undertaking recovery controls ([#833](https://github.com/jmcvetta/daily-driver/issues/833)) ([c747289](https://github.com/jmcvetta/daily-driver/commit/c7472894f0c5cc697054815889d3466336383c2d))
+* retain ownership through bounded pauses ([#831](https://github.com/jmcvetta/daily-driver/issues/831)) ([5a1766b](https://github.com/jmcvetta/daily-driver/commit/5a1766b42fa1559d8d453edf65f29f93bfc0c3bb))
+
+
+### Bug Fixes
+
+* **omp:** consolidate undertaking execution boundaries ([#832](https://github.com/jmcvetta/daily-driver/issues/832)) ([dc2d135](https://github.com/jmcvetta/daily-driver/commit/dc2d1352ce3a68c00e37e927c6f10c6be002bd4a))
+
+## [0.57.1](https://github.com/jmcvetta/daily-driver/compare/v0.57.0...v0.57.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **omp:** preserve default routes during settings cloning ([#820](https://github.com/jmcvetta/daily-driver/issues/820)) ([f1b4218](https://github.com/jmcvetta/daily-driver/commit/f1b42180416b1c2526ee7b881569c8ac9305dc32))
+* **rules:** allow owner-directed CI scope reductions ([#824](https://github.com/jmcvetta/daily-driver/issues/824)) ([eeb4c66](https://github.com/jmcvetta/daily-driver/commit/eeb4c66ac3f4cca4c9dc41fdc84d39a2261021e3))
+
+## [0.57.0](https://github.com/jmcvetta/daily-driver/compare/v0.56.0...v0.57.0) (2026-11-02)
+
+
+### Features
+
+* **constitution:** default to headless sensitive handoffs ([#818](https://github.com/jmcvetta/daily-driver/issues/818)) ([733564f](https://github.com/jmcvetta/daily-driver/commit/733564f3f17b6cee1c706b99dd97a00663384f56))
+* **issue:** report task classes after creation ([#784](https://github.com/jmcvetta/daily-driver/issues/784)) ([ebb605a](https://github.com/jmcvetta/daily-driver/commit/ebb605af48a1a84ff1adb3687a00c0cae6d1dc08))
+* **undertake:** select class variants within the invoking route ([#787](https://github.com/jmcvetta/daily-driver/issues/787)) ([8d14f61](https://github.com/jmcvetta/daily-driver/commit/8d14f61617438d5f3a3814bb11bc3a42b552f78e))
+
+
+### Bug Fixes
+
+* admit classed research and bug as assignable epic stories ([#815](https://github.com/jmcvetta/daily-driver/issues/815)) ([153277f](https://github.com/jmcvetta/daily-driver/commit/153277fa0fd80863683efac89cfcfc84365b3c5b))
+* **constitution:** permit targeted disposable experiments ([#811](https://github.com/jmcvetta/daily-driver/issues/811)) ([b3dd9ee](https://github.com/jmcvetta/daily-driver/commit/b3dd9ee9f7246422c96c0fdc65831583713ed04f))
+* honor assigned bounded evaluation work ([#786](https://github.com/jmcvetta/daily-driver/issues/786)) ([1139a56](https://github.com/jmcvetta/daily-driver/commit/1139a56f6d18a2f05af7a6e1fb71815e5de3444e))
+* **omp:** expose task-state action records ([#812](https://github.com/jmcvetta/daily-driver/issues/812)) ([ad14018](https://github.com/jmcvetta/daily-driver/commit/ad14018e52344dbc59f35bbf050e8d2b65153f31))
+* prevent unsupported Claude evaluation controllers ([#795](https://github.com/jmcvetta/daily-driver/issues/795)) ([42b5bdd](https://github.com/jmcvetta/daily-driver/commit/42b5bddb42cffffeab14678b446eed52a3c6bb23))
+* retain Omp owner continuation across CI waits ([#781](https://github.com/jmcvetta/daily-driver/issues/781)) ([acd6431](https://github.com/jmcvetta/daily-driver/commit/acd6431e742336ca62b6c4d86d30861aa02c77d2))
+* return implementation after frontier plan repair ([#799](https://github.com/jmcvetta/daily-driver/issues/799)) ([0fcf2d9](https://github.com/jmcvetta/daily-driver/commit/0fcf2d987d1761b2172d77e2491afbf746df65f2))
+* **task-worktree:** install Worktrunk from its release binary ([#813](https://github.com/jmcvetta/daily-driver/issues/813)) ([c2e8de1](https://github.com/jmcvetta/daily-driver/commit/c2e8de1161fefe475a48e19e82ff4a61f815a110))
+* **undertake:** allow operator frontier consultations ([#808](https://github.com/jmcvetta/daily-driver/issues/808)) ([25b7214](https://github.com/jmcvetta/daily-driver/commit/25b72145e82d8ca3a019dea59f63d5a0684cfabf))
+* **undertake:** preserve session recovery after rejected inference ([#797](https://github.com/jmcvetta/daily-driver/issues/797)) ([559b187](https://github.com/jmcvetta/daily-driver/commit/559b1877d0716b2c222df7fb9a3cece79febb1b4))
+
+## [0.56.0](https://github.com/jmcvetta/daily-driver/compare/v0.55.0...v0.56.0) (2026-11-02)
+
+
+### Features
+
+* **ci:** require approval for recurring checks ([#766](https://github.com/jmcvetta/daily-driver/issues/766)) ([93c01fb](https://github.com/jmcvetta/daily-driver/commit/93c01fb1c05c607b0b83bfe52f667bc3e7190e67))
+* enforce evidence-backed task continuation ([#764](https://github.com/jmcvetta/daily-driver/issues/764)) ([8e2119d](https://github.com/jmcvetta/daily-driver/commit/8e2119d667270c2f12831a51d2543c30216ed6fb))
+* **issue:** default unspecified requests to tasks ([#754](https://github.com/jmcvetta/daily-driver/issues/754)) ([22040b6](https://github.com/jmcvetta/daily-driver/commit/22040b610c9773a070d7bbc58715b5e416c88cfa))
+* **undertake:** select worker classes without changing authentication routes ([#763](https://github.com/jmcvetta/daily-driver/issues/763)) ([df6c7a1](https://github.com/jmcvetta/daily-driver/commit/df6c7a149ea7da7d8d9098a3bec6ad973d004cf4))
+
+
+### Bug Fixes
+
+* **omp:** distinguish link pathnames from executables ([#767](https://github.com/jmcvetta/daily-driver/issues/767)) ([eaba53e](https://github.com/jmcvetta/daily-driver/commit/eaba53ee831c62e7fb1a70d6e18f1f0a4dd638ea))
+* **provenance:** avoid duplicate attribution blocks ([#773](https://github.com/jmcvetta/daily-driver/issues/773)) ([7a9cf95](https://github.com/jmcvetta/daily-driver/commit/7a9cf95bb6f4d8973fdb6f8809be7c5d7a672b72))
+* **undertake:** honor requested subscription verification ([#757](https://github.com/jmcvetta/daily-driver/issues/757)) ([f785f50](https://github.com/jmcvetta/daily-driver/commit/f785f506b20898fc13e6e12b57846962d7c2e293))
+
+## [0.55.0](https://github.com/jmcvetta/daily-driver/compare/v0.54.1...v0.55.0) (2026-10-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* Epic stories must now be ready `task` issues. Existing bug, research, human, proposal, or nested-epic children are planning defects and cannot be dispatched as stories. Repair them through the normal issue workflow; standalone issue-kind contracts remain unchanged.
+
+### Features
+
+* **constitution:** require precise professional vocabulary in names ([#746](https://github.com/jmcvetta/daily-driver/issues/746)) ([5034764](https://github.com/jmcvetta/daily-driver/commit/5034764ff5517d51c7ef20bf0dfb8857a5e590e3))
+* **pr:** keep all agent-opened PRs current ([#736](https://github.com/jmcvetta/daily-driver/issues/736)) ([fd8919f](https://github.com/jmcvetta/daily-driver/commit/fd8919f40e402d748711fb5f5ead3bdcffd77c65))
+* require assignable tasks for epic stories ([#724](https://github.com/jmcvetta/daily-driver/issues/724)) ([06f76f0](https://github.com/jmcvetta/daily-driver/commit/06f76f0b092c1680fdb6a4df27f08710e890f317))
+
+
+### Bug Fixes
+
+* **conventional-commits-type:** classify repository administration as chore ([#728](https://github.com/jmcvetta/daily-driver/issues/728)) ([a61c25d](https://github.com/jmcvetta/daily-driver/commit/a61c25dcd554a34d9fb664dc70746d1977f95123))
+* **undertake:** report readiness before marking PR ready ([#739](https://github.com/jmcvetta/daily-driver/issues/739)) ([060b1c9](https://github.com/jmcvetta/daily-driver/commit/060b1c9c5dc7acd8d83763b334ed987c0421e551))
+* **undertake:** reuse standing permission for resumed pushes ([#733](https://github.com/jmcvetta/daily-driver/issues/733)) ([77da2ee](https://github.com/jmcvetta/daily-driver/commit/77da2eede1088e87280f2bd91829b0ab46bc298e))
 
 ## [0.54.1](https://github.com/jmcvetta/daily-driver/compare/v0.54.0...v0.54.1) (2026-10-30)
 

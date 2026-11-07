@@ -136,9 +136,10 @@ def find_claim_comment(comments: list[dict[str, Any]]) -> dict[str, Any] | None:
 
 
 _READINESS_MARKER = "First-readiness report"
-# Current shape: "Elapsed: ..., from claim (T1) to first merge readiness (T2)."
+# Current shapes: "first merge readiness" in historical reports and
+# "first ready-for-review gate" in reports published before the ready write.
 _READINESS_TIMES_RE = re.compile(
-    r"from claim \((?P<claimed>[^)]+)\) to first merge readiness \((?P<ready>[^)]+)\)"
+    r"from claim \((?P<claimed>[^)]+)\) to (?:first merge readiness|first ready-for-review gate) \((?P<ready>[^)]+)\)"
 )
 # Pre-`provenance`-skill shape: separate "start: T1" / "ready: T2" lines
 # (PR #405's own First-readiness report reads this way).
@@ -167,13 +168,13 @@ def find_readiness_report(comments: list[dict[str, Any]]) -> dict[str, Any] | No
 
 
 def parse_readiness_report(body: str) -> dict[str, Any]:
-    """Elapsed minutes (from the two ISO timestamps the report names -- more
-    exact than parsing the prose duration between them), the claimed and
-    ready timestamps, the head SHA, and the provenance pair.
+    """Elapsed minutes, claim timestamp, readiness timestamp, head SHA and
+    provenance pair from one first-readiness report.
 
-    `elapsed_minutes`, `claimed_at` and `ready_at` are None where the report
-    names no recoverable start -- `SKILL.md`'s "reports the timing as
-    unavailable rather than inventing one".
+    New reports timestamp the first successful ready-for-review gate before
+    the ready transition. Historical reports may timestamp merge readiness
+    after that transition; both remain readable. Timing fields are `None`
+    where the report has no recoverable start.
     """
     elapsed_minutes: float | None = None
     claimed_at: str | None = None

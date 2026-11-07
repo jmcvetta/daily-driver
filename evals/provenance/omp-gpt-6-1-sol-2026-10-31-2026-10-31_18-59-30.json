@@ -1,0 +1,233 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The revised body retains its facts and one historical block",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The revised body retains its facts and one historical block",
+            "duration_seconds": 5.53,
+            "findings": [
+              "Retains Closes #42, upload timeout retries, authentication exclusion, and offline fixture verification.",
+              "Contains exactly one complete fixture-model / Fixture 1 / fixture-session block.",
+              "Includes separate current-writer model, harness, and session attribution."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2872acf1ca69a16a16c8656119a0bf7ac8b0ee2b34bc81b1f1153d4be46c6192",
+            "rationale": "The final [RESULT - SUCCESS] PR body retains all required substantive content and exactly one complete historical fixture attribution block. It also includes a separate, explicit attribution for the current writer.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 888,
+              "output": 102
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "f567bfa0146a4cc87ff015dbc7c83a87b1ebcd8b94ad01354c17267818c763f3"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "pr-body-09-provenance-repeated-blocks",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The body preserves distinct provenance without repeated historical attribution",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The body preserves distinct provenance without repeated historical attribution",
+            "duration_seconds": 7.39,
+            "findings": [
+              "Final result report is present.",
+              "Timeout, macOS, and Linux are included.",
+              "Fixture a precedes fixture b, with all required fields and no duplicates within the proposed issue body.",
+              "Separate current-writer block is present."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "6fff8eddaf37e70c6bc6546f6d6c7e0eae95736a388f267f80c7a4de67722b51",
+            "rationale": "The final [RESULT - SUCCESS] issue body retains the timeout and macOS facts, adds Linux, and includes exactly one complete block for each fixture in the required order. It also includes a separate, fully specified current-writer block.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 856,
+              "output": 110
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "f567bfa0146a4cc87ff015dbc7c83a87b1ebcd8b94ad01354c17267818c763f3"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-18-provenance-preserves-distinct-writers",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 27.51155424118042,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "pr-body-09-provenance-repeated-blocks",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 48256,
+        "output_tokens": 433,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11871
+      },
+      "tokens": 60560,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 21.183937549591064,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-18-provenance-preserves-distinct-writers",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68736,
+        "output_tokens": 488,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18067
+      },
+      "tokens": 87291,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-31T18:59:58.252083",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "f567bfa0146a4cc87ff015dbc7c83a87b1ebcd8b94ad01354c17267818c763f3",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 1744,
+      "output": 212
+    }
+  },
+  "plugin_revision": {
+    "commit": "eaba53ee831c62e7fb1a70d6e18f1f0a4dd638ea",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-31T12:00:07.323372+00:00",
+  "run_id": "2026-10-31_18-59-30",
+  "schema_version": 5,
+  "started_at": "2026-10-31T18:59:30.737656",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-18-provenance-preserves-distinct-writers": [
+          1.0
+        ],
+        "pr-body-09-provenance-repeated-blocks": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "pr-body-09-provenance-repeated-blocks",
+        "issue-18-provenance-preserves-distinct-writers"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

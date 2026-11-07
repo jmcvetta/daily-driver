@@ -60,14 +60,24 @@ Actions, Ansible, containers and Claude Code plugins.
 
 ### Apply it to a project
 
-1. Implement every universal control.
+The catalog records control status and previously decided changes. It does
+not authorize unsolicited control expansion during unrelated work. The
+constitution's [recurring CI cost policy](../rules/constitution.md#recurring-ci-costs)
+governs proposals for new checks and other recurring CI expansion.
+
+1. Implement every universal control and applicable decided change recorded
+   for the project, within the constitution's approval boundary.
 2. List the ecosystems the repository contains.
-3. For each ecosystem control, implement the row for each of those
-   ecosystems. Where the row is `none`, record the gap.
-4. Make each gate control part of a required check (`QC-REQUIRED-CHECKS`):
+3. For each ecosystem control, implement the row already decided for that
+   project. Where the row is `none`, record the gap; the gap alone is not
+   authorization to add a check.
+4. Keep established gate controls in required checks (`QC-REQUIRED-CHECKS`):
    a step of `Checks`, or of `Release Projection` for the title and the
    projection, which must run on every pull request.
 
+When an authorized check is added, bound and select it as the constitution
+requires. Do not use workflow-level path filters that leave required checks
+pending.
 
 ## Universal controls
 
@@ -129,10 +139,15 @@ tag rather than `main`.
 
 ### QC-CONVENTION-RULES — repository rules as executable checks
 
-A repository rule that a pattern or a script can detect is an executable
-check with a failing test, not only a sentence in a document. Conventions are
-one source of such rules; config consistency and domain invariants are
-others. The rest stay review-only.
+A repository rule that a pattern or script can detect may be an executable
+check, not only a sentence in a document. Add one only when it catches a
+concrete failure that existing coverage misses, and only under the
+constitution's recurring CI cost policy. A regression test in an existing
+suite may provide the needed coverage without adding a separate check.
+Tests whose subject is testing machinery are not quality controls and must
+not be added, except when that machinery is the shipped product. Conventions
+are one source of detectable rules; config consistency and domain invariants
+are others. The rest stay review-only.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
@@ -165,7 +180,12 @@ event fields, over-broad token permissions, dangerous triggers such as
   public action that reads untrusted pull-request text with a write token.
   Each repository's adoption issue triages the first findings and sets how
   the pinning audit treats major-version tags.
-- Status: `none → gate` in all five repositories (#709 in DD).
+
+| Implementation | Repository | Status |
+| --- | --- | --- |
+| zizmor 1.31.1, `.github/zizmor.yml` (action tags pinned by `ref-pin`; two inline ignores carry reasons) | DD | `gate` |
+
+- Status: `gate` in DD; `none → gate` in CA, PG, PRA and CMWB.
 
 ### QC-GENERATED-FRESH — generated files match their source
 
@@ -348,7 +368,7 @@ changing it.
 | TypeScript (npm) | `npm ci` | PRA | `gate` |
 | JavaScript (npm) | `npm ci` (CI-selector dependencies) | DD | `gate` |
 | Python (uv) | `uv lock --check --offline` | CA | `gate` |
-| OpenTofu providers | `tofu init`, then `git diff --quiet` on `.terraform.lock.hcl` | DD | `gate → none` (#706) |
+| OpenTofu providers | none; the lock stays committed for hash-pinning | DD | `none` |
 | OpenTofu providers | the same | PRA | `gate → none` |
 
 OpenTofu provider lockfiles (`.terraform.lock.hcl`) stay committed for
@@ -362,13 +382,15 @@ already have no such gate.
 
 Locked dependencies are checked against an advisory database at its latest
 data, and any finding fails the check. The scan scopes to production
-dependencies; dev-only advisories are not a gate.
+dependencies; dev-only advisories are not a gate. DD declares only dev
+dependencies today, so its audit finds nothing until a production dependency
+is added.
 
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | pip-audit over the `uv export` of the lockfile | CA | `gate` |
 | TypeScript (pnpm) | `pnpm audit --prod` (fails on any finding; no severity floor) | PG | `none → gate` |
-| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | `none → gate` (#708 in DD) |
+| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | DD `gate`; PRA `none → gate` |
 
 ### QC-BUILD — the shipped artifact builds and loads
 
@@ -430,7 +452,7 @@ control covers.
 | QC-RELEASE-CONFIG | none | gate (schema unpinned) | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
 | QC-SAST | none | gate (Python) | gate → none | none | none |
-| QC-WORKFLOW-SECURITY | none → gate | none → gate | none → gate | none → gate | none → gate |
+| QC-WORKFLOW-SECURITY | gate | none → gate | none → gate | none → gate | none → gate |
 | QC-GENERATED-FRESH | none | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
 | QC-DEPENDENCY-UPDATES | on | on | none → on | on | none → on |
@@ -445,8 +467,8 @@ control covers.
 | QC-UNIT-TESTS | none | gate | gate | gate | gate |
 | QC-COVERAGE | none | gate (Python) | none → gate | gate | none → gate |
 | QC-MUTATION | none | none | local | none | none |
-| QC-LOCKFILE | gate (npm); gate → none (HCL) | gate (Python) | gate (pnpm) | gate (npm); gate → none (HCL) | none |
-| QC-VULN-AUDIT | none → gate | gate (Python) | none → gate | none → gate | n/a |
+| QC-LOCKFILE | gate (npm); none (HCL) | gate (Python) | gate (pnpm) | gate (npm); gate → none (HCL) | none |
+| QC-VULN-AUDIT | gate | gate (Python) | none → gate | none → gate | n/a |
 | QC-BUILD | n/a | none | gate | gate | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
 | QC-IAC-POLICY | gate | gate | gate | none → gate | gate |

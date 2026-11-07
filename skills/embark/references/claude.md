@@ -98,13 +98,17 @@ stops and waits`.
 Route assessment
 ----------------
 
-Every epic story must pass `Take the wave`'s task-readiness gate. Resolve its
+Every epic story must pass `Take the wave`'s assignability gate. Resolve its
 `Model class` using
 [`issue-body`'s shared guidance](../../issue-body/references/model-classes.md)
 before calling `create_session`.
 `session_context.model` is a candidate concrete identifier only after that
 assessment; `configured_model` can be an alias or unsupported suffix. Never
 pass a class name to `model`, and never silently inherit an unchecked model.
+The selected exact class and every visible fallback must retain the current
+family, provider, backend, and authentication route. A model argument alone
+does not establish those constraints. Stop the affected task if the available
+session surface cannot constrain and verify them; do not rewrite shared roles.
 The effective model route, including configured fallbacks and visible parent
 inheritance, must be resolved before dispatch. Treat any route the harness
 identifies as astra/fable as frontier regardless of agent or role name. A
@@ -196,7 +200,7 @@ recorded as completed.
 Landing and close
 -----------------
 
-The state read is `undertake`'s `The milestone` row: `draft` must be false,
+The state read is the pull request `get` call: `draft` must be false,
 `mergeable_state` must be `clean`, and `head.sha` is the head the merge binds
 to. The same `get` call supplies the labels and body for the human-action read.
 The complete thread read is the one `review-cycle`'s `Review history,
@@ -226,10 +230,13 @@ session pushes after the read. `merge_method: squash` preserves the
 repository's pull-request-title subject. `Close the epic` uses the issue
 update only after the epic's coordinated acceptance condition is evidenced.
 
-**`closed_by_pull_requests` links a task to its pull request** through the
-`Closes #123` line `pr-body` writes. Compare the delivered outcome with the
-task's acceptance criteria; a closed issue alone is not evidence that the
-epic outcome was met.
+**`closed_by_pull_requests` links a task or bug to its pull request** through
+the `Closes #123` line `pr-body` writes. Compare the delivered outcome with the
+story's own completion contract. A research story has no pull request: read the
+answer recorded on the issue with `get_comments` against its deliverable. A bug
+closed by evidenced disposition has none either: read the recorded evidence and
+reason the same way. A
+closed issue alone is not evidence that the epic outcome was met.
 
 **There is a `mcp__Claude_Code_Remote__subscribe_pr_activity` with the same
 contract.** Where both exist, use the GitHub one, and use one namespace

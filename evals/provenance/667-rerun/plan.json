@@ -1,0 +1,70 @@
+[
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "repeats": 2,
+  "tasks": [
+   "tasks/constitution/authorized-public-service-search.yaml",
+   "tasks/constitution/completion-report-is-lean.yaml",
+   "tasks/constitution/daily-driver-target-defect-follows-normal-rule.yaml",
+   "tasks/conventional-commits-type/07-user-set-type-is-not-reverted.yaml",
+   "tasks/conventional-commits-type/08-omp-configs-are-chore.yaml",
+   "tasks/deps/06-security-major-constraint.yaml",
+   "tasks/embark/12-neg-stale-completion-notice.yaml",
+   "tasks/epic/07-mixed-child-kind-contracts.yaml",
+   "tasks/issue/10-frontier-denial-keeps-assignment-unpublished.yaml",
+   "tasks/issue/12-effective-kind-preserves-content.yaml",
+   "tasks/issue/14-failed-access-is-not-research-completion.yaml",
+   "tasks/pr/08-primary-held-designated-head-claude.yaml",
+   "tasks/review-cycle/07-wait-for-ci-is-not-a-sleep.yaml",
+   "tasks/review-cycle/12-fallback-review-publication.yaml",
+   "tasks/review-cycle/14-completion-notice-premature.yaml",
+   "tasks/review-depth/07-neg-opening-a-pr.yaml",
+   "tasks/task-worktree/05-resume-branch-beats-designation.yaml"
+  ]
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "repeats": 3,
+  "tasks": [
+   "tasks/issue/08-research-supported-no-is-complete.yaml",
+   "tasks/issue/11-human-handoff-safe-evidence.yaml",
+   "tasks/task-worktree/06-designated-primary-branch.yaml"
+  ]
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "repeats": 2,
+  "tasks": [
+   "tasks/constitution/authorized-public-service-search.yaml",
+   "tasks/constitution/completion-report-is-lean.yaml",
+   "tasks/constitution/daily-driver-target-defect-follows-normal-rule.yaml",
+   "tasks/conventional-commits-type/07-user-set-type-is-not-reverted.yaml",
+   "tasks/conventional-commits-type/08-omp-configs-are-chore.yaml",
+   "tasks/deps/06-security-major-constraint.yaml",
+   "tasks/embark/12-neg-stale-completion-notice.yaml",
+   "tasks/epic/07-mixed-child-kind-contracts.yaml",
+   "tasks/issue/10-frontier-denial-keeps-assignment-unpublished.yaml",
+   "tasks/issue/12-effective-kind-preserves-content.yaml",
+   "tasks/issue/14-failed-access-is-not-research-completion.yaml",
+   "tasks/review-cycle/07-wait-for-ci-is-not-a-sleep.yaml",
+   "tasks/review-cycle/12-fallback-review-publication.yaml",
+   "tasks/review-cycle/14-completion-notice-premature.yaml",
+   "tasks/review-depth/07-neg-opening-a-pr.yaml",
+   "tasks/task-worktree/05-resume-branch-beats-designation.yaml"
+  ]
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "repeats": 3,
+  "tasks": [
+   "tasks/issue/08-research-supported-no-is-complete.yaml",
+   "tasks/issue/11-human-handoff-safe-evidence.yaml",
+   "tasks/pr/08-primary-held-designated-head-claude.yaml",
+   "tasks/task-worktree/06-designated-primary-branch.yaml"
+  ]
+ }
+]

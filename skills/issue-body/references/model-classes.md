@@ -1,8 +1,9 @@
 # Model classes
 
-Task issues name the minimum capability needed to implement their settled
-handoff. The narrow frontier exception lets a `research` issue name a bounded
-research or planning assignment. Classes remain provider-neutral: they do not
+Task issues, and any `research` or `bug` issue proposed as an epic story, name
+the minimum capability needed to deliver their settled handoff. The narrow
+frontier exception lets a `research` issue name a bounded research or planning
+assignment. Classes remain provider-neutral: they do not
 name a provider, price tier, context window, or reasoning-effort setting.
 
 ## Classes
@@ -43,16 +44,26 @@ covers only that assignment. Ask again before material scope expansion.
 `research` may use frontier for a bounded research or planning assignment. In
 that case the issue keeps its `research` label and single `## Model class`
 token and rationale, followed by the approval record and work envelope. Do not
-apply the task template to other issue kinds.
+apply the task template to other issue kinds. A `research` or `bug` epic story
+uses the same section and the ordinary classes' meanings; the class states the
+capability needed to deliver that kind's settled handoff.
 
 ## Selection
 
-At dispatch, filter candidates for the required class, tools, context,
-modalities, and current availability. Prefer the lowest expected reliable cost,
-including known rework and quota costs. Unknown or incomparable prices use the
-operator's configured eligible preference; do not call missing or zero catalog
-cost free. A stronger eligible model may run lower-class work. If no eligible
-route exists, stop only that task and report the configuration gap.
+For classed undertaking, select the exact required class within the invoking
+family and provider before worktree or claim. Preserve backend and authentication
+where supported; never deliberately substitute another provider. Assess tools,
+context, modalities, availability, and visible fallbacks. A configured mapping
+does not itself prove capability. Do not change shared roles or infer an
+eligible route from price.
+
+If the known family is absent from the class table, prominently warn with the
+family, requested class, and retained provider/model. Continue immediately on
+the invoking model, provider, and effort without confirmation. Class suitability
+is unverified, even if execution identity is observed. Frontier authorization
+and actual route constraints still apply. Do not use this exception for unknown
+identity or for a mapped family with a missing or cleared class, unavailable
+target, or incompatible assignment: report those configuration gaps.
 
 An effective route that runs frontier requires explicit approval for that
 assignment, even when a lower-class role, configured retry fallback, prewalk
@@ -60,16 +71,24 @@ fallback, or visible parent-model inheritance selects it. Resolve the effective
 execution route, not only the requested role name. A harness-resolved
 astra/fable route is frontier for this authorization check.
 
-A frontier session assigned ordinary implementation hands it to an eligible
-non-frontier route. It may perform only the bounded routing and handoff; it
-does not retain or supervise the implementation on frontier. An approved
-frontier research pass returns only its bounded deliverable; any implementation
-work is handed to an eligible ordinary class unless the user separately
-authorizes frontier implementation. If no eligible route or authorized
-model-switch/delegation path exists, stop and report the configuration gap.
-Frontier implementation requires explicit user authorization of that exception
-and its bounded scope; research approval does not cover it. Non-frontier
-standalone undertaking keeps its existing behavior.
+For a mapped family, prefer a verified in-session switch; use a full handoff
+only where the surface can constrain and verify the same route. The receiving
+session owns the undertaking and the sender stops. For an absent family, keep
+the invoking session if a child cannot retain the route. An approved frontier
+research pass returns
+only its bounded deliverable; implementation requires a separately authorized
+frontier exception or an eligible ordinary class. Frontier implementation
+requires explicit user authorization and its bounded scope; research approval
+does not cover it. Ordinary workers cannot fall back to frontier.
+
+For an operator's manual escalation during a failing task, apply the
+constitution's *Manual frontier escalation*: repair the plan and return the
+existing work to an eligible ordinary worker. Manual escalation is authorized;
+it is not a frontier implementation exception or an agent-initiated assignment.
+Keep this consultation separate from the task's required class, assigned worker,
+approval evidence, and execution verification. Operator model selection must
+not be vetoed for missing assignment approval. It does not authorize unrelated
+delegation or later automatic fallback.
 
 A row in the harness reference's `Measured routes` table outranks this file's
 hand-written `Classes` table. A missing row, or one marked `unmeasured` or

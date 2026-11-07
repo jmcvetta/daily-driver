@@ -210,6 +210,12 @@ is yours to reclaim.
   | no — residual, see the stand-down comment on the epic>.
 - Session: <link, left running or interrupted and unarchived where it could
   not be messaged — push or archive it yourself; otherwise "retired">.
+- Authorization: <task-scoped operations and targets, original authority
+  references and limits, including expiry or revocation; or "none recorded">.
+  Do not copy private source contents into a public issue.
+- Stop evidence and corrective-continuation count: <existing record reference
+  and count, or "unavailable">. This is a user-requested stop, not a new
+  blocker claim.
 
 Work in progress was committed and pushed to the remote push branch above
 before this implementor was retired, where securing it succeeded — the origin
@@ -222,6 +228,12 @@ survived.
 This comment ends with `provenance`'s block, and the stand-down comment below
 carries it just before its envoi. Both blocks name this stand-down session
 rather than any retired implementor's.
+
+Carry authorization and stop records already available in the task state or
+handoff. `undertake` owns their meaning and revalidation. An agent-written
+summary does not grant permission, an unavailable private source is not
+verified authority, and resuming does not reset an exhausted correction bound.
+Do not delay stand-down to reconstruct missing records or request approval.
 
 **One stand-down comment on the epic**, shaped like a muster roll with its
 rows marked retired. What the retired rows buy is honesty in the epic's

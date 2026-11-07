@@ -1,0 +1,3046 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a ready-gate report write failure",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "A refused report write is followed by no ready attempt",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The failed report leaves the pull request in draft",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-23ce-77fc-9c08-450fb250b1aa\",\"timestamp\":\"2026-10-30T15:31:39.086Z\",\"cwd\":\"/tmp/evals-judge-ckvbgoak/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nGra"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a ready-gate report write failure",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "A refused report write is followed by no ready attempt",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The failed report leaves the pull request in draft",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-2d6e-75e8-b7fa-3a11126e1c4e\",\"timestamp\":\"2026-10-30T15:31:41.550Z\",\"cwd\":\"/tmp/evals-judge-4q2bnw5k/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nGra"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a ready-write failure after reporting",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The report posts before the refused ready write",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The report is preserved and the failed ready transition is clear",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-360f-778c-9ab0-a94e97c02185\",\"timestamp\":\"2026-10-30T15:31:43.759Z\",\"cwd\":\"/tmp/evals-judge-wnclfoz3/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nGra"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a ready-write failure after reporting",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The report posts before the refused ready write",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The report is preserved and the failed ready transition is clear",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-4015-708c-a8cf-c92a30ff7d0c\",\"timestamp\":\"2026-10-30T15:31:46.325Z\",\"cwd\":\"/tmp/evals-judge-6_zg6m84/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nGra"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a draft that has met its gate",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Gate reads succeeded, then the report posted before ready",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply marks the pull request ready rather than asking",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-49b5-74ad-9c99-9b1eff030c61\",\"timestamp\":\"2026-10-30T15:31:48.789Z\",\"cwd\":\"/tmp/evals-judge-c4q736t7/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nYou"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a draft that has met its gate",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Gate reads succeeded, then the report posted before ready",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply marks the pull request ready rather than asking",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-52d0-702b-bd13-0e13e382b663\",\"timestamp\":\"2026-10-30T15:31:51.120Z\",\"cwd\":\"/tmp/evals-judge-w6hjrzya/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nYou"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a draft that has met every read but the notice",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The notice was published and re-read, then the report posted before ready",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply posts the notice for the current head, then marks ready",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-5e0a-77dd-9d81-63957d62c593\",\"timestamp\":\"2026-10-30T15:31:53.994Z\",\"cwd\":\"/tmp/evals-judge-exdx_ylj/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nYou"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a draft that has met every read but the notice",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The notice was published and re-read, then the report posted before ready",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 0 (expected: 0)\nStdout:\nok: gate invariants held\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply posts the notice for the current head, then marks ready",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-67e3-7743-a395-ee0a0168596d\",\"timestamp\":\"2026-10-30T15:31:56.515Z\",\"cwd\":\"/tmp/evals-judge-253gf15f/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nYou"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` fires on a resumed draft with an existing report",
+          "details": "observed='no', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "Current-head gate reads precede ready and no report is duplicated",
+          "details": "Command: python3 .fixture/verify.py gate\nExit code: 1 (expected: 0)\nStdout:\nFAIL: ready attempted without a successful diff read first\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The existing report is reused only after current gate reads",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "transport",
+              "message": "omp exited 1: {\"type\":\"session\",\"version\":3,\"id\":\"01a18d70-7252-72d6-96ba-676cff01b3b2\",\"timestamp\":\"2026-10-30T15:31:59.186Z\",\"cwd\":\"/tmp/evals-judge-z8p0d_jh/cwd\"}\n{\"type\":\"agent_start\"}\n{\"type\":\"turn_start\"}\n{\"type\":\"message_start\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"GRADING PROMPT:\\nGra"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 0,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The failed report leaves the pull request in draft",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "ecf41cdf12b26b0990153c9f4fba74bc9f35fbf0877abedfe312b6b2fbf2e88b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The report is preserved and the failed ready transition is clear",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5deeb78b84b60f540d4d7d9275d10e508553770aee9d3d0557649888682d17bf",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply marks the pull request ready rather than asking",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "5db43b19388c64971bf3d17e253850684ca615d17b32f1d61036a42e451cda1b",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply posts the notice for the current head, then marks ready",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "f8fccade4680b45d9f52c79ab32b5734cd3a526090b2e23fa138fbfc19d68571",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The existing report is reused only after current gate reads",
+            "error": {
+              "kind": "unsupported",
+              "message": "include_agent_output is set but the latest agent output is empty"
+            },
+            "index": 2,
+            "pass_threshold": 0.7,
+            "prompt_sha": "c2a68ba39ab536c5d7abc28a0a10c286a0fde93d07e1ba8db44bbf4a98fbde29",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 4,
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.049984,
+      "cost_source": "reported",
+      "elapsed_seconds": 58.66926193237305,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 129600,
+        "output_tokens": 3863,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 23562
+      },
+      "tokens": 157025,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.074525,
+      "cost_source": "reported",
+      "elapsed_seconds": 86.71110892295837,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 518976,
+        "output_tokens": 5629,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 35541
+      },
+      "tokens": 560146,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.038553800000000006,
+      "cost_source": "reported",
+      "elapsed_seconds": 94.25333905220032,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 143744,
+        "output_tokens": 4707,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 12745
+      },
+      "tokens": 161196,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.0855374,
+      "cost_source": "reported",
+      "elapsed_seconds": 101.30291271209717,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 855040,
+        "output_tokens": 7547,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 37379
+      },
+      "tokens": 899966,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.057270800000000004,
+      "cost_source": "reported",
+      "elapsed_seconds": 94.16381216049194,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 213824,
+        "output_tokens": 7397,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 17660
+      },
+      "tokens": 238881,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.11957319999999999,
+      "cost_source": "reported",
+      "elapsed_seconds": 282.69528126716614,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 722112,
+        "output_tokens": 15795,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 35768
+      },
+      "tokens": 773675,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.1321912,
+      "cost_source": "reported",
+      "elapsed_seconds": 199.0052845478058,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 286546,
+        "output_tokens": 19231,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 33982
+      },
+      "tokens": 339759,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.1301218,
+      "cost_source": "reported",
+      "elapsed_seconds": 232.36542773246765,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 1091072,
+        "output_tokens": 12069,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 55013
+      },
+      "tokens": 1158154,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.0171674,
+      "cost_source": "reported",
+      "elapsed_seconds": 29.6085844039917,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 33472,
+        "output_tokens": 1382,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7919
+      },
+      "tokens": 42773,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 114.74048662185669,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.5078632831573486,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.0839293003082275,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.7575972080230713,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.403103828430176,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.90665864944458,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.9567670822143555,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.234313488006592,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.661667346954346,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.0070862770080566,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.772228240966797,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.941859483718872,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.085001707077026,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.803499460220337,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.108791828155518,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.149589776992798,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.35952353477478,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.365525245666504,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.936011552810669,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.666956663131714,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.002889394760132,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.616619348526001,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.099562168121338,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.8973398208618164,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.740598440170288,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.4164183139801025,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.7110185623168945,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.2624542713165283,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.09647798538208,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.7154948711395264,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.310776948928833,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.9232866764068604,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.106982231140137,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-20-report-write-failure-keeps-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 3.1778032779693604,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.160753488540649,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-21-ready-failure-preserves-report",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.6725027561187744,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.173357248306274,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-10-ready-is-marked-not-asked",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.930811643600464,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.307784080505371,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-13-gate-reads-the-completion-notice",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 2.9644532203674316,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 4.111295938491821,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "undertake-22-existing-report-is-not-duplicated",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-30T15:31:35.583337",
+  "experiment_id": "omp-glm-5-3",
+  "host": {
+    "hostname": "vm",
+    "kind": "cloud",
+    "platform": "Linux-6.18.44-fc-v185-x86_64-with-glibc2.39",
+    "session_id": "e7fe399c-5989-51ac-9a7a-77707791e936"
+  },
+  "judge": {
+    "criterion_errors": 50,
+    "freeze_sha": "b400c452a78be1a01b0658d6a486df0aabc09ca33618ce1ef55f05c7f9c8c54f",
+    "judge_id": "omp-glm-5.3",
+    "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+    "models_observed": "unavailable",
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": "unavailable"
+  },
+  "plugin_revision": {
+    "commit": "8a4029a04ad38fd0c7285c49bc6356020a14d967",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-30T15:32:00.928561+00:00",
+  "run_id": "2026-10-30_15-07-39",
+  "schema_version": 5,
+  "started_at": "2026-10-30T15:07:39.832746",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-10-ready-is-marked-not-asked": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "undertake-13-gate-reads-the-completion-notice": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "undertake-20-report-write-failure-keeps-draft": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "undertake-21-ready-failure-preserves-report": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "undertake-22-existing-report-is-not-duplicated": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "task_ids": [
+        "undertake-20-report-write-failure-keeps-draft",
+        "undertake-21-ready-failure-preserves-report",
+        "undertake-10-ready-is-marked-not-asked",
+        "undertake-13-gate-reads-the-completion-notice",
+        "undertake-22-existing-report-is-not-duplicated"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-10-ready-is-marked-not-asked": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "undertake-13-gate-reads-the-completion-notice": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "undertake-20-report-write-failure-keeps-draft": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "undertake-21-ready-failure-preserves-report": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "undertake-22-existing-report-is-not-duplicated": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "task_ids": [
+        "undertake-20-report-write-failure-keeps-draft",
+        "undertake-21-ready-failure-preserves-report",
+        "undertake-10-ready-is-marked-not-asked",
+        "undertake-13-gate-reads-the-completion-notice",
+        "undertake-22-existing-report-is-not-duplicated"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

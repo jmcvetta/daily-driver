@@ -62,7 +62,9 @@ recommendation can complete without approval being implied. Experimental code
 may be disposable; shipping a production change is a separate task. If follow-
 on issues are required deliverables, create them through `issue` or `epic`
 under their existing gates, without inventing an epic for one task. An answer
-recorded on GitHub needs no empty pull request.
+recorded on GitHub needs no empty pull request. Research proposed as an epic
+story also carries the `## Model class` section and rationale defined under
+`Assignable stories` in `issue-body`; standalone research does not.
 
 ## Bug — closes on a verified correction or evidenced disposition
 
@@ -74,7 +76,10 @@ detail, or root cause is unknown.
 
 A plausible cause is a hypothesis, not a fact. Do not require a diagnosed cause,
 settled implementation, exhaustive impact study, acceptance plan, or model
-class to file a bug. A user's reported observation is evidence and need not be
+class to file a standalone bug. A bug proposed as an epic story also needs the
+`## Model class` section and rationale `issue-body` defines under `Assignable
+stories`, and its bounded diagnosis and correction scope; it still needs no
+task template. A user's reported observation is evidence and need not be
 rerun to qualify. `issue`'s automatic Daily Driver bug route keeps its stronger
 ownership evidence and brief report; it does not acquire task machinery.
 

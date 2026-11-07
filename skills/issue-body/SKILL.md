@@ -4,8 +4,8 @@ description: >-
   This skill should be used whenever the body of a GitHub issue is being
   written or revised. It selects the body contract by effective issue kind,
   including each kind's readiness and completion test. It supplies the grounded
-  handoff for `task`, the provider-neutral class contract, and the narrow
-  approval-gated frontier research exception. It is invoked from `issue` and
+  handoff for `task`, the provider-neutral class contract that every assignable
+  epic story carries, and the narrow approval-gated frontier research exception. It is invoked from `issue` and
   direct body edits. Not for labels, issue relationships, or pull request bodies.
 ---
 
@@ -43,11 +43,15 @@ task-format scaffolding when it no longer applies, retaining its substantive
 information in the selected contract. Do not migrate unrelated issues or
 reflow a body for an unrelated label or state change.
 
-**Task class requirements are defined for `task`, with one narrow exception.**
-A `research` issue assigned `frontier` carries only its single class section,
-rationale, explicit approval record, and approved work envelope. It does not
-inherit the task template. Every other kind uses its own contract and gains no
-task sections or generic template.
+**Class metadata is separate from the task template.** A `task` carries its
+`## Model class` section in the fixed task shape. A `research` or `bug` issue
+carries one only when it is an assignable epic story (see `Assignable stories`
+below) or a frontier research assignment. It then carries just that section and
+its rationale — plus, for frontier, the approval record and approved work
+envelope — and does not inherit the task template, haiku, implementation map
+or fixed body shape. Every kind uses its own contract and gains no task
+sections or generic template. Standalone bug filing and ordinary standalone
+research stay unchanged and need no class.
 
 **The routes are per harness, and they live beside this file.** The calls
 that open an issue or replace its body are in
@@ -154,8 +158,8 @@ approved assignment.
 
 Every complete issue-body draft intended for a write includes the block it
 would publish. Withholding the live write does not remove the provenance
-requirement. Follow `provenance`'s placement and field rules, and preserve
-earlier provenance blocks on an edited issue.
+requirement. Follow `provenance`'s placement, field, and distinct-attribution
+rules on an edited issue.
 
 
 **Relationships are edges, not prose.** What an issue waits on is
@@ -201,6 +205,46 @@ default to `implementation`. A `frontier` assignment is not ready unless its
 approval record and work envelope match the assignment exactly. Frontier
 research remains `research` and carries no task template.
 
+Preserve supplied execution bounds and applicable authority in a handoff.
+Do not invent a separate paid-run approval prerequisite for work the
+assignment itself authorizes under `undertake`'s direct-request rule.
+Record genuine exclusions, required bounds, and fresh-confirmation conditions
+without treating an agent-written handoff as user approval.
+
+Assignable stories
+==================
+
+An epic's story must be assignable, so that an orchestrator can hand it to a
+worker. **Assignable is not the `task` kind.** A story is assignable when it is:
+
+1. An agent-eligible kind — `task`, `research` or `bug`. `proposal`, `human`
+   and `epic` are never assignable stories.
+2. Ready under its own kind's readiness test above, with the kind's contract
+   and completion test unchanged. A research story's unknown answer is not a
+   defect. A bug story states the incorrect behavior, the expected contract,
+   the bounded diagnosis and correction scope, and the completion evidence,
+   without inventing an undiagnosed cause or a predetermined fix.
+3. Carrying exactly one valid `## Model class` section: one backtick-wrapped
+   lowercase class token from
+   [`references/model-classes.md`](references/model-classes.md), then a short
+   rationale paragraph. This holds for every proposed story, including
+   ordinary research and bug work. For `research` and `bug`, place it after the
+   kind's opening content and before `provenance`'s trailing block. The task
+   shape above is unchanged.
+
+An unknown token, a duplicate section, a missing section or a missing
+rationale makes the story not ready. None of them defaults to
+`implementation`. A `story` marker, a parent edge or a kind label alone proves
+no readiness.
+
+Resolve repository-answerable gaps before presenting a story as ready, and
+preserve valid existing content under the update rule below. Do not invent
+scope, silently relabel a kind, or manufacture a replacement issue; report
+unresolved intent or an unavailable prerequisite precisely. Frontier approval,
+the work envelope and the implementation exception apply to every kind as
+defined above. An open legitimate blocker does not make a story unassignable.
+A GitHub assignee and an available concrete model are not required.
+
 Task completion
 ===============
 
@@ -219,8 +263,8 @@ Unrelated text is not reflowed and existing issues are not swept.
 
 A deliberately revised task emits the new section and removes its trailing
 task `Model:` field — the legacy class-metadata field below `## Summary`, never
-a `provenance` block below the closing `---` rule, which this migration
-leaves alone. When selecting an old task for work, assess its body
+a `provenance` block below the closing `---` rule, which follows `provenance`'s
+distinct-attribution rule. When selecting an old task for work, assess its body
 against the class rubric and migrate only that issue before dispatch. Map the
 former `standard` class to `implementation` and `advanced` to `reasoning`, based
 on the grounded handoff; do not change its rationale or capability requirement,
@@ -242,11 +286,13 @@ The API contract and edge cases are fixed; implementation follows the existing
 adapter pattern.
 ```
 
-`embark` resolves the required class to an eligible concrete route. It never
-uses the issue body as concrete-model provenance. `undertake` validates the
-section and repairs an old or invalid body before its claim. A non-frontier
-standalone session does not gate on its own identity, but a frontier session
-must hand ordinary implementation to an eligible non-frontier route or stop
-with a configuration gap. Any frontier assignment must carry explicit user
-approval and its exact envelope before execution. Claim comments, readiness
-reports, and execution records retain the concrete model the harness reports.
+`undertake` validates and, where grounded, migrates the section before routing
+a classed `task`, `research` or `bug` assignment.
+For a mapped family it selects the exact class within the invoking family and
+provider before worktree creation or claim, preserving backend and authentication
+where supported. If the known family is absent from the class table, it warns
+prominently and continues on the invoking model, provider, and effort without
+confirmation; class suitability remains unverified. Missing classes in mapped
+families, unknown identity, and actual route violations remain gaps. Any
+frontier assignment still needs explicit user approval and its exact envelope.
+Claim comments and execution records retain the observed model.
