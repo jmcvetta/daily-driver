@@ -218,6 +218,15 @@ The bounded checkpoint on 2026-11-02 used no external model:
 | Claude Code 2.1.316 | Task-private npm installation; shipped `--plugin-dir` mod; local `turn.step` response fixture and loopback compaction provider | Genuine terminal `composer` input and a separate plugin's non-user input remained distinct. The shipped tool ran. Actual process resume and `/compact` preserved the contract and criterion IDs. Esc cancelled a pending correction with `turn.complete.isAborted: true`; cancellation and count 2 persisted. |
 | Codex CLI 0.160.0 | Task-private native marketplace/plugin installation and private CLI hook fixtures; local Responses provider | The unchanged shipped manifest captured one original user source and stopped at two corrections after three local requests. The shipped-controller lifecycle run exercised native tool access, child delegation with zero child user sources, SIGINT/`Interrupt`, process resume and `/compact`; contract, criteria, cancellation and count 2 survived. |
 
+On 2026-11-07 a Claude Code 2.1.319 cloud session loaded the shipped mod
+unchanged as a session dev mod and exercised delegation with genuine runtime
+events. A `composer` prompt became the only `user` source; a
+`task-notification` and the subagent's `peer` hand-back stayed
+`interpretation`. One `agent.spawn` gave the child the same contract ID,
+revision and criterion IDs in a separate private ledger with zero `user`
+sources. The child's authorization citing the parent's user source was
+rejected, and the parent recorded no authorization.
+
 The workstation's Claude Code 2.1.267 is too old for the mod route. The
 task-private 2.1.316 install did not change shared configuration or credentials.
 A separate Codex 0.160.0 app-server checkpoint used trusted hooks and the
