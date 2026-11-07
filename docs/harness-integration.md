@@ -122,8 +122,8 @@ requests each contained one complete 8,880-byte core. Read-only and
 workspace-write confinement, blocked network access, and disabled shell/child
 tools were observed. Injected HTTP errors and broken streams each produced a
 crashed partial record rather than a false success. Native zero-retry provider
-settings made one request per injected failure, but the unchanged runner retried
-HTTP errors four times and broken streams three times. Its maximum is six
+settings made one request per injected failure, but the unchanged runner made
+four HTTP-error attempts and three broken-stream attempts. Its maximum is six
 communication attempts for rate-limit errors, not an API-request cap.
 The final task-private proof is
 `evals/runs/disclosure-codex-adapter-final-core-isolated/proof-evidence.json`;
