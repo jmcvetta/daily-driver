@@ -178,12 +178,12 @@ event fields, over-broad token permissions, dangerous triggers such as
 
 - zizmor, promoted from the candidates list. It matters most for PRA, a
   public action that reads untrusted pull-request text with a write token.
-  Each repository's adoption issue triages the first findings and sets how
-  the pinning audit treats major-version tags.
+  Each remote action reference is pinned to a full commit SHA, with an adjacent
+  release-tag comment; zizmor's `hash-pin` policy enforces the full hash.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
-| zizmor 1.31.1, `.github/zizmor.yml` (action tags pinned by `ref-pin`; two inline ignores carry reasons) | DD | `gate` |
+| zizmor 1.31.1, `.github/zizmor.yml` (`hash-pin`; two inline ignores carry reasons) | DD | `gate` |
 
 - Status: `gate` in DD; `none → gate` in CA, PG, PRA and CMWB.
 
