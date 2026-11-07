@@ -18,6 +18,7 @@
 
 ### Fixed
 
+* Prevent invented approval checkpoints and preserve actionable reasons and resume paths in blocked replies ([#835](https://github.com/jmcvetta/daily-driver/issues/835)).
 * Preserve default model-class routes when Omp clones settings, allowing independent reviewer dispatch after undertaking routing ([#819](https://github.com/jmcvetta/daily-driver/issues/819)).
 * Permit bounded disposable experiments that answer a concrete engineering question without allowing routine local assurance checks ([#810](https://github.com/jmcvetta/daily-driver/issues/810)).
 * Expose action-specific task-state records and source-discovery guidance in the Omp device ([#806](https://github.com/jmcvetta/daily-driver/issues/806)).
