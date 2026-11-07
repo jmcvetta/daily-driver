@@ -167,7 +167,7 @@ and summarizer requests, and Claude/Codex summarizer/title requests, are not
 subject delivery. These captures prove access, not autonomous policy compliance.
 
 Retrieval is not free. Current full source sizes are 8,493 bytes for `provenance`,
-8,033 for `pr`, and 82,946 for `undertake`. Read only the relevant policy when
+8,033 for `pr`, and 82,338 for `undertake`. Read only the relevant policy when
 the issue sequence is not needed; retain retrieved context instead of repeating
 reads. Report actual returned context, truncation and repeated reads in behavioral
 records. Lower always-loaded bytes do not establish lower total cost or better

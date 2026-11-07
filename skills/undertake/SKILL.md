@@ -1,23 +1,15 @@
 ---
 name: undertake
 description: >-
-  This skill should be used whenever a GitHub issue, or a task this skill is
-  explicitly invoked on, is being taken from its description to a completed
-  result — a pull request ready for review or an evidenced answer-only research
-  result — and on the agent's own move from reading an issue to writing code
-  for it. It covers keeping a pull request current after it goes ready too:
-  "the PR is behind master", "bring the branch up to date". Two things fire
-  it: an issue handed over to be worked, or an explicit invocation. An
-  invocation carrying no issue opens one itself, but one of the two is still
-  required — "implement a retry loop" and "fix this function", with neither,
-  are ordinary work and must NOT fire it. Supplies the step order and gates,
-  the ready gate a branch behind its base does not pass, the pause on a human
-  action, and the base merge that keeps it current; the round is
-  `review-cycle`'s. Not for reading or discussing an issue: "what does #191
-  say" is a question, not an assignment.
-  Also read the relevant execution policy before delegation, manual frontier
-  escalation, or an unfinished stop, even without an issue. A policy-only read
-  does not invoke the issue sequence or create an issue.
+  Use for an assigned GitHub issue, an explicit undertaking invocation, or a
+  PR branch update such as "bring it up to date". Owns the issue-to-result
+  sequence, readiness and ongoing base currency; review rounds belong to
+  review-cycle. An invocation without an issue opens one. Ordinary coding
+  requests without an issue or invocation do not start this sequence.
+  Reading or discussing an issue is not an assignment. Also read the relevant
+  execution policy before delegation, manual frontier escalation or an
+  unfinished stop, even without an issue. A policy-only read does not start
+  the issue sequence or create an issue.
 ---
 
 # Undertake
