@@ -195,10 +195,10 @@ identity is `unreported`; known mismatches invalidate attribution.
 The parent returns the reviewer's JSON unchanged. The collector reads the
 adapter's final response from `task.json`; it does not require a file write
 inside the read-only Git fixture. Earlier result-file artifacts remain readable.
-The boundary smoke cases request `wait` immediately after dispatch so the
-completed reviewer result reaches the recorded tool output without opening
-the sandbox to `agent://` reads. Treat this revised configuration as a
-separate measurement from the earlier frozen cohort.
+Each case requests `wait` immediately after dispatch so the completed reviewer
+result reaches the recorded tool output without opening the sandbox to
+`agent://` reads. Treat this revised configuration as a separate measurement
+from the earlier frozen cohort.
 Reviewer usage and latency are `unavailable` unless directly exposed.
 Parent usage is not reviewer usage. Subscription allowance consumption is
 not cash spend; unknown cash spend is not zero.
