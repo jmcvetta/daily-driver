@@ -5,11 +5,54 @@ import { contractHandoff } from "../extensions/task-contract.mjs";
 
 const TOOL = "daily_driver_task_state";
 
-/** isTaskStateCommand recognizes a shell call of the task-state command route. */
-function isTaskStateCommand(input) {
+/** shellStructure keeps a command's shell syntax and makes each quoted word and heredoc body inert. */
+function shellStructure(command) {
+	let out = "";
+	const heredocs = [];
+	for (let i = 0; i < command.length; i++) {
+		const c = command[i];
+		if (c === "'" || c === '"') {
+			let j = i + 1;
+			while (j < command.length && command[j] !== c) j += c === '"' && command[j] === "\\" ? 2 : 1;
+			const body = command.slice(i + 1, j);
+			// Substitution inside double quotes runs another command, so it stays a separator.
+			out += c === '"' && /\$\(|`/u.test(body) ? ";" : `${c}${body.replace(/[\s;&|<>]/gu, "_")}${c}`;
+			i = j;
+			continue;
+		}
+		if (c === "\\") { out += "_"; i++; continue; }
+		const heredoc = command[i - 1] !== "<" && command.slice(i).match(/^<<(-?)\s*(['"]?)([A-Za-z_]\w*)\2/u);
+		if (heredoc) { heredocs.push({ delimiter: heredoc[3], tabs: heredoc[1] === "-" }); out += " "; i += heredoc[0].length - 1; continue; }
+		if (c === "\n" && heredocs.length) {
+			let rest = i + 1;
+			for (const { delimiter, tabs } of heredocs.splice(0)) {
+				for (;;) {
+					const end = command.indexOf("\n", rest);
+					const line = command.slice(rest, end < 0 ? command.length : end);
+					rest = end < 0 ? command.length : end + 1;
+					if (end < 0 || (tabs ? line.replace(/^\t+/u, "") : line) === delimiter) break;
+				}
+			}
+			out += "\n";
+			i = rest - 1;
+			continue;
+		}
+		out += c;
+	}
+	return out.trimEnd();
+}
+
+/** isTaskStateCommand recognizes a standalone shell call of the task-state command route; chained work keeps its evidence. */
+export function isTaskStateCommand(input) {
 	const command = typeof input?.command === "string" ? input.command : Array.isArray(input?.command) ? input.command.join(" ") : "";
-	// A command chained with other work keeps its evidence; only a standalone (optionally piped) call is excluded.
-	return /hooks\/task-state\.py\b/u.test(command) && /(?:^|\s)--tool(?:\s|$)/u.test(command) && !/;|&&|\|\||\n/u.test(command);
+	const structure = shellStructure(command);
+	if (/;|&&|\|\||\n|(?<![>&])&(?![>&])/u.test(structure)) return false;
+	return structure.split("|").some((segment) => {
+		const words = segment.trim().split(/\s+/u).map((word) => word.replace(/^['"]|['"]$/gu, ""));
+		const start = words[0] === "env" ? 1 : 0;
+		const script = /(?:^|\/)python3?$/u.test(words[start] ?? "") ? words[start + 1] : words[start];
+		return /(?:^|\/)hooks\/task-state\.py$/u.test(script ?? "") && words.includes("--tool");
+	});
 }
 
 /** handleTaskEvent maps attested harness events onto the shared task controller. */

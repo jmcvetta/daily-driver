@@ -18,7 +18,12 @@ const oneOf = (items) => items.length === 2 ? items.map((item) => `"${item}"`).j
 
 /** stripContractTags removes contract tags from model-written task input, wherever the harness renders it. */
 function stripContractTags(value) {
-	if (typeof value === "string") return value.replace(/<\/?daily-driver-task-contract>/gu, "");
+	if (typeof value === "string") {
+		// Repeat until stable: removing an inner tag must not join its neighbours into a new one.
+		let text = value;
+		for (let previous; previous !== text;) { previous = text; text = text.replace(/<\/?daily-driver-task-contract>/gu, ""); }
+		return text;
+	}
 	if (Array.isArray(value)) return value.map(stripContractTags);
 	if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, stripContractTags(item)]));
 	return value;
