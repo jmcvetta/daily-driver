@@ -27,6 +27,12 @@ skipped in the common case where the work already has an issue. Where it does
 not, that step supplies one: an issue is what this skill takes in, and
 untracked work is what running without one leaves behind.
 
+Each user-facing blocked reply, including a reminder, names the stopped
+operation, the concrete failure or restriction and its source, the smallest
+contribution needed, and what action follows that contribution. Do not reduce
+these facts to “consent pending” or imply unchanged work has progressed. Keep
+private sources and secrets out of public replies.
+
 It is an orchestrator, in the same shape as `pr`: **it invokes, it does not
 restate**. The task branch and execution root live in `task-worktree`, the
 title convention in `pr-title`, the pull request itself in `pr`, the review
@@ -425,6 +431,13 @@ route is confirmed non-frontier, or when the user explicitly authorizes the
 bounded frontier implementation exception. No implementor dispatch is used for
 ordinary undertakings.
 
+**Own the agreed result through a pause.** A review-ready pull request is the
+result when the assignment stops there; ownership does not add deployment or
+first-use acceptance. A component worker may finish its own contract before an
+epic's outcome is evidenced. A genuine pause retains responsibility for
+diagnosis, outstanding requirements and the next executable action; it does
+not make the user responsible for finishing the work or imply completion.
+
 **A direct request authorizes its scoped work and normal verification.** This
 includes focused behavioral evaluation through the configured subscription.
 An explicitly assigned, bounded evaluation campaign or separately metered
@@ -616,6 +629,12 @@ facility, transfer secrets, or call the work human-only. If a person must
 provision access or approve an operation, isolate only that contribution from
 the work an authorized agent can do.
 
+An instruction or unconfirmed message is not a transfer of responsibility.
+Transfer only through a supported route when the receiving worker is confirmed,
+carrying the agreed result, original authority references and recovery counts.
+Do not launch a concurrent writer or restart a live owner. Until transfer is
+confirmed, retain ownership and report the actual resumption path.
+
 An explicit production prohibition or required human approval is enough to
 stop without a probe. Never test a prohibited operation, access production,
 perform a dangerous action to see whether it fails, bypass authentication,
@@ -632,27 +651,38 @@ can supply. Evidence can be linked; do not turn every PR body into a
 transcript. Pending CI and other external waits stay with the existing
 continuation; a recoverable execution failure is not a human blocker.
 Complete independent permitted work before pausing unless a higher-priority
-safety rule requires an immediate stop. On resume, revalidate the dependency
-against current evidence, then remove satisfied or stale blocker text and the
-corresponding PR `human` label while preserving unrelated labels. Keep every
-still-valid apply, state, approval or other requirement.
+safety rule requires an immediate stop. Ask for the contribution, not
+takeover of the remaining workflow. For consent, use the protected handoff
+route and retain verification and subsequent work. State what actually starts
+the next turn: use a supported continuation when the harness can observe the
+prerequisite, otherwise name the user reply or session resumption required.
+Do not promise monitoring across shutdown or cross-session approval transfer.
+On resume, revalidate current evidence and authority, then remove only
+satisfied or stale blocker text and the corresponding PR `human` label while
+preserving unrelated labels and every still-valid requirement. Continue the
+next permitted action without repeating unchanged approval requests.
 
-**Retain the stop decision, not only its conclusion.** Record the exact
+
+**Retain the stop decision, not only its conclusion.** Use the existing claim,
+orchestrator and stop-decision records to preserve the current owner, exact
 operation, failure evidence or restriction source, authorization checked,
 disposition of available permitted routes, smallest external contribution,
-independent work completed or still actionable, and resumption path. Reuse
-observed failures rather than rerunning them to populate a record. A runtime
-record is not proof of arbitrary claims: source validity and semantic
-sufficiency are separate. The active harness reference names the supported
-storage and stop-time enforcement; never assume another harness has it.
+independent work completed or still actionable, and concrete resumption path.
+Keep private approval and secret material out of public records. Reuse observed
+failures rather than rerunning them to populate a record. A runtime record is
+not proof of arbitrary claims: source validity and semantic sufficiency are
+separate. The active harness reference names the supported storage and
+stop-time enforcement; never assume another harness has it or that private
+active-branch records are a cross-session authority service.
 
 An unsupported unfinished stop earns a targeted correction, not a generic
 request to try harder. Runtime corrections are bounded at two per unchanged
 condition, retained through resume. Agent-rewritten descriptions do not reset
 the bound. Exhaustion is an execution failure, not missing user approval or
-completion. Existing review and retry bounds, explicit safety restrictions,
-and user cancellation take precedence. A queued correction never restarts
-cancelled work.
+completion. Preserve the unfinished result and concrete resume requirement;
+do not reset the bound by launching a replacement. Existing review and retry
+bounds, explicit safety restrictions, and user cancellation take precedence.
+A queued correction never restarts cancelled work.
 
 **The push is what runs the project's gates.** The constitution's *Before you
 call it done* sends them to CI rather than to this machine, so no local gate

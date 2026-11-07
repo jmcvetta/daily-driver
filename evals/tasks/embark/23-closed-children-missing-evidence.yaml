@@ -1,0 +1,31 @@
+# Without this case, closed children can turn missing epic evidence into human takeover.
+task_id: embark-23-closed-children-missing-evidence
+description: Gather available evidence before treating an unsupported epic outcome as a human dependency.
+tags: [embark, behaviour, fire]
+initial_prompt: >-
+  Epic #200 requires a documented offline integration result. All its children
+  are closed and their individual outcomes are evidenced. The integration
+  result is not in the epic record, but an authorized local evidence bundle is
+  available and has not been inspected. Landing is orchestrator. No production
+  access is permitted. This exercise has no GitHub or session client. Explain
+  the next action and epic disposition; do not claim actions or messages occurred.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: agent_judge
+    description: Missing evidence must route to permitted evidence gathering.
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final `[RESULT - ...]` reply; score 0 if absent. Score 1 only
+      if it directs inspection of the available permitted evidence bundle,
+      keeps the epic open until its outcome is evidenced, and does not ask a
+      person to resolve the gap, reopen completed children, claim a completed
+      action, or cancel active recovery. This client-less case measures the
+      decision, not actual evidence gathering or scheduling.

@@ -167,20 +167,38 @@ An unset route configuration uses the registered default, including when Omp
 clones settings for a task. An explicit empty array stays empty; malformed
 explicit values are rejected rather than replaced with defaults.
 
-Classed undertaking calls `daily_driver_route_undertaking` alone in its
-assistant tool batch before worktree creation or claim. For a mapped family it
-selects the exact class within the invoking family and provider, preserving
-backend and authentication route across workers and visible fallbacks. A model
-or effort change remains `pending` until the next worker assistant response
-confirms actual execution. Show informative status during this normal
-verification, not an error; do not batch mutations with routing or start work
-while pending. An already matching model and effort needs no switch.
+Classed undertaking calls `daily_driver_route_undertaking` before worktree
+creation or claim. For a mapped family, admission resolves the selected class
+and visible automatic candidates once. It records their concrete backend,
+authentication route and effort. Dispatch and observed worker checks reuse
+that decision. Visible incompatible retry and prewalk candidates fail before
+dispatch. Independent specialist routes remain separate.
 
-Rejecting an inference request does not replace the selected worker's route
-with a permanent blocked disposition. After restoring the selected model,
-effort, and authentication route, the session can continue without a restart.
-A partially applied selection whose restoration failed remains recovery-only;
-an ordinary response does not verify that route.
+Call routing alone and report pending verification as normal progress. These
+are workflow instructions, not conversation-wide runtime failures. The runtime
+still reserves a routing response's whole tool batch before admitting sibling
+mutations. A selected model or effort change stays `pending` until a successful
+response follows an admitted request from that worker. Rejected requests,
+consultations, error responses and cancelled responses do not verify it.
+
+Omp 18.16.0 exposes expanded child patterns at `before_subagent_spawn`. It does
+not expose a veto before every retry or prewalk model transition. The adapter
+therefore retains a final request guard for transitions that dispatch cannot
+guarantee. Agent-definition prewalk targets and later configuration changes
+also require this guard. It rejects unauthorized inference, not host controls.
+Local inspection, cancellation and model restoration do not require worker
+verification.
+
+A disposable loopback-provider experiment on Omp 18.16.0 distinguished the
+selected route, the resolved retry fallback and actual HTTP requests. The host
+reported `retry_fallback_applied` for an incompatible model; its request never
+reached the provider. Local `get_state`, `abort` and `set_model` remained
+available. A restored turn and a reloaded session completed on the original
+route. This is boundary evidence, not evidence of model-class suitability.
+
+Rejecting a request does not replace the stored selected route with a blocked
+disposition. A partially applied selection whose restoration failed remains
+recovery-only; an ordinary response cannot certify it.
 
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues

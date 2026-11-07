@@ -87,3 +87,34 @@ export function installModelClassDefaults(settings, modelTagsSetting) {
 	if (addedTag) modelTagsSetting.override(settings, modelTags);
 }
 
+/** Read visible automatic candidates through Omp's own fallback resolver. */
+export async function readExecutionCandidates(ctx, settings, patterns, role, agent) {
+	const { getRetryFallbackChains, resolveRetryFallbackChainKey, findRetryFallbackCandidates } =
+		await import("@oh-my-pi/pi-coding-agent/session/retry-fallback-chains");
+	const { lookup } = await import("@oh-my-pi/pi-coding-agent/config/registry");
+	const { resolveAgentPrewalkPattern, resolveConfiguredModelPatterns } =
+		await import("@oh-my-pi/pi-coding-agent/config/model-resolver");
+	const setting = name => lookup(name)?.get(settings);
+	const context = {
+		chains: getRetryFallbackChains(settings),
+		getModelRole: name => settings.getModelRole(name),
+		modelLookup: ctx.modelRegistry,
+	};
+	const prewalk = agent
+		? resolveAgentPrewalkPattern({
+			settingsOverride: setting("task.agentPrewalk")?.[agent],
+			agentPrewalk: agent === "task" && setting("task.prewalk") ? true : undefined,
+		})
+		: setting("prewalk.enabled") ? "@smol"
+			: setting("prewalk.auto") === "on" ? setting("prewalk.autoTarget") : undefined;
+	const candidates = new Set(resolveConfiguredModelPatterns([...patterns, ...(prewalk ? [prewalk] : [])], settings));
+	for (const pattern of candidates) {
+		const model = ctx.models.resolve(pattern);
+		const key = resolveRetryFallbackChainKey(context, pattern, model, role);
+		if (key) for (const candidate of findRetryFallbackCandidates(context, key, pattern, model, { wrapAround: true })) {
+			candidates.add(candidate.raw);
+		}
+	}
+	return [...candidates];
+}
+

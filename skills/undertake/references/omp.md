@@ -65,6 +65,19 @@ before worktree creation, claim, or implementation. A matching model and effort
 can verify without a switch. Read-only discovery and route/session recovery
 remain available while pending; queued mutating calls are blocked.
 
+Admission snapshots the effective candidate identities and effort. Worker
+dispatch and observation reuse that decision. A successful response must
+follow an admitted worker request; resolving a selector, rejecting a request,
+or receiving a consultation does not verify the worker. Visible incompatible
+retry and prewalk candidates fail before dispatch.
+
+Routing alone and informative progress wording remain workflow instructions.
+The runtime retains the actual batch admission barrier, not a separate
+conversation-wide procedure check. Omp does not expose every automatic
+transition before resolution, so a final request guard still rejects actual
+unauthorized inference. This guard does not block native host inspection,
+cancellation or model restoration.
+
 If the known family is absent from the class table, a prominent warning names the
 family, class, and retained provider/model. Continue immediately on the invoking
 model, provider, and effort without confirmation. The route is observed but class

@@ -108,6 +108,10 @@ fresh-confirmation rule that requires another decision. A failed attempt,
 compaction, handoff or new session is not itself a changed requirement.
 Existing approval never waives an explicit fresh-confirmation rule or a
 higher-priority restriction.
+Check the original assignment and the source of any checkpoint against the
+exact operation. A task author's checkpoint does not create user authority.
+Do not disregard an explicit restriction in an assigned task: explain its
+source and ask only for the requirement that remains unsatisfied.
 
 **A question that survives is asked in prose, not in the widget.**
 The widget is closed on every harness, each by its own deny adapter — the

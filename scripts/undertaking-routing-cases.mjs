@@ -207,7 +207,10 @@ function fakeSession(options = {}) {
 		request: () => fire("before_provider_request", { payload: { model: current.id } }),
 		helperRequest: (selected) => fire("before_provider_request", { payload: { model: selected.id } }, selected),
 		response: (status = 200) => fire("after_provider_response", { status, headers: {} }),
-		assistant: (selected = current) => fire("assistant_message", { message: { role: "assistant", provider: selected.provider, model: selected.id, content: [{ type: "text", text: "Offline routing response" }] } }),
+		async assistant(selected = current) {
+			if (selected === current) await fire("before_provider_request", { payload: { model: current.id } });
+			return fire("assistant_message", { message: { role: "assistant", provider: selected.provider, model: selected.id, content: [{ type: "text", text: "Offline routing response" }] } });
+		},
 		spawn: (patterns, modelRole = "implementation", spawnKey = `routing-child-${sessionId}`, agent = modelRole) => fire("before_subagent_spawn", { agent, invocationKind: "task", modelRole, patterns, spawnKey }),
 		async close() {
 			if (!closed) {
@@ -246,7 +249,7 @@ export default function registerUndertakingRoutingChecks(check) {
 				sessions.push(session);
 				const parents = options?.parentId ? sessions.filter((candidate) => candidate.agentId === options.parentId) : [];
 				if (parents.length === 1 && options?.handoff !== false) {
-					await parents[0].spawn([qualified(session.ctx.models.current())], options.agentName ?? "implementation", session.agentId);
+					await parents[0].spawn([qualified(session.ctx.models.current())], options.agentName ?? (session.ctx.models.current() === REASONING ? "reasoning" : "implementation"), session.agentId);
 				}
 				await session.start();
 				return session;
@@ -1463,6 +1466,46 @@ export default function registerUndertakingRoutingChecks(check) {
 		assertAllowed(await s.spawn([qualified(FRONTIER)], "frontier"));
 	});
 
+	// A rejected or synthetic response used to certify a pending worker from its model name alone.
+	for (const stopReason of [undefined, "error", "aborted"]) {
+		routingCheck(`unadmitted ${stopReason ?? "ordinary"} response cannot verify a worker`, async (create) => {
+			const s = await create();
+			await s.route({ modelClass: "reasoning" });
+			if (stopReason) await s.request();
+			await s.fire("assistant_message", { message: {
+				role: "assistant", provider: REASONING.provider, model: REASONING.id, stopReason, content: [],
+			} });
+			assert.equal(s.describe().undertaking.status, "pending");
+			assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
+			await s.assistant();
+			assert.equal(s.describe().undertaking.status, "verified");
+		});
+	}
+
+	// A valid primary selector used to hide an unauthorized automatic candidate until inference dispatch.
+	for (const fallback of [qualified(FOREIGN), qualified(FRONTIER), `${qualified(MECHANICAL)}:low`]) {
+		routingCheck(`automatic candidate ${fallback} is rejected before selection`, async (create) => {
+			const s = await create({ candidates: async (_ctx, _settings, patterns) => [...patterns, fallback] });
+			assertGap(await s.route());
+			assert.equal(s.calls.models.length, 0);
+			assert.equal(s.describe().undertaking, null);
+		});
+	}
+
+	// A catalog backend change after admission used to be re-resolved instead of compared to the admitted identity.
+	routingCheck("admitted backend snapshot survives a catalog replacement", async (create) => {
+		const s = await create();
+		await s.route({ modelClass: "reasoning" });
+		const admitted = structuredClone(s.describe().undertaking);
+		s.setCurrent({ ...REASONING, baseUrl: "https://replacement.example.invalid/v1" });
+		await assert.rejects(s.request(), /backend/iu);
+		await s.fire("assistant_message", { message: { role: "assistant", provider: REASONING.provider, model: REASONING.id, content: [] } });
+		assert.deepEqual(s.describe().undertaking, admitted);
+		s.setCurrent(REASONING);
+		await s.assistant();
+		assert.equal(s.describe().undertaking.status, "verified");
+	});
+
 	// A rejected request must leave diagnostics accessible without another model response.
 	routingCheck("local status distinguishes selection, observation, and rejected host drift", async (create) => {
 		const s = await create();
@@ -1612,14 +1655,14 @@ export default function registerUndertakingRoutingChecks(check) {
 		await child.request();
 		await child.assistant();
 		const lateId = `cancelled-late-child-${++nextSession}`;
-		await parent.spawn([qualified(REASONING)], "implementation", lateId);
+		await parent.spawn([qualified(REASONING)], "reasoning", lateId);
 		await parent.command("cancel 755");
 		assert.equal(child.calls.aborts, 1);
 		assert.equal(auth.sessions.isRestricted(PROVIDER, child.sessionId), true, "running child retains its lease until shutdown");
 		await assert.rejects(child.request(), /cancelled/iu);
 		assertBlocked(await child.tool("write"));
 		assertBlocked(await child.spawn([qualified(REASONING)]));
-		await child.assistant();
+		await child.fire("assistant_message", { message: { role: "assistant", provider: REASONING.provider, model: REASONING.id, content: [] } });
 		assert.equal(child.describe().undertaking.status, "blocked");
 		assert.equal((await child.route()).isError, true);
 		assert.equal((await child.finish()).isError, true);
@@ -1631,6 +1674,79 @@ export default function registerUndertakingRoutingChecks(check) {
 		const resumed = await create({ auth, entries, sessionId: child.sessionId, current: REASONING });
 		await assert.rejects(resumed.request(), /cancelled/iu);
 		assertBlocked(await resumed.tool("write"));
+	});
+
+	// A lower-class model used to pass child admission whenever its family matched.
+	routingCheck("child class selection rejects a same-family lower-class candidate", async (create) => {
+		const s = await create();
+		await s.route();
+		assertBlocked(await s.spawn([qualified(MECHANICAL)], "reasoning"));
+		assertAllowed(await s.spawn([`${qualified(REASONING)}:high`], "reasoning"));
+	});
+
+	// Cancellation during credential preflight used to publish a new route after its owner was released.
+	routingCheck("cancelled owner cannot be restored by a late route admission", async (create) => {
+		const pending = deferred();
+		let delayed = false;
+		const s = await create({ candidates: async (_ctx, _settings, patterns) => {
+			if (delayed) await pending.promise;
+			return patterns;
+		} });
+		await s.route();
+		delayed = true;
+		const admission = s.route({ modelClass: "reasoning" });
+		await Promise.resolve();
+		await s.command("cancel 755");
+		pending.resolve();
+		assert.equal((await admission).isError, true);
+		assert.equal(s.describe().undertaking, null);
+		assert.equal(s.entries.at(-1).data.lifecycle, "cancelled");
+	});
+
+	// Two async route calls could otherwise overwrite each other's selected class and lease.
+	routingCheck("concurrent route admissions retain one owner", async (create) => {
+		const pending = deferred();
+		const entered = deferred();
+		const s = await create({ candidates: async (_ctx, _settings, patterns) => {
+			entered.resolve();
+			await pending.promise;
+			return patterns;
+		} });
+		const first = s.route();
+		await entered.promise;
+		assert.equal((await s.route({ modelClass: "reasoning" })).isError, true);
+		pending.resolve();
+		assert.notEqual((await first).isError, true);
+		assert.equal(s.describe().undertaking.selectedModel, qualified(MECHANICAL));
+	});
+
+	// Unspecified child effort used to inherit a different budget instead of the admitted class budget.
+	routingCheck("child startup cannot substitute a lower effort", async (create) => {
+		const parent = await create();
+		await parent.route();
+		const childId = `effort-child-${++nextSession}`;
+		assertAllowed(await parent.spawn([qualified(REASONING)], "reasoning", childId));
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentId: childId, current: REASONING, effort: "low", handoff: false,
+		});
+		assert.equal(child.describe().undertaking.status, "blocked");
+		await assert.rejects(child.request(), /effort/iu);
+	});
+
+	// A native consultation's explicit effort must not become permission for another budget.
+	routingCheck("native consultation keeps its explicit effort", async (create) => {
+		const parent = await create();
+		await parent.route();
+		const selected = `${qualified(FRONTIER)}:low`;
+		parent.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: selected, name: "Astra" } });
+		const key = `effort-consultation-${++nextSession}`;
+		assertAllowed(await parent.spawn([selected], "m1", key, "m1"));
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1", current: FRONTIER, effort: "low", handoff: false,
+		});
+		await child.request();
+		child.setEffort("high");
+		await assert.rejects(child.request(), /effort/iu);
 	});
 
 	// An in-progress selection with no published owner must not be mistaken for a cancellable issue.
@@ -1670,5 +1786,50 @@ export default function registerUndertakingRoutingChecks(check) {
 		await assert.rejects(child.request(), /cancelled/iu);
 		assert.equal(parent.describe().undertaking.status, "verified");
 		assert.equal(parent.auth.calls.unrestrict.length, 1, "only the quiescent child's lease is released");
+	});
+
+	// An aborted routing tool could otherwise publish a verified route when asynchronous preflight returns.
+	routingCheck("aborted route preflight cannot select or verify a worker", async (create) => {
+		const entered = deferred();
+		const proceed = deferred();
+		const s = await create({ candidates: async (_ctx, _settings, patterns) => {
+			entered.resolve();
+			await proceed.promise;
+			return patterns;
+		} });
+		const controller = new AbortController();
+		const admission = s.tools.get("daily_driver_route_undertaking").execute(
+			"aborted-route", { issue: 755, modelClass: "reasoning" }, controller.signal, undefined, s.ctx);
+		await entered.promise;
+		controller.abort();
+		proceed.resolve();
+		assert.equal((await admission).isError, true);
+		assert.equal(s.describe().undertaking, null);
+		assert.equal(s.calls.models.length, 0);
+		assert.equal(s.auth.calls.restrict.length, 0);
+	});
+
+	// Host dispatch cancellation does not stop an awaiting extension handler, which could leave a late handoff.
+	routingCheck("failed task dispatch invalidates an awaiting child admission", async (create) => {
+		const entered = deferred();
+		const proceed = deferred();
+		let delayed = false;
+		const parent = await create({ candidates: async (_ctx, _settings, patterns) => {
+			if (delayed) { entered.resolve(); await proceed.promise; }
+			return patterns;
+		} });
+		await parent.route();
+		delayed = true;
+		const key = `aborted-child-${++nextSession}`;
+		const admission = parent.spawn([qualified(REASONING)], "reasoning", key);
+		await entered.promise;
+		await parent.fire("tool_result", { toolName: "task", isError: true });
+		proceed.resolve();
+		assertBlocked(await admission);
+		const child = await create({
+			auth: parent.auth, parentId: parent.agentId, agentId: key, current: REASONING, handoff: false,
+		});
+		assert.equal(child.describe().undertaking.status, "blocked");
+		await assert.rejects(child.request());
 	});
 }

@@ -261,6 +261,20 @@ does not complete the comparison. Render the standard run index after recording:
 make evals-render-results
 ```
 
+`tasks/embark/23`–`26` cover unsupported epic outcomes: missing evidence,
+an invalidated plan requiring agreement, unconfirmed transfer after recovery
+exhaustion, and an in-scope integration repair. These client-less cases assess
+decisions, not actual evidence gathering, message delivery, issue creation or
+scheduling.
+The first three epic cases and the consent case passed one focused Omp run
+with `omp-gpt-6.1-sol` as subject and judge. The subject identity was
+unreported; the separate judge observed `gpt-6.1-sol`. The consent fixture
+recorded the smoke attempt. The run record is
+[`2026-11-04_17-52-28`](provenance/omp-gpt-6-1-sol-2026-11-04-2026-11-04_17-52-28.json).
+The in-scope repair, resumed blocker and revoked-approval cases passed in
+[`2026-11-04_17-57-15`](provenance/omp-gpt-6-1-sol-2026-11-04-2026-11-04_17-57-15.json).
+The resume fixture recorded the body and label changes; the revocation fixture
+recorded no forbidden verification.
 ## Evidence-backed stopping
 
 The five `tasks/undertake/24-*` cases cover earlier approval on resume,
@@ -272,6 +286,17 @@ compaction, session storage or delegation delivery. Their restricted tool
 lists exclude the `write` device route, so the comparison measures workflow
 decisions and actual fixture actions, not stop-controller enforcement. The
 installed-runtime check below covers that separate boundary.
+
+Issue #835 adds task-authoring, requested-plugin, and blocked-reminder cases.
+The fixture records local operations, not real service changes. The first
+[focused run](provenance/omp-gpt-6-1-sol-2026-11-07-2026-11-07_16-36-19.json)
+passed four of five cases, including revoked and excluded controls. The
+reminder omitted the action after confirmation. After moving the instruction
+to the skill opening, the
+[reminder rerun](provenance/omp-gpt-6-1-sol-2026-11-07-2026-11-07_16-41-39.json)
+passed; that rerun used a dirty checkout. Each case ran once with requested
+Omp `openai-codex/gpt-6.1-sol` subject and judge. The subject identity was
+unreported. These small runs do not establish fleet reliability.
 
 The existing `make check-omp-embark-title-live` suite runs the title barrier
 and task-state regressions against installed Omp with local scripted providers.
