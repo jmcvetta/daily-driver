@@ -178,12 +178,12 @@ event fields, over-broad token permissions, dangerous triggers such as
 
 - zizmor, promoted from the candidates list. It matters most for PRA, a
   public action that reads untrusted pull-request text with a write token.
-  Each repository's adoption issue triages the first findings and sets how
-  the pinning audit treats major-version tags.
+  Each remote action reference is pinned to a full commit SHA, with an adjacent
+  release-tag comment; zizmor's `hash-pin` policy enforces the full hash.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
-| zizmor 1.31.1, `.github/zizmor.yml` (action tags pinned by `ref-pin`; two inline ignores carry reasons) | DD | `gate` |
+| zizmor 1.31.1, `.github/zizmor.yml` (`hash-pin`; two inline ignores carry reasons) | DD | `gate` |
 
 - Status: `gate` in DD; `none → gate` in CA, PG, PRA and CMWB.
 
@@ -425,7 +425,7 @@ a reason.
 | OpenTofu | Checkov, `.checkov.yaml` (skips carry a comment; an Opengrep rule enforces that) | PG | `gate` |
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml` (five skips carry reasons) | DD | `gate` |
 | OpenTofu, Dockerfile, secrets | Checkov, pinned, frameworks `terraform dockerfile secrets` (`apps/omp-web`) | PG | `gate` |
-| OpenTofu | Checkov, `.checkov.yaml`, selected only when Tofu changes | CA | `none → gate` |
+| OpenTofu | Checkov, `.checkov.yaml`, selected only when Tofu changes | CA | `gate` |
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | PRA | `none → gate` |
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | CMWB | `gate` |
 
@@ -471,7 +471,7 @@ control covers.
 | QC-VULN-AUDIT | gate | gate (Python) | none → gate | none → gate | n/a |
 | QC-BUILD | n/a | none | gate | gate | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
-| QC-IAC-POLICY | gate | none → gate | gate | none → gate | gate |
+| QC-IAC-POLICY | gate | gate | gate | none → gate | gate |
 
 CA also holds a TypeScript tree (`agent-cli`, `core`, `cflow`, `viewer`,
 `polite-pace`). Its vitest and `tsc` legs run only locally (`make

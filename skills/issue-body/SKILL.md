@@ -206,10 +206,13 @@ approval record and work envelope match the assignment exactly. Frontier
 research remains `research` and carries no task template.
 
 Preserve supplied execution bounds and applicable authority in a handoff.
-Do not invent a separate paid-run approval prerequisite for work the
-assignment itself authorizes under `undertake`'s direct-request rule.
-Record genuine exclusions, required bounds, and fresh-confirmation conditions
-without treating an agent-written handoff as user approval.
+Do not add an approval checkpoint for a requested operation merely because
+it is disabled, unfamiliar, or covered by generic third-party permission
+language. Do not invent a separate paid-run approval prerequisite for work
+the assignment itself authorizes under `undertake`'s direct-request rule.
+Name the applicable authority for a real checkpoint. Preserve genuine
+exclusions, required bounds, and fresh-confirmation conditions.
+An agent-written handoff is not user approval and cannot waive a restriction.
 
 Assignable stories
 ==================
