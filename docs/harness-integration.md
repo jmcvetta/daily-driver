@@ -332,6 +332,22 @@ Rejecting a request does not replace the stored selected route with a blocked
 disposition. A partially applied selection whose restoration failed remains
 recovery-only; an ordinary response cannot certify it.
 
+Before the next ordinary prompt, Omp restores the admitted worker model and
+effort automatically. The target must still match the admitted backend and
+authentication route and have available credentials. No manual cancellation,
+model selection, request replay or autonomous inference is required. Pending
+workers still need a successful admitted response before task work.
+Cancellation and newer selections invalidate a waiting restoration.
+Model selection may refresh metadata and apply host effort defaults.
+Restoration compares the admitted origin, not object identity, then reapplies
+the admitted effort.
+
+A disposable Omp 18.18.3 loopback proof rejected late model drift without an
+unauthorized HTTP request. The next user prompt completed on the admitted
+worker without manual recovery, both before and after process resume.
+Unavailable targets or credentials remain explicit recovery failures, not
+permission to select a replacement route.
+
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
 immediately on the invoking model, provider, and effort without confirmation.
