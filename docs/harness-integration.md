@@ -226,13 +226,22 @@ The native home configuration stayed byte-identical and no hook file appeared.
 The exact-cwd project trust is derived per thread; this prevents native
 workspace-write startup from persisting project trust to the shared account
 configuration. Inherited permission-profile additions fail before inference.
-The final adapter SHA-256 is
+The owned-envelope and trust proof used adapter SHA-256
 `20e3a3c5c165785486db8660d6c5c05366c0d4ab0db4cd70fdc8eef11852e99c`.
 Proofs are under
 `disclosure-release-20261107/codex-preparation/task-trust-repair-report.json`
 and `official-runner-task-trust-fixed/` in ignored `evals/runs/`.
 These credential-free scripted proofs establish integration behavior, not
 model compliance or inference cost.
+
+The subsequent native comparison exposed genuine visible-tool caps despite
+upstream deterministic `SUCCESS` statuses. The adapter now marks capped partial
+output with an `ERROR` result anchor; it does not erase the cap or change the
+criteria. A replay through the changed wrapper checked preserved capped and
+completed records without starting a native runtime. The adapter SHA-256 is
+`78d93eff434f44bb3928c0139f6b031688603a90df1f59b0ea0166c0eae53ab5`.
+The [native attempt inventory](progressive-disclosure-native-attempts.json)
+keeps the original statuses and per-slot context/latency limits.
 
 ## Sensitive handoff examples
 

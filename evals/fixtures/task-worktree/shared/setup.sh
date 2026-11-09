@@ -15,6 +15,8 @@ esac
 git init -b master >/dev/null
 git config user.name "Eval Fixture"
 git config user.email "fixture@example.invalid"
+# Host signing policy must not turn a disposable commit into an authentication task.
+git config commit.gpgsign false
 
 mkdir -p src
 cat >src/parser.py <<'EOF'

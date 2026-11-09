@@ -547,6 +547,8 @@ class CodexDailyDriverAgent(CodexAgent):
         `pending_turn`, which the orchestrator reads and reports. A judged row
         that crashed should score 0.0 on the reply rather than on the anchor
         being absent, so the partial is tagged `ERROR` rather than left bare.
+        A turn stopped at its visible-tool limit carries an ERROR anchor even
+        when deterministic criteria passed on its partial output.
 
         `**kwargs` rather than the base signature's keyword arguments: this
         override adds nothing to the call and forwards it whole, so a new
@@ -565,7 +567,7 @@ class CodexDailyDriverAgent(CodexAgent):
             if self.pending_turn is not None:
                 self.pending_turn = self._retagged(self.pending_turn, is_error=True)
             raise
-        return self._retagged(record, is_error=False)
+        return self._retagged(record, is_error=record.max_turns_exhausted)
 
     def get_environment_info(self) -> dict[str, Any]:
         """The built-in's routing record, plus what this arm loaded.
