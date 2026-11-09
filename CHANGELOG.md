@@ -17,7 +17,7 @@
 
 ### Fixed
 
-* Deliver a compact complete instruction core and retrieve coding, validation and execution policy from existing owners without rewriting delegated prompts; preserve registered-worktree access and reviewed native Codex hook isolation in comparisons ([#804](https://github.com/jmcvetta/daily-driver/issues/804)).
+* Deliver compact complete standing instructions through pre-action workflow retrieval without rewriting delegated prompts, and support safe fixture discovery and confined Codex worktree operations ([#804](https://github.com/jmcvetta/daily-driver/issues/804)).
 * Prevent invented approval checkpoints and preserve actionable reasons and resume paths in blocked replies ([#835](https://github.com/jmcvetta/daily-driver/issues/835)).
 * Preserve default model-class routes when Omp clones settings, allowing independent reviewer dispatch after undertaking routing ([#819](https://github.com/jmcvetta/daily-driver/issues/819)).
 * Permit bounded disposable experiments that answer a concrete engineering question without allowing routine local assurance checks ([#810](https://github.com/jmcvetta/daily-driver/issues/810)).

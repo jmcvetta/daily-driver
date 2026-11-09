@@ -39,6 +39,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import stat
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
@@ -77,6 +79,8 @@ class CodexDailyDriverAgentConfig(CodexAgentConfig):
     offline_fixture: bool = False
     #: Reviewed hook payload selects frozen hooks without changing native account lookup.
     reviewed_hook_payload: str | None = None
+    #: Permit native worktree creation in a controller-marked private DIRECT_WRITE artifacts envelope.
+    fixture_worktree_envelope: bool = False
 
 
 class CodexDailyDriverAgent(CodexAgent):
@@ -103,6 +107,9 @@ class CodexDailyDriverAgent(CodexAgent):
         self._retagged_turns = 0
         self._already_tagged_turns = 0
         self._reviewed_hook_payload: dict[str, Any] | None = None
+        self._fixture_envelope_roots: tuple[Path, Path] | None = None
+        self._fixture_envelope_identity: tuple[int, int, int, int] | None = None
+        self._fixture_git_directories: tuple[Path, ...] = ()
 
     async def start(
         self,
@@ -134,6 +141,11 @@ class CodexDailyDriverAgent(CodexAgent):
         answer at all rather than a count of directory entries.
         """
         self._reviewed_hook_payload = None
+        self._fixture_envelope_roots = None
+        self._fixture_envelope_identity = None
+        self._fixture_git_directories = ()
+        if self.config.fixture_worktree_envelope:
+            self._validate_fixture_worktree_envelope(Path(working_directory), require_git=False)
         if self.config.reviewed_hook_payload is not None:
             self._reviewed_hook_payload = self._load_reviewed_hook_payload()
         elif self.config.lifecycle_hooks:
@@ -168,6 +180,75 @@ class CodexDailyDriverAgent(CodexAgent):
                 "codex-daily-driver: plugins were declared but no skill with a readable SKILL.md is under "
                 f"{SKILLS_DIR}; the arm would run untreated"
             )
+
+    @staticmethod
+    def _canonical_fixture_directory(value: Any) -> Path:
+        """Reject noncanonical, missing, symlinked or non-owned fixture roots."""
+        if not isinstance(value, str):
+            raise AgentConfigError("Fixture envelope paths must be canonical absolute strings")
+        path = Path(value)
+        if not path.is_absolute() or str(path) != value or path.resolve(strict=True) != path:
+            raise AgentConfigError("Fixture envelope paths must be canonical and must not contain symlinks")
+        details = path.stat()
+        if not stat.S_ISDIR(details.st_mode) or details.st_uid != os.getuid():
+            raise AgentConfigError("Fixture envelope roots must be current-user owned directories")
+        return path
+
+    def _validate_fixture_worktree_envelope(self, working_directory: Path, *, require_git: bool) -> None:
+        """Bind a private runner envelope to this task before granting native writes."""
+        if not self.config.offline_fixture or self.config.allowed_tools is None:
+            raise AgentConfigError("fixture_worktree_envelope requires offline_fixture and explicit allowed_tools")
+        allowed = set(self.config.allowed_tools) - set(self.config.disallowed_tools or [])
+        if not allowed & {"Bash", "Write", "Edit"}:
+            raise AgentConfigError("fixture_worktree_envelope requires write-capable allowed_tools")
+        try:
+            task = self._canonical_fixture_directory(str(working_directory))
+            artifacts = self._canonical_fixture_directory(str(task.parent))
+            if artifacts.name != "artifacts" or stat.S_IMODE(artifacts.stat().st_mode) != 0o700:
+                raise AgentConfigError("Fixture artifacts envelope must be named artifacts and have mode0700")
+            marker = artifacts.parent / "fixture-envelope.json"
+            details = marker.lstat()
+            if (
+                not stat.S_ISREG(details.st_mode)
+                or details.st_uid != os.getuid()
+                or stat.S_IMODE(details.st_mode) != 0o600
+            ):
+                raise AgentConfigError("Fixture envelope marker must be an owned regular mode0600 file")
+            payload = json.loads(marker.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict) or set(payload) != {"task_root", "artifacts_root"}:
+                raise AgentConfigError("Fixture envelope marker must contain exactly task_root and artifacts_root")
+            roots = (
+                self._canonical_fixture_directory(payload["task_root"]),
+                self._canonical_fixture_directory(payload["artifacts_root"]),
+            )
+            if roots != (task, artifacts):
+                raise AgentConfigError("Fixture envelope marker does not match the actual task directory")
+            task_stat, artifacts_stat = task.stat(), artifacts.stat()
+            identity = (task_stat.st_dev, task_stat.st_ino, artifacts_stat.st_dev, artifacts_stat.st_ino)
+            if self._fixture_envelope_roots is None:
+                if set(artifacts.iterdir()) != {task}:
+                    raise AgentConfigError("Fresh fixture envelope must contain only its declared task directory")
+                self._fixture_envelope_roots = roots
+                self._fixture_envelope_identity = identity
+            elif roots != self._fixture_envelope_roots or identity != self._fixture_envelope_identity:
+                raise AgentConfigError("Fixture envelope roots changed after agent start")
+            if require_git:
+                result = subprocess.run(
+                    ["git", "-C", str(task), "rev-parse", "--path-format=absolute",
+                     "--git-common-dir", "--absolute-git-dir", "--show-toplevel"],
+                    check=True, capture_output=True, text=True, timeout=5,
+                )
+                paths = result.stdout.splitlines()
+                if len(paths) != 3 or paths[2] != str(task):
+                    raise AgentConfigError("Fixture Git metadata does not describe the declared task root")
+                directories = tuple(self._canonical_fixture_directory(value) for value in paths[:2])
+                if any(not directory.is_relative_to(artifacts) or directory == artifacts for directory in directories):
+                    raise AgentConfigError("Fixture Git metadata must remain inside its owned artifacts envelope")
+                self._fixture_git_directories = directories
+        except AgentConfigError:
+            raise
+        except (OSError, UnicodeError, ValueError, subprocess.SubprocessError) as failure:
+            raise AgentConfigError("Unable to validate fixture worktree envelope and Git metadata") from failure
 
     def _load_reviewed_hook_payload(self) -> dict[str, Any]:
         """Reject settings outside the reviewed hook and native-isolation contract."""
@@ -264,64 +345,109 @@ class CodexDailyDriverAgent(CodexAgent):
             return "[" + ",".join(CodexDailyDriverAgent._native_inline(item) for item in value) + "]"
         return json.dumps(value, ensure_ascii=False)
 
-    def _validate_reviewed_hook_isolation(self) -> None:
-        """Inspect effective native hook trust and capabilities at the actual task directory."""
+    def _fixture_project_trust(self) -> dict[str, dict[str, str]]:
+        """Keep native write-capable fixture auto-trust out of shared configuration."""
+        if not self.config.offline_fixture:
+            return {}
+        allowed = set(self.config.allowed_tools or []) - set(self.config.disallowed_tools or [])
+        if not allowed & {"Bash", "Write", "Edit"}:
+            return {}
+        if self.working_directory is None:
+            raise AgentConfigError("Fixture project trust requires a started agent")
+        try:
+            task = self._canonical_fixture_directory(str(self.working_directory))
+        except (OSError, ValueError) as failure:
+            raise AgentConfigError("Fixture project trust requires an owned canonical task directory") from failure
+        # thread/start otherwise persists workspace-write project trust in
+        # CODEX_HOME/config.toml. This exact-path override is per thread only.
+        return {str(task): {"trust_level": "trusted"}}
+
+    def _validate_native_fixture_isolation(self) -> None:
+        """Reject inherited additions to reviewed hooks or the fixed fixture profile."""
         from openai_codex.client import CodexClient, CodexConfig
         from openai_codex.generated.v2_all import ConfigReadResponse, HooksListResponse
 
         payload = self._reviewed_hook_payload
-        if payload is None or self.working_directory is None:
-            raise AgentConfigError("reviewed_hook_payload requires a started agent")
-        expected = {
-            key: state["trusted_hash"] for key, state in payload["hooks"]["state"].items()
-            if state["enabled"]
-        }
-        # Only this metadata client uses CLI config values. Execution receives
-        # the same restricted values through thread_start(config=...), below.
+        if self.working_directory is None:
+            raise AgentConfigError("Native fixture inspection requires a started agent")
+        overrides = dict(payload or {})
+        permissions = None
+        projects = self._fixture_project_trust()
+        if projects:
+            overrides["projects"] = projects
+        if self.config.fixture_worktree_envelope:
+            native = self._build_thread_options()["config"]
+            permissions = native["permissions"]["owned-fixture"]
+            overrides.update(default_permissions="owned-fixture", permissions=native["permissions"])
+        # Metadata and execution use only validated hook values and this
+        # internally generated profile. There is no caller-supplied config API.
         client = CodexClient(CodexConfig(
             env=self._build_codex_env(), cwd=str(self.working_directory),
             config_overrides=tuple(
-                key + "=" + self._native_inline(value) for key, value in payload.items()
+                key + "=" + self._native_inline(value) for key, value in overrides.items()
             ),
         ))
         try:
             client.start()
             client.initialize()
-            response = client.request(
-                "hooks/list", {"cwds": [str(self.working_directory)]}, response_model=HooksListResponse
-            )
-            found = set()
-            for row in response.data:
-                if row.errors:
-                    raise AgentConfigError("reviewed_hook_payload failed native hook validation")
-                for wrapped in row.hooks:
-                    hook = wrapped.root
-                    if hook.is_managed:
-                        raise AgentConfigError("reviewed_hook_payload cannot isolate unexpected managed hooks")
-                    if not hook.enabled:
-                        continue
-                    if (
-                        hook.key not in expected or hook.source.value != "sessionFlags"
-                        or hook.trust_status.value != "trusted" or hook.current_hash != expected[hook.key]
-                    ):
-                        raise AgentConfigError("reviewed_hook_payload leaves unreviewed or untrusted hooks enabled")
-                    found.add(hook.key)
-            if found != set(expected):
-                raise AgentConfigError("reviewed_hook_payload did not load every reviewed hook")
+            if payload is not None:
+                expected = {
+                    key: state["trusted_hash"] for key, state in payload["hooks"]["state"].items()
+                    if state["enabled"]
+                }
+                response = client.request(
+                    "hooks/list", {"cwds": [str(self.working_directory)]}, response_model=HooksListResponse
+                )
+                found = set()
+                for row in response.data:
+                    if row.errors:
+                        raise AgentConfigError("reviewed_hook_payload failed native hook validation")
+                    for wrapped in row.hooks:
+                        hook = wrapped.root
+                        if hook.is_managed:
+                            raise AgentConfigError("reviewed_hook_payload cannot isolate unexpected managed hooks")
+                        if not hook.enabled:
+                            continue
+                        if (
+                            hook.key not in expected or hook.source.value != "sessionFlags"
+                            or hook.trust_status.value != "trusted" or hook.current_hash != expected[hook.key]
+                        ):
+                            raise AgentConfigError("reviewed_hook_payload leaves unreviewed or untrusted hooks enabled")
+                        found.add(hook.key)
+                if found != set(expected):
+                    raise AgentConfigError("reviewed_hook_payload did not load every reviewed hook")
             config = client.request(
                 "config/read", {"cwd": str(self.working_directory), "includeLayers": False},
                 response_model=ConfigReadResponse,
             ).config.model_dump(mode="json", by_alias=True)
-            # Inspect names and enable flags only. Never retain or log the
-            # host's server settings, environment values, or authentication.
-            if any(server.get("enabled", True) for server in (config.get("mcp_servers") or {}).values()):
-                raise AgentConfigError("reviewed_hook_payload leaves inherited MCP servers enabled")
-            if any((config.get("features") or {}).get(name) is not False for name in payload["features"]):
-                raise AgentConfigError("reviewed_hook_payload did not disable unrelated native features")
+
+            def populated(value: Any) -> Any:
+                # Native config/read serializes unset profile fields as null.
+                if isinstance(value, dict):
+                    return {key: populated(item) for key, item in value.items() if item is not None}
+                return value
+
+            if permissions is not None and (
+                config.get("default_permissions") != "owned-fixture"
+                or populated((config.get("permissions") or {}).get("owned-fixture")) != permissions
+            ):
+                raise AgentConfigError("Native fixture profile contains inherited or altered permissions")
+            if any(
+                (config.get("projects") or {}).get(path, {}).get("trust_level") != state["trust_level"]
+                for path, state in projects.items()
+            ):
+                raise AgentConfigError("Native fixture task trust was not applied without persistence")
+            # Inspect names and enable flags only. Never retain or log host
+            # server settings, environment values, or authentication.
+            if payload is not None:
+                if any(server.get("enabled", True) for server in (config.get("mcp_servers") or {}).values()):
+                    raise AgentConfigError("reviewed_hook_payload leaves inherited MCP servers enabled")
+                if any((config.get("features") or {}).get(name) is not False for name in payload["features"]):
+                    raise AgentConfigError("reviewed_hook_payload did not disable unrelated native features")
         except AgentConfigError:
             raise
         except Exception as failure:
-            raise AgentConfigError("Unable to inspect reviewed native hook/config metadata") from failure
+            raise AgentConfigError("Unable to inspect native fixture hook/config metadata") from failure
         finally:
             client.close()
 
@@ -359,7 +485,29 @@ class CodexDailyDriverAgent(CodexAgent):
                      "image_generation", "skill_search", "sleep_tool"), False
                 ),
             }
+            projects = self._fixture_project_trust()
+            if projects:
+                native["projects"] = projects
             options["config"] = native
+        if self.config.fixture_worktree_envelope:
+            if self._fixture_envelope_roots is None or not self._fixture_git_directories:
+                raise AgentConfigError("Fixture envelope needs validated task Git metadata before native execution")
+            options.pop("sandbox", None)
+            native = options["config"]
+            native.pop("sandbox_workspace_write", None)
+            native["default_permissions"] = "owned-fixture"
+            native["permissions"] = {
+                "owned-fixture": {
+                    "extends": ":workspace",
+                    "filesystem": {
+                        str(self._fixture_envelope_roots[1]): "write",
+                        **{str(directory): "write" for directory in self._fixture_git_directories},
+                        ":tmpdir": "read",
+                        ":slash_tmp": "read",
+                    },
+                    "network": {"enabled": False},
+                }
+            }
         if self._reviewed_hook_payload is not None:
             payload = self._reviewed_hook_payload
             native = options["config"]
@@ -371,9 +519,10 @@ class CodexDailyDriverAgent(CodexAgent):
     def _log_config_enforcement(self) -> None:
         """Avoid the inherited full-access claim when native fixture confinement applies."""
         if self.config.offline_fixture:
+            policy = "owned worktree envelope" if self.config.fixture_worktree_envelope else "read-only/workspace-write"
             self._log.info(
-                "Offline fixture: native read-only/workspace-write sandbox; network and "
-                "non-fixture tools disabled. Read/Skill share the native shell capability."
+                "Offline fixture: native %s sandbox; network and non-fixture tools disabled. "
+                "Read/Skill share the native shell capability.", policy,
             )
         else:
             super()._log_config_enforcement()
@@ -404,8 +553,12 @@ class CodexDailyDriverAgent(CodexAgent):
         keyword on `Agent.communicate` reaches the built-in without a change
         here.
         """
-        if self._reviewed_hook_payload is not None:
-            await self._run_async(self._validate_reviewed_hook_isolation)
+        if self.config.fixture_worktree_envelope:
+            await self._run_async(
+                self._validate_fixture_worktree_envelope, Path(self.working_directory or ""), require_git=True
+            )
+        if self._reviewed_hook_payload is not None or self._fixture_project_trust():
+            await self._run_async(self._validate_native_fixture_isolation)
         try:
             record = await super().communicate(user_input, **kwargs)
         except BaseException:
