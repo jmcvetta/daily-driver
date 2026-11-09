@@ -139,7 +139,8 @@ A fourth was on that list until 2026-09-14, when
 `tasks/constitution/reply-is-concise.yaml` was ported under this note's rule
 and with the same load-bearing settings. It asked whether the constitution
 changed behaviour; left on `llm_judge`, that question could not be asked on
-this project's credentials. The row was later retired; see `0017`.
+this project's credentials. The row was later retired; see
+[`0017`](0017-constitution-compliance-is-unmeasured.md).
 
 The other nine are the `omp-only` forks `0013` added, including the forks of
 eight of the nine rows this note is about. They have the same defect, and the
