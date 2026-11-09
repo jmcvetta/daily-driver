@@ -221,6 +221,10 @@ def run_routing_controls(omp: str, base: Path, env: dict[str, str]) -> None:
     observer = base / "controls-observer.mjs"
     observer.write_text('''import { createHash } from "node:crypto";
 export default function(pi) {
+ // Drift after prompt preparation so this probe still exercises rejected-request controls.
+ pi.on("before_agent_start",async(_event,ctx)=>{
+  await pi.setModel(ctx.models.resolve("embark-title-probe/embark-title-probe-model"));
+ });
  pi.registerCommand("seed-controls", {handler: async (args,ctx) => {
   const model = ctx.models.current();
   const auth = ctx.modelRegistry.authStorage.keys.source(model.provider, {env:"aliases"});
