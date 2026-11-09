@@ -388,6 +388,22 @@ charges. The recorder's PATH CLI version is 2.1.267; actual SDK selection is its
 bundled Claude Code 2.1.273. The failed attempts reported no execution version
 or served model, so no stronger identity claim comes from those records.
 
+The [first native Codex attempt](provenance/disclosure-codex-native-comparison-20261109-2026-11-09-authorized-public-service-search.json)
+used the same frozen plugin pair and original public-search criteria, with adapter
+`c28796fefe955a81fbee737fb92aee631ac09d49`. All four slots ended as errors:
+the native ChatGPT route rejected the frozen `gpt-6.1-sol` identifier as
+unsupported. No semantic judging ran, and the remaining eight cases were not
+attempted. These are execution failures, not zero-scoring behavioral evidence.
+The normal account was authenticated. A metadata-only native `model/list`
+request, including hidden models and all pages, did not list that identifier.
+No model or provider substitution was made.
+
+The selected SDK/bundled Codex was 0.154.0; the recorder's PATH version is
+0.160.0. Its `model_served` field repeats the configured native thread model,
+but the rejected turn proves no model served these attempts. Usage and cost
+were unreported. Keep these identity limits with the record; do not infer a
+successful request, free inference, or behavioral parity.
+
 ### Completed Omp continuation
 
 The same frozen plugin pair then ran only the invalid explanation control and

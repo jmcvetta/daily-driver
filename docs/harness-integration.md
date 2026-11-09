@@ -203,6 +203,22 @@ module-only traversal evidence from a separately installed 18.13.3 package.
 The proof is `omp-executable-discovery-proof-cerftbik/evidence.json` under ignored
 `evals/runs/`. Link names are directory metadata, not permission to read targets.
 
+A later Codex adapter proof exercised the official runner's `DIRECT_WRITE`
+layout with the opt-in owned fixture envelope. Native Worktrunk created an
+initially absent sibling, staged a named file, committed it, and ran the
+canonical verifier. The scripted run passed its two deterministic criteria.
+The native home configuration stayed byte-identical and no hook file appeared.
+The exact-cwd project trust is derived per thread; this prevents native
+workspace-write startup from persisting project trust to the shared account
+configuration. Inherited permission-profile additions fail before inference.
+The final adapter SHA-256 is
+`20e3a3c5c165785486db8660d6c5c05366c0d4ab0db4cd70fdc8eef11852e99c`.
+Proofs are under
+`disclosure-release-20261107/codex-preparation/task-trust-repair-report.json`
+and `official-runner-task-trust-fixed/` in ignored `evals/runs/`.
+These credential-free scripted proofs establish integration behavior, not
+model compliance or inference cost.
+
 ## Sensitive handoff examples
 
 The [constitution](../rules/constitution.md) owns the headless
