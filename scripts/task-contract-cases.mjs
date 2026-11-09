@@ -296,10 +296,17 @@ export default function registerTaskContractChecks(check, root) {
 			post("replayed", rejected.stdout, 0);
 			post("real", "3 failing", 1);
 			post("chained", `3 failing\n${malformed.stdout}`, 1);
+			// Codex itself sends a Bash result as the captured output string, with no exit status.
+			const later = run({ action: "status" }, true);
+			const postString = (id, output) => assert.equal(run({ hook_event_name: "PostToolUse", session_id: "s", turn_id: "one", tool_use_id: id,
+				tool_name: "Bash", tool_input: { command: "anything" }, tool_response: output }).status, 0);
+			postString("own-string", later.stdout);
+			postString("real-string", "npm ERR! 3 failing");
 			const status = JSON.parse(run({ action: "status" }, true).stdout).details;
 			// Each receipt is used once; a replay of the same output is ordinary evidence.
-			assert.deepEqual(status.evidence.map((item) => item.sourceId), ["tool:replayed", "tool:real", "tool:chained"]);
-			assert.deepEqual(status.evidence.map((item) => item.isError), [false, true, true]);
+			assert.deepEqual(status.evidence.map((item) => item.sourceId), ["tool:replayed", "tool:real", "tool:chained", "tool:real-string"]);
+			// A string result carries no exit status, so it cannot record a failure.
+			assert.deepEqual(status.evidence.map((item) => item.isError), [false, true, true, false]);
 		} finally { rmSync(home, { recursive: true, force: true }); }
 	});
 
