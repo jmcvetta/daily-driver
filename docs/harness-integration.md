@@ -193,6 +193,14 @@ rejects hook events. The hook entry rejects actions. A command hook cannot
 prove its caller, so this split protects the advertised route only. A model
 with unrestricted shell access to `task-state.py` or the private ledger is
 outside this boundary.
+The model's own task-state calls are bookkeeping, not task evidence. A
+controller answer exits 0 even when it reports `isError`, so a call can never
+register as a failed tool result, reset the correction allowance or support an
+execution blocker. Only protocol and runtime faults exit nonzero. Each Codex
+call also records a receipt: a digest of its exact output in the private
+ledger. `PostToolUse` drops a non-failing result whose output equals a pending
+receipt and consumes that receipt. Nothing parses the shell command, so a call
+chained with other work, or wrapped in other output, stays ordinary evidence.
 The implementation requires Python 3, POSIX process locks and Node.js.
 Trust the installed hooks through Codex's supported hook review.
 

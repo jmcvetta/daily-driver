@@ -14,6 +14,8 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
+RECEIPT = "daily-driver.task-receipt"
+RECEIPT_LIMIT = 20
 
 
 def _path(base: Path, harness: str, session: str, agent: str) -> Path:
@@ -70,17 +72,33 @@ def _main() -> None:
         request = {"harness": args.harness, "sessionId": session, "agentId": agent or None,
                    "cwd": data.get("cwd", os.getcwd()), "ledger": ledger, "parentLedger": parent, "rootLedger": root,
                    "toolCommand": shlex.join(command)}
+        response = None
         if tool:
             request.update(action=data["action"], record=data.get("record"))
             if isinstance(request["record"], str):
-                request["record"] = json.loads(request["record"])
+                try:
+                    request["record"] = json.loads(request["record"])
+                except json.JSONDecodeError as error:
+                    response = {"ledger": json.loads(json.dumps(ledger)), "output": {
+                        "content": [{"type": "text", "text": f"record must be a JSON object: {error}"}], "isError": True}}
         else:
             request["event"] = data
-        result = subprocess.run(["node", str(ROOT / "hooks/task-state.mjs")], input=json.dumps(request),
-                                text=True, capture_output=True, timeout=10, check=False)
-        if result.returncode:
-            raise RuntimeError(result.stderr.strip() or "Task controller did not return a result")
-        response = json.loads(result.stdout)
+        if response is None:
+            result = subprocess.run(["node", str(ROOT / "hooks/task-state.mjs")], input=json.dumps(request),
+                                    text=True, capture_output=True, timeout=10, check=False)
+            if result.returncode:
+                raise RuntimeError(result.stderr.strip() or "Task controller did not return a result")
+            response = json.loads(result.stdout)
+        text = json.dumps(response["output"])
+        if tool and args.harness == "codex":
+            # The hook drops a shell result whose output is exactly this text, so the model's
+            # own bookkeeping call is not task evidence; nothing parses the command.
+            entries = response["ledger"]["entries"]
+            receipts = [index for index, entry in enumerate(entries) if entry.get("customType") == RECEIPT]
+            for index in reversed(receipts[:max(0, len(receipts) + 1 - RECEIPT_LIMIT)]):
+                del entries[index]
+            entries.append({"type": "custom", "customType": RECEIPT,
+                            "data": {"digest": hashlib.sha256(text.encode()).hexdigest()}})
         if response["ledger"] != ledger:
             descriptor, temporary = tempfile.mkstemp(prefix=path.stem + ".", dir=base)
             try:
@@ -97,9 +115,9 @@ def _main() -> None:
             finally:
                 if os.path.exists(temporary):
                     os.unlink(temporary)
-        json.dump(response["output"], sys.stdout)
-        if tool and response["output"].get("isError"):
-            raise SystemExit(1)
+        # A controller answer exits 0 even when it reports isError, so a bookkeeping call never
+        # registers as a failed tool result; only protocol and runtime faults exit nonzero.
+        sys.stdout.write(text)
 
 
 if __name__ == "__main__":

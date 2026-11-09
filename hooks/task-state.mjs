@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createTaskStateController } from "../extensions/task-state.mjs";
@@ -5,54 +6,23 @@ import { contractHandoff } from "../extensions/task-contract.mjs";
 
 const TOOL = "daily_driver_task_state";
 
-/** shellStructure keeps a command's shell syntax and makes each quoted word and heredoc body inert. */
-function shellStructure(command) {
-	let out = "";
-	const heredocs = [];
-	for (let i = 0; i < command.length; i++) {
-		const c = command[i];
-		if (c === "'" || c === '"') {
-			let j = i + 1;
-			while (j < command.length && command[j] !== c) j += c === '"' && command[j] === "\\" ? 2 : 1;
-			const body = command.slice(i + 1, j);
-			// Substitution inside double quotes runs another command, so it stays a separator.
-			out += c === '"' && /\$\(|`/u.test(body) ? ";" : `${c}${body.replace(/[\s;&|<>]/gu, "_")}${c}`;
-			i = j;
-			continue;
-		}
-		if (c === "\\") { out += "_"; i++; continue; }
-		const heredoc = command[i - 1] !== "<" && command.slice(i).match(/^<<(-?)\s*(['"]?)([A-Za-z_]\w*)\2/u);
-		if (heredoc) { heredocs.push({ delimiter: heredoc[3], tabs: heredoc[1] === "-" }); out += " "; i += heredoc[0].length - 1; continue; }
-		if (c === "\n" && heredocs.length) {
-			let rest = i + 1;
-			for (const { delimiter, tabs } of heredocs.splice(0)) {
-				for (;;) {
-					const end = command.indexOf("\n", rest);
-					const line = command.slice(rest, end < 0 ? command.length : end);
-					rest = end < 0 ? command.length : end + 1;
-					if (end < 0 || (tabs ? line.replace(/^\t+/u, "") : line) === delimiter) break;
-				}
-			}
-			out += "\n";
-			i = rest - 1;
-			continue;
-		}
-		out += c;
-	}
-	return out.trimEnd();
+const RECEIPT = "daily-driver.task-receipt";
+
+/** responseTexts lists the text a shell result may carry, from the shapes hook payloads use. */
+function responseTexts(response) {
+	if (typeof response === "string") return [response];
+	if (Array.isArray(response)) return [response.map((part) => part?.text ?? "").join("\n")];
+	if (!response || typeof response !== "object") return [];
+	return ["output", "stdout", "aggregated_output", "formatted_output", "text"].map((key) => response[key])
+		.filter((value) => typeof value === "string").concat(Array.isArray(response.content) ? responseTexts(response.content) : []);
 }
 
-/** isTaskStateCommand recognizes a standalone shell call of the task-state command route; chained work keeps its evidence. */
-export function isTaskStateCommand(input) {
-	const command = typeof input?.command === "string" ? input.command : Array.isArray(input?.command) ? input.command.join(" ") : "";
-	const structure = shellStructure(command);
-	if (/;|&&|\|\||\n|(?<![>&])&(?![>&])/u.test(structure)) return false;
-	return structure.split("|").some((segment) => {
-		const words = segment.trim().split(/\s+/u).map((word) => word.replace(/^['"]|['"]$/gu, ""));
-		const start = words[0] === "env" ? 1 : 0;
-		const script = /(?:^|\/)python3?$/u.test(words[start] ?? "") ? words[start + 1] : words[start];
-		return /(?:^|\/)hooks\/task-state\.py$/u.test(script ?? "") && words.includes("--tool");
-	});
+/** consumeReceipt removes the receipt whose recorded output this result carries exactly, if one is pending. */
+function consumeReceipt(ledger, response) {
+	const digests = new Set(responseTexts(response).map((text) => createHash("sha256").update(text.trim()).digest("hex")));
+	const index = ledger.entries.findIndex((entry) => entry.customType === RECEIPT && digests.has(entry.data?.digest));
+	if (index >= 0) ledger.entries.splice(index, 1);
+	return index >= 0;
 }
 
 /** handleTaskEvent maps attested harness events onto the shared task controller. */
@@ -91,13 +61,14 @@ export async function handleTaskEvent(request) {
 			const genuine = request.harness === "codex" ? !request.agentId : ["composer", "bridge"].includes(event.origin?.kind);
 			controller.input({ text: event.prompt ?? event.text ?? "", source: genuine ? "rpc" : "delegated",
 				harness: request.harness, origin, eventId: event.turn_id ?? event.id, allowTask: request.harness === "claude" && event.origin?.kind === "sdk" }, ctx);
-		} else if ((name === "PostToolUse" || name === "tool.result") && isTaskStateCommand(event.tool_input ?? event.input)) {
-			// The model's own task-state call is bookkeeping: its errors must not become blocker evidence or reset the correction bound.
 		} else if (name === "PostToolUse" || name === "tool.result") {
 			const response = event.tool_response ?? event.result;
+			const isError = event.isError ?? response?.isError ?? (typeof response?.exit_code === "number" && response.exit_code !== 0);
+			// The model's own task-state call is bookkeeping: its exact output matches a receipt the command recorded.
+			if (!isError && consumeReceipt(ledger, response)) return { ledger, output, notifications };
 			controller.toolResult({ toolCallId: event.tool_use_id ?? event.id, toolName: event.tool_name ?? event.tool,
 				input: event.tool_input ?? event.input, content: [{ type: "text", text: typeof response === "string" ? response : JSON.stringify(response) }],
-				isError: event.isError ?? response?.isError ?? (typeof response?.exit_code === "number" && response.exit_code !== 0) }, ctx);
+				isError }, ctx);
 		} else if (name === "Interrupt" || name === "turn.aborted") {
 			controller.cancel(ctx, `${name}:${event.turn_id ?? event.id}`);
 		} else if (name === "Stop" || name === "SubagentStop") {

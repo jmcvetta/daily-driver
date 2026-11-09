@@ -74,8 +74,10 @@ Authorization and unfinished stops
 
 The installed task-state hooks supply a command bound to the native session
 and actor. Run that exact command with `{action, record}` JSON on stdin.
-`record` may be a JSON object or a JSON string on this CLI route. Do not select
-another session identity. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
+`record` may be a JSON object or a JSON string on this CLI route. Read `isError`
+in the JSON answer: a controller rejection exits 0. Run the call on its own, so
+its exact output matches the receipt it records and stays out of task evidence.
+Do not select another session identity. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
 define every action and record, including authorization, blocker and reported
 complete.
 

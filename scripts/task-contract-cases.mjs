@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { createTaskStateController } from "../extensions/task-state.mjs";
-import { handleTaskEvent, isTaskStateCommand } from "../hooks/task-state.mjs";
+import { handleTaskEvent } from "../hooks/task-state.mjs";
 import { contractHandoff } from "../extensions/task-contract.mjs";
 import { register as registerClaude } from "../hooks/task-state-claude.js";
 
@@ -272,34 +272,32 @@ export default function registerTaskContractChecks(check, root) {
 	});
 
 	/** A failed task-state shell call recorded as evidence would reset the correction bound and pose as an observed blocker. */
-	check("Codex task-state command calls are not recorded as task evidence", async () => {
-		const request = { harness: "codex", sessionId: "s", cwd: "/offline", toolCommand: "python3 /p/hooks/task-state.py --harness codex --tool --session s" };
-		let result = await handleTaskEvent({ ...request, event: { hook_event_name: "UserPromptSubmit", turn_id: "one", prompt: "Fix the parser." } });
-		result = await handleTaskEvent({ ...request, ledger: result.ledger, event: { hook_event_name: "PostToolUse", tool_use_id: "own",
-			tool_name: "shell", tool_input: { command: `printf '{}' | ${request.toolCommand}` }, tool_response: { exit_code: 1, output: "bad record" } } });
-		result = await handleTaskEvent({ ...request, ledger: result.ledger, event: { hook_event_name: "PostToolUse", tool_use_id: "real",
-			tool_name: "shell", tool_input: { command: "npm test" }, tool_response: { exit_code: 1, output: "3 failing" } } });
-		result = await handleTaskEvent({ ...request, ledger: result.ledger, event: { hook_event_name: "PostToolUse", tool_use_id: "chained",
-			tool_name: "shell", tool_input: { command: `npm test; printf '{}' | ${request.toolCommand}` }, tool_response: { exit_code: 1, output: "3 failing" } } });
-		const status = await handleTaskEvent({ ...request, ledger: result.ledger, action: "status" });
-		assert.deepEqual(status.output.details.evidence.map((item) => item.sourceId), ["tool:real", "tool:chained"]);
-	});
-
-	/** Reading payload text as shell syntax records bookkeeping as evidence; reading quoted commands as calls drops real evidence. */
-	check("task-state command recognition reads shell structure, not payloads", () => {
-		const command = "python3 /p/hooks/task-state.py --harness codex --tool --session s";
-		const cases = [
-			[`printf '{"quote":"Fix the parser; keep the API"}' | ${command} --agent a`, true],
-			[`${command} <<'EOF'\n{"action":"status"}\nEOF`, true],
-			[`${command} 2>&1`, true],
-			["python3 '/a b/hooks/task-state.py' --harness codex --tool --session s", true],
-			[`${command} <<EOF\n{"a":1}\nEOF\nnpm test`, false],
-			[`npm test && ${command}`, false],
-			[`npm test & ${command}`, false],
-			[`printf "$(npm test)" | ${command}`, false],
-			['grep "hooks/task-state.py --tool" README', false],
-		];
-		for (const [text, expected] of cases) assert.equal(isTaskStateCommand({ command: text }), expected, text);
+	check("Codex task-state calls leave receipts, not evidence, while real work stays evidence", () => {
+		const home = mkdtempSync(resolve(tmpdir(), "daily-driver-receipt-"));
+		const env = { PATH: process.env.PATH, HOME: home, CODEX_HOME: home };
+		const run = (payload, tool) => spawnSync("python3", [resolve(root, "hooks/task-state.py"), "--harness", "codex", "--session", "s", ...(tool ? ["--tool"] : [])],
+			{ env, input: JSON.stringify(payload), encoding: "utf8" });
+		const post = (id, output, exitCode) => assert.equal(run({ hook_event_name: "PostToolUse", session_id: "s", turn_id: "one", tool_use_id: id,
+			tool_name: "Bash", tool_input: { command: "anything; the hook never parses it" }, tool_response: { exit_code: exitCode, output } }).status, 0);
+		try {
+			run({ hook_event_name: "UserPromptSubmit", session_id: "s", turn_id: "one", prompt: "Fix the parser." });
+			// A controller error and a malformed record both answer with isError and exit 0.
+			const rejected = run({ action: "contract", record: { expectedRevision: 99 } }, true);
+			assert.equal(rejected.status, 0, rejected.stderr);
+			assert.equal(JSON.parse(rejected.stdout).isError, true);
+			const malformed = run({ action: "status", record: "{not json" }, true);
+			assert.equal(malformed.status, 0, malformed.stderr);
+			assert.equal(JSON.parse(malformed.stdout).isError, true);
+			post("own-rejected", `${rejected.stdout}\n`, 0);
+			post("own-malformed", malformed.stdout, 0);
+			post("replayed", rejected.stdout, 0);
+			post("real", "3 failing", 1);
+			post("chained", `3 failing\n${malformed.stdout}`, 1);
+			const status = JSON.parse(run({ action: "status" }, true).stdout).details;
+			// Each receipt is used once; a replay of the same output is ordinary evidence.
+			assert.deepEqual(status.evidence.map((item) => item.sourceId), ["tool:replayed", "tool:real", "tool:chained"]);
+			assert.deepEqual(status.evidence.map((item) => item.isError), [false, true, true]);
+		} finally { rmSync(home, { recursive: true, force: true }); }
 	});
 
 	/** A nested subagent must adopt its direct parent's revision yet still resolve the root's original user request. */
