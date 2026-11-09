@@ -199,6 +199,13 @@ Each case requests `wait` immediately after dispatch so the completed reviewer
 result reaches the recorded tool output without opening the sandbox to
 `agent://` reads. Treat this revised configuration as a separate measurement
 from the earlier frozen cohort.
+
+For the corrected fix-delta measurement, both delta tasks request an
+explanation of the finding's status, code, and caller impact. Calibrate each
+delta rubric against its labelled examples before running `--phase delta`,
+which runs five repeats of each delta case per arm. Preserve the earlier
+cohort separately: its fixed-delta response contract could not express the
+explanation its rubric required.
 Reviewer usage and latency are `unavailable` unless directly exposed.
 Parent usage is not reviewer usage. Subscription allowance consumption is
 not cash spend; unknown cash spend is not zero.

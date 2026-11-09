@@ -28,7 +28,7 @@ def main() -> int:
     """Dispatch only the named arm and phase into a fresh explicit run directory."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--arm", choices=("glm", "deepseek"), required=True)
-    parser.add_argument("--phase", choices=("smoke", "cohort"), required=True)
+    parser.add_argument("--phase", choices=("smoke", "cohort", "delta"), required=True)
     parser.add_argument("--run-dir", type=Path, required=True)
     args = parser.parse_args()
     run_dir = args.run_dir.resolve()
@@ -43,6 +43,8 @@ def main() -> int:
         parser.error("materialize all eight tasks with evals-judge preflight first")
     if args.phase == "smoke":
         cases = [path for path in cases if path.name.startswith(("01-", "05-"))]
+    elif args.phase == "delta":
+        cases = [path for path in cases if path.name.startswith(("07-", "08-"))]
     command = [
         "uv", "tool", "run", "--isolated", "--python", "3.13",
         "--from", "coder-eval==0.11.6",

@@ -1,0 +1,1 @@
+{"reviewer_reported_identity":"unreported","verdict":"defects","explanation":"The issue is an authentication failure in the caller, not pagination.","findings":[{"location":"caller.py authentication","trigger":"a user signs in","impact":"access is denied","severity":"high"}]}

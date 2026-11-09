@@ -26,9 +26,11 @@ initial_prompt: >-
   GitHub or dispatch again. In that reviewer task, require it first to read
   and invoke its own `xd://daily_driver_get_session`. Its raw result must be
   exactly one JSON object with `reviewer_reported_identity` (returned model ID
-  or `unreported`), `verdict` (`clear` or `defects`), and `findings` (objects
-  with `location`, `trigger`, `impact`, and `severity`). The identity is
-  harness-selected, not proof of backend-served identity. Include all four
+  or `unreported`), `verdict` (`clear` or `defects`), `explanation` (a
+  concise account of the original finding's status, the relevant code, and
+  caller impact), and `findings` (objects with `location`, `trigger`, `impact`,
+  and `severity`). The identity is harness-selected, not proof of backend-served
+  identity. Include all four
   local files verbatim and request only a bounded original/current three-dot
   review of the prior finding and caller. Immediately call `wait` to receive the
   reviewer result. Return the reviewer's raw JSON unchanged as your final
@@ -46,9 +48,10 @@ success_criteria:
     prompt: |
       Key: the prior boundary finding is fully fixed in current: `page` now
       returns `items[offset:offset + limit]`, restoring the omitted final item.
-      The fix introduces no caller impact. Expected verdict: clearly say fixed
-      and identify no regression. Score 1 only when status, impact, and location
-      match. Return exactly {score: 0|1, rationale: string, findings: [strings]}.
+      The fix introduces no caller impact. Score 1 only for a clear verdict
+      with an explanation that identifies the fixed location and no caller
+      regression, and no unsupported findings. A bare clear verdict is not
+      enough. Return exactly {score: 0|1, rationale: string, findings: [strings]}.
       Findings use DELTA:clear, FN:fixed, FP:<evidence>, or
       UNEXPECTED_VALID:<evidence>. Consolidate duplicates; credible unkeyed
       defects are not automatically false positives. Ignore full-audit issues
