@@ -253,6 +253,47 @@ aggregation, not the cohort. Reviewer usage and backend-served identity are
 unavailable. The evidence does not distinguish the reviewers. Keep the current
 default; this is not a promotion.
 
+### Revised capture cohort
+
+The separately [frozen cohort](provenance/reviewer-quality/freeze-capture-cohort.json)
+ran five repeats per case and subject. The
+[GLM evidence](provenance/reviewer-quality/glm-capture-cohort.json) and
+[DeepSeek evidence](provenance/reviewer-quality/deepseek-capture-cohort.json)
+retain every planned slot and independent judge result. Both arms used the
+same `c8c20c0aa89f7269a18baa337e54fde3f446c5a7` plugin tree and Omp 18.14.1.
+DeepSeek ran from an archive of that commit after the GLM evidence was committed.
+The standard recorder initially attributed that arm to the recording checkout;
+its plugin revision was corrected to the archived source.
+
+| Measure | GLM 5.3 | DeepSeek V4 Pro |
+| --- | --- | --- |
+| Captured reviewer completions | 37/40 | 40/40 |
+| Evaluator success / timeout | 38/40 / 2/40 | 40/40 / 0/40 |
+| Full-review true positives / eligible defects | 19/19 | 20/20 |
+| Full-review false positives | 2 | 0 |
+| Full-review precision | 19/21 | 20/20 |
+| Clean-case false alarms | 0/10 | 0/10 |
+| Incomplete-fix detection | 4/4 eligible | 5/5 eligible |
+| Fixed-delta strict rubric pass | 1/4 eligible | 0/5 eligible |
+| Attempt duration median / range | 51.2 s / 35.5–90,032.4 s | 77.0 s / 46.0–144.0 s |
+
+Both detected every eligible authorization and data-integrity defect; one GLM
+authorization attempt timed out. GLM's two false positives asserted a unit
+mismatch without evidence. One further GLM result lacked a verified reviewer
+delivery despite an evaluator success. The fixed-delta rubric requires explicit
+confirmation of the corrected location and caller impact, while the requested
+clear-result JSON has no field for that explanation. Most clear verdicts
+therefore failed that rubric. The strict scores do not measure verdict accuracy
+alone. The small fixture set and five repeats limit generalization.
+
+Attempt durations include orchestration, not reviewer latency. Two GLM timeouts
+span system suspension and inflate its range; the median is not reviewer-only
+latency. Reviewer usage, backend-served identities, subscription consumption,
+and cash spend are unavailable, not zero. DeepSeek had more attributable
+completions and fewer false positives here; GLM had a lower attempt median.
+The fixed-delta rubric limitation prevents a reliable overall winner. Keep the
+existing DeepSeek default unchanged.
+
 `scripts/evals-reviewer-quality.py` collects bounded per-case evidence from
 explicit run directories and their committed records. An incomplete cohort
 does not complete the comparison. Render the standard run index after recording:
