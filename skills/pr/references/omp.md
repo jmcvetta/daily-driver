@@ -86,26 +86,31 @@ The owner continuation
 **Keep one managed owner reminder alongside the detached service.**
 `daily_driver_schedule({delaySeconds: <delay>, message: <continuation>})`
 sends a follow-up turn to the live session, including when the owner is idle.
-The first delay is 120 seconds. Keep
-the returned `triggerId`; `daily_driver_cancel_schedule({triggerId})` cancels
-it. Before any turn ends with this PR open and owned, ensure that slot is
-occupied. Reuse an armed timer on unrelated wakes; never arm one per event.
-When it fires, clear the slot, take the catch-up look, then rearm if work remains.
+The first delay is 120 seconds. Keep the returned `triggerId`;
+`daily_driver_cancel_schedule({triggerId})` cancels it. Before any turn ends
+with this PR open and owned, ensure that slot is occupied. Reuse an armed
+timer on unrelated wakes; never arm one per event. When it fires, clear the
+slot, take the catch-up look, then rearm if work remains.
 
-**An unchanged look is silent and backs off.** Compare each look with the
-previous one: head SHA, base currency, check states, review threads and
-comments, and service state. When none changed and no action is available,
-end the turn without a status message to the user. Rearm at double the
-previous delay, capped at 1800 seconds. Any change, or any action taken,
-rearms at 120 seconds. Service results still wake the owner at once; the
-backoff delays only the reminder. Do not report "no change" or restate the
-watch.
+**An unchanged look is silent and backs off.** A look compares the PR's
+head SHA, base currency, state, draft flag, labels, requested reviewers,
+check states, review threads and comments, and the service state with the
+values its reminder prompt recorded. When none changed and no action is
+available, end the turn without a status message to the user, and rearm at
+double the previous delay, capped at 1800 seconds. Do not report "no change"
+or restate the watch. A changed value, an action taken, or no recorded values
+to compare is not unchanged: rearm at 120 seconds, and on any wake that finds
+a change, cancel a backed-off timer and rearm it at 120 seconds. While
+current-head CI is pending or unregistered, keep 120 seconds: `review-cycle`'s
+wait may depend on this reminder. The detached service's exit is seen on the
+next look, so a backed-off reminder can delay a conflict report by up to the
+cap.
 
-The prompt names the PR and branch, the delay it was armed with, the
-maintenance and CI services/window, and the next unfinished review or
-readiness action. It says to check the user
-stop first, inspect service failures, read current-head evidence, and continue
-permitted work. A timeout is not a handoff to the user. During a CI wait,
+The prompt names the PR and branch, the delay it was armed with, the values
+the look compared, the maintenance and CI services/window, and the next
+unfinished review or readiness action. It says to check the user stop first,
+inspect service failures, read current-head evidence, and continue permitted
+work. A timeout is not a handoff to the user. During a CI wait,
 `review-cycle` reuses this slot rather than cancelling the only future owner
 turn. A reminder does not restart a live watcher. Coalesce a reminder and a
 service completion by rereading state, not by launching duplicate work.
