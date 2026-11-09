@@ -277,6 +277,10 @@ its plugin revision was corrected to the archived source.
 | Fixed-delta strict rubric pass | 1/4 eligible | 0/5 eligible |
 | Attempt duration median / range | 51.2 s / 35.5–90,032.4 s | 77.0 s / 46.0–144.0 s |
 
+The standard results index reports 35/40 rubric passes for each arm, not
+evaluator completion or verdict accuracy. DeepSeek's five non-passes are correct
+clear verdicts that lack the explanation the rubric requires.
+
 Both detected every eligible authorization and data-integrity defect; one GLM
 authorization attempt timed out. GLM's two false positives asserted a unit
 mismatch without evidence. One further GLM result lacked a verified reviewer
