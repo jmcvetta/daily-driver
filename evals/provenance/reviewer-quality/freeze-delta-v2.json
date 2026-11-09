@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source_commit": "fa5b88378f9226faa62f6925d88f30e698d2f1d1",
+  "subjects": ["opencode-go/glm-5.3:high", "opencode-go/deepseek-v4-pro:high"],
+  "parent_and_helpers": "openai-codex/gpt-6.1-sol:low",
+  "judge": "omp-gpt-6.1-sol",
+  "cases": ["reviewer-quality-07-delta-fixed", "reviewer-quality-08-delta-incomplete"],
+  "repeats_per_case_per_arm": 5,
+  "attempts": 20,
+  "max_parallel": 1,
+  "retries": false,
+  "provider_fallback": false,
+  "limits": "Existing OpenCode Go subscriptions; stop on rate or quota pushback; preserve all attempts.",
+  "calibration": ["fixed-calibration-v2.json", "incomplete-calibration-v2.json"],
+  "calibration_runtime": "Omp 18.18.3",
+  "comparison": "Separate corrected delta measurement; earlier capture cohort and flawed strict scores remain unchanged.",
+  "input_sha256": {
+    "evals/tasks/reviewer-quality/07-delta-fixed.yaml": "7a1cd8a40f987c833eb829d2a98efaf998dae289947a69a8024550a34b77a8ad",
+    "evals/tasks/reviewer-quality/08-delta-incomplete.yaml": "0dbe2fa9366097a549c645b5db799343bd106d759aa115d86f895c4bab548ec5",
+    "scripts/evals-reviewer-run.py": "2401f7529bd5f4aa4c5ad78dd8f6e7ec532e335aaf0699ba22b3dac7f3a0dd95"
+  }
+}
