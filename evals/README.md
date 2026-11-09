@@ -281,7 +281,7 @@ its plugin revision was corrected to the archived source.
 | Full-review precision | 19/21 | 20/20 |
 | Clean-case false alarms | 0/10 | 0/10 |
 | Incomplete-fix detection | 4/4 eligible | 5/5 eligible |
-| Fixed-delta strict rubric pass | 1/4 eligible | 0/5 eligible |
+| Fixed-delta strict rubric pass (invalid) | 1/4 eligible | 0/5 eligible |
 | Attempt duration median / range | 51.2 s / 35.5–90,032.4 s | 77.0 s / 46.0–144.0 s |
 
 The standard results index reports 35/40 rubric passes for each arm, not
@@ -294,8 +294,9 @@ mismatch without evidence. One further GLM result lacked a verified reviewer
 delivery despite an evaluator success. The fixed-delta rubric requires explicit
 confirmation of the corrected location and caller impact, while the requested
 clear-result JSON has no field for that explanation. Most clear verdicts
-therefore failed that rubric. The strict scores do not measure verdict accuracy
-alone. The small fixture set and five repeats limit generalization.
+therefore failed that rubric. Those fixed-delta scores are invalid for
+comparing reviewer performance. The small fixture set and five repeats limit
+generalization.
 
 Attempt durations include orchestration, not reviewer latency. Two GLM timeouts
 span system suspension and inflate its range; the median is not reviewer-only
