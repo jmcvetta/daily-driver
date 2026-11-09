@@ -1,0 +1,749 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires for research issue authoring",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Research handoff has purpose, bounded criteria, evidence plan, deliverable, and stopping rule",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Research handoff has purpose, bounded criteria, evidence plan, deliverable, and stopping rule",
+            "duration_seconds": 8.02,
+            "findings": [
+              "Compares retaining the current design, using a shared store, and deferring change without preselecting an answer.",
+              "Limits investigation to repository evidence and available local metrics; explicitly excludes implementation and external investigation.",
+              "Requires an evidenced answer, recommendation, trade-offs, and limitations on the issue itself.",
+              "Defines a stopping rule bounded to the three alternatives and available evidence, including requirements for an inconclusive result.",
+              "Does not invent measurements, citations, a store technology, or a settled implementation design."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "e768c7cf7554df333d1753fa760ef1c1643126a526ed9c7906d9e5e63b132a52",
+            "rationale": "ANCHOR: result The final reply selects research and provides a complete, neutral research issue with an exact question, practical purpose, bounded evidence plan, evaluation criteria, and explicit completion requirements. It prohibits production access and external requests, distinguishes facts from inference and missing measurements, and includes normal trailing provenance without task class metadata.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2268,
+              "output": 177
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-07-research-contract-draft",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` and `issue-body` fire for the automatic bug report",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Automatic report stays concise, evidence-based, and provenance-bearing",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Automatic report stays concise, evidence-based, and provenance-bearing",
+            "duration_seconds": 11.03,
+            "findings": [
+              "Names Daily Driver\u2019s session-title skill and its declared 40-character, whole-word shortening contract.",
+              "Includes Omp 18.8.4, the exact example, two reported reproductions, and the reported tool behavior.",
+              "Explicitly identifies missing diagnostic information rather than inventing it.",
+              "Ends with model, harness, and session provenance."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "dfdc32581b4e88ad190ff1233d49607c30383f46844cb81e16017f24fb19db0d",
+            "rationale": "ANCHOR: result The final reply provides a concise proposed report with the required title, existing bug kind, affected component, ownership evidence, expected and observed behavior, and Omp version and context. It preserves the two reported reproductions, distinguishes unknowns without inventing tests, ends with provenance, and does not claim a live issue write or include prohibited task machinery.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1150,
+              "output": 196
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-15-automatic-bug-report-stays-brief",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='no', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The draft body is a grounded task handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": {
+        "armed_criteria": [
+          "skill_triggered: `issue` fires on an issue being opened"
+        ],
+        "deciding_criterion_description": "`issue` fires on an issue being opened",
+        "deciding_criterion_type": "skill_triggered",
+        "elapsed_seconds": 2.5398870710050687,
+        "gate_threshold": 1.0,
+        "reason": "criterion_passed",
+        "sdk_turn_index": 1,
+        "tool_call_index": 1,
+        "turns_remaining_at_stop": 29
+      },
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The draft body is a grounded task handoff with model class metadata",
+            "duration_seconds": 38.5,
+            "findings": [
+              "No task kind selection or task body.",
+              "Missing Summary, Model class, and Detail sections.",
+              "Missing distinct provenance block."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ef400d36f32197982220b2168e962103c490184a28bbeb8cfaadb7a8590bd87a",
+            "rationale": "ANCHOR: result The reply is only a workflow-reading JSON object and does not explicitly select task or provide the required task handoff.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 886,
+              "output": 69
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796"
+      },
+      "measured_score": 0.25,
+      "raw_weighted_score": 0.75,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A plain file request produces an assignable task",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A plain file request produces an assignable task",
+            "duration_seconds": 8.2,
+            "findings": [
+              "Selects kind `task` and model class `implementation`.",
+              "Defines checksum-based signing behavior for unchanged, changed, new, and unreadable-checksum artifacts.",
+              "Provides concrete fixture-based acceptance criteria and release-entry-point verification.",
+              "Discloses uninspected repository locations and gates rather than inventing repository evidence."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "e363b6209bb7be782961cd87ea960d200eb506c7180aac0f2b45fc1411b3ff48",
+            "rationale": "ANCHOR: result. The final reply selects task without a kind-selection question and supplies an assignable implementation body with outcome, scope, model class, acceptance criteria, and provenance while explicitly distinguishing user-reported behavior from unverified repository context.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1417,
+              "output": 128
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-17-file-issue-defaults-to-task",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on a bug body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The bug body carries no invented task sections or model class",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The bug body carries no invented task sections or model class",
+            "duration_seconds": 7.31,
+            "findings": [
+              "Records POST /login with user+tag@example.test and HTTP 500 on every reported production attempt.",
+              "Includes expected successful login and the sign-in impact on users with plus-addressed emails.",
+              "Explicitly identifies release/version and root cause as unknown and notes missing payload and encoding.",
+              "Includes trailing Model, Harness, and session provenance without task metadata."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "d0f0872e48232d345f10a0b8df5c7335fc15eeb6b9d114f81f12ec4cb757b100",
+            "rationale": "ANCHOR: result The reply selects bug and provides a useful body covering the affected login, expected success versus HTTP 500, reproduction, frequency, and impact, while explicitly marking release/version and root cause unknown. It avoids task machinery and preserves trailing provenance below the separator.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1331,
+              "output": 140
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-05-bug-body-gets-no-task-contract",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on a task body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply asks about the unresolved decision instead of claiming readiness",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply asks about the unresolved decision instead of claiming readiness",
+            "duration_seconds": 9.16,
+            "findings": [
+              "Asks the user to settle per-key versus per-IP limiting.",
+              "Explicitly blocks implementation readiness pending that decision.",
+              "Offers only a proposed title and problem statement, not a finished ready issue."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "326829d92414a80299b5ddde713c6cba9b8e9ce6070ff49b84532b4ab701c6e4",
+            "rationale": "ANCHOR: result The reply identifies quota identity as an unresolved product decision and asks the user to choose per-key or shared per-IP quotas. It explicitly states that the issue is not implementation-ready; its recommendation does not settle the decision.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1048,
+              "output": 148
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-04-unresolved-intent-asks",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "A plain create request produces an assignable task",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "A plain create request produces an assignable task",
+            "duration_seconds": 6.32,
+            "findings": [
+              "Outcome: skip signing artifacts whose checksums match the previous release.",
+              "Scope preserves signing for changed, new, and first-release artifacts and excludes unrelated release changes.",
+              "Model class is explicitly `implementation`.",
+              "Acceptance criteria cover equal, different, missing, and mixed checksums plus existing failure behavior.",
+              "Provenance includes model, harness, and session; repository-grounding limitations and required discovery are explicit."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "e363b6209bb7be782961cd87ea960d200eb506c7180aac0f2b45fc1411b3ff48",
+            "rationale": "ANCHOR: result. The final reply selects `task` without a kind-selection question and provides a concrete implementation body with outcome, scope, model class, acceptance criteria, and provenance. It explicitly distinguishes user-reported behavior from unverified repository details rather than inventing repository evidence.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1622,
+              "output": 177
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-16-create-issue-defaults-to-task",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 56.39415979385376,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-07-research-contract-draft",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 72192,
+        "output_tokens": 1576,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21445
+      },
+      "tokens": 95213,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 38.40856885910034,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-15-automatic-bug-report-stays-brief",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 53376,
+        "output_tokens": 1131,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20742
+      },
+      "tokens": 75249,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 3.5197293758392334,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 25,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 6780
+      },
+      "tokens": 6805,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 48.616679191589355,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-17-file-issue-defaults-to-task",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 76032,
+        "output_tokens": 1157,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 27360
+      },
+      "tokens": 104549,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 19.393370628356934,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-05-bug-body-gets-no-task-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 77952,
+        "output_tokens": 555,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 12687
+      },
+      "tokens": 91194,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 26.60060167312622,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-04-unresolved-intent-asks",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 19584,
+        "output_tokens": 684,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 19535
+      },
+      "tokens": 39803,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 49.899250745773315,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-16-create-issue-defaults-to-task",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 67840,
+        "output_tokens": 1398,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21357
+      },
+      "tokens": 90595,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-31T17:36:47.765472",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 9722,
+      "output": 1035
+    }
+  },
+  "plugin_revision": {
+    "commit": "22f43b3bc6705f64f8510bf4e8859492c75a6499",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-31T10:38:18.362755+00:00",
+  "run_id": "2026-10-31_17-32-44",
+  "schema_version": 5,
+  "started_at": "2026-10-31T17:32:44.913021",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-01-open-a-task-issue": [
+          0.25
+        ],
+        "issue-04-unresolved-intent-asks": [
+          1.0
+        ],
+        "issue-05-bug-body-gets-no-task-contract": [
+          1.0
+        ],
+        "issue-07-research-contract-draft": [
+          1.0
+        ],
+        "issue-15-automatic-bug-report-stays-brief": [
+          1.0
+        ],
+        "issue-16-create-issue-defaults-to-task": [
+          1.0
+        ],
+        "issue-17-file-issue-defaults-to-task": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "issue-07-research-contract-draft",
+        "issue-15-automatic-bug-report-stays-brief",
+        "issue-01-open-a-task-issue",
+        "issue-17-file-issue-defaults-to-task",
+        "issue-05-bug-body-gets-no-task-contract",
+        "issue-04-unresolved-intent-asks",
+        "issue-16-create-issue-defaults-to-task"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

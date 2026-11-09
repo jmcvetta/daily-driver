@@ -62,6 +62,7 @@ success_criteria:
   # a plausible-sounding reply. Left unarmed for the reason `undertake/08`
   # gives: there is no fail-stopping criterion here for a bare arm to defer.
   - type: skill_triggered
+    weight: 0
     description: "`deps` fires on a bulk upgrade of Dependabot's open pull requests"
     expected_skill: deps
     skill_name: deps
@@ -87,6 +88,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are grading one reply against a single rule.

@@ -17,7 +17,7 @@
 # What this row can and cannot see. The sandbox has no Omp runtime adapter, so
 # `daily_driver_set_session_title` cannot actually be called here — there is
 # no real session to title. What is observable is what the agent says it will
-# do, so the graded assertion is an `llm_judge` on the reply, plus the skill
+# do, so the graded assertion is an `agent_judge` on the reply, plus the skill
 # having fired at all. A positive check that the title was set needs a live
 # Omp session with the adapter loaded, which is not a sandbox this harness can
 # build.
@@ -54,16 +54,25 @@ success_criteria:
   # a plausible-sounding reply. Left unarmed for the reason `undertake/08`
   # gives: there is no fail-stopping criterion here for a bare arm to defer.
   - type: skill_triggered
+    weight: 0
     description: "`session-title` fires on Claude's own initiative when issue work begins"
     expected_skill: session-title
     skill_name: session-title
 
   # The finding.
-  - type: llm_judge
+  - type: agent_judge
     description: The reply sets the title in one call, with no id looked up first
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 

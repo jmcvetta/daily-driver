@@ -1,0 +1,21 @@
+# GPT 6.1 Sol subject through OpenAI Codex, with one repeat per variant.
+experiment_id: omp-gpt-6-1-sol
+description: Focused escalation regression evaluation on GPT 6.1 Sol through OpenAI Codex.
+defaults:
+  repeats: 1
+  run_limits:
+    max_turns: 30
+    task_timeout: 1200
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: openai-codex/gpt-6.1-sol
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+variants:
+  - variant_id: with-plugin
+    description: Omp session with daily-driver loaded to test escalation behavior.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

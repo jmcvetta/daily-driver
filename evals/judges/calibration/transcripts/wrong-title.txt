@@ -1,0 +1,3 @@
+  1. [success] Skill undertake
+  2. [success] Write xd://daily_driver_set_session_title {"title":"Rotate token"} → ok
+  3. [success] Bash `gh issue comment 52 --body "Taking issue #52."` → offline GitHub mock: issue comment 52 --body …

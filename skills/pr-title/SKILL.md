@@ -4,11 +4,9 @@ description: >-
   This skill should be used whenever the title of a GitHub pull request is
   being written or revised — including when the user says "fix the PR title",
   "rename the PR", "that title is wrong", or asks what a PR should be called,
-  and including any call Claude makes on its own initiative to
-  `mcp__github__create_pull_request`, to `mcp__github__update_pull_request`
-  that sets a `title`, to Omp's `github` tool's `pr_create` op (`title`), or
-  to `gh pr create --title` / `gh pr edit --title`, which is the route on Omp
-  and on Codex. Supplies the Conventional Commits convention the title must
+  and including any call the agent makes on its own initiative that writes or
+  revises a pull request's title while opening or updating one. Supplies the
+  Conventional Commits convention the title must
   conform to; the type itself comes from `conventional-commits-type`. Not for
   commit messages, not for the PR body — that is `pr-body` — and not for the
   session's own name — that is `session-title`.
@@ -36,10 +34,12 @@ the harness in use before the first call.
 The type
 --------
 
-Follow `conventional-commits-type`. It decides the type from what the change
-**does** — the two gates and the one test that settle it are its business,
-and they are not guessed at here from the branch name, the issue label, or
-the shape of the diff.
+Before proposing or writing a title, read the whole diff and follow
+`conventional-commits-type`. Apply its **Evals are tests** boundary before
+considering `feat` or `fix`; adding an eval capability is not adding a product
+capability. The type comes from what the change **does**, not the branch name,
+issue label, scope, or shape of the diff. The classification rules stay in
+that skill.
 
 It also decides when the type is decided already: a type on the pull request
 that this session did not write is settled — whoever set it — and a

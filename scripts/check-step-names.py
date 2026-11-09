@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """A step is cited by its name, never by its number.
 
-Several files here lay out a numbered sequence -- `undertake`'s eleven steps,
-`review-cycle`'s three stages, `session-title`'s four cuts -- and other files
+Several files here lay out a numbered sequence -- `undertake`'s twelve steps,
+`review-cycle`'s four stages, `session-title`'s four cuts -- and other files
 cite them. A number is positional: insert one step and every citation of every
 later step is silently wrong, in prose that still reads exactly like prose that
 is right. It has already cost once. 8354f33 added a step in the middle of
@@ -142,7 +142,7 @@ CLEAN = (
     "7 — Open the draft",
     "runs this round between its `Open the draft` and `Ready for review` steps",
     "1. **Tracker prefix.** Drop a leading prefix",
-    "eleven steps, and this skill is the order they run in",
+    "twelve steps, and this skill is the order they run in",
     "step by step, without stopping",
     # A blank line ends the reach: a heading above a numbered list is not one.
     "## The rule\n\n1. First",

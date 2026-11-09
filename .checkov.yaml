@@ -1,0 +1,14 @@
+directory:
+  - infra
+framework:
+  - terraform
+download-external-modules: false
+evaluate-variables: true
+quiet: true
+compact: true
+skip-check:
+  - CKV_TF_1 # Module sources are not pinned to commit hashes; version constraints and the lock file pin providers.
+  - CKV_TF_2 # The local modules are not versioned Git sources, so a commit hash cannot be pinned.
+  - CKV_GIT_1 # The repository is public by design.
+  - CKV_GIT_5 # This solo-maintainer repository does not require approving reviews.
+  - CKV_GIT_6 # Signed commits are not adopted; changing this requires a separate decision.

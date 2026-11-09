@@ -1,0 +1,77 @@
+task_id: issue-05-bug-body-gets-no-task-contract
+description: >-
+  The selected bug-body contract applies to supplied failure evidence without
+  requiring a diagnosed cause. The issue body must state uncertainty and keep
+  task machinery out while retaining separate trailing provenance.
+tags: [issue, behaviour, fire]
+
+initial_prompt: >-
+  Open a bug issue: the login endpoint returns HTTP 500 when an email address
+  contains a plus sign. The user's reproduction is POST /login with
+  user+tag@example.test; plus signs are valid email characters, so login should
+  succeed. This happens on every attempt in production, but the affected
+  release/version and root cause are unknown. The failure blocks these users
+  from signing in. Do not post anything; show the issue kind and exact body.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`issue-body` fires on a bug body being written"
+    expected_skill: issue-body
+    skill_name: issue-body
+
+  - type: agent_judge
+    description: The bug body carries no invented task sections or model class
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The reply selects the `bug` kind and proposes a useful bug body from supplied evidence. It records
+      the affected login behavior, expected success versus observed HTTP 500,
+      the supplied request as reproduction, known frequency and impact, and
+      explicitly says release/version and root cause are unknown. It must not
+      invent any details. Do not require a diagnosed cause, implementation
+      plan, acceptance template, exhaustive impact study, or model class.
+      It must keep task-only machinery out: no `## Model class`, task sections,
+      fixed task layout, or implementation metadata. A trailing
+      `provenance` block below `---` is required and is distinct from task
+      metadata; do not reject a concrete `Model:` line inside that block.
+
+      Score 1.0 if the body carries the supplied evidence and uncertainty,
+      adds no invented facts or task machinery, and preserves trailing
+      provenance. Score 0.5 if it reports the bug usefully but omits a known
+      impact/frequency detail or mishandles a minor non-task requirement.
+      Score 0.0 if it selects a non-bug kind, invents evidence, asserts a root
+      cause, uses task metadata, omits provenance, or gives no body.

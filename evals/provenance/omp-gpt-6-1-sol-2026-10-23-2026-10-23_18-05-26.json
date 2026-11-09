@@ -1,0 +1,360 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`embark` handles the active wave",
+          "details": "observed='yes', expected='yes' (skill_name='embark')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Pending required CI retains observation without human escalation or merge.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Pending required CI retains observation without human escalation or merge.",
+            "duration_seconds": 8.37,
+            "findings": [
+              "PR #301 remains unmerged at abc123 while Checks is in_progress.",
+              "Pending CI is distinguished from required human approval.",
+              "One muster-roll line records the wait.",
+              "Existing observation continuation is retained; CI events trigger gate re-evaluation.",
+              "No human label, auto-merge, implementor relaunch, or delivered writes/timers are claimed."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2bbfaf6599c5a405b282e98a53549bf03b123c6b14fd79900842caf7dbc3b2bc",
+            "rationale": "The final [RESULT - SUCCESS] leaves #301 unmerged, correctly treats pending Checks as an external CI wait, and provides one muster-roll line. It explicitly retains the existing continuation to re-read landing gates when CI changes, without requesting human intervention or claiming writes or live timers.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1031,
+              "output": 142
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "87beee0a1ee8546035ce801e19f6fd0e5faca83c5fa90f5c3a715246cd894110"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-19-blocked-pending-ci-is-not-human",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`embark` handles the active wave",
+          "details": "observed='yes', expected='yes' (skill_name='embark')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Evidence establishes the real approval gate and independent work continues.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Evidence establishes the real approval gate and independent work continues.",
+            "duration_seconds": 8.92,
+            "findings": [
+              "Required owner approval is explicitly identified.",
+              "One proposed muster-roll line is included; no delivered writes are claimed.",
+              "The implementor remains active and unarchived without relaunch or renewed authorization.",
+              "Landing gates will be rechecked against the resulting head, with unchanged wakes remaining silent.",
+              "No approval bypass, auto-merge, or blanket work stoppage is proposed."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "366c67b9987827cc5170a85b9879ee6aabd76244fc99bca19cb774307caf5cd5",
+            "rationale": "The final result leaves #301 unmerged and identifies the required owner approval using repository policy and REVIEW_REQUIRED, rather than BLOCKED alone. It supplies one muster-roll line without claiming a write, retains ongoing observation, and allows the active implementor to finish authorized documentation work while pausing only landing.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 977,
+              "output": 177
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "87beee0a1ee8546035ce801e19f6fd0e5faca83c5fa90f5c3a715246cd894110"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-20-blocked-confirmed-review-required",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`embark` handles the active wave",
+          "details": "observed='yes', expected='yes' (skill_name='embark')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Unknown evidence does not imply human approval or permit merge.",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Unknown evidence does not imply human approval or permit merge.",
+            "duration_seconds": 9.15,
+            "findings": [
+              "Explicitly declines to merge #301 because BLOCKED does not satisfy CLEAN.",
+              "Muster-roll line names unavailable review-decision and repository-policy evidence.",
+              "Keeps the watch active and calls for rereading the gate when evidence changes or missing reads become available.",
+              "Explicitly states that no writes or merge were performed."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "d3e17d65e5b0bbbc402ab81e39a25ce146f3f5d28007dacafaea11cf06c29cd7",
+            "rationale": "The final [RESULT - SUCCESS] leaves #301 unmerged, includes one muster-roll line identifying the unresolved merge gate and unavailable review evidence, and retains the existing watch with a read-again continuation. It makes none of the prohibited approval, readiness, escalation, auto-merge, or delivered-write claims.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 988,
+              "output": 141
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "87beee0a1ee8546035ce801e19f6fd0e5faca83c5fa90f5c3a715246cd894110"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-21-blocked-cause-unresolved",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 22.720250129699707,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-19-blocked-pending-ci-is-not-human",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 21888,
+        "output_tokens": 297,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 19593
+      },
+      "tokens": 41778,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 22.36538553237915,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-20-blocked-confirmed-review-required",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 42880,
+        "output_tokens": 416,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 22199
+      },
+      "tokens": 65495,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 18.505303859710693,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-21-blocked-cause-unresolved",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 15744,
+        "output_tokens": 274,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 25736
+      },
+      "tokens": 41754,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.12.6",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-23T18:05:50.278067",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "87beee0a1ee8546035ce801e19f6fd0e5faca83c5fa90f5c3a715246cd894110",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 2996,
+      "output": 460
+    }
+  },
+  "plugin_revision": {
+    "commit": "a2520432b0d243247cb1914c1599230abe780ae8",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-23T11:06:01.032765+00:00",
+  "run_id": "2026-10-23_18-05-26",
+  "schema_version": 5,
+  "started_at": "2026-10-23T18:05:26.094054",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "embark-19-blocked-pending-ci-is-not-human": [
+          1.0
+        ],
+        "embark-20-blocked-confirmed-review-required": [
+          1.0
+        ],
+        "embark-21-blocked-cause-unresolved": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "embark-19-blocked-pending-ci-is-not-human",
+        "embark-20-blocked-confirmed-review-required",
+        "embark-21-blocked-cause-unresolved"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

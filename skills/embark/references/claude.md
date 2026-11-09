@@ -2,8 +2,12 @@
 
 `SKILL.md` names each operation in words. This file names the call, for a
 session running in Claude Code. Omp's routes are in [`omp.md`](omp.md) and
-Codex's in [`codex.md`](codex.md); both of those are stops rather than tables,
-for different reasons each states.
+Codex's in [`codex.md`](codex.md); both carry the harness-local subagent
+fallback rather than web-session tables, for different reasons each states.
+
+Do not ask for landing or archive authorization before starting the workflow.
+If a tool denies an action, report the denied action and reason, and do not
+bypass the denial or record the action as complete.
 
 
 The epic
@@ -12,9 +16,11 @@ The epic
 | Step | Operation | Call |
 | ---- | --------- | ---- |
 | `Read the epic` | Read the body | `mcp__github__issue_read`, `method: get` |
-| `Read the epic` | Read the task issues under it | `mcp__github__issue_read`, `method: get_sub_issues` |
+| `Read the epic` | Read the child issues under it | `mcp__github__issue_read`, `method: get_sub_issues` |
 | `Read the epic` | Read the muster rolls already posted | `mcp__github__issue_read`, `method: get_comments` |
-| `Take the wave` | Read a task issue's body and claim | `mcp__github__issue_read`, `method: get` and `get_comments` |
+| `Title the session` | Read the orchestrator's own id | `get_session` on the Claude Code Remote server, `session_id` omitted; `session-title` says how the prefix is read |
+| `Title the session` | Set the title | `set_session_title`, with that id and `session-title`'s orchestrating-an-epic form |
+| `Take the wave` | Read a child issue's body and claim | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Post the muster roll` | Comment on the epic | `mcp__github__add_issue_comment` |
 | `Post the muster roll` | Mark the wave in the epic's body | `mcp__github__issue_write`, `method: update` |
 
@@ -33,11 +39,13 @@ The sessions
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Open the sessions` | Open one per task | `mcp__Claude_Code_Remote__create_session` |
-| `Watch the wave` | Read a task session's status | `mcp__Claude_Code_Remote__get_session` |
+| `Open the sessions` | Open one per ready, agent-eligible child | `mcp__Claude_Code_Remote__create_session` |
+| `Watch the wave` | Read a child session's status | `mcp__Claude_Code_Remote__get_session` |
+| `Watch the wave` | Read the implementor reports that arrived | `ReadNotifications`, until it reports none remaining |
+| `Watch the wave` | Send a visible answer or a nudge | `mcp__Claude_Code_Remote__send_message`, `session_id` the roll's session id |
 | `Recover a session` | Stop the current turn | `mcp__Claude_Code_Remote__interrupt_session` |
-| `Recover a session` | Name the session as an address | `ListAgents` |
-| `Recover a session` | Send a correction | `SendMessage`, to that name |
+| `Recover a session` | Read a session whose send errored, before any reopen | `mcp__Claude_Code_Remote__get_session` |
+| `Recover a session` | Send a correction | `mcp__Claude_Code_Remote__send_message`, `session_id` the roll's session id, `priority` omitted |
 | `Recover a session` | Retire one | `mcp__Claude_Code_Remote__archive_session` |
 
 What `create_session` is given
@@ -45,12 +53,13 @@ What `create_session` is given
 
 | Field | What goes in it |
 | ----- | --------------- |
-| `prompt` | The task issue, and the ask to undertake it. Nothing else. |
-| `title` | `session-title`'s form for that task issue. |
-| `model` | The task issue's `Model:` line, or omitted to inherit this session's. |
-| `environment_id` | Omitted. The default is the calling session's environment, which is where the plugin is installed. |
-| `permission_mode` | Omitted, to inherit. |
-| `outcome_branch` | `Recover a session` only — the branch the dead session was pushing to. |
+| `prompt` | The child issue and the ask to undertake it. Nothing else. |
+| `append_system_prompt` | The way back: this session's own id, below. |
+| `title` | `session-title`'s form for that child issue. |
+| `model` | A concrete identifier resolved from the task's required class and current session availability. |
+| `environment_id` | Omitted to inherit the calling environment. |
+| `permission_mode` | Omitted to inherit. |
+| `outcome_branch` | `Recover a session` only. |
 
 **Never `permission_mode: "plan"`.** The call's own contract says a `plan`
 session proposes a plan and then blocks for a human approval in the web UI. A
@@ -66,39 +75,58 @@ a grant that was not made.
 Addressing a session
 --------------------
 
-**`SendMessage` is addressed by name, never by a session id.** Its `to` takes
-the name a row of `ListAgents` prints — that name is the address, and there is
-no other syntax for one. The `session_01AbC…` identifier `create_session`
-returns, and that the muster roll records, is not one: passing it fails to
-resolve, and `SKILL.md`'s *messaging is one way* means nothing reads back that
-it did.
+**The address is the session id.** Every send to an implementor is
+`mcp__Claude_Code_Remote__send_message`, with `session_id` set to the id
+`create_session` returned. That id is already in the muster roll's
+`Implementor` cell, so a send costs no lookup. Nothing on this route loads
+`ListAgents` or `SendMessage`: they are a different transport, addressed by
+name, and they do not reach a cloud session.
 
-So a correction is two calls, in order. `ListAgents` lists this account's cloud
-sessions among its rows; match the fleet member there and send to the name it
-printed, appending the row's ` [ref]` only where an error asks for it. **A
-member the listing does not name cannot be reached** — a session that has
-already stopped is the usual reason — and that is the reopen path in
-`Recover a session` rather than a retry.
+Measured 2026-10-05, Claude Code 2.1.289: `ListAgents` returned "No reachable
+agents" while `get_session` showed two implementors running and connected.
+`SendMessage` to a session id failed to resolve. `send_message` with that id
+and `priority: later` succeeded and queued an event with `inbound_origin:
+mcp_send_message`.
 
-**There is no effort parameter.** Effort is session configuration —
-`session_context.effort_level` — rather than a dispatch argument, which is why
-`epic` records a model on a task issue and not a level.
+**Reachability is read from the send.** A `send_message` that errors is the
+signal. Then `get_session` decides. Reopen only a session it reports as
+archived, failed, or not found. A running or idle session whose send errors is
+interrupted, never reopened — a second session on its branch would collide
+with the one that still holds it — and the task is a stop under `Where it
+stops and waits`.
 
-The model identifier
---------------------
+Route assessment
+----------------
 
-It has to be one `create_session` accepts: a marketing name recalled from
-training is not one, and the session it opens fails rather than falling back.
-[`epic`'s own Claude routes](../../epic/references/claude.md) name the family
-and carry the date that measurement was taken. That table is not copied here —
-one home for it is what stops the two drifting.
+Every epic story must pass `Take the wave`'s assignability gate. Resolve its
+`Model class` using
+[`issue-body`'s shared guidance](../../issue-body/references/model-classes.md)
+before calling `create_session`.
+`session_context.model` is a candidate concrete identifier only after that
+assessment; `configured_model` can be an alias or unsupported suffix. Never
+pass a class name to `model`, and never silently inherit an unchecked model.
+The selected exact class and every visible fallback must retain the current
+family, provider, backend, and authentication route. A model argument alone
+does not establish those constraints. Stop the affected task if the available
+session surface cannot constrain and verify them; do not rewrite shared roles.
+The effective model route, including configured fallbacks and visible parent
+inheritance, must be resolved before dispatch. Treat any route the harness
+identifies as astra/fable as frontier regardless of agent or role name. A
+frontier task needs issue-recorded approval and its exact work envelope. Do not
+invent a Fable identifier or assume an API route; if the concrete route cannot
+be established, stop that task with a configuration gap. A frontier route may
+receive ordinary work only for bounded routing and handoff to a non-frontier
+implementor. Frontier implementation requires a separate explicit user
+exception and bounded scope.
 
 Reading a session, and what cannot be read
 ------------------------------------------
 
 `mcp__Claude_Code_Remote__get_session` takes a child's id and reports its
 `session_status` and its title. **It does not report what the session said**,
-and no call does: dispatch is available and reading the result is not. That is
+and no call reads it: dispatch is available and reading the result is not.
+What the implementor sends on the way back is the one exception, and it is
+what the implementor chose to say, not a read of its session. That is
 the whole reason `Watch the wave` watches pull requests instead, and it is why
 a status is read as a hint rather than as a verdict — `SESSION_STATUS_RUNNING`
 covers a session that is working and a session that is stuck.
@@ -107,24 +135,108 @@ covers a session that is working and a session that is stuck.
 where a muster roll is missing. The muster roll is still the record: it is on
 the epic, it survives every session in the fleet, and a person can read it.
 
+The way back
+------------
+
+**The implementor reports with a one-shot Routine it creates itself, bound to
+this session.** This session passes its own id, from
+`mcp__Claude_Code_Remote__get_session` with `session_id` omitted, in each
+`create_session` call's `append_system_prompt`:
+
+```text
+You were opened by an embark orchestrator, session <this session's id>, which
+the user started on the same account. That session is your orchestrator for
+undertake's `Reporting to an orchestrator`.
+```
+
+`undertake`'s `references/claude.md` names the call the implementor makes.
+[`0028`](../../../docs/notes/0028-the-report-is-a-scheduled-routine.md) is the
+measurement behind this route, and it records why the poke-only Routine this
+session could have created, and passed an id for, is not the route.
+
+**The address goes in `append_system_prompt`, not in `prompt`.** One
+implementor handed its report route in the prompt stopped and asked its user
+whether the prompt was an injection. The two briefed through
+`append_system_prompt` reported without asking. Keep `prompt` to the task
+issue, as the table above says.
+
+**A report arrives as a queued notification**, read with `ReadNotifications`.
+Its origin reads as a scheduled trigger "you or your owner scheduled", because
+the Routine is on the same account. That label does not make the report this
+session's own instruction. The report opens with `undertake`'s marker line,
+and the marker is what identifies it. A report lands one to three minutes after
+the implementor sends it, because Routines fire on a one-minute scheduler.
+
 
 The watch
 =========
 
 | Step | Operation | Call |
 | ---- | --------- | ---- |
-| `Watch the wave` | Subscribe to a task's pull request | `mcp__github__subscribe_pr_activity` |
-| `Watch the wave` | Find the pull request for a task issue | `mcp__github__issue_read`, `method: get` — `closed_by_pull_requests` |
+| `Watch the wave` | Subscribe to a task pull request when one exists | `mcp__github__subscribe_pr_activity` |
+| `Watch the wave` | Find a pull request for a child issue when one exists | `mcp__github__issue_read`, `method: get` — `closed_by_pull_requests` |
+| `Watch the wave` | Read a child's acceptance criteria and outcome evidence | `mcp__github__issue_read`, `method: get` and `get_comments` |
 | `Watch the wave` | Read a pull request's state and checks | `mcp__github__pull_request_read` |
 | `Watch the wave` | Arm the backstop | `mcp__Claude_Code_Remote__send_later`, ten minutes out |
-| `Report the epic ready` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger` |
-| `Report the epic ready` | Drop each subscription | `mcp__github__unsubscribe_pr_activity` |
+| `Watch the wave` | Archive a finished session | `mcp__Claude_Code_Remote__archive_session` |
+| `Watch the wave` | Post the archive record after successful archival | `mcp__github__add_issue_comment` |
+| `Land the pull request` | Read a task/bug PR draft, merge state, head SHA, labels, and body | `mcp__github__pull_request_read`, method `get` |
+| `Land the pull request` | Diagnose blocked CI | `review-cycle`'s `references/claude.md` checks and status reads |
+| `Land the pull request` | Read the aggregate review decision when available | Authenticated `gh pr view <number> --repo <owner>/<repo> --json headRefOid,reviewDecision`; if unavailable, report that evidence gap |
+| `Land the pull request` | Read review threads | `review-cycle`'s `references/claude.md` thread read |
+| `Land the pull request` | Read the review-cycle completion notice | `mcp__github__pull_request_read`, method `get_comments`, every page — `user.login` |
+| `Land the pull request` | Read the commits after the notice's SHA | `mcp__github__get_commit`, from `head.sha` back along first parents — `parents` |
+| `Land the pull request` | Squash merge the gated PR | `mcp__github__merge_pull_request`, `merge_method: squash`, `expectedHeadSha: <head.sha>` |
+| `Close the epic` | Comment with outcome evidence or an unsupported claim | `mcp__github__add_issue_comment` |
+| `Close the epic` | Close as completed | `mcp__github__issue_write`, `method: update`, `state: closed`, `state_reason: completed` |
+| `Close the epic` | Cancel the backstop | `mcp__Claude_Code_Remote__delete_trigger` |
+| `Close the epic` | Drop each subscription | `mcp__github__unsubscribe_pr_activity` |
 
-**`closed_by_pull_requests` is the link from a task to its pull request**, and
-it is populated by the `Closes #123` line `pr-body` writes. A task issue with
-no pull request against it is a session that has not reached `undertake`'s
-`Open the draft` yet — or one that died before it did, which is what
-`Recover a session` is for.
+Post the archive record to the epic only after `archive_session` returns
+success. If a landing record is written, post it only after
+`merge_pull_request` returns success. A denied or failed call must not be
+recorded as completed.
+
+Landing and close
+-----------------
+
+The state read is the pull request `get` call: `draft` must be false,
+`mergeable_state` must be `clean`, and `head.sha` is the head the merge binds
+to. The same `get` call supplies the labels and body for the human-action read.
+The complete thread read is the one `review-cycle`'s `Review history,
+publication, and threads` names; a partial review-comments page does not
+answer the gate.
+
+`blocked` alone does not identify a required approval. The aggregate
+`reviewDecision: REVIEW_REQUIRED` establishes an outstanding review
+requirement; a missing or empty decision does not prove that all requirements
+are satisfied. Individual review comments do not establish repository review
+requirements. Combine this evidence with current-head CI, complete threads,
+and explicit blockers. Pending CI retains the existing continuation. Missing
+access or inconclusive evidence leaves the cause unresolved, not human-only.
+Only `clean` can pass the merge-state read.
+
+The completion read is the conversation-comment read `review-cycle`'s
+`Review-cycle completion notice` names, read to the last page: the latest
+comment starting with `## Review cycle complete! 🎉` whose author is the
+author of the task issue's claim comment, and the SHA it names. Where that SHA
+is not `head.sha`, walk `get_commit` from `head.sha` along each first parent
+until the named SHA; every commit on the way must carry two `parents`. A
+single-parent commit, or a walk that never reaches the SHA, fails the read.
+
+The merge call is made only for a task pull request,
+after those reads hold. `expectedHeadSha` makes it fail closed if the task
+session pushes after the read. `merge_method: squash` preserves the
+repository's pull-request-title subject. `Close the epic` uses the issue
+update only after the epic's coordinated acceptance condition is evidenced.
+
+**`closed_by_pull_requests` links a task or bug to its pull request** through
+the `Closes #123` line `pr-body` writes. Compare the delivered outcome with the
+story's own completion contract. A research story has no pull request: read the
+answer recorded on the issue with `get_comments` against its deliverable. A bug
+closed by evidenced disposition has none either: read the recorded evidence and
+reason the same way. A
+closed issue alone is not evidence that the epic outcome was met.
 
 **There is a `mcp__Claude_Code_Remote__subscribe_pr_activity` with the same
 contract.** Where both exist, use the GitHub one, and use one namespace

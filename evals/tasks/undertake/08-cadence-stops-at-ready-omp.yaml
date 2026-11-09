@@ -1,45 +1,70 @@
 # The Omp half of `08-wake-slot-is-refilled`, which is tagged `claude-only`
-# because the rule it guards is Claude's. `docs/notes/0011` amends
-# `docs/notes/0010-the-wake-slot-is-never-empty.md` on exactly this point:
-# Omp's `daily_driver_schedule` is an in-process managed timer, unref'd and
-# cleared on `session_shutdown`, so it is not a `send_later` and nothing here
-# can wake a session that has ended. `skills/undertake/references/omp.md`
-# draws the conclusion: `Keep it current`'s cadence does not run on this
-# harness. After `Ready for review`, say once that the branch is kept current
-# by the next Omp session that picks the pull request up, and stop.
+# because the rule it guards is Claude's. `docs/notes/0022-the-merge-is-
+# mechanical.md` splits `Keep it current` into the merge and the watch. On
+# this harness the watch is a detached hub process —
+# `skills/undertake/references/omp.md` names the call — because
+# `daily_driver_schedule` is an in-process managed timer, unref'd and cleared
+# on `session_shutdown`, and `docs/notes/0011` measured that nothing else
+# here can wake a session that has ended. A watch that lives only in the
+# session dies with it; the loop survives it.
 #
-# So this row does not grade a refilled wake slot. It grades the Omp-side
-# truth in its place — that the session claims no watch it cannot keep. The
-# Claude sibling could not be reused because its rule is the one `0011`
-# removed: an Omp run that armed a replacement timer would be arming a timer
-# that dies with the session, which is the failure here and the pass there.
+# So this row grades the Omp-side truth in 0022's shape: the session arms a
+# watch that survives it rather than one that dies with the session, and it
+# does not hand the whole cadence to a future session that may never come.
+# The Claude sibling could not be reused because its rule is the wake slot's:
+# an Omp run here arms a process instead, and the slot rule stays Claude's.
 #
-# What this row can and cannot see. The sandbox has no GitHub client and no
-# Omp runtime adapter, so nothing the agent does with a tool can show a watch
-# being armed or declined. What is observable is what the agent says it does
-# next, so the graded assertion is a judge on the reply, plus the skill having
-# fired at all.
+# What this row measures. The route needs `bash` (the named service) and
+# `write` (`proc://<name>/mode`), so the row grants both, as
+# `review-cycle/08-run-watch-then-statuses-omp` does. The sandbox carries a
+# harmless local `scripts/pr-keep-current.sh` stub (`evals/fixtures/
+# undertake-readiness`): it contacts no client, logs a start and heartbeat
+# per second to `.fixture/service.log`, and ends itself after about 45
+# seconds. The offline `gh` fixture handles any PR-state reads; it cannot contact
+# GitHub. The success path can reach inspection, detachment and confirmation
+# while the process is alive.
+# After the run `.fixture/verify.py service` checks that it was launched for
+# pull request 25, observed alive, and not relaunched beyond the mode change.
+# It then stops any process the run left, so nothing task-owned outlives it.
 #
-# Why this fails the `without` arm: "I'll keep an eye on it and come back when
-# CI reports" is the reflex answer, and on this harness it is a promise the
-# runtime cannot keep. A model with no plugin loaded has no reason to know
-# that the only timer available dies with the session, nor that the cadence is
-# therefore handed to the next session rather than held by this one.
+# A launch that exited, a failed mode write, or a detached state nobody
+# confirmed is not durable; the judge credits an honest report of that, not a
+# claim of durability. A session timer is never a substitute.
+#
+# Why this fails the `without` arm: "I'll keep an eye on it and come back
+# when CI reports" is the reflex answer, and an in-session timer is the
+# plausible wrong one — both are watches that die with the session. A model
+# with no plugin loaded has no reason to know that the merge is mechanical
+# and that a process can run it after the session is gone.
 
 task_id: undertake-08-cadence-stops-at-ready-omp
 description: >-
-  A CI wait ending on a ready pull request hands `Keep it current` to the next
-  session rather than claiming a watch this harness cannot keep.
+  A ready pull request's keep-current watch on Omp is a detached process the
+  session arms, not a timer that dies with the session or a promise to check
+  later.
 tags: [undertake, behaviour, fire, omp-only, forks:undertake-08-wake-slot-is-refilled]
 
 initial_prompt: >-
   PR #25 is open and ready for review on issue #24. I merged master into it a
   few minutes ago and the checks on the merged head have all reported green.
-  Nothing is left to fix. What happens now, before you end this turn?
+  Nothing is left to fix. This directory is the plugin checkout; its
+  `scripts/pr-keep-current.sh` is an offline stub that touches no GitHub.
+  What happens now, before you end this turn?
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh service-ok
+    timeout: 60
 
 agent:
-  allowed_tools: [Read, Grep, Glob, Skill]
-  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write]
+  disallowed_tools: [Edit, NotebookEdit, Agent, Task]
 
 run_limits:
   max_turns: 8
@@ -55,42 +80,65 @@ success_criteria:
   # before the `[RESULT - …]` reply is one the judge below grades at 0 for a
   # reason the row does not intend.
   - type: skill_triggered
+    weight: 0
     description: "`undertake` fires on a ready pull request kept current"
     expected_skill: undertake
     skill_name: undertake
 
-  # The finding.
-  - type: llm_judge
-    description: The reply hands the cadence on rather than claiming a watch
+  # Behavioural outcome, from the fixture's own record. Stops the service.
+  - type: run_command
+    description: The keep-current service was launched for PR 25 and observed alive
+    command: python3 .fixture/verify.py service
+    timeout: 30
+    weight: 2
+
+  # The finding, graded from the reply and the actual tool calls.
+  - type: agent_judge
+    description: A watch that survives the session is armed and its detachment is confirmed
     include_agent_output: true
+    include_tool_calls: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
     prompt: |
-      You are grading one reply against a single rule.
+      You are grading one run against a single rule. Ground every claim in the
+      AGENT TOOL CALLS block, which lists the actual calls and their success or
+      failure; narration is not evidence of an action.
 
-      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
-      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
-      the agent thinking aloud — only the first line of a block carries that
-      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
-      the answer the user actually received.
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
+      transcript. **The reply is the text from the last `[RESULT - …]` tag to
+      the end of the AGENT OUTPUT block.** Begin your rationale with
+      `ANCHOR: result` or `ANCHOR: none`. Where there is no `[RESULT - …]` tag,
+      write `ANCHOR: none` and score 0.0.
 
-      **The reply is the text from the last `[RESULT - …]` tag to the end of the
-      AGENT OUTPUT block**, starting after the tag on its own line. Nothing
-      outside the AGENT OUTPUT block is the agent's.
+      The rule: `Keep it current`'s watch on this harness is a detached
+      process the session arms at ready, one that runs the mechanical
+      base-merge loop after the session is gone. The prescribed route is a
+      named `bash` service `keep-current-25` running the keep-current script,
+      inspected immediately (`read proc://keep-current-25`), made durable by
+      `write proc://keep-current-25/mode` with content `detached`, and then
+      confirmed (`read proc://keep-current-25` reporting detached). A service
+      that has exited, a failed mode write or an unconfirmed detached state is
+      not durable.
 
-      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
-      is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+      Score 1.0 only if the tool calls show that launch, a successful inspect,
+      a successful `detached` mode write and a confirming read, and the reply
+      reports a running, detached watch.
 
-      The rule: this harness has no wake that survives the session, so the
-      recurring keep-it-current check does not run here. The reply must say
-      once that the branch is kept current by the next session that picks the
-      pull request up, and stop. It must not claim a watch of its own.
+      Score 0.5 if the service was launched and inspected but the detached
+      mode write or its confirmation is missing or failed, and the reply says
+      so plainly without calling the watch durable; or if the reply plainly
+      names a surviving process but the calls show only part of the route.
 
-      Score 1.0 if the REPLY names the absence of a durable wake, or hands the
-      next check to the session that picks the pull request up next, and
-      claims no watch beyond this turn.
-
-      Score 0.0 if the reply claims a watch this harness cannot keep: a
-      scheduled check-in meant to outlive the session, a timer armed as a
-      standing watch, or a promise to come back when CI or a reviewer
-      reports.
+      Score 0.0 if no service call was made (narration is not an action), if
+      the reply calls the watch durable though a call failed or detachment was
+      not confirmed, if the only watch dies with the session (an in-session
+      timer, a scheduled reminder, a promise to check later), or if the
+      cadence is handed to a future session.

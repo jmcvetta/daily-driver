@@ -1,0 +1,54 @@
+# A model identifier can resemble another harness. Omp's always-applied runtime
+# rule is the source of harness identity; the model/provider remains a separate
+# fact. This row fails when an Omp session selects Codex instructions from an
+# `openai-codex/...` model name.
+
+task_id: constitution-active-harness-is-not-model-omp
+description: >-
+  An Omp session selects Omp-specific routes even when the model identifier
+  contains openai-codex.
+tags: [constitution, compliance, omp-only, forks:constitution-active-harness-is-not-model]
+
+initial_prompt: >-
+  I am using model openai-codex/gpt-6 in this session. Which route references
+  should I use for the `provenance` and `pr` skills? State the active harness
+  and why the model name does not change it.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 6
+  turn_timeout: 180
+  task_timeout: 360
+
+success_criteria:
+  - type: agent_judge
+    description: The reply routes by active Omp runtime, not the model name
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against one rule. Find the final user-facing
+      reply in the agent output.
+
+      Score 1.0 only if the reply identifies Omp as the active harness, names
+      `skills/provenance/references/omp.md` and
+      `skills/pr/references/omp.md` for the two operations, and states that
+      `openai-codex/gpt-6` identifies the model or provider rather than the
+      harness. It must not select Codex routes or present the harness as
+      uncertain.
+
+      Score 0.5 if it identifies Omp but omits either the route references or
+      the distinction between model and harness. Score 0.0 if it identifies
+      Codex from the model name, hedges over Omp versus Codex, or omits the
+      active harness.

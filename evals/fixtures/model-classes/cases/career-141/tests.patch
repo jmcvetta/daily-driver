@@ -1,0 +1,91 @@
+diff --git a/tests/test_infra_github.py b/tests/test_infra_github.py
+index fd8f06b..370f4be 100644
+--- a/tests/test_infra_github.py
++++ b/tests/test_infra_github.py
+@@ -451,6 +451,86 @@ def test_every_package_has_a_manifest_version(
+     assert sorted(release_packages) == sorted(release_manifest)
+ 
+ 
++# --- release-type: node ------------------------------------------------------
++#
++# The two npm packages release as `node` so release-please writes their
++# package.json versions (issue #121); the cflow and the resume stay `simple`,
++# having no manifest to write. Everything below is schema-valid either way, so
++# `make check-release-config` sees none of it.
++
++
++def _release_type(config: dict) -> str:
++    """_release_type returns a package's configured strategy."""
++    return config["release-type"]
++
++
++def _node_paths(release_packages: dict) -> list[str]:
++    """_node_paths returns the components configured as npm packages."""
++    return [
++        path
++        for path, config in release_packages.items()
++        if _release_type(config) == "node"
++    ]
++
++
++def test_every_node_component_has_a_package_json(release_packages: dict) -> None:
++    """The node strategy reads a manifest the component may not have.
++
++    node-workspace's buildAllPackages fetches `<path>/package.json` for every
++    node component in the config, candidate or not, and parses it. A node
++    component without one fails the whole release run rather than skipping.
++    """
++    manifestless = [
++        path for path in _node_paths(release_packages)
++        if not (REPO / path / "package.json").is_file()
++    ]
++    assert manifestless == [], (
++        f"release-type node with no package.json: {manifestless}"
++    )
++
++
++def test_every_component_with_a_package_json_is_node(release_packages: dict) -> None:
++    """The other direction, which is the defect issue #121 was filed for.
++
++    `simple` never touches package.json, so a component that has one carries a
++    version number nothing maintains -- both packages sat at 0.1.0 through
++    every release since the v2 split. Nothing complains, because the stale
++    number is only wrong to a reader.
++    """
++    unmanaged = [
++        path for path, config in release_packages.items()
++        if (REPO / path / "package.json").is_file()
++        and _release_type(config) != "node"
++    ]
++    assert unmanaged == [], (
++        f"components with a package.json released as non-node: {unmanaged}. "
++        "Their version fields will never be updated."
++    )
++
++
++def test_node_package_versions_match_the_manifest(
++    release_packages: dict, release_manifest: dict
++) -> None:
++    """The two version numbers a node component carries must agree.
++
++    release-please takes the base version from the manifest and writes the
++    result into package.json, so a release keeps them in step. They diverge
++    only by hand, and the divergence is invisible: the release still computes
++    correctly off the manifest while package.json quietly claims something
++    else.
++    """
++    drifted = {
++        path: (json.loads((REPO / path / "package.json").read_text())["version"],
++               release_manifest[path])
++        for path in _node_paths(release_packages)
++    }
++    drifted = {p: v for p, v in drifted.items() if v[0] != v[1]}
++    assert drifted == {}, (
++        f"package.json version != manifest version for {drifted} "
++        "(package.json, manifest). The manifest is the correct side."
++    )
++
++
+ # ---------------------------------------------------------------------------
+ # The CI fan-out.
+ #

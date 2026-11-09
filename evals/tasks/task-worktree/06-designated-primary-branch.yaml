@@ -1,0 +1,61 @@
+# Fails if the new task inherits primary-only state, pushes its local branch
+# name, or leaves the primary designation's branch/ref/index changed.
+task_id: task-worktree-06-designated-primary-branch
+description: >-
+  Claude Code keeps a harness-designated branch checked out in the primary
+  worktree, so new work uses an isolated base-derived execution branch and
+  pushes to the designated remote head.
+tags: [task-worktree, references, fire, behaviour, claude-only]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/task-worktree/shared
+      mount_point: .fixture
+
+pre_run:
+  - command: bash .fixture/setup.sh designated
+    timeout: 60
+
+initial_prompt: >-
+  I need a strict parser change for issue #52. There is no existing task
+  branch or pull request. This Claude session designates
+  `claude/designated-52` in `https://github.com/acme/widgets`, and `wt list`
+  schema 2 shows that branch checked out in the primary worktree, which is in
+  use for other work. Please add a line containing exactly
+  `STRICT_MODE = True` to `src/parser.py`, finish the change, and run
+  `bash .fixture/verify.sh designated`.
+
+agent:
+  allowed_tools: [Read, Write, Edit, Grep, Glob, Skill, Bash]
+  disallowed_tools: [NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`task-worktree` fires before a new repository-changing task"
+    expected_skill: task-worktree
+    skill_name: task-worktree
+
+  - type: command_executed
+    description: The designated remote head is pushed from the local execution branch
+    tool_name: Bash
+    command_pattern: 'git push -u upstream\s+issue-52-designated-route:claude/designated-52'
+    min_count: 1
+
+  - type: command_executed
+    description: The fixture verifies the task from its sibling worktree
+    tool_name: Bash
+    command_pattern: 'bash \.fixture/verify\.sh designated'
+    min_count: 1
+
+  - type: file_matches_regex
+    description: The pushed head differs from the execution name and preserves the primary checkout
+    path: .fixture/designated-outcome.txt
+    pattern: '(?m)^execution-branch=issue-52-designated-route\nremote-branch=claude/designated-52\nbase=upstream/master\nremote-head=[0-9a-f]{40}\nprimary-branch=claude/designated-52\nprimary-tip=[0-9a-f]{40}\nprimary-status=unchanged\nremote-execution-branch=absent$'
+    weight: 3

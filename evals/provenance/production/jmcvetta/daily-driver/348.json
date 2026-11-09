@@ -1,0 +1,21 @@
+{
+  "additions": 1545,
+  "changed_files": 15,
+  "check_reruns": 1,
+  "claim_model": "gpt-5.6-terra",
+  "claimed_at": null,
+  "deletions": 146,
+  "elapsed_minutes": null,
+  "findings_count": 2,
+  "harness": null,
+  "issue": 318,
+  "merged_at": "2026-09-22T14:34:51Z",
+  "model": "unreported",
+  "model_class": "unlabelled",
+  "model_mismatch": false,
+  "pull_request": 348,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 2,
+  "session": null
+}

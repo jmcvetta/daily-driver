@@ -1,0 +1,177 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The draft body is a grounded task handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The draft body is a grounded task handoff with model class metadata",
+            "duration_seconds": 7.9,
+            "findings": [
+              "Selects `task` without asking the user which kind to use.",
+              "Includes Summary, Model class, and Detail in order, with a lowercase backtick-wrapped class token.",
+              "States outcome, reason, scope, and observable signing acceptance criteria.",
+              "Explicitly says the draft is not ready for unattended implementation and requires further grounding.",
+              "Keeps the concrete Model identifier only in the distinct provenance block below the separator.",
+              "Distinguishes reported context, proposed constraints, and routine implementer discretion."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ef400d36f32197982220b2168e962103c490184a28bbeb8cfaadb7a8590bd87a",
+            "rationale": "ANCHOR: result The reply explicitly selects `task` and provides a plausible, scoped handoff with the required headings, class rationale, observable acceptance criteria, and distinct provenance. However, it explicitly declares the draft unready for implementation, missing the requirement to propose a ready task handoff.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2423,
+              "output": 172
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796"
+      },
+      "measured_score": 0.75,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 68.04711127281189,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 75392,
+        "output_tokens": 1784,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 22415
+      },
+      "tokens": 99591,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-31T17:41:54.131531",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "bf7e7bb34b9494257e5b0cb81b2726444ac6e4e53a84b2508db1be1b6e142796",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 2423,
+      "output": 172
+    }
+  },
+  "plugin_revision": {
+    "commit": "22f43b3bc6705f64f8510bf4e8859492c75a6499",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-31T10:42:04.208496+00:00",
+  "run_id": "2026-10-31_17-40-46",
+  "schema_version": 5,
+  "started_at": "2026-10-31T17:40:46.077126",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-01-open-a-task-issue": [
+          0.75
+        ]
+      },
+      "task_ids": [
+        "issue-01-open-a-task-issue"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

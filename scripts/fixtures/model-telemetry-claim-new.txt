@@ -1,0 +1,12 @@
+Claiming this issue.
+
+Branch: [`361-model-telemetry`](https://github.com/jmcvetta/daily-driver/tree/361-model-telemetry)
+
+---
+Model: claude-sonnet-5
+Harness: Claude Code 2.1.283
+session: https://claude.ai/code/session_01UgrMjQF4eeFhbXcHPDnVoK
+
+*Claim recorded, clock now ticking —*
+*a script will soon walk*
+*what the comments cost.*

@@ -1,0 +1,153 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-475",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-475",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 59.310195446014404,
+      "model_requested": "google-antigravity/gemini-3.8-flash:high",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-gemini-3-8-flash",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 51.42135190963745,
+      "model_requested": "google-antigravity/gemini-3.8-flash:high",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "classes-gemini-3-8-flash",
+      "source": "jmcvetta/career#475",
+      "task_id": "model-classes-career-475",
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 57.63278341293335,
+      "model_requested": "google-antigravity/gemini-3.8-flash:high",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "classes-gemini-3-8-flash",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "tokens": "unreported",
+      "variant_id": "default"
+    },
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 58.03054475784302,
+      "model_requested": "google-antigravity/gemini-3.8-flash:high",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "classes-gemini-3-8-flash",
+      "source": "jmcvetta/career#475",
+      "task_id": "model-classes-career-475",
+      "tokens": "unreported",
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T18:34:41.303287",
+  "experiment_id": "classes-gemini-3-8-flash",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "73b2e7b7019a0fbf29bea2d40c53025480ac1370",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-08T11:43:53.665740+00:00",
+  "run_id": "2026-10-08_18-33-41",
+  "schema_version": 3,
+  "started_at": "2026-10-08T18:33:41.990472",
+  "variants": [
+    {
+      "model_requested": "google-antigravity/gemini-3.8-flash:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "model-classes-career-462": [
+          0.0,
+          0.0
+        ],
+        "model-classes-career-475": [
+          0.0,
+          0.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-462",
+        "model-classes-career-475"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}

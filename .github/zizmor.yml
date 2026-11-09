@@ -1,0 +1,9 @@
+# zizmor configuration for `make check-zizmor`. Every triage below carries its reason.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Remote action references use full commit SHAs. Adjacent release-tag
+        # comments keep those pins readable; Dependabot continues to propose
+        # version updates, and zizmor rejects any reference without a full hash.
+        "*": hash-pin

@@ -1,32 +1,33 @@
 ---
 name: review-cycle
 description: >-
-  This skill should be used whenever a pull request is being reviewed and that
-  review is then answered — including when the user says "/review-cycle",
-  "review the PR and fix what it finds", "address the review feedback", "reply
-  to the review comments", "resolve those threads", or "does that need another
-  review?", and on any call to a harness's review surface aimed at a pull
-  request — Claude's `/code-review`, Omp's `reviewer` task agent, or
-  `codex exec review` — to a review-thread reply or resolution —
-  `mcp__github__add_reply_to_pull_request_comment`,
-  `mcp__github__resolve_review_thread`, or the `gh` equivalents — or to a wait
-  on a pull request's checks, `github.run_watch` among them. Supplies the CI
-  wait on the pushed head, the review invocation and its level, the protocol
-  every finding is answered under, and the test for whether a later push earns
-  a second round. Not for opening a pull request or bringing one up to date —
-  that is `pr` — nor for marking a draft ready, which is the caller's gate.
+  Use this skill whenever a pull request is reviewed, alone or then answered —
+  including "/review-cycle", "review the PR", "review the PR and fix what it
+  finds", "address the review feedback", "reply to the review comments",
+  "resolve those threads", or "does that need another review?", and before
+  invoking a pull-request review, recording a review finding, replying to or
+  resolving a review thread, or waiting for a pull request's checks. Supplies
+  the CI wait on the pushed head, the review invocation and its level, a
+  durable inline review record, the finding response protocol, bounded
+  independent verification of fix deltas, and the test for whether a later
+  push changes the full-review scope. Not for opening a pull request or
+  bringing one up to date — that is `pr` — nor for marking a draft ready,
+  which is the caller's gate.
 ---
 
 # Review cycle
 
-One round: **review, answer, and decide whether it goes again.** A pull request
-is reviewed once per diff, every finding it raises is closed out, and a push
-that only answered the review does not buy a second review.
+One full review per scope, then an independent fix-delta pass for every batch
+of corrections pushed under it, until one comes back clean or three in a row
+do not. Every finding is answered, and a behavioral fix is verified without
+repeatedly auditing unchanged pull-request content. A standalone review records its
+findings and stops; it does not turn into an implementation run.
 
 The analysis is the harness's own review surface, and this skill does not
-supply it. What it supplies is the four things around it — the wait for CI, the
-level, the thread protocol, and the re-review test — none of which any review
-surface has an opinion about, and all four of which are the ones that go wrong.
+supply it. What it supplies is the six things around it — the wait for CI, the
+level, the durable review record, the thread protocol, bounded fix verification,
+and the full-review test — none of which any review surface has an opinion
+about.
 
 **The routes are per harness, and they live beside this file.** Every operation
 below is named in words here and resolved to a call there:
@@ -36,11 +37,12 @@ below is named in words here and resolved to a call there:
 harness in use, and read it before the wait rather than during it — the wait is
 where the harnesses differ most, and one of them cannot wait at all.
 
-Callers keep their own gates. `undertake` runs this round between its `Open the
-draft` and `Ready for review` steps, runs it again where its `Keep it current`
-earns one, and owns whether the pull request then goes ready — including the
-return to draft while that later round runs. Nothing here marks a draft ready
-or merges anything.
+`pr` starts and owns ongoing base maintenance for agent-opened pull requests;
+its `Keep it current` watch remains active through review rounds. `undertake`
+invokes that maintenance and owns whether its pull request goes ready —
+including the return to draft while a later round runs. This skill borrows the
+watch's CI wake but owns neither base maintenance nor readiness. Nothing here
+marks a draft ready or merges anything.
 
 
 The round
@@ -50,15 +52,17 @@ The round
 | - | ----- | ----- |
 | 1 | `Review the head` | the harness's review surface |
 | 2 | `Fix, answer, resolve, push` | this skill |
-| 3 | `Does it go again?` | this skill |
+| 3 | `Verify the fix delta` | the harness's review surface |
+| 4 | `Does it go again?` | this skill |
 
 **Every stage has a name, and the name is how it is cited** — here and in
 `undertake`, whose `Review the head` and `Fix, answer, resolve, push` steps are
-the first two of these and carry the same names for that reason. Its
-`Ready for review` is its own, not a third stage of this round. The numbers
-order the round and do nothing else, because a number moves when a stage is
-inserted and a name does not.
-[`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision.
+the first two of these and carry the same names for that reason. `Verify the
+fix delta` is independent verification, not another full review. Its outcome
+is part of `Ready for review`'s gate. The numbers order the round and do
+nothing else, because a number moves when a stage is inserted and a name does
+not. [`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the
+decision.
 
 **A round entered on findings that already exist starts at `Fix, answer,
 resolve, push`.** Half the register arrives that way — *"address the review
@@ -68,6 +72,12 @@ Running `Review the head` over them would post a fresh set on top of the ones
 somebody asked to have answered, which is worse than not firing at all.
 `Review the head` is for a head nobody has reviewed yet; `Does it go again?`
 still decides what happens after.
+
+**A standalone review ends after `Review the head`.** It reads the history,
+reviews the requested pull request, publishes a submitted review, and reports
+the result. It does not enter `Fix, answer, resolve, push`, resolve its new
+threads, alter draft state, or merge. A request to fix or answer existing
+findings is not standalone and follows the relevant later stage.
 
 
 1 — Review the head
@@ -80,9 +90,10 @@ The wait ends when every check has reported, whichever way it reported: a red
 check is a fact about the branch, not a reason to hold the review, and
 `Fix, answer, resolve, push` is where it is answered.
 
-Then **run the harness's review surface against the pull request**, and take
-what it raises as the round's findings. The reference file names the surface
-and the flags it is invoked with.
+First **read the complete review record**, then run the harness's review
+surface against the pull request. The record and current head tell the reviewer
+what has already been considered; the reference file names both the reader and
+the publication route.
 
 How to wait
 -----------
@@ -103,20 +114,33 @@ discipline each mechanism needs. What follows holds whichever one is in use.
   of the two. Both answer for the head commit of the pull request, which is the
   commit the checks are running on: that SHA is the key they are looked up by,
   it does not move while they run, and nothing here is waiting for it to.
+- **A harness may observe a third source: workflow runs.** A workflow can be
+  queued or running before it registers a single check, so checks and statuses
+  alone can show a passing subset while CI is unfinished. Where the reference
+  names a workflow-run read, a run for the head that is not terminal blocks the
+  verdict, and a read that cannot establish what has registered is an incomplete
+  observation, not a pass. The calls are the reference's.
 - **An empty answer is not an answer.** Nothing from either endpoint, on a head
   pushed seconds ago, means nothing has registered yet rather than that
   everything passed — *every check has reported* is otherwise vacuously true of
-  a pull request nothing has looked at. Keep waiting, and let the cap decide.
+  a pull request nothing has looked at. Keep an actual continuation for another read.
+  **The exception is a partial watch that cannot observe registration and
+  cannot wake itself.** Its reference must say so; it rejects the empty result
+  and stops under *A surface that can neither block nor wake itself cannot
+  wait*, rather than hiding an unbounded poll behind the word *waiting*.
 - **A wake that is not about a check is still just a read.** The round is its
   own loudest source of the other kind: a review that posts a thread per
   finding, and a reply to every one. None of that is a check reporting, so none
   of it moves the wait — read, find nothing changed, and go on with what the
   turn was doing. A wake arriving after the wait is over is a no-op for the
   same reason.
-- **Cap the loop at fifteen minutes.** On the cap, stop and name the checks
-  that have not reported. Do not review: an unreported check is the thing this
-  wait exists not to guess at, and a check stuck for fifteen minutes is a
-  report to the user rather than a longer wait.
+- **Bound each observation window to fifteen minutes, not task ownership.**
+  On expiration, read the head and CI again. If work is still nonterminal,
+  renew the bounded observation through the harness's supported continuation.
+  Do not review, mark it human-blocked, or require another user prompt merely
+  because a window ended. Report changed conditions, not repeated timeout
+  notices. A genuine observation failure requires diagnosis; a surface without
+  a working continuation reports that precise limit under the rule below.
 
 **Never a `sleep`, in the foreground or in the background.** A sleep is a
 timer, not a test of the thing waited on — it expires while the checks are
@@ -125,13 +149,15 @@ it is also the failure this mechanism was written for: a job named *"Wait ~3
 minutes for CI"* that sits until it times out and never brings the session back
 to the loop.
 
-**And no shell wait at all where the session is unattended**, `gh` installed or
-not. The two shapes fail differently and both fail: a blocking watch in the
-foreground is bounded by the Bash tool's own timeout, and refused outright on a
-surface that blocks `sleep`; a backgrounded one is not bounded by anything and
-cannot wake the session, which is the report this mechanism answers.
-[`0006`](../../docs/notes/0006-waiting-for-ci.md) is the decision, and carries
-what was rejected with it.
+**No unmanaged shell wait where the session is unattended**, regardless of
+which command-line clients are installed. A foreground watch is bounded by
+the Bash tool's own timeout, and a backgrounded shell job is not supervised
+as a process the session can inspect and stop. Use the harness's supervised
+process service when its reference documents one; a service is not an
+unmanaged shell job. `sleep` remains forbidden as a substitute for observing
+CI.
+[`0006`](../../docs/notes/0006-waiting-for-ci.md) records the original
+decision; this rule clarifies the supervised-service boundary.
 
 **A surface that can neither block nor wake itself cannot wait.** Read the
 checks once, and where they have not all reported, say so and stop. A wait a
@@ -166,37 +192,76 @@ nothing to bind: they exist because a level can be remembered, and a surface
 with no level remembers none. The reference file says which case the harness in
 use is.
 
-A reviewer, not a bare subagent
--------------------------------
+Review record, not transcript
+-----------------------------
 
-**The reviewer is a named surface the round chose, never a bare subagent.** A
-bare subagent is an ad-hoc dispatch with no rubric: it inherits nothing, has no
-level anybody chose, and posts nothing — its findings die in the transcript,
-and `Fix, answer, resolve, push` has nothing to answer. The reference file
-names the surface for the harness in use, and it is the only thing this stage
-dispatches.
+**Every reviewer carries a bounded brief and a publication contract.** What
+disqualifies a dispatch is not that it is a subagent — the constitution reaches
+every subagent here, through `SubagentStart` and the `PreToolUse` hook on
+`Agent`/`Task` — it is a dispatch with no rubric bounding what it reviews and
+no route landing its findings as resolvable threads under a submitted
+`COMMENT` review. What stays forbidden is a dispatch missing either half.
 
-**Findings that land on the pull request survive the session**, and that is
-what makes them the record of why the branch was judged ready. They arrive as
-resolvable review threads, inline on the diff, where the reply-and-resolve of
-`Fix, answer, resolve, push` is the ordinary path rather than a hoped-for one.
-[`0001`](../../docs/notes/0001-built-in-review-surface.md) §4 records what was
-measured, and the reference file says whether the harness in use lands them
-that way.
+**At `Review the head` the reviewer is still the harness's named review
+surface, and only that surface.** It supplies both by being named, along with
+the effort level `Name the level` binds and the measured resolvable-thread
+contract; whether a panel of briefed subagents should replace it is a
+question this rule does not answer. `Verify the fix delta` is where a briefed
+subagent is a reviewer: the reference file states its brief and its
+publication route rather than leaving either assumed.
 
-**Where they do not**, `Fix, answer, resolve, push` degrades: the round carries
-the findings itself, from the surface's result, and *resolve* reads as
-*answered* — in this file **and in the caller's gate**, where a bullet asking
-for no unresolved thread would otherwise be a condition the round can never
-satisfy. A surface that posts plain issue comments degrades the same way, to
-reply-only. Say so once, and re-measure into `0001` rather than leaving the
-next round to rediscover it.
+**Read the complete GitHub review history before each review.** Read submitted
+reviews and every inline thread, including resolved and outdated threads, their
+replies, and the recorded dispositions. Paginate to the end; the newest page
+is not the history. Give the reviewer that history, the reviewed SHA, and the
+current head rather than leaving the prior decision only in the author's
+context.
 
-Record the head SHA
--------------------
+**Every actionable line-specific finding is an inline thread in a submitted
+`COMMENT` review.** The event is `COMMENT`: a review round states findings, and
+approving or requesting changes is the human reviewer's verdict to give, not
+this stage's. Anchor each finding to the reviewed commit, path, side, and a
+valid diff line — or, across more than one line, a start and end that both fall
+in the diff.
+Use a suggestion block only where it makes the concrete replacement clearer;
+it never replaces the explanation of the defect. A finding with no valid
+anchor, and a clean review, goes in the submitted review summary. Never invent
+an anchor.
 
-**Record the head SHA you reviewed.** `Does it go again?` measures its test
-from it, and nothing else records it.
+**Use the surface's native publication where it has one; otherwise publish its
+returned findings through the available GitHub route.** Read the surface output
+and existing review record first, and compare against the recorded review
+identifier rather than the finding text, so a resumed run does not post the
+same review twice. A reviewer returning findings locally is not permission to
+leave them in the transcript.
+
+**Re-read the head and re-validate every anchor immediately before
+publication.** The head can move while the review is being prepared, and an
+anchor validated against the old diff then lands on the wrong line or is
+rejected. Publication keeps the reviewed SHA it was produced against; it never
+re-attributes findings to a head they did not review.
+
+**A publication that does not complete is reported, never rounded up.** An
+absent GitHub client, a changed head, an invalid anchor, a permission problem,
+or a GitHub rejection each leaves the findings intact and the recording step
+named as incomplete. Never claim a durable review.
+
+**One finding has one conversation.** A repeated finding links to the earlier
+thread and disposition rather than reopening the argument. A recommendation
+that reverses a recorded decision names the decision and its new evidence or
+changed constraint. A prior decision is evidence, not immunity from a
+demonstrated defect.
+
+**A local review with no pull request still returns its findings and says that
+GitHub recording is unavailable.** It does not create a pull request to obtain
+a record.
+
+**Record the reviewed SHA, review identifier, findings, and dispositions on the
+pull request.** That record defines the scope, links the summary and threads,
+and gives a resumed session the evidence it needs to enforce the bound. The
+harness route names the durable format. Where the record is posted as its own
+comment rather than folded into the submitted review, it carries
+`provenance`'s block.
 
 
 2 — Fix, answer, resolve, push
@@ -207,9 +272,9 @@ Every finding gets a verdict, on its thread, and the thread is closed:
 1. **Implemented** — fix it, reply saying so, resolve the thread.
 2. **Rejected** — reply with the reason, and resolve it anyway. A rejection is
    an answer; only silence is not.
-3. **Deferred** — only where the user asks for it. Claude does not propose a
+3. **Deferred** — only where the user asks for it. The agent does not propose a
    deferral: `judgement-call` names "leave a TODO" as the option that is never
-   a real one, so a deferral Claude offers is the noise that skill deletes.
+   a real one, so a deferral the agent offers is the noise that skill deletes.
    When the user does defer, reply naming what was deferred and to where, then
    resolve — an open thread would claim the question is still live.
 4. **A repeat finding** — a reviewer opening a new thread for something already
@@ -219,14 +284,11 @@ Every finding gets a verdict, on its thread, and the thread is closed:
    and re-raise what this stage rejected.
 5. **Never left open silently.** The rule the other four exist to serve.
 
-Every reviewer is the same protocol — Claude's own findings, a human's, a
-bot's. None of it is reviewer-specific.
 
-**It is harness-specific.** The threads are a GitHub review surface, and a
-harness whose reviewer leaves no threads has none to answer or resolve: the
-round then carries the findings and the commits are the record.
-[`0011`](../../docs/notes/0011-two-harnesses-one-skill-tree.md) is the
-decision.
+Every reviewer uses this protocol — the agent's own findings, a human's, a
+bot's, or locally returned output. GitHub threads are the durable record, so a
+reviewer that did not create them is followed by publication rather than a
+transcript-only degradation.
 
 The reply
 ---------
@@ -234,8 +296,10 @@ The reply
 Verdict-first, concise, technical. A reader skimming twenty threads should
 never have to parse a paragraph to learn whether the finding was implemented or
 rejected. No thanks, no apologies, no restating the finding back at the
-reviewer, and no poetry — verse attaches to the pull request body, never to a
-finding somebody has to act on.
+reviewer, and no poetry — verse attaches to the writes that name it, never to a
+finding somebody has to act on. `provenance`'s block follows the same rule: it
+attaches to the submitted review and the completion notice below, never to an
+individual finding reply.
 
 A rejection carries its reason and stops. *"Rejected — `n` is bounded by the
 caller's `len(items)` check at `loader.go:88`"* is a complete reply; softening
@@ -244,10 +308,10 @@ it into a discussion reopens the thread the rule just closed.
 The clients, and the identifier trap
 ------------------------------------
 
-Three operations — **read the review threads, reply on one, resolve one** —
-and the client that performs them differs by harness. The reference file has
-the calls. The identifiers below are GitHub's, so the trap is the same
-whichever client makes the call.
+**Reading history, publishing the review, replying, and resolving are
+harness-specific operations.** The reference file names their calls. The
+identifiers below are GitHub's, so the trap is the same whichever client makes
+the call.
 
 **The two calls take different identifiers, and only one of them is a field.**
 Measured 2026-09-06: resolve wants the thread's `id`, a `PRRT_…` node ID, read
@@ -262,50 +326,108 @@ Then push
 ---------
 
 A caller's CI gate reads the remote head, and a fix that never left the laptop
-is not in it.
+is not in it. Batch every outstanding finding and CI correction before asking
+for verification. Per-finding verification is prohibited.
 
 
-3 — Does it go again?
+3 — Verify the fix delta
+=========================
+
+**Verify a behavioral delta independently after the batch is pushed and CI has
+reported for that head.** Passing CI does not replace this pass. A red result
+does not approve the head or satisfy the caller's readiness gate.
+
+Give one reviewer the recorded full-review SHA, current SHA, original findings,
+and their recorded dispositions. It verifies that implemented fixes solve their
+findings and do not regress affected behavior. It may read surrounding code and
+affected callers. It must not restart a full pull-request audit, solicit style
+work, or accept the author's verdict as verification. The harness route names
+the concrete invocation.
+
+Classify the pull-request content delta, not commit provenance. A change to
+behavior, a contract, or a workflow rule requires a pass, including Markdown
+that changes workflow behavior and fixes prompted by CI or bots. Pure formatting
+does not. A clean base merge whose three-dot pull-request content is unchanged
+does not. Mixed changes require a pass. This content comparison also applies
+after a rebase, amend, or squash: a missing ancestor is never evidence of no
+change.
+
+**A pushed fix batch always earns the pass that confirms it.** Verification of
+a pushed fix is never refused for having spent a budget: an unverified fix
+sitting on a pull request is worse than the pass that would have read it, and
+a caller left holding one has no way to reach its own gate. The bound below
+counts what actually goes wrong — fixes that do not converge — rather than
+passes as such.
+
+**The loop ends on the first clean pass.** A pass that records concrete
+defects earns one batched correction, pushed, with CI results obtained, and
+one more targeted pass over that correction delta and its regression risk.
+That repeats while the passes keep finding defects.
+
+**Three consecutive passes that each record defects is the wall**, in the
+sense the constitution's *When you hit a wall* gives it: the corrections are
+not converging, and a fourth attempt is the push-through that rule forbids.
+Stop there. Post the outstanding defects on the pull request, leave (or
+return) the pull request in draft, keep the caller's watch armed, and say in
+one line what is blocking. An incomplete pass and an unavailable reviewer
+stop unattended progress the same way, and neither is approval.
+
+The count runs from the first pass of the scope. A clean pass resets nothing,
+because a clean pass ends the loop. Commits, resumes, rewrites, late bot
+findings, and further CI fixes are not passes and do not move the count; only
+a pass that records defects moves it. A materially changed scope runs `Review
+the head` as a new full round and starts a new count; it does not disguise a
+reset as a fix.
+
+Rejected findings remain closed unless new evidence defeats the recorded
+rejection. Repeating a rejected finding without that evidence is not a defect
+and does not consume a pass.
+
+Record every pass on the pull request: reviewed SHA, verified SHA, pass number,
+original findings and dispositions, outcome, actionable defects, and whether
+the wall was reached. Record reviewer token usage where the harness exposes it;
+otherwise record `unavailable`, never an estimate or a telemetry service.
+
+
+
+4 — Does it go again?
 =====================
 
-**Review once per diff.** `Fix, answer, resolve, push` usually puts commits on
-the branch, so by the end of a round the head is usually not the one `Review
-the head` read — and a rule that keyed on sameness would re-review on every
-round that had anything to fix.
+**A material scope change earns a full review.** New feature work, a scope
+addition, a redesign, or a conflict resolution that changes the pull request's
+own behavior starts `Review the head` again and establishes a new scope. A
+comment reflow, changelog line, or clean base merge does not. The classification
+is content-based, so rewritten history preserves the existing scope when its
+pull-request content is unchanged.
 
-The test is therefore **provenance, not sameness**: take the head SHA recorded
-at `Review the head`, and classify every commit made after it.
+Review-cycle completion notice
+------------------------------
 
-- **Answering** — a review finding, a review thread, a lint bot, a red check.
-  These do not start a new round, however many of them there are. Answering a
-  review is not new work, and re-reviewing the answer is the loop this rule
-  exists to cut.
-- **Changing what the code does** — new feature work, a scope addition, a
-  conflict resolution that rewrites the branch's own files. This is a new diff.
-  `Review the head` runs again over it, once, and its head SHA becomes the new
-  mark.
-- **Neither** — a comment reflow, a changelog line, a merge from the base
-  branch that leaves the pull request's own diff untouched. **Not a new diff.**
-  What a base merge breaks, it breaks in the build rather than in the diff, so
-  a red check is what reports it and `Fix, answer, resolve, push` is where it
-  is answered.
-  The default is not to go again, because `Review the head` reads the pull
-  request, whose diff is three-dot: a clean base merge changes the head and
-  changes nothing it would read. Reviewing it again would review
-  byte-identical content, and on a base branch that moves often it would do so
-  without end.
+**Post a separate top-level PR conversation comment only when a non-standalone
+round is complete.** Keep the normal submitted `COMMENT` review and every
+`Review verification` record unchanged. The notice starts with
+`## Review cycle complete! 🎉`, states that the round completed, names the
+completed head SHA, and ends with `provenance`'s block.
 
-The classification is per commit and the categories do not compound: a round
-that only ever answers ends with one review behind it, which is the point.
+Completion requires green CI for that head, every finding's required
+disposition and resolved thread, and a clean required independent verification
+pass. A clean full review with no fixes needs no invented delta pass. Pending,
+failed, or unregistered CI; outstanding findings; incomplete or unavailable
+verification; and the non-convergence wall do not qualify.
 
-When the mark is void
----------------------
+Before publication, re-read the pull request head and conversation comments.
+The head must still be the one the notice names. Do not post another notice
+whose heading and SHA already identify that completed head; a later completed
+round at a different head may receive one. If publication fails, report that
+failure and do not claim success.
 
-Where the branch's history is rewritten — a rebase, an amend, a squash — the
-recorded SHA stops being an ancestor of the head and the mark is void. There
-are then no commits "after it" to read, which is not the same as there being
-none. Fall back to content: compare the pull request's diff against what
-`Review the head` reviewed, and go again only if it has changed.
+This notice reports the review cycle, not merge readiness. It never approves,
+merges, changes draft state, or replaces `undertake`'s first-readiness report.
+A standalone review ends at `Review the head` and never posts it.
+`undertake`'s `The gate` and `embark`'s `Land the pull request` read this
+notice, which is why a completed round that starts no new review posts it
+before the round returns to its caller, the clean full review included. The
+harness reference names the read and publication route.
 
 
 Where it stops and waits
@@ -313,13 +435,17 @@ Where it stops and waits
 
 - **CI still running**, before `Review the head`. A wait, not a question —
   nothing is asked, and nothing proceeds on a check that has not reported.
-  `How to wait` is the mechanism, and its fifteen-minute cap is where the wait
-  turns into a stop that reports.
+  `How to wait` keeps ownership across bounded observation windows where the
+  harness supports continuation. A window timeout is not a task blocker.
 - **A finding whose fix is a real trade-off**, in the sense `judgement-call`
   gives that phrase: two defensible approaches differing in something the user
   owns. That skill owns the gate, and it is the gate for every question this
   round would otherwise ask. A finding whose fix the standard already picks is
   not one of these — fix it and say so.
+- **Fixes that will not converge**, at `Verify the fix delta`: three
+  consecutive passes each recording defects. A report, not a question — the
+  defects go on the pull request, it stays draft, and nothing waits on an
+  answer.
 
 Everything else runs through. No permission is asked to fix a finding, to
 reply, to resolve, or to push.

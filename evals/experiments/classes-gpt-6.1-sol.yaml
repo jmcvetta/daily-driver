@@ -1,0 +1,19 @@
+# Model-class control on GPT 6.1 Sol through OpenAI Codex.
+# The Omp adapter pins every chat role, including helper and task roles, to this control.
+experiment_id: classes-gpt-6-1-sol
+description: >-
+  Model-class capability on real merged-pull-request cases, openai-codex/gpt-6.1-sol:high in the `task` role.
+defaults:
+  repeats: 3
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: openai-codex/gpt-6.1-sol:high
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+variants:
+  - variant_id: default
+    description: This model against the model-classes suite.

@@ -1,8 +1,7 @@
 """A `codex-daily-driver` agent kind for `coder_eval`, so the eval suites run on Codex.
 
-Import nothing from here at module scope that reaches `coder_eval`: `transcript`
-is pure on purpose, so `scripts/check-codex-agent.py` can drive it with nothing
-installed. `agent` and `plugin` are imported by name where they are needed.
+Import nothing from here at module scope that reaches `coder_eval`; `transcript`
+is pure on purpose. `agent` and `plugin` are imported by name where they are needed.
 """
 
 from __future__ import annotations

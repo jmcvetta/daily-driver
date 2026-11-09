@@ -6,6 +6,14 @@ diagnosed the row's failure, pre-registered the replacement design and the
 branch table, and this note records the branch the run selected.
 **Resolves:** [#195](https://github.com/jmcvetta/daily-driver/issues/195).
 
+**Historical scope:** This note records the 2026-09-14 experiment, not the
+current suite. Later work added selection and tool-heavy-work compliance
+probes in [#296](https://github.com/jmcvetta/daily-driver/pull/296) and
+[#477](https://github.com/jmcvetta/daily-driver/pull/477). #477 also retired
+`reply-is-concise`. The statements below about unmeasured compliance refer to
+the September experiment only. See [the current suite](../../evals/README.md#the-constitution-suite-reach-then-compliance)
+for its replacement probes and their limits.
+
 `tasks/constitution/reply-is-concise.yaml` is deleted. It was the only row in
 this repository that asked whether the constitution *changes behaviour* rather
 than whether it *arrives*, and it could not separate the arms. Rebuilding it

@@ -33,13 +33,15 @@ are checked here, each measured against the CLI rather than assumed:
   the plugin name or version, or missing or mispointing the Omp extension
   entry. Release-please bumps the three manifests together, so a tree where
   they disagree has already drifted.
-- A `SKILL.md` naming a harness's own tool routes in its body. The skills run
-  on Claude Code, on Omp and on Codex, and the routes differ; `0011` puts the
-  body's operation in words and the call in
+- A `SKILL.md` naming a harness's own tool routes in its description or its
+  body. The skills run on Claude Code, on Omp and on Codex, and the routes
+  differ; `0011` puts the operation in words in the `SKILL.md` and the call in
   `skills/<name>/references/claude.md`, `references/omp.md` or
-  `references/codex.md`. A route written back into the body is not wrong on the
+  `references/codex.md`. A route written back into either is not wrong on the
   harness it was written for, which is exactly why nothing else catches it: it
-  reads correctly, and it is silently wrong on the other two.
+  reads correctly, and it is silently wrong on the other two. The description
+  is checked with the body because it is read before any reference file can be
+  selected -- by all three harnesses at once (#229).
 - A reference file no `SKILL.md` links, or a reference link that resolves to
   nothing. The move only works if the session opens the file when the skill
   fires, and the link is the whole of that pointer. An unlinked file is a
@@ -56,6 +58,9 @@ are checked here, each measured against the CLI rather than assumed:
 
 No third-party imports: this runs from a Makefile on a laptop and from CI,
 and a dependency install between the two is a place for them to differ.
+(PyYAML is the repository's one declared exception -- the dev group in the
+root `pyproject.toml`, installed by uv for the legs that read YAML. This
+script is not one of those legs.)
 """
 
 from __future__ import annotations
@@ -81,11 +86,13 @@ JSON_BLOCK = re.compile(r"^```json\n(.*?)^```", re.DOTALL | re.MULTILINE)
 # written for.
 IGNORE = re.compile(r"<!--\s*stanza-check:\s*ignore\s*-->\s*\Z")
 
-# The harness routes a `SKILL.md` body may not name. One pattern per rule,
-# named, so a failure says which rule it broke rather than which alternation
-# branch matched. `${CLAUDE_PLUGIN_ROOT}` is matched braced or not: the
-# unbraced spelling is an equally valid shell expansion and is the likelier
-# way the rule gets broken.
+# The harness routes a `SKILL.md` description or body may not name. One
+# pattern per rule, named, so a failure says which rule it broke rather than
+# which alternation branch matched. `${CLAUDE_PLUGIN_ROOT}` is matched braced
+# or not: the unbraced spelling is an equally valid shell expansion and is the
+# likelier way the rule gets broken. The GitHub CLI, tool-operation and MCP
+# rules carry the forms the shared descriptions used to name (#229), without
+# matching ordinary words such as "ask", "reviewer" or "task".
 ROUTES = {
     "mcp__": re.compile(r"mcp__"),
     "AskUserQuestion": re.compile(r"AskUserQuestion"),
@@ -104,7 +111,31 @@ ROUTES = {
         r"|list_threads|list_archived_threads|send_message_to_thread"
         r"|set_thread_title|set_thread_archived)\b"
     ),
+    "gh pr create/edit": re.compile(r"\bgh pr (?:create|edit)\b"),
+    "gh issue route": re.compile(r"\bgh issue (?:create|edit|view)\b"),
+    "gh probe": re.compile(r"\bgh (?:--version|auth)\b"),
+    "GitHub tool": re.compile(r"\bgithub tool\b"),
+    "GitHub relationship operation": re.compile(
+        r"\b(?:issue_read|issue_write|sub_issue_write|get_issue|create_issue"
+        r"|update_issue|get_sub_issues|get_parent|parent_issue_number"
+        r"|closed_by_pull_requests)\b"
+    ),
+    "pr_create op": re.compile(r"\bpr_create\b"),
 }
+
+# Shared model-consumed guidance must not identify a provider or a concrete
+# model. `Claude Code` remains valid because it names a harness, not its active
+# agent. Harness-specific reference files are the boundary for those facts.
+MODEL_IDENTITIES = {
+    "model identity": re.compile(
+        r"\b(?:claude\b(?!\s+code\b|\.md\b)|gpt|glm|deepseek|kimi|qwen|"
+        r"mercury|minimax|mimo)\b(?:[- .]?[a-z0-9.]+)?",
+        re.IGNORECASE,
+    ),
+    "provider identity": re.compile(r"\b(?:Anthropic|OpenAI)\b", re.IGNORECASE),
+}
+
+HARNESS_REFERENCES = frozenset({"claude.md", "omp.md", "codex.md"})
 
 # What Codex's prompt renderer keeps of a `description`. Beyond this the
 # description is cut mid-word and `...` is appended, so the tail triggers
@@ -191,6 +222,32 @@ def section_of(parsed: object, section: str) -> dict | None:
     return entries if isinstance(entries, dict) else None
 
 
+def plugin_version_errors() -> list[str]:
+    """Require Omp and Claude plugin manifests to share package identity."""
+    errors: list[str] = []
+    files = [
+        ROOT / "package.json",
+        ROOT / ".claude-plugin" / "plugin.json",
+        ROOT / ".claude-plugin" / "marketplace.json",
+        ROOT / ".omp-plugin" / "plugin.json",
+    ]
+    versions: list[tuple[Path, str | None]] = []
+    for path in files:
+        parsed = load_json(path, errors)
+        if not isinstance(parsed, dict):
+            continue
+        version = parsed.get("version")
+        if path.name == "marketplace.json":
+            plugins = parsed.get("plugins", [])
+            version = plugins[0].get("version") if plugins and isinstance(plugins[0], dict) else None
+        versions.append((path, version if isinstance(version, str) else None))
+    expected = next((version for path, version in versions if path.name == "package.json"), None)
+    for path, version in versions:
+        if version != expected:
+            errors.append(f"{path.relative_to(ROOT)}: version {version!r} disagrees with package.json {expected!r}")
+    return errors
+
+
 def stanza_errors() -> list[str]:
     """Every copy of the stanza, measured against the manifests."""
     errors: list[str] = []
@@ -274,11 +331,13 @@ def stanza_errors() -> list[str]:
 def body_of(path: Path) -> tuple[str, int]:
     """A component's body and the line its body starts on.
 
-    The frontmatter is exempt from the route rules, and that exemption is the
-    point rather than a concession: the `description` is what triggers the
-    skill, so a skill that fires on a tool call has to name that call — on
-    every harness — to fire on any of them. A file with no frontmatter is all
-    body, which is the safe reading: it exempts nothing.
+    The split from the frontmatter is bookkeeping only -- the `description`
+    is route-checked with the body, because it is the one part of a
+    `SKILL.md` every harness reads before a reference file can be selected
+    (#229). What the split buys is the line numbers: the description is one
+    unfolded string, so its errors carry no line, while the body's do. A file
+    with no frontmatter is all body, which is the safe reading: it exempts
+    nothing.
     """
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
@@ -290,35 +349,115 @@ def body_of(path: Path) -> tuple[str, int]:
     return text, 1
 
 
-def reference_errors(skills: list[Path]) -> list[str]:
-    """The three things `0011`'s reference-file split needs to stay true.
+def route_errors(
+    where: str, lines: list[str], place: str, offset: int = 0
+) -> list[str]:
+    """Every harness route named in `lines`, one error each.
 
-    No route in a body, no reference file nothing links to, and no link that
-    resolves to nothing. See the docstring for why each one is invisible to
-    every other check.
+    `place` is the location the message reports -- `description` or `body` --
+    and `offset` is the 1-based line number `lines` starts on. A description
+    is one unfolded string with no lines to point at, so it is passed with no
+    offset and its errors carry none; a body is passed with its real offset so
+    a failure names the line to fix.
+    """
+    errors: list[str] = []
+    for lineno, line in enumerate(lines, start=offset or 1):
+        for name, pattern in ROUTES.items():
+            match = pattern.search(line)
+            if match:
+                at = f"{where}:{lineno}" if offset else where
+                errors.append(
+                    f"{at}: names the {name} route ({match.group(0)}) in the "
+                    f"{place}; name the operation in words here and leave the "
+                    "call to references/claude.md, references/omp.md or "
+                    "references/codex.md"
+                )
+    return errors
+
+
+def model_identity_errors(
+    where: str, lines: list[str], place: str, offset: int = 0
+) -> list[str]:
+    """Every concrete model identity named in shared guidance."""
+    errors: list[str] = []
+    for lineno, line in enumerate(lines, start=offset or 1):
+        for name, pattern in MODEL_IDENTITIES.items():
+            match = pattern.search(line)
+            if match:
+                at = f"{where}:{lineno}" if offset else where
+                errors.append(
+                    f"{at}: names {name} ({match.group(0)}) in {place}; "
+                    "keep model identity in a harness-specific reference or "
+                    "runtime configuration"
+                )
+    return errors
+
+
+def shared_guidance_errors(skills: list[Path], root: Path = ROOT) -> list[str]:
+    """Every model identity leaked into shared model-consumed guidance."""
+    errors: list[str] = []
+    for rule in sorted((root / "rules").glob("*.md")):
+        errors.extend(
+            model_identity_errors(
+                str(rule.relative_to(root)),
+                rule.read_text(encoding="utf-8").splitlines(),
+                "a shared rule",
+                1,
+            )
+        )
+    for skill in skills:
+        where = str(skill.relative_to(root))
+        fields = frontmatter(skill)
+        if fields is not None:
+            errors.extend(
+                model_identity_errors(
+                    where, [fields.get("description", "")], "the description"
+                )
+            )
+        body, offset = body_of(skill)
+        errors.extend(
+            model_identity_errors(where, body.splitlines(), "the body", offset)
+        )
+        for reference in sorted((skill.parent / "references").glob("*.md")):
+            if reference.name in HARNESS_REFERENCES:
+                continue
+            errors.extend(
+                model_identity_errors(
+                    str(reference.relative_to(root)),
+                    reference.read_text(encoding="utf-8").splitlines(),
+                    "a shared reference",
+                    1,
+                )
+            )
+    return errors
+
+
+def reference_errors(skills: list[Path], root: Path = ROOT) -> list[str]:
+    """The four things `0011`'s reference-file split needs to stay true.
+
+    No route in a description, no route in a body, no reference file nothing
+    links to, and no link that resolves to nothing. See the docstring for why
+    each one is invisible to every other check.
     """
     errors: list[str] = []
     for skill in skills:
-        where = skill.relative_to(ROOT)
+        where = skill.relative_to(root)
+        fields = frontmatter(skill)
+        if fields is not None:
+            errors.extend(
+                route_errors(str(where), [fields.get("description", "")], "description")
+            )
         body, offset = body_of(skill)
 
         linked: set[str] = set()
+        errors.extend(route_errors(str(where), body.splitlines(), "body", offset))
         for lineno, line in enumerate(body.splitlines(), start=offset):
-            for name, pattern in ROUTES.items():
-                if pattern.search(line):
-                    errors.append(
-                        f"{where}:{lineno}: names the {name} route in the body; "
-                        "put the call in references/claude.md, references/omp.md "
-                        "or references/codex.md, and name the operation in words "
-                        "here"
-                    )
             for target in REFERENCE_LINK.findall(line):
                 linked.add(target)
                 if not (skill.parent / target).is_file():
                     errors.append(
                         f"{where}:{lineno}: links {target}, which does not exist"
                     )
-
         # The other direction. A reference file nothing links to is a route
         # the session is never sent to read, and it fails nothing else: the
         # skill loads, and reads as complete, with the call unreachable.
@@ -384,6 +523,39 @@ def main() -> int:
             f"marketplace.json name is {marketplace['name']!r} "
             f"but plugin.json declares the repository {repository!r}"
         )
+
+    if plugin.get("dependencies") != ["worktrunk"]:
+        errors.append("plugin.json dependencies must list only 'worktrunk'")
+
+    expected_worktrunk = {
+        "name": "worktrunk",
+        "description": "Official Worktrunk plugin for Claude Code",
+        "source": {
+            "source": "git-subdir",
+            "url": "https://github.com/max-sixty/worktrunk",
+            "path": "plugins/worktrunk",
+        },
+    }
+    worktrunk_entries = [
+        entry for entry in marketplace["plugins"] if entry.get("name") == "worktrunk"
+    ]
+    if worktrunk_entries != [expected_worktrunk]:
+        errors.append(
+            "marketplace.json must list the official Worktrunk Claude plugin "
+            "once, without a version"
+        )
+
+    omp_manifest = load_json(ROOT / ".omp-plugin" / "plugin.json", errors)
+    if isinstance(omp_manifest, dict) and "dependencies" in omp_manifest:
+        errors.append(
+            ".omp-plugin/plugin.json must not declare Claude plugin dependencies"
+        )
+    if package_path.exists() and isinstance(package, dict):
+        dependencies = package.get("dependencies")
+        if isinstance(dependencies, dict) and "worktrunk" in dependencies:
+            errors.append(
+                "package.json must not install Worktrunk as an Omp dependency"
+            )
 
     # The plugin is the repository root -- `"source": "./"` -- so exactly one
     # marketplace entry describes it, and it has to agree about the name.
@@ -461,6 +633,12 @@ def main() -> int:
             )
         if not fields.get("description"):
             errors.append(f"{where}: frontmatter description is empty")
+        expected_aliases = {"mechanical": "@mechanical", "implementation": "@implementation", "reasoning": "@reasoning"}
+        if name in expected_aliases and fields.get("model") != expected_aliases[name]:
+            actual_model = fields.get("model")
+            errors.append(
+                f"{where}: Omp model alias is {actual_model!r}, expected {expected_aliases[name]!r}"
+            )
         if name:
             if name in claimed:
                 errors.append(
@@ -472,6 +650,8 @@ def main() -> int:
                 claimed[name] = agent
 
     errors.extend(reference_errors(skills))
+    errors.extend(shared_guidance_errors(skills))
+    errors.extend(plugin_version_errors())
     errors.extend(stanza_errors())
 
     for error in errors:
@@ -481,8 +661,8 @@ def main() -> int:
     print(
         f"manifests agree; {len(skills)} skill(s) "
         f"and {len(agents)} agent(s) checked; "
-        "skill bodies are harness-neutral and their reference files are "
-        f"linked; every description is inside Codex's {DESCRIPTION_CAP}-"
+        "skill descriptions and bodies are harness-neutral and their reference "
+        f"files are linked; every description is inside Codex's {DESCRIPTION_CAP}-"
         "character render; stanza copies agree"
     )
     return 0

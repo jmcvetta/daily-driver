@@ -1,0 +1,92 @@
+task_id: pr-title-09-evals-only-are-tests
+description: >-
+  Prevent new eval tooling from being titled as a product feature, while
+  preserving product types for mixed changes and the existing-title guard.
+tags: [pr-title, conventional-commits-type, behaviour, fire]
+
+initial_prompt: >-
+  Propose a Conventional Commits PR title for each fixture below and briefly
+  explain the type. These descriptions give each whole diff; no repository
+  lookup or GitHub write is needed. A through G have no existing PR title.
+
+  A. Add eval datasets, scoring rubrics, and regression cases. Only verification
+  inputs change; the shipped plugin is unchanged.
+
+  B. Add the first model-comparison runner, a new harness adapter, model routes,
+  and a results report, all used only by this repository's eval suite. The
+  runner can compare models for the first time. None of it ships to users.
+
+  C. Correct an eval judge that accepted incorrect answers and an adapter that
+  lost failure results. All changes are confined to eval verification tooling;
+  shipped behavior does not change.
+
+  D. Add a new shipped skill that lets plugin users compare two implementations,
+  plus evals for that skill. Users could not do this through the plugin before.
+  Most changed files are evals.
+
+  E. Restore an existing shipped skill's documented behavior that regressed,
+  plus evals for that regression. Most changed files are evals.
+
+  F. Change only the repository's GitHub Actions workflow definition to run
+  its existing eval job on a schedule. No eval code or product behavior changes.
+
+  G. Fix packaging/build tooling used only to build the local eval runner.
+  Neither eval behavior nor shipped product behavior changes.
+
+  H. An existing evals-only PR has title `feat(evals): add model comparisons`,
+  written by another actor. Its whole diff is B. State the warranted type and
+  the next action; do not assume authority to overwrite the existing type.
+
+agent:
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 7
+  task_timeout: 360
+  turn_timeout: 180
+
+success_criteria:
+  - type: skill_triggered
+    description: "`pr-title` handles the proposed PR titles"
+    expected_skill: pr-title
+    skill_name: pr-title
+
+  - type: skill_triggered
+    description: "`conventional-commits-type` owns the evals boundary"
+    expected_skill: conventional-commits-type
+    skill_name: conventional-commits-type
+
+  - type: agent_judge
+    description: New and corrected evals stay tests without masking product changes
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the final reply in the AGENT OUTPUT block, beginning at the
+      last [RESULT - SUCCESS] or [RESULT - ERROR] tag.
+
+      Score 1.0 only if the reply applies all these decisions to the fixtures:
+      - A, B, and C each receive a title with type `test`, not `feat`, `fix`,
+        or `chore`. Scope is optional; do not require exact subject wording.
+      - B explains that a new capability confined to eval tooling is not a
+        shipped product feature. C does not claim a product bug fix.
+      - D receives `feat` for the new shipped skill despite the eval majority.
+      - E receives `fix` for restoring shipped behavior despite the eval majority.
+      - F receives `ci` for a workflow-definition-only change.
+      - G receives `build` for packaging/build tooling only.
+      - H identifies `test` as warranted but raises the disagreement and asks
+        before changing the other actor's existing type. It does not claim
+        to have retitled the PR or authorize an automatic overwrite.
+      - Proposed titles for A through G use lowercase Conventional Commits
+        types and a colon followed by a subject.
+
+      Score 0.0 if any decision is missing or contradicted. General rules
+      without an applied answer for each fixture are not sufficient.

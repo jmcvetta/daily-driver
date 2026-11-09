@@ -1,0 +1,66 @@
+task_id: issue-08-research-supported-no-is-complete
+description: >-
+  Supplied evidence can support a negative research answer and complete the
+  agreed deliverable without an implementation pull request.
+tags: [issue, behaviour, fire]
+
+initial_prompt: >-
+  Please prepare a status update for research issue #72. It asks whether the
+  documented CSV export supports streaming. The evidence is that the public
+  API contract requires a complete in-memory array, the only implementation
+  is the generated client, and the repository has no server-side streaming
+  endpoint. The agreed scope was the API contract and repository
+  implementation only. Show me the proposed issue body ending with this
+  provenance block; do not post:
+
+  ---
+
+  Model: fixture-model
+
+  Harness: Omp 18.8.4
+
+  session: fixture-session
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`issue-body` fires on a research body revision"
+    expected_skill: issue-body
+    skill_name: issue-body
+
+  - type: agent_judge
+    description: Evidence-backed no completes the bounded research issue without an empty PR
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade the final reply. Begin rationale with `ANCHOR: result` or
+      `ANCHOR: none`; score 0 if no final result exists. It must update the
+      research findings with the supported negative answer, name the contract
+      and repository implementation as evidence, distinguish their observed
+      facts from the inference, state that streaming needs a separate future
+      change, and say the bounded research deliverable is complete. It must not
+      claim streaming works, fabricate evidence, request an implementation PR to
+      make research complete, or treat the answer as an approved product
+      decision. Preserve valid body requirements and include the exact
+      provenance block supplied for the draft. Score 1.0 when all distinctions
+      hold, 0.5 if the conclusion is right but evidence or scope is materially
+      incomplete, and 0.0 if it misstates the result or says an empty PR is
+      required.

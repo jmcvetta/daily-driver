@@ -7,9 +7,11 @@ description: >-
   says "the type is wrong" or "that's not a fix", questions what version
   merging will cut, or when a Projected Releases comment on a pull request
   disagrees with what the author meant; and whenever `pr-title` needs the type
-  for a title it is writing. Supplies the two gates and the one test that
+  for a title it is writing. Supplies the three gates and the one test that
   pick the type from what the change does, and what the type decides about
-  the next release. Not for writing the title itself — that is `pr-title` —
+  the next release — including the ships-versus-verifies boundary that
+  types test-only changes `test`.
+  Not for writing the title itself — that is `pr-title` —
   and not for commit messages, which are not Conventional Commits in this
   toolkit.
 ---
@@ -22,7 +24,7 @@ into a minor version, a breaking change into a major one, and everything else
 into a patch or nothing. So the type is decided from the change's **effect**,
 never from what the diff looks like or how the work felt.
 
-Two titles this toolkit reached for, and why both were too small:
+Three titles this toolkit reached for, and why each was the wrong word:
 
 - *"refactor: move the Terraform-shop review rules to project memory"* — the
   title #55 was written with, and corrected to `fix:` before it merged.
@@ -34,11 +36,20 @@ Two titles this toolkit reached for, and why both were too small:
   was warranted. A broken pointer prompted it, but the rubric it named was
   unreachable on every run, so no review had ever applied it. After the
   merge one does.
+- *"fix(check): declare pyyaml as a dev dependency of the check legs"* —
+  the title #215 was opened with, and since retitled `test(dev-deps): …`.
+  PyYAML entered as a dev dependency of the `make check` legs: nothing a
+  session loading the plugin observes moved, yet the title claimed a bug
+  fix, and release-please would have cut one under *Bug Fixes* for a
+  defect nobody had. `test(dev-deps): …` is the honest shape; the
+  ships-versus-verifies boundary under *The question* is why.
 
-Both reached for the smaller word, and that is the direction this skill
-exists to stop. An over-typed change cuts a version one size too large; an
-under-typed one hides from the changelog section and the version where the
-people it matters to would look for it.
+The first two reached for the smaller word; the third reached for the
+louder one. Both directions misread the same way — from what the diff looks
+like or how the work felt, not from the effect. An over-typed change cuts a
+version one size too large or files a bug fix nobody's bug belongs under;
+an under-typed one hides from the changelog section and the version where
+the people it matters to would look for it.
 
 
 The question
@@ -48,16 +59,60 @@ The question
 > doing that it did?
 
 "The thing" is whatever the repository ships, seen by whoever consumes it: a
-caller of a library, a user of a CLI, CI running a workflow, a session
-loading a plugin. **In a plugin whose product is prose, prose is code.** What
-Claude reads and acts on is `skills/`, `agents/`, `rules/` and `hooks/`, so
+caller of a library, a user of a CLI, CI running a workflow the repository
+publishes, a session loading a plugin. **In a plugin whose product is prose,
+prose is code.** What
+an agent reads and acts on is `skills/`, `agents/`, `rules/` and `hooks/`, so
 a change there goes to the tests below exactly as code would, and one that
-changes what Claude does is never `docs` however much it reads as writing. A
+changes agent behavior is never `docs` however much it reads as writing. A
 typo or a rewording there that changes nothing still is. Outside those
 directories — `README.md`, `docs/` and their kind — prose is documentation.
+The consumer list has a boundary: **ships versus verifies**. What the
+repository uses to verify itself — tests, check legs, fixtures, eval tooling,
+and the dev dependencies of any of them — is seen by the people working on the
+repository, not by a consumer of its shipped product. A change whose whole
+effect is there changes nothing anyone observes, and test 3 below types it
+`test` (or `build`/`ci`) before the consumer question is asked.
+
+Consumers also include people who use infrastructure the repository ships.
+An infrastructure change is not repository administration merely because it
+uses GitHub or OpenTofu; decide from who consumes its effects.
 
 Answer the question first, from the diff, before naming a type. The answer
-decides the type; the diff's shape does not.
+decides the type; the diff's shape does not. Repository settings administer
+the project, not its shipped product. A change whose only effect is such
+administration is `chore`, even when it changes a live setting. When a change
+also affects the shipped product, type it from that shipped effect.
+
+
+
+Repository-local product boundary
+---------------------------------
+
+This repository keeps `omp_configs/` only as personal convenience
+configuration. It is not part of the software product that this repository
+versions. A pull request whose changes are confined to `omp_configs/` is
+therefore always `chore:`, even when an overlay changes which model Omp uses.
+If a pull request also changes shipped files, type the whole pull request from
+the shipped effect under the rules below.
+
+Evals are tests
+---------------
+
+**An evals-only pull request MUST use `test`, NEVER `feat` or `fix`.** Apply
+this boundary before asking whether a capability is new or broken. New eval
+cases, datasets, fixtures, scorers, judges, runners, adapters, model routes,
+and result reporting still verify the product. A new capability in that
+tooling is not a new capability in the shipped product; correcting it is not
+a product bug fix. For example, use `test(evals): add a model comparison
+runner`, not `feat(evals): …`.
+
+Read the whole diff to establish that it is evals-only. The word `evals` in a
+scope or path is not proof. A change confined to a CI workflow definition or
+packaging/build tooling still uses `ci` or `build` under gate 3; it does not
+become a feature because it supports evals. A mixed pull request that changes
+shipped behavior and adds evals takes its type from the shipped effect.
+Neither the number of eval files nor their novelty overrides that effect.
 
 
 The tests
@@ -70,8 +125,8 @@ below applies on top of it: `revert!:`, with the footer, because taking back
 what a consumer may already be using breaks them. A *partial* undo is not a
 revert; it is an ordinary change, and the gates type it.
 
-Otherwise the first two are gates: where one fires it settles the type, and
-nothing below it runs.
+Otherwise the first three are gates: where one fires it settles the type,
+and nothing below it runs.
 
 1. **Does it break anyone?** A caller, a configuration, or a workflow that
    worked before the merge and does not after it. Then the type it would
@@ -83,19 +138,42 @@ nothing below it runs.
 2. **Does the behaviour change — what the thing returns, what it decides,
    what it does as a side effect?** If none of those move, the change is one
    of the silent types: `refactor` for code restructured to do the same
-   thing, `perf` for the same thing done faster, `chore` for a dependency
-   bump or a housekeeping change, `style` for formatting, and `docs`,
-   `test`, `build`, `ci`. Speed, formatting and internal shape are not
-   behaviour here — that is what lets `perf` and `refactor` be silent at
-   all — but an output, a decision or a side effect is, and a `refactor`
-   that moves one is not a refactor. Silent is about behaviour, not about
-   the changelog: `perf` is silent here and still gets a section there, as
-   the table below shows.
+   thing, `perf` for the same thing done faster, `chore` for housekeeping,
+   `style` for formatting, and `docs`, `test`, `build`, `ci`. A routine
+   dependency batch uses its repository convention, `build(deps): …` here;
+   an update that patches a qualifying vulnerability in the shipped product
+   is the `fix` exception described in *Dependency security fixes*. Speed,
+   formatting and internal shape are not behaviour here — that is what lets
+   `perf` and `refactor` be silent at all — but an output, a decision or a
+   side effect is, and a `refactor` that moves one is not a refactor. Silent
+   is about behaviour, not about the changelog: `perf` is silent here and
+   still gets a section there, as the table below shows.
 
-Past both gates the behaviour changes, and the only question left is `fix` or
-`feat`. One test settles it:
+3. **Does anything the repository ships change?** Where the change's whole
+   effect is on the repository's own verification — the tests, the `make
+   check` legs, fixtures, eval tooling, or the dev dependencies of any of
+   them — no consumer observes anything, and the type is `test`: `build`
+   where the change is to the packaging or build tooling itself, `ci`
+   where it is a workflow leg's definition. Declaring a dependency of the
+   check legs is a `test` change, as the #215 example shows. A broken check
+   leg is not a defect in the shipped thing, and titling it `fix` cuts a
+   bug-fix release for a change nobody consuming the repository can
+   observe — the shape of #215. The gate fires on the *whole effect*: a
+   `fix` to shipped code with its tests alongside changes what the thing
+   does, and test 4 below types it, tests and all.
 
-3. **Could the thing already do this, and merely do it wrong?**
+   Where the change's only effect is administering the repository itself,
+   such as changing an existing GitHub repository setting and refreshing
+   its state snapshot, it is `chore`, not `feat` or `fix`. Use a meaningful
+   scope such as `chore(infra): …`. This is a consumer boundary, not a path
+   rule. Infrastructure that provides behavior to the product's users is
+   shipped behavior and continues to gate 4.
+
+Past these gates, the shipped product's behaviour changes, and the only
+question left is `fix` or `feat`. One test settles it:
+
+
+4. **Could the thing already do this, and merely do it wrong?**
 
    - **Yes — `fix`.** The behaviour was promised and delivered incorrectly.
      The test is against the intent, not the code: a rule shipping to
@@ -111,7 +189,8 @@ that was specified but never once worked has not regressed.** The agent's own
 text named a rubric, which reads like a promise broken — but no run had ever
 applied it, so nothing was restored and something arrived for the first time.
 Ask what a consumer *observed*, never what a document promised. Where even
-that cannot settle it, prefer `feat`, for the reason the two examples give.
+that cannot settle it, prefer `feat`, for the reason the examples above
+give.
 
 A check on the answer: write the changelog line. *"Bug Fixes: reviewers no
 longer apply Terraform-shop rules in every repository"* reads true;
@@ -125,7 +204,9 @@ What does not decide it
 - **The size of the diff.** One line can be a `feat`; five hundred can be a
   `fix`.
 - **The proportion of it that is tests, docs or generated files.** The
-  behaviour change is the type; the files carrying it are not.
+  behaviour change is the type; the files carrying it are not. Where the
+  change's whole effect is on the verification itself, that is not a
+  proportion question — test 3 above decides.
 - **What the author called it** in the issue, the branch name, the commit
   messages or the conversation. Commit messages here are prose by rule and
   carry no type at all.
@@ -176,6 +257,39 @@ of change, the highest-impact one decides: breaking over `feat`, `feat` over
 request or none of it. An undo carrying unrelated work alongside it — like
 any two changes of consequence in one pull request — wants splitting, which
 is `pr`'s business.
+
+Dependency security fixes
+-------------------------
+
+A dependency update that actually patches a serious vulnerability affecting
+the shipped product is a `fix`, even when no first-party application code
+changes. Use the advisory evidence: record its identifier and link, severity,
+affected dependency and versions, patched version in the proposed update, and
+evidence that the vulnerable dependency affects the shipped product. A high-
+or critical-rated advisory affecting a shipped dependency is a positive case
+when those facts support applicability and impact. Do not infer applicability
+from a package name or severity alone; where evidence is missing, state the
+uncertainty and do not claim a verified security fix.
+
+A routine batch remains `build(deps): …`; preserve `test`, `build` and `ci`
+for changes confined to verification or tooling. A mixed routine batch with a
+qualifying security fix uses `fix(security): …`. An advisory limited to
+development or CI tooling does not automatically change the product: judge
+whether the tooling affects the safety of the shipped artifact, not only the
+manifest's dependency category.
+
+`fix` is the release-relevant type. `security` is descriptive scope, not a
+release instruction. A qualifying security fix does not override the existing
+higher-impact rules for breaking changes and features. The merge commit
+subject, repository path exclusions and other pending commits still affect
+the actual release; read *Projected Releases* when available and do not
+promise a patch release from the title alone.
+
+When the patched version lies outside the existing major-version constraint,
+the vulnerability remains unresolved. Report the constraint and do not claim
+the batch fixed it or cross an unattended dependency-upgrade boundary.
+
+
 
 
 What the type releases

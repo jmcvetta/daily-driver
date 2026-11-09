@@ -1,196 +1,173 @@
-# Continuous integration.
-#
-# `CI Success` is the single required status check on master (see
-# infra/github/branch_protection.tf), and the contract with that configuration
-# is the job *name*. Real jobs report into it through `needs`, so adding one
-# never means touching the Tofu.
-#
-# What the jobs assert is the Makefile's `check` target, invoked rather than
-# restated. A CI leg that spelled out the same command line would be one edit
-# away from spelling it out differently, and the laptop and the required check
-# would quietly stop testing the same thing.
-#
-# **No `paths:` filter here, and there must not be one.** A path-filtered
-# workflow does not report a skipped check, it reports nothing at all, and a
-# required check that never reports leaves the pull request pending forever.
-# infra.yml and pr-title-check.yml are filtered or narrow precisely because
-# neither is required.
+# Checks is the required validation status, beside Release Projection. Selection always runs; only selected checks install tools or run commands, except the production-dependency audit, which always runs.
+# The workflow has no `paths:` filter: a path-filtered required check that never reports leaves every pull request pending.
 name: CI
 
 on:
   pull_request:
-  push:
-    branches: [master]
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: Plugin checks
+  ci-success:
+    name: Checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
-      # Unpinned, deliberately. The thing being validated is a Claude Code
-      # plugin, so the question CI is asking is whether the CLI people
-      # actually run will accept it — a pinned CLI answers a question about
-      # last month instead. The cost is real and accepted: a new `--strict`
-      # warning can turn a green repository red without a commit. That is the
-      # signal, not the noise.
-      #
-      # `validate` reads files and calls nothing, so no credentials are
-      # needed; measured with an empty environment and an empty HOME.
-      - name: Install the Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code@latest
-
-      # ShellCheck ships in the ubuntu-latest image; the guard is for the day
-      # it does not, and costs nothing on the day it does.
-      - name: Ensure ShellCheck
-        run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
-
-      - run: make check
-
-  # The Omp half of the plugin, asked of a real Omp rather than of a fake.
-  #
-  # `check` proves the adapter's logic under Node with a faked ExtensionAPI
-  # (`check-omp-extension`). It never starts Omp, so it cannot see discovery: a
-  # plugin whose skills Omp does not find, or whose extension Omp never
-  # reaches, passes it green. `make check-omp-plugin` is that other half, and
-  # it needs a whole second harness installed to run.
-  #
-  # **A job here rather than a workflow of its own**, because a workflow is
-  # filtered with `paths:` and a filtered workflow reports *nothing* — so it
-  # could never feed `CI Success`, and breaking the Omp integration would not
-  # block a merge. This job always runs and always reports; the filter moves
-  # inside it, onto the steps, so the runner downloads Omp only when the diff
-  # could have broken it.
-  omp:
-    name: Omp integration
-    runs-on: ubuntu-latest
-    steps:
-      # Full history: the step below diffs against the merge base, which a
-      # shallow clone does not have.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-
-      # The files that decide whether Omp loads this plugin, measured rather
-      # than guessed:
-      #
-      #   - `package.json` — Omp's own manifest. `omp.extensions` names the
-      #     adapter's entry point and nothing else does; move the file, drop
-      #     `"type": "module"`, or rename the package, and the extension
-      #     silently does not load.
-      #   - `.claude-plugin/**` — the catalog `omp plugin install` reads. Omp
-      #     takes the Claude-compatible one as its documented fallback
-      #     (docs/notes/0011), so the name, source and version there are what
-      #     an install resolves against.
-      #   - `extensions/**` — the adapter itself. A module that throws on
-      #     import costs one stderr line and the session runs on without it.
-      #   - `scripts/check-omp-plugin.py` — the check.
-      #
-      # `skills/**` is deliberately absent. An added or renamed skill is
-      # discovered by Omp exactly as by Claude Code, so a skill-only diff
-      # cannot break the integration. The tempting objection — that the check's
-      # headline assertion is *about* `skills/` — does not survive reading it:
-      # `expected_skill_commands()` builds the expected set from the same
-      # `skills/*/SKILL.md` glob Omp discovers by, so a layout neither harness
-      # walks (a grouping directory) is absent from both sides of the
-      # comparison and the check passes either way. Running it on skill diffs
-      # would assert nothing a skill diff can change.
-      #
-      # The Makefile is absent too: it holds the command line, not the
-      # integration.
-      - name: Decide whether this diff can affect Omp
-        id: scope
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Install selector dependencies
+        run: npm ci
+      - name: Plan changed checks
+        id: plan
         env:
-          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: node scripts/ci-select.mjs --base "$BASE_SHA" --head "$HEAD_SHA"
+      - name: Install Claude Code CLI
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-skills') || contains(fromJSON(steps.plan.outputs.checks), 'check-agents') || contains(fromJSON(steps.plan.outputs.checks), 'check-claude-dependency')
+        # The newest CLI is the point: these checks validate the plugin against
+        # the Claude Code that users run, so a pin would hide a break. That is
+        # why zizmor's adhoc-packages finding is ignored here.
+        run: npm install -g @anthropic-ai/claude-code@latest # zizmor: ignore[adhoc-packages]
+      - name: Ensure ShellCheck
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-scripts')
+        run: shellcheck --version >/dev/null 2>&1 || sudo apt-get install -y shellcheck
+      - name: Install Worktrunk
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-git-sync') || contains(fromJSON(steps.plan.outputs.checks), 'check-worktrunk-install')
         run: |
           set -euo pipefail
-          # No base to diff against — a new branch's first push, or a force
-          # push GitHub reports as all-zeros. Run it rather than guess.
-          if [[ -z "$BASE" || "$BASE" =~ ^0+$ ]]; then
-            echo 'no usable base commit; running the check'
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # `set -e` would abort the step here, not just this command, and
-          # a failed scope step fails the job and reddens the required
-          # `CI Success`. merge-base fails on a base commit the clone cannot
-          # reach — rewritten history on the base branch, a deleted ref — so
-          # that case runs the check rather than taking the job down.
-          if ! base=$(git merge-base "$BASE" "$GITHUB_SHA"); then
-            echo "no merge base with $BASE; running the check"
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          changed=$(git diff --name-only "$base" "$GITHUB_SHA" -- \
-            package.json .claude-plugin extensions scripts/check-omp-plugin.py)
-          if [[ -n "$changed" ]]; then
-            echo "files that can affect Omp changed:"
-            echo "$changed"
-            echo 'run=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'no file that can affect Omp changed; the check is not run'
-            echo 'run=false' >> "$GITHUB_OUTPUT"
-          fi
-
-      # The official binary installer. The binary carries its own runtime, so
-      # there is no Bun to install — see
-      # docs/notes/0011-two-harnesses-one-skill-tree.md for why that route.
-      #
-      # Unpinned, for the reason the Claude CLI install above is unpinned.
-      #
-      # `--retry-all-errors` is what makes `--retry` cover a connection reset:
-      # without it curl retries only the errors it considers transient, and a
-      # reset on the TLS handshake is not one of them. Measured — this step
-      # installed Omp on one run and answered `curl: (35) Recv failure` from
-      # the same URL two minutes later.
+          installer="$RUNNER_TEMP/worktrunk-installer.sh"
+          curl --fail --location --retry 5 --retry-delay 2 --retry-all-errors \
+            --output "$installer" \
+            https://github.com/max-sixty/worktrunk/releases/download/v0.80.0/worktrunk-installer.sh
+          echo '53b606fa48b84169180f8881a61f5c31c770645e1d51328032aa5aeb4f2e155a  '"$installer" | sha256sum --check -
+          WORKTRUNK_UNMANAGED_INSTALL="$RUNNER_TEMP/worktrunk/bin" sh "$installer"
+          echo "$RUNNER_TEMP/worktrunk/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/worktrunk/bin/wt" --version
       - name: Install Omp
-        if: steps.scope.outputs.run == 'true'
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin') || contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live')
         run: |
           curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors https://omp.sh/install | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      # `GITHUB_PATH` takes effect on the next step, so this is a step of its
-      # own. It fails loudly where an installer put the binary somewhere else,
-      # rather than leaving the check below to fail for a reason that reads
-      # like a plugin fault.
-      - name: Verify Omp is on PATH
-        if: steps.scope.outputs.run == 'true'
-        run: omp --version
-
-      - name: make check-omp-plugin
-        if: steps.scope.outputs.run == 'true'
+      - name: Validate repository step references
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-step-names')
+        run: make check-step-names
+      - name: Validate release path classification
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-release-paths')
+        run: make check-release-paths
+      - name: Validate plugin manifest
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-plugin')
+        run: make check-plugin
+      - name: Validate skills
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-skills')
+        run: make check-skills
+      - name: Validate agents
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-agents')
+        run: make check-agents
+      - name: Validate manifests
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-manifests')
+        run: make check-manifests
+      - name: Validate Claude dependency
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-claude-dependency')
+        run: make check-claude-dependency
+      - name: Validate constitution hooks
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-constitution')
+        run: make check-constitution
+      - name: Validate Ask in chat hook
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-ask-in-chat')
+        run: make check-ask-in-chat
+      - name: Validate Title gate hook
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-title-gate')
+        run: make check-title-gate
+      - name: Validate Omp extension
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-extension')
+        run: make check-omp-extension
+      - name: Validate model class roles
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-class-roles')
+        run: make check-model-class-roles
+      - name: Validate Omp guard differential
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-guard-differential')
+        run: make check-omp-guard-differential
+      - name: Validate Omp cache refresh
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-cache-clean')
+        run: make check-omp-cache-clean
+      - name: Validate Git sync
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-git-sync')
+        run: make check-git-sync
+      - name: Validate Worktrunk installation
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-worktrunk-install')
+        run: make check-worktrunk-install
+      - name: ShellCheck scripts
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-scripts')
+        run: make check-scripts
+      - name: Test Omp branch maintenance
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-pr-keep-current')
+        run: make check-pr-keep-current
+      - name: Validate model telemetry
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-model-telemetry')
+        run: make check-model-telemetry
+      - name: Validate issue labels
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-labels')
+        run: make check-labels
+      - name: Validate Omp plugin integration
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-plugin')
         run: make check-omp-plugin
-
-  # The aggregating job branch protection names. `if: always()` is
-  # load-bearing: without it a failure upstream *skips* this job, and GitHub
-  # counts a skipped required check as satisfied — the pull request would go
-  # green on a failed check.
-  ci-success:
-    name: CI Success
-    needs: [check, omp]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Verify every job succeeded
+      - name: Validate live Omp runtime integration
+        if: contains(fromJSON(steps.plan.outputs.checks), 'check-omp-embark-title-live')
+        run: make check-omp-embark-title-live
+      # The infrastructure steps run last and tolerate an earlier failed check,
+      # so an unrelated failure cannot hide a stack error and a stack error
+      # cannot stop the checks above. `!cancelled()` keeps a cancelled run from
+      # turning into a pass. Each step still requires its own prerequisite.
+      - name: Install OpenTofu
+        id: install-opentofu
+        if: ${{ !cancelled() && steps.plan.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-infra') }}
+        uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          # CI and a laptop version manager read the same pin.
+          tofu_version_file: infra/github/.opentofu-version
+          # The default wrapper swallows exit codes, so a failing `fmt -check`
+          # or `validate` would report green.
+          tofu_wrapper: false
+      - name: Validate infrastructure
+        id: validate-infrastructure
+        if: ${{ !cancelled() && steps.install-opentofu.outcome == 'success' }}
+        run: make check-infra
+      - name: Install uv
+        id: install-uv
+        if: ${{ !cancelled() && steps.plan.outcome == 'success' && (contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') || contains(fromJSON(steps.plan.outputs.checks), 'check-zizmor')) }}
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+      - name: Install Checkov
+        id: install-checkov
+        if: ${{ !cancelled() && steps.install-uv.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-checkov') }}
+        run: uv tool install checkov==3.2.472
+      - name: Validate infrastructure policy
+        if: ${{ !cancelled() && steps.install-checkov.outcome == 'success' }}
+        run: make check-checkov
+      # `make check-zizmor` checks the installed version against the Makefile's
+      # pin, so this version and that one cannot drift apart unnoticed.
+      - name: Install zizmor
+        id: install-zizmor
+        if: ${{ !cancelled() && steps.install-uv.outcome == 'success' && contains(fromJSON(steps.plan.outputs.checks), 'check-zizmor') }}
+        run: uv tool install zizmor==1.31.1
+      - name: Audit workflows
+        if: ${{ !cancelled() && steps.install-zizmor.outcome == 'success' }}
         env:
-          RESULTS: ${{ join(needs.*.result, ' ') }}
-        run: |
-          set -euo pipefail
-          echo "upstream results: $RESULTS"
-          for result in $RESULTS; do
-            if [[ "$result" != "success" ]]; then
-              echo "::error::a required job did not succeed: $RESULTS" >&2
-              exit 1
-            fi
-          done
+          # Read-only. It lets zizmor's online audits ask GitHub about the
+          # actions the workflows call.
+          GH_TOKEN: ${{ github.token }}
+        run: make check-zizmor
+      # Advisories are disclosed against unchanged lockfiles, so the audit runs on every pull request. It runs last and tolerates an earlier failed check, so an advisory cannot hide another result. Dev-only advisories are not a gate.
+      - name: Audit production dependencies
+        if: ${{ !cancelled() }}
+        run: npm audit --omit=dev

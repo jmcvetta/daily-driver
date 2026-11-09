@@ -1,0 +1,313 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles the resumed verification",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The documented setup target ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/(^|[;&|]\\s*)(\\S+=\\S+\\s+)*(make\\s+setup-verifier|(bash\\s+)?(\\./)?\\.fixture/install-verifier\\.sh)\\b/)\nExamples: ['make setup-verifier && PATH=\"$PWD/.fixture/bin:$PATH\" verify-live --case 03']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The fixture recorded the setup and then the verification",
+          "details": "Pattern '(?ms)^install-verifier$.*^verify-live --case 03$' found in file (matched: 'install-verifier\nverify-live --case 03')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result reports the observed sandbox verification, not an invented capability gap",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result reports the observed sandbox verification, not an invented capability gap",
+            "duration_seconds": 6.36,
+            "findings": [
+              "Ran make setup-verifier successfully.",
+              "Executed the offline verifier for case 03.",
+              "Reported: live verification case 03: 3 of 3 assertions passed.",
+              "Clearly disclosed offline-only verification without requesting user action."
+            ],
+            "index": 3,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5f652a451ee0283719354f6707b6962cadfc1d0bfc5952f98ccbf8ad1904ffad",
+            "rationale": "The final [RESULT - SUCCESS] reply reports the observed local verifier output, and the successful command trajectory confirms both setup and offline fixture execution. It does not ask the user to perform setup or choose a handoff; its disclosure that no real services were accessed is appropriate.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1378,
+              "output": 115
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "31b2b51f6d24a46381bfb925b59e88b00dc4e749def36b0da0469530342ea73b"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-resume-sets-up-missing-tool",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles the resumed verification",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The documented setup target ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/(^|[;&|]\\s*)(\\S+=\\S+\\s+)*(make\\s+setup-verifier|(bash\\s+)?(\\./)?\\.fixture/install-verifier\\.sh)\\b/)\nExamples: ['make setup-verifier']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The fixture recorded the setup and then the verification",
+          "details": "Pattern '(?ms)^install-verifier$.*^verify-live --case 03$' found in file (matched: 'install-verifier\nverify-live --case 03')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result reports the observed sandbox verification, not an invented capability gap",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result reports the observed sandbox verification, not an invented capability gap",
+            "duration_seconds": 36.96,
+            "findings": [
+              "Ran make setup-verifier successfully.",
+              "Ran the offline verifier with --case 03 successfully.",
+              "Reported observed output: live verification case 03: 3 of 3 assertions passed.",
+              "Clearly distinguished fixture output from real live verification."
+            ],
+            "index": 3,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5f652a451ee0283719354f6707b6962cadfc1d0bfc5952f98ccbf8ad1904ffad",
+            "rationale": "The final [RESULT - SUCCESS] reply reports the observed local output, and the tool trace confirms both setup and offline verifier execution succeeded. It does not ask the user to perform setup or choose a handoff, and its disclosure about the fixture's limitations is appropriate.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2125,
+              "output": 117
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "31b2b51f6d24a46381bfb925b59e88b00dc4e749def36b0da0469530342ea73b"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-resume-sets-up-missing-tool",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 29.633362293243408,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-760-base-vs-candidate",
+      "task_id": "undertake-17-resume-sets-up-missing-tool",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 127872,
+        "output_tokens": 663,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 14461
+      },
+      "tokens": 142996,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 69.48634004592896,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-760-base-vs-candidate",
+      "task_id": "undertake-17-resume-sets-up-missing-tool",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 289152,
+        "output_tokens": 1674,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 25016
+      },
+      "tokens": 315842,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-31T18:40:14.981949",
+  "experiment_id": "omp-760-base-vs-candidate",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "31b2b51f6d24a46381bfb925b59e88b00dc4e749def36b0da0469530342ea73b",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3503,
+      "output": 232
+    }
+  },
+  "plugin_revision": {
+    "commit": "fd624e4161686971fced530d1d4a1145afd26970",
+    "dirty": false
+  },
+  "recorded_at": "2026-10-31T11:41:04.987808+00:00",
+  "run_id": "2026-10-31_18-39-04",
+  "schema_version": 5,
+  "started_at": "2026-10-31T18:39:04.516236",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-17-resume-sets-up-missing-tool": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-17-resume-sets-up-missing-tool"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-17-resume-sets-up-missing-tool": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-17-resume-sets-up-missing-tool"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}

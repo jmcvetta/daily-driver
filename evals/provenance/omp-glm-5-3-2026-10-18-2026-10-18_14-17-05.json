@@ -1,0 +1,1335 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['python3 .fixture/verify_state.py && cat fixture-verification.txt']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 1 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990009\\b/, require_success=True)\nExamples: ['Agent({\"context\": \"# Goal\\\\nDispatch eligible Daily Driver task issues #990009 and #990)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990011\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The task with no available route is not dispatched",
+          "details": "Matched 2 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/990010/)\nExamples: ['Agent({\"context\": \"# Goal\\\\nDispatch eligible Daily Driver task issues #990009 and #990)', 'Agent({\"context\": \"# Goal\\\\nDispatch eligible Daily Driver task issues #990009 and #990)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 8.0,
+            "findings": [
+              "#990009 and #990011 are reported as dispatched, not fixed or review-ready.",
+              "The reply after the last result tag omits #990010 and its reasoning-route configuration gap."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result The reply reports #990009 and #990011 as dispatched, but does not report #990010 as undispatched due to a configuration gap with no available reasoning route or preserve its required class explicitly.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1615,
+              "output": 100
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": 0.545455,
+      "raw_weighted_score": 0.5454545454545454,
+      "replicate_index": 0,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['python3 .fixture/verify_state.py']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990009\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990011\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The task with no available route is not dispatched",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/990010/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 7.61,
+            "findings": [
+              "#990010 remains reasoning with no substitute route dispatched.",
+              "Missing provider configuration for the reasoning override is explicitly identified.",
+              "#990009 and #990011 are reported as dispatched to implementation agents.",
+              "No bug fixes or review-ready outcomes are claimed."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result The reply reports #990010 as not dispatched because its required reasoning class has no available route, explicitly identifies a configuration gap, and preserves that class. It reports #990009 and #990011 as dispatched and running without claiming any bug is fixed or review-ready.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2684,
+              "output": 123
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": 0.818182,
+      "raw_weighted_score": 0.6363636363636364,
+      "replicate_index": 0,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['python3 .fixture/verify_state.py && cat fixture-verification.txt']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990009\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990011\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The task with no available route is not dispatched",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/990010/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 8.51,
+            "findings": [
+              "#990010 remains reasoning and is not dispatched due to an unconfigured provider/model route.",
+              "#990009 and #990011 are reported as dispatched to implementation jobs.",
+              "No class substitution, blocked eligible dispatch, or bug-fix claim appears in the reply."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result. The reply reports #990010 as not dispatched because its required reasoning route is unavailable, identifies the configuration gap in overlay.yml, and preserves its reasoning class. It reports #990009 and #990011 as dispatched without claiming any bug is fixed or review-ready.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1657,
+              "output": 154
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": 0.818182,
+      "raw_weighted_score": 0.6363636363636364,
+      "replicate_index": 1,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['echo \"PATH=$PATH\"; which gh git python3; git rev-parse --git-dir 2>&1 | head -2; python3 .fixture/verify_state.py 2>&1 |']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": null,
+          "error": "File 'fixture-verification.txt' does not exist",
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990009\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990011\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The task with no available route is not dispatched",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/990010/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 8.37,
+            "findings": [
+              "#990009 and #990011 dispatched on the implementation agent.",
+              "#990010 retains reasoning and is not dispatched because its override has no configured provider or effective route.",
+              "No bug is claimed fixed or review-ready."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result. The reply reports #990009 and #990011 as dispatched and #990010 as not dispatched because its required `reasoning` route has no configured provider, identifying the configuration gap while preserving the required class.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1562,
+              "output": 124
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": 0.636364,
+      "raw_weighted_score": 0.45454545454545453,
+      "replicate_index": 1,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['gh --version; python3 .fixture/verify_state.py; echo \"exit=$?\"']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": null,
+          "error": "File 'fixture-verification.txt' does not exist",
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990009\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990011\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The task with no available route is not dispatched",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/990010/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 7.93,
+            "findings": [
+              "#990009 and #990011 are reported as dispatched.",
+              "#990010 remains reasoning-class and is not dispatched due to an unavailable configured provider.",
+              "No fallback route for #990010, halted eligible tasks, or bug-fix claims are reported."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result The reply reports #990009 and #990011 as dispatched and #990010 as not dispatched because its required reasoning route points to a selector with no configured provider, identifying the configuration gap. It explicitly preserves the reasoning class and makes no claims that bugs are fixed or review-ready.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2082,
+              "output": 155
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": 0.636364,
+      "raw_weighted_score": 0.45454545454545453,
+      "replicate_index": 2,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 7.91,
+            "findings": [
+              "Does not report #990009 and #990011 as dispatched.",
+              "Does not report #990010 as undispatched because its required reasoning class has no available route.",
+              "Earlier transcript statements are outside the reply defined by the grading prompt."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result. The reply after the last result tag reports a refused dispatch and an intention to retry, not the required dispatch outcomes or the configuration gap for #990010.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2123,
+              "output": 135
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 2,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 0/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": null,
+          "error": "File 'fixture-verification.txt' does not exist",
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990009\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990011\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The task with no available route is not dispatched",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/990010/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 9.97,
+            "findings": [
+              "#990009 and #990011 are reported as dispatched with implementors running.",
+              "#990010 is held back for a route gap.",
+              "The reply omits the required `reasoning` class and explicit configuration-gap identification.",
+              "No bug is claimed fixed or review-ready."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result The reply reports #990009 and #990011 as dispatched and #990010 as held back for a route gap, without claiming any fix. However, it does not explicitly identify the missing route as a configuration gap for the required `reasoning` class or state that this class remains unchanged.",
+            "score": 0.7,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1346,
+              "output": 197
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.2727272727272727,
+      "replicate_index": 3,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "ERROR",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 9.79,
+            "findings": [
+              "#990010 remains reasoning with no effective route because its configured selector has no provider.",
+              "The configuration problem is described concretely, though not explicitly named a configuration gap.",
+              "#990009 and #990011 are not halted, but their dispatch is announced rather than confirmed.",
+              "No bug is claimed fixed or review-ready."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result. The reply preserves #990010's reasoning class and identifies its unavailable configured route as blocking only that task, but it describes #990009 and #990011 as eligible and being dispatched rather than reporting completed dispatch.",
+            "score": 0.7,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2958,
+              "output": 183
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": null,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['python3 .fixture/verify_state.py && cat fixture-verification.txt']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990009\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990011\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The task with no available route is not dispatched",
+          "details": "Matched 2 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/990010/)\nExamples: ['Agent({\"context\": \"# Goal\\\\nTriage of jmcvetta/daily-driver issues #990009, #990010, #9)', 'Agent({\"context\": \"# Goal\\\\nTriage of jmcvetta/daily-driver issues #990009, #990010, #9)']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 8.4,
+            "findings": [
+              "#990009 and #990011 are reported as in flight, not fixed or review-ready.",
+              "#990010 is reported as undispatched without the required class and configuration-gap explanation.",
+              "No bug is claimed fixed in the reply."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result The reply reports #990009 and #990011 as dispatched and #990010 as undispatched, but does not explain that the required reasoning class has no available route or identify this as a configuration gap. It also does not explicitly retain reasoning as #990010's required class, so it fails the stated requirements for full credit.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1685,
+              "output": 194
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": 0.454545,
+      "raw_weighted_score": 0.45454545454545453,
+      "replicate_index": 4,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "The repository-local bug triage skill is loaded",
+          "details": "observed='yes', expected='yes' (skill_name='fix-daily-driver-bugs')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The verifier confirms the tasks were read and not rewritten",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/python3 .fixture/verify_state.py/, require_success=True)\nExamples: ['python3 .fixture/verify_state.py']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Fixture state and recorded GitHub operations pass",
+          "details": "Pattern '^PASS$' found in file (matched: 'PASS')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990009\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The routable task",
+          "details": "Matched 0 matches (allowed range 1..1) commands (filters: tool_name=Agent, pattern=/undertake #990011\\b/, require_success=True)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The task with no available route is not dispatched",
+          "details": "Matched 0 matches (allowed range 0..0) commands (filters: tool_name=Agent, pattern=/990010/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The unroutable task is reported as a configuration gap at its required class",
+          "details": "Judge agent crashed before producing a verdict: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "error": "AgentCrashError: CLI process failed (exit code 1): Failed to authenticate: OAuth session expired and could not be refreshed",
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 0.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The unroutable task is reported as a configuration gap at its required class",
+            "duration_seconds": 7.34,
+            "findings": [
+              "#990010 remains unclaimed pending a configured reasoning route, with no implementation downgrade or alternative-model fallback.",
+              "#990009 and #990011 are dispatched to implementation agents independently of #990010.",
+              "The reply explicitly distinguishes dispatch from a fix or review-ready outcome."
+            ],
+            "index": 6,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ca2efe5ad455e514585ac0e0ddc82fc6323ce9b8ec8f0ebfd3c38400570c170c",
+            "rationale": "ANCHOR: result. The reply reports #990010 as not dispatched due to a configuration gap leaving its required reasoning class without an effective route, while explicitly preserving that class. It reports #990009 and #990011 as dispatched and makes no claim that any bug is fixed or review-ready.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2934,
+              "output": 130
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff"
+      },
+      "measured_score": 0.818182,
+      "raw_weighted_score": 0.6363636363636364,
+      "replicate_index": 4,
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.13631079999999998,
+      "cost_source": "reported",
+      "elapsed_seconds": 419.16922211647034,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 155365,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.3209724,
+      "cost_source": "reported",
+      "elapsed_seconds": 576.638631105423,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 328157,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.13965239999999998,
+      "cost_source": "reported",
+      "elapsed_seconds": 565.9404954910278,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 149213,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.235116,
+      "cost_source": "reported",
+      "elapsed_seconds": 360.88511395454407,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 1,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 775164,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.2254158,
+      "cost_source": "reported",
+      "elapsed_seconds": 455.2356939315796,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 463269,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.2720862,
+      "cost_source": "reported",
+      "elapsed_seconds": 602.733889579773,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 2,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 1173331,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.10359720000000001,
+      "cost_source": "reported",
+      "elapsed_seconds": 334.88278913497925,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 180617,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.306736,
+      "cost_source": "reported",
+      "elapsed_seconds": 602.1495499610901,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 3,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 1345703,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.138665,
+      "cost_source": "reported",
+      "elapsed_seconds": 246.06799244880676,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 255357,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.27764520000000004,
+      "cost_source": "reported",
+      "elapsed_seconds": 477.8644630908966,
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 4,
+      "settings": "omp-glm-5-3",
+      "task_id": "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp",
+      "tokens": 898087,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.12.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-18T15:34:27.334257",
+  "experiment_id": "omp-glm-5-3",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "d39c1fbf9b7dec072ce9ca7d05c594670a709f6699cc84095bce66ab5786a6ff",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 20646,
+      "output": 1495
+    }
+  },
+  "plugin_revision": {
+    "commit": "8653f2161a2f1c7d7b8ab10b37253ed5e0553ee5",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-18T08:48:25.380444+00:00",
+  "run_id": "2026-10-18_14-17-05",
+  "schema_version": 4,
+  "started_at": "2026-10-18T14:17:05.733857",
+  "variants": [
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp": [
+          0.545455,
+          0.818182,
+          0.636364,
+          0.4,
+          0.454545
+        ]
+      },
+      "task_ids": [
+        "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "vercel-ai-gateway/zai/glm-5.3",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp": [
+          0.818182,
+          0.636364,
+          null,
+          null,
+          0.818182
+        ]
+      },
+      "task_ids": [
+        "fix-daily-driver-bugs-03-unavailable-route-blocks-only-its-task-omp"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

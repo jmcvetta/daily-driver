@@ -1,0 +1,13 @@
+diff --git a/tests/test_infra_github.py b/tests/test_infra_github.py
+index f42dc3b0..148b9558 100644
+--- a/tests/test_infra_github.py
++++ b/tests/test_infra_github.py
+@@ -542,7 +542,7 @@ def test_projected_releases_skips_release_prs() -> None:
+     both the guard and this assertion.
+     """
+     workflow = yaml.safe_load(PROJECTED_RELEASES.read_text())
+-    condition = workflow["jobs"]["project"].get("if", "")
++    condition = workflow["jobs"]["projection"].get("if", "")
+ 
+     assert "github.event.pull_request.head.ref" in condition, (
+         "the projection job must key its guard on the head branch: the release "

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """The label standard is written twice, so the two copies are checked.
 
-`skills/issue-labels/SKILL.md` carries the table a session reads.
+`skills/issue-labels/SKILL.md` carries the tables a session reads: six
+mutually-exclusive issue kinds and supplemental visual markers.
 `infra/github/labels.tf` carries the `github_issue_label` resources GitHub is
 configured from. A label's description is the same string in both, because the
 skill is what Claude reads and GitHub is what a person hovers, and a standard
@@ -11,15 +12,14 @@ Nothing else would catch the drift. `claude plugin validate` never opens a
 `.tf` file, `tofu validate` never opens a skill, and a table row that has
 fallen behind the Tofu reads exactly like one that has not -- it is prose, and
 it is still well-formed. The failure is silent in both directions: a label
-declared in Tofu and missing from the table is one no session will ever apply,
-and a label in the table and missing from Tofu is one an apply will not create.
+declared in Tofu and missing from the tables is one no session will ever apply,
+and a label in a table and missing from Tofu is one an apply will not create.
 
 WHAT IT ASSERTS
 
-    The same set of label names in both files.
+    The same set of label names in the tables and Tofu.
     The same description for every name.
-    No two Tofu resources declaring one label name -- which Tofu rejects at
-    apply time, and which a check keyed on the name would swallow whole.
+    No duplicate label name across either skill table or Tofu resource.
     A non-empty colour on every Tofu resource, and no two labels sharing one.
 
 WHAT IT DOES NOT ASSERT
@@ -42,10 +42,12 @@ ROOT = Path(__file__).resolve().parent.parent
 SKILL = ROOT / "skills" / "issue-labels" / "SKILL.md"
 LABELS_TF = ROOT / "infra" / "github" / "labels.tf"
 
-# The table is found by its marker rather than by position, so prose may be
-# added above or below it without silently moving what is parsed. Rows run
-# from the marker to the first blank line after the table.
-TABLE_MARKER = "<!-- labels-table -->"
+# Tables are found by marker rather than position, so prose may move without
+# silently moving what is parsed. Each table ends at its first blank line.
+TABLE_MARKERS = (
+    "<!-- issue-kind-labels-table -->",
+    "<!-- supplemental-labels-table -->",
+)
 
 # | `name` | description | anything |
 TABLE_ROW = re.compile(r"^\|\s*`([^`]+)`\s*\|\s*([^|]+?)\s*\|")
@@ -61,22 +63,25 @@ TF_RESOURCE = re.compile(
 TF_ATTR = re.compile(r'^\s*(\w+)\s*=\s*"([^"]*)"\s*$', re.MULTILINE)
 
 
-def parse_skill_table(text: str) -> dict[str, str]:
-    """Return {label name: description} from the marked table in the skill."""
-    start = text.find(TABLE_MARKER)
-    if start < 0:
-        sys.exit(f"{SKILL}: no {TABLE_MARKER} marker; nothing to check against")
+def parse_skill_tables(text: str) -> list[tuple[str, str]]:
+    """Return (label name, description) rows from every marked skill table."""
+    rows: list[tuple[str, str]] = []
+    for marker in TABLE_MARKERS:
+        start = text.find(marker)
+        if start < 0:
+            sys.exit(f"{SKILL}: no {marker} marker; nothing to check against")
 
-    labels: dict[str, str] = {}
-    for line in text[start + len(TABLE_MARKER):].splitlines():
-        if labels and not line.startswith("|"):
-            break
-        match = TABLE_ROW.match(line)
-        if match:
-            labels[match.group(1)] = match.group(2)
-    if not labels:
-        sys.exit(f"{SKILL}: the table after {TABLE_MARKER} has no rows")
-    return labels
+        table_rows: list[tuple[str, str]] = []
+        for line in text[start + len(marker):].splitlines():
+            if table_rows and not line.startswith("|"):
+                break
+            match = TABLE_ROW.match(line)
+            if match:
+                table_rows.append((match.group(1), match.group(2)))
+        if not table_rows:
+            sys.exit(f"{SKILL}: the table after {marker} has no rows")
+        rows.extend(table_rows)
+    return rows
 
 
 def parse_labels_tf(text: str) -> list[tuple[str, str, str, str]]:
@@ -105,7 +110,7 @@ def parse_labels_tf(text: str) -> list[tuple[str, str, str, str]]:
 
 
 def main() -> int:
-    table = parse_skill_table(SKILL.read_text(encoding="utf-8"))
+    table_rows = parse_skill_tables(SKILL.read_text(encoding="utf-8"))
     rows = parse_labels_tf(LABELS_TF.read_text(encoding="utf-8"))
 
     problems: list[str] = []
@@ -113,6 +118,15 @@ def main() -> int:
     # Duplicates first, and by resource rather than by label name, so the two
     # collapsing rows are both reported before anything reads them as one.
     by_name: dict[str, str] = {}
+
+    table: dict[str, str] = {}
+    for name, description in table_rows:
+        if name in table:
+            problems.append(
+                f"`{name}` appears more than once in the skill's label tables"
+            )
+        else:
+            table[name] = description
     for resource, name, _, _ in rows:
         if name in by_name:
             problems.append(

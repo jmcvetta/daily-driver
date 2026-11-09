@@ -1,0 +1,2 @@
+modelRoles:
+  default: vercel-ai-gateway/minimax/minimax-m3:high

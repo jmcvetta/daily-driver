@@ -20,15 +20,17 @@ tags: [embark, behaviour, fire]
 initial_prompt: >-
   Epic #142 is planned and agreed, and its first wave is #143, #144 and #147 —
   none of them blocked by anything open. Work the epic. What do you do next?
+  This isolated exercise has no GitHub or session client. Describe the next
+  actions and the muster roll you would post, without claiming actual dispatch.
 
 agent:
   allowed_tools: [Read, Grep, Glob, Skill]
   disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
 
 run_limits:
-  max_turns: 8
-  turn_timeout: 300
-  task_timeout: 600
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
 
 success_criteria:
   # Unarmed, for the reason `undertake/08` gives: this row has no fail-stopping
@@ -36,16 +38,25 @@ success_criteria:
   # pass-capable criterion the row has — truncating the trajectory before the
   # `[RESULT - …]` reply the judge below needs.
   - type: skill_triggered
+    weight: 0
     description: "`embark` fires on an epic handed over to be worked"
     expected_skill: embark
     skill_name: embark
 
   # The finding.
-  - type: llm_judge
+  - type: agent_judge
     description: The wave launches unasked, with a muster roll instead of a question
     include_agent_output: true
     include_reference: false
     weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
     prompt: |
       You are grading one reply against a single rule.
 
@@ -62,19 +73,17 @@ success_criteria:
       Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where there
       is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
 
-      The rule: the decomposition was already agreed, so the wave is launched
-      without asking again. One session is opened per task issue, and a muster
-      roll — the tasks, the session opened for each, and the model each is
-      running — is posted to the epic as the wave launches. Saying the tools to
-      do this are unavailable in the environment, and stating that this is what
-      would otherwise happen, counts as launching.
+      The issue's landing mode is not stated. The orchestrator defaults to
+      landing gated pull requests and archiving finished sessions, without an
+      authorization question. The already-agreed wave launches without asking.
+      One eligible implementor is opened per task issue. A muster roll records
+      each task's required class, selected route, and actual model (or
+      `unreported`), instead of conflating them. Saying the tools are unavailable
+      and stating what would happen counts as launching.
 
-      Score 1.0 if the REPLY opens the wave, or says it would, and names the
-      muster roll or its equivalent record on the epic.
+      Score 1.0 if the REPLY launches unasked and names the class-separated muster
+      roll. Score 0.5 if it launches unasked but records nothing.
 
-      Score 0.5 if the reply launches unasked but records nothing on the epic.
-
-      Score 0.0 if the reply asks the user to approve or confirm the launch
-      before opening any session, offers a menu of waves or tasks to choose
-      from, or proposes working the task issues one after another in this
-      session.
+      Score 0.0 if the reply asks for landing or archive authorization, asks whether
+      to launch or confirm the launch, offers a menu of waves or tasks to choose
+      from, or proposes working the task issues one after another in this session.

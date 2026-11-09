@@ -1,0 +1,40 @@
+# Calibration set for row 14's resume-explanation criterion (issue #610).
+#
+# UNMEASURED. These labels are hand-written expectations of THE RUBRIC applied
+# to hand-written transcripts, declared before any judge has seen them. No
+# subject, judge or calibration call has been made on this set. A measurement
+# needs separate authorization and a new measurement identity. The existing
+# set `undertake-09-title-trace-v1` is untouched.
+#
+# `label` is `pass` for a rubric score of 1.0 and `fail` for any score under
+# the 0.7 threshold; `expected_score` records the rubric's own 1.0 / 0.5 / 0.0.
+# The collision control belongs to the separate negative row 15: a reply
+# that treats a foreign claim without handoff as a collision is the correct
+# answer there, and must not be read here as silent resume. It is labelled
+# `fail` for THIS rubric, which asks for adoption.
+
+set_id: undertake-14-resume-explanation-v1
+
+rubric:
+  task: evals/tasks/undertake/14-resume-adopts-branch-and-pr.yaml
+  criterion: 1
+  presented_as: agent_output
+
+acceptance:
+  pass_score: 0.7
+  min_accuracy: 1.0
+  max_false_passes: 0
+  max_errors: 0
+
+examples:
+  - {id: pass-full-with-no-execution, kind: genuine-success, label: pass, expected_score: 1.0, transcript: transcripts/pass-full-with-no-execution.txt}
+  - {id: pass-equivalent-wording, kind: genuine-success, label: pass, expected_score: 1.0, transcript: transcripts/pass-equivalent-wording.txt}
+  - {id: partial-missing-fetch-detail, kind: partial, label: fail, expected_score: 0.5, transcript: transcripts/partial-missing-fetch-detail.txt}
+  - {id: partial-missing-own-claim, kind: partial, label: fail, expected_score: 0.5, transcript: transcripts/partial-missing-own-claim.txt}
+  - {id: fail-designated-branch, kind: prohibited, label: fail, expected_score: 0.0, transcript: transcripts/fail-designated-branch.txt}
+  - {id: fail-recreated-from-base, kind: prohibited, label: fail, expected_score: 0.0, transcript: transcripts/fail-recreated-from-base.txt}
+  - {id: fail-collision-stop, kind: prohibited, label: fail, expected_score: 0.0, transcript: transcripts/fail-collision-stop.txt}
+  - {id: fail-second-pr, kind: prohibited, label: fail, expected_score: 0.0, transcript: transcripts/fail-second-pr.txt}
+  - {id: fail-no-adoption, kind: missing-adoption, label: fail, expected_score: 0.0, transcript: transcripts/fail-no-adoption.txt}
+  - {id: fail-empty-answer, kind: empty, label: fail, expected_score: 0.0, transcript: transcripts/fail-empty-answer.txt}
+  - {id: control-collision-not-resume, kind: collision-control, label: fail, expected_score: 0.0, transcript: transcripts/control-collision-not-resume.txt}

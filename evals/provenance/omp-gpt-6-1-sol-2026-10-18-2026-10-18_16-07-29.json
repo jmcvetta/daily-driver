@@ -1,0 +1,452 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Plan protects returned state and supports cross-session recovery",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Plan protects returned state and supports cross-session recovery",
+            "duration_seconds": 6.31,
+            "findings": [
+              "Defines authoritative repository configuration, protected existing remote state, and immutable artifact storage.",
+              "Treats provider state and saved plans as sensitive and references existing credentials without copying them.",
+              "Records reusable nonsecret inputs and provides cross-session recovery and reconciliation steps.",
+              "Requires separate explicit teardown approval and prohibits session-end or automatic destruction.",
+              "Uses existing infrastructure and security mechanisms without requiring encrypted Git or inventing a platform."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5cb29e0c27fb16517b3071cfa804461d046e08231f1a984bf03bcc2ac240b8a1",
+            "rationale": "ANCHOR: result The plan satisfies all required state, security, recovery, artifact continuity, and lifecycle safeguards while respecting existing tooling and avoiding actual cloud access. Repository-specific locations remain explicit prerequisites rather than invented details.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2309,
+              "output": 136
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9922a1582a388b3e732e92eb76f7761212dec4f16230ba258d6dc3dcec9aeed0"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "epic-10-deployment-continuity-and-state",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "Undertake requires early integration proof",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The authenticated integration fixture was exercised",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/integration-probe --fixture/)\nExamples: ['bash .fixture/bin/integration-probe --fixture']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The fixture proves integration ran before dependent work",
+          "details": "Pattern '(?s)^integration-auth-probe\\ndependent-work$' found in file (matched: 'integration-auth-probe\ndependent-work')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The agent reports observed proof, not a promise or health check",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The agent reports observed proof, not a promise or health check",
+            "duration_seconds": 5.41,
+            "findings": [
+              "Bash call 11 successfully ran the authenticated integration probe before dependent work in call 12.",
+              "The trajectory log records integration-auth-probe followed by dependent-work.",
+              "The final result quotes the verification output and disclaims live-service integration."
+            ],
+            "index": 3,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "c43925424359645a33175a6f7abc3b9bdc497d72e85d5c9e27fd66fd12bbe158",
+            "rationale": "ANCHOR: result The final result reports the fixture's authenticated request/response verification before dependent work, corroborated by the authoritative Bash trajectory. It explicitly limits the proof to the local fixture and does not claim external-service access or provisioning.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1544,
+              "output": 112
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9922a1582a388b3e732e92eb76f7761212dec4f16230ba258d6dc3dcec9aeed0"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-22-integration-proof-before-dependent-work",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "Epic uses independently mergeable outcomes, not activity labels",
+          "details": "observed='yes', expected='yes' (skill_name='epic')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Necessary same-delivery work stays together and independent outcomes remain separable",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Necessary same-delivery work stays together and independent outcomes remain separable",
+            "duration_seconds": 6.26,
+            "findings": [
+              "Workspace implementation, required configuration, and verification share one child issue.",
+              "The reusable guide and policy research each have independent completion criteria.",
+              "All three children proceed in parallel absent a real dependency.",
+              "Review checkpoints and deployment approval explicitly create no blocked-by edges."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "688a684685ba74e32f9f01881245da956a0fc2431b790e938f32423d7e4f8070",
+            "rationale": "ANCHOR: result The final reply keeps implementation, configuration, and verification in one issue because they do not independently deliver a useful, green outcome. It correctly separates the standalone guide and research answer as parallel deliverables and does not turn verification checkpoints or human approval into blocked-by edges.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1385,
+              "output": 123
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9922a1582a388b3e732e92eb76f7761212dec4f16230ba258d6dc3dcec9aeed0"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "epic-09-outcome-based-task-boundaries",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "First delivery is complete and optional scope remains optional",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "First delivery is complete and optional scope remains optional",
+            "duration_seconds": 6.88,
+            "findings": [
+              "Variant 1 defers independent comparison without blocking deployment.",
+              "Variant 2 includes comparison in first-delivery scope following the informed explicit choice.",
+              "Scoped-token deployment does not depend on optional GitHub App authentication.",
+              "SSO remains mandatory before customer-record access."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "b214ef538bee92a31447bbb6e603e8b14854c09db3d9fb6db41a4abb78174e43",
+            "rationale": "ANCHOR: result Both variants distinguish the smallest useful scoped-token deployment from independent comparison work, keep GitHub App authentication optional, and require SSO for customer-record access. The second variant preserves comparison in completion criteria after explicit acceptance without requesting repeated approval, inventing estimates, or creating automatic follow-up issues.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1160,
+              "output": 129
+            },
+            "weight": 3
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "9922a1582a388b3e732e92eb76f7761212dec4f16230ba258d6dc3dcec9aeed0"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "epic-08-first-delivery-scope",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 47.62753081321716,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "epic-10-deployment-continuity-and-state",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 27520,
+        "output_tokens": 1328,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 8501
+      },
+      "tokens": 37349,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 38.35214900970459,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-22-integration-proof-before-dependent-work",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 187008,
+        "output_tokens": 846,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 26593
+      },
+      "tokens": 214447,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 32.04805612564087,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "epic-09-outcome-based-task-boundaries",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 35840,
+        "output_tokens": 676,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21906
+      },
+      "tokens": 58422,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 15.835806846618652,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "epic-08-first-delivery-scope",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 6016,
+        "output_tokens": 414,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 7834
+      },
+      "tokens": 14264,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.12.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-18T16:09:43.037327",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "9922a1582a388b3e732e92eb76f7761212dec4f16230ba258d6dc3dcec9aeed0",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 6398,
+      "output": 500
+    }
+  },
+  "plugin_revision": {
+    "commit": "d70ab32db8f7568e9ebebc1abd888bc6f754379d",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-18T09:10:09.315603+00:00",
+  "run_id": "2026-10-18_16-07-29",
+  "schema_version": 5,
+  "started_at": "2026-10-18T16:07:29.163215",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "epic-08-first-delivery-scope": [
+          1.0
+        ],
+        "epic-09-outcome-based-task-boundaries": [
+          1.0
+        ],
+        "epic-10-deployment-continuity-and-state": [
+          1.0
+        ],
+        "undertake-22-integration-proof-before-dependent-work": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "epic-10-deployment-continuity-and-state",
+        "undertake-22-integration-proof-before-dependent-work",
+        "epic-09-outcome-based-task-boundaries",
+        "epic-08-first-delivery-scope"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

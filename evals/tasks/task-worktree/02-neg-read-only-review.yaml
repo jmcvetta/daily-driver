@@ -1,0 +1,24 @@
+task_id: task-worktree-02-neg-read-only-review
+description: >-
+  A read-only repository review needs no branch or worktree. Firing here would
+  add setup to a task that changes nothing.
+tags: [trigger-accuracy, task-worktree, no-fire]
+
+initial_prompt: >-
+  Review the README in this repository and tell me whether the installation
+  section is clear. Do not change any files.
+
+agent:
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 5
+  task_timeout: 300
+  turn_timeout: 120
+
+success_criteria:
+  - type: skill_triggered
+    description: "`task-worktree` does not fire on a read-only review"
+    expected_skill: none
+    skill_name: task-worktree
+    stop_early: {}

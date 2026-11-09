@@ -1,0 +1,47 @@
+# This catches a PR workflow that edits a draft but leaves its base commits out.
+# The fixture starts with an open draft whose merge state is masked as DRAFT,
+# whose old head is green, and whose local master already has a later commit.
+# `verify.py currency` requires the agent to update the PR, merge the actual
+# fixture base into its Git head, and assess CI on the new head. No prompt text
+# gives the expected command or procedure.
+
+task_id: pr-08-omp-draft-currency
+description: >-
+  Updating a draft pull request also attempts the base update and assesses CI
+  on the resulting head instead of trusting an old green result.
+tags: [pr, behaviour, fire, omp-only]
+
+initial_prompt: >-
+  A draft pull request #25 already exists for this branch. Update the PR for the
+  finished implementation and tell me what still needs attention.
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh currency-stale
+    timeout: 60
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write]
+  disallowed_tools: [Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 30
+  turn_timeout: 600
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    description: "`pr` fires while the existing pull request is updated"
+    expected_skill: pr
+    skill_name: pr
+  - type: run_command
+    description: The pull request contains its base update and CI is assessed on the new head
+    command: python3 .fixture/verify.py currency
+    timeout: 30
+    weight: 4

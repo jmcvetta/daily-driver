@@ -1,0 +1,107 @@
+{
+  "generatedAt": 1791550457421,
+  "reports": [
+    {
+      "provider": "google-antigravity",
+      "fetchedAt": 1791550457025,
+      "limits": [
+        {
+          "id": "google-antigravity:google:default:gemini-weekly",
+          "label": "Gemini",
+          "scope": {
+            "provider": "google-antigravity",
+            "projectId": "ai*",
+            "windowId": "weekly"
+          },
+          "window": {
+            "id": "weekly",
+            "label": "Weekly",
+            "durationMs": 604800000,
+            "resetsAt": 1791626580000
+          },
+          "amount": {
+            "unit": "percent",
+            "remainingFraction": 0.3685496,
+            "usedFraction": 0.6314504000000001,
+            "remaining": 36.85496,
+            "used": 63.14504000000001,
+            "limit": 100
+          },
+          "status": "ok"
+        },
+        {
+          "id": "google-antigravity:anthropic:default:3p-weekly",
+          "label": "Claude & GPT (shared)",
+          "scope": {
+            "provider": "google-antigravity",
+            "projectId": "ai*",
+            "windowId": "weekly",
+            "shared": true,
+            "sharedGroup": "3p-weekly:weekly"
+          },
+          "window": {
+            "id": "weekly",
+            "label": "Weekly",
+            "durationMs": 604800000,
+            "resetsAt": 1792155258000
+          },
+          "amount": {
+            "unit": "percent",
+            "remainingFraction": 1,
+            "usedFraction": 0,
+            "remaining": 100,
+            "used": 0,
+            "limit": 100
+          },
+          "status": "ok"
+        },
+        {
+          "id": "google-antigravity:openai:default:3p-weekly",
+          "label": "Claude & GPT (shared)",
+          "scope": {
+            "provider": "google-antigravity",
+            "projectId": "ai*",
+            "windowId": "weekly",
+            "shared": true,
+            "sharedGroup": "3p-weekly:weekly"
+          },
+          "window": {
+            "id": "weekly",
+            "label": "Weekly",
+            "durationMs": 604800000,
+            "resetsAt": 1792155258000
+          },
+          "amount": {
+            "unit": "percent",
+            "remainingFraction": 1,
+            "usedFraction": 0,
+            "remaining": 100,
+            "used": 0,
+            "limit": 100
+          },
+          "status": "ok"
+        }
+      ],
+      "metadata": {
+        "endpoint": "https://daily-cloudcode-pa.googleapis.com",
+        "projectId": "ai*",
+        "email": "ja*"
+      }
+    }
+  ],
+  "accountsWithoutUsage": [],
+  "disabledCredentials": [],
+  "capacity": {
+    "google-antigravity": [
+      {
+        "window": "7d",
+        "durationMs": 604800000,
+        "accounts": 1,
+        "usedAccounts": 0.6314504000000001,
+        "remainingAccounts": 0.3685495999999999
+      }
+    ]
+  },
+  "batch": "sol-workflow-after-final",
+  "run_id": "2026-10-09_19-52-54"
+}

@@ -1,0 +1,93 @@
+import assert from "node:assert/strict";
+import { explicitModelClassRole, installModelClassDefaults, MODEL_CLASS_ROLE_DEFAULTS, MODEL_CLASS_ROLE_TAGS } from "../extensions/role-default-helper.mjs";
+
+function settingsFixture(initialRoles = {}, initialTags = {}) {
+  const roles = { ...initialRoles };
+  const tags = { ...initialTags };
+  const mutations = [];
+  const settings = {
+    mutations,
+    roles,
+    tags,
+    getModelRole(role) { return roles[role]; },
+    overrideModelRoles(values) {
+      Object.assign(roles, values);
+      mutations.push(["roles", values]);
+    },
+  };
+  const modelTagsSetting = {
+    get(scope) {
+      assert.equal(scope, settings);
+      return tags;
+    },
+    override(scope, value) {
+      assert.equal(scope, settings);
+      Object.assign(tags, value);
+      mutations.push(["tags", value]);
+    },
+  };
+  return { settings, modelTagsSetting, roles, tags, mutations };
+}
+
+const clean = settingsFixture();
+assert.equal(clean.settings.get, undefined, "Omp Settings does not expose generic get");
+installModelClassDefaults(clean.settings, clean.modelTagsSetting);
+assert.deepEqual(clean.roles, MODEL_CLASS_ROLE_DEFAULTS);
+assert.deepEqual(clean.tags, MODEL_CLASS_ROLE_TAGS);
+assert.deepEqual(clean.mutations.map(([kind]) => kind), ["roles", "tags"]);
+
+// Without this case, the fixed ordinary routes or frontier default could drift.
+assert.deepEqual(clean.roles, {
+  mechanical: "openai-codex/gpt-6-luna:low",
+  implementation: "openai-codex/gpt-6-luna:high",
+  reasoning: "openai-codex/gpt-6.1-sol:high",
+  frontier: "openai-codex/gpt-6-astra:high",
+});
+assert.deepEqual(clean.tags.frontier, { name: "Frontier" });
+
+// Without this case, installing the frontier default can overwrite an operator's explicit route or tag.
+const operator = settingsFixture(
+  { implementation: "operator/selected:high", frontier: "operator/frontier-route:high" },
+  {
+    implementation: { name: "Operator's implementation", color: "cyan" },
+    frontier: { name: "Custom frontier", color: "magenta" },
+    custom: { name: "Custom" },
+  },
+);
+installModelClassDefaults(operator.settings, operator.modelTagsSetting);
+assert.equal(operator.roles.implementation, "operator/selected:high");
+assert.equal(operator.roles.frontier, "operator/frontier-route:high");
+assert.equal(operator.roles.mechanical, MODEL_CLASS_ROLE_DEFAULTS.mechanical);
+assert.deepEqual(operator.tags.implementation, { name: "Operator's implementation", color: "cyan" });
+assert.deepEqual(operator.tags.frontier, { name: "Custom frontier", color: "magenta" });
+assert.deepEqual(operator.tags.mechanical, { name: "Mechanical" });
+assert.deepEqual(operator.tags.custom, { name: "Custom" });
+const mutationCount = operator.mutations.length;
+installModelClassDefaults(operator.settings, operator.modelTagsSetting);
+assert.equal(operator.mutations.length, mutationCount, "repeated installation must not rewrite established settings");
+
+// Clearing a role must not silently reinstate the plugin's selector.
+const cleared = settingsFixture({ implementation: "" });
+installModelClassDefaults(cleared.settings, cleared.modelTagsSetting);
+assert.equal(cleared.roles.implementation, "");
+assert.deepEqual(explicitModelClassRole(cleared.settings, "implementation"), { assigned: true, value: "" });
+
+// Plugin defaults must not be mistaken for explicit operator assignments in another family.
+const tracked = settingsFixture();
+installModelClassDefaults(tracked.settings, tracked.modelTagsSetting);
+assert.deepEqual(explicitModelClassRole(tracked.settings, "implementation"), { assigned: false });
+tracked.roles.implementation = "operator/selected:high";
+assert.deepEqual(explicitModelClassRole(tracked.settings, "implementation"), { assigned: true, value: "operator/selected:high" });
+tracked.roles.implementation = undefined;
+tracked.settings.getModelRoleProvenance = () => "user";
+installModelClassDefaults(tracked.settings, tracked.modelTagsSetting);
+assert.equal(tracked.roles.implementation, undefined);
+assert.deepEqual(explicitModelClassRole(tracked.settings, "implementation"), { assigned: true, value: undefined });
+
+console.log(JSON.stringify({
+  installedSelectors: clean.roles,
+  preservedOperatorSelector: operator.roles.implementation,
+  preservedOperatorMetadata: operator.tags.implementation,
+}, null, 2));
+
+

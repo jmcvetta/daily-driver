@@ -1,8 +1,7 @@
 """An `omp` agent kind for `coder_eval`, so the eval suites can run on Omp.
 
-Import nothing from here at module scope that reaches `coder_eval`: `rpc` is
-pure on purpose, so `scripts/check-omp-agent.py` can drive it with nothing
-installed. `agent` and `plugin` are imported by name where they are needed.
+Import nothing from here at module scope that reaches `coder_eval`; `rpc` is
+pure on purpose. `agent` and `plugin` are imported by name where they are needed.
 """
 
 from __future__ import annotations

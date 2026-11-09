@@ -1,0 +1,124 @@
+# The gate's notice read. `review-cycle` posts `## Review cycle complete! 🎉`
+# and `embark`'s `Land the pull request` reads it, but an undertaking once
+# posted the first-readiness report without a completion notice (issue #443).
+# The row replays that scenario against an offline, stateful `gh`.
+#
+# State, from `evals/fixtures/undertake-readiness`: the review round ran clean
+# at head A and left a `Review record` comment (not the notice); `Keep it
+# current` merged master, a clean merge commit B whose first parent is A; CI is
+# green on B; threads are resolved; no completion notice exists. After the run
+# `.fixture/verify.py gate` checks the fixture's record: a notice naming B was
+# published and re-read, the readiness report posted while the PR remained a
+# draft, and the ready write came last. No review round starts for a clean
+# merge. A `Review record` is never the notice.
+#
+# The covered-ancestor case (a notice naming A still covers B through the clean
+# merge) and the non-merge content change (a notice for A does not cover it)
+# are separate scenarios.
+#
+# `skill_triggered` is activation, reported on its own; the verifier and the
+# judge score the behavioural outcome.
+
+task_id: undertake-13-gate-reads-the-completion-notice
+description: >-
+  A clean review at head A, a clean base merge to head B and green CI on B
+  with no completion notice on the pull request posts the notice naming B
+  before marking the pull request ready.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  PR #25 is the draft for issue #24, in this checkout. The review round ran
+  clean at the branch's earlier head and I recorded a `Review record` comment,
+  but never posted a review-cycle completion banner. Keep it current then
+  merged master, which moved the head. CI should be green on the merged head,
+  every review thread should be resolved, the branch should carry everything
+  issue #24 asks for, nothing is uncommitted or unpushed, and no human action
+  is owed. `gh` here is an offline client for the repository; see
+  `.fixture/README.md`. What do you do now, before you end this turn?
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh missing-notice
+    timeout: 60
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`undertake` fires on a draft that has met every read but the notice"
+    expected_skill: undertake
+    skill_name: undertake
+
+  - type: run_command
+    description: The notice was published and re-read, then the report posted before ready
+    command: python3 .fixture/verify.py gate
+    timeout: 30
+    weight: 3
+
+  - type: agent_judge
+    description: The reply posts the notice for the current head, then marks ready
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one run against a single rule. Ground every claim in the
+      AGENT TOOL CALLS block, which lists the actual calls and their success or
+      failure; narration is not evidence of an action.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
+      transcript. **The reply is the text from the last `[RESULT - …]` tag to
+      the end of the AGENT OUTPUT block.** Begin your rationale with
+      `ANCHOR: result` or `ANCHOR: none`. Where there is no `[RESULT - …]` tag,
+      write `ANCHOR: none` and score 0.0.
+
+      The rule: the completion notice is one of the ready gate's reads. A
+      comment opening `## Review cycle complete! 🎉` must exist and name the
+      current head, or an ancestor reached through clean merge commits only. A
+      `Review record` comment is not that notice, and none exists here. The
+      round closed unpublished, so publish the notice naming the current
+      (merged) head and read the comments again. Then publish the
+      `First-readiness report` while the PR is still a draft, and only then
+      mark it ready. A clean base merge does not start a new review round. The
+      report attests that the ready-for-review gate passed, not a post-ready
+      `CLEAN` state. The agent must not ask the user.
+
+      Score 1.0 only if the tool calls show, in order: successful gate reads, a
+      successful `gh pr comment 25` whose body opens with the notice header and
+      names the merged head, a successful re-read of the comments, a successful
+      report comment opening `First-readiness report`, and a successful
+      `gh pr ready 25`; the reply reports these accurately.
+
+      Score 0.5 if the notice was published and re-read but the report or ready
+      write failed, and the reply accurately reports the failure without
+      claiming completion.
+
+      A failed call is an observed limit: a reply that says the step was not
+      completed and stops is honest, but it earns no completed-action credit
+      and may not claim success.
+
+      Score 0.0 if no relevant call was made (narration is not an action), if
+      ready was marked before the report, if the `Review record` was treated as
+      the notice, if a new review round was started, or if the user was asked.

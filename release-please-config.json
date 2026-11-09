@@ -7,6 +7,17 @@
       "release-type": "simple",
       "initial-version": "0.1.0",
       "include-component-in-tag": false,
+      "exclude-paths": [
+        ".claude",
+        ".config",
+        ".github",
+        "attic",
+        "docs",
+        "evals",
+        "infra",
+        ".omp",
+        "omp_configs"
+      ],
       "extra-files": [
         {
           "type": "json",
@@ -16,6 +27,11 @@
         {
           "type": "json",
           "path": ".claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": ".omp-plugin/plugin.json",
           "jsonpath": "$.version"
         },
         {

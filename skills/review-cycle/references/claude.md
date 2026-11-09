@@ -23,11 +23,61 @@ whatever level was typed last, in some other session, about some other diff.
 `SKILL.md`'s `Name the level` is the rule; this is the surface that makes it
 load-bearing.
 
-Should a later CLI post plain issue comments instead of threads, read them with
-`get_comments` rather than `get_review_comments` and answer with
-`mcp__github__add_issue_comment` — the degradation `SKILL.md` describes under
-`A reviewer, not a bare subagent`.
+If the CLI returns findings without a submitted review, publish them through
+the fallback below. Plain issue comments are not an equivalent artifact.
 
+
+Fix-delta verification
+======================
+
+**Unavailable on `/code-review`, not on the harness.** `/code-review
+--comment` reviews the pull request as a whole; it has no measured SHA-range
+or finding-disposition input, so it cannot be represented as an independent
+delta pass, and a second full review through it is not targeted verification.
+The route is a briefed subagent instead: dispatch exactly one, through the
+`Agent` tool, carrying the bounded brief `SKILL.md`'s `Verify the fix delta`
+requires — the pull request, base branch, full-review SHA, current SHA,
+original findings, dispositions, and pass number. Require it to compare the
+pull request's three-dot content at the reviewed SHA with its three-dot
+content at the current SHA, exclude changes attributable only to the base
+branch, and inspect affected callers. It reports only whether each
+implemented finding is solved and any concrete regressions in that delta. It
+must not perform a full-PR audit, solicit style work, or supply the verdict —
+the session records the result from the subagent's report, never in place of
+it.
+
+Publish any findings it raises through this file's `Review history,
+publication, and threads` route below, then record the pass with
+`mcp__github__add_issue_comment`:
+
+```text
+Review verification
+scope reviewed: <sha>
+pass: <n>
+verified: <sha>
+findings: <finding ids and dispositions>
+outcome: <clear|defects|incomplete|unavailable>
+defects: <none|concise list>
+wall: <open|reached>
+usage: <exact value if exposed|unavailable>
+```
+
+`outcome: unavailable` stays reachable for a dispatch that genuinely fails —
+the subagent returns nothing usable, or does not return at all — recorded as
+such rather than guessed at; a working dispatch is not unavailable by design.
+Never estimate usage when the invocation does not expose it.
+
+Review-cycle completion notice
+==============================
+
+After a non-standalone round meets `SKILL.md`'s completion conditions and
+`Does it go again?` starts no new full review, read the current head with `mcp__github__pull_request_read`, method `get`, and
+conversation comments with the same tool, method `get_comments`. If no existing
+comment starts with `## Review cycle complete! 🎉` and names that head, post
+the separate notice with `mcp__github__add_issue_comment`. Its body starts with
+that heading, gives a short factual completion status, and names the completed
+SHA. Re-read the head immediately before writing; a changed head does not
+inherit the notice. A failed write is reported, never claimed.
 
 The wait
 ========
@@ -91,43 +141,48 @@ The backstop
   [`0011`](../../../docs/notes/0011-two-harnesses-one-skill-tree.md) scopes it
   to Claude Code, which is why the rule lives in this file: a harness without a
   durable wake has no slot to fill.
-- **A slot already occupied is the backstop.** A wait entered while the
-  caller's cadence timer is in flight — `undertake`'s `Keep it current`, which
-  holds one for the life of the pull request — arms nothing: that timer is two
-  minutes out too, and every wake ends in a read whatever the wake was for.
-  Note whose it is, because `End the wait` cancels the timer in the slot and
-  hands the slot back to that owner.
+**A slot already occupied is the backstop.** A wait entered while the PR
+maintenance timer is in flight — `pr`'s `Keep it current`, which holds one
+for the life of the PR — arms nothing: that timer is two minutes out too, and
+every wake ends in a read whatever the wake was for. Note whose it is, because
+`End the wait` cancels the timer in the slot and hands the slot back to `pr`.
 
 End the wait
 ------------
 
-Both halves are running until something stops them, and neither stops itself.
-On the wake that ends the wait — every check reported, however it reported, or
-the fifteen-minute cap:
+At each fifteen-minute observation-window boundary, read the head and both CI
+sources again. Nonterminal work renews the window with the existing single
+timer and subscription; do not ask the user to restart monitoring. Expiration
+alone is not a human blocker. A changed head invalidates earlier conclusions.
+Diagnose failed observation routes and retain supported continuation while
+permitted work remains.
+
+Both halves stay active across window renewals. End this wait only when CI
+has reported or a genuine blocker or user stop requires it:
 
 - **Cancel the timer in the slot** with
   `mcp__Claude_Code_Remote__delete_trigger` — the backstop this wait armed, or
-  the caller's cadence timer it borrowed under `The backstop`. An armed
-  `send_later` does not lapse, it fires: left pending, it injects *read the
-  checks again* as a user turn in the middle of the review, restarting a wait
-  on a run that finished.
+  `pr`'s cadence timer it borrowed under `The backstop`. An armed `send_later`
+  does not lapse, it fires: left pending, it injects *read the checks again*
+  as a user turn in the middle of the review, restarting a wait on a run that
+  finished.
 - **Unsubscribe** with `mcp__github__unsubscribe_pr_activity`. The subscription
   is this wait's, taken for it and dropped with it — the next wait on this pull
   request takes it again, and the call is idempotent. Left standing it is the
   round's own echo chamber, waking the session for every thread the round posts
   and every reply it writes.
-- **Hand the slot back to the caller**, where the caller keeps a standing
-  cadence and the surface has the scheduler that cadence needs. The wait does
-  not arm that timer itself: the caller arms it under its own rule, before the
-  turn ends, so a check-in cannot fire into the round this cancel was clearing
-  the way for. What this bullet forbids is standing down instead — no timer and
-  no subscription, on a pull request the caller is still driving, which is the
-  session asleep through a green run that
+- **Hand the slot back to `pr`**, where its `Keep it current` watch remains
+  active. The wait does not arm that timer itself: `pr` arms it under its own
+  rule, before the turn ends, so a check-in cannot fire into the round this
+  cancel was clearing the way for. What this bullet forbids is standing down
+  instead — no timer and no subscription, on a pull request `pr` is still
+  driving, which is the session asleep through a green run that
   [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) records.
-  **A wait with no such caller arms nothing.** A round run on its own — no
-  `undertake` around it — has no cadence to resume and no step that would ever
-  end one, so a check-in armed here would wake a session that has stopped
-  driving anything. This wait owns the reading loop, never the caller's watch.
+  **A wait with no active PR-maintenance watch arms nothing.** A round run on
+  its own — without a `pr` watch — has no cadence to resume and no step that
+  would ever end one, so a check-in armed here would wake a session that has
+  stopped driving anything. This wait owns the reading loop, never the
+  standing watch.
 
 A laptop with neither
 ---------------------
@@ -139,15 +194,42 @@ timeout. Failing that, this is the surface `SKILL.md` says cannot wait: read
 the checks once, and where they have not all reported, say so and stop.
 
 
-The review threads
-==================
+Review history, publication, and threads
+========================================
+
+Before reviewing, read `pull_request_read` with `get_reviews`,
+`get_review_comments`, and `get_comments`. Follow every page or cursor until
+the result is complete. Preserve resolved and outdated threads, replies,
+review identifiers, and reviewed SHAs in the reviewer brief.
+
+`/code-review --comment` is the native publication route. Confirm that its
+result is a submitted `COMMENT` review with the reviewed SHA before treating
+its threads as recorded. Compare the returned review and comments with the
+history first; a resumed session must not post native findings twice.
+
+Where the review surface returns findings but no submitted review, create one
+with `curl` and the ambient `GITHUB_TOKEN` on a web worker, or `gh api` on a
+laptop, through `POST /repos/{owner}/{repo}/pulls/{n}/reviews`.
+The JSON body has `event: "COMMENT"`, `commit_id: <reviewed-sha>`, a summary
+`body`, and a `comments` array whose entries carry `path`, `side`, `line`
+(and `start_side` / `start_line` for a range), and finding body. The submitted
+summary carries unanchorable or clean results. Validate the head and diff
+anchors again immediately before this call. A missing token, GitHub rejection,
+or head change leaves the findings intact and reports publication as incomplete.
+
+The `/comments` fallback measured in `0001` demonstrates inline posting, not
+this submitted-review aggregation; read the response and review history before
+claiming the aggregation succeeded.
 
 | Operation | Call |
 | --------- | ---- |
-| Read the threads | `mcp__github__pull_request_read`, `get_review_comments` method |
+| Read review history | `mcp__github__pull_request_read`, `get_reviews`, `get_review_comments`, and `get_comments` |
+| Native publication | `/code-review` with `--comment` |
+| Fallback publication | `curl` with `GITHUB_TOKEN`, or `gh api`, to `POST /repos/{owner}/{repo}/pulls/{n}/reviews` |
 | Reply on a thread | `mcp__github__add_reply_to_pull_request_comment` |
 | Resolve a thread | `mcp__github__resolve_review_thread` |
 
 The identifier trap `SKILL.md` states applies to the last two: resolve takes
 the thread's `PRRT_…` node ID, reply takes the `#discussion_r…` number from the
-comment's `html_url`.
+comment's `html_url`. The fallback creates a review, not a loose comment, so it
+gives the summary and each finding one durable review record.

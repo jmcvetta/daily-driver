@@ -1,0 +1,154 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on body revision using the effective kind",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Effective research contract replaces proposal contract without losing valid content or provenance",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Effective research contract replaces proposal contract without losing valid content or provenance",
+            "duration_seconds": 10.1,
+            "findings": [
+              "Replaces proposal with research while preserving story and customer-visible without adding extra body templates.",
+              "Names the report query and retention policy as sources and compares inclusion versus exclusion against monthly reconciliation needs.",
+              "Explicitly excludes production access and code changes, and defines completion and an insufficient-evidence outcome.",
+              "Removes proposal-only scaffolding and retains the trailing Model, Harness, and session provenance."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "16ebecba45d1d26c208538c0f64fe773bc5a22c02be94c033472cfbe294667ee",
+            "rationale": "ANCHOR: result The final reply uses the research contract and preserves the question, both support requests, reconciliation purpose, uncertain retention-policy constraint, and trailing provenance. It requires a bounded, evidence-backed comparison and recommendation without inventing policy findings, accessing production, or prescribing implementation.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1283,
+              "output": 187
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-12-effective-kind-preserves-content",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 44.22446846961975,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-12-effective-kind-preserves-content",
+      "tokens": 44880,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T18:26:52.834784",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "d4661e260263149560d60ed421ee94dc3281b078f821d82385cfa9bda9ddcdc4",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "medium",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 1283,
+      "output": 187
+    }
+  },
+  "plugin_revision": {
+    "commit": "73b2e7b7019a0fbf29bea2d40c53025480ac1370",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-08T11:27:04.747650+00:00",
+  "run_id": "2026-10-08_18-26-08",
+  "schema_version": 3,
+  "started_at": "2026-10-08T18:26:08.605363",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "issue-12-effective-kind-preserves-content": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "issue-12-effective-kind-preserves-content"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

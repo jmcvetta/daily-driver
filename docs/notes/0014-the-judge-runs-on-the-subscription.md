@@ -1,6 +1,15 @@
 # The judge runs on the subscription
 
 **Status:** decided, 2026-09-11.
+*Amended 2026-10-02 — `allowed_tools: []` does not remove tools; every judge
+now carries a `disallowed_tools` list, and `scripts/check-agent-judges.py` is
+the guard this note said it did not add.*
+*Amended 2026-10-05 — the rule below is conditional: a **Claude-judged**
+evaluation runs from a Claude Code session on its subscription. A non-Claude
+judge need not, and
+[`0030`](0030-the-judge-is-selected-apart-from-the-subject.md) adds that route
+without weakening this one: still no metered Anthropic access, no OAuth token
+sought, and no Claude judge outside a Claude Code session.*
 **Provenance:** found while running
 [#158](https://github.com/jmcvetta/daily-driver/issues/158)'s nine
 `references` rows, on the second attempt at that run.
@@ -36,6 +45,12 @@ builder (`agents/claude_code_agent.py:817`) leaves `ANTHROPIC_API_KEY` alone
 and lets the SDK inherit the environment. So the judge authenticates exactly
 the way the agent under test already does, which on this project is the
 subscription.
+
+The execution session matters as well as the judge choice: a Claude-judged
+evaluation must run from a Claude Code web or CLI session so the SDK inherits
+that session's subscription. The operational route, including Omp handoff and
+credential-failure guidance, lives in the single
+[`evaluation runbook`](../../evals/README.md#choose-the-execution-session-first).
 
 `AgentJudgeCriterion` mirrors `LLMJudgeCriterion`'s prompt and context fields —
 `prompt`, `include_agent_output`, `include_reference`, `weight` are all shared
@@ -88,10 +103,10 @@ judge in this suite inherited by default. `AgentJudgeCriterion` has no such
 field, and neither does `ClaudeCodeAgentConfig`, so a ported judge samples at
 the SDK default and nothing can pin it. A rubric that scores on a boundary can
 therefore return a different verdict on an identical transcript, and a moved
-mean is not by itself evidence that the agent's behaviour moved. It lands
-hardest on `tasks/constitution/reply-is-concise.yaml`, whose weight-2 grader
-reports a line count — the one figure in the suite chosen because it was meant
-to be exact.
+mean is not by itself evidence that the agent's behaviour moved. The port of
+`tasks/constitution/reply-is-concise.yaml` exposed this risk: its weight-2
+grader reported a line count intended to be exact. That row was later retired;
+[`0017`](0017-constitution-compliance-is-unmeasured.md) records the experiment.
 
 That is a real cost, accepted because the alternative is eight findings that
 never execute at all. Two things hold it down, and neither is the guard:
@@ -112,8 +127,8 @@ memory — not a guard against a missing key.
 
 ## What is left
 
-Twelve rows elsewhere in the suite still carry an enabled `llm_judge`, so
-`make evals-run` over the whole suite still stops at the guard. Three are
+After the 2026-09-14 port, twelve rows still carried an enabled `llm_judge`,
+so `make evals-run` over that suite still stopped at the guard. Three were
 Claude-arm rows outside the nine:
 
 - `tasks/embark/06-launches-without-asking.yaml`
@@ -122,9 +137,9 @@ Claude-arm rows outside the nine:
 
 A fourth was on that list until 2026-09-14, when
 `tasks/constitution/reply-is-concise.yaml` was ported under this note's rule
-and with the same load-bearing settings. It is the row that measures whether
-the constitution changes behaviour at all, and left on `llm_judge` that
-question could not be asked on this project's credentials.
+and with the same load-bearing settings. It asked whether the constitution
+changed behaviour; left on `llm_judge`, that question could not be asked on
+this project's credentials. The row was later retired; see `0017`.
 
 The other nine are the `omp-only` forks `0013` added, including the forks of
 eight of the nine rows this note is about. They have the same defect, and the

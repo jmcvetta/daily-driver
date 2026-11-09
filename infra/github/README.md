@@ -1,8 +1,8 @@
 # GitHub Repository Configuration
 
 Manages the configuration of the `jmcvetta/daily-driver` repository
-itself: merge strategy, branch protection, Dependabot alerts, and the issue
-labels.
+itself: merge strategy, branch protection, Dependabot alerts and security
+updates, and the issue labels.
 
 Modelled on `Green-Pagoda/pagoda`'s `infra/bootstrap/bootstrap-github`, minus
 the parts that are specific to that monorepo.
@@ -26,53 +26,61 @@ exclusion below.
 
 - **`github_repository`** — merge settings, visibility, feature toggles
 - **`github_repository_vulnerability_alerts`** — Dependabot alerts
+- **`github_repository_dependabot_security_updates`** — Dependabot pull
+  requests that fix vulnerable dependencies
 - **`github_workflow_repository_permissions`** — the default workflow token
   scope, and whether Actions may open a pull request (the release job's
   default-token fallback needs the latter)
-- **`github_branch_protection`** on `master` — required `CI Success` check,
-  linear history, conversation resolution, no force pushes or deletions
-- **`github_issue_label`** ×5 — the issue labels the `issue-labels` skill
-  defines: `epic`, `task`, `bug`, `proposal`, `research`
+- **`github_branch_protection`** on `master` — required `Checks` and
+  `Release Projection` checks on an up-to-date branch, linear history, conversation resolution, no
+  force pushes or deletions
+- **`github_issue_label`** ×7 — six issue kinds plus the `story` supplemental
+  marker. The `issue-labels` skill defines their contract.
 
-## The `CI Success` Check
+## Required Checks
 
-Branch protection requires a status check named `CI Success`, and a required
-check that never reports blocks every pull request. `.github/workflows/ci.yml`
-ships a job with exactly that name, which aggregates the real jobs through
-`needs`.
+Branch protection requires two status checks: `Checks`, the one CI validation
+job, which runs the repository checks, the selected component checks and, when
+`infra/**` changes, the stack validation, and `Release Projection`, which
+validates the Conventional Commit pull-request title release-please consumes
+and projects what release-please will ship. Both report on every pull-request
+head. On release-please pull requests, `Release Projection` validates the title
+but skips checkout and projection; GitHub treats those skipped steps in an
+otherwise successful job as successful for branch protection.
 
-Adding CI is therefore a change to the workflow, not to this configuration:
-the Tofu binds to the job *name*, so jobs can be added under `needs` without
-touching `branch_protection.tf`.
+Adding a CI step is therefore a change to the workflow, not to this
+configuration, unless it is a merge gate. The Tofu binds to each job's display
+name, so the selected checks inside `Checks` need no change to
+`branch_protection.tf`. Renaming a job does: apply the new context in step
+with the workflow change, or pull requests wait on a check nothing reports.
+The order for a rename: apply the stack, then merge the pull request that
+renames the job (merge first and the old context blocks it; apply a rename
+with no merge and every other pull request waits). Open pull requests then
+merge `master` to report the new context.
+
+Neither workflow may carry a `paths:` filter. A path-filtered workflow does not
+report a *skipped* check, it reports nothing at all, so a required context
+naming a filtered job leaves every unmatched pull request pending forever.
+Selection happens inside `Checks`, in `scripts/ci-select.mjs`, so the job
+always reports.
 
 Three consequences worth knowing:
 
-- A pull request whose branch predates the workflow will not report the check
-  at all, and must pick up `master` before it can merge. Nothing forces that:
-  `strict = false`, for the reason `branch_protection.tf` gives — requiring
-  every branch to be up to date re-invalidates every open pull request each
-  time another merges.
+- A pull request whose branch predates a workflow will not report its check at
+  all, and must pick up `master` before it can merge. `strict = true` forces
+  that: a branch that is behind is blocked until it is updated and the required
+  checks run again. Every merge re-invalidates the open pull requests, and the
+  update-branch button is the price.
 - `enforce_admins = false` leaves an escape hatch for the case where CI
   itself is what is broken.
 - **The release pull request no longer needs that escape hatch.**
   `release-please.yml` authenticates as a GitHub App, which is a distinct
-  identity, so `CI Success` reports on the release pull request like any
-  other. It did need the hatch while the release job ran on the default
-  token: before 2026-06-11 GitHub created no workflow runs at all for
-  `github-actions[bot]` pull requests, so `CI Success` sat "expected"
-  indefinitely on the one pull request whose merge cuts a permanent tag, and
-  `enforce_admins = false` was what let it merge. Since that date the runs
-  are created but held in `action_required` until someone with write access
-  clicks **Approve workflows to run** — which is how #56 merged green without
-  the hatch, and why #59 was filed about the clicking rather than about a
-  stuck check.
-
-`ci.yml` carries no `paths:` filter, and must not grow one. A path-filtered
-workflow does not report a *skipped* check, it reports nothing at all, so a
-required context naming a filtered job leaves every unmatched pull request
-pending forever. `infra.yml` is filtered precisely because it is not required;
-requiring it later means dropping its filter in the same commit, and nothing
-enforces that.
+  identity, so the required checks report on the release pull request like any
+  other. It did need the hatch while the release job ran on the default token:
+  before 2026-06-11 GitHub created no workflow runs at all for
+  `github-actions[bot]` pull requests, so checks sat "expected" indefinitely.
+  Since that date the runs are created but held in `action_required` until
+  someone with write access clicks **Approve workflows to run**.
 
 ## The Release Job's Fallback Depends on a Workflow Permission
 
@@ -102,18 +110,11 @@ declaration stays anyway, because the other half was wrong then and is wrong
 now — a setting the release job falls back on belongs written down next to the
 reason it is needed, whether or not something better exists.
 
-## The Provider Lock Has To Be What `init` Produces
+## The Provider Lock
 
-`.terraform.lock.hcl` is committed, and `.github/workflows/infra.yml` fails a
-pull request whose lock file `tofu init` would rewrite. That is stricter than
-it sounds: initialising against the registry records an `h1:` hash for every
-platform the provider publishes, so a lock file carrying fewer of them is
-rewritten on the next init, on any machine. A file that init rewrites is not a
-pin anyone reads — the diff appears, nobody asked for it, and it gets
-committed unread.
-
-So when the provider version changes, let init write the file and commit what
-it wrote:
+`.terraform.lock.hcl` is committed for hash-pinning, and CI does not check it
+for drift. One operator applies this configuration by hand. When the provider
+version changes, let init write the file and commit what it wrote:
 
 ```bash
 cd infra/github
@@ -128,10 +129,11 @@ same file.
 
 ## The Issue Labels
 
-`labels.tf` declares the five labels `skills/issue-labels/SKILL.md` defines,
-so the names, colours and descriptions come from a file under review rather
-than from whoever clicked last. The skill is the standard; this is where it is
-declared.
+`labels.tf` declares six issue kinds plus the supplemental `story` marker from
+`skills/issue-labels/SKILL.md`. The kinds decide agent readiness. The marker
+only makes a confirmed direct child of an epic visible in issue lists; it
+never replaces its kind or its parent edge. The skill is the standard; this is
+where all seven labels are declared.
 
 Two properties are worth knowing before an apply:
 
@@ -140,15 +142,23 @@ Two properties are worth knowing before an apply:
   (`dependencies`, `autorelease: pending`) survive untouched. That is
   deliberate: the standard governs what a skill applies to an issue, and
   claims no more of the namespace than that.
-- **`bug` must be imported.** Every repository GitHub creates ships with it,
-  and creating a label that already exists fails the apply rather than
-  adopting it. `import.sh` carries that import, so re-running the script
-  before the first apply is what makes the plan clean.
+- **Pre-existing labels must be imported.** Every repository GitHub creates
+  ships with `bug`, and creating an existing label fails rather than adopting
+  it. `import.sh` carries `bug`. If `story` was created before this managed
+  apply, import it with `tofu import 'github_issue_label.story'
+  'daily-driver:story'` before planning.
 
-The description strings are duplicated in the skill's table, and
+The description strings are duplicated in the skill's tables, and
 `scripts/check-labels.py` fails `make check` when they drift. That check is a
 leg of `check` rather than of `check-infra`: it needs only Python, so a laptop
 editing a skill runs it without OpenTofu installed.
+
+After the human applies this stack, that person runs one backfill for existing
+open stories. For each open issue, read its native direct parent and the
+parent's labels. Add only `story` when the parent is confirmed and carries
+`epic`; preserve every existing label. Do not infer a parent from issue text or
+add a marker after a failed graph read. This rollout step waits on the same
+human who applies the Tofu stack.
 
 ## Renaming the Repository
 
@@ -170,7 +180,7 @@ with provider 6.13.0 against this stack's committed state — is:
       ~ repository = "claude-daily-driver" -> "daily-driver" # forces replacement
 ```
 
-for all five labels, plus `github_repository_vulnerability_alerts`, which
+for all seven labels, plus `github_repository_vulnerability_alerts`, which
 holds nothing worth keeping. A destroyed label is stripped from every issue
 carrying it, and creating it again does not put it back.
 
@@ -188,14 +198,14 @@ So move the labels in state instead of letting the plan replace them:
 cd infra/github
 export GITHUB_TOKEN=$(gh auth token)
 
-tofu apply -target=github_repository.this          # the rename, alone
+tofu apply -target=github_repository.this               # the rename, alone
 
-for label in epic task bug proposal research; do   # re-adopt under the new name
-	tofu state rm "github_issue_label.$label"
-	tofu import "github_issue_label.$label" "daily-driver:$label"
+for label in epic story task bug proposal research human; do
+	tofu state rm "github_issue_label.${label//-/_}"
+	tofu import "github_issue_label.${label//-/_}" "daily-driver:$label"
 done
 
-tofu plan                                          # expect: alerts replaced, nothing else
+tofu plan                                               # expect: alerts replaced, nothing else
 tofu apply
 ```
 
@@ -239,8 +249,8 @@ make check-infra
 It runs `tofu fmt -check`, then `tofu init -backend=false`, then `tofu
 validate`. The `-backend=false` is what keeps it credential-free: providers
 are installed for validation, and neither state nor the GitHub API is touched.
-`.github/workflows/infra.yml` runs it on every pull request that touches this
-directory, so a syntax error or an attribute the provider does not have fails
+`.github/workflows/ci.yml` runs it, with the lock check, inside `Checks` on
+every pull request that changes `infra/**`, so a syntax error or an attribute the provider does not have fails
 in review.
 
 It is not part of `make check`, which is what a laptop runs while editing a
@@ -272,6 +282,6 @@ than the "No changes." a fully-imported stack would:
 - `github_workflow_repository_permissions.this` created
 - `github_branch_protection.master` created
 - `github_issue_label.bug` updated in place — the description replaced with the
-  standard's — and the other four created
+  standard's — and the six other labels created
 
 After applying, commit `terraform.tfstate` to Git.

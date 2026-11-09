@@ -2,7 +2,7 @@ task_id: undertake-04-neg-untracked-ordinary-work
 description: >-
   The same work as 01 and 02, with neither an issue nor an invocation. `Open
   the issue` makes the issue optional; it does not make the skill fire on every
-  request. This is the row that keeps eleven steps and a review panel off a
+  request. This is the row that keeps twelve steps and a review panel off a
   ten-line change.
 tags: [trigger-accuracy, undertake, no-fire]
 

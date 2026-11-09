@@ -40,7 +40,7 @@ from its Codex agent.
 Every rubric under `evals/tasks/` locates the reply at the last `[RESULT - …]`
 tag and scores 0.0 where there is none, deliberately and with no fallback, so an
 arm that shipped without this would score every judged row 0.0: most of the
-`references` suites, and both halves of the constitution suite had they been in
+`references` suites, and every row of the constitution suite had it been in
 this arm at all. `coder_eval_codex/transcript.py` renders the shape, and
 `scripts/check-codex-agent.py` asserts it is byte-identical to
 `coder_eval_omp.rpc.render_agent_output` for one block — the two packages render
@@ -143,12 +143,10 @@ tag, and never takes a row out of every arm.
 hole.** `coder_eval`'s Codex agent symlinks skills and installs nothing else —
 no `hooks/hooks.json`, so no `SessionStart` and no `PreToolUse` on the `Agent`
 tool. The constitution never reaches the session. `reaches-subagent` measures
-whether the text arrives and `reply-is-concise` measured whether it lands; both
-would score 0 for a reason that has nothing to do with the constitution, which
-is the exact failure `0013` built the Omp arm's `omp plugin link` to avoid.
-(`reply-is-concise` was retired on 2026-09-14 — see
-[`0017`](0017-constitution-compliance-is-unmeasured.md) — so only the first of
-the two rows still exists. The hole this paragraph describes is unchanged.)
+whether the text arrives and the compliance rows measure whether it lands;
+every one of them would score 0 for a reason that has nothing to do with the
+constitution, which is the exact failure `0013` built the Omp arm's `omp
+plugin link` to avoid.
 
 The Omp arm's fix does not transfer. #181 measured that a real Codex session
 does load `hooks/hooks.json` and does deliver the constitution as a developer
@@ -192,7 +190,7 @@ the rest, both while this work was in review, so the set is complete:
 | `review-cycle` | `08-subscribe-before-first-read` | `08-both-endpoints-once-codex` | the check runs and the commit statuses, one read each |
 | `session-title` | `07-get-session-before-set` | `07-one-call-or-no-surface-codex` | one `agent_tasks` call with `threadId` omitted, or the stop |
 | `undertake` | `08-wake-slot-is-refilled` | `08-no-wake-to-keep-codex` | no durable wake, so the cadence is handed on |
-| `undertake` | `09-session-fields-for-claim` | `09-claim-carries-the-branch-alone-codex` | branch from git, model and session recorded as absent |
+| `undertake` | `09-session-fields-for-claim` | `09-claim-records-session-na-codex` | branch from git, `session: n/a` recorded, model from the harness |
 
 None is its sibling's stem plus `-codex`, and that is the same reason `0013`
 gives for seven of the Omp counterparts: the sibling's stem states Claude's

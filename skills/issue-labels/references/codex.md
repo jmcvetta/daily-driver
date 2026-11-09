@@ -26,8 +26,18 @@ no read-first is needed here.
 It is also the half that breaks the exactly-one invariant. Swapping one
 standard label for another takes both flags — `--add-label task
 --remove-label proposal` — and an `--add-label` on its own leaves the issue
-carrying two of the five, which `SKILL.md` makes a stop. Write the swap as
+carrying two of the six, which `SKILL.md` makes a stop. Write the swap as
 one call with both flags rather than as two calls with one each.
+
+Reconciling the story marker
+============================
+
+`issue-deps` supplies a verified direct-parent read. If its parent has the
+`epic` label, use `gh issue edit <number> --add-label story`. If no parent is
+confirmed or its labels omit `epic`, use `gh issue edit <number> --remove-label
+story`. A failed graph read preserves the current labels and reports the
+limitation. These additive writes preserve the issue kind,
+stock labels, bot labels, and unrelated labels.
 
 Finding the issues that carry a label is `gh issue list --label task`, or
 `gh search issues` with `label:task` in the query.

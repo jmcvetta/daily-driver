@@ -1,0 +1,29 @@
+experiment_id: case03-unavailable-route-acceptance
+
+description: >-
+  One with-plugin behavioral replicate for case 03's unavailable reasoning route.
+
+defaults:
+  repeats: 1
+
+  run_limits:
+    max_turns: 30
+    turn_timeout: 600
+    task_timeout: 1200
+
+  post_run:
+    - command: 'if [ -r omp-protocol-observations.json ]; then cat omp-protocol-observations.json; else printf "%s\n" "{\"omp_argument_keys_seen\":[],\"omp_usage_keys_seen\":[]}"; fi'
+
+  agent:
+    type: omp
+    model: vercel-ai-gateway/zai/glm-5.3
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+
+variants:
+  - variant_id: with-plugin
+    description: An Omp session with the daily-driver plugin installed.
+    agent:
+      plugins:
+        - type: local
+          path: ".."

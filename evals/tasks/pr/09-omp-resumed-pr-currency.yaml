@@ -1,0 +1,45 @@
+# This catches a resumed PR workflow that trusts green CI from the old head.
+# The fixture starts with an open draft, reports the old head green, and keeps a
+# later master commit outside the branch. The verifier requires the actual base
+# merge plus CI and workflow reads on the new head. The prompt gives no command.
+
+task_id: pr-09-omp-resumed-pr-currency
+description: >-
+  Resuming work on an existing draft pull request settles base currency before
+  using CI evidence from its resulting head.
+tags: [pr, behaviour, fire, omp-only]
+
+initial_prompt: >-
+  Resume work on the existing draft pull request #25. The implementation is
+  finished. Update the PR and tell me what still needs attention.
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh currency-stale
+    timeout: 60
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write]
+  disallowed_tools: [Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 30
+  turn_timeout: 600
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    description: "`pr` fires while the resumed pull request is updated"
+    expected_skill: pr
+    skill_name: pr
+  - type: run_command
+    description: The resumed pull request contains its base update and CI is assessed on the new head
+    command: python3 .fixture/verify.py currency
+    timeout: 30
+    weight: 4

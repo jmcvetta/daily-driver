@@ -41,12 +41,12 @@ targets `cd` into — which is right for the Claude agent, because `coder_eval`
 resolves plugin paths before that agent is built, and wrong for the Codex one,
 which never goes through that resolution.
 
-Measured against this repository's real layout: a relative root makes every link
-body relative too, so `.agents/skills/pr -> ../skills/pr` resolves back to the
-link's own directory and points at itself. Fourteen entries are created and not
-one of them has a readable `SKILL.md`; the treated arm runs with no skills and
-every trigger row scores 0, at full price. `_setup_skills`'s own "0 skills
-linked" warning counts `iterdir()` entries, so it stays silent on it.
+Measured against this repository's real layout: a relative root makes every
+link body relative too, so `.agents/skills/pr -> ../skills/pr` resolves back
+to the link's own directory and points at itself. One entry per skill is
+created and not one has a readable `SKILL.md`; the treated arm runs with no
+skills and every trigger row scores 0, at full price. `_setup_skills`'s own
+"0 skills linked" warning counts `iterdir()` entries, so it stays silent.
 `plugins.resolve_local_plugins` makes the root absolute in `start()` before
 delegating, and `start()` then raises — rather than warning — when plugins were
 declared and no readable skill arrived.
@@ -62,8 +62,8 @@ retry count is zero.
 **It is registered as a new kind, not as a replacement for `codex`.** The
 registry rejects two implementations claiming one kind, so shadowing the
 built-in would change what every other `coder_eval` user's `codex` means. The
-distinct kind also makes the routing readable: `scripts/check-eval-arms.py` maps
-a pinned `agent.type` to the arm tag it must carry.
+distinct kind also makes the routing readable: each experiment's `agent.type`
+must match its arm tag.
 
 ## The normalisation that is not here
 
@@ -97,7 +97,7 @@ never arrived must not read alike. One field lands in each run's
 Codex app-server exposes no query for the skills it discovered, so unlike the
 Omp arm's `omp_skills_loaded` this says what was *offered* rather than what was
 taken up. It requires a readable `SKILL.md` rather than counting directory
-entries, which is what makes it an answer: fourteen broken symlinks are fourteen
+entries, which is what makes it an answer: broken symlinks still count as
 entries.
 
 **Only one field, and that is a constraint rather than a choice.** `coder_eval`
@@ -116,12 +116,8 @@ transcript itself and this package is a no-op worth deleting.
 ## What is tested, and what is not
 
 `transcript.py` and `plugins.py` import nothing — not `coder_eval`, not the
-Codex SDK — and `scripts/check-codex-agent.py` drives both in `make check`. That
-leg asserts the rendered shape is byte-identical to
-`coder_eval_omp.rpc.render_agent_output` for one block, which is what keeps one
-rubric readable on both harnesses without either package depending on the other;
-and it builds the self-referential symlink a relative root produces, so the
-assertion is the failure itself rather than a description of it.
+Codex SDK — so their transcript normalization and plugin-root resolution are
+independent of those runtime dependencies.
 
 `agent.py` cannot be reached without a `coder-eval` install and the Codex SDK,
 and CI here has neither. What it holds is the subclass: two overrides, a

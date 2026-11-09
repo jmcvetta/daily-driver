@@ -1,0 +1,581 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-141_z8i86h8k\nconfigfile: pytest.ini\nplugins: base-url-2.1.0, playwright-0.8.0, cov-7.1.0\ncollected 39 items\n\n../tests/test_infra_github.py .......................................    [100%]\n\n============================== 39 passed in 0.59s ==============================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-141_z8i86h8k/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nUsing CPython 3.13.15\nCreating virtual environment at: .venv\nwarning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.\n         If the cache and target directories are on different filesystems, hardlinking may not be supported.\n         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.\nInstalled 36 packages in 1.07s\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-141",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts\nExit code: 0 (expected: 0)\nStdout:\nLockfile is up to date, resolution step is skipped\nDone in 1.6s using pnpm v10.33.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-career-370_gm8uv6pf/core\n\n\n Test Files  1 passed (1)\n      Tests  23 passed (23)\n   Start at  20:32:14\n   Duration  558ms (transform 141ms, setup 0ms, import 223ms, tests 87ms, environment 0ms)\n\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts\nExit code: 0 (expected: 0)\nStdout:\nLockfile is up to date, resolution step is skipped\nDone in 2.4s using pnpm v10.33.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-career-370_fvuhy9dw/core\n\n\n Test Files  1 passed (1)\n      Tests  23 passed (23)\n   Start at  20:33:17\n   Duration  1.02s (transform 259ms, setup 0ms, import 370ms, tests 107ms, environment 0ms)\n\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && pnpm install --frozen-lockfile --filter career-scan-core... && pnpm --filter career-scan-core exec vitest run src/intros/store.test.ts\nExit code: 0 (expected: 0)\nStdout:\nLockfile is up to date, resolution step is skipped\nDone in 815ms using pnpm v10.33.0\n\n RUN  v4.1.11 /tmp/coder_eval_model-classes-career-370_2s6k0g5m/core\n\n\n Test Files  1 passed (1)\n      Tests  23 passed (23)\n   Start at  20:32:12\n   Duration  1.03s (transform 337ms, setup 0ms, import 525ms, tests 223ms, environment 0ms)\n\n\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "model-classes-career-370",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: GH_CONFIG_DIR=\"$(mktemp -d)\" GH_TOKEN= GITHUB_TOKEN= bash -c 'bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py'\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-462_kah1f4t6\nconfigfile: pytest.ini\nplugins: cov-7.1.0, base-url-2.1.0, playwright-0.8.0\ncollected 81 items\n\n../tests/test_infra_github.py .........................s................ [ 51%]\n.......................................                                  [100%]\n\n============================= slowest 30 durations =============================\n0.23s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.23s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.21s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.20s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.19s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.18s call     tests/test_infra_github.py::test_declared_labels_match_github\n0.18s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.16s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.15s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.12s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.12s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n0.12s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.12s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.12s call     tests/test_infra_github.py::test_the_aggregate_is_not_guarded_off_release_prs\n0.12s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.11s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n0.11s call     tests/test_infra_github.py::test_ci_runs_are_cancelled_when_superseded\n0.11s call     tests/test_infra_github.py::test_the_kokoro_job_selects_affected_tests\n0.11s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.10s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.10s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.10s call     tests/test_infra_github.py::test_every_leg_is_gated_on_the_change_filter\n0.10s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.10s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.10s call     tests/test_infra_github.py::test_ci_never_runs_the_v1_suite\n0.09s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.09s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.09s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.09s call     tests/test_infra_github.py::test_every_change_filter_feeds_a_job\n0.09s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-core]\n======================== 80 passed, 1 skipped in 4.99s =========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-462_kah1f4t6/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: GH_CONFIG_DIR=\"$(mktemp -d)\" GH_TOKEN= GITHUB_TOKEN= bash -c 'bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py'\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-462_m4dzukfe\nconfigfile: pytest.ini\nplugins: cov-7.1.0, base-url-2.1.0, playwright-0.8.0\ncollected 81 items\n\n../tests/test_infra_github.py .........................s................ [ 51%]\n.......................................                                  [100%]\n\n============================= slowest 30 durations =============================\n1.19s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n1.12s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.74s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.62s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.53s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.51s call     tests/test_infra_github.py::test_the_kokoro_job_selects_affected_tests\n0.43s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n0.42s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-cflow]\n0.41s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.38s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-core]\n0.36s call     tests/test_infra_github.py::test_declared_labels_match_github\n0.34s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.33s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.33s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.30s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.30s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.27s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-polite-pace]\n0.26s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.25s call     tests/test_infra_github.py::test_ci_runs_every_leg_of_the_current_suite\n0.25s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n0.23s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.22s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n0.21s call     tests/test_infra_github.py::test_every_change_filter_feeds_a_job\n0.19s call     tests/test_infra_github.py::test_the_filter_reads_the_output_the_rewind_step_writes\n0.18s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.18s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.17s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.16s call     tests/test_infra_github.py::test_every_leg_is_gated_on_the_change_filter\n0.13s call     tests/test_infra_github.py::test_the_ci_definition_is_an_input_to_one_leg_only\n0.12s call     tests/test_infra_github.py::test_the_aggregate_is_not_guarded_off_release_prs\n======================== 80 passed, 1 skipped in 13.55s ========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-462_m4dzukfe/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: GH_CONFIG_DIR=\"$(mktemp -d)\" GH_TOKEN= GITHUB_TOKEN= bash -c 'bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py'\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-462_c658qva4\nconfigfile: pytest.ini\nplugins: playwright-0.8.0, cov-7.1.0, base-url-2.1.0\ncollected 81 items\n\n../tests/test_infra_github.py .........................s................ [ 51%]\n.......................................                                  [100%]\n\n============================= slowest 30 durations =============================\n5.70s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n5.39s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n4.48s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n3.81s call     tests/test_infra_github.py::test_declared_labels_match_github\n2.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-viewer]\n1.88s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-polite-pace]\n1.83s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n1.54s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n1.07s call     tests/test_infra_github.py::test_ci_never_runs_the_v1_suite\n1.05s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.98s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.90s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-agent-cli]\n0.87s call     tests/test_infra_github.py::test_every_change_filter_feeds_a_job\n0.72s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-core]\n0.69s call     tests/test_infra_github.py::test_ci_exports_a_token_for_the_label_check\n0.65s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-agent-cli]\n0.52s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.49s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.43s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.42s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-polite-pace]\n0.40s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-cflow]\n0.40s call     tests/test_infra_github.py::test_the_kokoro_pytest_step_reads_the_test_selection\n0.36s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-core]\n0.31s call     tests/test_infra_github.py::test_the_kokoro_job_selects_affected_tests\n0.25s call     tests/test_infra_github.py::test_every_leg_is_gated_on_the_change_filter\n0.24s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.23s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.23s call     tests/test_infra_github.py::test_ci_runs_every_leaf_of_the_kokoro_leg\n0.21s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.19s call     tests/test_infra_github.py::test_the_kokoro_umbrellas_carry_no_commands\n======================== 80 passed, 1 skipped in 41.88s ========================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-462_c658qva4/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\nwarning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.\n         If the cache and target directories are on different filesystems, hardlinking may not be supported.\n         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.\nInstalled 36 packages in 2.49s\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "model-classes-career-469",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 174.78265857696533,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "classes-terra-5-6",
+      "source": "jmcvetta/career#141",
+      "task_id": "model-classes-career-141",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 649728,
+        "output_tokens": 10158,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 57822
+      },
+      "tokens": 717708,
+      "variant_id": "default"
+    },
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 250.23703789710999,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "classes-terra-5-6",
+      "source": "jmcvetta/career#370",
+      "task_id": "model-classes-career-370",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 366592,
+        "output_tokens": 4058,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 47003
+      },
+      "tokens": 417653,
+      "variant_id": "default"
+    },
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 316.536758184433,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "classes-terra-5-6",
+      "source": "jmcvetta/career#370",
+      "task_id": "model-classes-career-370",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 492032,
+        "output_tokens": 5744,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 53677
+      },
+      "tokens": 551453,
+      "variant_id": "default"
+    },
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 248.01721596717834,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "classes-terra-5-6",
+      "source": "jmcvetta/career#370",
+      "task_id": "model-classes-career-370",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 247296,
+        "output_tokens": 4032,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 37518
+      },
+      "tokens": 288846,
+      "variant_id": "default"
+    },
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 335.61932039260864,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "classes-terra-5-6",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 165888,
+        "output_tokens": 2102,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 35240
+      },
+      "tokens": 203230,
+      "variant_id": "default"
+    },
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 461.91771173477173,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "classes-terra-5-6",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 240640,
+        "output_tokens": 3025,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 34562
+      },
+      "tokens": 278227,
+      "variant_id": "default"
+    },
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 514.133248090744,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "classes-terra-5-6",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 197120,
+        "output_tokens": 4348,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 33906
+      },
+      "tokens": 235374,
+      "variant_id": "default"
+    },
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 524.8890104293823,
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "classes-terra-5-6",
+      "source": "jmcvetta/career#469",
+      "task_id": "model-classes-career-469",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.11.3",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-09T20:36:51.969861",
+  "experiment_id": "classes-terra-5-6",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "6a2a11beb63933c15f084e39a16b4001eda46bb6",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-17T10:50:15.505276+00:00",
+  "recovery": {
+    "finalized_attempts": 8,
+    "invalid_disk_quota_grades": [],
+    "method": "coder-eval aggregate over unchanged task.json files; class tags restored from each original resolved task config; experiment scores grouped by observed variant and task paths; unfinalized slots omitted, not scored",
+    "partial": true,
+    "planned_attempts": 18,
+    "provenance_limit": "Recorder host, plugin revision and recorded_version describe recovery, not the interrupted subject execution. Original client version remains unknown.",
+    "source_run_id": "2026-10-09_20-28-05",
+    "source_task_sha256": {
+      "default/model-classes-career-141/00/task.json": "d5efcd9d593e3c2c6a5f924fbffdf3e71c353c9676f5dfe15defc93aca7bc7bf",
+      "default/model-classes-career-370/00/task.json": "5fe06d61ce178b0e800921f5a1a7f4b5d33f9130e7a1ac7cf04b9d99528f964d",
+      "default/model-classes-career-370/01/task.json": "1ae1839a558cb31e5b6cbd6c751c660a877bf0181fdd584dbb96489750a5f584",
+      "default/model-classes-career-370/02/task.json": "b4c25d6abff45012a5449db5b9eae05339bec2812c2063db5e8fa9312c2b9991",
+      "default/model-classes-career-462/00/task.json": "b86171dadf65c8b81644d26161e930d5762096bb1c724f72d977bf2758beed6c",
+      "default/model-classes-career-462/01/task.json": "8eadb08970010642f20e06ca6d9a17afdc6cc83f51f0f8a2a206661da5d02a5a",
+      "default/model-classes-career-462/02/task.json": "e13ef48bdc8b86e73f56b38e7c2ea986053252f165fe3c039138cae313f407ae",
+      "default/model-classes-career-469/01/task.json": "572778bd441b4a2025254a8e8c2d1142528cbd9738eeac342b8e6d9656996043"
+    },
+    "unfinalized_attempts": 10
+  },
+  "run_id": "2026-10-09_20-28-05",
+  "schema_version": 4,
+  "started_at": "2026-10-09T20:28:05.134543",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-5.6-terra",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "model-classes-career-141": [
+          1.0
+        ],
+        "model-classes-career-370": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "model-classes-career-462": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "model-classes-career-469": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-141",
+        "model-classes-career-370",
+        "model-classes-career-462",
+        "model-classes-career-469"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}

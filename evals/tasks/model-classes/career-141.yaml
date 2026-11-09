@@ -1,0 +1,48 @@
+task_id: model-classes-career-141
+description: >-
+  jmcvetta/career#141: ci: release the two npm packages with release-type node
+tags: [model-classes, class:implementation]
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/model-classes/shared
+      mount_point: .fixture
+
+# The answer key. coder_eval stages it outside the sandbox and names it in
+# REFERENCE_DIR for the criteria alone, so the agent cannot find it in its tree.
+reference:
+  directory: ../../fixtures/model-classes/cases/career-141
+
+pre_run:
+  - command: bash .fixture/clone-base.sh jmcvetta/career 1920731d0398f5cced3cb15c458c8d8eef5ba0f5
+    timeout: 120
+
+agent:
+  allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+run_limits:
+  max_turns: 30
+  task_timeout: 780
+  turn_timeout: 660
+
+initial_prompt: "This is jmcvetta/career, checked out at a past commit. Implement the change the issue below describes. Work from this checkout and the issue text alone: do not fetch from jmcvetta/career, and do not look it up on GitHub.\n\n# release-type: node for the TypeScript components\n\nAll four components are `release-type: simple`. That is a v1 inheritance\nrather than a v2 decision, and it leaves the npm packages' own manifests\nstale.\n\n## Where it came from\n\nv1's config had one component at path `.`:\n\n```json\n\"packages\": { \".\": { \"release-type\": \"simple\", \"component\": \"career-scan-skill-suite\", ... } }\n```\n\nThat was the whole repo, and the whole repo was a suite of Claude skills —\nmarkdown, no `package.json`. `simple` was correct. The v2 commit (`4e912ed`)\nsplit one component into four and carried `simple` onto all of them. Nothing in\nthe repo records a choice, and `git log` on `release-please-config.json` shows\nnone of the three later commits revisiting it.\n\n## What it costs\n\n`simple` never touches `package.json`, so:\n\n| Component | package.json | manifest |\n|---|---|---|\n| `career-scan` | `0.1.0` | `2.6.0` |\n| `viewer` | `0.1.0` | `2.2.0` |\n\nTwo published-looking version numbers that have been wrong for every release.\nHarmless while nothing reads them; not harmless once packages depend on each\nother by version.\n\n## Shape\n\n`release-type: node` for the components that have a `package.json`, plus the\n`node-workspace` plugin for propagation — releasing a package releases every\nworkspace that depends on it, which is what makes the decomposition affordable\nrather than a hand-coupling exercise.\n\n| Component | Type |\n|---|---|\n| `career-scan` | node |\n| `viewer` | node |\n| `resume` | **simple** — typst documents, no manifest to update |\n\n`resume` is the only one that stays. `.claude/workflows` is `simple` today for\nthe same reason and stops being a component under the decomposition issue.\n\n## The seeding trap applies, in the opposite direction\n\n`.release-please-manifest.json` is already correct; it is `package.json` that\nis stale. So set each `package.json` version to match its manifest entry\n*before* switching type, and let release-please take it from there.\n\nDo not seed toward a target. That is the mistake from 2026-08-29 that opened\n`3.0.0` release PRs for four components and left `resume` permanently at\n`resume@v3.0.0`: the manifest supplies the **base**, the commit scan supplies\nthe bump, and seeding the wanted number double-counts the history.\n\n## Definition of done\n\n- [ ] `package.json` versions set to match the manifest, in their own commit,\n      before the type switch\n- [ ] `release-type: node` for `career-scan` and `viewer`; `resume` unchanged\n- [ ] `node-workspace` plugin configured\n- [ ] `make check-release-config` passes, and every declared path confirmed to\n      exist — a path that does not is not a config error, it is a component\n      that silently never releases\n- [ ] A draft PR's `projected-releases` comment names the expected tags at the\n      expected versions. An unexpected number means suspect the seed before the\n      config.\n- [ ] `CLAUDE.md`'s Releases section records why `resume` alone is `simple`\n\nDepends on #119 — `node-workspace` operates on a workspace, and the pnpm\nchoice there is driven by what this issue turns on.\n\nAdjacent: #59 wants shorter tag names. Both rewrite the component table, so\nwhichever lands second should absorb the other.\n"
+
+success_criteria:
+  - type: run_command
+    description: No test file present at the base SHA was deleted
+    command: bash .fixture/check-no-deleted.sh
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: No skip or xfail marker was added to a test file
+    command: bash .fixture/check-no-skip.sh
+    timeout: 30
+    weight: 1
+
+  - type: run_command
+    description: The pull request's own tests pass after applying tests.patch
+    command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py
+    timeout: 720
+    weight: 3

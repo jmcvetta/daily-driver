@@ -59,18 +59,71 @@ than a level the surface remembers between runs, and reaching for it would be
 this round choosing a depth by hand on every diff, which `Name the level`
 refuses above `high` for the reason it gives there.
 
-**Its findings do not land on the pull request.** It reports into the terminal,
-and nothing is posted. So the round carries them into `Fix, answer, resolve,
-push` itself, out of the command's output — the degradation `SKILL.md`
-describes under `A reviewer, not a bare subagent`, and the same one Omp takes.
-*Resolve* then reads as *answered*, in that stage and in the caller's gate
-alike.
+**Its findings return locally and must be published as a GitHub review.** They
+are not a transcript-only degradation. Give the reviewer the complete history,
+reviewed SHA, and current head; the publication route below turns its findings
+into the submitted threads that `Fix, answer, resolve, push` answers.
 
 **It is a second agent run, and it is billed as one.** `codex exec review`
 starts a fresh session with its own model. That is what makes it a named
-surface rather than the bare subagent `SKILL.md` refuses, and it is also why
-the round runs it once per diff rather than once per push.
+surface carrying its own rubric and publication route, rather than an ad-hoc
+dispatch with neither, and it is also why the round runs it once per diff
+rather than once per push.
 
+
+
+Fix-delta verification
+======================
+
+**Unavailable on `codex exec review`, not on the harness.** It accepts a base
+branch or one commit, not a reviewed-SHA/current-SHA range plus findings and
+dispositions; `--commit <SHA>` would verify one commit, not a batch, and
+neither substitutes for the required delta pass. The route is the delegation
+namespace's `multi_agent_v1` dispatch instead — the same one
+[`skills/undertake/references/codex.md`](../../undertake/references/codex.md)
+uses for `Implement` — carrying the bounded brief `SKILL.md`'s `Verify the fix
+delta` requires: the pull request, base branch, full-review SHA, current SHA,
+original findings, dispositions, and pass number. Require it to compare the
+pull request's three-dot content at the reviewed SHA with its three-dot
+content at the current SHA, exclude changes attributable only to the base
+branch, and inspect affected callers. It reports only whether each
+implemented finding is solved and any concrete regressions in that delta. It
+must not perform a full-PR audit, solicit style work, or supply the verdict —
+the session records the result from the delegate's report, never in place of
+it.
+
+Publish any findings it raises through this file's `Review history,
+publication, and threads` route below, then record the pass with
+`gh pr comment <number> --body-file <path>`:
+
+```text
+Review verification
+scope reviewed: <sha>
+pass: <n>
+verified: <sha>
+findings: <finding ids and dispositions>
+outcome: <clear|defects|incomplete|unavailable>
+defects: <none|concise list>
+wall: <open|reached>
+usage: <exact value if exposed|unavailable>
+```
+
+`outcome: unavailable` stays reachable for a dispatch that genuinely fails —
+the delegate returns nothing usable, or does not return at all — recorded as
+such rather than guessed at; a working dispatch is not unavailable by design.
+Never estimate usage when the invocation does not expose it.
+
+Review-cycle completion notice
+==============================
+
+After a non-standalone round meets `SKILL.md`'s completion conditions and
+`Does it go again?` starts no new full review, read the current head and
+existing conversation comments with `gh pr view <number> --json headRefOid,comments`. If no existing comment
+starts with `## Review cycle complete! 🎉` and names that head, write the
+separate notice with `gh pr comment <number> --body-file <path>`. The body
+starts with that heading, gives a short factual completion status, and names
+the completed SHA. Re-read the head immediately before writing; a changed head
+does not inherit the notice. A failed write is reported, never claimed.
 
 The wait
 ========
@@ -124,34 +177,60 @@ the second harness that is true of, and it is true here more sharply than on
 Omp — Omp at least blocks on the Actions runs, so its wait completes inside the
 turn. This one does not wait at all.
 
-`undertake`'s `Keep it current` cadence stops at `Ready for review` here too,
-and for the same reason.
+`undertake` has no cadence or wake slot on this harness. Its owner-resume
+catch-up obligation starts at `Open the draft` and continues before and after
+`Ready for review` until the pull request merges, closes, or the user stops it.
 
 
-The review threads
-==================
+Review history, publication, and threads
+========================================
 
-**All three operations go through the GitHub CLI and API**, exactly as they do
-on Omp. Codex has no GitHub tool of its own, and the shell is the client.
+Before reviewing, read every submitted review with `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews`. Read the complete thread graph with a
+paginated GraphQL `PullRequest.reviewThreads` query, including `id`,
+`isResolved`, `isOutdated`, review/comment IDs, replies, SHAs, paths, lines,
+and bodies. A REST comments page alone is not complete history and does not
+contain the `PRRT_…` ID needed to resolve a thread.
+
+After the review command returns, re-read the head and its diff anchors.
+Compare the returned findings with the review history and recorded review
+identifier before posting; a resumed run must not duplicate a review already
+submitted for that SHA. Put line-specific findings in `review.json` and create
+one submitted review:
+
+```json
+{
+  "event": "COMMENT",
+  "commit_id": "<reviewed-sha>",
+  "body": "<clean or cross-cutting review summary>",
+  "comments": [
+    {
+      "path": "<path>",
+      "side": "RIGHT",
+      "line": 42,
+      "body": "<finding, with a suggestion block when useful>"
+    }
+  ]
+}
+```
+
+Run `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input
+review.json`. Use `start_side` and `start_line` for a valid range. A clean or
+unanchorable review has no `comments` entry and uses the submitted summary.
+Never invent an anchor. On changed head, invalid anchor, absent `gh`, or GitHub
+failure, retain the findings and report publication as incomplete.
 
 | Operation | Call |
 | --------- | ---- |
-| Read the threads | `gh api /repos/{owner}/{repo}/pulls/{n}/comments` |
+| Read reviews | `gh api --paginate /repos/{owner}/{repo}/pulls/{n}/reviews` |
+| Read threads | paginated `gh api graphql` query of `PullRequest.reviewThreads` |
+| Publish review | `gh api --method POST /repos/{owner}/{repo}/pulls/{n}/reviews --input review.json` |
 | Reply on a thread | `gh api -X POST /repos/{owner}/{repo}/pulls/{n}/comments/{comment_id}/replies` |
 | Resolve a thread | `gh api graphql` with the `resolveReviewThread` mutation |
 
 The identifier trap `SKILL.md` states applies to the last two: the mutation
-takes the thread's `PRRT_…` node ID, and the reply takes the comment's numeric
-id — the `#discussion_r…` suffix of its `html_url`.
-
-**These calls are still worth having, even though this harness's own reviewer
-posts nothing.** A human reviewer's threads, a bot's, and an earlier round's
-are all on the pull request whatever reviewed the branch, and `SKILL.md` says a
-round entered on findings that already exist starts at `Fix, answer, resolve,
-push`. That entry is the common one here.
-
-Where `gh` is absent, `issue-deps`' client probe is the same question asked one
-skill over, and its script is the token-only route.
+takes the thread's `PRRT_…` node ID, while reply takes the comment's numeric
+ID. The review REST endpoint returns a review ID; record it with the reviewed
+SHA and dispositions so later rounds have a stable duplicate check.
 
 
 Provenance

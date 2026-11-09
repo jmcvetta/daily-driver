@@ -9,6 +9,15 @@ did not anticipate.
 [#158](https://github.com/jmcvetta/daily-driver/issues/158#issuecomment-5634289151)'s
 first finding.
 
+**Current operational guidance:** this note preserves the earlier transport
+guard and its historical rationale. Its key and Bedrock remedies are
+superseded by
+[`0014`](0014-the-judge-runs-on-the-subscription.md), which decides that
+Claude judges use `agent_judge` through the subscription-backed Claude Code
+SDK route. Use the execution-session procedure in
+[`evals/README.md`](../../evals/README.md#choose-the-execution-session-first)
+before running or troubleshooting an evaluation. Do not seek a metered key.
+
 `coder_eval`'s `llm_judge` criterion needs a transport to a judge model, and
 that transport is separate from whatever authenticates the agent under test.
 On the default DIRECT backend,

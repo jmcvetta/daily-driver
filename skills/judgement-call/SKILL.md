@@ -2,17 +2,17 @@
 name: judgement-call
 description: >-
   This skill should be used at the moment a choice between ways of doing the
-  same task is about to be put to the user — on the harness's own use of the
-  question widget (Claude's `AskUserQuestion`, Omp's `ask`, Codex's
-  `request_user_input`), on a reply about to offer alternatives where one is
+  same task is about to be put to the user — on the harness's own use of its
+  question widget before asking the user to choose between approaches, on a
+  reply about to offer alternatives where one is
   quicker, less complete, or a departure from the standard way ("fix it
   properly, or leave a TODO?", "which approach do you prefer?", "should I …,
   or …?"), and when the user hands the same choice back ("properly, or a
   TODO?", "you decide"). It also fires on "/judgement-call", "just decide",
   "you pick", "use your judgement" (or "judgment") and "stop asking me".
   Supplies the test that separates a question only the user can answer from
-  one Claude can answer himself, and the rule that answers the second kind. It
-  waives no confirmation another rule requires — the constitution's discussion
+  one the agent can answer directly, and the rule that answers the second kind.
+  It waives no confirmation another rule requires — the constitution's discussion
   of an unavoidable workaround among them — and relaxes nothing governing an
   irreversible, destructive or outward-facing action.
 ---
@@ -100,6 +100,18 @@ genuinely does not settle it:
   unavoidable workaround before writing it, and `review` — where it is live
   rather than in `attic/skills/` — offers its walkthrough before applying
   anything. This skill overrides none of them.
+
+Before asking for a confirmation, check whether its requirement is already
+satisfied. Follow the constitution's authorization record and `undertake`'s
+operational escalation contract: name the changed scope, condition or
+fresh-confirmation rule that requires another decision. A failed attempt,
+compaction, handoff or new session is not itself a changed requirement.
+Existing approval never waives an explicit fresh-confirmation rule or a
+higher-priority restriction.
+Check the original assignment and the source of any checkpoint against the
+exact operation. A task author's checkpoint does not create user authority.
+Do not disregard an explicit restriction in an assigned task: explain its
+source and ask only for the requirement that remains unsatisfied.
 
 **A question that survives is asked in prose, not in the widget.**
 The widget is closed on every harness, each by its own deny adapter — the

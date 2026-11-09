@@ -20,9 +20,9 @@
 # has no subscription and no durable wake, so there is no ordering to grade —
 # an ordering rubric would fail a Codex run for answering correctly.
 #
-# Why not the Omp fork either: Omp's grades a blocking `github.run_watch`
-# followed by the statuses, and the blocking call is the half Codex does not
-# have. What survives on both is that the commit statuses are the second half of
+# Why not the Omp fork either: Omp's grades a supervised `gh pr checks --watch`
+# followed by both endpoint reads, while Codex cannot supervise that process.
+# What survives on both is that the commit statuses are the second half of
 # *reported*, and that is what this row keeps.
 #
 # Why this row and `07-there-is-no-wait-codex` are not the same row: 07 grades
@@ -70,6 +70,7 @@ success_criteria:
   # a plausible-sounding reply. Left unarmed for the reason `undertake/08`
   # gives: there is no fail-stopping criterion here for a bare arm to defer.
   - type: skill_triggered
+    weight: 0
     description: "`review-cycle` fires on a pull request whose CI is being waited on"
     expected_skill: review-cycle
     skill_name: review-cycle
@@ -95,6 +96,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are grading one reply against a single rule.

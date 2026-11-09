@@ -1,10 +1,11 @@
 # The issue labels this toolkit recognises.
 #
-# Five labels answer one question -- what kind of issue is this, and is it
-# ready for an agent to work unattended -- and every issue carries exactly one
-# of them. `skills/issue-labels/SKILL.md` is the standard; this file is where
-# it is declared, so the names, colours and descriptions come from a file
-# under review rather than from whoever clicked last.
+# Six issue-kind labels answer one question -- what kind of issue is this, and
+# is it ready for an agent to work unattended -- and every issue carries
+# exactly one. `story` is a supplemental marker for a confirmed direct child
+# of an epic. It does not answer the readiness question.
+# `skills/issue-labels/SKILL.md` is the standard; this file is where it is
+# declared, so names, colours and descriptions come from a file under review.
 #
 # The `description` strings are duplicated in that skill's table on purpose:
 # the skill is what a session reads and GitHub is what a person hovers, and
@@ -27,6 +28,14 @@ resource "github_issue_label" "epic" {
   name        = "epic"
   color       = "5319e7"
   description = "Coordinates a sequence of other issues"
+}
+
+# A lighter purple than its epic parent distinguishes a story in issue lists.
+resource "github_issue_label" "story" {
+  repository  = github_repository.this.name
+  name        = "story"
+  color       = "d4c5f9"
+  description = "A focused piece of work within an epic"
 }
 
 resource "github_issue_label" "task" {
@@ -57,4 +66,15 @@ resource "github_issue_label" "research" {
   name        = "research"
   color       = "fbca04"
   description = "A question to settle"
+}
+
+# Not a status. `human` says the work itself is a person's -- credentials no
+# agent holds, a decision only the user can make, an action outside the
+# repository -- and an agent that stops on one stops because of what the work
+# is, not because of where it got to.
+resource "github_issue_label" "human" {
+  repository  = github_repository.this.name
+  name        = "human"
+  color       = "006b75"
+  description = "Work only a person can do"
 }

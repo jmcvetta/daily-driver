@@ -1,0 +1,140 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply routes by active Omp runtime, not the model name",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply routes by active Omp runtime, not the model name",
+            "duration_seconds": 10.81,
+            "findings": [
+              "Identifies Oh My Pi (`Omp`) as the active harness without hedging.",
+              "Provides `skill://provenance/references/omp.md` and `skill://pr/references/omp.md`, not the required `skills/provenance/references/omp.md` and `skills/pr/references/omp.md`.",
+              "Explains that a Codex model name does not imply a Codex harness and does not select Codex routes."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "ed8ecd384cf95a0c8c9c4980c2fb6c7901a8ad37268be639ce0259f354811265",
+            "rationale": "The reply unambiguously identifies Omp and distinguishes model/provider identity from the harness, but it does not name the two required `skills/...` route paths. It also describes Codex model names generically rather than explicitly identifying `openai-codex/gpt-6`.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 844,
+              "output": 233
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "74b8f4aac67f14e02d46a6996e6f28e3895ac3b261c72c82b648cd9cf4c5828c"
+      },
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-active-harness-is-not-model-omp",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 17.902701377868652,
+      "model_requested": "google-antigravity/gemini-3.8-flash:high",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-gemini-3-8-flash",
+      "task_id": "constitution-active-harness-is-not-model-omp",
+      "tokens": 24918,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T19:09:01.967080",
+  "experiment_id": "omp-gemini-3-8-flash",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "criterion_errors": 0,
+    "freeze_sha": "74b8f4aac67f14e02d46a6996e6f28e3895ac3b261c72c82b648cd9cf4c5828c",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "medium",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 844,
+      "output": 233
+    }
+  },
+  "plugin_revision": {
+    "commit": "73b2e7b7019a0fbf29bea2d40c53025480ac1370",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-08T12:09:13.809823+00:00",
+  "run_id": "2026-10-08_19-08-44",
+  "schema_version": 3,
+  "started_at": "2026-10-08T19:08:44.060594",
+  "variants": [
+    {
+      "model_requested": "google-antigravity/gemini-3.8-flash:high",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-active-harness-is-not-model-omp": [
+          0.5
+        ]
+      },
+      "task_ids": [
+        "constitution-active-harness-is-not-model-omp"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

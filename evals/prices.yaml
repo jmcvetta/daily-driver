@@ -1,0 +1,68 @@
+# Per-token prices, in USD, for harnesses that report token counts but no
+# price -- Omp and Codex. `scripts/evals-record.py` computes a replicate's
+# price from these rates and the token counts its run row carries. Claude
+# Code reports its own price, so its models need no entry here.
+#
+# Keyed by requested model id, without trailing `:<level>` thinking suffix.
+# Priced entries carry four rates -- uncached `input`, `output`, `cache_read`
+# and `cache_write` (USD per token, not per million). All entries cite the
+# source URL and date read (`read_on`, YYYY-MM-DD).
+#
+# A subscription-billed model with no applicable per-token rate may instead
+# declare `unpriced_reason`, `source` and `read_on`. Its tokens remain recorded;
+# its dollar cost stays unavailable, never zero.
+#
+#   vercel-ai-gateway/zai/glm-5.3:
+#     input: <USD per uncached input token>
+#     output: <USD per output token>
+#     cache_read: <USD per cached input token read>
+#     cache_write: <USD per input token written to cache>
+#     source: <URL of the published price list>
+#     read_on: <YYYY-MM-DD>
+
+models:
+  vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:
+    unpriced_reason: >-
+      Vercel's first-party DeepSeek endpoint publishes prompt, completion and
+      cache-read rates but no cache-write rate, so the four-rate record cannot
+      price it without inventing one.
+    source: https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4-pro-0813/endpoints
+    read_on: 2026-10-30
+  vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:
+    unpriced_reason: >-
+      Vercel's first-party DeepSeek endpoint publishes prompt, completion and
+      cache-read rates but no cache-write rate, so the four-rate record cannot
+      price it without inventing one.
+    source: https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4.1-flash-1017/endpoints
+    read_on: 2026-10-30
+  openai-codex/gpt-6.1-sol:
+    unpriced_reason: Codex subscription usage has no per-token dollar rate.
+    source: https://developers.openai.com/codex/pricing
+    read_on: 2026-10-06
+  openai-codex/gpt-6-luna:
+    unpriced_reason: Codex subscription credit usage has no dollar-per-token rate; normalized credits are reported separately.
+    source: https://developers.openai.com/codex/pricing
+    read_on: 2026-10-08
+  openai-codex/gpt-5.6-terra:
+    unpriced_reason: Codex subscription credit usage has no dollar-per-token rate; normalized credits are reported separately.
+    source: https://developers.openai.com/codex/pricing
+    read_on: 2026-10-08
+  google-antigravity/gemini-3.8-flash:
+    unpriced_reason: Antigravity quota is a subscription allowance with no applicable per-token USD rate.
+    source: https://antigravity.google/docs/plans
+    read_on: 2026-10-08
+  google-antigravity/gemini-3.1-pro:
+    unpriced_reason: Antigravity quota is a subscription allowance with no applicable per-token USD rate.
+    source: https://antigravity.google/docs/plans
+    read_on: 2026-10-08
+  # Claude Code prices its own rows. This entry prices only a row it left
+  # unpriced, such as an early-stopped Haiku turn. The rates are the tier for
+  # prompts up to 100,000 tokens, and `cache_write` is the 5-minute rate; a
+  # longer prompt or a 1-hour cache write would be priced low.
+  claude-haiku-5-5:
+    input: 0.0000001
+    output: 0.0000005
+    cache_read: 0.00000001
+    cache_write: 0.000000125
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    read_on: 2026-10-18

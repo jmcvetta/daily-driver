@@ -39,6 +39,7 @@ import contextlib
 import json
 import logging
 import os
+import re
 import shutil
 import signal
 import tempfile
@@ -48,8 +49,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, ClassVar, Literal, NoReturn
 
+from pydantic import model_validator
+
 from coder_eval.agent import Agent
-from coder_eval.errors import AgentCrashError, TurnTimeoutError
+from coder_eval.errors import AgentConfigError, AgentCrashError, TurnTimeoutError
 from coder_eval.models import (
     AgentState,
     ApiRoute,
@@ -76,6 +79,10 @@ from coder_eval.streaming.events import (
     TurnStartEvent,
 )
 
+from .dispatch import EVIDENCE_FILENAME as DISPATCH_EVIDENCE_FILENAME
+from .dispatch import EvidenceTooLarge, error_document, evidence_document, task_call_records
+from .home import inherited_files, restrict_model_upstreams
+from .pricing import UNREPORTED, cost_usd
 from .rpc import (
     AgentFinished,
     ExtensionFailed,
@@ -85,7 +92,10 @@ from .rpc import (
     TurnFinished,
     TurnReducer,
     TurnStarted,
+    model_commands,
 )
+from .launch import OMP_CONFIG, child_env, reject_tool_flags, rpc_argv
+from .tools import ToolSelection, UnenforceableToolList, select_tools
 
 
 logger = logging.getLogger(__name__)
@@ -105,6 +115,9 @@ _SIGKILL: signal.Signals = getattr(signal, "SIGKILL", signal.SIGTERM)
 # that is too short is a red run nobody can reproduce.
 _STARTUP_TIMEOUT_SECONDS = 180.0
 
+# Bounds the whole post-settle subagent cancel, so a silent Omp cannot stretch a row past its budget.
+_CANCEL_TIMEOUT_SECONDS = 30.0
+
 # A single frame can carry a whole tool result, which blows past asyncio's
 # default 64 KiB line cap and raises mid-stream, killing the read loop.
 _STDOUT_LINE_LIMIT = 16 * 1024 * 1024
@@ -116,11 +129,57 @@ _RESULT_STATUS: dict[ToolEndStatus, str] = {
     ToolEndStatus.UNRESOLVED: "unknown",
 }
 
-# Written into the throwaway Omp home. Skill commands are off by default, and
-# with them off `get_available_commands` reports the builtins alone — so the
-# run could not record which skills it loaded, which is what tells a red arm
-# from an arm whose plugin never arrived.
-_OMP_CONFIG = "skills:\n  enableSkillCommands: true\n"
+#: File in each task sandbox that persists post-turn Omp protocol observations.
+PROTOCOL_EVIDENCE_FILENAME = "omp-protocol-observations.json"
+
+#: Version of the `omp_settlement_evidence` block in that file.
+SETTLEMENT_EVIDENCE_VERSION = 1
+
+#: Most `agent_end` observations kept per attempt; the rest only count as overflow.
+MAX_AGENT_END_OBSERVATIONS = 16
+
+#: Most attempt records kept per agent session; the rest only count as overflow.
+MAX_ATTEMPT_RECORDS = 32
+
+#: The fixed vocabulary of an attempt's `exit_reason`.
+EXIT_REASONS = (
+    "completed",
+    "async_handoff",
+    "stopped_early",
+    "max_turns",
+    "timeout",
+    "eof",
+    "no_recognized_frames",
+    "provider_error",
+    "no_usage",
+    "exception",
+    "cancelled",
+    "evidence_write_failed",
+)
+
+
+#: Omp's chat model roles: the `section: "chat"` entries of `MODEL_ROLES` in
+#: Omp's `src/config/model-roles.ts` (18.4.9). Each one left unset falls to
+#: whatever the provider catalog offers, so helper calls and subagents would run
+#: on a model the arm does not measure. The `kind` roles (image, web, speech,
+#: dictation, judge) take other model kinds and are left alone.
+OMP_CHAT_ROLES = ("default", "smol", "slow", "vision", "plan", "commit", "tiny", "memory", "task", "advisor")
+
+#: The Omp provider id whose requests carry `providerOptions.gateway`.
+VERCEL_GATEWAY_PROVIDER = "vercel-ai-gateway"
+
+#: The shape of a Vercel upstream provider slug, the values its `only` accepts.
+_UPSTREAM_SLUG = re.compile(r"[a-z0-9][a-z0-9._-]*")
+
+
+def omp_config_text(model: str | None) -> str:
+    """The throwaway home's `config.yml`: `OMP_CONFIG`, plus every chat role in
+    `modelRoles` pinned to `model` when the arm names one. JSON flow style is
+    valid YAML, so no YAML writer is needed."""
+    if not model:
+        return OMP_CONFIG
+    roles = {role: model for role in OMP_CHAT_ROLES}
+    return OMP_CONFIG + f"modelRoles: {json.dumps(roles, sort_keys=True)}\n"
 
 
 class OmpAgentConfig(BaseAgentConfig):
@@ -138,7 +197,14 @@ class OmpAgentConfig(BaseAgentConfig):
     """The Omp executable, resolved on PATH unless an absolute path is given."""
 
     inherit_omp_home: bool = True
-    """Symlink the real `~/.omp/agent/` into the throwaway home.
+    """Symlink the real `~/.omp/agent/`'s provider files into the throwaway home.
+
+    Only `models.yml`, `agent.db` (with its `-wal` and `-shm` siblings) and
+    `secrets.yml` — the files `home.PROVIDER_FILES` lists. `mcp.json` and the
+    instruction files (`AGENTS.md`, `SYSTEM.md`, `SYSTEM_TEMPLATE.md`,
+    `PERSONALITY.md`, `RULES.md`) are left out on purpose: an inherited MCP
+    server escapes `--tools`, and inherited instructions make the bare arm
+    stop being bare in both arms.
 
     On by default, because a run needs a model and the provider configuration
     lives there. Off, the session starts from Omp's own defaults — useful only
@@ -146,20 +212,78 @@ class OmpAgentConfig(BaseAgentConfig):
     refuses to start a session with no model available at all.
     """
 
-    require_token_telemetry: bool = False
+    require_token_telemetry: bool = True
     """Fail a turn that captured no token counts.
 
-    Off, unlike `coder_eval`'s OpenCode agent, and the reason is honesty:
-    Omp's `docs/rpc.md` places per-turn accounting in "telemetry fields on
-    `agent_end`" without naming them, so this agent reads every plausible
-    spelling and records which one answered. Until a live run says which it is,
-    a missing count is a gap in this adapter rather than proof of a broken
-    turn. Turn it on once `usage_keys_seen` in a run's `environment_info` names
-    the real fields.
+    The redacted Omp 18.4.3 capture shows a complete `usage` object on the
+    assistant message repeated by both `message_end` and `agent_end`. A turn
+    that produced an assistant reply without that usage has drifted from the
+    captured protocol, so it fails instead of reporting zero tokens.
     """
 
+    settle_on_async_handoff: bool = False
+    """Settle the turn when Omp hands it to background workers, and cancel them.
+
+    Omp ends the orchestrator's reply with a non-terminal `agent_end` carrying
+    `awaitingAsyncWork: true` when only a background-job result can resume the
+    session. Off, the turn keeps waiting for a terminal end, which a row that
+    depends on a dispatched subagent's result needs. On, that frame settles the
+    turn as COMPLETED after `cancel_subagent` stops every running subagent, so a
+    row that grades only the orchestrator is not left to hit `turn_timeout`.
+    """
+
+    record_task_dispatches: bool = False
+    """Write `omp-task-dispatches.json`, the evidence a dispatch grader reads.
+
+    Off by default. On, every attempted `task` call is kept whole — arguments
+    after their final update, outcome and raw result, retries included — and
+    persisted atomically after the subject stops on every exit path. The normal
+    telemetry is untouched.
+    """
+
+    vercel_gateway_only: list[str] | None = None
+    """Allowed upstream provider slugs for the selected Vercel AI Gateway model.
+
+    The adapter writes them into the throwaway home's `models.yml` as
+    `providers.vercel-ai-gateway.modelOverrides.<model>.compat.
+    vercelGatewayRouting.only`, which Omp sends as the request's
+    `providerOptions.gateway.only`. An unavailable allowed upstream therefore
+    fails instead of falling back to another provider, and a model id that
+    begins with `deepseek/` is not evidence of which upstream served it.
+
+    `None` leaves routing as the caller configured it. A supplied list must be
+    non-empty, must hold provider slugs, and requires `model` to name a
+    `vercel-ai-gateway/<model>` selector; anything else is refused rather than
+    silently running unrestricted.
+    """
+
+    @model_validator(mode="after")
+    def _check_vercel_gateway_only(self) -> "OmpAgentConfig":
+        """Refuse a route restriction the adapter could not enforce exactly."""
+        if self.vercel_gateway_only is None:
+            return self
+        if not self.vercel_gateway_only:
+            raise ValueError(
+                "vercel_gateway_only must name at least one upstream provider; "
+                "omit it to leave routing unrestricted"
+            )
+        for slug in self.vercel_gateway_only:
+            if not isinstance(slug, str) or not _UPSTREAM_SLUG.fullmatch(slug):
+                raise ValueError(f"vercel_gateway_only entry {slug!r} is not a provider slug")
+        selection = model_commands(self.model or "")[0]
+        if selection.get("provider") != VERCEL_GATEWAY_PROVIDER or not selection.get("modelId"):
+            raise ValueError(
+                "vercel_gateway_only requires model to be a "
+                f"{VERCEL_GATEWAY_PROVIDER}/<model> selector"
+            )
+        return self
+
     extra_args: list[str] = []
-    """Arguments appended to the `omp --mode rpc` command line, verbatim."""
+    """Arguments appended to the `omp --mode rpc` command line, verbatim.
+
+    A tool flag here fails the task: tools are granted through the row's
+    `allowed_tools`, which the eval guard reads as well.
+    """
 
 
 class OmpAgent(Agent[OmpAgentConfig]):
@@ -202,7 +326,15 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._linked_plugins: list[str] = []
         self._extension_errors: list[str] = []
         self._argument_keys_seen: set[str] = set()
+        self._cancelled_subagents: list[str] = []
+        self._dispatch_calls: list[dict[str, Any]] = []
+        self._dispatch_guard: Path | None = None
+        self._attempts: list[dict[str, Any]] = []
+        self._attempt_overflow = 0
+        self._attempt: dict[str, Any] | None = None
+        self._attempt_started_at = 0.0
         self._usage_keys_seen: set[str] = set()
+        self._tools = ToolSelection(tools=(), read_for_skill=False, webfetch_via_read=False)
         self._state = AgentState.WORKING
 
     # --- lifecycle ---------------------------------------------------------
@@ -228,18 +360,26 @@ class OmpAgent(Agent[OmpAgentConfig]):
                 "Install Omp with `curl -fsSL https://omp.sh/install | sh`."
             )
 
-        unenforced = [
-            field
-            for field in ("allowed_tools", "disallowed_tools", "system_prompt", "system_prompt_file")
-            if getattr(self.config, field, None)
-        ]
+        # Before anything is built: a list this arm cannot enforce fails the
+        # task here, rather than after a run with every tool on.
+        try:
+            self._tools = select_tools(self.config.allowed_tools, self.config.disallowed_tools)
+            reject_tool_flags(self.config.extra_args)
+        except UnenforceableToolList as error:
+            # Not retryable: the same row fails the same way every attempt.
+            raise AgentConfigError(str(error)) from error
+        if self._tools.read_for_skill:
+            # The one place a row's list is not met exactly. Omp engages a
+            # skill by reading `skill://<name>`, so `Skill` needs `read`.
+            logger.warning(
+                "omp: `read` is on for Skill although the row does not allow Read; "
+                "a Read of skills/<name>/SKILL.md can still happen on this arm."
+            )
+
+        unenforced = [field for field in ("system_prompt", "system_prompt_file") if getattr(self.config, field, None)]
         if unenforced:
-            # Said out loud once per task rather than left to be discovered from
-            # a report. `disallowed_tools` is what the trigger rows use to keep
-            # a denied `Read` of `skills/<name>/SKILL.md` from scoring as an
-            # engagement, and this arm cannot enforce it: Omp's RPC mode takes
-            # no per-session tool allowlist. A no-fire row is therefore weaker
-            # here than on Claude Code, and `evals/README.md` says so.
+            # Said out loud once per task rather than left to be discovered
+            # from a report: Omp's RPC mode takes no system-prompt argument.
             logger.warning(
                 "omp: %s set but NOT enforced — Omp's RPC mode has no equivalent knob, so the run is "
                 "unconstrained by them; do not read them as a boundary.",
@@ -317,16 +457,148 @@ class OmpAgent(Agent[OmpAgentConfig]):
             "omp_linked_plugins": list(self._linked_plugins),
             "omp_skills_loaded": list(self._loaded_skills),
             "omp_extension_errors": list(self._extension_errors),
+            "omp_tools": list(self._tools.tools),
         }
         if self._session_id:
             info["omp_session_id"] = self._session_id
-        if self._argument_keys_seen:
-            # The spike could not say whether a tool frame carries its input
-            # arguments, or under which key. A live run answers it here.
-            info["omp_argument_keys_seen"] = sorted(self._argument_keys_seen)
-        if self._usage_keys_seen:
-            info["omp_usage_keys_seen"] = sorted(self._usage_keys_seen)
         return info
+
+    def _write_protocol_evidence(self) -> None:
+        """Atomically persist the observed RPC keys and settlement summaries."""
+        if self.working_directory is None:
+            raise RuntimeError("OmpAgent.start() must be called before recording protocol evidence")
+
+        evidence: dict[str, Any] = {
+            "omp_argument_keys_seen": sorted(self._argument_keys_seen),
+            "omp_usage_keys_seen": sorted(self._usage_keys_seen),
+            "omp_settlement_evidence": {
+                "version": SETTLEMENT_EVIDENCE_VERSION,
+                "attempts": [dict(attempt) for attempt in self._attempts],
+                "attempts_overflow": self._attempt_overflow,
+            },
+        }
+        if self._cancelled_subagents:
+            evidence["omp_cancelled_subagents"] = list(self._cancelled_subagents)
+        destination = Path(self.working_directory) / PROTOCOL_EVIDENCE_FILENAME
+        temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+        try:
+            temporary.write_text(
+                json.dumps(evidence, separators=(",", ":"), sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            temporary.replace(destination)
+        finally:
+            with contextlib.suppress(FileNotFoundError):
+                temporary.unlink()
+
+    def _open_attempt(self, started_at: float) -> dict[str, Any]:
+        """Start this attempt's settlement summary; earlier attempts stay as they were."""
+        attempt: dict[str, Any] = {
+            "attempt": len(self._attempts) + self._attempt_overflow + 1,
+            "iteration": self._iteration,
+            "exit_reason": None,
+            "elapsed_seconds": None,
+            "recognized_frames": 0,
+            "last_recognized_frame": None,
+            "pending_tools_at_exit": None,
+            "agent_end": {
+                "total": 0,
+                "terminal": 0,
+                "nonterminal": 0,
+                "awaiting_async_work": 0,
+                "overflow": 0,
+                "recent": [],
+            },
+            "async_settlement": {"enabled": self.config.settle_on_async_handoff, "taken": False},
+            "cancellation": {"succeeded": 0, "failed": 0, "timed_out": 0},
+        }
+        if len(self._attempts) >= MAX_ATTEMPT_RECORDS:
+            self._attempts.pop(0)
+            self._attempt_overflow += 1
+        self._attempts.append(attempt)
+        self._attempt = attempt
+        self._attempt_started_at = started_at
+        return attempt
+
+    def _persist_attempt(self, attempt: dict[str, Any], reducer: TurnReducer) -> None:
+        """Fold the reducer's state into the attempt and the session unions, then write."""
+        self._argument_keys_seen.update(reducer.argument_keys_seen)
+        self._usage_keys_seen.update(reducer.usage_keys_seen)
+        attempt["recognized_frames"] = reducer.recognized
+        attempt["last_recognized_frame"] = reducer.last_recognized_kind
+        attempt["elapsed_seconds"] = round(time.monotonic() - self._attempt_started_at, 3)
+        if attempt["exit_reason"] is None:
+            attempt["exit_reason"] = "exception"
+        self._write_protocol_evidence()
+
+    def _note_agent_end(self, attempt: dict[str, Any], action: AgentFinished) -> None:
+        """Count one `agent_end`, keeping only the most recent observations."""
+        ends = attempt["agent_end"]
+        ends["total"] += 1
+        ends["terminal" if action.terminal else "nonterminal"] += 1
+        if action.awaiting_async_work:
+            ends["awaiting_async_work"] += 1
+        if len(ends["recent"]) >= MAX_AGENT_END_OBSERVATIONS:
+            ends["recent"].pop(0)
+            ends["overflow"] += 1
+        ends["recent"].append(
+            {
+                "offset_seconds": round(time.monotonic() - self._attempt_started_at, 3),
+                "is_terminal": action.is_terminal_field,
+                "awaiting_async_work": action.awaiting_async_work_field,
+            }
+        )
+
+    def _set_exit_reason(self, reason: str) -> None:
+        """Record why the current attempt ended; the first reason given wins."""
+        if reason not in EXIT_REASONS:
+            raise ValueError(f"unknown exit reason {reason!r}")
+        if self._attempt is not None and self._attempt["exit_reason"] is None:
+            self._attempt["exit_reason"] = reason
+
+    def _begin_dispatch_evidence(self) -> None:
+        """Block grading before the subject can produce unrecorded task calls."""
+        if not self.config.record_task_dispatches or self.working_directory is None:
+            return
+        if self._dispatch_guard is not None:
+            raise RuntimeError("a previous task-dispatch evidence update did not finish")
+        guard = Path(self.working_directory) / f"{DISPATCH_EVIDENCE_FILENAME}.pending"
+        # Exclusive creation also rejects an interrupted prior adapter. Its
+        # calls may be lost, so a fresh adapter must not seal over that gap.
+        guard.mkdir()
+        self._dispatch_guard = guard
+
+    def _record_task_dispatches(self, reducer: TurnReducer, attempt: int, iteration: int) -> None:
+        """Publish all attempted calls atomically, then allow grading.
+
+        The guard was created before the prompt. Any failure or interruption
+        leaves it in place, even if writing a diagnostic is impossible.
+        """
+        if not self.config.record_task_dispatches or self.working_directory is None:
+            return
+        if self._dispatch_guard is None:
+            raise RuntimeError("task-dispatch evidence was not guarded before the prompt")
+        reducer.close_open_tools()
+        self._dispatch_calls.extend(
+            task_call_records(reducer.tool_calls, attempt=attempt, iteration=iteration)
+        )
+        try:
+            text = evidence_document(self._dispatch_calls)
+        except EvidenceTooLarge as error:
+            logger.error("omp: %s", error)
+            text = error_document(str(error))
+        destination = Path(self.working_directory) / DISPATCH_EVIDENCE_FILENAME
+        temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+        try:
+            temporary.write_text(text, encoding="utf-8")
+            temporary.replace(destination)
+        finally:
+            with contextlib.suppress(FileNotFoundError):
+                temporary.unlink()
+        # This is the commit point. Failure keeps even a complete artifact
+        # non-passing; no fallback write is needed.
+        self._dispatch_guard.rmdir()
+        self._dispatch_guard = None
 
     # --- the turn ----------------------------------------------------------
 
@@ -343,16 +615,20 @@ class OmpAgent(Agent[OmpAgentConfig]):
         if proc is None or self.working_directory is None:
             raise RuntimeError("OmpAgent.start() must be called before communicate()")
 
+        self._begin_dispatch_evidence()
         self._begin_turn()
         collector = EventCollector()
         reducer = TurnReducer()
         started_at = time.monotonic()
+        attempt = self._open_attempt(started_at)
         open_tools: dict[str, CommandTelemetry] = {}
         sequence = 0
         current_turn_id = ""
         finalized = [False]
+        evidence_written = [False]
         max_turns_exhausted = False
         stopped_early = False
+        async_handoff = False
 
         def emit(event: StreamEvent) -> None:
             collector.on_event(event)
@@ -373,6 +649,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             if finalized[0]:
                 return
             finalized[0] = True
+            attempt["pending_tools_at_exit"] = len(reducer.open_tools)
             for closed in reducer.close_open_tools():
                 _emit_tool_end(emit, self.task_id, current_turn_id, open_tools, closed)
             if current_turn_id:
@@ -384,11 +661,12 @@ class OmpAgent(Agent[OmpAgentConfig]):
                         tokens=None,
                     )
                 )
+            cost = cost_usd(self.config.model, reducer.usage) if self.config.model else UNREPORTED
             emit(
                 AgentEndEvent(
                     task_id=self.task_id,
                     status=status,
-                    usage=TokenUsage(**reducer.usage),
+                    usage=TokenUsage(**reducer.usage, total_cost_usd=cost if isinstance(cost, float) else None),
                     iteration=self._iteration,
                     user_input=user_input,
                     agent_output=reducer.agent_output(is_error=crashed),
@@ -421,6 +699,90 @@ class OmpAgent(Agent[OmpAgentConfig]):
             request_id = self._next_request_id()
             await self._send({"id": request_id, "type": "prompt", "message": user_input})
 
+            def dispatch(action: Any) -> bool:
+                """Emit one reducer action as a stream event.
+
+                Shared by the live loop and the abort settle, so a frame that
+                lands after a stop is recorded exactly as one that lands before
+                it. Returns True only for a terminal `AgentFinished`.
+                """
+                nonlocal sequence, current_turn_id, async_handoff
+                if isinstance(action, AgentFinished):
+                    self._note_agent_end(attempt, action)
+                if isinstance(action, Text):
+                    emit(
+                        TextChunkEvent(
+                            task_id=self.task_id,
+                            turn_id=current_turn_id,
+                            text=action.text,
+                        )
+                    )
+                elif isinstance(action, TurnStarted):
+                    current_turn_id = action.turn_id
+                    emit(
+                        TurnStartEvent(
+                            task_id=self.task_id,
+                            turn_id=current_turn_id,
+                            model=self.config.model,
+                        )
+                    )
+                elif isinstance(action, TurnFinished):
+                    emit(
+                        TurnEndEvent(
+                            task_id=self.task_id,
+                            turn_id=action.turn_id,
+                            status=TurnEndStatus.COMPLETED,
+                            tokens=None,
+                        )
+                    )
+                    current_turn_id = ""
+                elif isinstance(action, ToolStarted):
+                    sequence += 1
+                    telemetry = CommandTelemetry(
+                        tool_name=action.tool_name,
+                        tool_id=action.call_id,
+                        assistant_turn_index=reducer.turn_count,
+                        timestamp=datetime.now(),
+                        execution_started_at=datetime.now(),
+                        parameters=dict(action.parameters),
+                        sequence_number=sequence,
+                    )
+                    open_tools[action.call_id] = telemetry
+                    emit(
+                        ToolStartEvent(
+                            task_id=self.task_id,
+                            turn_id=current_turn_id,
+                            tool=telemetry,
+                        )
+                    )
+                elif isinstance(action, ToolFinished):
+                    _emit_tool_end(emit, self.task_id, current_turn_id, open_tools, action)
+                elif isinstance(action, ExtensionFailed):
+                    # The constitution and the session tools ride on the
+                    # extension, so this is a defect in the arm rather than
+                    # in the skill under test. Recorded, not swallowed.
+                    self._extension_errors.append(
+                        f"{action.extension_path} on {action.event}: {action.error}"
+                    )
+                    logger.error("omp: extension error: %s", self._extension_errors[-1])
+                elif (
+                    isinstance(action, AgentFinished)
+                    and not action.terminal
+                    and action.awaiting_async_work
+                    and self.config.settle_on_async_handoff
+                ):
+                    # Opted in: the orchestrator's reply is over and only
+                    # background workers remain, so the turn settles here.
+                    async_handoff = True
+                    attempt["async_settlement"]["taken"] = True
+                    return True
+                elif isinstance(action, AgentFinished) and action.terminal:
+                    # `isTerminal: false` means maintenance has scheduled
+                    # more work and the session will resume, so only a
+                    # terminal end settles the turn.
+                    return True
+                return False
+
             assert proc.stdout is not None
             settled = False
             while not settled:
@@ -440,6 +802,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
                         collector,
                         f"omp closed its stream after {reducer.recognized} recognized frame(s) "
                         "without a terminal agent_end",
+                        kind="eof",
                     )
 
                 frame = _parse(line)
@@ -447,81 +810,28 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     continue
 
                 for action in reducer.feed(frame):
-                    if isinstance(action, Text):
-                        emit(
-                            TextChunkEvent(
-                                task_id=self.task_id,
-                                turn_id=current_turn_id,
-                                text=action.text,
-                            )
-                        )
-                    elif isinstance(action, TurnStarted):
-                        current_turn_id = action.turn_id
-                        emit(
-                            TurnStartEvent(
-                                task_id=self.task_id,
-                                turn_id=current_turn_id,
-                                model=self.config.model,
-                            )
-                        )
-                    elif isinstance(action, TurnFinished):
-                        emit(
-                            TurnEndEvent(
-                                task_id=self.task_id,
-                                turn_id=action.turn_id,
-                                status=TurnEndStatus.COMPLETED,
-                                tokens=None,
-                            )
-                        )
-                        current_turn_id = ""
-                    elif isinstance(action, ToolStarted):
-                        sequence += 1
-                        telemetry = CommandTelemetry(
-                            tool_name=action.tool_name,
-                            tool_id=action.call_id,
-                            assistant_turn_index=reducer.turn_count,
-                            timestamp=datetime.now(),
-                            execution_started_at=datetime.now(),
-                            parameters=dict(action.parameters),
-                            sequence_number=sequence,
-                        )
-                        open_tools[action.call_id] = telemetry
-                        emit(
-                            ToolStartEvent(
-                                task_id=self.task_id,
-                                turn_id=current_turn_id,
-                                tool=telemetry,
-                            )
-                        )
-                    elif isinstance(action, ToolFinished):
-                        _emit_tool_end(emit, self.task_id, current_turn_id, open_tools, action)
-                    elif isinstance(action, ExtensionFailed):
-                        # The constitution and the session tools ride on the
-                        # extension, so this is a defect in the arm rather than
-                        # in the skill under test. Recorded, not swallowed.
-                        self._extension_errors.append(
-                            f"{action.extension_path} on {action.event}: {action.error}"
-                        )
-                        logger.error("omp: extension error: %s", self._extension_errors[-1])
-                    elif isinstance(action, AgentFinished) and action.terminal:
-                        # `isTerminal: false` means maintenance has scheduled
-                        # more work and the session will resume, so only a
-                        # terminal end settles the turn.
+                    if dispatch(action):
                         settled = True
 
                 if settled:
                     break
                 if max_turns is not None and reducer.turn_count > max_turns:
                     max_turns_exhausted = True
-                    await self._abort_and_settle(reducer)
+                    await self._abort_and_settle(reducer, dispatch)
                     break
                 if should_stop is not None and should_stop():
                     stopped_early = True
-                    await self._abort_and_settle(reducer)
+                    await self._abort_and_settle(reducer, dispatch)
                     break
 
-            self._argument_keys_seen.update(reducer.argument_keys_seen)
-            self._usage_keys_seen.update(reducer.usage_keys_seen)
+            if async_handoff:
+                try:
+                    await asyncio.wait_for(
+                        self._cancel_background_subagents(attempt["cancellation"]), _CANCEL_TIMEOUT_SECONDS
+                    )
+                except (TimeoutError, asyncio.TimeoutError):
+                    attempt["cancellation"]["timed_out"] += 1
+                    logger.warning("omp: cancelling background subagents timed out after %.0fs", _CANCEL_TIMEOUT_SECONDS)
 
             if reducer.recognized == 0:
                 # The vocabulary moved. A turn that recognized nothing captured
@@ -532,20 +842,42 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     collector,
                     "omp emitted no recognized event frames; the RPC vocabulary has moved "
                     f"(saw: {sorted(reducer.unrecognized_types)})",
+                    kind="no_recognized_frames",
                 )
+            if reducer.error_message:
+                # The provider refused the turn (a 402 from an over-budget
+                # key, say). Omp still sends a terminal `agent_end`, so
+                # without this the attempt grades as a subject failure.
+                self._crash(finalize, collector, f"omp provider error: {reducer.error_message}", kind="provider_error")
             if self.config.require_token_telemetry and not reducer.usage:
                 self._crash(
                     finalize,
                     collector,
-                    "omp reported no token counts on agent_end; the telemetry field names have moved",
+                    "omp reported no usage on any assistant message this turn; "
+                    "the AssistantMessage usage field has moved",
+                    kind="no_usage",
                 )
 
             status = AgentEndStatus.MAX_TURNS_EXHAUSTED if max_turns_exhausted else AgentEndStatus.COMPLETED
+            exit_reason = "max_turns" if max_turns_exhausted else "async_handoff" if async_handoff else "completed"
             if stopped_early:
                 # Its own status, not COMPLETED: a run cut by `stop_early` read
                 # a truncated trajectory, and reporting it as a full one would
                 # make the same event read differently per harness.
                 status = AgentEndStatus.STOPPED_EARLY
+                exit_reason = "stopped_early"
+            self._set_exit_reason(exit_reason)
+            attempt["pending_tools_at_exit"] = len(reducer.open_tools)
+            try:
+                self._persist_attempt(attempt, reducer)
+            except Exception as error:
+                # Nothing else is failing here, so the missing evidence is the
+                # failure: a turn that claims evidence it did not write is the
+                # silence this artifact exists to rule out.
+                attempt["exit_reason"] = "evidence_write_failed"
+                evidence_written[0] = True  # the write was tried; the finally block does not repeat it
+                self._crash(finalize, collector, f"omp protocol evidence could not be written: {error!s}", cause=error)
+            evidence_written[0] = True
             finalize(status)
             # Built before the turn is marked clean: a failure in the reduction
             # is a failed turn, and `_end_turn_ok` would clear the rollback flag
@@ -557,27 +889,81 @@ class OmpAgent(Agent[OmpAgentConfig]):
         except (AgentCrashError, TurnTimeoutError):
             raise
         except asyncio.CancelledError:
+            self._set_exit_reason("cancelled")
             self._finalize_external_cancel(finalize)
             self._capture_partial_turn(collector)
             raise
         except Exception as error:
             self._crash(finalize, collector, f"Omp turn failed: {error!s}", cause=error)
             raise  # unreachable: _crash is NoReturn. Kept so the flow is explicit.
+        finally:
+            if not evidence_written[0]:
+                # Every exit that did not write on the normal path writes here.
+                # A failure is logged and swallowed: the timeout, crash or
+                # cancellation already in flight is the truth of the attempt.
+                try:
+                    self._persist_attempt(attempt, reducer)
+                except Exception as error:
+                    logger.error("omp: could not write %s: %s", PROTOCOL_EVIDENCE_FILENAME, error)
+            try:
+                self._record_task_dispatches(reducer, attempt["attempt"], attempt["iteration"])
+            except Exception as error:
+                logger.error("omp: could not write %s: %s", DISPATCH_EVIDENCE_FILENAME, error)
+                raise
+
+    async def _cancel_background_subagents(self, counts: dict[str, int]) -> list[str]:
+        """Cancel every running background subagent; return the ids cancelled.
+
+        Each id is recorded in `_cancelled_subagents` as it is cancelled, so a
+        timeout partway through keeps the ones already stopped.
+
+        A failure is logged, not raised: the orchestrator's turn is already
+        complete and graded on its own output.
+        """
+        cancelled: list[str] = []
+        try:
+            data = await self._request("get_subagents")
+        except Exception as error:
+            counts["failed"] += 1
+            logger.warning("omp: get_subagents failed: %s", error)
+            return cancelled
+        for subagent in data.get("subagents") or []:
+            if not isinstance(subagent, dict):
+                continue
+            subagent_id = subagent.get("id") or subagent.get("subagentId")
+            if not subagent_id or subagent.get("status", "running") != "running":
+                continue
+            try:
+                result = await self._request("cancel_subagent", subagentId=subagent_id)
+            except Exception as error:
+                counts["failed"] += 1
+                logger.warning("omp: cancel_subagent %s failed: %s", subagent_id, error)
+                continue
+            if result.get("cancelled") is not False:
+                counts["succeeded"] += 1
+                cancelled.append(str(subagent_id))
+                self._cancelled_subagents.append(str(subagent_id))
+            else:
+                counts["failed"] += 1
+        return cancelled
 
     # --- startup -----------------------------------------------------------
 
     def _prepare_home(self, home: Path) -> None:
         """A throwaway Omp home that borrows the real one's providers.
 
-        Every file in the real `~/.omp/agent/` is symlinked in, so the run finds
-        the models and credentials a person configured. `config.yml` is written
+        The provider files of the real `~/.omp/agent/` are symlinked in
+        (`home.PROVIDER_FILES`), so the run finds the models and credentials a
+        person configured and nothing else of theirs. `config.yml` is written
         here instead of symlinked: the arm runs on Omp's defaults plus skill
         commands, rather than on whatever a laptop happens to have set, which is
         the same isolation `coder_eval`'s Claude agent gets from
         `setting_sources: []`.
 
         Nothing is written into the real home. `omp plugin link` writes into
-        this one.
+        this one. Where the row restricts the route, the borrowed `models.yml`
+        is read and replaced by a private merge, so the operator's file keeps
+        its content and its symlink target.
         """
         agent_dir = home / ".omp" / "agent"
         agent_dir.mkdir(parents=True, exist_ok=True)
@@ -585,9 +971,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         if self.config.inherit_omp_home:
             real = Path(os.path.expanduser("~")) / ".omp" / "agent"
             if real.is_dir():
-                for entry in sorted(real.iterdir()):
-                    if entry.name == "config.yml" or not entry.is_file():
-                        continue
+                for entry in inherited_files(real):
                     with contextlib.suppress(OSError):
                         (agent_dir / entry.name).symlink_to(entry)
             else:
@@ -597,7 +981,16 @@ class OmpAgent(Agent[OmpAgentConfig]):
                     real,
                 )
 
-        (agent_dir / "config.yml").write_text(_OMP_CONFIG, encoding="utf-8")
+        if self.config.vercel_gateway_only is not None:
+            selection = model_commands(self.config.model or "")[0]
+            restrict_model_upstreams(
+                agent_dir,
+                str(selection["provider"]),
+                str(selection["modelId"]),
+                self.config.vercel_gateway_only,
+            )
+
+        (agent_dir / "config.yml").write_text(omp_config_text(self.config.model), encoding="utf-8")
 
     async def _link_plugins(self, binary: str, home: Path) -> None:
         """Install every `plugins:` root into the throwaway home.
@@ -655,8 +1048,13 @@ class OmpAgent(Agent[OmpAgentConfig]):
             raise RuntimeError("omp: plugins were declared but none installed; the arm would run untreated")
 
     async def _spawn(self, binary: str, home: Path) -> None:
-        """Start `omp --mode rpc` and wait for its `ready` frame."""
-        argv = [binary, "--mode", "rpc", *self.config.extra_args]
+        """Start `omp --mode rpc` and wait for its `ready` frame.
+
+        `launch.rpc_argv` builds the command line, the eval guard included.
+        Omp exits on a tool name it does not know, which fails the task in
+        `_await_frame` with Omp's own error.
+        """
+        argv = rpc_argv(binary, self._tools, self.config.extra_args)
         self._process = await asyncio.create_subprocess_exec(
             *argv,
             stdin=asyncio.subprocess.PIPE,
@@ -694,36 +1092,27 @@ class OmpAgent(Agent[OmpAgentConfig]):
             self._session_id = session_id
 
     async def _apply_model(self) -> None:
-        """Pin the session's model, where the task named one.
+        """Pin the task's model and thinking level, where the task named one.
 
-        Omp's `set_model` takes the provider and the model id separately, so
-        `provider/modelId` is split on the first slash. A bare name is sent as
-        the model id alone and Omp resolves the provider.
+        Omp's RPC represents a thinking level with a separate command, not as
+        part of the model id.
         """
         if not self.config.model:
             return
-        provider, _, model_id = self.config.model.partition("/")
-        command: dict[str, Any] = {"type": "set_model", "modelId": model_id or provider}
-        if model_id:
-            command["provider"] = provider
-        await self._request_command(command)
+        for command in model_commands(self.config.model):
+            await self._request_command(command)
 
     # --- rpc plumbing ------------------------------------------------------
 
     def _child_env(self, home: Path) -> dict[str, str]:
-        """The child's environment: the caller's, pointed at the throwaway home.
-
-        The PATH prepend is `Agent.start`'s mock-shadowing contract — the
-        sandbox's mock CLI directories must resolve before the real binaries, or
-        a task grading a mocked CLI silently exercises the real one.
-        """
-        env = dict(os.environ)
-        if self._env_path_prepend:
-            env["PATH"] = os.pathsep.join([*self._env_path_prepend, env.get("PATH", "")])
-        env["HOME"] = str(home)
-        for name in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
-            env[name] = str(home / name.lower())
-        return env
+        """The child's environment: the caller's, as `launch.child_env` builds it."""
+        if self.working_directory is None:
+            raise RuntimeError("A task directory is required for the read boundary")
+        return child_env(
+            os.environ, home, self._env_path_prepend, self._tools,
+            task_root=Path(self.working_directory),
+            plugin_roots=[Path(root) for root in self._linked_plugins],
+        )
 
     def _next_request_id(self) -> str:
         self._request_id += 1
@@ -788,6 +1177,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
         every tool call the turn made, and a row whose skill fired scores 0.0
         for want of the record rather than for want of the engagement.
         """
+        self._set_exit_reason("timeout")
         with contextlib.suppress(Exception):
             await self._send({"id": self._next_request_id(), "type": "abort"})
         try:
@@ -795,14 +1185,19 @@ class OmpAgent(Agent[OmpAgentConfig]):
         finally:
             self._capture_partial_turn(collector)
 
-    async def _abort_and_settle(self, reducer: TurnReducer) -> None:
+    async def _abort_and_settle(self, reducer: TurnReducer, dispatch: Callable[[Any], bool]) -> None:
         """Stop the in-flight prompt, then read the stream back to a settled state.
 
         The session outlives the turn, so an `agent_end` still in flight would
         be read at the top of the NEXT turn and settle it before the model had
-        said anything. The frames are fed to the reducer rather than dropped, so
-        a tool call that completed during the abort is still in the record — but
-        nothing is emitted for them, because the turn's events are closed.
+        said anything. The frames are fed to the reducer AND emitted, because
+        the turn's record is built from emitted events, not from reducer state:
+        a tool call that started before the stop and finished during the settle
+        must still land in the frozen trajectory. Dropping it here is how an
+        early-stopped replicate loses the very command its early-stop latched
+        on — the live verdict saw the in-flight call, the final check saw an
+        empty record, and every positive row scored 0 with the plugin provably
+        loaded. Measured live, 2026-09-16, and the reason this emits.
         """
         with contextlib.suppress(Exception):
             await self._send({"id": self._next_request_id(), "type": "abort"})
@@ -827,7 +1222,7 @@ class OmpAgent(Agent[OmpAgentConfig]):
             if frame is None:
                 continue
             for action in reducer.feed(frame):
-                if isinstance(action, AgentFinished) and action.terminal:
+                if dispatch(action):
                     return
 
     def _crash(
@@ -837,8 +1232,10 @@ class OmpAgent(Agent[OmpAgentConfig]):
         message: str,
         *,
         cause: BaseException | None = None,
+        kind: str = "exception",
     ) -> NoReturn:
         """Finalize the turn as crashed, park its telemetry, and raise."""
+        self._set_exit_reason(kind)
         self._capture_partial_turn(collector)
         self._finalize_and_raise_crash(finalize, message, cause=cause)
 

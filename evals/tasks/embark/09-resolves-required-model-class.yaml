@@ -1,0 +1,59 @@
+task_id: embark-09-resolves-required-model-class
+description: >-
+  Omp dispatch looks up the configured `task` role in the measured-routes
+  table, dispatches or reports a gap, and records observed model separately.
+tags: [embark, behaviour, fire]
+
+initial_prompt: >-
+  Launch the agreed wave on Omp. Task #143 requires `implementation`. The
+  running configuration sets `modelRoles.task` to a selector whose row in
+  `Measured routes` earns `implementation`, recorded recently. Task #144
+  requires `reasoning`; the same row earns only `implementation`. A candidate
+  model A is cheaper and a candidate model B has a larger context window, but
+  neither is the configured `task` role. What do you do?
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`embark` fires on the agreed wave"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: Dispatch assesses the executing fallback and preserves observed identity
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if it reads `modelRoles.task`, finds its row in
+      `Measured routes`, and dispatches #143 by that row because the class
+      earned covers `implementation`. For #144 it stops only that task and
+      reports a configuration gap, because the class earned is below
+      `reasoning`, and launches the rest of the wave. It records required
+      class, selected agent, and actual model separately (`unreported` when no
+      runtime identity is reported). It must not invent or search for
+      candidates such as A or B, infer capability from price, effort, context
+      or an agent name, pass a per-item model argument, or mutate shared roles.
+      Score 0.0 if it dispatches #144 on the row, halts #143, or conflates
+      selector and observed model.

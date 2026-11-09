@@ -1,0 +1,21 @@
+{
+  "additions": 218,
+  "changed_files": 12,
+  "check_reruns": 1,
+  "claim_model": "claude-opus-5-5",
+  "claimed_at": null,
+  "deletions": 10,
+  "elapsed_minutes": null,
+  "findings_count": 1,
+  "harness": "Claude Code 2.1.283",
+  "issue": 430,
+  "merged_at": "2026-09-28T14:35:07Z",
+  "model": "claude-opus-5-5",
+  "model_class": "implementation",
+  "model_mismatch": false,
+  "pull_request": 431,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 1,
+  "session": "https://claude.ai/code/session_01AxbNqy51xwfvSiYwerKcdh"
+}

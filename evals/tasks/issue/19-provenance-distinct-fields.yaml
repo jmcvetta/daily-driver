@@ -1,0 +1,52 @@
+# Without this case, deduplication can collapse writers when just one
+# attribution field differs, silently discarding provenance.
+task_id: issue-19-provenance-distinct-fields
+description: An issue revision retains attribution that differs in one field.
+tags: [issue, behaviour, fire]
+initial_prompt: |
+  Update this bug report to say a timeout also happens on Linux. Show the
+  complete revised body. Do not contact GitHub.
+
+  Uploads time out on macOS.
+
+  ---
+  Model: fixture-model-a
+  Harness: Fixture 1
+  session: fixture-session-a
+
+  ---
+  Model: fixture-model-b
+  Harness: Fixture 1
+  session: fixture-session-a
+
+  ---
+  Model: fixture-model-a
+  Harness: Fixture 2
+  session: fixture-session-a
+
+  ---
+  Model: fixture-model-a
+  Harness: Fixture 1
+  session: fixture-session-b
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 10, turn_timeout: 300, task_timeout: 600}
+success_criteria:
+  - type: agent_judge
+    description: One-field differences remain distinct attribution
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Find the final [RESULT - ...] reply. Score 0 if absent. Score 1 only if
+      the proposed body preserves macOS and adds Linux and keeps these four
+      complete blocks, once each, in order: (fixture-model-a, Fixture 1,
+      fixture-session-a), (fixture-model-b, Fixture 1, fixture-session-a),
+      (fixture-model-a, Fixture 2, fixture-session-a), (fixture-model-a,
+      Fixture 1, fixture-session-b). A separate current-writer block is
+      required. Do not assume the current writer's identity. Score 0 for a
+      missing, altered, duplicated, or reordered fixture block.

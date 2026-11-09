@@ -1,0 +1,70 @@
+task_id: review-cycle-09-bounded-fix-verification
+description: >-
+  A behavior-changing batch of review fixes is independently checked, and every
+  further pushed correction earns the pass that confirms it; the loop ends on
+  the first clean pass or at the three-defect wall.
+tags: [review-cycle, behaviour, fire]
+initial_prompt: >-
+  On PR #25, the full review at aaa111 found two defects. I fixed both plus a
+  CI-reported Markdown workflow regression in one batch and pushed bbb222; CI
+  is green. Explain the next review action, the evidence it must use, what you
+  record, and what happens if this pass finds defects — and if the pass after
+  the correction for those finds more.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Task]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`review-cycle` fires for review-fix verification"
+    expected_skill: review-cycle
+    skill_name: review-cycle
+
+  - type: agent_judge
+    description: The reply describes the bounded independent delta-pass protocol
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn transcript.
+      The reply starts after the last `[RESULT - …]` tag. If there is no such
+      tag, begin with `ANCHOR: none` and score 0.0. Otherwise begin with
+      `ANCHOR: result`.
+
+      The rule: a behavior-changing batch, including a Markdown workflow fix,
+      gets ONE independent reviewer delta pass after CI. The reviewer receives
+      the reviewed SHA, current SHA, original findings, and dispositions; it
+      checks fixes and regressions, not a whole-PR audit or style. The result is
+      durably recorded with SHAs, pass number, outcome, defects, wall state, and
+      unavailable usage. A pass that finds defects earns one batched correction,
+      pushed, and the pass that confirms it — a pushed fix is never left
+      unverified for want of an allowance. The loop ends on the first clean
+      pass. Three consecutive defect-finding passes is the wall: the defects go
+      on the PR, it stays draft, and the blocker is reported. An incomplete or
+      unavailable pass stops progress the same way. Commits, resumes, rewrites,
+      bot findings, and CI fixes are not passes and do not move the count, and
+      CI is never verification.
+
+      Score 1.0 only if the REPLY states all parts. Score 0.5 if it describes
+      the independent batch pass and the confirmation the next correction earns
+      but misses material record or blocking details. Score 0.0 if it offers a
+      full re-review, verifies per finding, accepts CI as verification, counts a
+      commit or CI fix as a pass, refuses a pass to a pushed correction before
+      the wall, or approves after a defect.

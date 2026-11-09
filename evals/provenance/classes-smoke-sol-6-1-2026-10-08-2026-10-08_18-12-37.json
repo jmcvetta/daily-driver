@@ -1,0 +1,167 @@
+{
+  "attempts": [
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_infra_github.py\nExit code: 1 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-462_ftjsah02\nconfigfile: pytest.ini\nplugins: cov-7.1.0, playwright-0.8.0, base-url-2.1.0\ncollected 81 items\n\n../tests/test_infra_github.py .........................F................ [ 51%]\n.......................................                                  [100%]\n\n=================================== FAILURES ===================================\n______________________ test_declared_labels_match_github _______________________\n\n    def test_declared_labels_match_github() -> None:\n        \"\"\"labels.tf's five standard labels agree with what GitHub serves.\n    \n        The comparison nothing else performs: `tofu plan` would catch a drift\n        but runs only when a person is mid-apply from a laptop, so a hand edit\n        in the GitHub UI -- a colour tweaked, a description reworded -- drifts\n        silently until the next apply. The comparison covers exactly the five\n        standard names; the repository deliberately carries labels the standard\n        does not define (GitHub's stock set, `chore`, the `autorelease: *` bot\n        labels), and an undeclared one among those is not a failure.\n        \"\"\"\n        if shutil.which(\"gh\") is None:\n            pytest.skip(\"gh is not installed\")\n        auth = _gh(\"auth\", \"status\")\n        if auth.returncode != 0:\n            pytest.skip(\"gh cannot authenticate; reading labels needs auth\")\n    \n        # --limit matters: the default page of 30 would silently drop labels on\n        # a repository with more, and \"absent from GitHub\" would then be a lie\n        # rather than a drift.\n        listing = _gh(\n            \"label\", \"list\", \"--json\", \"name,description,color\", \"--limit\", \"200\"\n        )\n>       assert listing.returncode == 0, (\n            f\"gh label list failed: {listing.stderr.strip()}\"\n        )\nE       AssertionError: gh label list failed: no git remotes found\nE       assert 1 == 0\nE        +  where 1 = CompletedProcess(args=['gh', 'label', 'list', '--json', 'name,description,color', '--limit', '200'], returncode=1, stdout='', stderr='no git remotes found\\n').returncode\n\n../tests/test_infra_github.py:371: AssertionError\n============================= slowest 30 durations =============================\n1.79s call     tests/test_infra_github.py::test_declared_labels_match_github\n0.13s call     tests/test_infra_github.py::test_no_filter_uses_a_bare_negation_pattern\n0.11s call     tests/test_infra_github.py::test_ci_tests_the_delta_a_release_pr_will_ship\n0.10s call     tests/test_infra_github.py::test_the_aggregate_reads_every_result_it_waits_for\n0.10s call     tests/test_infra_github.py::test_the_test_selection_reaches_the_coverage_comment\n0.09s call     tests/test_infra_github.py::test_the_aggregate_passes_a_skipped_leg\n0.09s call     tests/test_infra_github.py::test_the_installer_answers_about_the_shell_that_will_run_the_command\n0.08s call     tests/test_infra_github.py::test_every_required_context_is_produced_by_a_job\n0.07s call     tests/test_infra_github.py::test_the_aggregate_job_is_the_required_check\n0.07s call     tests/test_infra_github.py::test_no_filter_starts_a_leg_for_a_generated_changelog\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-cflow]\n0.06s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[test-typescript-viewer]\n0.06s call     tests/test_infra_github.py::test_the_aggregate_waits_for_every_other_job\n0.06s call     tests/test_infra_github.py::test_ci_never_runs_the_v1_suite\n0.06s call     tests/test_infra_github.py::test_ci_runs_are_cancelled_when_superseded\n0.06s call     tests/test_infra_github.py::test_infra_still_owns_the_ci_definition\n0.05s call     tests/test_infra_github.py::test_ci_runs_a_leg_per_workspace_package[typecheck-agent-cli]\n0.05s call     tests/test_infra_github.py::test_ci_run\n\u2026 (1718 more chars truncated)\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-462_ftjsah02/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.4,
+      "raw_weighted_score": 0.4,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-462",
+      "variant_id": "default"
+    },
+    {
+      "answer_key_contact": [],
+      "criteria": [
+        {
+          "criterion_type": "run_command",
+          "description": "No test file present at the base SHA was deleted",
+          "details": "Command: bash .fixture/check-no-deleted.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "No skip or xfail marker was added to a test file",
+          "details": "Command: bash .fixture/check-no-skip.sh\nExit code: 0 (expected: 0)\nStdout: (empty)\nStderr: (empty)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "run_command",
+          "description": "The pull request's own tests pass after applying tests.patch",
+          "details": "Command: bash .fixture/apply-tests.sh && cd viewer && uv run pytest ../tests/test_git_sync.py\nExit code: 0 (expected: 0)\nStdout:\n============================= test session starts ==============================\nplatform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: /tmp/coder_eval_model-classes-career-475_g8bp9f6z\nconfigfile: pytest.ini\nplugins: cov-7.1.0, playwright-0.8.0, base-url-2.1.0\ncollected 5 items\n\n../tests/test_git_sync.py .....                                          [100%]\n\n============================= slowest 30 durations =============================\n0.10s call     tests/test_git_sync.py::test_git_sync_continues_after_dirty_worktree_to_direct_branch\n0.09s call     tests/test_git_sync.py::test_git_sync_removes_merged_worktree_without_upstream\n0.09s call     tests/test_git_sync.py::test_git_sync_keeps_merged_worktree_with_remote_branch\n0.08s call     tests/test_git_sync.py::test_git_sync_removes_clean_stale_worktree_and_branch\n0.08s call     tests/test_git_sync.py::test_git_sync_keeps_dirty_stale_worktree_and_branch\n\n(10 durations < 0.005s hidden.  Use -vv to show these durations.)\n============================== 5 passed in 0.50s ===============================\n\nStderr:\nwarning: `VIRTUAL_ENV=/tmp/coder_eval_model-classes-career-475_g8bp9f6z/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "model-classes-career-475",
+      "variant_id": "default"
+    }
+  ],
+  "cases": [
+    {
+      "class": "mechanical",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 73.23015809059143,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "classes-smoke-sol-6-1",
+      "source": "jmcvetta/career#462",
+      "task_id": "model-classes-career-462",
+      "tokens": 132985,
+      "variant_id": "default"
+    },
+    {
+      "class": "implementation",
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 200.74172568321228,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "classes-smoke-sol-6-1",
+      "source": "jmcvetta/career#475",
+      "task_id": "model-classes-career-475",
+      "tokens": 427941,
+      "variant_id": "default"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.8.4",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-10-08T18:17:11.678881",
+  "experiment_id": "classes-smoke-sol-6-1",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "73b2e7b7019a0fbf29bea2d40c53025480ac1370",
+    "dirty": true
+  },
+  "recorded_at": "2026-10-08T11:17:12.331756+00:00",
+  "run_id": "2026-10-08_18-12-37",
+  "schema_version": 3,
+  "started_at": "2026-10-08T18:12:37.698844",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "model-classes-career-462": [
+          0.4
+        ],
+        "model-classes-career-475": [
+          1.0
+        ]
+      },
+      "task_ids": [
+        "model-classes-career-462",
+        "model-classes-career-475"
+      ],
+      "variant_id": "default"
+    }
+  ]
+}

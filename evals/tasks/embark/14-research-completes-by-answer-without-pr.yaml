@@ -1,0 +1,64 @@
+# Guards #785: the watch accepts each kind's own completion evidence. An
+# evidenced answer completes research with no branch or pull request. A
+# closed issue or an ended session alone proves nothing. The prompt supplies
+# the facts; the run is read-only.
+task_id: embark-14-research-completes-by-answer-without-pr
+description: >-
+  An evidenced answer-only research result completes its story without a
+  pull request, while a bare closure does not.
+tags: [embark, behaviour, fire]
+
+initial_prompt: >-
+  You are watching epic #48 on Claude Code, with landing by the orchestrator.
+  Research child #51 is closed; its session has ended; it has no branch and no
+  pull request. Its issue carries a comment with the findings, the sources,
+  the stated limits and the follow-on issue links its deliverable required.
+  Research child #56 is also closed and its session has ended, but its issue
+  holds no findings comment and no explanation. The epic's other children are
+  merged task pull requests whose outcomes are evidenced. Say how you treat
+  #51 and #56 on this wake and whether the epic can close. This is a dry run:
+  do not call any tracker or session tool.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`embark` fires on the wave watch"
+    expected_skill: embark
+    skill_name: embark
+  - type: agent_judge
+    description: Completion is judged by kind-specific evidence
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      FIRST, FIND THE REPLY. The agent output is a whole-turn transcript; the
+      reply starts after the last `[RESULT - …]` tag and runs to the end.
+      Begin the rationale with `ANCHOR: result` or `ANCHOR: none`. If no result
+      tag exists, write `ANCHOR: none` and score 0.0.
+
+      Score 1.0 only if the reply accepts #51 as complete on the strength of
+      its recorded, evidenced answer, without asking for or recreating a
+      pull request or branch; treats #56 as NOT complete, because a closed
+      issue and an ended session alone are not evidence, and reports or
+      investigates it instead; and does not close the epic while #56's
+      outcome is unevidenced. Score 0.5 if it gets #51 and #56 right but
+      closes the epic anyway, or gets only one of #51 and #56 right. Score 0.0
+      if it demands a pull request for #51, accepts #56, or calls the research
+      child a planning defect for not being a task.

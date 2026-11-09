@@ -1,0 +1,21 @@
+{
+  "additions": 1077,
+  "changed_files": 37,
+  "check_reruns": 3,
+  "claim_model": null,
+  "claimed_at": null,
+  "deletions": 1039,
+  "elapsed_minutes": null,
+  "findings_count": 0,
+  "harness": null,
+  "issue": 436,
+  "merged_at": "2026-09-28T19:07:53Z",
+  "model": "unreported",
+  "model_class": "implementation",
+  "model_mismatch": false,
+  "pull_request": 437,
+  "ready_at": null,
+  "repo": "jmcvetta/daily-driver",
+  "review_passes": 0,
+  "session": null
+}

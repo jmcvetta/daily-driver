@@ -1,0 +1,116 @@
+task_id: issue-01-open-a-task-issue
+description: >-
+  An ordinary request must select an assignable task for a concrete change.
+  The sandbox supplies the release code and existing verification context.
+tags: [trigger-accuracy, issue, fire, behaviour]
+sandbox:
+  python: null
+  template_sources:
+    - type: starter_files
+      files:
+        - path: release.py
+          content: |
+            """Release signing behavior and its input contract."""
+            # Each release manifest maps artifact names to SHA-256 digests.
+            # Previous signatures remain available in the release store.
+            def sign_changed(current, previous, sign):
+                for name, digest in current.items():
+                    sign(name, digest)
+        - path: test_release.py
+          content: |
+            """Offline signing tests use a list as the sign callback."""
+            from release import sign_changed
+
+            def test_signs_artifacts():
+                calls = []
+                sign_changed({"a": "abc"}, {}, lambda *args: calls.append(args))
+                assert calls == [("a", "abc")]
+
+        - path: README.md
+          content: |
+            The release module signs artifacts from the current manifest.
+            Run the offline tests with pytest. CI runs the same tests.
+
+
+initial_prompt: >-
+  Open an issue for this: the release script re-signs every artifact even
+  when nothing changed, and each run takes eleven minutes. Skip artifacts
+  whose checksum matches the previous release. Do not post anything — show
+  me the issue kind and exact issue body you would open, then explain which
+  parts of it are grounded and which choices you left to the implementer.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    description: "`issue` fires on an issue being opened"
+    expected_skill: issue
+    skill_name: issue
+  - type: skill_triggered
+    description: "`issue-body` fires on the body being written"
+    expected_skill: issue-body
+    skill_name: issue-body
+
+  - type: agent_judge
+    description: The draft body is a grounded task handoff with model class metadata
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one reply against a single rule.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block you have been given is a
+      whole-turn transcript, not a reply. `[ASSISTANT] …` starts each block of
+      the agent thinking aloud — only the first line of a block carries that
+      tag — and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …` carries
+      the answer the user actually received.
+
+      **The reply is the text from the last `[RESULT - …]` tag to the end of
+      the AGENT OUTPUT block**, starting after the tag on its own line.
+      Nothing outside the AGENT OUTPUT block is the agent's.
+
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The user reports an eleven-minute release run. The sandbox's
+      `release.py::sign_changed(current, previous, sign)` calls
+      `sign(name, digest)` unconditionally for each current artifact and does
+      not use `previous`. Its module comments state that both manifests map
+      names to SHA-256 digests and previous signatures remain in the release
+      store. `test_release.py::test_signs_artifacts` records calls in a list
+      and tests one artifact with an empty previous manifest. `README.md`
+      says to run pytest offline and CI runs those tests. These are supplied
+      facts, not invented claims.
+
+      The rule: the REPLY selects `task` as the issue kind even though the
+      request describes broken behavior and does not name a kind. It proposes
+      a ready task handoff, not a bug report, without asking which kind to use.
+      The body states the observable outcome, reason, scope, and observable
+      acceptance criteria. It contains `## Summary`, immediately followed by
+      `## Model class`, then `## Detail`. The class section starts with exactly
+      one backtick-wrapped lowercase class token and a short rationale. The task
+      metadata must not add a concrete `Model:` identifier or `Effort:` field.
+      The final provenance block below `---` is distinct and must be retained.
+      The surrounding reply distinguishes grounded context from routine
+      implementer choices; it must not invent repository evidence.
+
+      Score 1.0 if the reply explicitly selects `task` and meets the rule.
+      Score 0.5 if it selects `task` and provides a plausible handoff but
+      misses one body requirement. Score 0.0 if it selects another kind, asks
+      the user to choose a kind, lacks a task body or class section, or puts
+      concrete model or effort metadata in the task sections.

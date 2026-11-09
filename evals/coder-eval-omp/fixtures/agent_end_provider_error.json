@@ -1,0 +1,45 @@
+{
+  "isTerminal": true,
+  "messages": [
+    {
+      "attribution": "user",
+      "content": [
+        {
+          "text": "Reply with the word ok.",
+          "type": "text"
+        }
+      ],
+      "role": "user",
+      "timestamp": 1792255496933
+    },
+    {
+      "api": "bedrock-converse-stream",
+      "content": [],
+      "duration": 361.716359,
+      "errorId": 16781312,
+      "errorMessage": "Bedrock HTTP 403: {\"message\":\"The security token included in the request is invalid.\"}",
+      "errorStatus": 403,
+      "model": "us.anthropic.claude-opus-5-5",
+      "provider": "amazon-bedrock",
+      "role": "assistant",
+      "stopReason": "error",
+      "timestamp": 1792255497034,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "cost": {
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "input": 0,
+          "output": 0,
+          "total": 0
+        },
+        "input": 0,
+        "output": 0,
+        "totalTokens": 0
+      }
+    }
+  ],
+  "type": "agent_end",
+  "yielded": true
+}

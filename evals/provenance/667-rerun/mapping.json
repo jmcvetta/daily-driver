@@ -1,0 +1,611 @@
+[
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "constitution-authorized-public-service-search",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "constitution-authorized-public-service-search",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "constitution-completion-report-is-lean",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "constitution-completion-report-is-lean",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "deps-06-security-major-constraint",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "deps-06-security-major-constraint",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "embark-12-neg-stale-completion-notice",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "embark-12-neg-stale-completion-notice",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "issue-12-effective-kind-preserves-content",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "issue-12-effective-kind-preserves-content",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "review-cycle-12-fallback-review-publication",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "review-cycle-12-fallback-review-publication",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "review-cycle-14-completion-notice-premature",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "review-cycle-14-completion-notice-premature",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "review-depth-neg-opening-a-pr",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "review-depth-neg-opening-a-pr",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k2",
+  "variant": "bare",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "issue-08-research-supported-no-is-complete",
+  "local_repeat": 0,
+  "original_repeat": 2
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "issue-08-research-supported-no-is-complete",
+  "local_repeat": 1,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "issue-08-research-supported-no-is-complete",
+  "local_repeat": 2,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "local_repeat": 0,
+  "original_repeat": 2
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "local_repeat": 1,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "local_repeat": 2,
+  "original_repeat": 4
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "task-worktree-06-designated-primary-branch",
+  "local_repeat": 0,
+  "original_repeat": 1
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "task-worktree-06-designated-primary-branch",
+  "local_repeat": 1,
+  "original_repeat": 3
+ },
+ {
+  "group": "bare-k3",
+  "variant": "bare",
+  "case": "task-worktree-06-designated-primary-branch",
+  "local_repeat": 2,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "constitution-authorized-public-service-search",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "constitution-authorized-public-service-search",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "constitution-completion-report-is-lean",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "constitution-completion-report-is-lean",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "constitution-daily-driver-target-defect-follows-normal-rule",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-07-user-set-type-is-not-reverted",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "conventional-commits-type-08-omp-configs-are-chore",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "deps-06-security-major-constraint",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "deps-06-security-major-constraint",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "embark-12-neg-stale-completion-notice",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "embark-12-neg-stale-completion-notice",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "epic-07-mixed-child-kind-contracts",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "issue-10-frontier-denial-keeps-assignment-unpublished",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "issue-12-effective-kind-preserves-content",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "issue-12-effective-kind-preserves-content",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "issue-14-failed-access-is-not-research-completion",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "review-cycle-07-wait-for-ci-is-not-a-sleep",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "review-cycle-12-fallback-review-publication",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "review-cycle-12-fallback-review-publication",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "review-cycle-14-completion-notice-premature",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "review-cycle-14-completion-notice-premature",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "review-depth-neg-opening-a-pr",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "review-depth-neg-opening-a-pr",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "local_repeat": 0,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k2",
+  "variant": "with-plugin",
+  "case": "task-worktree-05-resume-branch-beats-designation",
+  "local_repeat": 1,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "issue-08-research-supported-no-is-complete",
+  "local_repeat": 0,
+  "original_repeat": 2
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "issue-08-research-supported-no-is-complete",
+  "local_repeat": 1,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "issue-08-research-supported-no-is-complete",
+  "local_repeat": 2,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "local_repeat": 0,
+  "original_repeat": 2
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "local_repeat": 1,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "issue-11-human-handoff-safe-evidence",
+  "local_repeat": 2,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "local_repeat": 0,
+  "original_repeat": 2
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "local_repeat": 1,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "pr-08-primary-held-designated-head-claude",
+  "local_repeat": 2,
+  "original_repeat": 4
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "task-worktree-06-designated-primary-branch",
+  "local_repeat": 0,
+  "original_repeat": 1
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "task-worktree-06-designated-primary-branch",
+  "local_repeat": 1,
+  "original_repeat": 3
+ },
+ {
+  "group": "with-plugin-k3",
+  "variant": "with-plugin",
+  "case": "task-worktree-06-designated-primary-branch",
+  "local_repeat": 2,
+  "original_repeat": 4
+ }
+]

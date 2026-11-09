@@ -40,6 +40,15 @@ resource "github_repository_vulnerability_alerts" "this" {
   enabled    = true
 }
 
+# Dependabot security updates: pull requests that fix vulnerable dependencies.
+# They need the alerts above, so the order is explicit.
+resource "github_repository_dependabot_security_updates" "this" {
+  repository = github_repository.this.name
+  enabled    = true
+
+  depends_on = [github_repository_vulnerability_alerts.this]
+}
+
 # Settings -> Actions -> General -> Workflow permissions, which is the setting
 # the release job actually depends on.
 #

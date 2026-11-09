@@ -1,0 +1,134 @@
+# The gate's own row. `08-cadence-stops-at-ready-omp` grades what a session
+# does *after* ready; this one grades whether it gets there at all, and what it
+# may then claim.
+#
+# Why the row exists: docs/notes/0021-the-gate-is-a-read.md records a session
+# that held a current, green, thread-free, verified pull request in draft and
+# asked the user whether it was ready. The user could not answer — it was the
+# agent's work, and the agent held every fact the question was about.
+#
+# What the row measures. The sandbox carries an offline, stateful `gh`
+# (`evals/fixtures/undertake-readiness`): PR #25 is a draft whose head is
+# green, whose threads are resolved, and which already carries a completion
+# notice naming that head. Reads return real fixture state, `gh pr ready 25`
+# clears the draft flag, and a first-readiness report comment is returned by
+# the next read. The verifier checks the complete record: required gate reads
+# succeeded on the current head, the report posted successfully while the PR
+# was still a draft, and only then did the ready write run.
+#
+# Report-write refusal, ready-write refusal after a successful report,
+# draft-masked post-ready states, CI on another head and failed reads are
+# separate fixture scenarios. This row covers the positive path only.
+#
+# Scoring. `skill_triggered` is activation and is reported on its own. The
+# verifier and the judge score the behavioural outcome; a run that only
+# triggered the skill has not completed the workflow.
+#
+# Why this fails the `without` arm: "everything looks good — shall I mark it
+# ready?" is the courteous reflex, and a bare model that names `gh pr ready` in
+# prose has done nothing the verifier can see.
+
+task_id: undertake-10-ready-is-marked-not-asked
+description: >-
+  A draft pull request meeting every gate condition is marked ready in the same
+  turn, without a confirmation the user has no way to give.
+tags: [undertake, behaviour, fire]
+
+initial_prompt: >-
+  PR #25 is the draft for issue #24, in this checkout. I merged master in, CI
+  should be green on the merged head, every review thread should be resolved,
+  the review round you recorded found nothing actionable, the branch should
+  carry everything issue #24 asks for, and nothing should be uncommitted or
+  unpushed. `gh` here is an offline client for the repository; see
+  `.fixture/README.md`. What happens now, before you end this turn?
+
+sandbox:
+  template_sources:
+    - type: template_dir
+      path: ../../fixtures/undertake-readiness/shared
+      mount_point: .fixture
+  mock_path_dirs: [.fixture/bin]
+
+pre_run:
+  - command: bash .fixture/setup.sh ready-clean
+    timeout: 60
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  # Unarmed, for the reason `08-cadence-stops-at-ready-omp` gives: an on-fail
+  # stop here would truncate the trajectory before the `[RESULT - …]` reply the
+  # judge below needs, and grade a 0 the row does not intend.
+  - type: skill_triggered
+    weight: 0
+    description: "`undertake` fires on a draft that has met its gate"
+    expected_skill: undertake
+    skill_name: undertake
+
+  # Behavioural outcome, from the fixture's own record.
+  - type: run_command
+    description: Gate reads succeeded, then the report posted before ready
+    command: python3 .fixture/verify.py gate
+    timeout: 30
+    weight: 3
+
+  # The finding, graded from the reply and the actual tool calls.
+  - type: agent_judge
+    description: The reply marks the pull request ready rather than asking
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      You are grading one run against a single rule. Ground every claim in the
+      AGENT TOOL CALLS block, which lists the actual calls and their
+      success or failure; narration is not evidence of an action.
+
+      FIRST, FIND THE REPLY. The AGENT OUTPUT block is a whole-turn
+      transcript. `[ASSISTANT] …` starts each block of the agent thinking
+      aloud, and a final `[RESULT - SUCCESS] …` or `[RESULT - ERROR] …`
+      carries the answer the user actually received. **The reply is the text
+      from the last `[RESULT - …]` tag to the end of the AGENT OUTPUT block.**
+      Begin your rationale with `ANCHOR: result` or `ANCHOR: none`. Where
+      there is no `[RESULT - …]` tag, write `ANCHOR: none` and score 0.0.
+
+      The rule: read the readiness gate, publish the first-readiness report,
+      then mark ready. The report says the ready-for-review gate passed; it
+      does not claim that the draft has already cleared or that mergeability
+      is confirmed. A post-ready `CLEAN` read is not a prerequisite.
+
+      Score 1.0 only if the tool calls show, in this order: successful reads of
+      the gate evidence (pull request state, current-head CI, review threads,
+      comments including the completion notice), a successful
+      `gh pr comment 25` whose body opens `First-readiness report`, then a
+      successful `gh pr ready 25`; and the reply says what was done, with no
+      question to the user.
+
+      Score 0.5 if the gate was read but report publication or marking ready
+      failed and the reply accurately reports the failed step without claiming
+      completion. It also earns 0.5 if the report succeeded but ready was not
+      attempted or the operation order was wrong.
+
+      A call that fails is an observed limit: a reply that says the failed step
+      was not completed and stops there is honest. It does not earn the 1.0 of
+      a completed action, and it may not claim the step succeeded.
+
+      Score 0.0 if no relevant call was made (narration is not an action), if
+      the reply asks the user whether to mark ready or proposes leaving it
+      draft to be safe, if it claims ready or a report that the calls do not
+      show, or if the turn ends with no `[RESULT - …]`.

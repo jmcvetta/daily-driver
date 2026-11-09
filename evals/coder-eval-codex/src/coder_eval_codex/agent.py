@@ -10,8 +10,7 @@ session actually got.
 **Why a new kind rather than `agent: {type: codex}`.** The registry rejects two
 implementations claiming one kind, and shadowing a built-in would change what
 every other `coder_eval` user's `codex` means. A distinct kind also makes the
-arm's routing readable: `scripts/check-eval-arms.py` maps a pinned `agent.type`
-to the arm tag it must carry, and `codex-daily-driver` names exactly one arm.
+arm's routing readable: `agent.type` and the experiment arm tag must agree.
 
 **The first correction** is `transcript.render_agent_output`, applied to the
 `TurnRecord` this agent hands back. `transcript.py` says what it is for; the
@@ -22,8 +21,7 @@ at the last `[RESULT - …]` tag and scores 0.0 where there is none, and
 **The second** is `plugins.resolve_local_plugins`, applied to the plugin roots
 before `start()` delegates. `plugins.py` says what it is for; the short version
 is that `_setup_skills` symlinks each skill by the path it was handed, so the
-relative root an experiment naturally writes links fourteen skills that point at
-themselves.
+relative root an experiment naturally writes links every skill back at itself.
 
 **Neither of them is the normalisation issue #185 expected.** It asked for a
 `skill://<name>` mapping, the spelling Omp uses. The spike in #181 measured
@@ -33,9 +31,7 @@ already detects the spelling Codex does use — a shell read of
 `skills/<name>/` substring the criterion matches on. Adding a mapping would have
 been a rename of something already named.
 
-Nothing here can be exercised without a `coder_eval` install and the Codex SDK,
-which is why so little is here. `scripts/check-codex-agent.py` drives the pure
-half in `make check`.
+Nothing here can be exercised without a `coder_eval` install and the Codex SDK.
 """
 
 from __future__ import annotations
@@ -109,14 +105,14 @@ class CodexDailyDriverAgent(CodexAgent):
         length: `CodexAgent._setup_skills` symlinks each skill by the path it was
         handed, so a relative root — which is what these experiments write, and
         what the Claude agent never sees because `coder_eval` resolves it before
-        that agent is built — produces fourteen links that point at themselves.
+        that agent is built — produces one broken link per skill.
 
         **Then the count is checked, and an empty one is fatal.** The Omp arm
         raises in the same place and for the same reason: an arm that declared
         plugins and loaded none runs untreated and reports zeros, which reads
         exactly like a skill that never fires. `_setup_skills` only warns, and
-        only when it had sources to link from — fourteen broken links are
-        fourteen `iterdir()` entries, so its own warning stays silent on exactly
+        only when it had sources to link from — those broken links are still
+        `iterdir()` entries, so its own warning stays silent on exactly
         the failure above.
 
         The reading is done from the directory rather than from the session: the

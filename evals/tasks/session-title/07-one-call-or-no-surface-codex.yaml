@@ -78,6 +78,7 @@ success_criteria:
   # a plausible-sounding reply. Left unarmed for the reason `undertake/08`
   # gives: there is no fail-stopping criterion here for a bare arm to defer.
   - type: skill_triggered
+    weight: 0
     description: "`session-title` fires on Claude's own initiative when issue work begins"
     expected_skill: session-title
     skill_name: session-title
@@ -104,6 +105,7 @@ success_criteria:
       type: claude-code
       model: claude-sonnet-5
       allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
       permission_mode: default
     prompt: |
       You are grading one reply against a single rule.

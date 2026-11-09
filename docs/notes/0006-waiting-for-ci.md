@@ -1,6 +1,6 @@
 # Waiting for CI is a loop of turns, never a sleep
 
-**Status:** decided, 2026-09-08; amended, 2026-09-08 and 2026-09-09.
+**Status:** decided, 2026-09-08; amended, 2026-09-08, 2026-09-09 and 2026-10-06.
 **Provenance:** chosen by an agent in
 [#100](https://github.com/jmcvetta/daily-driver/pull/100) — the same
 pull request as the change it justifies — and ratified by that merge.
@@ -97,3 +97,22 @@ than one too many. They are not two ways of doing the same thing: the
 subscription decides *when the session wakes*, the read decides *whether the
 wait is over*, and the timer only guarantees that a wake happens at all. The
 cap and the stop are unchanged.
+
+## Amended, 2026-10-06
+
+**A completed check watch is a wake, not a verdict.**
+[#557](https://github.com/jmcvetta/daily-driver/issues/557) reported that
+`gh pr checks --watch` exited 0 while a second workflow for the same head was
+still running. The watcher reads the status-check rollup and stops when nothing
+in it is pending. A workflow whose jobs have not registered is not in the
+rollup, so the check runs and statuses can both look finished.
+
+On Omp the wait now also reads the Actions workflow-run inventory for the head
+and treats any run not `completed` with a conclusion as unfinished. It watches
+such a run with `gh run watch` in a second supervised service. One absolute
+fifteen-minute deadline, recorded in the service log, bounds all of it. A
+partial registration, or a read that fails, is reported and never green.
+
+The decision against unmanaged shell waits stands. Both services are named,
+bounded, persistent and inspectable. No new scheduler or watcher program is
+added.

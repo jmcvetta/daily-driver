@@ -40,22 +40,15 @@ The graph
 harness it has two rather than three to pick from. Read that skill's routes
 before `Write the graph`.
 
+Apply `issue-deps`' pre-link assignability gate before every parent or
+sub-issue write to the epic, including when linking an existing issue.
 
-The model a task records
-========================
 
-`Draft the plan` writes a `Model:` line into each task issue. **Nothing on
-this harness reads it.** Codex does have a session-opening client — the
-`agent_tasks` namespace — but `embark`'s
-[`codex.md`](../../embark/references/codex.md) records why this plugin cannot
-launch a wave through it, so no Codex session opens one per task issue. Nor
-does anything here report the running session's own model, so the identifier
-cannot be read off the session the way the Claude route reads it.
+The required class
+==================
 
-Write it anyway, exactly as the Omp route does. The judgement is made here, at
-decomposition time, and a task issue planned on Codex is undertaken wherever
-the wave is put to sea. The identifiers are the ones the Claude session client
-accepts, and [`claude.md`](claude.md) is where they are named — with the
-warning that the table there is a measurement with a date on it. A recalled
-identifier is not one: where `claude.md` cannot be read, write no line rather
-than guess at a name.
+`issue-body` owns the task body contract and shared routing guidance in
+[`model-classes.md`](../../issue-body/references/model-classes.md). Every story
+uses that task contract and required model class at `Open the issues`, whether
+new or reused. This skill neither duplicates the taxonomy nor records a
+concrete model.

@@ -1,0 +1,10 @@
+# The existing judge route, named. Every `agent_judge` in evals/tasks/ pins this
+# model on the claude-code agent kind; this file makes that pin selectable and
+# comparable rather than changing it. It runs inside `coder_eval`, from a Claude
+# Code web or CLI session, on inherited subscription access
+# (docs/notes/0014-the-judge-runs-on-the-subscription.md).
+judge_id: claude-code-sonnet-5
+route: claude-code
+model: claude-sonnet-5
+status: default
+description: The task-pinned Claude Code agent_judge; the repository's default judge.

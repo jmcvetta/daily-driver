@@ -1,0 +1,16 @@
+# A non-Claude judge route: Omp, no tools, over the Vercel AI Gateway the Omp
+# arms already use (`make evals-setup-omp` proves the model is listed). The model
+# is named, never inferred from the subject or a role default. `validated` means
+# `calibration` names a committed result that met the rule declared in
+# calibration/labels.yaml before it was run (11 of 11, no false pass, 2026-10-05):
+# a recommended non-Claude route, from a small hand-labelled sample and not a
+# quality ranking. The repository default stays claude-code-sonnet-5.
+judge_id: omp-glm-5.3
+route: omp
+model: vercel-ai-gateway/zai/glm-5.3
+status: validated
+calibration: calibration/observed/omp-glm-5.3.json
+settings:
+  thinking: "off"
+  timeout_seconds: 300
+description: Candidate non-Claude judge (GLM 5.3 via the Vercel AI Gateway, on Omp).
