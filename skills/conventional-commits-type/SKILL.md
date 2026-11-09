@@ -120,20 +120,29 @@ The tests
 
 One case skips them. A **wholesale undo** of a change already merged is a
 `revert`, whatever the undone change was typed — patch, with its own
-changelog section. Where the undone change had already been released, gate 1
-below applies on top of it: `revert!:`, with the footer, because taking back
-what a consumer may already be using breaks them. A *partial* undo is not a
-revert; it is an ordinary change, and the gates type it.
+changelog section. Apply gate 1 to a released undo before adding `!`; release
+alone does not establish a break. A *partial* undo is not a revert; it is an
+ordinary change, and the gates type it.
 
 Otherwise the first three are gates: where one fires it settles the type,
 and nothing below it runs.
 
-1. **Does it break anyone?** A caller, a configuration, or a workflow that
-   worked before the merge and does not after it. Then the type it would
-   otherwise have carries `!` — `feat!:`, `fix!:` — and the body carries a
-   `BREAKING CHANGE:` footer saying what broke. Major bump — or a minor one
-   below `1.0.0` where the repository sets `bump-minor-pre-major`; see
-   *What the type releases*.
+1. **Does it break anyone?** Identify a supported use that worked before and
+   no longer works, and what its user must change. For a library, CLI, or
+   other product, an incompatible interface or configuration can meet this
+   test. If it does, the type it would otherwise have carries `!` — `feat!:`,
+   `fix!:` — and the body carries a `BREAKING CHANGE:` footer describing the
+   break and migration. Major bump — or a minor one below `1.0.0` where the
+   repository sets `bump-minor-pre-major`; see *What the type releases*.
+
+   **For Daily Driver**, changing agent instructions, decisions, skills, rules,
+   or internal workflows is not by itself a breaking change. Changing agent
+   behavior is the product's purpose. Do not add `!` or a `BREAKING CHANGE:`
+   footer merely because an agent now behaves differently, including when
+   reverting released instructions. Removing a user-invoked command or
+   requiring users to migrate configuration can qualify: name the concrete
+   previously supported use that fails and the action the user must take.
+   Without that evidence, omit the marker and continue to the other gates.
 
 2. **Does the behaviour change — what the thing returns, what it decides,
    what it does as a side effect?** If none of those move, the change is one

@@ -1,0 +1,75 @@
+# Agent behavior changes alone must not produce breaking-release markers.
+task_id: conventional-commits-type-11-breaking-instruction-changes
+description: >-
+  Distinguish Daily Driver instruction changes from concrete user migration,
+  while preserving breaking classification for other products.
+tags: [conventional-commits-type, behaviour, fire]
+
+initial_prompt: >-
+  Classify each pull request with a Conventional Commits type and say whether
+  it needs `!` or a `BREAKING CHANGE:` footer. Treat these as complete fixture
+  facts, not requests to inspect live repositories.
+
+  A. Daily Driver changes a shipped skill so agents make a different review
+  decision. The old decision was wrong. No user command or configuration
+  changes.
+
+  B. Daily Driver changes its internal agent workflow to perform an extra
+  review step, a new capability. User commands and configuration stay the same.
+
+  C. Daily Driver wholly reverts a previously released instruction change.
+  Agent behavior returns to its prior state. Commands and configuration remain
+  unchanged.
+
+  D. Daily Driver removes a released user-invoked command without a replacement.
+  Users who invoke it must use a different manual process.
+
+  E. A separately published library removes a released public function. Its
+  callers must migrate to a different function.
+
+agent:
+  disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  task_timeout: 1080
+  turn_timeout: 900
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`conventional-commits-type` fires for release classification"
+    expected_skill: conventional-commits-type
+    skill_name: conventional-commits-type
+
+  - type: agent_judge
+    description: The reply distinguishes instruction changes from user migration
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Grade only the final reply in the AGENT OUTPUT block, beginning at the
+      last [RESULT - SUCCESS] or [RESULT - ERROR] tag.
+
+      Score 1.0 only if all five cases are classified:
+      - A is `fix`, without `!` or a breaking footer. A changed agent decision
+        does not by itself break a user interface.
+      - B is `feat`, without either breaking marker. A new internal workflow
+        step changes shipped behavior but does not require user migration.
+      - C is `revert`, without either breaking marker. Prior release alone
+        does not make an instruction revert breaking.
+      - D carries `!` and a breaking footer. The reply identifies the removed
+        command and the user's required alternative process.
+      - E carries `!` and a breaking footer. The reply identifies the removed
+        library function and the caller's required migration.
+
+      Score 0.0 if a case is missing or contradicted, or if the reply treats
+      instruction changes alone as breaking or denies the concrete breaks.
