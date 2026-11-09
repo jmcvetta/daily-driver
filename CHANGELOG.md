@@ -4,6 +4,7 @@
 
 ### Changed
 
+* Preserve source-anchored, versioned task contracts and separate execution plans across Omp, Claude Code native mods and Codex CLI hooks; retain criterion IDs, amendment history, authority references and cancellation bounds through resume and delegation ([#802](https://github.com/jmcvetta/daily-driver/issues/802)).
 * Consolidate undertaking admission and worker checks around concrete route decisions; remove redundant routing-procedure injection while retaining same-batch mutation protection, truthful worker verification and the final unauthorized-request guard ([#829](https://github.com/jmcvetta/daily-driver/issues/829)).
 * Retain bounded undertaking ownership through pauses and route unsupported epic outcomes to evidence gathering or agreed repair instead of automatic human takeover ([#830](https://github.com/jmcvetta/daily-driver/issues/830)).
 * Add model-independent `/undertaking status` and `/undertaking cancel` controls that preserve unfinished work and revoke only the current undertaking's owned route and children ([#828](https://github.com/jmcvetta/daily-driver/issues/828)).

@@ -1,0 +1,12 @@
+{
+  "description": "Codex native task contracts, durable recovery and cancellation.",
+  "hooks": {
+    "SessionStart": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10, "additionalContextLimit": 5000}]}],
+    "SubagentStart": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10, "additionalContextLimit": 5000}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10, "additionalContextLimit": 5000}]}],
+    "PostToolUse": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10}]}],
+    "SubagentStop": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10}]}],
+    "Stop": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10}]}],
+    "Interrupt": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10}]}]
+  }
+}
