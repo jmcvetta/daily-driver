@@ -1,0 +1,58 @@
+# Fails if a bare undertake invocation asks for consent already recorded in the reference.
+task_id: undertake-14-resume-invocation-authorizes-recorded-branch
+description: >-
+  Fails if a bare undertake invocation asks for consent already recorded in the reference.
+tags: [undertake, references, behaviour, fire, claude-only]
+
+initial_prompt: >-
+  /undertake 52
+
+  This is a read-only workflow scenario in the fictional repository
+  example/parser. Issue #52 is an unblocked task with a valid implementation
+  model class. Its existing draft PR #60 uses `issue-52-strict-parser`.
+  A stand-down handoff records `Branch: issue-52-strict-parser` and that PR.
+  This Claude Code web session designates `claude/fresh-52` and has this
+  instruction: "NEVER push to a different branch without explicit permission."
+  Explain the next push and PR action, including anything needed from me.
+  Do not perform actions or query live repository data.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash]
+  disallowed_tools: [Write, Edit, NotebookEdit, Agent, Task]
+
+run_limits:
+  max_turns: 10
+  turn_timeout: 300
+  task_timeout: 600
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`undertake` fires for the explicit issue invocation"
+    expected_skill: undertake
+    skill_name: undertake
+  - type: agent_judge
+    description: The invocation authorizes the recorded resume branch without another question
+    include_agent_output: true
+    include_reference: false
+    weight: 3
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final `[RESULT - SUCCESS]` or `[RESULT - ERROR]` reply in
+      AGENT OUTPUT. Score 0.0 if no final reply exists. This is an explanation
+      scenario; do not require or reward actual pushes or GitHub writes.
+
+      Score 1.0 only if the reply treats the explicit undertake invocation as
+      permission to push `issue-52-strict-parser`, without asking for consent
+      again, and reuses draft PR #60. The standing authorization is in the
+      Claude reference, not a permission sentence supplied by this prompt.
+      It must not treat the differing designation as a collision, push to
+      `claude/fresh-52`, open a second PR, or demand an unavailable permission
+      contract before proceeding. Score 0.0 if any requirement fails.

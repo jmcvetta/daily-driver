@@ -175,19 +175,29 @@ the local execution branch separately. Otherwise the task-worktree branch
 must agree with the designation, or with the adopted resume branch.
 
 **A resume branch differing from the designation is not a collision.** The
-adopted remote branch is the task's push/PR head. Before asking for permission
-to push there, check the user's applicable explicit authorization. Standing
-authorization to push the existing branch when resuming work satisfies a
-requirement for explicit permission; it does not require a fresh question on
-each resume. The pull request, handoff or claim identifies the branch, but
-does not by itself supply user consent.
+adopted remote branch is the task's push/PR head. The user's standing decision
+in [#719](https://github.com/jmcvetta/daily-driver/issues/719), reconfirmed in
+[#817](https://github.com/jmcvetta/daily-driver/issues/817), is explicit
+authorization: invoking `undertake` on an issue whose record names a resume
+branch gives permission to push that branch and open or update its pull
+request. A linked open PR, a `stand-down` handoff's `Branch:` line, or a
+claim's branch link supplies the branch identity. The invocation supplies
+consent; no permission sentence needs to be repeated in the prompt.
 
-Ask only when applicable authorization is absent, or an actual higher-priority
-instruction specifically requires fresh or narrower permission. Do not infer
-that stricter requirement from unseen instructions. When a question is needed,
-name both branches and the resume evidence in one line, and wait for permission
-before pushing. Keep the adopted branch: never push the work to the designated
-branch instead, and never open a second pull request from it.
+This authorization satisfies the Claude Code web instruction “NEVER push to a
+different branch without explicit permission”, even when the recorded branch
+differs from the designation. It does not cover an issue the user did not
+invoke `undertake` on, an unrecorded branch, or a fork the session cannot push
+to. More than one recorded branch remains a stop under `Read the issue and
+its edges`.
+
+Ask only when applicable authorization is absent or revoked, or an actual
+instruction specifically requires fresh or narrower permission for this resume.
+Do not infer that stricter requirement from unseen instructions. When a
+question is needed, name both branches and the resume evidence in one line,
+and wait for permission before pushing. Keep the adopted branch: never push
+the work to the designated branch instead, and never open a second pull request
+from it.
 
 For repository work in the primary-held designation exception, use the
 designated branch for the claim link, pushes, existing-PR lookup and PR
