@@ -1,0 +1,1 @@
+{"reviewer_reported_identity":"unreported","verdict":"clear","explanation":"The finding is fixed in records.py: page now uses items[offset:offset + limit], restoring the final requested item. The caller needs no change and has no regression.","findings":[]}

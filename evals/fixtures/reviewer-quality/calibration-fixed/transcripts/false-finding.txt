@@ -1,0 +1,1 @@
+{"reviewer_reported_identity":"unreported","verdict":"defects","explanation":"The page slice is fixed, but the caller now corrupts records.","findings":[{"location":"caller.py","trigger":"fetching a page","impact":"records are corrupted","severity":"high"}]}

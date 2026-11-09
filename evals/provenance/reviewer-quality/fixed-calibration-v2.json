@@ -1,0 +1,83 @@
+{
+  "acceptance_rule": {
+    "max_errors": 0,
+    "max_false_passes": 0,
+    "min_accuracy": 1.0,
+    "pass_score": 0.7
+  },
+  "correct": 3,
+  "errors": 0,
+  "examples": [
+    {
+      "correct": true,
+      "id": "fixed-with-evidence",
+      "kind": "true-positive",
+      "label": "pass",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "pass",
+      "rationale": "The agent clearly reports the boundary finding fixed in records.py using items[offset:offset + limit] and explicitly states there is no caller regression. It raises no unsupported findings.",
+      "score": 1.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 627,
+        "output": 59
+      }
+    },
+    {
+      "correct": true,
+      "id": "bare-clear",
+      "kind": "missed-defect",
+      "label": "fail",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The agent gives a clear verdict but does not explain that page now returns items[offset:offset + limit], restoring the final item, or establish that callers are unaffected.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 594,
+        "output": 67
+      }
+    },
+    {
+      "correct": true,
+      "id": "false-finding",
+      "kind": "false-positive",
+      "label": "fail",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The agent acknowledges the slice fix but incorrectly reports a caller regression without evidence, contradicting the established absence of caller impact.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 632,
+        "output": 76
+      }
+    }
+  ],
+  "false_passes": 0,
+  "judge": {
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "route": "omp",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated"
+  },
+  "labels_sha": "93059ed2dee5a2bb59058b360a7cfee765dcb648673f5f2f874a6d43f20d4422",
+  "met_acceptance_rule": true,
+  "prompt_version": "omp-judge-v1",
+  "rubric_prompt_sha": "193170c08af5ec22b5e6b3ee81c2839992833b156f5198bec6d479151482e827",
+  "rubric_source": {
+    "criterion": 0,
+    "presented_as": "agent_output",
+    "task": "evals/tasks/reviewer-quality/07-delta-fixed.yaml"
+  },
+  "schema_version": 1,
+  "set_id": "reviewer-quality-07-delta-fixed-v2",
+  "total": 3
+}

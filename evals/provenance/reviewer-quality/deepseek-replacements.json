@@ -1,0 +1,200 @@
+{
+  "analysis_valid": null,
+  "arm": "deepseek",
+  "attempts": [
+    {
+      "arm": "deepseek",
+      "artifact_sha256": "0c6915e81b9910127ccebcf857911b8d98b510731a07701615e586180c798226",
+      "attempt_seconds": 758.4728944301605,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "e2d95b6f9c5f78345e9bebcd507e0303e06e27a50c75d1591b72a0312d744cf3",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "{\"reviewer_reported_identity\":\"deepseek-v4-pro\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Calling page() with any limit causes the slice upper bound offset + limit - 1 to return one fewer record than requested; with limit=0 the bound is offset - 1, which for offset=0 becomes -1 and returns every record except the last.\",\"impact\":\"Cursor-based listing returns limit-1 records per page, silently dropping one record per page and corrupting pagination; a limit=0 request returns nearly the full dataset instead of an empty page.\",\"severity\":\"high\"}]}",
+      "parent_reported_reviewer_identity": "deepseek-v4-pro",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": false,
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/deepseek-v4-pro:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "delivery_unverified",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-deepseek-replacements",
+      "score": 1.0,
+      "status": "reviewer_unverified",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "deepseek",
+      "artifact_sha256": "72e41e2fbcd6446d3e5267eb3d91019ab8e9f493065e8c01661082086a95c229",
+      "attempt_seconds": 73.63235688209534,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "e2d95b6f9c5f78345e9bebcd507e0303e06e27a50c75d1591b72a0312d744cf3",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "{\"reviewer_reported_identity\":\"deepseek-v4-pro\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:3\",\"trigger\":\"Calling export_project(user, project) when user.id equals project.owner_id (the legitimate owner).\",\"impact\":\"The access check is inverted: the owner raises PermissionError and is denied export, while any non-owner falls through and receives project.archive(), exposing the project archive to unauthorized users. This is an authorization bypass and a denial of service to the authorized owner.\",\"severity\":\"P0\"}]}",
+      "parent_reported_reviewer_identity": "deepseek-v4-pro",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": false,
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/deepseek-v4-pro:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "delivery_unverified",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-deepseek-replacements",
+      "score": 1.0,
+      "status": "reviewer_unverified",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "captured reviewer delivery and reported session identity; backend-served identity is unreported",
+    "expected_model_id": "deepseek-v4-pro",
+    "expected_reviewer_selector": "opencode-go/deepseek-v4-pro:high",
+    "mismatches": [],
+    "reported_model_ids": [],
+    "reviewer_reported_identities": [],
+    "valid": null
+  },
+  "cohort_complete": true,
+  "coverage_complete": true,
+  "created_at": "2026-11-02T14:46:47.260472+00:00",
+  "planned": {
+    "attempts": 2,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-03-authorization"
+    ],
+    "repeats_per_case": 1
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/reviewer-quality-deepseek-replacements",
+      "run_id": "reviewer-quality-deepseek-replacements",
+      "run_record": "evals/provenance/omp-reviewer-deepseek-v4-pro-go-2026-11-02-reviewer-quality-deepseek-replacements.json",
+      "run_record_sha256": "4b9ae07e761f217a28a60f79d5b64189523d13df4f8faee7abb6275aa59c2206"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-deepseek-v4-pro-go.yaml",
+    "experiment_sha256": "260e82fba73502d2f1233ada8d0d0bcb7e7dc52a740690382530f944a3f14eee",
+    "route_overlay_path": "/home/jmcvetta/projects/daily-driver.issue-737-reviewer-quality/evals/fixtures/reviewer-quality/shared/routes/deepseek.yml",
+    "route_overlay_sha256": "add91cbf8891391b2be6a014a7c43c48d6750647537161698984e8f0105860a4"
+  },
+  "summary": {
+    "attempts": 2,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 0,
+        "false_alarms": 0,
+        "planned_denominator": 0
+      },
+      "delta": {
+        "accuracy": null,
+        "correct": 0,
+        "eligible_denominator": 0,
+        "planned_denominator": 0
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": null,
+        "precision_denominator": 0,
+        "recall": null,
+        "recall_eligible_denominator": 0,
+        "recall_planned_denominator": 2,
+        "tp": 0
+      },
+      "unexpected_valid": []
+    },
+    "eligible": 0,
+    "harness_errors": 0,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 2,
+      "max": 758.4728944301605,
+      "mean": 416.05262565612793,
+      "median": 416.05262565612793,
+      "min": 73.63235688209534,
+      "population_stddev": 342.4202687740326
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 0,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 0
+      },
+      "reviewer-quality-03-authorization": {
+        "eligible": 0,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 0
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_delivery_unverified": 2,
+    "unattempted": 0,
+    "verified_reviewer_completion_rate": 0.0,
+    "verified_reviewer_completions": 0
+  },
+  "winner": null
+}

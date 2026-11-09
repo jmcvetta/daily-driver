@@ -1,0 +1,1 @@
+{"reviewer_reported_identity":"unreported","verdict":"defects","findings":[{"location":"records.py, page end expression","trigger":"positive limit returns one fewer record than requested","impact":"the final requested record can be skipped during pagination","severity":"high"}]}
