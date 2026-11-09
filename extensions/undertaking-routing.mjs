@@ -670,7 +670,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	}
 
 	function workerReady(ctx, state) {
-		if (isCancelled(state) || state.status !== "verified" || state.consultation ||
+		if (isCancelled(state) || state.restoring || state.status !== "verified" || state.consultation ||
 			selector(state.workerModels.current()) !== state.selectedModel ||
 			(state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort)) return false;
 		try {
@@ -678,6 +678,52 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			return true;
 		} catch { return false; }
 	}
+
+	pi.on("before_agent_start", async (_event, ctx) => {
+		const state = current(ctx);
+		if (!state || isCancelled(state) ||
+			state.consultation || state.recovery || consultation(ctx, state) ||
+			!state.selectedModel || !state.origin || state.restoring) return;
+		const initial = ctx.models.current();
+		const initialEffort = pi.getThinkingLevel();
+		if (!rejections.has(state.sessionId) && state.status !== "blocked" &&
+			selector(initial) === state.selectedModel &&
+			(state.selectedEffort === undefined || initialEffort === state.selectedEffort)) return;
+		const unchanged = () => current(ctx) === state && !isCancelled(state) &&
+			ctx.models.current() === initial && pi.getThinkingLevel() === initialEffort;
+		state.restoring = true;
+		try {
+			if (state.ownerState && state.ownerState.status !== "verified") throw new Error("Parent undertaking route is not verified");
+			const target = ctx.models.resolve(state.selectedModel);
+			if (!target) throw new Error("The admitted worker model is unavailable");
+			const decision = workerDecision(ctx, state);
+			checkModel(ctx, state, target);
+			checkDecision(ctx, decision, target, state.selectedEffort);
+			if (!(await ctx.modelRegistry.getApiKey(target, state.sessionId))) throw new Error("The admitted worker has no available credentials");
+			if (!unchanged()) return;
+			if (!sameOrigin(origin(initial), origin(target))) {
+				if (typeof pi.setModel !== "function" || !(await pi.setModel(target))) throw new Error("The host rejected automatic worker restoration");
+				if (current(ctx) !== state || isCancelled(state) ||
+					!sameOrigin(origin(ctx.models.current()), origin(target))) return;
+			}
+			if (state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort) {
+				if (typeof pi.setThinkingLevel !== "function") throw new Error("Effort restoration control is unavailable");
+				pi.setThinkingLevel(state.selectedEffort);
+			}
+			checkDecision(ctx, decision, ctx.models.current(), pi.getThinkingLevel());
+			if (!state.lease) installPool(ctx, state);
+			// A restored selection is not a successful worker response.
+			if (state.status === "blocked") {
+				state.status = "pending";
+				state.observedModel = null;
+				state.reason = undefined;
+			}
+		} catch (error) {
+			reportRejection(ctx, state, error);
+		} finally {
+			state.restoring = false;
+		}
+	});
 
 	pi.on("before_provider_request", (_event, ctx) => {
 		const state = current(ctx);
