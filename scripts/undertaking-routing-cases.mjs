@@ -204,6 +204,7 @@ function fakeSession(options = {}) {
 			return tool.execute("finish-call", { issue }, undefined, undefined, ctx);
 		},
 		tool: (toolName, input = {}) => fire("tool_call", { toolCallId: "queued-call", toolName, input }),
+		prompt: () => fire("before_agent_start", { reason: "prompt", prompt: "Continue the conversation.", systemPrompt: [] }),
 		request: () => fire("before_provider_request", { payload: { model: current.id } }),
 		helperRequest: (selected) => fire("before_provider_request", { payload: { model: selected.id } }, selected),
 		response: (status = 200) => fire("after_provider_response", { status, headers: {} }),
@@ -659,7 +660,7 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(s.describe().undertaking.status, "verified");
 	});
 
-	// Rejected inference must not prevent the selected worker from explaining or repairing the failure.
+	// A rejected route must recover on the next user prompt without manual model selection or cancellation.
 	for (const [name, drift] of [
 		["class", MECHANICAL],
 		["provider", model(REASONING.id, { provider: "other-provider" })],
@@ -668,7 +669,7 @@ export default function registerUndertakingRoutingChecks(check) {
 		["transport", model(REASONING.id, { api: "openai-completions" })],
 		["headers", model(REASONING.id, { headers: { "x-routing-region": "other-region" } })],
 	]) {
-		routingCheck(`${name} request drift aborts without poisoning recovery`, async (create) => {
+		routingCheck(`${name} request drift automatically restores the admitted route`, async (create) => {
 			const s = await create();
 			await s.route({ modelClass: "reasoning" });
 			const selected = structuredClone(s.describe().undertaking);
@@ -676,7 +677,10 @@ export default function registerUndertakingRoutingChecks(check) {
 			await assert.rejects(s.request());
 			assert.equal(s.calls.aborts, 1);
 			assert.deepEqual(s.describe().undertaking, selected);
-			s.setCurrent(REASONING);
+			await s.prompt();
+			assert.equal(s.ctx.models.current(), REASONING);
+			assert.equal(s.describe().undertaking.status, "pending", "restoration cannot verify the worker");
+			assertBlocked(await s.tool("write", { path: "premature.js", content: "change" }));
 			await s.request();
 			await s.assistant();
 			assert.equal(s.calls.aborts, 1, "the restored worker must reach inference");
@@ -684,17 +688,95 @@ export default function registerUndertakingRoutingChecks(check) {
 		});
 	}
 
-	// Refusing an effort mismatch must not require a process restart after the configured effort is restored.
+	// An effort mismatch must not strand the conversation until the operator repairs its budget.
 	routingCheck("same-model effort drift aborts before inference", async (create) => {
 		const s = await create();
 		await s.route();
 		s.setEffort("low");
 		await assert.rejects(s.request(), /effort/iu);
 		assert.equal(s.calls.aborts, 1);
-		s.setEffort("high");
+		await s.prompt();
+		assert.equal(s.pi.getThinkingLevel(), "high");
 		await s.request();
 		assert.equal(s.calls.aborts, 1, "restoring the effort must allow the selected worker to continue");
 		assertAllowed(await s.tool("write", { path: "recovery.md", content: "Selected route restored." }));
+	});
+
+	// Reloading on a mismatched model must not require cancelling the persisted undertaking.
+	routingCheck("reload restores the admitted route before the next prompt", async (create) => {
+		const first = await create();
+		await first.route({ modelClass: "reasoning" });
+		const entries = structuredClone(first.entries);
+		await first.close();
+		const resumed = await create({ entries, current: MECHANICAL });
+		await resumed.prompt();
+		assert.equal(resumed.ctx.models.current(), REASONING);
+		assert.equal(resumed.describe().undertaking.status, "pending");
+		await resumed.assistant();
+		assert.equal(resumed.describe().undertaking.status, "verified");
+		assertAllowed(await resumed.tool("write", { path: "recovered.js", content: "change" }));
+	});
+
+	// Unavailable credentials must not cause automatic recovery to select an unapproved replacement.
+	routingCheck("failed automatic restoration retains ownership and denies inference", async (create) => {
+		let available = true;
+		const s = await create({ getApiKey: async () => available ? "fixture-key" : undefined });
+		await s.route({ modelClass: "reasoning" });
+		s.setCurrent(MECHANICAL);
+		await assert.rejects(s.request());
+		available = false;
+		const selections = s.calls.models.length;
+		await s.prompt();
+		assert.equal(s.calls.models.length, selections);
+		assert.equal(s.describe().undertaking.issue, 755);
+		assert.equal(s.describe().undertaking.status, "pending");
+		assertBlocked(await s.tool("write"));
+		await assert.rejects(s.request());
+		assert.match((await s.inspection()).lastRejection, /selected worker/iu);
+	});
+
+	// Cancellation while credential lookup waits must not resurrect the released worker or lease.
+	routingCheck("cancelled automatic recovery cannot select a worker", async (create) => {
+		const pending = deferred();
+		let delay = false;
+		const s = await create({ getApiKey: async () => {
+			if (delay) await pending.promise;
+			return "fixture-key";
+		} });
+		await s.route({ modelClass: "reasoning" });
+		s.setCurrent(MECHANICAL);
+		await assert.rejects(s.request());
+		delay = true;
+		const selections = s.calls.models.length;
+		const recovery = s.prompt();
+		await s.command("cancel 755");
+		pending.resolve();
+		await recovery;
+		assert.equal(s.calls.models.length, selections);
+		assert.equal(s.describe().undertaking, null);
+		assert.equal(s.auth.sessions.isRestricted(PROVIDER, s.sessionId), false);
+	});
+
+	// An operator's newer selection must win over a delayed automatic restoration.
+	routingCheck("operator selection supersedes pending automatic recovery", async (create) => {
+		const pending = deferred();
+		let delay = false;
+		const s = await create({ getApiKey: async () => {
+			if (delay) await pending.promise;
+			return "fixture-key";
+		} });
+		await s.route({ modelClass: "reasoning" });
+		s.setCurrent(MECHANICAL);
+		await assert.rejects(s.request());
+		delay = true;
+		const selections = s.calls.models.length;
+		const recovery = s.prompt();
+		s.selectCurrent(FRONTIER);
+		pending.resolve();
+		await recovery;
+		assert.equal(s.ctx.models.current(), FRONTIER);
+		assert.equal(s.calls.models.length, selections);
+		assert.equal(s.describe().undertaking.status, "pending");
 	});
 
 	// A rejected authentication change must not poison the unchanged route after its source is restored.

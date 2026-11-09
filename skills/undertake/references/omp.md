@@ -104,6 +104,14 @@ completed undertaking or resume the existing one before selecting another.
 A finish call with the wrong issue also returns an error and preserves the
 existing state.
 
+**Ordinary conversation recovers automatically.** After request rejection,
+the next prompt restores the admitted worker model and effort without a
+cancel command or manual model change. Restoration validates the existing
+route and available credentials; it does not broaden admission, replay the
+failed request, cancel the task, or verify a pending worker. A missing target
+or unavailable credentials remain an explicit gap. Native consultation and
+independent helper routes remain separate.
+
 **Operator recovery does not require a model turn.** Run `/undertaking status`
 locally to inspect the owner, selected model and effort, host selection, last
 observed execution identity, authentication route category, and last rejection.
