@@ -221,6 +221,10 @@ def run_routing_controls(omp: str, base: Path, env: dict[str, str]) -> None:
     observer = base / "controls-observer.mjs"
     observer.write_text('''import { createHash } from "node:crypto";
 export default function(pi) {
+ // Drift after prompt preparation so this probe still exercises rejected-request controls.
+ pi.on("before_agent_start",async(_event,ctx)=>{
+  await pi.setModel(ctx.models.resolve("embark-title-probe/embark-title-probe-model"));
+ });
  pi.registerCommand("seed-controls", {handler: async (args,ctx) => {
   const model = ctx.models.current();
   const auth = ctx.modelRegistry.authStorage.keys.source(model.provider, {env:"aliases"});
@@ -332,12 +336,13 @@ export default function(pi) {
 
 
 def run_routing_boundaries(omp: str, base: Path, env: dict[str, str]) -> None:
-    """Prevent mock-only admission from hiding real request drift or failed recovery."""
+    """Prevent request rejection from requiring manual cancellation or model restoration."""
     observer = base / "boundaries-observer.mjs"
     observer.write_text('''import { installUndertakingRouting } from "''' + os.path.relpath(ROOT / "extensions/undertaking-routing.mjs", base) + '''";
 import { lookup } from "@oh-my-pi/pi-coding-agent/config/registry";
 export default function(pi) {
  let route;
+ let drift = false;
  const register = pi.registerTool.bind(pi);
  pi.registerTool = definition => {
   if (definition.name === "daily_driver_route_undertaking") route = definition;
@@ -347,7 +352,13 @@ export default function(pi) {
   referenceModel:"embark-title-probe/embark-title-probe-model",
   classes:{reasoning:"embark-title-probe/independent-reviewer"}
  }]);
+ pi.on("before_agent_start",async(_event,ctx)=>{
+  if(!drift) return;
+  drift=false;
+  await pi.setModel(ctx.models.resolve("embark-title-probe/embark-title-probe-model"));
+ });
  pi.registerCommand("route-boundary", {handler:async(args,ctx)=>{
+  if(args === "drift") { drift=true; return; }
   const settings=pi.pi.settings;
   const chains=lookup("retry.fallbackChains");
   const previous=chains.get(settings);
@@ -446,19 +457,18 @@ export default function(pi) {
                         assert rejected.get("isError"), rejected
                         assert rejected["details"]["undertaking"]["selectedModel"] == selected, rejected
                         assert len(REQUEST_IDENTITIES) == before, "visible candidate preflight incurred inference"
-                    model("drift", FIXTURE.MODEL)
-                    prompt("reject-drift")
-                    info = status("rejected")
-                    assert info["selectedModel"] == selected and info["state"] == "verified", info
-                    assert info["hostModel"] == f"{FIXTURE.PROVIDER}/{FIXTURE.MODEL}" and info["lastRejection"], info
-                    assert len(REQUEST_IDENTITIES) == before, "rejected worker reached the provider"
-                    send({"id": "inspect-host", "type": "get_state"})
-                    assert wait(lambda frame: frame.get("id") == "inspect-host").get("success")
-                    send({"id": "abort-host", "type": "abort"})
-                    assert wait(lambda frame: frame.get("id") == "abort-host").get("success")
-                    model("restore", REVIEWER_MODEL)
-                    prompt("restored-worker")
-                    assert status("restored")["observedModel"] == selected
+                before = len(REQUEST_IDENTITIES)
+                command("arm-late-drift", "/route-boundary drift")
+                prompt("reject-drift")
+                info = status("rejected")
+                assert info["selectedModel"] == selected and info["state"] == "verified", info
+                assert info["hostModel"] == f"{FIXTURE.PROVIDER}/{FIXTURE.MODEL}" and info["lastRejection"], info
+                assert len(REQUEST_IDENTITIES) == before, "rejected worker reached the provider"
+                prompt("automatically-restored-worker")
+                restored = status("restored")
+                assert restored["hostModel"] == selected and restored["observedModel"] == selected, restored
+                assert restored["state"] == "verified" and restored["issue"] == 829, restored
+                assert len(REQUEST_IDENTITIES) == before + 1, "recovery must make only the user's admitted request"
             finally:
                 process.stdin.close()
                 try:
@@ -466,8 +476,8 @@ export default function(pi) {
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait()
-    assert REQUEST_IDENTITIES[start_requests:] == [REVIEWER_MODEL] * 3, REQUEST_IDENTITIES[start_requests:]
-    print("Undertaking boundaries: real candidate preflight, rejected HTTP request, local inspection/abort, restoration and reload passed")
+    assert REQUEST_IDENTITIES[start_requests:] == [REVIEWER_MODEL] * 4, REQUEST_IDENTITIES[start_requests:]
+    print("Undertaking boundaries: rejected HTTP drift, automatic next-prompt recovery and reload passed without manual intervention")
 
 
 def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -> list[dict]:
