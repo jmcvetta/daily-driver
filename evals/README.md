@@ -468,6 +468,9 @@ the agent searched for one. Three pending-CI slots reached their eight-tool
 cap. Deterministic criteria still made the upstream status `SUCCESS`.
 Do not count those seven partial slots as behavioral passes. The adapter now
 gives capped output an `ERROR` anchor while retaining the cap flag and criteria.
+New provenance records also retain `max_turns_exhausted`, preserve raw status
+and criteria, and give a capped partial an error outcome with no completion
+score. Semantic grades cannot turn that partial into a completion pass.
 
 The negative control now supplies the complete README in its prompt; its
 criterion, tools and limits are unchanged. The worktree fixture pins local
@@ -503,6 +506,22 @@ longer task paths crossed the native default session-directory component
 limit. This is not a model regression. The private-session launch correction
 was then exercised against the actual Omp executable with a legal long cwd,
 including both explicit option forms, without starting a model turn.
+
+The corrected native fixtures then used adapter
+`c2f7b280f1b1f6655b16e6762a5891d074cccd2a`, the same frozen plugin pair and
+`gpt-5.6-sol`. Limits and criteria stayed fixed. Four initial v2 judge calls
+graded the captured ordinary-commit outputs; no subject slot was retried:
+
+| Corrected case and record | Base scores | Candidate scores | Limit |
+| --- | --- | --- | --- |
+| [Read-only negative](provenance/disclosure-corrected-fixtures-codex-20261109-2026-11-09-02-neg-read-only-review.json) | 1, 1 | 1, 1 | All completed without task-worktree activation. |
+| [Ordinary commit](provenance/disclosure-corrected-fixtures-codex-20261109-2026-11-09-disclosure-ordinary-commit.json) | Partial, 1 | 1, 1 | Baseline replicate 0 reached the unchanged twenty-tool cap. Its captured criterion grades do not establish completion. |
+
+An offline replay of these eight real artifacts verified the capped error,
+null completion score, preserved raw result and exclusion from score rollups.
+The other three ordinary-commit slots passed the complete v2 rubric. This
+targeted repair does not make the original capped pending-CI slots complete
+or establish full cross-harness parity.
 
 
 ## Provenance
