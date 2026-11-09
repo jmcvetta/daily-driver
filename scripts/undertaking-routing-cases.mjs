@@ -702,6 +702,28 @@ export default function registerUndertakingRoutingChecks(check) {
 		assertAllowed(await s.tool("write", { path: "recovery.md", content: "Selected route restored." }));
 	});
 
+	// Host metadata/default-effort refresh must not strand the restored worker at the wrong effort.
+	routingCheck("refreshed worker metadata still restores admitted effort", async (create) => {
+		const s = await create({
+			effort: "low",
+			setModel: async (selected, update) => {
+				update({ ...selected, contextWindow: 65536 });
+				s.setEffort("medium");
+				return true;
+			},
+		});
+		await s.route({ modelClass: "reasoning" });
+		s.setCurrent(MECHANICAL);
+		s.setEffort("low");
+		await assert.rejects(s.request());
+		await s.prompt();
+		assert.equal(qualified(s.ctx.models.current()), qualified(REASONING));
+		assert.equal(s.pi.getThinkingLevel(), "high");
+		await s.request();
+		await s.assistant();
+		assertAllowed(await s.tool("write", { path: "recovered.js", content: "change" }));
+	});
+
 	// Reloading on a mismatched model must not require cancelling the persisted undertaking.
 	routingCheck("reload restores the admitted route before the next prompt", async (create) => {
 		const first = await create();

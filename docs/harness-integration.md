@@ -206,6 +206,9 @@ authentication route and have available credentials. No manual cancellation,
 model selection, request replay or autonomous inference is required. Pending
 workers still need a successful admitted response before task work.
 Cancellation and newer selections invalidate a waiting restoration.
+Model selection may refresh metadata and apply host effort defaults.
+Restoration compares the admitted origin, not object identity, then reapplies
+the admitted effort.
 
 A disposable Omp 18.18.3 loopback proof rejected late model drift without an
 unauthorized HTTP request. The next user prompt completed on the admitted

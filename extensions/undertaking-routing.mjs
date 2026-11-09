@@ -703,8 +703,8 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 			if (!unchanged()) return;
 			if (!sameOrigin(origin(initial), origin(target))) {
 				if (typeof pi.setModel !== "function" || !(await pi.setModel(target))) throw new Error("The host rejected automatic worker restoration");
-				if (current(ctx) !== state || isCancelled(state) || ctx.models.current() !== target ||
-					pi.getThinkingLevel() !== initialEffort) return;
+				if (current(ctx) !== state || isCancelled(state) ||
+					!sameOrigin(origin(ctx.models.current()), origin(target))) return;
 			}
 			if (state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort) {
 				if (typeof pi.setThinkingLevel !== "function") throw new Error("Effort restoration control is unavailable");
