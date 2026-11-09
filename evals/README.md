@@ -523,6 +523,20 @@ The other three ordinary-commit slots passed the complete v2 rubric. This
 targeted repair does not make the original capped pending-CI slots complete
 or establish full cross-harness parity.
 
+After the private-session correction, Omp used adapter
+`67e77597c1854d69450ab374159df0e511d87a28` with the same corrected inputs,
+plugin pair and original limits. All eight subject slots completed without
+startup errors or caps. Four initial v2 judge calls graded ordinary work:
+
+| Corrected Omp case and record | Base scores | Candidate scores |
+| --- | --- | --- |
+| [Read-only negative](provenance/disclosure-omp-private-sessions-20261109-2026-11-09-02-neg-read-only-review.json) | 1, 1 | 1, 1 |
+| [Ordinary commit](provenance/disclosure-omp-private-sessions-20261109-2026-11-09-disclosure-ordinary-commit.json) | 1, 1 | 1, 1 |
+
+The earlier startup failures remain separate. Claude comparison still needs
+native sign-in; its prepared continuation preserves the original plugin pair,
+model, nine cases, criteria and limits. No further Claude request has run.
+
 
 ## Provenance
 
