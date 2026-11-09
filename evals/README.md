@@ -303,8 +303,40 @@ span system suspension and inflate its range; the median is not reviewer-only
 latency. Reviewer usage, backend-served identities, subscription consumption,
 and cash spend are unavailable, not zero. DeepSeek had more attributable
 completions and fewer false positives here; GLM had a lower attempt median.
-The fixed-delta rubric limitation prevents a reliable overall winner. Keep the
-existing DeepSeek default unchanged.
+These observations do not establish an overall winner. Keep the existing
+DeepSeek default unchanged.
+
+### Corrected fix-delta comparison
+
+The [corrected protocol](provenance/reviewer-quality/freeze-delta-v2.json)
+provides an explanation field and uses five repeats per case and model.
+The fixed and incomplete rubrics each classified all three labelled
+calibration examples correctly. Both arms used the archived plugin tree
+`8ab7a6ed24c1e6c9024e7beea6f652d0ba48175b` and Omp 18.14.1.
+
+| Measure | GLM 5.3 | DeepSeek V4 Pro |
+| --- | --- | --- |
+| Verified reviewer completions | 10/10 | 10/10 |
+| Correct fixed-delta reviews | 4/5 | 5/5 |
+| Correct incomplete-fix reviews | 5/5 | 5/5 |
+| Attempt duration median / range | 67.5 s / 59.5–76.0 s | 85.5 s / 70.4–110.1 s |
+
+The first judge pass scored all 20 reviews as correct but assigned contradictory
+missed-fix labels to seven passing fixed reviews. Its
+[GLM](provenance/reviewer-quality/glm-delta-v2.json) and
+[DeepSeek](provenance/reviewer-quality/deepseek-delta-v2.json) results remain
+available. After clarifying the label definitions and recalibrating, the same
+responses were independently regraded; no reviewer was rerun. The regrade
+penalized one GLM review for an overgeneralized claim about a zero limit that
+the first pass accepted. The score depends on the judge's treatment of that
+claim. The regraded
+[GLM](provenance/reviewer-quality/glm-delta-v2-regraded.json) and
+[DeepSeek](provenance/reviewer-quality/deepseek-delta-v2-regraded.json)
+evidence retains the judge rationale and each reviewer response.
+
+Attempt duration includes orchestration, not reviewer latency. Backend-served
+identity, reviewer-only usage, and cash spend remain unavailable. Two fixtures
+and five repeats per case do not establish an overall winner.
 
 `scripts/evals-reviewer-quality.py` collects bounded per-case evidence from
 explicit run directories and their committed records. An incomplete cohort
