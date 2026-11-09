@@ -1,7 +1,15 @@
+const parents = new Map();
+
 /** parentOf names a subagent's direct parent loop, so a nested child adopts its parent's contract, not the root's. */
 async function parentOf($, agentId) {
 	if (!agentId) return null;
-	return (await $.agent.list()).find((agent) => agent.id === agentId)?.parentId ?? null;
+	// A parent never changes, and the engine stops listing an agent that has ended.
+	if (!parents.has(agentId)) {
+		const listed = (await $.agent.list()).find((agent) => agent.id === agentId);
+		if (!listed) return null;
+		parents.set(agentId, listed.parentId ?? null);
+	}
+	return parents.get(agentId);
 }
 
 async function request($, payload, agentId) {

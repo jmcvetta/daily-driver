@@ -81,7 +81,7 @@ export async function handleTaskEvent(request) {
 		}
 		const state = (await status()).state;
 		if (state && ["UserPromptSubmit", "SessionStart", "SubagentStart", "prompt.submit", "session.start", "session.compact"].includes(name)) {
-			const route = request.harness === "claude" ? "\nNative task-state tool: mcp__daily-driver__task_state." : request.toolCommand ? `\nTask-state tool route: ${request.toolCommand}. Supply JSON {action, record} on stdin. The command is bound to this native session; do not change its session identity.` : "";
+			const route = request.harness === "claude" ? "\nNative task-state tool: mcp__daily-driver__task_state." : request.toolCommand ? `\nTask-state tool route: ${request.toolCommand}. Supply JSON {action, record} on stdin. A rejection still exits 0: read isError in the JSON answer. Run the command on its own, not chained with other work, so its exact output matches the receipt that keeps it out of task evidence. The command is bound to this native session; do not change its session identity.` : "";
 			const context = controller.instructions(ctx) + route;
 			output = request.harness === "codex" ? { hookSpecificOutput: { hookEventName: name, additionalContext: context } } : { context };
 		}

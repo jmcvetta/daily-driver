@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { amendContract, contractHandoff, createContract, migrateContractState } from "./task-contract.mjs";
+import { amendContract, contractHandoff, createContract, migrateContractState, sourceReference } from "./task-contract.mjs";
 
 const STATE = "daily-driver.task-state";
 const SOURCE = "daily-driver.task-source";
@@ -154,7 +154,7 @@ export function createTaskStateController(pi) {
 				next.executionBound = true;
 				next.contract = contract;
 				next.contractHistory = [...current.contractHistory, { revision: contract.revision, contract,
-					change: "Bind request to its execution operation and target", sourceRefs: [{ sourceId: source.sourceId, quote: source.text }] }];
+					change: "Bind request to its execution operation and target", sourceRefs: [sourceReference(source, source.text)] }];
 			}
 			save(ctx, next);
 			return;
@@ -208,7 +208,7 @@ export function createTaskStateController(pi) {
 			return;
 		}
 		if (CANCEL.test(event.text)) {
-			if (current) save(ctx, { ...current, status: "cancelled", cancellationSource: source.sourceId });
+			if (current?.status === "active") save(ctx, { ...current, status: "cancelled", cancellationSource: source.sourceId });
 			return;
 		}
 		if (REQUEST.test(event.text) && current?.status !== "active") begin(ctx, current ? { newTask: true } : {}, source);

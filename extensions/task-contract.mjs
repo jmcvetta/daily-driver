@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 const FIELDS = ["objective", "scope", "exclusions", "constraints", "criteria", "requiredEvidenceKinds", "requiredReviewKinds", "approvalRequirements"];
 const copy = (value) => JSON.parse(JSON.stringify(value));
 const nonblank = (value) => typeof value === "string" && Boolean(value.trim());
-const sourceReference = (source, quote) => ({ sourceId: source.sourceId, quote, sourceClass: source.kind,
+export const sourceReference = (source, quote) => ({ sourceId: source.sourceId, quote, sourceClass: source.kind,
 	origin: source.origin ?? null, version: source.version ?? source.fingerprint ?? null });
 
 /** createContract retains a request without inventing unspecified acceptance or approval requirements. */

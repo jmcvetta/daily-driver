@@ -280,7 +280,10 @@ export default function registerTaskContractChecks(check, root) {
 		const post = (id, output, exitCode) => assert.equal(run({ hook_event_name: "PostToolUse", session_id: "s", turn_id: "one", tool_use_id: id,
 			tool_name: "Bash", tool_input: { command: "anything; the hook never parses it" }, tool_response: { exit_code: exitCode, output } }).status, 0);
 		try {
-			run({ hook_event_name: "UserPromptSubmit", session_id: "s", turn_id: "one", prompt: "Fix the parser." });
+			const prompt = JSON.parse(run({ hook_event_name: "UserPromptSubmit", session_id: "s", turn_id: "one", prompt: "Fix the parser." }).stdout);
+			// The model must learn the exit-0 contract from the route it is given, not only from a skill reference.
+			assert.match(prompt.hookSpecificOutput.additionalContext, /read isError/u);
+			assert.match(prompt.hookSpecificOutput.additionalContext, /on its own/u);
 			// A controller error and a malformed record both answer with isError and exit 0.
 			const rejected = run({ action: "contract", record: { expectedRevision: 99 } }, true);
 			assert.equal(rejected.status, 0, rejected.stderr);
@@ -298,6 +301,42 @@ export default function registerTaskContractChecks(check, root) {
 			assert.deepEqual(status.evidence.map((item) => item.sourceId), ["tool:replayed", "tool:real", "tool:chained"]);
 			assert.deepEqual(status.evidence.map((item) => item.isError), [false, true, true]);
 		} finally { rmSync(home, { recursive: true, force: true }); }
+	});
+
+	/** A subagent's late events must keep its direct parent after the engine stops listing it, without a lookup per call. */
+	check("Claude mod remembers a subagent's parent across calls", async () => {
+		const handlers = new Map();
+		registerClaude((event, ...args) => { handlers.set(event, args.at(-1)); });
+		const calls = [];
+		let listed = [{ id: "nested-b", parentId: "nested-a" }];
+		let lookups = 0;
+		const $ = { plugin: { root }, session: { id: async () => "claude-root", cwd: async () => root }, ui: { log: async () => {} },
+			agent: { list: async () => { lookups += 1; return listed; } },
+			process: { run: async (argv) => { calls.push(argv); return { exitCode: 0, stdout: JSON.stringify({ details: {}, content: [] }) }; } } };
+		const next = async (event) => event; next.signal = new AbortController().signal;
+		await handlers.get("classic.SubagentStart")($, { agent_id: "nested-b" }, async () => ({}));
+		listed = [];
+		await handlers.get("classic.SubagentStop")($, { agent_id: "nested-b", turn_id: "end" }, next);
+		assert.ok(calls.every((argv) => argv.join(" ").includes("--agent nested-b --parent nested-a")), JSON.stringify(calls));
+		assert.equal(lookups, 1);
+	});
+
+	/** A binding revision without a normalized reference would read as unsourced to anything checking sourceClass. */
+	check("binding a task to execution labels records a normalized user source reference", async () => {
+		const s = session(); s.input("Fix the parser.");
+		assert.equal((await s.command("begin", { taskId: "parser", operation: "fix", target: "parser" })).isError, undefined);
+		const binding = (await s.status()).state.contractHistory.at(-1);
+		assert.equal(binding.revision, 2);
+		assert.equal(binding.sourceRefs[0].sourceClass, "user");
+		assert.ok(binding.sourceRefs[0].version);
+	});
+
+	/** A stop typed after reported completion must not rewrite finished work as cancelled. */
+	check("a cancel message leaves a reported-complete task complete", async () => {
+		const s = session(); s.input("Fix the parser.");
+		await s.command("complete", { summary: "Parser fixed." });
+		s.input("stop");
+		assert.equal((await s.status()).state.status, "reported-complete");
 	});
 
 	/** A nested subagent must adopt its direct parent's revision yet still resolve the root's original user request. */

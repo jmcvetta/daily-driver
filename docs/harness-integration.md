@@ -201,6 +201,12 @@ call also records a receipt: a digest of its exact output in the private
 ledger. `PostToolUse` drops a non-failing result whose output equals a pending
 receipt and consumes that receipt. Nothing parses the shell command, so a call
 chained with other work, or wrapped in other output, stays ordinary evidence.
+Codex sends a Bash `PostToolUse` result as the captured output string, with no
+exit status (`codex-rs/core/src/tools/context.rs`,
+`ExecCommandToolOutput::post_tool_use_response`). A Codex shell observation
+therefore never records a failure: a failed command does not change the
+correction condition and cannot support an `execution` blocker on Codex. The
+two-correction bound still applies to an unchanged condition.
 The implementation requires Python 3, POSIX process locks and Node.js.
 Trust the installed hooks through Codex's supported hook review.
 
