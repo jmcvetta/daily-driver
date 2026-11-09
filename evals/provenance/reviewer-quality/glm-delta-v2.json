@@ -1,0 +1,584 @@
+{
+  "analysis_valid": true,
+  "arm": "glm",
+  "attempts": [
+    {
+      "arm": "glm",
+      "artifact_sha256": "04e364983db4e816247b7678f6b08cba163fafb1bd7a2d30dd3bc7b175e7791b",
+      "attempt_seconds": 66.33723640441895,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "DELTA:clear",
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"explanation\":\"The prior finding is resolved. The original review commit changed records.py page() to items[offset:offset + limit - 1], which dropped the last item of a full page (and returned an empty list for limit=1). The review...current delta reverts that line to items[offset:offset + limit], and base...current is empty, so the current revision exactly restores the baseline behavior. A behavioral check of page() confirmed full-page (offset 0 and 2, limit 3), partial-page, limit=1, and empty-input cases all return the correct records. The sole caller, list_records() in client.py, delegates directly to page(items, offset, limit) with no slicing or length assumptions of its own, so the fix restores correct caller output and introduces no new defects.\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "8b41ebb4232bac7a800070722c75661aa55fc5f84748ef7628a96f739541c1b2",
+      "attempt_seconds": 69.99369859695435,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "DELTA:clear"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"explanation\":\"The original finding is confirmed valid at the review commit 192d892, where records.py returned items[offset:offset + limit - 1], dropping the last item at a full page boundary and returning one item when limit=0. The current commit e989250 restores items[offset:offset + limit], identical to base cc13cd8; the base...current diff for records.py is empty, so the fixed disposition is independently verified with no residual base-only change. The sole caller, list_records in client.py, forwards (items, offset, limit) directly to page with no slicing of its own, so it now again returns exactly the documented 'up to limit records beginning at offset' page.\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "b5ac9c93c029cb7a4ebe99f6eee8ef184030a47b7f9ecc495fdb99762da9a6a3",
+      "attempt_seconds": 63.06140875816345,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "DELTA:clear",
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"explanation\": \"The original finding is resolved. The review commit (192d892) changed records.py page() to items[offset:offset + limit - 1], dropping the last item at a full page boundary (e.g. limit 10 over 10 items returned 9; limit 1 returned an empty list, verified with a disposable in-memory scenario). The current commit (e989250) reverts the slice to items[offset:offset + limit]; the base...current diff is empty, so records.py matches baseline exactly and the off-by-one is fully removed. The sole caller, client.list_records, forwards offset and limit unchanged, is untouched on all three surfaces, and its 'requested page of records' contract is restored by the fix. No new or residual defects on the reviewed surfaces.\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "28251f55c6dede9e1803700aae19bde43c488f434b562ac9b3270729df214977",
+      "attempt_seconds": 65.52451920509338,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "DELTA:clear"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"explanation\":\"The original finding is resolved. The review commit (192d892) changed the slice in records.py:page to items[offset:offset + limit - 1], dropping the last requested record whenever a page was full. The current commit (e989250) restores items[offset:offset + limit]; the base...current diff on records.py is empty, so the helper is byte-identical to the correct baseline, and the review...current diff is exactly the one-line revert of the off-by-one. The only caller, client.py:list_records, passes offset and limit through unchanged, so it now receives the complete requested page including the boundary item, and no other code references page(). No new defects are introduced by the fix.\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "5811f2a1b995f8a6acbdad476b9e959dcf742776777757714ebfb54b377ecdc3",
+      "attempt_seconds": 59.452064990997314,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "DELTA:clear",
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "opencode-go/glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "opencode-go/glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"opencode-go/glm-5.3\",\"verdict\":\"clear\",\"explanation\":\"The review commit (192d892) introduced the reported defect: records.py page() sliced items[offset:offset + limit - 1], returning at most limit-1 records and dropping the last requested item whenever a full page was available. The current commit (e989250) restores items[offset:offset + limit], byte-identical to the baseline blob (1b2574b), so base...current is empty and the original finding is resolved. The only caller, client.py list_records(), forwards (items, offset, limit) unchanged and returns page()'s result, so the fix restores the caller's baseline behavior with no regression; no other callers exist in any commit tree.\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "fc7df55cb97df018de1a9ecab052817124b58a414c6d35e3822874c04d781f57",
+      "attempt_seconds": 75.37392807006836,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"explanation\":\"The original page-boundary finding is not resolved. The review commit changed `items[offset:offset + limit]` to `items[offset:offset + limit - 1]`, dropping the last item of every full page; the current commit merely extracts that same off-by-one expression into `end = offset + limit - 1` (verified by the base...current and review...current diffs and by a direct behavioral check: page(list(range(10)),0,5) returns [0,1,2,3], and page(...,3,1) returns []). The caller client.list_records delegates straight to page() and is unchanged, so every full page requested through it silently returns limit-1 records and a limit of 1 returns an empty page.\",\"findings\":[{\"location\":\"records.py:3-4 (commit 61fa14e, `end = offset + limit - 1; return items[offset:end]`)\",\"trigger\":\"Any call to page()/client.list_records() where the requested window fits inside the data, e.g. offset=0, limit=5 on a 10-item list returns 4 items; limit=1 returns an empty list.\",\"impact\":\"Silent record omission on every full page: the helper returns limit-1 records instead of limit, and single-record pages return nothing. The prior finding is therefore still open; the delta only refactored the same off-by-one expression. Fix: use `end = offset + limit` (restore the base slice).\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "3332f329680bc480e042ee24e45bd34ae11f967aa0474431bceb1497e99fd3c5",
+      "attempt_seconds": 69.36065578460693,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\n  \"reviewer_reported_identity\": \"glm-5.3\",\n  \"verdict\": \"defects\",\n  \"explanation\": \"Original finding: the patch changed `return items[offset:offset + limit]` to `items[offset:offset + limit - 1]`, dropping the last item of every full page. The current revision (review...current) is behaviorally identical \u2014 it only extracts the buggy bound into `end = offset + limit - 1` before slicing `items[offset:end]`. So the claimed fix is cosmetic and the off-by-one persists. The sole caller is `list_records(items, offset, limit)` in client.py, which returns `page(items, offset, limit)` unchanged; the short page therefore propagates to all of its callers. The correct bound is `offset + limit`.\",\n  \"findings\": [\n    {\n      \"location\": \"records.py:3-4\",\n      \"trigger\": \"Call page(items, offset, limit) with limit >= 1 and at least offset+limit records, e.g. page(items, 0, 10) returns items[0:9] \u2014 9 records, silently omitting index 9 (the last requested item).\",\n      \"impact\": \"Every full page returned through client.py's list_records is one record short; the last record of each page is silently dropped with no error, so downstream consumers lose data. Same defect as the original finding; not resolved.\",\n      \"severity\": \"high\"\n    }\n  ]\n}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "20bfcbd1918cf119c34b408a33900078d39c2db63049b0e0a353075b83c1cfd3",
+      "attempt_seconds": 63.66436505317688,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"defects\", \"explanation\": \"The original finding is not resolved. The current commit (61fa14e) computes end = offset + limit - 1 and slices items[offset:end], which is semantically identical to the original buggy expression items[offset:offset + limit - 1] in review commit 192d892; the delta only extracts the bound into a variable and still excludes the last item of a full page (page(items, 0, 10) yields 9 items). The caller client.list_records forwards offset and limit verbatim to page(), so every full page it returns drops its final record; the correct slice bound is offset + limit.\", \"findings\": [{\"location\": \"records.py:3-4\", \"trigger\": \"Any call to page(items, offset, limit) with limit >= 1, e.g. page(list(range(10)), 0, 10)\", \"impact\": \"The slice end offset + limit - 1 excludes the last requested record, so full pages return limit - 1 items. The original finding's fix is only cosmetic (variable extraction); client.list_records inherits the same off-by-one and silently drops the final record of every page. Fix: end = offset + limit; return items[offset:end].\", \"severity\": 1}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "d61ef495cd68374101824cce826d17d5e582b00c61edaeab3bddc3418a2276f7",
+      "attempt_seconds": 76.01516056060791,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"defects\", \"explanation\": \"The original finding is not resolved. The original review commit changed `return items[offset:offset + limit]` to `return items[offset:offset + limit - 1]`, which drops the last requested item. The current commit (61fa14e) only extracts that same off-by-one expression into a variable: `end = offset + limit - 1; return items[offset:end]`, so behavior is identical to the buggy review commit and still differs from the baseline. Bounded check on the sole caller, `client.py:list_records`, which delegates directly to `page(items, offset, limit)`, confirms the caller and its consumers inherit the defect. The delta surface `review...current` contains no behavioral change at all \u2014 it is a cosmetic refactor of the same wrong slice bound. The correct fix is `end = offset + limit` (or the original `items[offset:offset + limit]`).\", \"findings\": [{\"location\": \"/tmp/coder_eval_reviewer-quality-08-delta-incomplete_0dhxi66u/records.py:3-4\", \"trigger\": \"Any call to page() with limit >= 1 where the requested page fits within the list, e.g. page(list(range(10)), 0, 3) or page(items, 5, 1). The slice end is `offset + limit - 1`, one element short of `offset + limit`.\", \"impact\": \"Every full page drops its last requested item (limit=3 returns 2 items; limit=1 returns an empty list, as verified by running the current code). The sole caller client.py:list_records returns the same short page, so all of its consumers silently lose the final record of each page. The claimed fix for the original finding does not change behavior; it only renames the same off-by-one expression.\", \"severity\": \"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "2c5812150dcc4e8b3664f6f5d44008ea812fb025a5755b9035363e467c073b4a",
+      "attempt_seconds": 68.65607619285583,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "4ec3834c8ebd67b5eddacb52fbd5d426175d853e6ac0aae0e17a24ce55ffc73e",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"explanation\":\"The original finding is NOT resolved. The current revision (61fa14e) only extracts the same faulty expression into a variable: `end = offset + limit - 1; return items[offset:end]` is semantically identical to the reviewed `items[offset:offset+limit-1]`. Both differ from the correct baseline `items[offset:offset+limit]` by one, so the off-by-one persists at records.py:3-4. The sole caller, `list_records` in client.py:3, forwards `page(items, offset, limit)` directly with no compensation, so every consumer inherits the truncated page. A bounded behavioral experiment confirms it: page(items,0,3) returns 2 items, page(items,0,10) on 10 records returns 9, and page(items,0,1) returns an empty list \u2014 the last requested record is silently dropped at every full page boundary, and a limit-1 page is always empty.\",\"findings\":[{\"location\":\"records.py:3-4 (introduced in review commit 192d892, unchanged semantically in current 61fa14e; caller: client.py:3)\",\"trigger\":\"Any call to list_records/page where at least `limit` records exist from `offset` (full page boundary); trivially any request with limit=1.\",\"impact\":\"Silent data loss: a request for `limit` records returns `limit - 1` records; the last record of every full page is dropped without error, so clients cannot detect omission. The patch claims to fix this finding but the variable extraction preserves the exact same off-by-one slice; the finding remains open. Fix: compute `end = offset + limit` (or revert to the baseline slice `items[offset:offset + limit]`).\",\"severity\":1}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "captured reviewer delivery and reported session identity; backend-served identity is unreported",
+    "expected_model_id": "glm-5.3",
+    "expected_reviewer_selector": "opencode-go/glm-5.3:high",
+    "mismatches": [],
+    "reported_model_ids": [
+      "glm-5.3"
+    ],
+    "reviewer_reported_identities": [
+      "glm-5.3",
+      "opencode-go/glm-5.3"
+    ],
+    "valid": true
+  },
+  "cohort_complete": true,
+  "coverage_complete": true,
+  "created_at": "2026-11-09T11:50:20.413376+00:00",
+  "planned": {
+    "attempts": 10,
+    "cases": [
+      "reviewer-quality-07-delta-fixed",
+      "reviewer-quality-08-delta-incomplete"
+    ],
+    "repeats_per_case": 5
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/reviewer-quality-delta-v2-source/evals/runs/reviewer-quality-delta-v2-glm",
+      "run_id": "reviewer-quality-delta-v2-glm",
+      "run_record": "evals/provenance/omp-reviewer-glm-5-3-go-2026-11-09-reviewer-quality-delta-v2-glm.json",
+      "run_record_sha256": "eeda466b2b6848ff0439f2b147765067a662525563d919197af15ef8890a7769"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-glm-5.3-go.yaml",
+    "experiment_sha256": "1bc4a72619f58843410bdd5dba3189b0a6a981f4b837dfd356dc218246c45616",
+    "route_overlay_path": "/home/jmcvetta/projects/daily-driver.issue-737-reviewer-quality/evals/fixtures/reviewer-quality/shared/routes/glm.yml",
+    "route_overlay_sha256": "805e42c910651b62ab77e5c4b13a9e60d5d73ef761753ce78eb966b39d5cbd1a"
+  },
+  "summary": {
+    "attempts": 10,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 0,
+        "false_alarms": 0,
+        "planned_denominator": 0
+      },
+      "delta": {
+        "accuracy": 1.0,
+        "correct": 10,
+        "eligible_denominator": 10,
+        "planned_denominator": 10
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": null,
+        "precision_denominator": 0,
+        "recall": null,
+        "recall_eligible_denominator": 0,
+        "recall_planned_denominator": 0,
+        "tp": 0
+      },
+      "unexpected_valid": []
+    },
+    "eligible": 10,
+    "harness_errors": 0,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 10,
+      "max": 76.01516056060791,
+      "mean": 67.74391136169433,
+      "median": 67.49665629863739,
+      "min": 59.452064990997314,
+      "population_stddev": 4.993654463653065
+    },
+    "per_case": {
+      "reviewer-quality-07-delta-fixed": {
+        "eligible": 5,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 5
+      },
+      "reviewer-quality-08-delta-incomplete": {
+        "eligible": 5,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 5
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_delivery_unverified": 0,
+    "unattempted": 0,
+    "verified_reviewer_completion_rate": 1.0,
+    "verified_reviewer_completions": 10
+  },
+  "winner": null
+}

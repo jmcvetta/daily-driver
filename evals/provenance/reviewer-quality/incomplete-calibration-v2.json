@@ -1,0 +1,83 @@
+{
+  "acceptance_rule": {
+    "max_errors": 0,
+    "max_false_passes": 0,
+    "min_accuracy": 1.0,
+    "pass_score": 0.7
+  },
+  "correct": 3,
+  "errors": 0,
+  "examples": [
+    {
+      "correct": true,
+      "id": "still-open-with-evidence",
+      "kind": "true-positive",
+      "label": "pass",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "pass",
+      "rationale": "The agent correctly identifies the original finding as still open, with matching location and impact, and does not invent a separate caller regression.",
+      "score": 1.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 676,
+        "output": 74
+      }
+    },
+    {
+      "correct": true,
+      "id": "incorrect-clear",
+      "kind": "missed-defect",
+      "label": "fail",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The agent incorrectly declares the original defect fixed. The end remains offset + limit - 1 and is used as an exclusive slice endpoint, omitting the last requested item at a full page boundary.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 630,
+        "output": 100
+      }
+    },
+    {
+      "correct": true,
+      "id": "wrong-location",
+      "kind": "false-positive",
+      "label": "fail",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The agent missed the still-open pagination off-by-one defect and instead reported an unsupported caller authentication failure.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 654,
+        "output": 88
+      }
+    }
+  ],
+  "false_passes": 0,
+  "judge": {
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "route": "omp",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated"
+  },
+  "labels_sha": "dab0e81e1418e7daa67b5d17f816c20dbd09bed3cd46f0883597de5d64088f60",
+  "met_acceptance_rule": true,
+  "prompt_version": "omp-judge-v1",
+  "rubric_prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+  "rubric_source": {
+    "criterion": 0,
+    "presented_as": "agent_output",
+    "task": "evals/tasks/reviewer-quality/08-delta-incomplete.yaml"
+  },
+  "schema_version": 1,
+  "set_id": "reviewer-quality-08-delta-incomplete-v2",
+  "total": 3
+}

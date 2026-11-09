@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "run_id": "reviewer-quality-glm-smoke-mounted",
+  "phase": "interrupted pre-cohort smoke",
+  "cohort_attempts": 0,
+  "attempts": [
+    {
+      "case_id": "reviewer-quality-01-boundary",
+      "status": "reviewer completed; run interrupted before durable grading",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_backend_served": "unreported",
+      "reviewer_response": {
+        "reviewer_reported_identity": "glm-5.3",
+        "verdict": "defects",
+        "findings": [
+          {
+            "location": "records.py:3",
+            "trigger": "Any call to page(items, offset, limit) with limit >= 1, e.g. page([1,2,3,4], 0, 4).",
+            "impact": "The slice end is offset + limit - 1, so the function returns limit - 1 records instead of limit, contradicting its docstring ('Return up to limit records beginning at offset'). Every page silently drops the last record it should contain; a client walking the new cursor-based listing endpoint page by page will permanently skip one record per page (e.g. the 4th, 8th, ... record for limit=4) with no error raised. The correct expression is items[offset:offset + limit], as in the base commit.",
+            "severity": 1
+          }
+        ]
+      },
+      "attempt_seconds": 65.96997380256653,
+      "task_sha256": "8efaa95a25644885f3159fd4e631d1cc52dd3cc7877c88a1deb3d39e8b247799"
+    },
+    {
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "status": "interrupted; no terminal task.json",
+      "reviewer_backend_served": "unreported",
+      "reviewer_response": "unavailable"
+    }
+  ],
+  "note": "Retained from prior stand-down. Neither attempt is retried into the measured cohort. Corrected result persistence smoke is separate."
+}

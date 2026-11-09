@@ -1,0 +1,860 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 4.0,
+            "findings": [
+              "DELTA:clear"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5216ed5a57279b49613fd99d5f4c80c0e67928858a413d6f1376c298f3dbf09e",
+            "rationale": "The review clearly identifies the fix in records.py: page now returns items[offset:offset + limit], restoring the omitted final item. It explicitly concludes there is no caller regression and reports no unsupported defects.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2001,
+              "output": 61
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 7.33,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 retains the exclusive slice endpoint offset + limit - 1, returning one fewer item than requested on a full page."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original off-by-one as still present at records.py:3-4: the exclusive endpoint remains offset + limit - 1, omitting the last requested item on full pages. It describes caller impact as inherited behavior, not a separate regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2448,
+              "output": 105
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.25,
+            "findings": [
+              "DELTA:clear"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5216ed5a57279b49613fd99d5f4c80c0e67928858a413d6f1376c298f3dbf09e",
+            "rationale": "The review clearly identifies the corrected slice in records.py's page function and explains that it restores the omitted final item without regressing the delegating caller. It reports no unsupported defects.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2105,
+              "output": 57
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 4.9,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 uses offset + limit - 1 as an exclusive endpoint, leaving full pages one record short."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original off-by-one finding as still open at records.py:3-4 and explains that the exclusive slice endpoint still omits the last requested item. It describes the unchanged caller impact without inventing a separate caller regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2228,
+              "output": 96
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 4.76,
+            "findings": [
+              "DELTA:clear"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5216ed5a57279b49613fd99d5f4c80c0e67928858a413d6f1376c298f3dbf09e",
+            "rationale": "The review clearly identifies the restored slice in records.py page(), explains that it includes the previously omitted final item, and states that the caller has no regression. It reports no unsupported defects.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2111,
+              "output": 58
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.08,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 retains the off-by-one endpoint and returns limit-1 items for a full page."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original defect as still open at records.py:3-4: the exclusive slice endpoint remains offset + limit - 1, omitting the last requested item. It does not report a separate caller regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2324,
+              "output": 91
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 4.84,
+            "findings": [
+              "DELTA:clear"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5216ed5a57279b49613fd99d5f4c80c0e67928858a413d6f1376c298f3dbf09e",
+            "rationale": "The review clearly identifies the fix in records.py page(): restoring items[offset:offset + limit] includes the previously omitted final item. It explicitly explains that the caller incurs no regression and reports no unsupported defects.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2023,
+              "output": 62
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.57,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 retains the exclusive-endpoint off-by-one and returns one fewer item at full page boundaries."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original off-by-one defect as still open at records.py:3-4: the exclusive slice endpoint remains offset + limit - 1, omitting the last requested item on full pages. Caller impact is described as propagation of the same defect, not a separate regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2467,
+              "output": 105
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.1,
+            "findings": [
+              "DELTA:clear"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5216ed5a57279b49613fd99d5f4c80c0e67928858a413d6f1376c298f3dbf09e",
+            "rationale": "The review clearly identifies the corrected slice in records.py page() and explains that restoring the final requested item introduces no caller regression. It reports no unsupported defects.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2038,
+              "output": 52
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.52,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 computes end = offset + limit - 1 and slices to that exclusive endpoint, returning one fewer record on full pages."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original off-by-one as still present at records.py:3-4, explaining that the exclusive slice endpoint still omits the last requested item. It describes the unchanged caller impact without alleging a separate caller regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2429,
+              "output": 99
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 70.35036325454712,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 86272,
+        "output_tokens": 1044,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 4557
+      },
+      "tokens": 91873,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 110.12853670120239,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 84736,
+        "output_tokens": 1292,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 34245
+      },
+      "tokens": 120273,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 96.60952758789062,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 105600,
+        "output_tokens": 1093,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 37318
+      },
+      "tokens": 144011,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 86.90010046958923,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 79872,
+        "output_tokens": 1182,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11663
+      },
+      "tokens": 92717,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 73.1340844631195,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 122624,
+        "output_tokens": 1101,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20362
+      },
+      "tokens": 144087,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 105.7606737613678,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 130816,
+        "output_tokens": 1246,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 12994
+      },
+      "tokens": 145056,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 75.23220872879028,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 87680,
+        "output_tokens": 1068,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 3237
+      },
+      "tokens": 91985,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 84.13321781158447,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 113408,
+        "output_tokens": 1337,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 30557
+      },
+      "tokens": 145302,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 72.76732802391052,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 87168,
+        "output_tokens": 1062,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 3700
+      },
+      "tokens": 91930,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 101.95328116416931,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-deepseek-v4-pro-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 70016,
+        "output_tokens": 1299,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21683
+      },
+      "tokens": 92998,
+      "variant_id": "reviewer"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.18.3",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-09T18:47:30.744395",
+  "experiment_id": "omp-reviewer-deepseek-v4-pro-go",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "1cfe54f4d533ccd69347c2b58e2e1b2b06f3dd4ce3641ca307e5f41809ca87b4",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 22174,
+      "output": 786
+    }
+  },
+  "plugin_revision": {
+    "commit": "8ab7a6ed24c1e6c9024e7beea6f652d0ba48175b",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-09T11:54:39.280880+00:00",
+  "run_id": "reviewer-quality-delta-v2-deepseek",
+  "schema_version": 5,
+  "started_at": "2026-11-09T18:32:53.759513",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "reviewer-quality-07-delta-fixed": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "reviewer-quality-08-delta-incomplete": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "reviewer-quality-07-delta-fixed",
+        "reviewer-quality-08-delta-incomplete"
+      ],
+      "variant_id": "reviewer"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "source": "omp usage --provider opencode-go --json --redact --no-extensions",
+  "generated_at_unix_ms": 1793436650517,
+  "fetched_at_unix_ms": 1793436554661,
+  "provider": "opencode-go",
+  "plan": "OpenCode Go",
+  "windows": [
+    {"id": "5h", "used_fraction": 0.05, "resets_at_unix_ms": 1793454376000},
+    {"id": "7d", "used_fraction": 0.28, "resets_at_unix_ms": 1793577600000},
+    {"id": "monthly", "used_fraction": 0.14, "resets_at_unix_ms": 1795946903000}
+  ],
+  "scope": "Shared account windows, sampled during resumed smoke; not attributable benchmark consumption.",
+  "cash_spend": "unavailable",
+  "per_model_allowance_consumption": "unavailable"
+}

@@ -1,0 +1,14 @@
+{
+  "source": "omp usage --provider opencode-go --json --redact --no-extensions",
+  "generated_at_unix_ms": 1793366374494,
+  "provider": "opencode-go",
+  "plan": "OpenCode Go",
+  "windows": [
+    {"id": "5h", "used_fraction": 0.32, "resets_at_unix_ms": 1793372216000},
+    {"id": "7d", "used_fraction": 0.21, "resets_at_unix_ms": 1793577600000},
+    {"id": "monthly", "used_fraction": 0.10, "resets_at_unix_ms": 1795946903000}
+  ],
+  "scope": "Provider reports shared windows; not a per-reviewer usage measurement.",
+  "cash_spend": "unavailable",
+  "per_model_allowance_consumption": "unavailable"
+}

@@ -1,0 +1,15 @@
+# Constructed fixed-delta reviews with independently assigned labels.
+set_id: reviewer-quality-07-delta-fixed-v2
+rubric:
+  task: evals/tasks/reviewer-quality/07-delta-fixed.yaml
+  criterion: 0
+  presented_as: agent_output
+acceptance:
+  pass_score: 0.7
+  min_accuracy: 1.0
+  max_false_passes: 0
+  max_errors: 0
+examples:
+  - {id: fixed-with-evidence, kind: true-positive, label: pass, expected_score: 1.0, transcript: transcripts/fixed.txt}
+  - {id: bare-clear, kind: missed-defect, label: fail, expected_score: 0.0, transcript: transcripts/bare-clear.txt}
+  - {id: false-finding, kind: false-positive, label: fail, expected_score: 0.0, transcript: transcripts/false-finding.txt}
