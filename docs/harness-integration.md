@@ -243,6 +243,15 @@ completed records without starting a native runtime. The adapter SHA-256 is
 The [native attempt inventory](progressive-disclosure-native-attempts.json)
 keeps the original statuses and per-slot context/latency limits.
 
+The Omp adapter now supplies `--session-dir` inside its private home by
+default, while honoring explicit separated and inline options. This avoids
+native startup failure when the encoded task path exceeds one directory
+component. The actual Omp 18.18.3 executable returned ready and state frames
+for all three forms at a long cwd, without a model turn or provider request.
+The proof is `disclosure-omp-private-session-proof-20261109/report.json` under
+ignored `evals/runs/`; its Omp adapter SHA-256 is
+`fe414c50222423c3bbb9fcacf68e9b6f12741fa4da35369448817ac3d6205334`.
+
 ## Sensitive handoff examples
 
 The [constitution](../rules/constitution.md) owns the headless

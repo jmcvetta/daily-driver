@@ -1053,8 +1053,13 @@ class OmpAgent(Agent[OmpAgentConfig]):
         `launch.rpc_argv` builds the command line, the eval guard included.
         Omp exits on a tool name it does not know, which fails the task in
         `_await_frame` with Omp's own error.
+        The default session directory stays in the private home instead of
+        encoding an arbitrarily long task path as one directory component.
         """
-        argv = rpc_argv(binary, self._tools, self.config.extra_args)
+        extra_args = self.config.extra_args
+        if not any(arg.split("=", 1)[0] == "--session-dir" for arg in extra_args):
+            extra_args = ["--session-dir", str(home / ".omp" / "agent" / "sessions"), *extra_args]
+        argv = rpc_argv(binary, self._tools, extra_args)
         self._process = await asyncio.create_subprocess_exec(
             *argv,
             stdin=asyncio.subprocess.PIPE,

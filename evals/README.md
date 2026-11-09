@@ -259,6 +259,10 @@ the exact cases, tool boundaries, replicates, and execution limits before a
 comparison. Preserve every completed or failed attempt when repairing the
 implementation or evaluation boundary; a failed fixture is not behavioral parity.
 
+The Omp adapter defaults `--session-dir` to storage inside its per-agent
+private home. This avoids encoding a long task path into one directory name.
+Explicit separated or inline session-directory options remain supported.
+
 The Codex comparison opts into `lifecycle_hooks: true` and `offline_fixture:
 true`, with an explicit allowed-tools list. Use either separate reviewed native
 homes or `reviewed_hook_payload` to select frozen hooks while retaining normal
@@ -474,17 +478,31 @@ private inherited configuration.
 
 The v1 judge exposed only 120 command characters and 80 result characters.
 Shell warnings hid successful commit receipts, and long command prefixes hid
-later actions. Version `omp-judge-v2` renders complete tool parameters, results
+later actions. Version `omp-judge-v2` renders complete persisted tool parameters, results
 and errors as JSON. The existing 120,000-byte route ceiling still rejects
 oversized evidence before launch; no limit or rubric was relaxed. The version
 changes the judge freeze, so old sidecars cannot be reused. All eleven literal
 calibration request payloads and the judge system prompt remain byte-identical;
 this is an offline compatibility check, not a new calibration score.
 
+Rich native history also omits some failed custom `exec` calls. Scoped reads of
+the API-identified candidate fixture rollouts retained named staging invocations
+absent from both rich history and captured commands. Missing rich telemetry is
+not proof of a policy-activation failure. The attempt inventory retains this
+diagnostic; its tool-byte counts cover exposed records, not all native context.
+
 Preserve every v1 result; do not rescore it with v2 or report cross-harness
 parity from these partial and floor results. Cost and token fields remain in
 the linked records; complete evidence can increase judge input. No lower total
 cost or reliability improvement is established.
+
+The [first corrected Omp negative-control attempt](provenance/disclosure-corrected-fixtures-omp-20261109-2026-11-09-02-neg-read-only-review.json)
+preserves a separate startup fault: both baseline slots completed, but both
+candidate slots failed before the ready frame with `ENAMETOOLONG`. Their
+longer task paths crossed the native default session-directory component
+limit. This is not a model regression. The private-session launch correction
+was then exercised against the actual Omp executable with a legal long cwd,
+including both explicit option forms, without starting a model turn.
 
 
 ## Provenance

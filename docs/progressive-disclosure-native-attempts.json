@@ -749,6 +749,29 @@
     "Seven capped slots and the unjudged pending-CI case are not behavioral passes.",
     "Ordinary-commit judgments had abbreviated v1 evidence; preserve their grades, do not rescore them with v2.",
     "Public-search floor and explanation padding failures establish no parity.",
-    "No lower cost, latency or reliability claim is made."
-  ]
+    "No lower cost, latency or reliability claim is made.",
+    "Rich native events omit some failed custom exec calls; exposed tool-result byte counts are not complete native context counts."
+  ],
+  "failed_exec_history_diagnostic": {
+    "method": "Query native thread/list for each exact completed candidate fixture cwd. Validate the API-provided rollout path and session cwd; inspect only raw tool calls in that file. No broad native-home search, credential-file read, thread creation or inference.",
+    "rich_tool_items_per_replicate": [13, 13],
+    "raw_tool_calls_per_replicate": [14, 15],
+    "replicates": [
+      {
+        "replicate": 0,
+        "rollout_sha256": "ab73c007d7bb8868c5cc70257c651b3a9d411b88a18d04a822e1d63ed45fbe9c",
+        "named_parser_staging_input_present": true,
+        "broad_staging_flag_present": false,
+        "staging_call_output_mentions_read_only_failure": true
+      },
+      {
+        "replicate": 1,
+        "rollout_sha256": "16d1b7017e1504b82d1c059abc578e1578007ab99c3b655bc175a967689ce3a6",
+        "named_parser_staging_input_present": true,
+        "broad_staging_flag_present": false,
+        "staging_call_output_mentions_read_only_failure": true
+      }
+    ],
+    "result": "Raw failed custom exec calls retain named staging absent from rich history and captured commands. Missing rich telemetry is not proof of a policy-activation failure. Historical grades remain unchanged."
+  }
 }
