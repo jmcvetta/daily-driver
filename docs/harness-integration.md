@@ -186,6 +186,21 @@ reads. Report actual returned context, truncation and repeated reads in behavior
 records. Lower always-loaded bytes do not establish lower total cost or better
 reliability. Scripted usage counters are not inference-cost evidence.
 
+The [valid Omp comparison retrieval record](progressive-disclosure-retrieval.json)
+contains all 36 slots, their input hashes, returned bytes, tool duration and task
+wall time. It counts successful skill results, including repeated reads and
+returned wrappers, not complete source files or hidden preparation:
+
+| Across nine cases and two replicates per arm | Base | Candidate |
+| --- | ---: | ---: |
+| Successful skill reads | 20 | 45 |
+| Returned UTF-8 bytes | 416,941 | 631,617 |
+
+Some `undertake` results were truncated. The increased explicit retrieval is
+not hidden by the smaller standing core; these counts establish no total-cost
+or latency improvement. Per-slot token usage and separate judge usage remain
+in the linked behavioral records.
+
 The actual SDK/bundled Codex 0.154.0 adapter also delivered the 2,482-byte core
 once in each of five parent/child loopback requests. Two containment requests
 confirmed read access and denied writes and shell network access. All 16 invalid
