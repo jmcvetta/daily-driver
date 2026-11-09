@@ -382,10 +382,12 @@ Those raw scores remain recorded; do not rescore them or count them as valid
 policy evidence. Repair and prove the boundary before new affected attempts.
 
 The [first Claude attempt](provenance/disclosure-claude-release-20261107-2026-11-07-authorized-public-service-search.json)
-finalized all four slots as errors: the subscription OAuth session expired and
-automatic refresh failed. No semantic judging ran. This requires native Claude
-reauthentication, not another task approval or an API-key fallback. Preserve the
-errors and continue independent permitted work while authentication is pending.
+finalized all four slots as errors. The raw output reported expired OAuth and
+failed refresh, but the controller ran from Omp, not an eligible Claude Code
+execution session. This does not establish a problem with the user's Claude
+sign-in and must not prompt login repair or another nested CLI attempt.
+Preserve the errors and use a native Claude Code execution session for the
+remaining Claude comparison; see [the execution-session policy](#choose-the-execution-session-first).
 The framework exposed zero tokens and reported cost for these failed slots.
 Those counters are not a measurement of successful inference or subscription
 charges. The recorder's PATH CLI version is 2.1.267; actual SDK selection is its
@@ -533,9 +535,11 @@ startup errors or caps. Four initial v2 judge calls graded ordinary work:
 | [Read-only negative](provenance/disclosure-omp-private-sessions-20261109-2026-11-09-02-neg-read-only-review.json) | 1, 1 | 1, 1 |
 | [Ordinary commit](provenance/disclosure-omp-private-sessions-20261109-2026-11-09-disclosure-ordinary-commit.json) | 1, 1 | 1, 1 |
 
-The earlier startup failures remain separate. Claude comparison still needs
-native sign-in; its prepared continuation preserves the original plugin pair,
-model, nine cases, criteria and limits. No further Claude request has run.
+The earlier startup failures remain separate. The prepared Claude inputs
+preserve the original plugin pair, model, nine cases, criteria and limits.
+They require an eligible native Claude Code executor outside Omp, not user
+reauthentication. No supported cross-harness dispatch has been established;
+preparation is not a completed handoff or execution.
 
 
 ## Provenance
