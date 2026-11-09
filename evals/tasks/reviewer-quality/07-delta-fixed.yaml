@@ -52,7 +52,8 @@ success_criteria:
       with an explanation that identifies the fixed location and no caller
       regression, and no unsupported findings. A bare clear verdict is not
       enough. Return exactly {score: 0|1, rationale: string, findings: [strings]}.
-      Findings use DELTA:clear, FN:fixed, FP:<evidence>, or
-      UNEXPECTED_VALID:<evidence>. Consolidate duplicates; credible unkeyed
-      defects are not automatically false positives. Ignore full-audit issues
-      outside the named change.
+      Use DELTA:clear for a correctly identified fix. Use FN:fixed only if the
+      review fails to identify the fix, its location, or caller impact; never
+      emit FN:fixed alongside a score of 1. Use FP:<evidence> for unsupported
+      findings and UNEXPECTED_VALID:<evidence> for credible unkeyed defects.
+      Consolidate duplicates. Ignore full-audit issues outside the named change.

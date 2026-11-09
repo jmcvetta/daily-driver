@@ -145,7 +145,10 @@ One row per committed record, oldest first.
 | 2026-11-03 | omp-reviewer-deepseek-v4-pro-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 2/2 | not recorded | not recorded | 2m 47s |
 | 2026-11-04 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 4 | 4/4 | subscription | subscription | 2m 22s |
 | 2026-11-04 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 3 | 3/3 | subscription | subscription | 2m 06s |
+| 2026-11-07 | with-without | claude-code | claude-sonnet-5 | claude-code claude-sonnet-5 (task-pinned) | 8 | 7/8 | $1.12 | $0.16 | 4m 28s |
 | 2026-11-07 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 5 | 4/5 | subscription | subscription | 2m 59s |
 | 2026-11-07 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 1 | 1/1 | subscription | subscription | 0m 25s |
 | 2026-11-07 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 40 | 35/40 | not recorded | not recorded | 43h 39m 47s |
 | 2026-11-09 | omp-reviewer-deepseek-v4-pro-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 40 | 35/40 | not recorded | not recorded | 53m 51s |
+| 2026-11-09 | omp-reviewer-glm-5-3-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 10 | 10/10 | not recorded | not recorded | 11m 17s |
+| 2026-11-09 | omp-reviewer-deepseek-v4-pro-go | omp | openai-codex/gpt-6.1-sol:low (requested) | omp-gpt-6.1-sol (run-selected) | 10 | 10/10 | not recorded | not recorded | 14m 36s |
