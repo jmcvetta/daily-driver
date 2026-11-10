@@ -630,20 +630,15 @@ authentication route and effort. Dispatch and observed worker checks reuse
 that decision. Visible incompatible retry and prewalk candidates fail before
 dispatch. Independent specialist routes remain separate.
 
-Call routing alone and report pending verification as normal progress. These
-are workflow instructions, not conversation-wide runtime failures. The runtime
-reserves a routing response's whole tool batch before admitting sibling
-mutations. An initial model or effort change stays `pending` until a successful
-response follows an admitted request from that worker. Rejected requests,
-consultations, error responses and cancelled responses do not verify it.
+Report the selected initial route as progress; status `selected` records
+selection, not execution identity or class suitability. The runtime reserves a
+routing response's whole tool batch before admitting sibling mutations. Visible
+incompatible retry and prewalk candidates fail before dispatch.
 
-Initial admission selects and records the undertaking's class route and its
-visible candidates. Omp does not expose every automatic retry or prewalk
-transition. Agent-initiated work remains subject to the class, frontier
-authorization, and route-integrity requirements as workflow policy; the runtime
-does not enforce a continuing request-route guard. Operator model, provider,
-and effort changes after admission remain permitted and must not be blocked or
-reversed.
+Agent-initiated work remains subject to the class, frontier authorization, and
+route-integrity requirements as workflow policy; the runtime does not enforce a
+continuing request-route guard. Operator model, provider, and effort changes
+after admission remain permitted and must not be blocked or reversed.
 
 Provider transport can rewrite the request API model, endpoint, and headers
 without changing the selected provider/model. This is distinct from the
@@ -653,17 +648,20 @@ Native consultations and recovery explanations remain separate.
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
 immediately on the invoking model, provider, and effort without confirmation.
-The route's execution identity can be verified while class suitability remains
-unverified. A missing or cleared class in a mapped family, unavailable or
-incompatible initial target, unknown identity, or actual agent-route violation
-remains a configuration gap. Failed preflight must permit explanation and retry
-without discarding an existing valid route. The public route `status` remains
-`pending`, `verified`, or `blocked`; `capability` separately reports `mapped`
-or `unverified`. An absent-family result may also carry a `warning`. Frontier
-authorization and OAuth restrictions remain in force. Independently configured
-`reviewer`, `scout`, `security-reviewer`, and `seance` helpers retain their
-routes. A delegated worker must retain the undertaking route; otherwise work
-stays in the invoking session.
+The route's execution identity can be reported separately from class suitability.
+A missing or cleared class in a mapped family, unavailable or incompatible
+initial target, unknown identity, or observed agent-route mismatch requires
+explanation and repair; later operator selections are not route violations.
+Failed preflight must permit explanation and retry without discarding an
+existing valid route. Route status is `selected` after initial selection;
+malformed or cancelled state can report `blocked`. Neither status alone
+establishes observed execution identity or class suitability. An absent-family
+result may also carry a `warning`. Frontier authorization and OAuth restrictions
+remain in force. Independently configured `reviewer`, `scout`,
+`security-reviewer`, and `seance` helper routes are selected separately from
+issue class routing; this does not define their cancellation ownership. A
+delegated worker must retain the undertaking route; otherwise work stays in the
+invoking session.
 
 
 After the pull request is ready, or answer-only research is completed and

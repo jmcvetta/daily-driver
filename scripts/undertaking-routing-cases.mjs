@@ -117,7 +117,8 @@ function fakeSession(options = {}) {
 		prompt: () => fire("before_agent_start", { prompt: "Continue" }),
 		request: () => fire("before_provider_request", { payload: { model: current.id } }),
 		assistant: () => fire("assistant_message", { message: { role: "assistant", provider: current.provider, model: current.id, content: [{ type: "text", text: "Response" }] } }),
-		spawn: (key, patterns = [qualified(FOREIGN)]) => fire("before_subagent_spawn", { agent: "implementation", modelRole: "implementation", patterns, spawnKey: key }),
+		spawn: (key, patterns = [qualified(FOREIGN)], agent = "implementation", modelRole = "implementation") =>
+			fire("before_subagent_spawn", { agent, modelRole, patterns, spawnKey: key }),
 		async close() { if (!closed) { closed = true; await fire("session_shutdown"); } },
 	};
 }
@@ -403,6 +404,72 @@ export default function registerUndertakingRoutingChecks(check) {
 		quiescent = true; idle.resolve();
 		await cancelling;
 		assert.equal(s.describe().undertaking, null);
+	});
+
+	// Agent-selected frontier models and visible fallback candidates must not evade assignment approval.
+	for (const viaFallback of [false, true]) {
+		routingCheck(`ordinary worker rejects frontier ${viaFallback ? "fallback" : "candidate"}`, async create => {
+			const s = await create({ candidates: async (_ctx, _settings, patterns) =>
+				viaFallback ? [...patterns, qualified(FRONTIER)] : patterns });
+			await s.route();
+			const result = await s.spawn(`frontier-${viaFallback}`, [qualified(viaFallback ? FOREIGN : FRONTIER)]);
+			assertBlocked(result);
+			assert.match(result.reason, /frontier/iu);
+		});
+	}
+
+	// Approval for the undertaking does not turn an ordinary child assignment into a frontier assignment.
+	routingCheck("approved frontier undertaking cannot dispatch ordinary worker on frontier", async create => {
+		const s = await create();
+		await s.route({ modelClass: "frontier", frontierApproval: "Explicit bounded approval" });
+		assertBlocked(await s.spawn("ordinary", [qualified(FRONTIER)]));
+		assertAllowed(await s.spawn("approved", [qualified(FRONTIER)], "frontier", "frontier"));
+	});
+
+	// Host-selected non-frontier workers remain free to use another provider or model.
+	routingCheck("ordinary worker allows non-frontier alternate provider and fallback", async create => {
+		const s = await create({ candidates: async (_ctx, _settings, patterns) => [...patterns, qualified(TERRA)] });
+		await s.route();
+		s.setCurrent(REASONING);
+		const result = await s.spawn("alternate", [qualified(FOREIGN)]);
+		assertAllowed(result);
+		assert.equal(result?.model, undefined);
+	});
+
+	// A native operator mention is allowed without granting its agent-selected frontier fallback.
+	routingCheck("operator frontier mention is permitted while another frontier fallback is rejected", async create => {
+		const fable = model("claude-fable", "anthropic", "anthropic-messages");
+		let fallback = false;
+		const s = await create({ models: [...MODELS, fable], candidates: async (_ctx, _settings, patterns) =>
+			fallback ? [...patterns, qualified(fable)] : patterns });
+		await s.route();
+		s.entries.push({ type: "custom", customType: "model_mention", data: { agent: "m1", selector: qualified(FRONTIER), name: "Astra" } });
+		assertAllowed(await s.spawn("mention", [qualified(FRONTIER)], "m1"));
+		fallback = true;
+		assertBlocked(await s.spawn("mention-fallback", [qualified(FRONTIER)], "m1"));
+		assertBlocked(await s.spawn("unbound", [qualified(FRONTIER)], "m2"));
+	});
+
+	// Independently configured reviewer roles are not undertaking workers.
+	routingCheck("independent helper selection is not restricted by undertaking class", async create => {
+		const s = await create();
+		await s.route();
+		assertAllowed(await s.spawn("reviewer", [qualified(FRONTIER)], "reviewer", "reviewer"));
+	});
+
+	// A pending candidate lookup must not resurrect a dispatch after its owner is cancelled.
+	routingCheck("cancel during child candidate lookup prevents late dispatch", async create => {
+		const entered = deferred();
+		const proceed = deferred();
+		const s = await create({ candidates: async (_ctx, _settings, patterns) => {
+			entered.resolve(); await proceed.promise; return patterns;
+		} });
+		await s.route();
+		const dispatch = s.spawn("cancelled-child");
+		await entered.promise;
+		await s.command("cancel 755");
+		proceed.resolve();
+		assertBlocked(await dispatch);
 	});
 
 	// Child model choice is independent, but cancellation still revokes an owned child.

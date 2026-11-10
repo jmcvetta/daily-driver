@@ -32,15 +32,16 @@ For classed undertaking, call `daily_driver_route_undertaking` alone in its
 assistant tool batch before worktree or claim. This makes the initial selection
 within the invoking family and provider; a mapped selection also constrains
 agent-initiated workers and fallbacks to the required family, provider, backend,
-and authentication route. For a pending initial change, show non-error status
-and wait for the next worker response to verify execution before mutations.
+and authentication route. Report the selected route as progress, without
+claiming class suitability or observed execution identity from the selector.
 Matching model and effort need no switch. If the known family is absent from
 the class table, warn prominently and continue immediately on the invoking
 model, provider, and effort; suitability remains unverified. Retain the invoking
 session if a child cannot retain the initial route. A missing or cleared class
 in a mapped family, incompatible assignment, unknown identity, or actual
-agent-route violation is a configuration gap. Do not rewrite shared roles or
-credentials. Independently configured host helpers are outside this policy.
+agent-route mismatch is a configuration gap. Do not rewrite shared roles or
+credentials. Independently configured host helpers are not issue implementation
+workers for class selection; this does not define their cancellation ownership.
 
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or

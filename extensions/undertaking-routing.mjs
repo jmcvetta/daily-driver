@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
-import { MODEL_CLASS_ROUTES, explicitModelClassRole } from "./role-default-helper.mjs";
+import { MODEL_CLASS_ROUTES, explicitModelClassRole, readExecutionCandidates } from "./role-default-helper.mjs";
 
 const ENTRY = "daily-driver-undertaking-route";
 const CLASSES = ["mechanical", "implementation", "integration", "reasoning", "frontier"];
 const EFFORT = /:(off|minimal|low|medium|high|xhigh|max|auto|inherit)$/u;
+const INDEPENDENT_HELPERS = new Set(["reviewer", "scout", "security-reviewer", "seance"]);
 // Agent names are process-local, not globally unique. A shared auth store and
 // an unambiguous live parent session are both required for inheritance.
 const roots = new WeakMap();
@@ -25,6 +26,22 @@ function selector(model) {
 
 function frontier(model) {
 	return /(?:^|[-/])(?:astra|fable)(?:[-/]|$)/iu.test(selector(model) ?? "");
+}
+
+function nativeMention(ctx, agent) {
+	const agents = new Set();
+	const selectors = new Set();
+	for (const entry of ctx.sessionManager.getBranch?.() ?? []) {
+		if (entry.type !== "custom" || entry.customType !== "model_mention") continue;
+		const mention = entry.data;
+		if (!mention || typeof mention.agent !== "string" || !/^m\d+$/u.test(mention.agent) ||
+			typeof mention.selector !== "string" || typeof mention.name !== "string" ||
+			agents.has(mention.agent) || selectors.has(mention.selector)) continue;
+		agents.add(mention.agent);
+		selectors.add(mention.selector);
+		if (mention.agent === agent) return mention;
+	}
+	return null;
 }
 
 function origin(model) {
@@ -148,7 +165,7 @@ function ownedBy(state, owner) {
 }
 
 /** Install one-time undertaking model selection without changing host helper roles. */
-export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES) {
+export function installUndertakingRouting(pi, getSettings, getRoutes = () => MODEL_CLASS_ROUTES, getCandidates = readExecutionCandidates) {
 	const states = new Map();
 	const selecting = new Set();
 	const admissions = new Set();
@@ -521,10 +538,33 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		return { block: true, reason: failure ?? "Initial undertaking selection is in progress." };
 	});
 
-	pi.on("before_subagent_spawn", (event, ctx) => {
+	pi.on("before_subagent_spawn", async (event, ctx) => {
 		const state = current(ctx);
 		if (!state) return;
 		if (isCancelled(state)) return { block: true, reason: "The owning undertaking was cancelled; execution is not authorized" };
+		const dispatchEpoch = state.dispatchEpoch ?? 0;
+		const mention = nativeMention(ctx, event.agent);
+		if (!INDEPENDENT_HELPERS.has(event.agent)) {
+			try {
+				if (!event.patterns?.length) throw new Error("Child effective model route is unavailable");
+				const candidates = await getCandidates(ctx, await getSettings(ctx), event.patterns, event.modelRole, event.agent);
+				if (!candidates.length) throw new Error("Child effective model route is unavailable");
+				for (const pattern of candidates) {
+					if (typeof pattern !== "string" || /[*?,]/u.test(pattern)) throw new Error("Child effective model candidate cannot be verified");
+					const model = ctx.models.resolve(pattern);
+					if (!model) throw new Error("Child effective model candidate cannot be resolved");
+					const operatorSelected = mention && selector(model) === mention.selector.replace(EFFORT, "");
+					if (frontier(model) && !operatorSelected && (state.modelClass !== "frontier" || event.modelRole !== "frontier" || !state.frontierApproval)) {
+						throw new Error("Frontier worker execution requires a frontier assignment and recorded approval");
+					}
+				}
+			} catch (error) {
+				return { block: true, reason: `Undertaking assignment gap: ${error.message}` };
+			}
+		}
+		if (isCancelled(state) || current(ctx) !== state || (state.dispatchEpoch ?? 0) !== dispatchEpoch) {
+			return { block: true, reason: "The owning undertaking or child dispatch was cancelled or replaced" };
+		}
 		const parents = [...(scope(ctx)?.values() ?? [])].filter(record => record.agentId === ctx.agent?.id);
 		if (parents.length !== 1 || !event.spawnKey) {
 			return { block: true, reason: "Child undertaking ownership identity is unavailable or ambiguous" };
