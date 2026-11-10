@@ -841,10 +841,11 @@ its cost evidence. `cost` is numeric when the harness reports a price
 (`cost_source: reported`) or reports token counts the recorder can price from
 [`prices.yaml`](prices.yaml) (`cost_source: computed`). The exact Omp Codex
 models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`,
-`openai-codex/gpt-6.1-sol`, and `openai-codex/gpt-5.6-terra` use `cost: null`
-and `cost_source: subscription`; token usage remains recorded, but no API
-price is inferred. When usage is missing, `cost` is null and
-`cost_source: unreported`; it is never treated as
+`openai-codex/gpt-6.1-sol`, `openai-codex/gpt-6.1-terra`, and historical
+`openai-codex/gpt-5.6-terra` use `cost: null` and `cost_source: subscription`;
+token usage remains recorded when available, but no API price is inferred.
+For other routes, missing usage leaves `cost` null and `cost_source: unreported`;
+it is never treated as
 free. Other token-only routes without a price-table entry or an explicit
 unpriced subscription entry fail recording. New schema-5 records require
 explicit token buckets (`token_usage`) as well as billing-source evidence.
