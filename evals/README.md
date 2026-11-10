@@ -845,9 +845,13 @@ models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`,
 `openai-codex/gpt-5.6-terra` use `cost: null` and `cost_source: subscription`;
 token usage remains recorded when available, but no API price is inferred.
 For other routes, missing usage leaves `cost` null and `cost_source: unreported`;
-it is never treated as
-free. Other token-only routes without a price-table entry or an explicit
-unpriced subscription entry fail recording. New schema-5 records require
+it is never treated as free. Other token-only routes without a price-table entry
+or an explicit unpriced subscription entry fail recording. OpenCode Go catalog
+estimates represent allowance consumption, not observed cash charges. The
+recorder leaves their cash cost unreported until billing evidence is available;
+token buckets remain separate. A Go plan can fall back to Console balance if
+extra usage is enabled, so a model selector alone does not prove which source
+paid for a request. New schema-5 records require
 explicit token buckets (`token_usage`) as well as billing-source evidence.
 Historical records remain unchanged, including both schema-4 forms: records
 with token buckets and records with subscription billing.

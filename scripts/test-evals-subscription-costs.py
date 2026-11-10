@@ -31,6 +31,17 @@ class TerraSubscriptionTest(unittest.TestCase):
         self.assertEqual(recorder.case_price({}, "openai-codex/gpt-6.1-terra", {}, "codex"),
                          (None, "unreported"))
 
+    def test_go_catalog_estimate_is_not_reported_as_cash(self):
+        row = {"input_tokens": 100, "output_tokens": 20, "agent_cost_usd": 0.5}
+        self.assertEqual(recorder.case_price(row, "opencode-go/glm-5.3", {}, "omp"),
+                         (None, "unreported"))
+        self.assertEqual(recorder.token_usage(row)["output_tokens"], 20)
+
+    def test_go_missing_usage_does_not_imply_free(self):
+        self.assertEqual(recorder.case_price({}, "opencode-go/glm-5.3", {}, "omp"),
+                         (None, "unreported"))
+        self.assertTrue(all(value == "unreported" for value in recorder.token_usage({}).values()))
+
 
 if __name__ == "__main__":
     unittest.main()

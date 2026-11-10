@@ -265,6 +265,10 @@ def case_price(
     task = row_label(row)
     if uses_omp_codex_subscription(client_name, "omp", model):
         return None, "subscription"
+    # Go's catalog rates describe allowance consumption, not cash paid. The
+    # adapter's estimated agent_cost_usd does not establish the billing source.
+    if client_name == "omp" and model.startswith("opencode-go/"):
+        return None, "unreported"
     if _number(row.get("agent_cost_usd")):
         total = row.get("total_cost_usd")
         return (float(total) if _number(total) else float(row["agent_cost_usd"])), "reported"
