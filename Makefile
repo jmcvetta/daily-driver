@@ -259,7 +259,7 @@ check-scripts:
 	shellcheck -x --source-path=SCRIPTDIR \
 		skills/*/scripts/*.sh scripts/*.sh \
 		evals/fixtures/*/shared/*.sh
-	uv run --frozen python3 scripts/test-evals-subscription-costs.py
+	python3 scripts/test-evals-subscription-costs.py
 
 # Exercise the real Omp keep-current loop against an offline GitHub client.
 check-pr-keep-current:

@@ -19,8 +19,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import tree_sitter_bash
-from tree_sitter import Language, Parser
 
 from evals_costs import uses_omp_codex_subscription
 
@@ -397,7 +395,6 @@ _GIT_REF_COMMANDS = {
 _GH_REPO_COMMANDS = {"pr", "issue", "repo", "browse", "run", "release", "workflow"}
 
 
-_BASH_LANGUAGE = Language(tree_sitter_bash.language())
 
 
 def _shell_nodes(root: Any) -> list[Any]:
@@ -440,7 +437,10 @@ def _heredoc_expansion(body: str) -> str:
 
 def _shell_ast(command: str) -> list[tuple[Any, bytes]]:
     """Parse shell syntax, executable shell scripts, and here-document substitutions."""
-    parser = Parser(_BASH_LANGUAGE)
+    import tree_sitter_bash
+    from tree_sitter import Language, Parser
+
+    parser = Parser(Language(tree_sitter_bash.language()))
     pending = [command.encode("utf-8")]
     trees = []
     while pending:
