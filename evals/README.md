@@ -84,6 +84,14 @@ The Sol judge completed both semantic judgments. The requested subject was
 smoke does not establish the effective effort or the model-classes route, and
 is not full-cohort evidence.
 
+A matching Luna smoke is recorded in
+[`issue-695-luna-smoke`](provenance/omp-gpt-6-luna-2026-11-10-issue-695-luna-smoke.json).
+Both treated cases passed; both bare cases failed. The subject's served
+identity and effective effort were unreported. Its recorded checkout was dirty:
+the pending Makefile runner cutover was the tracked modification. This is
+smoke evidence, not a frozen cohort.
+
+
 A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
 checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated
 `--session-dir`. The first `omp -p` drafted an upload-timeout PR body; a second
