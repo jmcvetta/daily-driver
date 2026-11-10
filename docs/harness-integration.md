@@ -624,83 +624,47 @@ clones settings for a task. An explicit empty array stays empty; malformed
 explicit values are rejected rather than replaced with defaults.
 
 Classed undertaking calls `daily_driver_route_undertaking` before worktree
-creation or claim. For a mapped family, admission resolves the selected class
-and visible automatic candidates once. It records their concrete backend,
+creation or claim. For a mapped family, initial admission resolves the selected
+class and visible automatic candidates once. It records their concrete backend,
 authentication route and effort. Dispatch and observed worker checks reuse
 that decision. Visible incompatible retry and prewalk candidates fail before
 dispatch. Independent specialist routes remain separate.
 
 Call routing alone and report pending verification as normal progress. These
 are workflow instructions, not conversation-wide runtime failures. The runtime
-still reserves a routing response's whole tool batch before admitting sibling
-mutations. A selected model or effort change stays `pending` until a successful
+reserves a routing response's whole tool batch before admitting sibling
+mutations. An initial model or effort change stays `pending` until a successful
 response follows an admitted request from that worker. Rejected requests,
 consultations, error responses and cancelled responses do not verify it.
 
-Omp 18.16.0 exposes expanded child patterns at `before_subagent_spawn`. It does
-not expose a veto before every retry or prewalk model transition. The adapter
-therefore retains a final request guard for transitions that dispatch cannot
-guarantee. Agent-definition prewalk targets and later configuration changes
-also require this guard. It rejects unauthorized inference, not host controls.
-Local inspection, cancellation and model restoration do not require worker
-verification.
+Initial admission selects and records the undertaking's class route and its
+visible candidates. Omp does not expose every automatic retry or prewalk
+transition. Agent-initiated work remains subject to the class, frontier
+authorization, and route-integrity requirements as workflow policy; the runtime
+does not enforce a continuing request-route guard. Operator model, provider,
+and effort changes after admission remain permitted and must not be blocked or
+reversed.
 
-The request guard validates the captured live catalog selection against the
-admitted route. Providers can rewrite the request model's API, endpoint and
-headers without changing its provider/model selector. Comparing that transport
-model with the catalog snapshot caused false rejections, including Kimi's
-Anthropic shim. The guard no longer makes that comparison. Catalog backend,
-model, effort and authentication checks remain; request transport integrity
-belongs to the host/provider. The same split applies to native consultations
-and recovery explanations.
-
-An Omp 18.18.6 loopback proof exercises the built-in Kimi shim. Seven
-requests reached the local Anthropic endpoint while the catalog retained its
-OpenAI-compatible model. The proof covers unmapped-family warning and
-continuation, ordinary prompts, rejected model drift, automatic recovery and
-process reload without external inference.
-
-A disposable loopback-provider experiment on Omp 18.16.0 distinguished the
-selected route, the resolved retry fallback and actual HTTP requests. The host
-reported `retry_fallback_applied` for an incompatible model; its request never
-reached the provider. Local `get_state`, `abort` and `set_model` remained
-available. A restored turn and a reloaded session completed on the original
-route. This is boundary evidence, not evidence of model-class suitability.
-
-Rejecting a request does not replace the stored selected route with a blocked
-disposition. A partially applied selection whose restoration failed remains
-recovery-only; an ordinary response cannot certify it.
-
-Before the next ordinary prompt, Omp restores the admitted worker model and
-effort automatically. The target must still match the admitted backend and
-authentication route and have available credentials. No manual cancellation,
-model selection, request replay or autonomous inference is required. Pending
-workers still need a successful admitted response before task work.
-Cancellation and newer selections invalidate a waiting restoration.
-Model selection may refresh metadata and apply host effort defaults.
-Restoration compares the admitted origin, not object identity, then reapplies
-the admitted effort.
-
-A disposable Omp 18.18.3 loopback proof rejected late model drift without an
-unauthorized HTTP request. The next user prompt completed on the admitted
-worker without manual recovery, both before and after process resume.
-Unavailable targets or credentials remain explicit recovery failures, not
-permission to select a replacement route.
+Provider transport can rewrite the request API model, endpoint, and headers
+without changing the selected provider/model. This is distinct from the
+operator's model choice; transport integrity belongs to the host/provider.
+Native consultations and recovery explanations remain separate.
 
 When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
 immediately on the invoking model, provider, and effort without confirmation.
 The route's execution identity can be verified while class suitability remains
 unverified. A missing or cleared class in a mapped family, unavailable or
-incompatible target, unknown identity, or actual route violation remains a
-configuration gap. Failed preflight must permit explanation and retry without
-discarding an existing valid route. The public route `status` remains `pending`,
-`verified`, or `blocked`; `capability` separately reports `mapped` or
-`unverified`. An absent-family result may also carry a `warning`. Frontier
-authorization and OAuth restrictions remain
-in force. Independently configured `reviewer`, `scout`, `security-reviewer`,
-and `seance` helpers retain their routes. A delegated worker must retain the
-undertaking route; otherwise work stays in the invoking session.
+incompatible initial target, unknown identity, or actual agent-route violation
+remains a configuration gap. Failed preflight must permit explanation and retry
+without discarding an existing valid route. The public route `status` remains
+`pending`, `verified`, or `blocked`; `capability` separately reports `mapped`
+or `unverified`. An absent-family result may also carry a `warning`. Frontier
+authorization and OAuth restrictions remain in force. Independently configured
+`reviewer`, `scout`, `security-reviewer`, and `seance` helpers retain their
+routes. A delegated worker must retain the undertaking route; otherwise work
+stays in the invoking session.
+
 
 After the pull request is ready, or answer-only research is completed and
 recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
@@ -714,8 +678,7 @@ returns an error without changing the existing state.
 
 Omp registers `/undertaking status` and `/undertaking cancel <issue>` as host
 commands. They do not send a model request. They remain available after a
-rejected inference request or a saved-route restoration error.
-
+rejected inference request or an operator model, provider, or effort change.
 Status separates configured model and effort from the host selection and
 last observed execution identity. It reports the authentication route category,
 ownership, state, and last rejection reason without credential identities.

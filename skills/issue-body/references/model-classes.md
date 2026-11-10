@@ -58,9 +58,9 @@ capability needed to deliver that kind's settled handoff.
 
 ## Selection
 
-For classed undertaking, select the exact required class within the invoking
-family and provider before worktree or claim. Preserve backend and authentication
-where supported; never deliberately substitute another provider. Assess tools,
+For classed undertaking, make the initial selection within the invoking family
+and provider before worktree or claim. Preserve backend and authentication
+where supported; never deliberately substitute a provider. Assess tools,
 context, modalities, availability, and visible fallbacks. A configured mapping
 does not itself prove capability. Do not change shared roles or infer an
 eligible route from price.
@@ -79,15 +79,21 @@ fallback, or visible parent-model inheritance selects it. Resolve the effective
 execution route, not only the requested role name. A harness-resolved
 astra/fable route is frontier for this authorization check.
 
-For a mapped family, prefer a verified in-session switch; use a full handoff
-only where the surface can constrain and verify the same route. The receiving
-session owns the undertaking and the sender stops. For an absent family, keep
-the invoking session if a child cannot retain the route. An approved frontier
-research pass returns
-only its bounded deliverable; implementation requires a separately authorized
-frontier exception or an eligible ordinary class. Frontier implementation
-requires explicit user authorization and its bounded scope; research approval
-does not cover it. Ordinary workers cannot fall back to frontier.
+For a mapped family, prefer a verified in-session switch for initial selection;
+use a full handoff only where the surface can constrain and verify that route.
+The receiving session owns the undertaking and the sender stops. For an absent
+family, keep the invoking session if a child cannot retain the initial route.
+An approved frontier research pass returns only its bounded deliverable;
+implementation requires a separately authorized frontier exception or an
+eligible ordinary class. Frontier implementation requires explicit user
+authorization and its bounded scope; research approval does not cover it.
+Ordinary workers cannot fall back to frontier.
+After initial selection, operator model, provider, and effort changes remain
+permitted and must not be blocked or reversed, including after rejection or
+resume. This does not change the assigned worker, issue class, approval record,
+or verification state, and does not authorize agent-initiated reassignment or
+fallback. Agent-initiated routes still require their own class and frontier
+authorization.
 
 For an operator's manual escalation during a failing task, apply `undertake`'s
 *Manual frontier escalation* policy: repair the plan and return the existing
@@ -104,9 +110,10 @@ hand-written `Classes` table. A missing row, or one marked `unmeasured` or
 `Recorded` date, is read the same way. An unmeasured model is unknown, and
 unknown falls to the operator's configured preference above.
 
-Record the requested class separately from the selected route and actual model.
-Use `unreported` when the harness does not report actual execution identity;
-report visible runtime fallback mismatches and reassess before continuing.
+Record the requested class separately from the initial selected route and actual
+model. Use `unreported` when the harness does not report actual execution
+identity; report visible agent-route fallback mismatches and reassess before
+agent work continues.
 
 This file stays provider-neutral by rule, so the generated measured-routes
 table that cites real routes by name lives in the harness-specific reference

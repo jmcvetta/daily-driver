@@ -50,13 +50,14 @@ frontier assignment also needs explicit approval and its exact envelope. A
 frontier `research` issue keeps that label and its narrow metadata exception;
 do not impose the task template.
 
-Before worktree creation or claim, resolve classed work within the invoking
-family and provider. Preserve backend, authentication route, and fallbacks where
-the surface supports them; never deliberately substitute a provider. If the
-known family is absent from the class table, prominently warn with the family,
-class, and retained provider/model, then continue immediately on the invoking
-model and effort without confirmation. Identity does not establish class
-suitability. Frontier approval and actual route constraints still apply.
+Before worktree creation or claim, make the initial class selection within the
+invoking family and provider. Preserve backend, authentication route, and
+fallbacks where the surface supports them; never deliberately substitute a
+provider.
+If the known family is absent from the class table, prominently warn with the
+family, class, and retained provider/model, then continue immediately on the
+invoking model and effort without confirmation. Identity does not establish
+class suitability. Frontier approval and agent-route constraints still apply.
 
 For a mapped family, a missing or cleared class, unavailable target, or
 incompatible assignment is a gap. Unknown family or identity is not an absent

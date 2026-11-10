@@ -59,30 +59,31 @@ Read `details.undertaking` from the result or `daily_driver_get_session`:
 reports provider and non-secret authentication route. `status` is `pending`,
 `verified`, or `blocked`; `capability` is `mapped` or `unverified`.
 `verified` permits the undertaking to proceed, but execution identity is not
-proof of class suitability. `pending` means a mapped switch was requested but
-actual worker execution is not yet confirmed. Show informative status, not an
-error; wait for the next worker assistant response and read the state again
-before worktree creation, claim, or implementation. A matching model and effort
-can verify without a switch. Read-only discovery and route/session recovery
-remain available while pending; queued mutating calls are blocked.
+proof of class suitability. `pending` means an initial mapped switch was
+requested but actual worker execution is not yet confirmed. Show informative
+status, not an error; wait for the next worker assistant response and read the
+state again before worktree creation, claim, or implementation. A matching
+model and effort can verify without a switch. Read-only discovery and
+route/session recovery remain available while pending; queued mutating calls
+are blocked.
 
-Admission snapshots the effective candidate identities and effort. Worker
-dispatch and observation reuse that decision. A successful response must
-follow an admitted worker request; resolving a selector, rejecting a request,
-or receiving a consultation does not verify the worker. Visible incompatible
-retry and prewalk candidates fail before dispatch.
+Admission snapshots the effective candidate identities and effort for the
+initial undertaking route. Worker dispatch and observation reuse that decision.
+A successful response must follow an admitted worker request; resolving a
+selector, rejecting a request, or receiving a consultation does not verify the
+worker. Visible incompatible retry and prewalk candidates fail before dispatch.
 
-Routing alone and informative progress wording remain workflow instructions.
-The runtime retains the actual batch admission barrier, not a separate
+The runtime retains the actual initial batch admission barrier, not a separate
 conversation-wide procedure check. Omp does not expose every automatic
-transition before resolution, so a final request guard still rejects actual
-unauthorized inference. This guard does not block native host inspection,
-cancellation or model restoration.
+transition before resolution, so agent-initiated unauthorized inference is
+rejected. The route admission does not impose continuing control over the
+operator's later model, provider, or effort selections.
 
 Request admission checks the captured catalog selection, not the provider's
 transformed request API, endpoint or headers. Provider transport rewriting
 must not interrupt an unchanged selected route. Backend checks apply to catalog
-configuration; the workflow guard does not certify request transport integrity.
+configuration; the initial route check does not certify request transport
+integrity.
 
 If the known family is absent from the class table, a prominent warning names the
 family, class, and retained provider/model. Continue immediately on the invoking
@@ -110,13 +111,12 @@ completed undertaking or resume the existing one before selecting another.
 A finish call with the wrong issue also returns an error and preserves the
 existing state.
 
-**Ordinary conversation recovers automatically.** After request rejection,
-the next prompt restores the admitted worker model and effort without a
-cancel command or manual model change. Restoration validates the existing
-route and available credentials; it does not broaden admission, replay the
-failed request, cancel the task, or verify a pending worker. A missing target
-or unavailable credentials remain an explicit gap. Native consultation and
-independent helper routes remain separate.
+**Operator choices remain in control after admission.** Request rejection or
+resume does not restore or require the initially selected model or effort.
+Operators may change model, provider, and effort at any later point; routing
+must not block those changes. The initial selection remains the undertaking's
+assigned worker identity for agent-initiated dispatch and fallback checks.
+Native consultations and independent helper routes remain separate.
 
 **Operator recovery does not require a model turn.** Run `/undertaking status`
 locally to inspect the owner, selected model and effort, host selection, last

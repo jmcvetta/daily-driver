@@ -15,6 +15,7 @@
 * Report a newly opened task issue's assigned model class beside its issue-kind label ([#783](https://github.com/jmcvetta/daily-driver/issues/783)).
 * Route classed undertaking work to the exact configured class before ownership, preserving its provider, backend, family, and authentication route; retain independent specialist helper routes and finish completed undertakings before session reuse ([#755](https://github.com/jmcvetta/daily-driver/issues/755)).
 * Select undertaking classes within the invoking family and provider; warn and continue on the invoking model when its family has no mapping, with suitability unverified ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
+* Select the issue's model class at undertaking admission while leaving later operator model, provider, and effort changes in control, including after rejection and resume; retain agent-initiated route authorization ([#860](https://github.com/jmcvetta/daily-driver/issues/860)).
 * Require assignable task issues for all new and reused epic stories, with task readiness checked before linking and dispatch ([#723](https://github.com/jmcvetta/daily-driver/issues/723)).
 
 ### Fixed
