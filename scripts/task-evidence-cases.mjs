@@ -96,6 +96,9 @@ export default function registerTaskEvidenceChecks(check) {
 				assert.equal((await d.evidence("no-attribution", source, { kind: "judgment" })).isError, true);
 				const judgment = { reviewer: "independent fixture reviewer", rationale: "Inspected the fixture behavior.\nRetained the required records.", artifacts: [`${f.git("rev-parse", "HEAD")}:subject.txt`] };
 				assert.equal((await d.evidence("invented-review", source, { kind: "judgment", judgment })).isError, true);
+				const oldJudgment = { ...judgment, artifacts: ["old-head:subject.txt"] };
+				const oldReview = await d.observe("old-review", { judgment: oldJudgment });
+				assert.equal((await d.evidence("old-review", oldReview, { kind: "judgment", judgment: oldJudgment })).isError, true);
 				const review = await d.observe("review", { judgment });
 				assert.equal((await d.evidence("review", review, { kind: "judgment", judgment })).isError, undefined);
 				const receipt = (await d.call("receipt")).details;

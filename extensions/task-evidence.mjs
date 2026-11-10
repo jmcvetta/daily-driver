@@ -68,10 +68,13 @@ export function recordEvidence(state, record, source, sessionId) {
 		if (record.kind === "command" && source.outcome.basis === "check-conclusions") throw new Error("Command evidence requires an actual exit status, not check transport success");
 		if (record.kind === "check") {
 			const value = JSON.parse(source.text);
-			if (value.headRefOid !== execution.subject.commit) throw new Error("Check responses must name the checked headRefOid");
+			const identity = execution.subject.kind === "repository" ? value.headRefOid : value.artifactDigest;
+			if (identity !== (execution.subject.commit ?? execution.subject.digest)) throw new Error("Check responses must name the exact checked headRefOid or artifactDigest");
 		}
 	} else if (record.kind !== "report") {
 		if (!nonblank(record.judgment?.reviewer) || !nonblank(record.judgment?.rationale) || !Array.isArray(record.judgment?.artifacts) || !record.judgment.artifacts.length || record.judgment.artifacts.some((item) => !nonblank(item))) throw new Error("An attributed judgment requires reviewer, rationale and inspected artifact references");
+		const identity = execution.subject.commit ?? execution.subject.digest;
+		if (record.judgment.artifacts.some((item) => !item.includes(identity))) throw new Error("Judgment artifact references must identify the exact inspected commit or content digest");
 		const values = (value) => typeof value === "string" ? [value] : value && typeof value === "object" ? Object.values(value).flatMap(values) : [];
 		const retained = [source.text];
 		try { retained.push(...values(JSON.parse(source.text))); } catch { /* Plain review text remains usable. */ }

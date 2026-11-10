@@ -158,18 +158,18 @@ the operation starts. A late result retains that binding. Repository evidence
 names the exact commit and dirty-state distinction. Dirty repository evidence
 cannot establish completion. File artifacts use SHA-256 content identities.
 Contract revisions and changed subjects make old evidence stale without
-deleting it. Check responses must include the checked `headRefOid` and actual
-conclusions. A successful tool transport is not a check pass. Commands require
-a native exit status; shell output that merely prints a success claim is not
-an exit status.
+deleting it. Check responses must include actual conclusions and the exact
+checked `headRefOid`, or `artifactDigest` for a file. A successful tool
+transport is not a check pass. Commands require a native exit status; shell
+output that merely prints a success claim is not an exit status.
 
 Subjective acceptance uses attributed judgments with rationale and inspected
-artifact references retained in the review observation. An agent cannot invent
+artifact references retained in the review observation. Each artifact reference
+must contain the captured commit or content digest. An agent cannot invent
 attribution or rationale that the source does not contain. Attribution and
 prose sufficiency still need review against that observation. Agent reports
-remain a separate evidence
-kind and cannot establish a pass. Receipt consumers must distinguish these
-kinds and redact sensitive commentary and local paths before publishing.
+remain a separate evidence kind and cannot establish a pass. Receipt consumers
+must distinguish these kinds and redact sensitive commentary and local paths.
 Do not publish retained source quotes. Reuse the receipt inside existing
 PR details and handoffs instead of maintaining a second evidence ledger.
 
@@ -333,6 +333,26 @@ not bypass the task completion gate. The private Codex configuration sets
 `tool_output_token_limit = 20000` so the native status response is not
 truncated before the scripted provider can read it. A truncated status is
 not evidence of a controller pass.
+
+Observed on 2026-11-10:
+
+| Harness | Local provider requests | Completion and abort result |
+| --- | --- | --- |
+| Omp 18.18.6 | 16 | Rejected summary-only completion and a failed check inside successful transport. Current check evidence plus a source-backed scripted judgment completed. A dirty subject reopened the task; correction count stopped at two. The existing live suite also exercised native RPC abort without completion. |
+| Claude Code 2.1.321 | 18 | The same completion and dirty-subject cases passed. A second process received SIGINT during corrective request 1. It stopped without completion or another provider request; its private task remained `active`. |
+| Codex CLI 0.160.0 | 18 | The same completion and dirty-subject cases passed. SIGINT during corrective request 1 stopped further requests and persisted `cancelled`, without completion. |
+
+Claude print-mode SIGINT did not persist a cancellation record in this
+scenario. Do not describe that state as cancelled or completed. Its unfinished
+contract remains available for a supported resume. The native mod's
+`turn.complete.isAborted` route and the shared explicit-cancellation tests
+remain separate coverage.
+
+These fixtures establish runtime transitions and evidence-kind accounting.
+Their scripted judgments do not establish independent semantic correctness.
+The existing runtime suite also covers missing, unrelated, truncated, stale,
+wrong-task, changed-revision and non-code-artifact evidence, required approvals,
+contradictory results, exact native-source recovery and historical reports.
 
 ## Omp task roles and worktrees
 
