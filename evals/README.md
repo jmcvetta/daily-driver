@@ -154,6 +154,8 @@ cases are separate from the historical eight-case comparison below. One
 defective and one control observation are recorded in
 [`issue-803-contract-review-observations.json`](provenance/issue-803-contract-review-observations.json).
 They do not prove review publication or other harnesses.
+The same record distinguishes the scripted Claude native-fork publication
+proof from model judgment and records the incomplete Codex continuation.
 Answer keys and rubric calibration examples are outside subject inputs.
 Only a finding with the correct location, triggering condition, and concrete
 impact counts. Duplicate findings count once. Style comments do not count.

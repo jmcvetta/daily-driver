@@ -24,12 +24,14 @@ whatever level was typed last, in some other session, about some other diff.
 load-bearing.
 
 Obtain the current contract with `mcp__daily-driver__task_state`, action
-`handoff`. Supply `/code-review` the contract, criterion IDs, evidence
-expectations, original requirement references, reviewed artifact SHA and
-complete history as review instructions. Require the contract challenges and
-criterion-linked findings in `SKILL.md`. Keep private sources out of the
-submitted review. If this surface cannot receive the brief, report the missing
-route rather than claiming contract review.
+`handoff`. The installed task-state mod carries the active parent contract into
+the native review fork. Confirm that the handoff has the current revision,
+criterion IDs, evidence expectations and original requirement references.
+Supply the reviewed artifact SHA and complete history as review instructions;
+the contract handoff alone does not establish their delivery. Require the
+contract challenges and criterion-linked findings in `SKILL.md`. Keep private
+sources out of the submitted review. If the full brief cannot reach the review
+surface, report the missing route rather than claiming contract review.
 
 If the CLI returns findings without a submitted review, publish them through
 the fallback below. Plain issue comments are not an equivalent artifact.

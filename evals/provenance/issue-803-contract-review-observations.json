@@ -76,6 +76,31 @@
     "observation": "In a disposable checkout, setup succeeded and offline gh issue view 24 returned fixture issue version 2, contract uploader-contract revision 2, and both C1 retry and C2 backoff.",
     "limits": "The revised fixture has not been exercised by a model reviewer. Earlier explicit-prompt observations remain unchanged."
   },
+  "claude_integrated_transport": {
+    "cli": "Claude Code 2.1.321",
+    "plugin_revision": "3cb6a9fd3786beea808a9078905bb73a99d15e71",
+    "artifact_sha": "449094b5d6c0c8997ce7e2a984d8b83885a18615",
+    "contract_id": "contract:1a118542-9005-40c1-bb84-193be685936a",
+    "observation": "A private-home loopback run loaded the installed Daily Driver Claude mod and its Worktrunk dependency. The offline fixture issue output was retained as a tool source. The existing request criterion was preserved while sourced C1 and C2 were appended at revision 2. The actual /code-review fork received the contract, source references and artifact identity; its scripted tool call submitted fixture COMMENT review ID 1.",
+    "limits": "Scripted transport and publication, not model judgment. A preceding fixture amendment removed the original request criterion and was rejected; its ledger remains preserved. The corrected fixture later reached its own two-correction stop failure despite an attempted final disposition. This does not affect the undertaking's correction bound. The source-to-review proof does not establish changed-contract or fix-delta behavior."
+  },
+  "codex_integrated_attempt": {
+    "cli": "codex-cli 0.160.0",
+    "artifact_sha": "96dc419a9cd4827f407d0026c692012d9c605899",
+    "contract_id": "contract:ac179b09-665b-40ff-829a-3bf983603a98",
+    "observation": "A private-home loopback run with the installed plugin retained the offline issue output and amended the contract to revision 2, preserving request and appending sourced C1 and C2.",
+    "limits": "The scripted controller embedded the entire escaped request history instead of the bounded handoff. The native review command failed with argument list too long and did not run. The controller incorrectly submitted a fixture COMMENT afterward; it is not review-route evidence. The disposable fixture reached its two-correction stop failure. An earlier no-ledger attempt overwrote its private plugin registration with provider configuration; both failures and their ledgers are retained. No model judgment or native publication is established."
+  },
+  "codex_gated_attempt": {
+    "artifact_sha": "a1ef0916255394a9ad56d2a1ca43bdb7cfc9dfda",
+    "observation": "The bounded structured revision-2 handoff passed an offline schema and argument-size check. A gate rejected the earlier recorded argument-list failure. A corrected private-home fixture amended its sourced contract and launched the native review command.",
+    "limits": "The command returned a running exec session rather than terminal success. The controller did not continue that session and correctly refused fixture publication. A request containing the brief was the parent request, not evidence that the native reviewer received it. No reviewer judgment or publication was established."
+  },
+  "codex_continuation_attempt": {
+    "artifact_sha": "053add235e78059a1aa83449cad9c8b09fe9461d",
+    "observation": "A private-home loopback fixture amended the retained issue contract to revision 2 and launched the native review command. Its running exec session was continued with write_stdin three times.",
+    "limits": "Each continuation remained nonterminal and reported reconnecting while waiting for network. The local provider observed no native reviewer request, and no fixture review was submitted. The parent process exited; its exec session has no documented standalone continuation. A nested sandbox network restriction is a possible cause, not an established diagnosis."
+  },
   "codex_fixture_publication": {
     "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
     "observation": "The offline GitHub fixture accepted and retained scripted COMMENT review ID 1 with contract revision 2 and C2 in its summary.",
