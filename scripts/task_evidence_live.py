@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import signal
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -134,6 +135,32 @@ export default function(pi) {
         finally:
             server.shutdown()
 
+def _interrupt_correction(argv, root, env, ledger_root, abort, count):
+    abort["start"] = len(count)
+    process = subprocess.Popen(argv, cwd=root, env=env, text=True, stdin=subprocess.DEVNULL,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        assert abort["ready"].wait(15), "The native runtime did not start its corrective request"
+        process.send_signal(signal.SIGINT)
+        process.communicate(timeout=15)
+    finally:
+        abort["release"].set()
+        if process.poll() is None:
+            process.kill()
+            process.communicate()
+    interrupted = []
+    for path in ledger_root.glob("*.json"):
+        states = [entry["data"]["state"] for entry in json.loads(path.read_text())["entries"]
+                  if entry.get("customType") == "daily-driver.task-state"]
+        if states and states[-1]["corrections"] == 1:
+            assert states[-1]["status"] in ("active", "cancelled"), states[-1]
+            assert not any(state["status"] == "verified-complete" for state in states), states[-1]
+            interrupted.append(states[-1])
+    assert interrupted, "Native abort did not leave its corrective task unfinished"
+    assert len(count) == abort["start"] + 2, "The aborted runtime made another provider request"
+    return interrupted[-1]["status"]
+
+
 def _run_claude():
     worktrunk = os.environ.get('WORKTRUNK_PLUGIN_ROOT')
     if not worktrunk or not (Path(worktrunk) / '.claude-plugin/plugin.json').is_file():
@@ -162,6 +189,7 @@ def _run_claude():
  });
 }''')
         count=[]; requests=[]
+        abort={"start":None,"ready":threading.Event(),"release":threading.Event()}
         class Provider(BaseHTTPRequestHandler):
             def log_message(self,*_): pass
             def do_POST(self):
@@ -169,6 +197,8 @@ def _run_claude():
                 if self.path.endswith('/count_tokens'):
                     data=b'{"input_tokens":100}'; self.send_response(200); self.send_header('Content-Type','application/json'); self.send_header('Content-Length',str(len(data))); self.end_headers(); self.wfile.write(data); return
                 index=len(count); count.append(index); requests.append(body); assert index<24
+                if abort["start"] is not None and index>abort["start"]:
+                    abort["ready"].set(); abort["release"].wait(20); self.close_connection=True; return
                 try: action=_step(index,body.get('messages',[]),root,'mcp__daily-driver__task_state','mcp__completion-fixture__check')
                 except Exception as error:
                     (base/'failure.json').write_text(json.dumps({'error':repr(error),'body':body})); raise
@@ -188,14 +218,16 @@ def _run_claude():
         env={key:os.environ[key] for key in ('PATH','TMPDIR','LANG','TERM') if key in os.environ}
         env.update(HOME=str(home),CLAUDE_CONFIG_DIR=str(home/'config'),ANTHROPIC_BASE_URL=f'http://127.0.0.1:{server.server_address[1]}',ANTHROPIC_API_KEY='offline-fixture',CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC='1',DISABLE_AUTOUPDATER='1')
         try:
-            run=subprocess.run(['claude','-p','Implement the offline native completion fixture.','--plugin-dir',worktrunk,'--plugin-dir',str(ROOT),'--plugin-dir',str(plugin),'--setting-sources','','--allowedTools','mcp__daily-driver__task_state,mcp__completion-fixture__check','--output-format','stream-json','--verbose','--debug-file',str(base/'debug.log')],cwd=root,env=env,text=True,capture_output=True,timeout=120)
+            argv=['claude','-p','Implement the offline native completion fixture.','--plugin-dir',worktrunk,'--plugin-dir',str(ROOT),'--plugin-dir',str(plugin),'--setting-sources','','--allowedTools','mcp__daily-driver__task_state,mcp__completion-fixture__check','--output-format','stream-json','--verbose','--debug-file',str(base/'debug.log')]
+            run=subprocess.run(argv,cwd=root,env=env,text=True,capture_output=True,timeout=120)
             ledgers=list((home/'config/daily-driver-task-contracts').glob('*.json'))
             assert ledgers, {'returncode':run.returncode,'stdout':run.stdout[-6000:],'stderr':run.stderr[-6000:],'requests':len(count)}
             entries=json.loads(ledgers[0].read_text())['entries']; states=[entry['data']['state'] for entry in entries if entry.get('customType')=='daily-driver.task-state']
             assert any(state['status']=='verified-complete' for state in states), {'state':states[-1],'stdout':run.stdout[-8000:],'stderr':run.stderr[-4000:],'requests':len(count)}
             assert states[-1]['status']=='active' and states[-1]['corrections']==2 and states[-1].get('stopFailure'), states[-1]
             assert 'Completion rejected' in run.stdout and 'actual command/check outcome' in run.stdout, run.stdout[-8000:]
-            print(json.dumps({'harness':subprocess.check_output(['claude','--version'],text=True).strip(),'requests':len(count),'summary_rejected':True,'failed_check_rejected':True,'current_check_and_judgment_completed':True,'dirty_subject_reopened':True,'corrections':states[-1]['corrections']}))
+            abort_state=_interrupt_correction(argv,root,env,home/'config/daily-driver-task-contracts',abort,count)
+            print(json.dumps({'harness':subprocess.check_output(['claude','--version'],text=True).strip(),'requests':len(count),'summary_rejected':True,'failed_check_rejected':True,'current_check_and_judgment_completed':True,'dirty_subject_reopened':True,'corrections':states[-1]['corrections'],'abort_during_correction_stopped':True,'abort_state':abort_state}))
         except Exception:
             print('CLAUDE_OFFLINE_DIAGNOSTIC',json.dumps({'requests':len(count),'tools':[tool['name'] for tool in requests[-1].get('tools',[]) if tool['name'].startswith('mcp__')] if requests else [],'debug':(base/'debug.log').read_text()[-6000:] if (base/'debug.log').exists() else None})[-10000:])
             raise
@@ -220,11 +252,14 @@ if count==3: (root/'subject.txt').write_text('changed')
 print(json.dumps({'headRefOid':head,'statusCheckRollup':[{'conclusion':'FAILURE' if count==1 else 'SUCCESS'}],'judgment':{'reviewer':'offline scripted reviewer','rationale':'Inspected the unchanged fixture against the native scenario contract.','artifacts':[head+':subject.txt']}}))
 ''')
         count=[]; requests=[]; state_command=[None]
+        abort={"start":None,"ready":threading.Event(),"release":threading.Event()}
         class Provider(BaseHTTPRequestHandler):
             def log_message(self,*_): pass
             def do_POST(self):
                 body=json.loads(self.rfile.read(int(self.headers['Content-Length'])))
                 index=len(count); count.append(index); requests.append(body); assert index<24
+                if abort["start"] is not None and index>abort["start"]:
+                    abort["ready"].set(); abort["release"].wait(20); self.close_connection=True; return
                 messages=body.get('input',[])
                 if index==0:
                     import re
@@ -278,14 +313,16 @@ requires_openai_auth = false
             assert added.returncode==0,added.stderr
             installed=subprocess.run(['codex','plugin','add','daily-driver@daily-driver','--json'],cwd=root,env=env,text=True,capture_output=True,timeout=20)
             assert installed.returncode==0,installed.stderr
-            run=subprocess.run(['codex','-a','never','exec','--json','--dangerously-bypass-hook-trust','--sandbox','workspace-write','--add-dir',str(base),'-C',str(root),'Implement the offline native completion fixture.'],cwd=root,env=env,text=True,capture_output=True,timeout=120)
+            argv=['codex','-a','never','exec','--json','--dangerously-bypass-hook-trust','--sandbox','workspace-write','--add-dir',str(base),'-C',str(root),'Implement the offline native completion fixture.']
+            run=subprocess.run(argv,cwd=root,env=env,text=True,capture_output=True,timeout=120)
             ledgers=list((home/'daily-driver-task-contracts').glob('*.json'))
             assert ledgers,{'returncode':run.returncode,'stdout':run.stdout[-4000:],'stderr':run.stderr[-4000:],'requests':len(count)}
             entries=json.loads(ledgers[0].read_text())['entries']; states=[entry['data']['state'] for entry in entries if entry.get('customType')=='daily-driver.task-state']
             assert any(state['status']=='verified-complete' for state in states), {'state':states[-1],'stdout':run.stdout[-10000:],'stderr':run.stderr[-4000:],'requests':len(count)}
             assert states[-1]['status']=='active' and states[-1]['corrections']==2 and states[-1].get('stopFailure'),states[-1]
             assert 'Completion rejected' in run.stdout and 'actual command/check outcome' in run.stdout,run.stdout[-8000:]
-            print(json.dumps({'harness':subprocess.check_output(['codex','--version'],text=True).strip(),'requests':len(count),'summary_rejected':True,'failed_check_rejected':True,'current_check_and_judgment_completed':True,'dirty_subject_reopened':True,'corrections':states[-1]['corrections']}))
+            abort_state=_interrupt_correction(argv,root,env,home/'daily-driver-task-contracts',abort,count)
+            print(json.dumps({'harness':subprocess.check_output(['codex','--version'],text=True).strip(),'requests':len(count),'summary_rejected':True,'failed_check_rejected':True,'current_check_and_judgment_completed':True,'dirty_subject_reopened':True,'corrections':states[-1]['corrections'],'abort_during_correction_stopped':True,'abort_state':abort_state}))
         except Exception:
             print('CODEX_OFFLINE_DIAGNOSTIC',json.dumps({'requests':len(count),'first_outputs':[str(item.get('output',''))[:3000] for request in requests[:3] for item in request.get('input',[]) if item.get('type')=='function_call_output'],'tools':[tool.get('name') for tool in requests[-1].get('tools',[])] if requests else []}))
             raise

@@ -54,7 +54,7 @@ async function driver(harness, root, overrides = {}) {
 		return call("evidence", { id, taskId: state.taskId, criterionId: "request", contractRevision: state.contract.revision,
 			subject: source.execution?.subject, source: { sourceId: source.sourceId, quote: source.text }, kind: "check", result: "passed", ...overrides });
 	};
-	return { call, event, observe, evidence, verification, ref };
+	return { call, event, observe, evidence, verification, ref, entries };
 }
 
 /** registerTaskEvidenceChecks prevents transport success and stale artifacts from becoming verified completion. */
@@ -94,7 +94,7 @@ export default function registerTaskEvidenceChecks(check) {
 				assert.equal((await d.evidence("check", source)).isError, undefined);
 				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
 				assert.equal((await d.evidence("no-attribution", source, { kind: "judgment" })).isError, true);
-				const judgment = { reviewer: "independent fixture reviewer", rationale: "Inspected the fixture behavior against the recorded requirement.", artifacts: [`${f.git("rev-parse", "HEAD")}:subject.txt`] };
+				const judgment = { reviewer: "independent fixture reviewer", rationale: "Inspected the fixture behavior.\nRetained the required records.", artifacts: [`${f.git("rev-parse", "HEAD")}:subject.txt`] };
 				assert.equal((await d.evidence("invented-review", source, { kind: "judgment", judgment })).isError, true);
 				const review = await d.observe("review", { judgment });
 				assert.equal((await d.evidence("review", review, { kind: "judgment", judgment })).isError, undefined);
@@ -158,5 +158,65 @@ export default function registerTaskEvidenceChecks(check) {
 				assert.equal((await d.call("receipt")).details.criteria[0].disposition, "stale");
 			} finally { f.remove(); }
 		});
+
+		/** An agent waiver or unrelated approval must not satisfy a contract-required signoff. */
+		check(`${harness} requires sourced approval for the named requirement`, async () => {
+			const f = fixture();
+			try {
+				const d = await driver(harness, f.root, { kinds: ["check", "approval"] });
+				await d.event("UserPromptSubmit", { prompt: "Require maintainer signoff for this fixture.", turn_id: "approval-requirement", origin: { kind: "composer" } });
+				const status = (await d.call("status")).details;
+				const decision = status.sources.at(-1);
+				const ref = { sourceId: decision.sourceId, quote: decision.text };
+				assert.equal((await d.call("contract", { expectedRevision: status.state.contract.revision, change: "Retain the requested signoff", sourceRefs: [ref], authoritySource: ref, contract: { approvalRequirements: ["maintainer signoff"] } })).isError, undefined);
+				const head = f.git("rev-parse", "HEAD");
+				const source = await d.observe("check", { headRefOid: head, statusCheckRollup: [{ conclusion: "SUCCESS" }] });
+				assert.equal((await d.evidence("check", source)).isError, undefined);
+				assert.equal((await d.call("complete", { summary: "done", notApplicable: ["maintainer signoff"] })).isError, true);
+				const judgment = { reviewer: "fixture maintainer", rationale: "Approved the recorded fixture.", artifacts: [`${head}:subject.txt`] };
+				const approval = await d.observe("approval", { judgment });
+				assert.equal((await d.evidence("wrong-approval", approval, { kind: "approval", judgment, requirement: "another requirement" })).isError, undefined);
+				assert.deepEqual((await d.call("receipt")).details.outstandingApprovals, ["maintainer signoff"]);
+				assert.equal((await d.evidence("approval", approval, { kind: "approval", judgment, requirement: "maintainer signoff" })).isError, undefined);
+				assert.equal((await d.call("complete", { summary: "Check and attributed signoff recorded." })).details.state.status, "verified-complete");
+			} finally { f.remove(); }
+		});
+
+		/** A later success must not silently erase a contradictory failure on the same artifact. */
+		check(`${harness} retains contradictory failures until explicit observed supersession`, async () => {
+			const f = fixture();
+			try {
+				const d = await driver(harness, f.root, { kinds: ["check"] });
+				const headRefOid = f.git("rev-parse", "HEAD");
+				const failed = await d.observe("failure", { headRefOid, statusCheckRollup: [{ conclusion: "FAILURE" }] });
+				assert.equal((await d.evidence("failure", failed, { result: "failed" })).isError, undefined);
+				const passed = await d.observe("rerun", { headRefOid, statusCheckRollup: [{ conclusion: "SUCCESS" }] });
+				assert.equal((await d.evidence("rerun", passed)).isError, undefined);
+				assert.equal((await d.call("receipt")).details.criteria[0].disposition, "failed");
+				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
+				assert.equal((await d.evidence("confirmed-rerun", passed, { supersedes: "failure" })).isError, undefined);
+				assert.equal((await d.call("complete", { summary: "Recorded rerun supersedes the failure." })).details.state.status, "verified-complete");
+				assert.equal((await d.call("status")).details.state.criterionEvidence.length, 3);
+			} finally { f.remove(); }
+		});
 	}
+
+	/** A bounded preview must not force replay when the exact native tool result is already retained. */
+	check("Omp recovers exact native evidence without treating its truncated preview as a pass", async () => {
+		const f = fixture();
+		try {
+			const d = await driver("omp", f.root, { kinds: ["check"] });
+			const payload = { headRefOid: f.git("rev-parse", "HEAD"), statusCheckRollup: [{ conclusion: "SUCCESS" }], padding: "x".repeat(10000) };
+			const truncated = await d.observe("retained-result", payload);
+			assert.equal(truncated.textTruncated, true);
+			assert.equal((await d.evidence("preview", truncated)).isError, true);
+			d.entries.push({ type: "message", message: { role: "toolResult", toolCallId: "retained-result", content: [{ type: "text", text: JSON.stringify(payload) }] } });
+			const recovered = (await d.call("status", { sourceId: "tool:retained-result" })).details.source;
+			assert.equal(recovered.textTruncated, false);
+			assert.equal(recovered.recoveredFromNativeEntry, true);
+			assert.equal((await d.evidence("exact-result", recovered)).isError, undefined);
+			assert.equal((await d.call("complete", { summary: "Exact retained check result recorded." })).details.state.status, "verified-complete");
+			assert.equal(d.entries.find((entry) => entry.customType === "daily-driver.task-observation").data.observation.textTruncated, true);
+		} finally { f.remove(); }
+	});
 }

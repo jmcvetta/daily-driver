@@ -72,7 +72,10 @@ export function recordEvidence(state, record, source, sessionId) {
 		}
 	} else if (record.kind !== "report") {
 		if (!nonblank(record.judgment?.reviewer) || !nonblank(record.judgment?.rationale) || !Array.isArray(record.judgment?.artifacts) || !record.judgment.artifacts.length || record.judgment.artifacts.some((item) => !nonblank(item))) throw new Error("An attributed judgment requires reviewer, rationale and inspected artifact references");
-		if ([record.judgment.reviewer, record.judgment.rationale, ...record.judgment.artifacts].some((value) => !source.text.includes(value))) throw new Error("Judgment attribution, rationale and artifacts must appear in the retained review observation");
+		const values = (value) => typeof value === "string" ? [value] : value && typeof value === "object" ? Object.values(value).flatMap(values) : [];
+		const retained = [source.text];
+		try { retained.push(...values(JSON.parse(source.text))); } catch { /* Plain review text remains usable. */ }
+		if ([record.judgment.reviewer, record.judgment.rationale, ...record.judgment.artifacts].some((value) => !retained.some((part) => part.includes(value)))) throw new Error("Judgment attribution, rationale and artifacts must appear in the retained review observation");
 		if (source.isError) throw new Error("A failed observation cannot support an approving judgment");
 	}
 	if (record.supersedes && !(state.criterionEvidence ?? []).some((item) => item.id === record.supersedes && item.criterionId === record.criterionId && item.kind === record.kind && equal(item.subject, record.subject))) throw new Error("Supersession must identify evidence for the same criterion, kind and subject");
