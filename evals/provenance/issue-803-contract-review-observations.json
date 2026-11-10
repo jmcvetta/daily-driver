@@ -1,0 +1,36 @@
+{
+  "source_revision": "d42c9e4f9eb5a95c9dddc7b472e5f40d8cb019f1",
+  "codex_transport": {
+    "cli": "codex-cli 0.160.0",
+    "mode": "isolated Git repository and scripted loopback Responses provider",
+    "invocation": "codex exec review --base main --ephemeral --ignore-user-config -c developer_instructions=<TOML string> with an invocation-local fixture provider",
+    "contract": "account-export revision 2; source issue #42 version 2; C2 preserve identifiers including zero",
+    "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
+    "base_sha": "9161518e7091406c3b733f5e883ad0bc37e7e8dd",
+    "observation": "One request contained the complete source-anchored contract and artifact SHA in a developer message, the native base target and merge-base instruction in a user message, and nonempty built-in base instructions. A second fixture invocation combined existing developer instructions with the contract; both reached the same native base review request. Codex app-server config/read returned the fixture's effective existing developer_instructions. The scripted responses ended as interrupted reviews.",
+    "limits": "Transport only. No model judgment or GitHub publication was established. CLI overrides take precedence; callers must preserve the effective value before supplying a replacement."
+  },
+  "omp_behavior": {
+    "case": "reviewer-quality-09-task-contract",
+    "plugin_revision": "d42c9e4f9eb5a95c9dddc7b472e5f40d8cb019f1",
+    "parent_model": "openai-codex/gpt-6.1-sol:low",
+    "reviewer_reported_model": "opencode-go/glm-5.3",
+    "backend_served_model": "unreported",
+    "reviewed_sha": "b2a139e50c180e9e55753663e08af568363081da",
+    "contract_revision": 2,
+    "replicates": 1,
+    "observation": "The delivered reviewer response identified C2 zero-ID loss and C3 inactive-account export. It named the contract revision but returned account-export rather than the requested artifact SHA, omitted the C3 location, and returned malformed JSON. The worker completion assertion was not accepted as a clean verdict.",
+    "judge": "omp-gpt-6.1-sol (reported openai-codex/gpt-6.1-sol), score 0, rubric freeze 5a5379fc3b8e017a909c3a576778b4e4f487ad0e2a4949c3cf159125ed5b8af7",
+    "limits": "The initial evaluator success score used a disabled criterion and is not a behavioral grade. The subsequent non-Claude judge scored 0 for missing artifact SHA and the identifier-stringification defect. This new rubric has no case-specific calibration. Publication was not run."
+  },
+  "omp_control": {
+    "reviewed_sha": "b94aa07d9529fe90274c2a9886cea73665514030",
+    "contract_revision": 2,
+    "reviewer_reported_model": "opencode-go/glm-5.3",
+    "backend_served_model": "unreported",
+    "replicates": 1,
+    "observation": "The delivered reviewer cleared the conforming control, named its SHA and revision, and did not demand sorting or validation.",
+    "judge": "omp-gpt-6.1-sol, score 1, rubric freeze 5a5379fc3b8e017a909c3a576778b4e4f487ad0e2a4949c3cf159125ed5b8af7",
+    "limits": "The case-specific rubric is uncalibrated. This is not a baseline-versus-candidate comparison or publication proof."
+  }
+}

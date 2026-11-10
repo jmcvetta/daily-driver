@@ -65,13 +65,19 @@ reviewed SHA, and current head; the publication route below turns its findings
 into the submitted threads that `Fix, answer, resolve, push` answers.
 
 Obtain the current contract through the installed session-bound task-state
-command, action `handoff`. Codex CLI 0.160.0 rejects a custom `PROMPT` together
-with `--base`, so the documented `--base` invocation alone does not establish
-contract-brief delivery. Do not claim contract review until a supported route
-has delivered the contract, criterion IDs, evidence expectations, original
-requirement references, artifact SHA and complete history to this surface.
-Keep private source contents out of the submitted review. Report the missing
-route rather than treating an unbriefed review as contract review.
+command, action `handoff`. Pass the contract, criterion IDs, evidence
+expectations, original requirement references, artifact SHA and complete
+history to the same `codex exec review --base <branch>` invocation using
+`-c developer_instructions=<TOML string>`. The override replaces the configured
+value. Read the effective value through the Codex app-server `config/read`
+method for the same working directory and configuration, and include it
+unchanged before the brief. Keep that read private. If it cannot be recovered,
+do not discard it. Require the contract challenges and criterion-linked findings in
+`SKILL.md`. Do not expose secrets in command arguments or publish private source
+contents. Codex CLI 0.160.0 rejects a
+positional `PROMPT` with `--base`; do not use both. An isolated loopback
+provider observed the developer instruction and native base target in one
+request. It did not establish model behavior or review publication.
 
 **It is a second agent run, and it is billed as one.** `codex exec review`
 starts a fresh session with its own model. That is what makes it a named
