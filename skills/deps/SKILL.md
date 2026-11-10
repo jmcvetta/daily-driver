@@ -22,9 +22,8 @@ Dependabot files one pull request per dependency: a branch each, a CI run
 each, a review each. This skill does the opposite. **One branch carries every
 upgrade, and one CI run says whether the result holds together.**
 
-The upgrades themselves are the package manager's work, never a hand-edited
-manifest or lockfile. That rule is the constitution's, under `Dependencies`,
-and it is not restated here.
+The upgrades themselves follow `provenance`'s package-manager policy, never a
+hand-edited manifest or lockfile. That policy is not restated here.
 
 **The routes are per harness, and they live beside this file.** Every
 operation below is named in words here and resolved to a call there:
@@ -70,8 +69,8 @@ unresolved.** Report the dependency and constraint. Do not call it fixed or
 cross the unattended boundary to take the major upgrade.
 
 A red suite is still answered by finding which upgrade broke what, and never
-by pinning around the failure, skipping the test, or silencing it — the
-constitution's *Fix problems, do not hide them*.
+by pinning around the failure, skipping the test, or silencing it —
+`provenance`'s test discipline.
 
 
 
@@ -134,7 +133,7 @@ The command is whatever that manager calls its bulk upgrade:
 **The table is a convenience, not the rule.** The rule is *the manager that
 wrote the lockfile is the manager that updates it*, and a manager missing from
 the table is looked up in its own manual rather than guessed at — the
-constitution's *RTFM*. Maven, Gradle and Docker are the common ones absent
+constitution's “manuals first” rule. Maven, Gradle and Docker are the common ones absent
 here.
 
 Some ecosystems have no package manager to run at all. A GitHub Actions pin

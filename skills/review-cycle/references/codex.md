@@ -181,8 +181,7 @@ what the next session will reach for.
 - **`codex queue --thread <id> --message <text>`.** It injects a message into a
   saved session, which is most of a durable wake and not the part that matters:
   something outside Codex has to fire it at a time. A wake built on `at` or on
-  cron is a workaround, and the constitution says to discuss one before writing
-  it.
+  cron is a workaround; `provenance` requires discussion before writing one.
 
 There is no wake slot
 ---------------------

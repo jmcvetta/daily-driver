@@ -102,7 +102,7 @@ DEFAULT_MAX_FILE_CHARS = 20_000
 DEFAULT_MAX_DIALOG_CHARS = 100_000
 
 # Bump when JUDGE_SYSTEM_PROMPT or the envelope changes: it is part of `freeze_sha`.
-PROMPT_VERSION = "omp-judge-v1"
+PROMPT_VERSION = "omp-judge-v2"
 
 JUDGE_SYSTEM_PROMPT = """\
 You are a strict grader. You grade one transcript of a coding agent against one \
@@ -347,24 +347,19 @@ def truncate_agent_output(text: str, limit: int) -> str:
 
 
 def summarize_commands(commands: list[dict[str, Any]]) -> str | None:
-    """Mirror `coder_eval.evaluation.summaries.summarize_commands` over persisted `commands`."""
+    """Render complete tool evidence; the route byte limit rejects oversized prompts."""
     if not commands:
         return None
     lines = []
     for i, cmd in enumerate(commands, 1):
-        params = cmd.get("parameters") or {}
-        tool = cmd.get("tool_name", "unknown")
-        detail = ""
-        if tool == "Bash" and "command" in params:
-            detail = f" `{str(params['command'])[:120]}`"
-        elif tool in ("Read", "Write", "Edit", "Glob") and "file_path" in params:
-            detail = f" {params['file_path']}"
-        elif tool == "Grep" and "pattern" in params:
-            detail = f" pattern={str(params['pattern'])[:60]}"
-        elif tool in ("Task", "Agent"):
-            detail = f" ({str(params.get('description', ''))[:60]})"
-        preview = f" → {str(cmd['result_summary'])[:80]}" if cmd.get("result_summary") else ""
-        lines.append(f"  {i}. [{cmd.get('result_status') or 'unknown'}] {tool}{detail}{preview}")
+        evidence = {
+            "tool_name": cmd.get("tool_name", "unknown"),
+            "result_status": cmd.get("result_status") or "unknown",
+            "parameters": cmd.get("parameters") or {},
+            "result_summary": cmd.get("result_summary"),
+            "error_message": cmd.get("error_message"),
+        }
+        lines.append(f"  {i}. {json.dumps(evidence, ensure_ascii=False, sort_keys=True)}")
     return "\n".join(lines)
 
 

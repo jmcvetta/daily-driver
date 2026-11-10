@@ -1,12 +1,24 @@
+# A missing README can exhaust native shared-shell turns before this negative
+# control receives an answer, even while its no-activation criterion passes.
 task_id: task-worktree-02-neg-read-only-review
 description: >-
   A read-only repository review needs no branch or worktree. Firing here would
   add setup to a task that changes nothing.
 tags: [trigger-accuracy, task-worktree, no-fire]
 
-initial_prompt: >-
-  Review the README in this repository and tell me whether the installation
-  section is clear. Do not change any files.
+initial_prompt: |
+  Review the installation section in this complete README excerpt and tell
+  me whether it is clear. This is a read-only review. Do not read or change files.
+
+  ```markdown
+  # Parser
+
+  ## Installation
+
+  Requires Python 3.12 and uv.
+  From the repository root, run `uv tool install .`.
+  Run `parser --help` to check the installation.
+  ```
 
 agent:
   disallowed_tools: [Read, Write, Edit, NotebookEdit, Glob, Grep, Bash, Agent, Task]

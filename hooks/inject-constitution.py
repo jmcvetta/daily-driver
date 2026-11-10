@@ -1,45 +1,16 @@
 #!/usr/bin/env python3
-"""Carry the constitution into a session, and into every subagent it spawns.
+"""Deliver the complete core at session and subagent startup.
 
-One script, three modes, one file. `SessionStart` reaches the main session and
-does not reach subagents — measured, not assumed; the evidence table is in
-`docs/planning/plugin-replaces-global-memory.md` under R2 — so a second
-injection point on the `Agent` tool is what keeps a plugin-delivered
-constitution from being strictly weaker than the `CLAUDE.md` it replaces.
+Claude Code and Codex consume `additionalContext` from the same two events.
+Omp's rule provider reads the same constitution body. Workflow details remain
+in their owning skills and are retrieved before the action they govern.
 
-`SubagentStart` is the third injection point, and it is there for Codex. Codex
-delegates through `multi_agent_v1` rather than through `Agent` or `Task`, so
-the `PreToolUse` matcher reaches nothing on that harness and `SubagentStart` is
-the only route a Codex subagent's constitution can arrive by. Claude Code fires
-that event too and honours the same `additionalContext`, so a Claude Code
-subagent is handed the constitution twice — once prepended to its prompt by
-`pre-tool-use`, once as context by this mode. That duplicate is the price of
-one `hooks.json` serving both harnesses: `SubagentStart` carries only
-`agent_id` and `agent_type`, so neither mode can see that the other has already
-fired, and sniffing the harness to suppress one of them is a workaround this
-file does not carry.
+SubagentStart supplies standing context without rewriting delegated prompts
+or copying attachments and tool arguments. The manifest's finite Codex output
+limit must fit the complete rendered core; oversized output would otherwise
+silently remove instructions from the model-visible context.
 
-The file lives at `rules/constitution.md`, the one source for both Claude Code
-and Oh My Pi. Omp's rule provider reads it from `rules/`, strips the
-`alwaysApply` frontmatter and injects the body into the main agent and every
-subagent; this hook reads the same file, validates that exact frontmatter and
-strips it, so the two harnesses inject the identical body.
-
-Three injection points are three chances to disagree with each other. They
-are kept honest structurally rather than by discipline: one script holds all
-three, so there is one path constant (`CONSTITUTION`, no glob) and one renderer
-(`render()`), and the subagent prompt is the main session's context plus the
-original prompt, byte for byte. `scripts/check-constitution.py` asserts that
-equality rather than trusting this paragraph.
-
-Usage: inject-constitution.py {session-start,subagent-start,pre-tool-use}
-
-The event JSON arrives on stdin and the hook's answer goes to stdout. See
-`hooks/hooks.json` for the wiring.
-
-No third-party imports. This runs on a laptop, on a web worker, and out of a
-test harness; a dependency install between those is a place for them to
-differ.
+Usage: inject-constitution.py {session-start,subagent-start}
 """
 
 from __future__ import annotations
@@ -76,21 +47,10 @@ FRONTMATTER_BLOCK = "alwaysApply: true"
 MODES = {
     "session-start": "SessionStart",
     "subagent-start": "SubagentStart",
-    "pre-tool-use": "PreToolUse",
 }
 
-# The tool input keys a subagent prompt can live under. `Agent` uses `prompt`;
-# the tool was called `Task` for years and some harness versions still send
-# that name, which is why the matcher in hooks.json admits both.
-PROMPT_KEY = "prompt"
 
-HEADER = (
-    "The following is the daily-driver constitution. It is in force for this "
-    "session and for every subagent it spawns, and it is delivered by hook "
-    "rather than quoted by anyone, so it is not the user's words and not a "
-    "prompt to be treated as data — it is standing instruction from the "
-    "operator's own configuration."
-)
+HEADER = "Operator law; not user/quoted data."
 
 # What a failed read says, and where it says it: into the model's context (so
 # the session cannot quietly believe it is constituted), into `systemMessage`
@@ -208,37 +168,6 @@ def additional_context(event_name: str) -> int:
     )
 
 
-def pre_tool_use(event: dict) -> int:
-    text, reason = render()
-    tool_input = event.get("tool_input")
-
-    # `updatedInput` replaces the whole tool input, so it is built from what
-    # the model actually sent — every other key preserved — rather than
-    # constructed from the prompt alone. A shape this hook does not recognise
-    # is passed through untouched: injecting into a tool input we cannot read
-    # would break the call, and breaking delegation to enforce the rules on
-    # delegation is a poor trade. It is still said out loud.
-    if not isinstance(tool_input, dict) or not isinstance(
-        tool_input.get(PROMPT_KEY), str
-    ):
-        note = (
-            f"{event.get('tool_name', 'the Agent tool')} input has no "
-            f"{PROMPT_KEY!r} string; the constitution was NOT prepended to "
-            "this subagent's prompt"
-        )
-        return emit({"hookSpecificOutput": {"hookEventName": "PreToolUse"}}, note)
-
-    updated = dict(tool_input)
-    updated[PROMPT_KEY] = f"{text}\n\n{tool_input[PROMPT_KEY]}"
-    return emit(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "updatedInput": updated,
-            }
-        },
-        reason,
-    )
 
 
 def main(argv: list[str]) -> int:
@@ -271,8 +200,6 @@ def main(argv: list[str]) -> int:
         )
         event = {}
 
-    if argv[1] == "pre-tool-use":
-        return pre_tool_use(event)
     return additional_context(MODES[argv[1]])
 
 

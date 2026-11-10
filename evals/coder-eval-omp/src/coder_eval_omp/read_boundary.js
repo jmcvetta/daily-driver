@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { lstatSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 
@@ -28,6 +29,51 @@ function allowed(target, policy) {
 	return policy.roots.some((root) => contained(target, root));
 }
 
+// Discover new task worktrees from the sandbox's Git registration, never from
+// a supplied branch name or a blanket grant to the sandbox's parent directory.
+function admitRegisteredSibling(target, policy, env) {
+	const parent = dirname(policy.taskRoot);
+	if (!contained(target, parent)) return false;
+	const sibling = resolve(parent, relative(parent, target).split("/")[0]);
+	if (sibling === policy.taskRoot || sibling === parent) return false;
+	const gitEnv = Object.fromEntries(Object.entries(env).filter(([key]) => !key.startsWith("GIT_")));
+	const git = (root, args) => execFileSync("git", ["-C", root, ...args], {
+		env: gitEnv, encoding: "utf8", timeout: 2000, maxBuffer: 1024 * 1024,
+		stdio: ["ignore", "pipe", "ignore"],
+	});
+	// An enclosing host repository must not confer authority on a non-repository
+	// sandbox. Strip inherited Git overrides before asking Git about either root.
+	if (realpathSync(git(policy.taskRoot, ["rev-parse", "--show-toplevel"]).trim()) !== policy.taskRoot) return false;
+	const common = realpathSync(git(policy.taskRoot, ["rev-parse", "--path-format=absolute", "--git-common-dir"]).trim());
+	const registrations = git(policy.taskRoot, ["worktree", "list", "--porcelain", "-z"]).split("\0\0");
+	const registered = registrations.some((record) => {
+		const fields = record.split("\0");
+		return fields[0] === `worktree ${sibling}` &&
+			!fields.some((field) => field === "bare" || field.startsWith("prunable"));
+	});
+	if (!registered || realpathSync(sibling) !== sibling) return false;
+	if (realpathSync(git(sibling, ["rev-parse", "--show-toplevel"]).trim()) !== sibling ||
+		realpathSync(git(sibling, ["rev-parse", "--path-format=absolute", "--git-common-dir"]).trim()) !== common) return false;
+	const gitDir = realpathSync(git(sibling, ["rev-parse", "--absolute-git-dir"]).trim());
+	// Only linked task worktrees qualify, not the repository's primary checkout.
+	if (dirname(gitDir) !== resolve(common, "worktrees")) return false;
+	policy.roots.push(sibling);
+	return true;
+}
+
+function safeTarget(target, policy, env, followLinks) {
+	if (!allowed(target, policy) && !admitRegisteredSibling(target, policy, env)) return false;
+	if (followLinks) return safeTree(target, policy, true);
+	// Local Read lists metadata; local Grep/Glob do not follow descendant links.
+	// Their ignore readers do open control files, including ancestor controls.
+	if (!policy.checkIgnoreFiles || !statSync(target).isDirectory()) return true;
+	for (let parent = dirname(target); allowed(parent, policy); parent = dirname(parent)) {
+		if (!safeIgnoreFiles(parent, policy)) return false;
+		if (dirname(parent) === parent) break;
+	}
+	return safeTree(target, policy, false);
+}
+
 function normalize(raw, env) {
 	let text = raw.trim().replace(/^"(.*)"$/, "$1");
 	text = text.replace(/^@/, "").replace(/^:(?=[/\\~]|\.\.?[/\\])/, "");
@@ -53,16 +99,32 @@ function existingTarget(text, policy) {
 	}
 }
 
-// Native directory readers and searches can follow descendants, not only their
-// input root. Refuse a tree containing an escaping link before giving it to Omp.
-function safeTree(target, policy, seen = new Set()) {
+function safeIgnoreFiles(directory, policy) {
+	for (const name of [".gitignore", ".ignore", ".git/info/exclude", ".git/config"]) {
+		const path = resolve(directory, name);
+		try {
+			lstatSync(path);
+		} catch (error) {
+			if (error.code === "ENOENT" || error.code === "ENOTDIR") continue;
+			throw error;
+		}
+		if (!allowed(realpathSync(path), policy)) return false;
+	}
+	return true;
+}
+
+// Only skill URI traversal can follow descendant links. Local searches need
+// containment for ignore-file contents, not for link names in directory metadata.
+function safeTree(target, policy, followLinks, seen = new Set()) {
 	if (!allowed(target, policy)) return false;
 	if (!statSync(target).isDirectory() || seen.has(target)) return true;
 	seen.add(target);
+	if (!followLinks && !safeIgnoreFiles(target, policy)) return false;
 	for (const entry of readdirSync(target)) {
 		const child = resolve(target, entry);
 		const stat = lstatSync(child);
-		if ((stat.isDirectory() || stat.isSymbolicLink()) && !safeTree(realpathSync(child), policy, seen)) return false;
+		if ((stat.isDirectory() || (followLinks && stat.isSymbolicLink())) &&
+			!safeTree(realpathSync(child), policy, followLinks, seen)) return false;
 	}
 	return true;
 }
@@ -88,10 +150,10 @@ function skillTarget(body, commands) {
 	return null;
 }
 
-function safePath(raw, tool, policy, env, commands) {
+function safePath(raw, tool, policy, env, commands, followLinks = false) {
 	const text = normalize(raw, env);
 	if (text.includes(";")) {
-		return text.split(";").every((part) => part.trim() && safePath(part, tool, policy, env, commands));
+		return text.split(";").every((part) => part.trim() && safePath(part, tool, policy, env, commands, followLinks));
 	}
 	const uri = URI.exec(text);
 	if (uri) {
@@ -99,14 +161,14 @@ function safePath(raw, tool, policy, env, commands) {
 		if (scheme === "skill") {
 			const target = skillTarget(uri[2], commands);
 			if (target === null) return false;
-			return safePath(target, tool, policy, env, commands);
+			return safePath(target, tool, policy, env, commands, true);
 		}
 		// These protocols serve runtime-managed virtual resources, not arbitrary
 		// local filenames. The outer eval guard still owns the scheme allow list.
 		return ["rule", "xd", "proc", "omp"].includes(scheme);
 	}
 	const target = existingTarget(text, policy);
-	if (target !== null) return safeTree(target, policy);
+	if (target !== null) return safeTarget(target, policy, env, followLinks);
 	if (tool === "glob" || tool === "grep") {
 		const wildcard = text.search(/[*?\[{]/);
 		if (wildcard >= 0) {
@@ -116,7 +178,7 @@ function safePath(raw, tool, policy, env, commands) {
 			const prefix = text.slice(0, wildcard);
 			const base = prefix.slice(0, prefix.lastIndexOf("/") + 1) || ".";
 			const root = existingTarget(base, policy);
-			return root !== null && safeTree(root, policy);
+			return root !== null && safeTarget(root, policy, env, followLinks);
 		}
 	}
 	return false;
@@ -127,6 +189,7 @@ export function guardReadCall(event, env, commands = []) {
 	if (!["read", "grep", "glob"].includes(event.toolName)) return undefined;
 	try {
 		const policy = policyFrom(env);
+		policy.checkIgnoreFiles = event.toolName !== "read" && event.input?.gitignore !== false;
 		const paths = event.input?.path ?? (event.toolName === "read" ? null : ".");
 		if (typeof paths !== "string" || !safePath(paths, event.toolName, policy, env, commands)) {
 			throw new Error("outside readable inputs or unsupported target");

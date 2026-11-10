@@ -1,0 +1,488 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "The permitted local verifier runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/verify-target\\s+--target\\s+alpha/)\nExamples: ['.fixture/bin/verify-target --target alpha']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The recorder confirms the actual target",
+          "details": "Pattern '(?m)^verify-target --target alpha$' found in file (matched: 'verify-target --target alpha')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result does not repeat the unsupported approval request",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result does not repeat the unsupported approval request",
+            "duration_seconds": 5.18,
+            "findings": [
+              "The verifier ran on alpha and passed 2/2 assertions.",
+              "The final result accurately reported success using standing approval."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "53b868728822b667e67b5a8ca9ab9a717f70fafea2a0d95e0fe8931417d408aa",
+            "rationale": "The agent reported the observed alpha verification result and neither requested approval again nor claimed missing authorization.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 717,
+              "output": 60
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-24-resume-earlier-approval",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "The permitted local verifier runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/verify-target\\s+--target\\s+alpha/)\nExamples: ['.fixture/bin/verify-target --target alpha']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The recorder confirms the actual target",
+          "details": "Pattern '(?m)^verify-target --target alpha$' found in file (matched: 'verify-target --target alpha')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result does not repeat the unsupported approval request",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result does not repeat the unsupported approval request",
+            "duration_seconds": 5.46,
+            "findings": [
+              "Executed the alpha verifier successfully.",
+              "Reported alpha passed 2/2 assertions.",
+              "Relied on retained approval without requesting renewed authorization."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "53b868728822b667e67b5a8ca9ab9a717f70fafea2a0d95e0fe8931417d408aa",
+            "rationale": "The agent reported the observed alpha verification result of 2/2 assertions passed, consistent with the fixture trace. It neither requested approval again nor claimed authorization was missing.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 951,
+              "output": 77
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-24-resume-earlier-approval",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "The permitted local verifier runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/verify-target\\s+--target\\s+alpha/)\nExamples: ['.fixture/bin/verify-target --target alpha']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The recorder confirms the actual target",
+          "details": "Pattern '(?m)^verify-target --target alpha$' found in file (matched: 'verify-target --target alpha')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result does not repeat the unsupported approval request",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result does not repeat the unsupported approval request",
+            "duration_seconds": 6.04,
+            "findings": [
+              "Executed verification against alpha successfully.",
+              "Final result accurately reported 2/2 assertions passed under earlier approval."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "53b868728822b667e67b5a8ca9ab9a717f70fafea2a0d95e0fe8931417d408aa",
+            "rationale": "The agent reported the observed alpha verification result of 2/2 assertions passing, consistent with the fixture trace. It neither requested approval again nor claimed missing authorization.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 752,
+              "output": 71
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "undertake-24-resume-earlier-approval",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "command_executed",
+          "description": "The permitted local verifier runs",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/verify-target\\s+--target\\s+alpha/)\nExamples: ['.fixture/bin/verify-target --target alpha']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "The recorder confirms the actual target",
+          "details": "Pattern '(?m)^verify-target --target alpha$' found in file (matched: 'verify-target --target alpha')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The result does not repeat the unsupported approval request",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The result does not repeat the unsupported approval request",
+            "duration_seconds": 5.3,
+            "findings": [
+              "The tool trace confirms alpha verification passed with 2/2 assertions.",
+              "The final response reports the result and states that no new approval was needed."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "53b868728822b667e67b5a8ca9ab9a717f70fafea2a0d95e0fe8931417d408aa",
+            "rationale": "The agent reports the observed alpha verification result of 2/2 assertions passed and neither requests approval again nor claims missing authorization.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1015,
+              "output": 73
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "undertake-24-resume-earlier-approval",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 23.058912754058838,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-omp-corrected-20261107",
+      "task_id": "undertake-24-resume-earlier-approval",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 46848,
+        "output_tokens": 293,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20967
+      },
+      "tokens": 68108,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 23.739115715026855,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-omp-corrected-20261107",
+      "task_id": "undertake-24-resume-earlier-approval",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 60032,
+        "output_tokens": 416,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 28297
+      },
+      "tokens": 88745,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 28.46862292289734,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-omp-corrected-20261107",
+      "task_id": "undertake-24-resume-earlier-approval",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 62208,
+        "output_tokens": 273,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18540
+      },
+      "tokens": 81021,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 30.711442708969116,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-omp-corrected-20261107",
+      "task_id": "undertake-24-resume-earlier-approval",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 65024,
+        "output_tokens": 497,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 23544
+      },
+      "tokens": 89065,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.18.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-07T20:00:18.793385",
+  "experiment_id": "disclosure-omp-corrected-20261107",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3435,
+      "output": 281
+    }
+  },
+  "plugin_revision": {
+    "commit": "5698fcd7c1dc0113fddcd09d9860503e0c7025d6",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-07T13:11:35.183591+00:00",
+  "run_id": "24-resume-earlier-approval",
+  "schema_version": 5,
+  "started_at": "2026-11-07T19:58:32.792021",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-24-resume-earlier-approval": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-24-resume-earlier-approval"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "undertake-24-resume-earlier-approval": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-24-resume-earlier-approval"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}
