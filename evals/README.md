@@ -763,8 +763,9 @@ same frozen plugin pair, the nine original cases, their criteria and limits,
 adapter `67e77597c1854d69450ab374159df0e511d87a28`, and the `omp-gpt-6.1-sol`
 judge at `omp-judge-v2`. Every slot requested and reported `claude-sonnet-5`
 on the subscription route. No Omp-launched Claude CLI, credential copy or API
-fallback was used. Two phases completed 36 valid subject slots and 32 semantic
-judge calls; the read-only negative has no judge criterion:
+fallback was used. Two phases completed 36 valid subject slots and 36 semantic
+judge calls; the read-only negative has no judge criterion, and requested
+explanation has two per slot:
 
 | Case and record | Base scores | Candidate scores | Observation |
 | --- | --- | --- | --- |
@@ -781,8 +782,8 @@ judge calls; the read-only negative has no judge criterion:
 The capped ordinary-commit slot retrieved `task-worktree` and then
 `provenance`, as the compact core requires before edits; the baseline carries
 commit discipline in its core and made one Skill call. The slot verified the
-commit and reported, but used 21 turns against the frozen cap of 20. It is a
-partial with a null completion score, not a pass; its semantic judge grade of
+commit and reported, but exhausted the frozen twenty-turn cap
+(`max_turns_exhausted` in the record). It is a partial with a null completion score, not a pass; its semantic judge grade of
 1 does not change that. The limit was not raised. This is the retrieval
 overhead the comparison exists to expose, not a missing control.
 
@@ -793,10 +794,12 @@ and was not judged; the whole case was rerun after the reset. The second phase,
 `disclosure-claude-native-continuation-20261110`, ran only the six unattempted
 cases. No finalized slot was retried.
 
-Candidate slots took more wall time on most cases, and more turns on the
-approval cases (10–12 against 7–8 on earlier approval); per-replicate
-duration, turns and token buckets are in the linked records. Cost is null with
-subscription billing, not zero. No observed regression appears in this sample.
+Candidate slots took 521 seconds of total subject wall time against 443 for
+the baseline; the largest per-case differences were requested explanation and
+earlier approval. The records retain per-replicate elapsed time and token
+buckets. The client reported subject costs of $3.02 for the candidate and $3.61
+for the baseline; these are SDK-reported figures, not subscription charges, and
+judge cost is recorded as subscription. No observed regression appears in this sample.
 The public-search floor and one-replicate production-refusal difference do not
 establish parity or an improvement, and no lower total cost or reliability is
 established.
