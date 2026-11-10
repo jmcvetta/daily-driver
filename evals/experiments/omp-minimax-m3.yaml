@@ -1,0 +1,19 @@
+experiment_id: omp-minimax-m3
+description: MiniMax M3 on Vercel, with and without the plugin.
+defaults:
+  repeats: 5
+  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  agent:
+    type: omp
+    model: vercel-ai-gateway/minimax/minimax-m3
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+variants:
+  - variant_id: bare
+    agent: {plugins: []}
+  - variant_id: with-plugin
+    agent:
+      plugins:
+        - type: local
+          path: ".."

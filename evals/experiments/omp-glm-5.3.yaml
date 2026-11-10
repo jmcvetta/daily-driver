@@ -29,6 +29,7 @@ defaults:
     type: omp
     # Verified against the provider catalog borrowed into the throwaway Omp home.
     model: vercel-ai-gateway/zai/glm-5.3
+    extra_args: ["--thinking", "high"]
     permission_mode: acceptEdits
     # Enforced as `omp --tools=read`: `Skill` needs `read`, which is how Omp
     # engages a skill. A row that restates this field replaces it.

@@ -1,0 +1,13 @@
+experiment_id: classes-glm-5-3-vercel
+description: Fixed merged-PR cases on GLM 5.3 through Vercel at high effort.
+defaults:
+  repeats: 3
+  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  agent:
+    type: omp
+    model: vercel-ai-gateway/zai/glm-5.3
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+variants:
+  - variant_id: default

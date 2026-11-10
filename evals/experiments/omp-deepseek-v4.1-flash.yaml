@@ -24,10 +24,9 @@ defaults:
 
   agent:
     type: omp
-    # The dated catalog entry Vercel lists, and only DeepSeek's first-party
-    # upstream may serve it. The suffix is the adapter's thinking-level
-    # setting, stripped before `set_model`; the full-rerun protocol uses high.
-    model: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high
+    # The dated catalog entry permits only DeepSeek's first-party upstream.
+    model: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017
+    extra_args: ["--thinking", "high"]
     vercel_gateway_only: [deepseek]
     permission_mode: acceptEdits
     # Enforced as `omp --tools=read`: `Skill` needs `read`, which is how Omp
