@@ -78,6 +78,11 @@ transition before resolution, so a final request guard still rejects actual
 unauthorized inference. This guard does not block native host inspection,
 cancellation or model restoration.
 
+Request admission checks the captured catalog selection, not the provider's
+transformed request API, endpoint or headers. Provider transport rewriting
+must not interrupt an unchanged selected route. Backend checks apply to catalog
+configuration; the workflow guard does not certify request transport integrity.
+
 If the known family is absent from the class table, a prominent warning names the
 family, class, and retained provider/model. Continue immediately on the invoking
 model, provider, and effort without confirmation. The route is observed but class
