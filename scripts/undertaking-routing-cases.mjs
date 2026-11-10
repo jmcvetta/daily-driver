@@ -483,7 +483,11 @@ export default function registerUndertakingRoutingChecks(check) {
 		assertAllowed(await child.tool("write", { path: "task.txt" }));
 		assert.equal(child.current(), FOREIGN);
 		await parent.command("cancel 755");
-		assertBlocked(await child.tool("write", { path: "task.txt" }));
+		const blocked = await child.tool("write", { path: "task.txt" });
+		assertBlocked(blocked);
+		assert.match(blocked.reason, /issue #755/u);
+		assert.match(blocked.reason, /cancelled/iu);
+		assert.match(blocked.reason, /\/undertaking status/u);
 		await assert.rejects(child.request(), /cancelled/iu);
 		assert.equal(child.entries.at(-1).data.retired, true);
 	});
@@ -495,5 +499,36 @@ export default function registerUndertakingRoutingChecks(check) {
 		await s.finish();
 		assert.deepEqual(s.auth.calls.restrict, []);
 		assert.deepEqual(s.auth.calls.unrestrict, []);
+	});
+
+	// A failed admission must name its issue, the condition, and a recovery route.
+	routingCheck("failed admission block names issue, condition, and recovery", async create => {
+		const s = await create({ roles: { implementation: "" } });
+		assertGap(await s.route());
+		const blocked = await s.tool("write", { path: "task.txt" });
+		assertBlocked(blocked);
+		assert.match(blocked.reason, /issue #755/u);
+		assert.match(blocked.reason, /admission failed/iu);
+		assert.match(blocked.reason, /\/undertaking status/u);
+		assertAllowed(await s.tool("read", { path: "task.txt" }));
+	});
+
+	// A pending selection must describe its condition rather than reuse the failed-admission reason.
+	routingCheck("pending selection block names the condition and recovery", async create => {
+		const entered = deferred();
+		const proceed = deferred();
+		const s = await create({ getApiKey: async () => {
+			entered.resolve();
+			await proceed.promise;
+			return "offline-key";
+		} });
+		const routing = s.route({ modelClass: "reasoning" });
+		await entered.promise;
+		const blocked = await s.tool("write", { path: "task.txt" });
+		assertBlocked(blocked);
+		assert.match(blocked.reason, /selection is in progress/iu);
+		assert.match(blocked.reason, /\/undertaking status/u);
+		proceed.resolve();
+		assert.notEqual((await routing).isError, true);
 	});
 }

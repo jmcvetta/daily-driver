@@ -20,6 +20,8 @@
 
 ### Fixed
 
+* Name the owning issue, the block condition and a `/undertaking status` recovery route in remaining undertaking guard blocks; a manual model or effort difference is never a block reason ([#864](https://github.com/jmcvetta/daily-driver/issues/864)).
+
 * Recover a failed initial task-contract grounding with explicit retain-request guidance in the amendment error, the Omp device description and the undertaking skill; keep the material-amendment and evidence guards unchanged ([#862](https://github.com/jmcvetta/daily-driver/issues/862)).
 * Deliver compact complete standing instructions through pre-action workflow retrieval without rewriting delegated prompts; support safe fixture discovery, private Omp sessions and confined Codex worktrees; preserve complete judge evidence and mark capped native output incomplete ([#804](https://github.com/jmcvetta/daily-driver/issues/804)).
 * Admit legitimate provider transport rewrites without rejecting the unchanged undertaking model, including unmapped Kimi continuation, native consultations and recovery explanations ([#842](https://github.com/jmcvetta/daily-driver/issues/842)).

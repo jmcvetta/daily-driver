@@ -150,6 +150,12 @@ function storedState(ctx) {
 	return saved;
 }
 
+/** Block reasons name the owning issue where known and a concrete recovery route. */
+function guardReason(condition, issue) {
+	const known = Number.isSafeInteger(issue) && issue > 0;
+	return `${condition}${known ? ` for issue #${issue}` : ""}. Use /undertaking status for current state and recovery.`;
+}
+
 function isCancelled(state) {
 	for (let owner = state; owner; owner = owner.ownerState) {
 		if (owner.cancelled || owner.cancelling || owner.retired) return true;
@@ -482,7 +488,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 
 					return { isError: true, content: [{ type: "text", text: "Undertaking admission cancelled; ownership was not restored." }], details: describe(ctx) };
 				}
-				failures.set(sessionId, error.message);
+				failures.set(sessionId, { message: error.message, issue: params.issue });
 				selecting.delete(sessionId);
 				status(ctx, undefined);
 				if (current(ctx) === state) {
@@ -514,9 +520,10 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	});
 
 	pi.on("before_provider_request", (_event, ctx) => {
-		if (isCancelled(current(ctx))) {
+		const state = current(ctx);
+		if (isCancelled(state)) {
 			ctx.abort();
-			throw new Error("The owning undertaking was cancelled; execution is not authorized");
+			throw new Error(guardReason("The owning undertaking was cancelled; execution is not authorized", state?.issue));
 		}
 	});
 
@@ -530,18 +537,21 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 
 	pi.on("tool_call", (event, ctx) => {
 		const sessionId = ctx.sessionManager?.getSessionId?.();
-		if (isCancelled(current(ctx))) return { block: true, reason: "The owning undertaking was cancelled; execution is not authorized" };
+		const state = current(ctx);
+		if (isCancelled(state)) return { block: true, reason: guardReason("The owning undertaking was cancelled; execution is not authorized", state?.issue) };
 		const failure = failures.get(sessionId);
 		if (!failure && !selecting.has(sessionId)) return;
 		if (["read", "grep", "glob", "daily_driver_get_session", "daily_driver_route_undertaking", "daily_driver_finish_undertaking"].includes(event.toolName)) return;
 		if (event.toolName === "write" && ["xd://daily_driver_get_session", "xd://daily_driver_route_undertaking", "xd://daily_driver_finish_undertaking"].includes(event.input?.path)) return;
-		return { block: true, reason: failure ?? "Initial undertaking selection is in progress." };
+		return { block: true, reason: failure
+			? guardReason(`Undertaking admission failed: ${failure.message}`, failure.issue)
+			: guardReason("Initial undertaking selection is in progress", state?.issue) };
 	});
 
 	pi.on("before_subagent_spawn", async (event, ctx) => {
 		const state = current(ctx);
 		if (!state) return;
-		if (isCancelled(state)) return { block: true, reason: "The owning undertaking was cancelled; execution is not authorized" };
+		if (isCancelled(state)) return { block: true, reason: guardReason("The owning undertaking was cancelled; execution is not authorized", state?.issue) };
 		const dispatchEpoch = state.dispatchEpoch ?? 0;
 		const mention = nativeMention(ctx, event.agent);
 		if (!INDEPENDENT_HELPERS.has(event.agent)) {
@@ -559,15 +569,15 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					}
 				}
 			} catch (error) {
-				return { block: true, reason: `Undertaking assignment gap: ${error.message}` };
+				return { block: true, reason: guardReason(`Undertaking assignment gap: ${error.message}`, state?.issue) };
 			}
 		}
 		if (isCancelled(state) || current(ctx) !== state || (state.dispatchEpoch ?? 0) !== dispatchEpoch) {
-			return { block: true, reason: "The owning undertaking or child dispatch was cancelled or replaced" };
+			return { block: true, reason: guardReason("The owning undertaking or child dispatch was cancelled or replaced", state?.issue) };
 		}
 		const parents = [...(scope(ctx)?.values() ?? [])].filter(record => record.agentId === ctx.agent?.id);
 		if (parents.length !== 1 || !event.spawnKey) {
-			return { block: true, reason: "Child undertaking ownership identity is unavailable or ambiguous" };
+			return { block: true, reason: guardReason("Child undertaking ownership identity is unavailable or ambiguous", state?.issue) };
 		}
 		const auth = ctx.modelRegistry.authStorage;
 		for (const record of pendingChildren) {
