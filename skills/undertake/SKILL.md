@@ -774,6 +774,16 @@ independent verification that the gate consumes. The completion notice is one
 of the gate's reads, so a round that closed without posting it is not yet
 ready.
 
+Read the current task receipt before reporting completion. Every required
+criterion must have current evidence of its declared kind, including required
+review and approval. Reuse the existing current-head CI and reviewed-SHA
+observations. Record attributed judgments separately from command/check
+outcomes and agent reports. Stale, failed, missing and truncated evidence
+cannot pass. Use the receipt in the existing report, with essential risks
+and unknowns, not a second hand-written ledger. Keep private sources out of
+public text. The runtime `complete` transition enforces evidence accounting;
+it does not prove arbitrary semantics or replace this readiness gate.
+
 Once the pull request is ready, finish the Omp undertaking through its harness
 route before reusing the session for another issue.
 

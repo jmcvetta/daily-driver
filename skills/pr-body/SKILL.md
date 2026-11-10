@@ -49,6 +49,12 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   how the change was made, how it was verified, and the material risk or
   uncertainty — said once. What the opening line and `Summary` already say is
   not repeated here.
+  Where task state is available, use its current `receipt` for criterion
+  dispositions and evidence references. Keep unverified requirements, stale
+  results, risks and outstanding approvals visible. Distinguish observed
+  checks, attributed judgments and agent reports. Redact private source
+  quotes and sensitive local details. Do not repeat the receipt in another
+  summary or infer completion from rendering it.
 - **Unopinionated**: This is a short description of the branch, NOT a code
   review. Do NOT do opine on code quality or security.
 - **Provenance**: Last, below all of the above, `provenance`'s block — the
