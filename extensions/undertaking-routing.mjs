@@ -732,19 +732,22 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 		// Keep the live query captured outside this request: request contexts bind
 		// both model accessors to the request model, including helper requests.
 		if (!isCancelled(state) && selector(ctx.model) !== selector(state.workerModels.current())) return;
+		// Providers may rewrite request API, endpoint and headers. Validate the
+		// captured catalog selection, not that transport model, against admission.
+		const selected = state.workerModels.current();
 		try {
 			if (isCancelled(state)) throw new Error("The owning undertaking was cancelled; execution is not authorized");
 			state.admittedRequest = undefined;
 			if (consultation(ctx, state)) return;
 			if (state.consultation) {
 				if (state.status === "blocked") throw new Error(state.reason);
-				if (!sameOrigin(origin(ctx.model), state.origin)) throw new Error("Consultation model differs from the operator's native selection");
+				if (!sameOrigin(origin(selected), state.origin)) throw new Error("Consultation model differs from the operator's native selection");
 				if (state.selectedEffort !== undefined && pi.getThinkingLevel() !== state.selectedEffort) throw new Error("Consultation effort differs from the operator's native selection");
 			} else if (state.recovery) {
-				checkModel(ctx, state, ctx.model, true);
+				checkModel(ctx, state, selected, true);
 			} else {
 				if (state.status === "blocked") throw new Error(state.reason);
-				checkDecision(ctx, workerDecision(ctx, state), ctx.model, pi.getThinkingLevel());
+				checkDecision(ctx, workerDecision(ctx, state), selected, pi.getThinkingLevel());
 			}
 			if (source(ctx, state.origin.provider) !== state.authenticationRoute) throw new Error("Worker authentication route changed");
 			state.admittedRequest = state.consultation || state.recovery ? undefined : {
