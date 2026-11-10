@@ -4,6 +4,7 @@
     "SessionStart": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10, "additionalContextLimit": 5000}]}],
     "SubagentStart": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10, "additionalContextLimit": 5000}]}],
     "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10, "additionalContextLimit": 5000}]}],
+    "PreToolUse": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10}]}],
     "PostToolUse": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10}]}],
     "SubagentStop": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10}]}],
     "Stop": [{"hooks": [{"type": "command", "command": "python3 \"${PLUGIN_ROOT}/hooks/task-state.py\" --harness codex", "timeout": 10}]}],
