@@ -310,7 +310,13 @@ Initial capture retains the request as criterion `request`. Ground the
 remaining fields and criteria in the issue/request version actually read.
 Keep the original request criterion when adding detailed issue acceptance.
 The issue's observation fingerprint identifies the captured version; a later
-issue read is another source, not a replacement for that contract.
+issue read is another source, not a replacement for that contract. A failed
+initial grounding that replaced the auto-captured request criterion recovers
+without new approval: retain `request`, append sourced acceptance criteria,
+populate the unknown fields, and declare each criterion's verification before
+execution. Replacing or removing `request` still requires the later applicable
+original user decision. A contract revision after execution requires newly
+bound evidence under the revised contract.
 
 `contractHistory` retains each prior revision, its change and applicable
 source references. `plan` is separate mutable execution state. Updating a plan,

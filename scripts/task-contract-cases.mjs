@@ -83,6 +83,63 @@ export default function registerTaskContractChecks(check, root) {
 		assert.equal((await s.command("contract", { ...remove, expectedRevision: 1 })).isError, true);
 	});
 
+	/** A failed initial grounding must recover without approval by retaining the captured request, never by weakening the guard. */
+	check("grounding a captured request appends sourced criteria and declares verification without approval", async () => {
+		const s = session(); s.input("Implement the parser issue.");
+		await s.controller.toolResult({ toolCallId: "grounding-issue-1", toolName: "read", input: { path: "issue://862" }, content: "Keep the parser offline." }, s.ctx);
+		const before = (await s.status()).state.contract;
+		const ref = { sourceId: "tool:grounding-issue-1", quote: "Keep the parser offline." };
+		const grounded = await s.command("contract", { expectedRevision: before.revision, change: "Ground issue acceptance", sourceRefs: [ref], contract: {
+			scope: ["Parser only"], constraints: ["Offline fixtures"],
+			criteria: [{ ...before.criteria[0], verification: { kinds: ["command"], toolName: "fixture-check", input: { root: "/offline/fixture" }, subject: { kind: "repository", root: "/offline/fixture" } } },
+				{ id: "offline-only", description: "Run only offline fixtures.", sourceRefs: [ref] }],
+			requiredEvidenceKinds: ["command"], approvalRequirements: [],
+		} });
+		assert.equal(grounded.isError, undefined, JSON.stringify(grounded));
+		const after = (await s.status()).state.contract;
+		assert.equal(after.revision, 2);
+		assert.deepEqual(after.criteria.map((item) => item.id), ["request", "offline-only"]);
+		assert.deepEqual(after.criteria[0].verification, { kinds: ["command"], toolName: "fixture-check", input: { root: "/offline/fixture" }, subject: { kind: "repository", root: "/offline/fixture" } });
+		assert.equal(after.criteria[0].description, before.criteria[0].description);
+		assert.equal(after.criteria[0].sourceRefs[0].sourceClass, "user");
+		assert.equal(after.scope, grounded.details.state.contract.scope);
+	});
+
+	check("replacing the captured request during grounding is rejected with recovery guidance", async () => {
+		const s = session(); s.input("Implement the parser issue.");
+		await s.controller.toolResult({ toolCallId: "grounding-issue-2", toolName: "read", input: { path: "issue://862" }, content: "Keep the parser offline." }, s.ctx);
+		const before = (await s.status()).state.contract;
+		const ref = { sourceId: "tool:grounding-issue-2", quote: "Keep the parser offline." };
+		const replacement = { expectedRevision: before.revision, change: "Ground issue acceptance", sourceRefs: [ref], contract: { criteria: [{ id: "offline-only", description: "Run only offline fixtures.", sourceRefs: [ref] }] } };
+		const removed = await s.command("contract", replacement);
+		assert.equal(removed.isError, true);
+		assert.match(removed.content?.[0]?.text ?? "", /retain `request`/);
+		assert.match(removed.content?.[0]?.text ?? "", /newly bound evidence/);
+		const unchanged = (await s.status()).state.contract;
+		assert.equal(unchanged.revision, before.revision);
+		assert.deepEqual(unchanged.criteria, before.criteria);
+		const retitled = await s.command("contract", { ...replacement,
+			contract: { criteria: [{ ...before.criteria[0], description: "Implement the parser issue differently.", sourceRefs: [ref] }] } });
+		assert.equal(retitled.isError, true);
+		assert.match(retitled.content?.[0]?.text ?? "", /retain `request`/);
+		assert.equal((await s.status()).state.contract.revision, before.revision);
+	});
+
+	check("a genuine user-authorized request removal keeps the material path", async () => {
+		const s = session(); s.input("Implement the parser issue.");
+		const before = (await s.status()).state.contract;
+		s.input("Drop the captured request criterion from this task.");
+		const source = (await s.status()).sources.filter((item) => item.kind === "user").at(-1);
+		const decision = { sourceId: source.sourceId, quote: source.text };
+		const amended = await s.command("contract", { expectedRevision: before.revision, change: "The user replaced the captured request", sourceRefs: [decision], authoritySource: decision,
+			contract: { criteria: [{ id: "new-request", description: "Implement the parser without the captured request wording.", sourceRefs: [decision] }] },
+			removedCriteria: [{ id: "request", reason: "The user replaced the captured request with a narrower one." }] });
+		assert.equal(amended.isError, undefined, JSON.stringify(amended));
+		const after = (await s.status()).state.contract;
+		assert.equal(after.revision, 2);
+		assert.deepEqual(after.criteria.map((item) => item.id), ["new-request"]);
+	});
+
 	/** Renaming a bound task or replaying a prompt must not renew exhausted corrections. */
 	check("contract scope bindings cancellation and duplicate events preserve correction limits", async () => {
 		const s = session(); s.input("Fix the parser.", { eventId: "request-1" });

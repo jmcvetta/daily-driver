@@ -6,6 +6,9 @@ const nonblank = (value) => typeof value === "string" && Boolean(value.trim());
 export const sourceReference = (source, quote) => ({ sourceId: source.sourceId, quote, sourceClass: source.kind,
 	origin: source.origin ?? null, version: source.version ?? source.fingerprint ?? null });
 
+/** Recovery guidance for a failed initial grounding that replaces the auto-captured request criterion. */
+const GROUNDING_RECOVERY = "Initial grounding must keep the auto-captured request criterion: retain `request`, append sourced acceptance criteria, populate the unknown fields, and declare each criterion's verification before execution. A contract revision after execution requires newly bound evidence under the revised contract. Replacing or removing `request` is a material amendment that needs a later original user decision (authoritySource) and removedCriteria with the user-authorized reason.";
+
 /** createContract retains a request without inventing unspecified acceptance or approval requirements. */
 export function createContract(taskId, source) {
 	const reference = sourceReference(source, source.text);
@@ -66,11 +69,14 @@ export function amendContract(state, record, reference) {
 	});
 	const previous = state.contract.criteria ?? [];
 	const removed = previous.filter((criterion) => !ids.has(criterion.id));
+	let changedGroundedRequest = false;
 	const changedCriteria = previous.some((criterion) => {
 		const nextCriterion = next.criteria.find((item) => item.id === criterion.id);
 		if (!nextCriterion) return false;
 		// Grounding an unknown verification contract adds detail; changing an established one changes the requirement.
-		return canonical(criterion.verification === undefined ? { ...criterion, verification: nextCriterion.verification } : criterion) !== canonical(nextCriterion);
+		const changed = canonical(criterion.verification === undefined ? { ...criterion, verification: nextCriterion.verification } : criterion) !== canonical(nextCriterion);
+		if (changed && criterion.id === "request" && criterion.interpretation === true) changedGroundedRequest = true;
+		return changed;
 	});
 	const changesObjective = state.contract.objective !== null && next.objective !== state.contract.objective;
 	// Adding sourced detail to unknown fields and appending criteria is not a scope reduction.
@@ -79,6 +85,14 @@ export function amendContract(state, record, reference) {
 	const requiresDecision = changesBinding || changesObjective || changedCriteria || removed.length > 0 ||
 		FIELDS.filter((key) => !["objective", "criteria"].includes(key)).some((key) => state.contract[key] !== null && JSON.stringify(state.contract[key]) !== JSON.stringify(next[key]));
 	if (requiresDecision) {
+		const groundedRequest = previous.find((criterion) => criterion.id === "request" && criterion.interpretation === true);
+		const touchedGroundedRequest = groundedRequest && (removed.some((item) => item.id === groundedRequest.id) || changedGroundedRequest);
+		if (touchedGroundedRequest) {
+			const candidate = record.authoritySource ? reference(record.authoritySource, true) : null;
+			const authorized = Boolean(candidate) && candidate.kind === "user" && candidate.sourceId !== state.externalSourceId &&
+				(candidate.taskSourceId === state.externalSourceId || candidate.sourceId === state.resumeSource?.sourceId);
+			if (!authorized) throw new Error(GROUNDING_RECOVERY);
+		}
 		const authority = reference(record.authoritySource, true);
 		if (authority.kind !== "user" || authority.sourceId === state.externalSourceId) throw new Error("A material contract amendment requires the applicable later original user decision");
 		if (authority.taskSourceId !== state.externalSourceId && authority.sourceId !== state.resumeSource?.sourceId) throw new Error("The amendment decision belongs to another task");
