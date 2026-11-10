@@ -1,0 +1,19 @@
+experiment_id: omp-deepseek-v4-pro-go
+description: DeepSeek V4 Pro on Go, with and without the plugin.
+defaults:
+  repeats: 5
+  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  agent:
+    type: omp
+    model: opencode-go/deepseek-v4-pro
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+variants:
+  - variant_id: bare
+    agent: {plugins: []}
+  - variant_id: with-plugin
+    agent:
+      plugins:
+        - type: local
+          path: ".."

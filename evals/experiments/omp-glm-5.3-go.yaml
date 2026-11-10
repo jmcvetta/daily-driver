@@ -1,0 +1,19 @@
+experiment_id: omp-glm-5-3-go
+description: GLM 5.3 on Go, with and without the plugin.
+defaults:
+  repeats: 5
+  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  agent:
+    type: omp
+    model: opencode-go/glm-5.3
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Skill]
+variants:
+  - variant_id: bare
+    agent: {plugins: []}
+  - variant_id: with-plugin
+    agent:
+      plugins:
+        - type: local
+          path: ".."
