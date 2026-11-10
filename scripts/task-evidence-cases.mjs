@@ -1,0 +1,129 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createTaskStateController } from "../extensions/task-state.mjs";
+import { handleTaskEvent } from "../hooks/task-state.mjs";
+
+function fixture() {
+	const root = mkdtempSync(join(tmpdir(), "task-evidence-"));
+	const git = (...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+	git("init", "--initial-branch=master");
+	git("config", "user.name", "Offline Fixture"); git("config", "user.email", "fixture@example.invalid");
+	writeFileSync(join(root, "subject.txt"), "original\n"); git("add", "subject.txt"); git("commit", "-m", "Record fixture");
+	return { root, git, remove: () => rmSync(root, { recursive: true, force: true }) };
+}
+
+async function driver(harness, root) {
+	let ledger;
+	const entries = [];
+	const ctx = { cwd: root, agent: { kind: "main" }, sessionManager: { getSessionId: () => "evidence-session", getBranch: () => entries }, ui: { notify() {} } };
+	const controller = createTaskStateController({ appendEntry: (customType, data) => entries.push({ type: "custom", customType, data }), getActiveTools: () => ["daily_driver_task_state"] });
+	const call = async (action, record) => {
+		if (harness === "omp") return controller.execute("state", { action, record: record && JSON.stringify(record) }, null, null, ctx);
+		const result = await handleTaskEvent({ harness, sessionId: "evidence-session", cwd: root, ledger, action, record }); ledger = result.ledger; return result.output;
+	};
+	const event = async (name, extra = {}) => {
+		if (harness !== "omp") {
+			const result = await handleTaskEvent({ harness, sessionId: "evidence-session", cwd: root, ledger, event: { hook_event_name: name, ...extra } }); ledger = result.ledger; return result.output;
+		}
+		if (name === "UserPromptSubmit") controller.input({ text: extra.prompt, source: "rpc", eventId: extra.turn_id }, ctx);
+		if (name === "PreToolUse") controller.delegateCall({ toolCallId: extra.tool_use_id, toolName: extra.tool_name, input: extra.tool_input }, ctx);
+		if (name === "PostToolUse") controller.toolResult({ toolCallId: extra.tool_use_id, toolName: extra.tool_name, input: extra.tool_input, content: [{ type: "text", text: JSON.stringify(extra.tool_response) }], result: extra.tool_response, isError: extra.isError }, ctx);
+		if (name === "Interrupt") controller.cancel(ctx);
+		if (name === "Stop") return controller.stop({}, ctx);
+	};
+	await event("UserPromptSubmit", { prompt: "Implement the offline fixture. Verify the result and obtain independent review.", turn_id: "request", origin: { kind: "composer" } });
+	const initial = (await call("status")).details;
+	const source = initial.sources[0];
+	const ref = { sourceId: source.sourceId, quote: source.text };
+	const verification = { kinds: ["check", "judgment"], toolName: "fixture-check", input: { root }, subject: { kind: "repository", root } };
+	const grounded = await call("contract", { expectedRevision: initial.state.contract.revision, change: "Ground the required offline check and review", sourceRefs: [ref], contract: {
+		criteria: initial.state.contract.criteria.map((item) => ({ ...item, verification })), requiredEvidenceKinds: ["check"], requiredReviewKinds: ["judgment"], approvalRequirements: [],
+	} });
+	assert.equal(grounded.isError, undefined, JSON.stringify(grounded));
+	const observe = async (id, response, input = verification.input, pre = true) => {
+		const data = { tool_use_id: id, tool_name: "fixture-check", tool_input: input, tool_response: response };
+		if (pre) await event("PreToolUse", data);
+		await event("PostToolUse", data);
+		return (await call("status", { sourceId: `tool:${id}` })).details.source;
+	};
+	const evidence = async (id, source, overrides = {}) => {
+		const state = (await call("status")).details.state;
+		return call("evidence", { id, taskId: state.taskId, criterionId: "request", contractRevision: state.contract.revision,
+			subject: source.execution?.subject, source: { sourceId: source.sourceId, quote: source.text }, kind: "check", result: "passed", ...overrides });
+	};
+	return { call, event, observe, evidence, verification };
+}
+
+/** registerTaskEvidenceChecks prevents transport success and stale artifacts from becoming verified completion. */
+export default function registerTaskEvidenceChecks(check) {
+	for (const harness of ["omp", "claude", "codex"]) {
+		/** A successful transport, unrelated operation, missing start or old head must not establish required behavior. */
+		check(`${harness} rejects missing unrelated failed truncated and wrong-task completion evidence`, async () => {
+			const f = fixture();
+			try {
+				const d = await driver(harness, f.root);
+				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
+				const headRefOid = f.git("rev-parse", "HEAD");
+				const success = { headRefOid, statusCheckRollup: [{ conclusion: "SUCCESS" }] };
+				const unrelated = await d.observe("unrelated", success, { command: "unrelated" });
+				assert.equal((await d.evidence("unrelated", unrelated)).isError, true);
+				const failed = await d.observe("failed", { headRefOid, exitCode: 0, statusCheckRollup: [{ conclusion: "FAILURE" }] });
+				assert.equal((await d.evidence("hidden-failure", failed)).isError, true);
+				assert.equal((await d.evidence("failure", failed, { result: "failed" })).isError, undefined);
+				assert.equal((await d.call("receipt")).details.criteria[0].disposition, "failed");
+				const truncated = await d.observe("truncated", { ...success, omitted: "x".repeat(10000) });
+				assert.equal((await d.evidence("truncated", truncated)).isError, true);
+				const noStart = await d.observe("no-start", success, d.verification.input, false);
+				assert.equal((await d.evidence("no-start", noStart)).isError, true);
+				const current = await d.observe("current", success);
+				assert.equal((await d.evidence("wrong-task", current, { taskId: "another-task" })).isError, true);
+				assert.equal((await d.evidence("wrong-revision", current, { contractRevision: 999 })).isError, true);
+				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
+			} finally { f.remove(); }
+		});
+
+		/** A valid check alone must not replace required review, and edits must invalidate a completed receipt. */
+		check(`${harness} completes only current evidence and attributed judgments then invalidates changed artifacts`, async () => {
+			const f = fixture();
+			try {
+				const d = await driver(harness, f.root);
+				const source = await d.observe("success", { headRefOid: f.git("rev-parse", "HEAD"), statusCheckRollup: [{ conclusion: "SUCCESS" }] });
+				assert.equal((await d.evidence("check", source)).isError, undefined);
+				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
+				assert.equal((await d.evidence("no-attribution", source, { kind: "judgment" })).isError, true);
+				assert.equal((await d.evidence("review", source, { kind: "judgment", judgment: { reviewer: "independent fixture reviewer", rationale: "Inspected the fixture behavior against the recorded requirement.", artifacts: [`${f.git("rev-parse", "HEAD")}:subject.txt`] } })).isError, undefined);
+				const receipt = (await d.call("receipt")).details;
+				assert.equal(receipt.verified, true); assert.equal(receipt.criteria[0].evidence.length, 2);
+				assert.equal(JSON.stringify(receipt).includes('"quote"'), false);
+				assert.equal((await d.call("complete", { summary: "Offline check and attributed review recorded." })).details.state.status, "verified-complete");
+				writeFileSync(join(f.root, "subject.txt"), "changed\n");
+				assert.equal((await d.call("receipt")).details.criteria[0].disposition, "stale");
+				await d.event("Stop");
+				assert.equal((await d.call("status")).details.state.status, "active");
+			} finally { f.remove(); }
+		});
+
+		/** A result arriving after commit or contract change must retain its original execution identity. */
+		check(`${harness} rejects late old-head evidence and preserves cancellation bounds without complete`, async () => {
+			const f = fixture();
+			try {
+				const d = await driver(harness, f.root);
+				const original = f.git("rev-parse", "HEAD");
+				await d.event("PreToolUse", { tool_use_id: "late", tool_name: "fixture-check", tool_input: d.verification.input });
+				writeFileSync(join(f.root, "subject.txt"), "changed\n"); f.git("add", "subject.txt"); f.git("commit", "-m", "Change fixture");
+				const late = await d.observe("late", { headRefOid: original, statusCheckRollup: [{ conclusion: "SUCCESS" }] }, d.verification.input, false);
+				assert.equal(late.execution.subject.commit, original);
+				assert.equal((await d.evidence("late", late)).isError, true);
+				await d.event("Stop"); await d.event("Stop"); await d.event("Stop");
+				const bounded = (await d.call("status")).details.state;
+				assert.equal(bounded.corrections, 2); assert.ok(bounded.stopFailure);
+				await d.event("Interrupt"); await d.event("Stop");
+				assert.equal((await d.call("status")).details.state.status, "cancelled");
+				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
+			} finally { f.remove(); }
+		});
+	}
+}

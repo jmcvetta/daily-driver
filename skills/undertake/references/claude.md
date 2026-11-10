@@ -79,8 +79,10 @@ Authorization and unfinished stops
 Use `mcp__daily-driver__task_state` with `action` and an optional JSON-string
 `record`. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
 define every action and record: `status`, `contract`, `plan`, `handoff`,
-`resume`, `authorization`, `blocker` and reported `complete`.
-Recover the contract before changing a resumed task's plan.
+`resume`, `authorization`, `blocker`, `evidence`, `receipt` and `complete`.
+Recover the contract before changing a resumed task's plan. `complete`
+requires criterion evidence, not a summary alone. Use `receipt` in the existing
+PR/handoff format; reuse recorded current-head checks and attributed review.
 
 This route requires Claude Code native mods support, terminal version 2.1.287
 or later; the installed-runtime proof used 2.1.316. The mod registers the tool,

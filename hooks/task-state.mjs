@@ -61,6 +61,9 @@ export async function handleTaskEvent(request) {
 			const genuine = request.harness === "codex" ? !request.agentId : ["composer", "bridge"].includes(event.origin?.kind);
 			controller.input({ text: event.prompt ?? event.text ?? "", source: genuine ? "rpc" : "delegated",
 				harness: request.harness, origin, eventId: event.turn_id ?? event.id, allowTask: request.harness === "claude" && event.origin?.kind === "sdk" }, ctx);
+		} else if (name === "PreToolUse" || name === "tool.start") {
+			controller.delegateCall({ toolCallId: event.tool_use_id ?? event.id, toolName: event.tool_name ?? event.tool,
+				input: event.tool_input ?? event.input }, ctx);
 		} else if (name === "PostToolUse" || name === "tool.result") {
 			const response = event.tool_response ?? event.result;
 			const isError = event.isError ?? response?.isError ?? (typeof response?.exit_code === "number" && response.exit_code !== 0);
@@ -68,7 +71,7 @@ export async function handleTaskEvent(request) {
 			if (!isError && consumeReceipt(ledger, response)) return { ledger, output, notifications };
 			controller.toolResult({ toolCallId: event.tool_use_id ?? event.id, toolName: event.tool_name ?? event.tool,
 				input: event.tool_input ?? event.input, content: [{ type: "text", text: typeof response === "string" ? response : JSON.stringify(response) }],
-				isError }, ctx);
+				isError, result: typeof response === "object" ? response : undefined }, ctx);
 		} else if (name === "Interrupt" || name === "turn.aborted") {
 			controller.cancel(ctx, `${name}:${event.turn_id ?? event.id}`);
 		} else if (name === "Stop" || name === "SubagentStop") {

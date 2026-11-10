@@ -218,7 +218,7 @@ another approval request or an unfinished stop. Do not activate an ordinary
 question. Mutating calls take a JSON-string `record`. `status` with
 `record: "{\"sourceId\":\"<id>\"}"` reads retained originals rather than previews.
 The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
-define `contract`, `plan`, `handoff` and `resume`.
+define `contract`, `plan`, `handoff`, `resume`, `evidence`, `receipt` and `complete`.
 
 The record shapes, defaults, source discovery and exact-quote limits are
 documented once, in the device itself: read `xd://daily_driver_task_state`.
@@ -228,8 +228,11 @@ scope; `newTask: true` needs fresh user input, and `resume` keeps the
 contract and correction allowance. Sources must resolve to original user
 input or workflow instructions. Exact quotes establish provenance, not
 semantic permission, so read conditions against the original source before
-acting. `complete` records
-reported completion, not independent proof that acceptance criteria passed.
+acting. `evidence` binds criterion results to execution-time identities.
+`receipt` renders current dispositions without side effects. `complete`
+requires every criterion and declared review/approval; it does not prove
+arbitrary semantic correctness. Reuse current-head CI and reviewed-SHA
+observations instead of rerunning checks to fill the receipt.
 
 The tool never grants permission or replaces harness approval. Original
 sources and tool evidence stay in session entries through compaction and
