@@ -43,9 +43,11 @@ outside this undertaking policy.
 
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
-assume an API route. The `integration` and `reasoning` roles default to
-`openai-codex/gpt-6.1-sol:high`, not a frontier route. Classify the resolved
-selector, not the role label: an effective Astra/Fable route is frontier even
+assume an API route. The `integration` role defaults to
+`openai-codex/gpt-6.1-terra:medium`; `reasoning` defaults to
+`openai-codex/gpt-6.1-sol:high`. Neither is a frontier route. Classify the
+resolved selector, not the role label: an effective Astra/Fable route is
+frontier even
 when selected through `reasoning`, an agent override, a configured prewalk or
 retry fallback, or visible parent-model inheritance. Such a route still
 requires explicit approval and the approved work envelope.

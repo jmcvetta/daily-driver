@@ -40,7 +40,7 @@ assert.deepEqual(clean.mutations.map(([kind]) => kind), ["roles", "tags"]);
 assert.deepEqual(clean.roles, {
   mechanical: "openai-codex/gpt-6-luna:low",
   implementation: "openai-codex/gpt-6-luna:high",
-  integration: "openai-codex/gpt-6.1-sol:high",
+  integration: "openai-codex/gpt-6.1-terra:medium",
   reasoning: "openai-codex/gpt-6.1-sol:high",
   frontier: "openai-codex/gpt-6-astra:high",
 });

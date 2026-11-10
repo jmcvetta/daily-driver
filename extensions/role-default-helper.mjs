@@ -2,7 +2,7 @@
 export const MODEL_CLASS_ROLE_DEFAULTS = Object.freeze({
 	mechanical: "openai-codex/gpt-6-luna:low",
 	implementation: "openai-codex/gpt-6-luna:high",
-	integration: "openai-codex/gpt-6.1-sol:high",
+	integration: "openai-codex/gpt-6.1-terra:medium",
 	reasoning: "openai-codex/gpt-6.1-sol:high",
 	frontier: "openai-codex/gpt-6-astra:high",
 });
