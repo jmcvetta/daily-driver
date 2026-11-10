@@ -76,6 +76,14 @@ and [`19-04-35`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-04-35.json)
 The subject's served identity was unreported; the Omp GPT 6.1 Sol judge scored
 each case. The successive-revision cases use one turn, not a resumed session.
 
+A paired Omp/Sol setup smoke used the firing and behavior cases in
+[`issue-695-sol-smoke`](provenance/omp-gpt-6-1-sol-ablation-2026-11-10-issue-695-sol-smoke.json).
+Both treated cases passed; both bare cases failed their applicable criteria.
+The Sol judge completed both semantic judgments. The requested subject was
+`openai-codex/gpt-6.1-sol`; served subject identity was unreported. This
+smoke does not establish the effective effort or the model-classes route, and
+is not full-cohort evidence.
+
 A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
 checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated
 `--session-dir`. The first `omp -p` drafted an upload-timeout PR body; a second
