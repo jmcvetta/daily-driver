@@ -1,6 +1,8 @@
 """Regression coverage for recorded Codex subscription usage and cost."""
 
 import importlib.util
+import json
+import tempfile
 from pathlib import Path
 import unittest
 
@@ -41,6 +43,28 @@ class TerraSubscriptionTest(unittest.TestCase):
         self.assertEqual(recorder.case_price({}, "opencode-go/glm-5.3", {}, "omp"),
                          (None, "unreported"))
         self.assertTrue(all(value == "unreported" for value in recorder.token_usage({}).values()))
+
+    def test_effective_route_is_preserved_without_a_served_identity_claim(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task = root / "bare" / "case" / "00"
+            task.mkdir(parents=True)
+            (task / "task.json").write_text(json.dumps({
+                "success_criteria_results": [],
+                "environment_info": {
+                    "omp_model": "openai-codex/gpt-6.1-terra",
+                    "omp_effective_model": "openai-codex/gpt-6.1-terra",
+                    "omp_effective_thinking": "high",
+                    "omp_skills_loaded": [],
+                },
+            }))
+            run = {"task_results": [{"variant_id": "bare", "task_id": "case"}]}
+            attempt = recorder.run_attempts(root, run, root)[0]
+            self.assertEqual(attempt["omp_route"], {
+                "effective_model": "openai-codex/gpt-6.1-terra",
+                "effective_thinking": "high",
+                "skills_loaded": [],
+            })
 
 
 if __name__ == "__main__":

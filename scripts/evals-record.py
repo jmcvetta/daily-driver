@@ -705,6 +705,13 @@ def run_attempts(run_dir: Path, run: dict[str, Any], root: Path) -> list[dict[st
             "early_stop": artifact.get("early_stop"),
             "max_turns_exhausted": artifact.get("max_turns_exhausted", False),
         }
+        environment = artifact.get("environment_info")
+        if isinstance(environment, dict) and "omp_model" in environment:
+            attempt["omp_route"] = {
+                "effective_model": environment.get("omp_effective_model", "unreported"),
+                "effective_thinking": environment.get("omp_effective_thinking", "unreported"),
+                "skills_loaded": environment.get("omp_skills_loaded", "unreported"),
+            }
         if attempt["max_turns_exhausted"]:
             attempt["coder_eval_status"] = attempt["final_status"]
             attempt["final_status"] = "ERROR"

@@ -321,6 +321,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
         self._home: tempfile.TemporaryDirectory[str] | None = None
         self._request_id = 0
         self._session_id: str | None = None
+        self._effective_model: str | None = None
+        self._effective_thinking: str | None = None
         self._loaded_commands: list[str] = []
         self._loaded_skills: list[str] = []
         self._linked_plugins: list[str] = []
@@ -394,8 +396,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
         try:
             await self._link_plugins(binary, home)
             await self._spawn(binary, home)
-            await self._record_what_loaded()
             await self._apply_model()
+            await self._record_what_loaded()
         except Exception:
             # A half-built session must not survive the failure. `coder_eval`
             # retries a start that raises, so an RPC process left running here
@@ -454,6 +456,8 @@ class OmpAgent(Agent[OmpAgentConfig]):
         info: dict[str, Any] = {
             **super().get_environment_info(),
             "omp_model": self.config.model,
+            "omp_effective_model": self._effective_model or "unreported",
+            "omp_effective_thinking": self._effective_thinking or "unreported",
             "omp_linked_plugins": list(self._linked_plugins),
             "omp_skills_loaded": list(self._loaded_skills),
             "omp_extension_errors": list(self._extension_errors),
@@ -1095,6 +1099,14 @@ class OmpAgent(Agent[OmpAgentConfig]):
         session_id = state.get("sessionId")
         if isinstance(session_id, str):
             self._session_id = session_id
+        model = state.get("model")
+        if isinstance(model, dict):
+            provider, model_id = model.get("provider"), model.get("id")
+            if isinstance(provider, str) and isinstance(model_id, str):
+                self._effective_model = f"{provider}/{model_id}"
+        thinking = state.get("thinkingLevel")
+        if isinstance(thinking, str):
+            self._effective_thinking = thinking
 
     async def _apply_model(self) -> None:
         """Pin the task's model and thinking level, where the task named one.
