@@ -61,6 +61,8 @@ check-omp-extension:
   - 'extensions/role-default-helper.mjs'
   - 'extensions/task-state.mjs'
   - 'extensions/task-contract.mjs'
+  - 'extensions/undertaking-routing.mjs'
+  - 'scripts/undertaking-routing-cases.mjs'
   - 'package.json'
 check-model-class-roles:
   - 'scripts/check-model-class-role-defaults.mjs'
