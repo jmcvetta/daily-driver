@@ -128,6 +128,7 @@ The pull request
 | `The gate` | Read CI on the head | `gh pr view <number> --json statusCheckRollup` |
 | `The gate` | Read the review threads | `review-cycle`'s `references/codex.md` owns them |
 | `The gate` | Read the review record | `gh pr view <number> --json comments` — the round's own `Review` and `Review verification` comments |
+| `The gate` | Read current contract and compare review applicability | The installed session-bound task-state command, action `handoff`; compare its contract ID and revision to the submitted reviews and `Review verification` records |
 | `The gate` | Read the completion notice | `gh pr view <number> --json comments`, to the last page — the latest `## Review cycle complete! 🎉` comment by the claim's author |
 | `The gate` | Post a missing completion notice | `review-cycle`'s notice route: `gh pr comment <number>` |
 | `The gate` | Read the Blockers section | `gh pr view <number> --json body`, where `pr-body`'s Blockers section sits |

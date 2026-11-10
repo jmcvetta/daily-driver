@@ -217,6 +217,30 @@ is not the history. Give the reviewer that history, the reviewed SHA, and the
 current head rather than leaving the prior decision only in the author's
 context.
 
+**Review the task contract, not the worker's verdict.** Obtain the current
+contract ID and revision, criteria and stable IDs, evidence and review
+expectations, scope, exclusions, constraints, and original requirement
+references from the active task-state handoff. Give the named reviewer these
+inputs, the artifact identity and complete review history. Keep private source
+quotes and locators out of public records. If a contract or a required source
+is unavailable, identify the gap; do not invent a criterion or claim a
+contract review took place.
+
+The reviewer independently inspects the relevant artifacts and existing CI and
+review records. Worker assertions are claims, not observed evidence. Challenge
+omitted criteria, narrowed implementations, unsupported verification claims,
+scope or constraint violations, and applicable boundary and error cases.
+Do not demand work outside the contract. Tie each applicable finding to its
+criterion ID and contract revision, with concrete evidence and impact.
+
+Record the contract ID and revision with the reviewed artifact SHA in the
+submitted review summary, including a clean result. If the contract changes,
+compare the changed criteria and scope with the prior conclusions before
+reusing them. Record the applicability decision and its evidence against the
+new revision. A material review-scope change starts a new full review under
+`Does it go again?`; an immaterial change does not cause a repeated full audit.
+An unavailable applicability decision is not a clean conclusion.
+
 **Every actionable line-specific finding is an inline thread in a submitted
 `COMMENT` review.** The event is `COMMENT`: a review round states findings, and
 approving or requesting changes is the human reviewer's verdict to give, not
@@ -338,8 +362,10 @@ reported for that head.** Passing CI does not replace this pass. A red result
 does not approve the head or satisfy the caller's readiness gate.
 
 Give one reviewer the recorded full-review SHA, current SHA, original findings,
-and their recorded dispositions. It verifies that implemented fixes solve their
-findings and do not regress affected behavior. It may read surrounding code and
+their recorded dispositions, and the current contract ID, revision and
+relevant criteria, evidence expectations and original requirement references.
+It verifies that implemented fixes solve their findings and do not regress
+affected behavior against those criteria. It may read surrounding code and
 affected callers. It must not restart a full pull-request audit, solicit style
 work, or accept the author's verdict as verification. The harness route names
 the concrete invocation.
@@ -383,10 +409,11 @@ Rejected findings remain closed unless new evidence defeats the recorded
 rejection. Repeating a rejected finding without that evidence is not a defect
 and does not consume a pass.
 
-Record every pass on the pull request: reviewed SHA, verified SHA, pass number,
-original findings and dispositions, outcome, actionable defects, and whether
-the wall was reached. Record reviewer token usage where the harness exposes it;
-otherwise record `unavailable`, never an estimate or a telemetry service.
+Record every pass on the pull request: reviewed SHA, verified SHA, contract ID
+and revision, pass number, original findings and dispositions, outcome,
+actionable defects, and whether the wall was reached. Record reviewer token
+usage where the harness exposes it; otherwise record `unavailable`, never an
+estimate or a telemetry service.
 
 
 

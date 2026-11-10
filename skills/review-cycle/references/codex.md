@@ -64,6 +64,15 @@ are not a transcript-only degradation. Give the reviewer the complete history,
 reviewed SHA, and current head; the publication route below turns its findings
 into the submitted threads that `Fix, answer, resolve, push` answers.
 
+Obtain the current contract through the installed session-bound task-state
+command, action `handoff`. Codex CLI 0.160.0 rejects a custom `PROMPT` together
+with `--base`, so the documented `--base` invocation alone does not establish
+contract-brief delivery. Do not claim contract review until a supported route
+has delivered the contract, criterion IDs, evidence expectations, original
+requirement references, artifact SHA and complete history to this surface.
+Keep private source contents out of the submitted review. Report the missing
+route rather than treating an unbriefed review as contract review.
+
 **It is a second agent run, and it is billed as one.** `codex exec review`
 starts a fresh session with its own model. That is what makes it a named
 surface carrying its own rubric and publication route, rather than an ad-hoc
@@ -91,6 +100,8 @@ implemented finding is solved and any concrete regressions in that delta. It
 must not perform a full-PR audit, solicit style work, or supply the verdict —
 the session records the result from the delegate's report, never in place of
 it.
+Include the current contract ID and revision and the relevant criteria,
+evidence expectations and original requirement references in that brief.
 
 Publish any findings it raises through this file's `Review history,
 publication, and threads` route below, then record the pass with
@@ -101,6 +112,7 @@ Review verification
 scope reviewed: <sha>
 pass: <n>
 verified: <sha>
+contract: <contract ID and revision>
 findings: <finding ids and dispositions>
 outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>

@@ -23,6 +23,14 @@ whatever level was typed last, in some other session, about some other diff.
 `SKILL.md`'s `Name the level` is the rule; this is the surface that makes it
 load-bearing.
 
+Obtain the current contract with `mcp__daily-driver__task_state`, action
+`handoff`. Supply `/code-review` the contract, criterion IDs, evidence
+expectations, original requirement references, reviewed artifact SHA and
+complete history as review instructions. Require the contract challenges and
+criterion-linked findings in `SKILL.md`. Keep private sources out of the
+submitted review. If this surface cannot receive the brief, report the missing
+route rather than claiming contract review.
+
 If the CLI returns findings without a submitted review, publish them through
 the fallback below. Plain issue comments are not an equivalent artifact.
 
@@ -45,6 +53,8 @@ implemented finding is solved and any concrete regressions in that delta. It
 must not perform a full-PR audit, solicit style work, or supply the verdict —
 the session records the result from the subagent's report, never in place of
 it.
+Include the current contract ID and revision and the relevant criteria,
+evidence expectations and original requirement references in that brief.
 
 Publish any findings it raises through this file's `Review history,
 publication, and threads` route below, then record the pass with
@@ -55,6 +65,7 @@ Review verification
 scope reviewed: <sha>
 pass: <n>
 verified: <sha>
+contract: <contract ID and revision>
 findings: <finding ids and dispositions>
 outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>

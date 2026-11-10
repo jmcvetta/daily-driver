@@ -145,6 +145,13 @@ Freeze the source commit before measurement. The four defective full reviews
 cover a boundary, a cross-file contract, authorization, and data integrity.
 Two full reviews are correct. Two fix-delta reviews carry prior findings and
 dispositions: one correction is complete; the other is incomplete.
+
+The opt-in `09-task-contract` and `10-task-contract-control` cases give the
+reviewer a versioned task contract. The first contains a boundary failure and
+an omitted exclusion despite the worker's completion assertion. The second is
+a conforming control that excludes unrequested validation and sorting. These
+cases are separate from the historical eight-case comparison below; they have
+not yet been measured and do not prove review publication or other harnesses.
 Answer keys and rubric calibration examples are outside subject inputs.
 Only a finding with the correct location, triggering condition, and concrete
 impact counts. Duplicate findings count once. Style comments do not count.

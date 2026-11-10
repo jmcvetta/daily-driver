@@ -712,6 +712,11 @@ finding disposition. Batch all fixes, including CI and bot fixes, push them,
 and wait for CI on that head. Then run `Verify the fix delta` when the
 pull-request content changed behavior, contracts, or workflow rules. It is one
 pass for the batch, never one per commit or finding.
+Give the existing reviewer the current task contract and original requirement
+references through the harness route. `review-cycle` owns the independent
+contract challenge, evidence inspection, and revision applicability decision.
+Do not replace the review with the worker's completion assertion.
+
 
 A pass that finds defects returns to `Fix, answer, resolve, push`, and the
 correction pushed from there earns the pass that confirms it — every time,
@@ -946,6 +951,11 @@ number.
    leaves nothing to verify**, and this condition is satisfied with no pass
    owed — a clean review produces no verification record, so waiting for one
    waits forever.
+   Read the current contract ID and revision and compare them with the review
+   and verification records. A prior clean result does not silently cover a
+   changed contract: require `review-cycle`'s recorded applicability decision
+   or a new full review when the review scope changed materially. Missing
+   contract or applicability evidence leaves this condition unmet.
 5. **The completion notice covers the current head.** Read the pull request's
    conversation comments to the last page and take the latest comment that
    starts with `## Review cycle complete! 🎉` and is written by the account
