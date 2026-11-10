@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "run_id": "reviewer-quality-deepseek-cohort-v3",
+  "phase": "measured cohort interrupted at user stand-down",
+  "planned_attempts": 40,
+  "terminal_records": 3,
+  "cohort_complete": false,
+  "attempts": [
+    {
+      "case_id": "reviewer-quality-03-authorization",
+      "repeat": 0,
+      "task_status": "SUCCESS",
+      "attempt_seconds": 72.57301998138428,
+      "reviewer_requested": "opencode-go/deepseek-v4-pro:high",
+      "reviewer_backend_served": "unreported",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"deepseek-v4-pro\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:3\",\"trigger\":\"The access check condition is inverted: calling export_project with the owner (user.id == project.owner_id) now raises PermissionError, while a non-owner (user.id != project.owner_id) proceeds to return project.archive().\",\"impact\":\"Authorization bypass: any non-owner can export a project archive, and legitimate owners are denied export \u2014 directly contradicting the docstring 'Export the project archive only for its owner' and the stated purpose of adding access checks.\",\"severity\":\"critical\"}]}",
+      "judge_status": "not graded at stand-down",
+      "task_sha256": "8b9665a76efcff21cdbf697dcb9e934a0d8465babee3a70fd839e0c961e06a85"
+    },
+    {
+      "case_id": "reviewer-quality-04-integrity",
+      "repeat": 0,
+      "task_status": "SUCCESS",
+      "attempt_seconds": 105.94708061218262,
+      "reviewer_requested": "opencode-go/deepseek-v4-pro:high",
+      "reviewer_backend_served": "unreported",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"deepseek-v4-pro\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"wallet.py:5\",\"trigger\":\"Any call to transfer() now executes source.debit(amount) twice, but target.credit(amount) only once, because the patch adds a duplicate debit line after the credit.\",\"impact\":\"The source account is charged twice the intended amount while the target receives it once, silently destroying funds and contradicting the docstring contract 'debiting source once and crediting target once'.\",\"severity\":\"P0\"}]}",
+      "judge_status": "not graded at stand-down",
+      "task_sha256": "a5edf7f0a5a75fd110e402d0c6f704a338f5cbc0f3431d48dc91ec9651ec1d07"
+    },
+    {
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "repeat": 0,
+      "task_status": "SUCCESS",
+      "attempt_seconds": 71.51368880271912,
+      "reviewer_requested": "opencode-go/deepseek-v4-pro:high",
+      "reviewer_backend_served": "unreported",
+      "reviewer_result": "unavailable",
+      "judge_status": "not graded at stand-down",
+      "task_sha256": "5de688c75ec68a7309c69f6c6656ab336b3d895bf77b3f62592b2135f2e57d6c"
+    }
+  ],
+  "interrupted_without_terminal_record": [
+    {
+      "case_id": "reviewer-quality-01-boundary",
+      "repeat": 0,
+      "status": "interrupted; no terminal task.json"
+    }
+  ],
+  "remaining_coverage": "Unattempted entries and any interrupted attempt must be reconciled on resume. Do not rerun finalized failures. No complete cohort or model comparison is claimed.",
+  "grading": "Not run at stand-down; resume from preserved task.json artifacts.",
+  "freeze": "freeze-v3.json",
+  "source_commit": "bf39c58",
+  "collector_checkpoint": "466c00c"
+}

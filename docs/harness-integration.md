@@ -276,70 +276,209 @@ build contexts and published artifacts. Paths are illustrative, not deliveries.
 
 These notices disclose neither credentials nor device codes. Device approval
 is the user's authentication action; it does not renew task approval.
-## Task continuation and approval evidence
 
-The constitution requires agents to diagnose ordinary failures, preserve
-applicable approval, and finish independent permitted work before pausing.
-`undertake` owns the detailed escalation contract. The rule also applies to
-ordinary repository work.
+## Task contracts, continuation and approval evidence
 
-On Omp, `extensions/task-state.mjs` registers `daily_driver_task_state` and
-uses `session_stop` for bounded correction. Task scope, source-anchored
-authorization, tool evidence and correction counts live in private,
-active-branch session entries. The adapter restores a compact handoff during
-context preparation and compaction. Read `xd://daily_driver_task_state` in Omp
-for the action records, source discovery, exact-quote limits and examples.
-`status` returns bounded source excerpts; retrieval by source ID returns the
-original authority source or retained tool evidence. Tool input/output
-payloads have bounded previews, truncation metadata and a fingerprint; the
-adapter does not persist a second full copy of every file or command result.
+`extensions/task-state.mjs` owns task transitions for all three harnesses.
+`extensions/task-contract.mjs` owns the versioned contract representation.
+Adapters bind native input, persistence, tools, compaction and cancellation to
+that controller. They do not implement separate approval policies.
+
+Clear repository work captures a contract without asking for approval again.
+An ordinary question creates none. User requirements, workflow instructions,
+tool observations and agent interpretations remain separate source classes.
+An issue body, a delegated prompt or a copied approval is not user authority.
+
+### Contract and execution state
+
+Schema version 1 contains:
+
+- `contractId`, `taskId` and monotonic `revision`.
+- `objective`, `scope`, `exclusions` and `constraints`.
+- `criteria`, each with a stable `id`, `description` and original `sourceRefs`.
+- `requiredEvidenceKinds`, `requiredReviewKinds` and `approvalRequirements`.
+- `sourceRefs` with the retained `sourceId`, exact quote, canonical source
+  class, native origin and captured source version or observation fingerprint.
+
+Unknown fields are `null`. They do not mean empty, approved or fulfilled.
+Initial capture retains the request as criterion `request`. Ground the
+remaining fields and criteria in the issue/request version actually read.
+Keep the original request criterion when adding detailed issue acceptance.
+The issue's observation fingerprint identifies the captured version; a later
+issue read is another source, not a replacement for that contract.
+
+`contractHistory` retains each prior revision, its change and applicable
+source references. `plan` is separate mutable execution state. Updating a plan,
+retrying or compacting does not create a contract revision. Material amendments
+require a later applicable original user decision. Removing a criterion also
+requires its ID and the user-authorized reason. An issue edit alone cannot
+delete an unmet criterion.
+
+The first explicit `begin` may bind execution labels to the captured request.
+It does not infer unknown scope. A later `begin` cannot rewrite that binding or
+the contracted scope. Starting another task requires `newTask: true` and a
+fresh original user source. `resume` selects an existing contract by
+`contractId` when needed and preserves its correction allowance.
+
+### Task-state operations
+
+All routes accept `action` and an optional JSON-string `record`. `status`
+returns current state, retained task identities and bounded source previews.
+`status` with `{sourceId}` retrieves the retained original source or bounded
+tool observation. It does not recover omitted tool-output bytes.
+
+- `contract`: `{expectedRevision, change, sourceRefs, contract: {...}}`.
+  Supply only changed contract fields. A material amendment also supplies
+  `authoritySource`. A removal supplies `removedCriteria: [{id, reason}]`.
+  Changing bound `operation` or `target` belongs to this amendment, not `begin`.
+- `plan`: `{summary, ...executionDetails}`. This changes no contract revision.
+- `handoff`: returns the contract, history, current plan, unresolved criterion
+  IDs, authority locators and correction identity/count. It grants no approval.
+- `resume`: `{source: {sourceId, quote}, contractId?}`. A cancelled task needs
+  fresh original user input. Resume does not renew an exhausted allowance.
+- `authorization`: `{id, kind: "user" | "workflow", operation, target,
+  source: {sourceId, quote}, limits, conditions, expiresAt?, supersedes?,
+  revokes?, freshConfirmation?}`. The source must resolve to original user
+  input or workflow instructions of the same kind.
+- `blocker`: `{operation, target, kind: "external" | "authorization" |
+  "safety" | "execution", evidence: [{sourceId, quote}], authorizationIds: [],
+  routes: [{route, disposition: "failed" | "prohibited" | "unavailable",
+  evidence: {sourceId, quote}}], externalContribution,
+  independentWork: {pending: [], completed: []}, resume}`.
+- `complete`: `{summary}`. It remains a report. It does not verify acceptance.
+
+References establish provenance, not the meaning of arbitrary approval prose.
+Read the original scope, conditions, revocations, expiry and fresh-confirmation
+requirements before acting. The records do not replace harness permissions or
+safety restrictions.
+
+On Omp, read `xd://daily_driver_task_state` for the action records, defaults,
+source discovery, exact-quote limits and an example sequence. Tool
+input/output payloads have bounded previews, truncation metadata and a
+fingerprint; the adapter does not persist a second full copy of every file or
+command result.
+
+### Persistence and delegation
+
+Omp uses private, active-branch native session entries. Claude Code and Codex
+use `hooks/task-state.py` and `hooks/task-state.mjs` with the same controller.
+Their private ledgers live under `CLAUDE_CONFIG_DIR` or `CODEX_HOME`, falling
+back to `~/.claude` or `~/.codex`, in `daily-driver-task-contracts/`.
+Directory and ledger permissions are private. Native session/actor identities
+select separate ledgers. A process lock serializes updates; staged writes,
+`fsync` and atomic replacement preserve concurrent updates and crash recovery.
+No ledger or transcript is written to the repository.
+
+Native child adapters inherit contract identity, revision, criterion IDs and
+authority locators. Delegated input remains an interpretation. Hook-harness
+children resolve original sources from the parent's private ledger, not from
+copied prose. On Claude Code the mod reads the engine's `parentId`, so a
+nested child adopts its direct parent's revision and still resolves the root
+session's original sources; Codex children use the root session's ledger. An
+Omp `task` call strips contract tags from model-written input, and a child
+adopts a contract only from exactly one tag. An Omp handoff retains native session/source locators; a source
+unavailable on the child's branch remains `source-unavailable`, not approved.
+The existing workflow handoffs carry those locators across sessions. Never
+publish private quotes in a GitHub handoff.
+
+Legacy Omp records migrate explicitly on first access. Existing ledger entries,
+authorizations, cancellation and correction history remain. Missing contract
+fields stay unknown until sourced. Historical completion stays reported, not
+verified.
 
 An unsupported unfinished stop receives at most two corrective continuations
-per unchanged observed condition. Restarting the process does not renew that
-allowance. Explicit cancellation and an aborted stop handler prevent further
-correction. Exhaustion persists an execution failure and shows an error
-notification without scheduling another model turn. Ordinary questions do not
-automatically activate a task.
-
-Enforcement also requires an accessible task-state tool: either direct
-exposure, or Omp's active `write` device route. A restricted tool selection
-without either route receives a capability notice, not corrections that demand
-an inaccessible tool. The adapter never enables tools or calls this a missing
-user approval. Shared workflow instructions still apply.
-
-These checks validate provenance, scope fields and referenced observations.
-They do not prove that arbitrary prose grants permission, that every possible
-route was exhausted, or that reported completion satisfies acceptance criteria.
-The tool does not replace harness permissions. Original approval sources,
-conditions and safety restrictions remain authoritative. A copied agent
-handoff cannot grant approval in another session.
-
-`scripts/check-omp-task-state-live.py` exercises the installed Omp with a local
-scripted provider, persistent session resume and RPC abort. It makes no live
-model request. Behavioral cases separately measure whether a model uses
-approval and completes permitted actions; see [evaluation guidance](../evals/README.md).
+per unchanged observed condition. Process restart, duplicate native events,
+record relabelling, plan changes and delegation do not renew that allowance.
+Cancellation suppresses corrections. Exhaustion records an execution failure
+without another model turn. A missing task-state tool is a capability limit,
+not missing user approval; adapters do not expand tool permissions.
 
 ### Hook-harness boundary
 
-Claude Code and Codex document stop interception, but Daily Driver does not
-claim the Omp adapter is enforced there:
+Claude Code requires native mods support: terminal version 2.1.287 or later.
+The measured version is 2.1.316. `.claude-plugin/plugin.json` adds
+`hooks/task-state-claude.json`; Claude still loads common `hooks/hooks.json`.
+The mod uses engine-stamped `prompt.submit.origin`, native tool registration,
+`classic.SessionStart`, `classic.SubagentStart`, `classic.Stop` and
+`turn.complete.isAborted`. Native classic handlers return `additionalContext`
+arrays or a `block` reason, not settings-hook response envelopes. A settings
+`UserPromptSubmit` hook alone cannot distinguish user, scheduler and peer
+input. The adapter does not use that unsafe classification.
+SDK-host requests can create interpreted contracts, but are not user approval.
 
-- [Claude Code's `UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit)
-  also receives scheduled tasks, background-agent reports and peer messages.
-  Its documented event has no origin discriminator. Treating every prompt
-  event as a user source would manufacture authority and could restart
-  cancelled work.
-- [Codex documents `Stop` and `Interrupt`](https://developers.openai.com/codex/hooks).
-  Its stop continuation becomes a new user prompt, so an adapter must exclude
-  its own messages from authority and retry renewal. The shared plugin hook
-  manifest cannot register Codex's `Interrupt` event: Claude's strict plugin
-  validator reports it as unknown and rejects the manifest.
+Codex uses `.codex-plugin/plugin.json` to load the common hooks and
+`hooks/task-state-codex.json`. Only the Codex file registers `Interrupt`.
+Claude never parses that event. The model receives a task-state command bound
+to its native session and actor; it supplies `{action, record}` on stdin.
+That command carries `--tool`, which accepts only `{action, record}` and
+rejects hook events. The hook entry rejects actions. A command hook cannot
+prove its caller, so this split protects the advertised route only. A model
+with unrestricted shell access to `task-state.py` or the private ledger is
+outside this boundary.
+The model's own task-state calls are bookkeeping, not task evidence. A
+controller answer exits 0 even when it reports `isError`, so a call can never
+register as a failed tool result, reset the correction allowance or support an
+execution blocker. Only protocol and runtime faults exit nonzero. Each Codex
+call also records a receipt: a digest of its exact output in the private
+ledger. `PostToolUse` drops a non-failing result whose output equals a pending
+receipt and consumes that receipt. Nothing parses the shell command, so a call
+chained with other work, or wrapped in other output, stays ordinary evidence.
+Codex sends a Bash `PostToolUse` result as the captured output string, with no
+exit status (`codex-rs/core/src/tools/context.rs`,
+`ExecCommandToolOutput::post_tool_use_response`). A Codex shell observation
+therefore never records a failure: a failed command does not change the
+correction condition and cannot support an `execution` blocker on Codex. The
+two-correction bound still applies to an unchanged condition.
+The implementation requires Python 3, POSIX process locks and Node.js.
+Trust the installed hooks through Codex's supported hook review.
 
-These are integration limits, not a claim that either harness lacks a stop
-hook. Their shared workflow and handoff contracts preserve approval references
-and require blocker evidence. Runtime parity needs a supported transport with
-verified input-origin and cancellation semantics, not guessed transcript fields
-or omission of cancellation handling.
+In the measured Codex CLI 0.160.0, a blocked `Stop` creates another model
+request and retains `stop_hook_active`, but does **not** emit
+`UserPromptSubmit`. The adapter does not read unstable transcript fields.
+Native delegated prompt events carry `agent_id`/`agent_type` and retain the
+root `session_id`; they are interpretations, not fresh user authority.
+After compaction, the documented `SessionStart(source: compact)` route
+restores the contract before the next request. `PostCompact` has no supported
+additional-context output and is not used as a substitute.
+
+Codex app-server clients must request the supported lifecycle explicitly:
+`thread/start` with `sessionStartSource: "startup"` (Python SDK
+`session_start_source=ThreadStartSource.startup`). The default `None` source
+can execute model and tool requests without these lifecycle hooks, even when
+`hooks/list` reports trusted definitions. A bounded native app-server run
+with the startup source observed root and child hooks.
+
+### Installed-runtime capability checkpoint
+
+The bounded checkpoint on 2026-11-02 used no external model:
+
+| Harness | Registration and local response route | Observed native events |
+| --- | --- | --- |
+| Omp 18.15.0 | Installed/linked extension, scripted loopback provider, RPC | The live task-state probe passed original approval/tool-source recovery, two-correction bounds and native abort. A separate shipped-extension run retained equal parent/child contracts, zero child user sources, criteria and correction counts through native compaction and process resume. |
+| Claude Code 2.1.316 | Task-private npm installation; shipped `--plugin-dir` mod; local `turn.step` response fixture and loopback compaction provider | Genuine terminal `composer` input and a separate plugin's non-user input remained distinct. The shipped tool ran. Actual process resume and `/compact` preserved the contract and criterion IDs. Esc cancelled a pending correction with `turn.complete.isAborted: true`; cancellation and count 2 persisted. |
+| Codex CLI 0.160.0 | Task-private native marketplace/plugin installation and private CLI hook fixtures; local Responses provider | The unchanged shipped manifest captured one original user source and stopped at two corrections after three local requests. The shipped-controller lifecycle run exercised native tool access, child delegation with zero child user sources, SIGINT/`Interrupt`, process resume and `/compact`; contract, criteria, cancellation and count 2 survived. |
+
+On 2026-11-07 a Claude Code 2.1.319 cloud session loaded the shipped mod
+unchanged as a session dev mod and exercised delegation with genuine runtime
+events. A `composer` prompt became the only `user` source; a
+`task-notification` and the subagent's `peer` hand-back stayed
+`interpretation`. One `agent.spawn` gave the child the same contract ID,
+revision and criterion IDs in a separate private ledger with zero `user`
+sources. The child's authorization citing the parent's user source was
+rejected, and the parent recorded no authorization.
+
+The workstation's Claude Code 2.1.267 is too old for the mod route. The
+task-private 2.1.316 install did not change shared configuration or credentials.
+A separate Codex 0.160.0 app-server checkpoint used trusted hooks and the
+explicit startup source. Six local Responses requests exercised
+`SessionStart`, `UserPromptSubmit`, `PreToolUse`, `SubagentStart` and `Stop`.
+The earlier default-source attempt omitted lifecycle hooks; it did not
+establish an unsupported capability.
+
+These native-event observations establish the adapter route. Offline
+controller/adapter regressions run in the existing `check-omp-extension`
+suite. They do not replace installed-runtime evidence or prove that a model
+will honor arbitrary approval prose.
 
 ## Omp task roles and worktrees
 

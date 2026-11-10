@@ -1,0 +1,15 @@
+# Constructed incomplete-delta reviews with independently assigned labels.
+set_id: reviewer-quality-08-delta-incomplete-v2
+rubric:
+  task: evals/tasks/reviewer-quality/08-delta-incomplete.yaml
+  criterion: 0
+  presented_as: agent_output
+acceptance:
+  pass_score: 0.7
+  min_accuracy: 1.0
+  max_false_passes: 0
+  max_errors: 0
+examples:
+  - {id: still-open-with-evidence, kind: true-positive, label: pass, expected_score: 1.0, transcript: transcripts/still-open.txt}
+  - {id: incorrect-clear, kind: missed-defect, label: fail, expected_score: 0.0, transcript: transcripts/incorrect-clear.txt}
+  - {id: wrong-location, kind: false-positive, label: fail, expected_score: 0.0, transcript: transcripts/wrong-location.txt}

@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SHIPPED = frozenset(
     {
         ".claude-plugin",
+        ".codex-plugin",
         ".omp-plugin",
         "agents",
         "extensions",

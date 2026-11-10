@@ -2,9 +2,9 @@
  * Omp runtime adapter for daily-driver.
  *
  * This is the Oh My Pi half of the daily-driver plugin. The common guards
- * correspond to `hooks/hooks.json`; Omp also provides task-state enforcement
- * through its trusted input and stop lifecycle. Hooks on other harnesses do
- * not establish those same provenance and cancellation guarantees.
+ * correspond to `hooks/hooks.json`. Native Omp session events, Claude mods
+ * and Codex-specific hooks share the task-contract controller while retaining
+ * their own input-origin, persistence and cancellation adapters.
  * The harnesses share the skills and marketplace catalog
  * (`.claude-plugin/marketplace.json`); there is no separate Omp catalog.
  *

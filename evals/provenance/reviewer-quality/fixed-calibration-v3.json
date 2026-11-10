@@ -1,0 +1,83 @@
+{
+  "acceptance_rule": {
+    "max_errors": 0,
+    "max_false_passes": 0,
+    "min_accuracy": 1.0,
+    "pass_score": 0.7
+  },
+  "correct": 3,
+  "errors": 0,
+  "examples": [
+    {
+      "correct": true,
+      "id": "fixed-with-evidence",
+      "kind": "true-positive",
+      "label": "pass",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "pass",
+      "rationale": "The review clearly identifies the corrected slice in records.py: page and explains that it restores the final requested item without caller changes or regressions. It raises no unsupported findings.",
+      "score": 1.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 660,
+        "output": 55
+      }
+    },
+    {
+      "correct": true,
+      "id": "bare-clear",
+      "kind": "missed-defect",
+      "label": "fail",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The clear verdict lacks an explanation identifying the corrected page slice and confirming no caller regression.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 628,
+        "output": 62
+      }
+    },
+    {
+      "correct": true,
+      "id": "false-finding",
+      "kind": "false-positive",
+      "label": "fail",
+      "observed_model": "gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The review acknowledges the page slice fix but incorrectly claims that the caller corrupts records; the keyed change has no caller impact.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 663,
+        "output": 60
+      }
+    }
+  ],
+  "false_passes": 0,
+  "judge": {
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "route": "omp",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated"
+  },
+  "labels_sha": "93059ed2dee5a2bb59058b360a7cfee765dcb648673f5f2f874a6d43f20d4422",
+  "met_acceptance_rule": true,
+  "prompt_version": "omp-judge-v1",
+  "rubric_prompt_sha": "5216ed5a57279b49613fd99d5f4c80c0e67928858a413d6f1376c298f3dbf09e",
+  "rubric_source": {
+    "criterion": 0,
+    "presented_as": "agent_output",
+    "task": "evals/tasks/reviewer-quality/07-delta-fixed.yaml"
+  },
+  "schema_version": 1,
+  "set_id": "reviewer-quality-07-delta-fixed-v2",
+  "total": 3
+}

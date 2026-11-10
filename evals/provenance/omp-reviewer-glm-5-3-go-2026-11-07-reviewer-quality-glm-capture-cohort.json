@@ -1,0 +1,3206 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 6.04,
+            "findings": [
+              "TP:boundary"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "63c268a35281441484010cc471b6902b6c7d603e6b90800ade58b38dc29c30b7",
+            "rationale": "The agent correctly identified the exclusive slice-end defect at records.py:3, explaining that positive limits omit the final requested record and that pagination can silently skip or lose records.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1954,
+              "output": 54
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-01-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.99,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7fd9c956e9f5c1ecc8e36be2ccd8e60ca2361e34f2c64b56a07f7b26a9fc7fb1",
+            "rationale": "The response correctly reports no actionable defect: service.py returns balance_cents and client.py reads the same key, so the response contract and caller remain aligned.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1704,
+              "output": 47
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-06-clean-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.05,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0802cbd570fb005888a0b070f3a13d8c9e692064b521bd51dd2950f38ddf1fea",
+            "rationale": "The response correctly reports no actionable defect, consistent with the change normalizing negative offsets and limits to zero and returning the requested slice.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1545,
+              "output": 42
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.25,
+            "findings": [
+              "TP:authorization"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "90ac78ac60e3fd1eadf745a5b49ff5ec30d3a5d11e129c3a1e23e5b28b6d54a7",
+            "rationale": "The report correctly identifies the reversed ownership conditional in exports.py:3, explaining that owners receive PermissionError while non-owners can export. It explicitly connects this authorization bypass to unauthorized disclosure of project archives.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1770,
+              "output": 60
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-03-authorization",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.59,
+            "findings": [
+              "TP:contract"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2e285460eaafb5be7d66176935848ec2b3edcc4f758df5f99e353870c8d9f2ee",
+            "rationale": "The report correctly identifies the cross-file contract mismatch at service.py:3 and the stale client.py balance access. It explicitly states that every show_summary call raises KeyError, causing summary display to fail.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1862,
+              "output": 60
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-02-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "TIMEOUT",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "TIMEOUT",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.83,
+            "findings": [
+              "FN:fixed \u2014 No verdict confirms that page in records.py now returns items[offset:offset + limit], restoring the final requested item without caller impact or regression."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f7e3fe90839f8abf8b81f65cfc5449133fd9e2ff5013109e2d666f55822ddbef",
+            "rationale": "The agent stopped after reading review materials and did not deliver a verdict identifying the page slicing fix, its location, or the absence of caller impact and regressions.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1047,
+              "output": 81
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.05,
+            "findings": [
+              "TP:integrity"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "782ca41f60a5911df5905fcc837fda024543f0192709bcb8a06e114a526a1605",
+            "rationale": "The report correctly identifies the duplicate source debit in wallet.py's transfer function and explains that successful transfers remove twice the amount from the source while crediting the target only once, destroying user funds.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1965,
+              "output": 59
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-04-integrity",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.48,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 retains the off-by-one exclusive endpoint; a five-item page returns four items, and limit=1 returns an empty page."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The review correctly identifies the original finding as still open at records.py:3-4: the exclusive slice endpoint remains offset + limit - 1, omitting the last requested item on a full page. It treats the caller impact as propagation of the same defect, not a separate regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2343,
+              "output": 111
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.1,
+            "findings": [
+              "TP:boundary"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "63c268a35281441484010cc471b6902b6c7d603e6b90800ade58b38dc29c30b7",
+            "rationale": "The report identifies the exclusive slice-end defect at records.py:3, demonstrates a positive-limit page returning one fewer record, and explains how advancing the offset can permanently skip the omitted boundary record.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2158,
+              "output": 58
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-01-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.07,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7fd9c956e9f5c1ecc8e36be2ccd8e60ca2361e34f2c64b56a07f7b26a9fc7fb1",
+            "rationale": "The response correctly reports no actionable defect: service.py returns balance_cents and client.py reads that same key, so the response contract and caller match.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1741,
+              "output": 46
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-06-clean-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.47,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0802cbd570fb005888a0b070f3a13d8c9e692064b521bd51dd2950f38ddf1fea",
+            "rationale": "The response correctly reports no actionable defect. The change clamps negative offsets and limits to zero and returns the requested slice, with no demonstrated consumer-visible defect.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1566,
+              "output": 46
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.56,
+            "findings": [
+              "TP:authorization"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "90ac78ac60e3fd1eadf745a5b49ff5ec30d3a5d11e129c3a1e23e5b28b6d54a7",
+            "rationale": "The report correctly identifies the inverted owner check in exports.py's export_project conditional, explaining that owners receive PermissionError while non-owners can export archives. It explicitly identifies unauthorized disclosure of project data as the impact.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1997,
+              "output": 62
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-03-authorization",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.01,
+            "findings": [
+              "TP:contract"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2e285460eaafb5be7d66176935848ec2b3edcc4f758df5f99e353870c8d9f2ee",
+            "rationale": "The agent correctly reports the cross-file contract mismatch: service.py returns balance_cents while client.py still indexes balance. It identifies the matching locations and explains that every show_summary call against the endpoint raises KeyError, breaking summary display.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2019,
+              "output": 66
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-02-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.77,
+            "findings": [
+              "FN:fixed \u2014 records.py::page restores the omitted final item with items[offset:offset + limit].",
+              "DELTA:clear \u2014 The unchanged caller requires no adaptation and the fix introduces no regression."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f7e3fe90839f8abf8b81f65cfc5449133fd9e2ff5013109e2d666f55822ddbef",
+            "rationale": "The agent clearly identifies the prior boundary finding as fixed in records.py::page by restoring items[offset:offset + limit]. It also explicitly reports no caller adaptation or regression, matching the expected status, impact, and location.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2114,
+              "output": 101
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.36,
+            "findings": [
+              "TP:integrity"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "782ca41f60a5911df5905fcc837fda024543f0192709bcb8a06e114a526a1605",
+            "rationale": "The agent correctly reported the duplicate debit in wallet.py:5 within transfer, explaining that the source loses twice the amount while the target receives it only once. This matches the successful-transfer trigger and resulting loss of user funds.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1753,
+              "output": 65
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-04-integrity",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 6.96,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 retains offset + limit - 1 as an exclusive endpoint, returning nine records for a full ten-record page.",
+              "UNEXPECTED_VALID: records.py:3 with offset=0 and limit=0 produces items[0:-1] rather than an empty page."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original finding as still open at records.py:3-4 and explains that the exclusive slice endpoint still drops the last requested record. It does not claim a separate caller regression; the additional zero-limit case is a credible consequence of the same changed calculation.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2632,
+              "output": 134
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.34,
+            "findings": [
+              "TP:boundary",
+              "UNEXPECTED_VALID:records.py:3 returns all but the last item for offset=0 and limit=0 because the slice end becomes -1."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "63c268a35281441484010cc471b6902b6c7d603e6b90800ade58b38dc29c30b7",
+            "rationale": "The review correctly identifies the exclusive slice-end defect in records.py:3, its positive-limit trigger, and the resulting missing boundary records and pagination skips. It also identifies a credible zero-limit consequence of the same expression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2265,
+              "output": 94
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-01-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.18,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7fd9c956e9f5c1ecc8e36be2ccd8e60ca2361e34f2c64b56a07f7b26a9fc7fb1",
+            "rationale": "The response correctly reports no actionable defect. Both service.py and client.py use balance_cents, so the response contract and its caller remain consistent.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1746,
+              "output": 45
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-06-clean-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.14,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0802cbd570fb005888a0b070f3a13d8c9e692064b521bd51dd2950f38ddf1fea",
+            "rationale": "The response correctly reports no actionable defect, returning a clear verdict with no findings. The diff clamps negative offsets and limits to zero and returns the requested slice, with no demonstrated consumer-visible defect.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1624,
+              "output": 54
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.79,
+            "findings": [
+              "TP:authorization"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "90ac78ac60e3fd1eadf745a5b49ff5ec30d3a5d11e129c3a1e23e5b28b6d54a7",
+            "rationale": "The report correctly identifies the inverted owner check in exports.py:3 within export_project. It explains both the owner receiving PermissionError and non-owners receiving project archives, matching the required trigger and unauthorized disclosure impact.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1801,
+              "output": 62
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-03-authorization",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 6.09,
+            "findings": [
+              "TP:contract",
+              "FP:Claimed factor-of-100 unit mismatch lacks evidence of account.balance units or an intended conversion."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2e285460eaafb5be7d66176935848ec2b3edcc4f758df5f99e353870c8d9f2ee",
+            "rationale": "The review correctly identifies the cross-file contract mismatch, its trigger on every show_summary call, and the resulting KeyError that prevents summary display. The additional unit-conversion allegation is speculative because no evidence establishes that account.balance is not already denominated in cents.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2119,
+              "output": 93
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-02-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 7.75,
+            "findings": [
+              "DELTA:clear \u2014 reports no current defects or regression.",
+              "FN:fixed \u2014 omits explicit confirmation that records.py::page now uses items[offset:offset + limit], restoring the final requested item without caller impact."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f7e3fe90839f8abf8b81f65cfc5449133fd9e2ff5013109e2d666f55822ddbef",
+            "rationale": "The agent reports a clear verdict with no defects, consistent with no regression, but never explicitly identifies the prior finding as fixed or locates the corrected slice in records.py::page. Thus it does not satisfy the required status, impact, and location match.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1660,
+              "output": 142
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.96,
+            "findings": [
+              "TP:integrity"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "782ca41f60a5911df5905fcc837fda024543f0192709bcb8a06e114a526a1605",
+            "rationale": "The report correctly identifies the duplicate debit in wallet.py:5 and explains that successful transfers debit the source twice while crediting the target once, destroying an extra amount of user funds.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1846,
+              "output": 57
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-04-integrity",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 5.56,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 computes end = offset + limit - 1 and slices items[offset:end], returning only limit - 1 items at a full page boundary."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original finding as still open at records.py:3-4: extracting the endpoint into a variable does not fix the exclusive-slice off-by-one, so full pages still omit the last requested item. It describes caller propagation rather than claiming a separate caller regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2392,
+              "output": 113
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 2,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.86,
+            "findings": [
+              "TP:boundary"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "63c268a35281441484010cc471b6902b6c7d603e6b90800ade58b38dc29c30b7",
+            "rationale": "The report correctly identifies the exclusive slice-end defect in records.py:3, demonstrates a positive-limit page returning one fewer record, and explains the resulting silent loss during pagination.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1999,
+              "output": 54
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-01-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.48,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7fd9c956e9f5c1ecc8e36be2ccd8e60ca2361e34f2c64b56a07f7b26a9fc7fb1",
+            "rationale": "The response correctly reports no actionable defect. Both service.py and client.py consistently use balance_cents, so the changed response contract has a matching caller.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1724,
+              "output": 46
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-06-clean-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.66,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0802cbd570fb005888a0b070f3a13d8c9e692064b521bd51dd2950f38ddf1fea",
+            "rationale": "The response reports a clear verdict with no actionable defects, matching the expected assessment. The change correctly clamps negative offsets and limits to zero before returning the requested slice.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1599,
+              "output": 48
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "TIMEOUT",
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "TIMEOUT",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.39,
+            "findings": [
+              "FN:authorization"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "90ac78ac60e3fd1eadf745a5b49ff5ec30d3a5d11e129c3a1e23e5b28b6d54a7",
+            "rationale": "The agent did not report the reversed owner check in exports.py or identify its trigger and unauthorized archive disclosure impact. The transcript shows only preparatory reads, with no defect finding.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1033,
+              "output": 55
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-03-authorization",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.19,
+            "findings": [
+              "TP:contract"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2e285460eaafb5be7d66176935848ec2b3edcc4f758df5f99e353870c8d9f2ee",
+            "rationale": "The report correctly identifies the cross-file contract mismatch at the stale client.py balance access, explains that show_summary raises KeyError against the changed endpoint, and reports the resulting consumer-visible summary failure.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2047,
+              "output": 58
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-02-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 10.26,
+            "findings": [
+              "FN:fixed \u2014 The report omits explicit confirmation that records.py's page now returns items[offset:offset + limit], restoring the final requested item without caller impact."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f7e3fe90839f8abf8b81f65cfc5449133fd9e2ff5013109e2d666f55822ddbef",
+            "rationale": "The agent's clear verdict is consistent with no regression, but it never explicitly identifies the prior finding as fixed or locates the corrected slice in records.py. Thus status, impact, and location do not all match the required explicit assessment.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1831,
+              "output": 131
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.55,
+            "findings": [
+              "TP:integrity"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "782ca41f60a5911df5905fcc837fda024543f0192709bcb8a06e114a526a1605",
+            "rationale": "The report correctly identifies the duplicate debit in wallet.py:5 and explains that successful transfers debit the source twice while crediting the target once, destroying an extra amount of user funds.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1906,
+              "output": 57
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-04-integrity",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 6.03,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 retains the incorrect exclusive endpoint, returning one fewer record on full pages and an empty list for limit == 1."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original off-by-one finding as still open at records.py:3-4: the exclusive slice endpoint remains offset + limit - 1, omitting the last requested item on full pages. It treats the caller as affected by the same defect rather than reporting a separate caller regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2327,
+              "output": 112
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 3,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 12.47,
+            "findings": [
+              "TP:boundary",
+              "UNEXPECTED_VALID:At offset 0 and limit 0, the changed slice becomes items[0:-1] and can return records instead of an empty page; the reported example with offset 1 would actually return []."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "63c268a35281441484010cc471b6902b6c7d603e6b90800ade58b38dc29c30b7",
+            "rationale": "The agent correctly reports the positive-limit off-by-one defect at records.py:3, including a concrete missing boundary item and the risk of skipped pagination results. Its additional zero-limit concern is valid at offset 0, although its offset-1 example is incorrect.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2278,
+              "output": 190
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-01-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.75,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "7fd9c956e9f5c1ecc8e36be2ccd8e60ca2361e34f2c64b56a07f7b26a9fc7fb1",
+            "rationale": "The response correctly reports no actionable defect. Both service.py and client.py consistently use balance_cents, so the changed response contract has a matching caller.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1724,
+              "output": 46
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-06-clean-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.17,
+            "findings": [],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0802cbd570fb005888a0b070f3a13d8c9e692064b521bd51dd2950f38ddf1fea",
+            "rationale": "The response correctly reports no actionable defect. The change clamps negative offsets and limits to zero and returns the corresponding slice, consistent with the expected behavior.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1568,
+              "output": 45
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 4.63,
+            "findings": [
+              "TP:authorization"
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "90ac78ac60e3fd1eadf745a5b49ff5ec30d3a5d11e129c3a1e23e5b28b6d54a7",
+            "rationale": "The report correctly identifies the reversed owner check in exports.py's export_project conditional. It explicitly states that owners receive PermissionError while non-owners can obtain project archives, matching the required trigger and unauthorized-disclosure impact.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1743,
+              "output": 63
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-03-authorization",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.7,
+            "findings": [
+              "TP:contract",
+              "FP:Unit mismatch asserted without evidence of account.balance units or a distinct balance_cents attribute."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "2e285460eaafb5be7d66176935848ec2b3edcc4f758df5f99e353870c8d9f2ee",
+            "rationale": "The report correctly identifies the stale client.py balance access, its trigger against the renamed balance_cents response, and the resulting KeyError that breaks summary display. Its additional unit-mismatch claim is speculative because no evidence establishes that account.balance is not already measured in cents.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2071,
+              "output": 93
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-02-contract",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 8.0,
+            "findings": [
+              "DELTA:clear",
+              "FN:fixed \u2014 Missing explicit confirmation that records.py page now returns items[offset:offset + limit], restoring the omitted final item without caller impact."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "f7e3fe90839f8abf8b81f65cfc5449133fd9e2ff5013109e2d666f55822ddbef",
+            "rationale": "The agent returned a clear verdict with no findings, consistent with no regression, but did not explicitly identify the prior finding as fixed or locate the corrected slice in records.py. Therefore, it does not meet the requirement that status, impact, and location all match.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1901,
+              "output": 128
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Review finding accuracy and impact",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Review finding accuracy and impact",
+            "duration_seconds": 5.2,
+            "findings": [
+              "TP:integrity \u2014 wallet.py:5 adds a second source.debit(amount), causing each successful transfer to remove an extra amount from the source without crediting the target."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "782ca41f60a5911df5905fcc837fda024543f0192709bcb8a06e114a526a1605",
+            "rationale": "The report correctly identifies the duplicate debit in wallet.py's transfer function, triggered by successful transfers, and explains that debiting the source twice while crediting the target once destroys user funds.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1865,
+              "output": 89
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-04-integrity",
+      "variant_id": "reviewer"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Delta finding status and scope",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Delta finding status and scope",
+            "duration_seconds": 6.8,
+            "findings": [
+              "TP:still-open \u2014 records.py:3-4 computes end = offset + limit - 1 and slices items[offset:end], returning one fewer record than requested at a full page boundary."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "da89937a845fea08f743ebdc2295df1a72a5ca3ca948d605302b57037efc3f31",
+            "rationale": "The agent correctly identifies the original finding as still open at records.py:3-4: extracting offset + limit - 1 into a variable preserves the exclusive-slice off-by-one error and still omits the last requested record. It treats caller impact as propagation of the same defect, not a separate regression.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2512,
+              "output": 117
+            },
+            "weight": 1
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 4,
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "variant_id": "reviewer"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 52.927749156951904,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-01-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68608,
+        "output_tokens": 977,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11300
+      },
+      "tokens": 80885,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 59.307626724243164,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-06-clean-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 58496,
+        "output_tokens": 932,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 22131
+      },
+      "tokens": 81559,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 51.16147518157959,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68736,
+        "output_tokens": 768,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11092
+      },
+      "tokens": 80596,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 44.769606590270996,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-03-authorization",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68480,
+        "output_tokens": 849,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11271
+      },
+      "tokens": 80600,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 55.43325233459473,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-02-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68608,
+        "output_tokens": 905,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11197
+      },
+      "tokens": 80710,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 64773.723489522934,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 57856,
+        "output_tokens": 241,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 26645
+      },
+      "tokens": 84742,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 47.355947732925415,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-04-integrity",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 89856,
+        "output_tokens": 966,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 17124
+      },
+      "tokens": 107946,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 356.4801187515259,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 79616,
+        "output_tokens": 1241,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11798
+      },
+      "tokens": 92655,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 43.07512664794922,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-01-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 89856,
+        "output_tokens": 1063,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 17241
+      },
+      "tokens": 108160,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 49.04533076286316,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-06-clean-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 69504,
+        "output_tokens": 976,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11165
+      },
+      "tokens": 81645,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 35.88785743713379,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68864,
+        "output_tokens": 793,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11051
+      },
+      "tokens": 80708,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 41.568928718566895,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-03-authorization",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 101632,
+        "output_tokens": 997,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 30106
+      },
+      "tokens": 132735,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 70.771475315094,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-02-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 111488,
+        "output_tokens": 1004,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20229
+      },
+      "tokens": 132721,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 59.984925985336304,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 122112,
+        "output_tokens": 1097,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20497
+      },
+      "tokens": 143706,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 39.47622084617615,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-04-integrity",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 58112,
+        "output_tokens": 845,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21567
+      },
+      "tokens": 80524,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 98.05732846260071,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 92288,
+        "output_tokens": 1452,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11389
+      },
+      "tokens": 105129,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 55.45958161354065,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-01-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 111488,
+        "output_tokens": 1119,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20275
+      },
+      "tokens": 132882,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 46.02231168746948,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-06-clean-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 59648,
+        "output_tokens": 974,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21036
+      },
+      "tokens": 81658,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 44.620734214782715,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 90240,
+        "output_tokens": 827,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 16807
+      },
+      "tokens": 107874,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 42.67201519012451,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-03-authorization",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 89728,
+        "output_tokens": 871,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 17167
+      },
+      "tokens": 107766,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 51.20811748504639,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-02-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68736,
+        "output_tokens": 1060,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11336
+      },
+      "tokens": 81132,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 49.42395281791687,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 78976,
+        "output_tokens": 862,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11406
+      },
+      "tokens": 91244,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 39.52422571182251,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-04-integrity",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 58752,
+        "output_tokens": 881,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20986
+      },
+      "tokens": 80619,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 64.32433104515076,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 2,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 88448,
+        "output_tokens": 1267,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 2955
+      },
+      "tokens": 92670,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 44.822089433670044,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-01-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 59008,
+        "output_tokens": 955,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20831
+      },
+      "tokens": 80794,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 49.01630663871765,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-06-clean-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 59520,
+        "output_tokens": 960,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21122
+      },
+      "tokens": 81602,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 54.773491859436035,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 59392,
+        "output_tokens": 817,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20513
+      },
+      "tokens": 80722,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 90032.42507243156,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-03-authorization",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 57600,
+        "output_tokens": 215,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 16466
+      },
+      "tokens": 74281,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 163.62122750282288,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-02-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 111104,
+        "output_tokens": 1054,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20740
+      },
+      "tokens": 132898,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 53.6715521812439,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 122240,
+        "output_tokens": 970,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20307
+      },
+      "tokens": 143517,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 46.31752800941467,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-04-integrity",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 95744,
+        "output_tokens": 940,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 35776
+      },
+      "tokens": 132460,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 65.15647029876709,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 3,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 79616,
+        "output_tokens": 1225,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11727
+      },
+      "tokens": 92568,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 55.06010866165161,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-01-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 92160,
+        "output_tokens": 1089,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 39500
+      },
+      "tokens": 132749,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 52.407599210739136,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-06-clean-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 59776,
+        "output_tokens": 961,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20872
+      },
+      "tokens": 81609,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 35.506144523620605,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-05-clean-boundary",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 59392,
+        "output_tokens": 802,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20442
+      },
+      "tokens": 80636,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 39.21817636489868,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-03-authorization",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 75776,
+        "output_tokens": 838,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 3971
+      },
+      "tokens": 80585,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 49.93215727806091,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-02-contract",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 58880,
+        "output_tokens": 1013,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 21053
+      },
+      "tokens": 80946,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 65.59170126914978,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-07-delta-fixed",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 102912,
+        "output_tokens": 1041,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 39786
+      },
+      "tokens": 143739,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 40.928879499435425,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-04-integrity",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 68608,
+        "output_tokens": 918,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 11189
+      },
+      "tokens": 80715,
+      "variant_id": "reviewer"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "unreported",
+      "elapsed_seconds": 66.3372848033905,
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 4,
+      "settings": "omp-reviewer-glm-5-3-go",
+      "task_id": "reviewer-quality-08-delta-incomplete",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 113152,
+        "output_tokens": 1347,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 30537
+      },
+      "tokens": 145036,
+      "variant_id": "reviewer"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.14.1",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-09T16:00:05.670401",
+  "experiment_id": "omp-reviewer-glm-5-3-go",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 75751,
+      "output": 3084
+    }
+  },
+  "plugin_revision": {
+    "commit": "c8c20c0aa89f7269a18baa337e54fde3f446c5a7",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-09T09:04:20.030602+00:00",
+  "run_id": "reviewer-quality-glm-capture-cohort",
+  "schema_version": 5,
+  "started_at": "2026-11-07T20:20:18.501894",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol:low",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "reviewer-quality-01-boundary": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "reviewer-quality-02-contract": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "reviewer-quality-03-authorization": [
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "reviewer-quality-04-integrity": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "reviewer-quality-05-clean-boundary": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "reviewer-quality-06-clean-contract": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "reviewer-quality-07-delta-fixed": [
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "reviewer-quality-08-delta-incomplete": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "reviewer-quality-01-boundary",
+        "reviewer-quality-06-clean-contract",
+        "reviewer-quality-05-clean-boundary",
+        "reviewer-quality-03-authorization",
+        "reviewer-quality-02-contract",
+        "reviewer-quality-07-delta-fixed",
+        "reviewer-quality-04-integrity",
+        "reviewer-quality-08-delta-incomplete"
+      ],
+      "variant_id": "reviewer"
+    }
+  ]
+}

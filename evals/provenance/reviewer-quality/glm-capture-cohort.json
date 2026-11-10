@@ -1,0 +1,2055 @@
+{
+  "analysis_valid": true,
+  "arm": "glm",
+  "attempts": [
+    {
+      "arm": "glm",
+      "artifact_sha256": "ced8040c05a7a0ecb74ac3ce5995673f9a7ca3e2fedf84b5a35a90b3bcc0b0b2",
+      "attempt_seconds": 52.927749156951904,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"defects\", \"findings\": [{\"location\": \"records.py:3\", \"trigger\": \"Any call to page(items, offset, limit) with limit >= 1; the slice end changed from offset + limit to offset + limit - 1, so each call returns one record fewer than the requested page size (limit=1 returns an empty list; limit=N returns N-1 records).\", \"impact\": \"The cursor-based listing endpoint short-changes every page, dropping one record per page. Records silently disappear from listings: a client paging with limit=1 gets nothing and loops can skip or lose records entirely, contradicting the docstring 'Return up to limit records' and the endpoint's pagination contract.\", \"severity\": \"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "d6344b3d1801a36a62d0d0b96b2e84352aeece56026eedda664cbd1526a780ae",
+      "attempt_seconds": 43.07512664794922,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Any call to page(items, offset, limit) with limit >= 1, e.g. page([1,2,3,4,5], 0, 5)\",\"impact\":\"The slice end is offset + limit - 1, so the function returns at most limit - 1 records (page([1,2,3,4,5], 0, 5) yields [1,2,3,4]), contradicting the docstring and breaking cursor pagination: every full page silently drops one record, and with offset advancing by the requested limit the dropped record is never returned by a subsequent page. With limit=1 the function returns no records at all, and with limit=0 or negative values the empty-slice guard effect of the old expression is lost (limit=0 previously gave an empty slice, now offset + limit - 1 = offset - 1 still gives empty, but limit=1 differs). The change is an unintended off-by-one relative to the documented contract 'up to limit records beginning at offset'.\",\"severity\":\"P1\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "d15fed9b213f68b8f4c4b4f625bed032b6871e9e1671e4637477fcd0b1002868",
+      "attempt_seconds": 55.45958161354065,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary",
+        "UNEXPECTED_VALID:records.py:3 returns all but the last item for offset=0 and limit=0 because the slice end becomes -1."
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Any call to page(items, offset, limit) with limit >= 1 (e.g. page(list(range(5)), 0, 3) verified to return [0, 1]).\",\"impact\":\"The slice end offset + limit - 1 is an off-by-one: the function returns limit - 1 records instead of the documented 'up to limit records'. A cursor-based lister that advances offset by limit skips one record per page (the item at index offset + limit - 1 is never returned), so records silently disappear from listing results. limit=1 returns an empty list for every offset, so a client paging with limit=1 sees no records at all.\",\"severity\":\"high\"},{\"location\":\"records.py:3\",\"trigger\":\"page(items, 0, 0) \u2014 verified to return [0, 1, 2, 3] for a 5-element list.\",\"impact\":\"When limit=0 and offset=0, the slice end evaluates to -1, which Python treats as 'all but the last element'. A request for zero records instead returns len(items) - 1 records, inverting the intended empty result and exposing records the caller explicitly did not request.\",\"severity\":\"medium\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "1697f8ac8e15db9dc074a6c9ee42f55aeace3bbbafcaa9a948144ec342c214db",
+      "attempt_seconds": 44.822089433670044,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"defects\", \"findings\": [{\"location\": \"records.py:3 (page, changed from items[offset:offset + limit] to items[offset:offset + limit - 1])\", \"trigger\": \"Any call to page(items, offset, limit) with limit >= 1; e.g. page([1,2,3,4,5], 0, 2) now returns [1] instead of [1,2], and page(items, offset, 1) returns [] for every offset.\", \"impact\": \"Off-by-one in the slice end: a Python slice items[offset:offset+n] yields exactly n items, so the new expression yields only limit-1 items. Every page is one record short of the documented 'up to limit records', silently dropping one record per page during pagination; with limit=1 the endpoint always returns an empty list. The docstring still promises limit records, so this is an unintentional regression introduced in the patch.\", \"severity\": \"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "282c8fcaaccae6dfc350d7038c82e37ba58e0800ae8e1d2dd977207616ef8936",
+      "attempt_seconds": 55.06010866165161,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary",
+        "UNEXPECTED_VALID:At offset 0 and limit 0, the changed slice becomes items[0:-1] and can return records instead of an empty page; the reported example with offset 1 would actually return []."
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Any call to page(items, offset, limit) with limit >= 1, e.g. page([1,2,3], 0, 2)\",\"impact\":\"The slice items[offset:offset + limit - 1] returns limit - 1 records, not the documented 'up to limit records', so every page silently drops one record \u2014 e.g. page([1,2,3], 0, 2) returns [1] instead of [1,2]. In a cursor-based listing endpoint this means one record is lost per page, so consumers paginating through all records never see every record. Fix: return items[offset:offset + limit].\",\"severity\":\"high\"},{\"location\":\"records.py:3\",\"trigger\":\"page called with limit = 0 (or any limit <= 0), e.g. page([1,2,3,4], 1, 0)\",\"impact\":\"With limit = 0 the expression becomes items[offset:-1], which Python interprets as a slice from offset up to the last element, returning nearly the whole remaining list (page([1,2,3,4], 1, 0) returns [2,3]) instead of an empty page. The baseline items[offset:offset+0] correctly returned []. The patch therefore turns a zero/negative limit from an empty result into a large over-return of records.\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "6f1a8a7641546e75adb4826a9784664c71a91c16a5e334ca9fa1954326e66f0c",
+      "attempt_seconds": 55.43325233459473,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-02-contract"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"service.py:3 (cross-boundary consumer: client.py:3)\",\"trigger\":\"The patch renames the service response key from \\\"balance\\\" to \\\"balance_cents\\\" in account_summary(), but the only consuming-side reader, show_summary() in client.py, still does api.get_summary(account_id)[\\\"balance\\\"] and was left unchanged in this commit.\",\"impact\":\"Every call to show_summary() now raises KeyError: 'balance' \u2014 the service/client contract is broken universally, with no input for which the old code path still works. The stated goal of updating the client integration is unmet because client.py is absent from the diff.\",\"severity\":\"P1\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "a8a202450a7fbeeee18b54a73ea477a07884ae15a0e40c68932c6579f1eb1eb5",
+      "attempt_seconds": 70.771475315094,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-02-contract"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"service.py:3 (producer); consumer at client.py:3\",\"trigger\":\"The patch renames the response key returned by account_summary from \\\"balance\\\" to \\\"balance_cents\\\" without updating the client integration: show_summary still evaluates api.get_summary(account_id)[\\\"balance\\\"] against the new response payload.\",\"impact\":\"Every call to show_summary raises KeyError: 'balance' because the sole consuming lookup no longer matches any key the service returns; the client integration for this endpoint is broken end-to-end. Fix by updating client.py:3 to index \\\"balance_cents\\\" (or keeping the old key) in the same commit.\",\"severity\":\"P1\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "78f433e8ad7d51353b9d2613a6246a2a05b0cb27d9b9498f10f826bc4e381c90",
+      "attempt_seconds": 51.20811748504639,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-02-contract",
+        "FP:Claimed factor-of-100 unit mismatch lacks evidence of account.balance units or an intended conversion."
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"client.py:3 (show_summary), against service.py:3 (account_summary)\",\"trigger\":\"The patch renames the service response key from \\\"balance\\\" to \\\"balance_cents\\\", but the client was not updated. Any call to show_summary(api, account_id) fetches the summary and indexes api.get_summary(account_id)[\\\"balance\\\"].\",\"impact\":\"The key \\\"balance\\\" no longer exists in the response dict returned by account_summary, so every show_summary call raises a KeyError and the client integration is completely broken at runtime.\",\"severity\":\"high\"},{\"location\":\"service.py:2-3 (account_summary)\",\"trigger\":\"The renamed key \\\"balance_cents\\\" and its docstring now describe a cents-valued field, but the function still returns the raw value account.balance rather than a cents value (e.g. account.balance_cents or a conversion).\",\"impact\":\"Consumers receive the original balance value mislabeled as cents; if the rename reflects an intended unit change, downstream code will interpret monetary amounts in the wrong unit by a factor of 100. Value/label mismatch introduced by this patch.\",\"severity\":\"medium\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "fb09497392b142218f6ab24fddaaa8665af3adade271c7dc929b80d6dc1c7d80",
+      "attempt_seconds": 163.62122750282288,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-02-contract"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"client.py:3 (break introduced by service.py:2 in commit d3c4bc5)\",\"trigger\":\"client.show_summary calls api.get_summary(account_id)[\\\"balance\\\"], but account_summary in service.py now returns the dict key \\\"balance_cents\\\" instead of \\\"balance\\\"; the review commit changed only service.py and left the client contract consumer unupdated\",\"impact\":\"Every call to show_summary raises KeyError: 'balance' because the response dict no longer contains the \\\"balance\\\" key, breaking the service-to-client integration introduced by this patch\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "e52f06b07b00dee09be847ac3c088a24987261db6cabdc3b1ea19e7236f35711",
+      "attempt_seconds": 49.93215727806091,
+      "case_id": "reviewer-quality-02-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-02-contract",
+        "FP:Unit mismatch asserted without evidence of account.balance units or a distinct balance_cents attribute."
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"client.py:3 (consuming service.py:2 from commit d3c4bc5)\",\"trigger\":\"show_summary calls api.get_summary(account_id) and indexes the response with [\\\"balance\\\"], but the patch renamed the service response key from \\\"balance\\\" to \\\"balance_cents\\\" in service.py account_summary, and no client change accompanied it (diff touches only service.py).\",\"impact\":\"Every show_summary call now raises KeyError: 'balance' at runtime \u2014 a hard, universal failure of the client integration, not an edge case.\",\"severity\":\"high\"},{\"location\":\"service.py:2\",\"trigger\":\"The new key balance_cents is populated from account.balance, the same attribute that previously backed the balance key; the docstring now claims the value is the cents field.\",\"impact\":\"If the account object exposes a distinct balance_cents attribute, the response reports a non-cents value under a cents-named key \u2014 a silent unit mismatch for downstream consumers; if no such attribute exists, the rename changed only the key name and the docstring is inaccurate. Either way the producing side of the new contract is inconsistent.\",\"severity\":\"medium\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "ae2663834fd78b0fd9376ee9132d7beef9b28a782a050ecdbf0a223eae9da3cc",
+      "attempt_seconds": 44.769606590270996,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:3\",\"trigger\":\"export_project is called with a user whose id equals project.owner_id (the legitimate owner requesting their own export); conversely any non-owner user passes the check\",\"impact\":\"The change inverts the ownership comparison: the owner now gets PermissionError, while any non-owner receives project.archive(), leaking the project archive to unauthorized users. The docstring still says export is allowed 'only for its owner', so this contradicts intended behavior and is a direct authorization bypass (data exposure) introduced by the patch.\",\"severity\":\"P0\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "ad0d34e473290cfffb6062ac7b3d0b48329292f6e29bd3dc3a26fa4de2a86ce3",
+      "attempt_seconds": 41.568928718566895,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:2-4 (export_project)\",\"trigger\":\"Any call to export_project: the access-check condition was inverted from `user.id != project.owner_id` to `user.id == project.owner_id`, so the PermissionError branch now executes for the project owner, while the `return project.archive()` path executes for every non-owner.\",\"impact\":\"Complete authorization failure in both directions: (1) any non-owner can export the project archive (confidentiality breach / privilege escalation to owner-only data), and (2) the legitimate owner is always denied with PermissionError, so the endpoint's intended function is broken for all valid users.\",\"severity\":\"critical\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "f40b921f831f6e9b3629935c1bb9f96819cab1ee84c0666d2edbb59316715a73",
+      "attempt_seconds": 42.67201519012451,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:3\",\"trigger\":\"Any call to export_project where user.id equals project.owner_id (the legitimate owner attempting export).\",\"impact\":\"The condition was inverted from != to ==, so the owner now gets PermissionError and every non-owner passes the check and receives project.archive() \u2014 a full authorization bypass and denial for the intended user. The docstring still states the intended owner-only behavior, confirming this is unintentional.\",\"severity\":\"critical\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "93f5867dce59869b5cef52d9092c6d3fa36f0bc545d41972f37b704786c1aa27",
+      "attempt_seconds": 90032.42507243156,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "unreported",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": false,
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "9d87a432a0a925348d1094729acfc03504c0955471d45654796a2044ba0b5815",
+      "attempt_seconds": 39.21817636489868,
+      "case_id": "reviewer-quality-03-authorization",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-03-authorization"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"exports.py:3 (export_project)\",\"trigger\":\"Any call to export_project: the patch changes `if user.id != project.owner_id:` to `if user.id == project.owner_id:`, inverting the authorization check.\",\"impact\":\"The project owner now always raises PermissionError and cannot export, while every non-owner receives project.archive() \u2014 an access-control inversion that leaks the archive to unauthorized users. Severity P0.\",\"severity\":\"P0\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "860833dcce2a33908e184a921acb72eaa4bf6500e77218fef02fa26a8063d9c8",
+      "attempt_seconds": 47.355947732925415,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"wallet.py:5 (transfer, added line `source.debit(amount)` in base...current diff)\",\"trigger\":\"transfer(source, target, amount) is called with any amount\",\"impact\":\"The added second `source.debit(amount)` debits the source account a second time, so the source loses 2\u00d7amount while the target gains only amount. This contradicts the documented contract (\\\"debitting source once and crediting target once\\\") and silently destroys amount from the total balance on every transfer; e.g. a transfer of 100 leaves the combined accounts short by 100. Present identically in the review commit and the current commit (review...current shows no further change), so the defect is live in the current commit.\",\"severity\":\"critical\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "283d30ce6a70c8c3e15fdfcde208124101fd9226ed5b11ee888adfab06c7186a",
+      "attempt_seconds": 39.47622084617615,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"defects\", \"findings\": [{\"location\": \"wallet.py:5\", \"trigger\": \"Any call to transfer(source, target, amount)\", \"impact\": \"The added line debits source a second time after target is credited. The docstring specifies one debit and one credit, but the source account loses 2*amount while target gains amount, so amount is silently destroyed on every transfer. This corrupts balances on the core wallet code path and breaks conservation of funds.\", \"severity\": \"P0\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "ef0e598cf39bab921d8c416cc2feb047b4128770307696b32940eab62c636bc1",
+      "attempt_seconds": 39.52422571182251,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"wallet.py:5\",\"trigger\":\"Every call to transfer(source, target, amount) executes source.debit(amount) a second time after target.credit(amount).\",\"trigger_detail\":\"Line 5 adds an unconditional duplicate debit; review and current commits are identical (review...current is empty), so the defect is present in both review surfaces.\",\"impact\":\"The source account is debited twice while the target is credited once, so amount is destroyed from the money supply on every transfer. This breaks the function contract stated in its own docstring ('debitting source once and crediting target once') and corrupts account balances for all callers. Single-line fix: delete the extra source.debit(amount) on line 5.\",\"severity\":\"critical\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "f565c37dd54268a9db65936a8acf4238399f6be7755dd95b09973490c6550adb",
+      "attempt_seconds": 46.31752800941467,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"wallet.py:5\",\"trigger\":\"Any call to transfer(source, target, amount) completes normally; no special input required.\",\"impact\":\"The added line debits source a second time after the single credit to target. Source loses 2*amount while target gains only amount, so amount is destroyed from total balances on every transfer. This contradicts the docstring 'debitting source once and crediting target once' and corrupts account state for all callers.\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "96aceba3855863b5d8b54271779f2f878ccbe59369e98a1f4d260923b290caf4",
+      "attempt_seconds": 40.928879499435425,
+      "case_id": "reviewer-quality-04-integrity",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-04-integrity"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"wallet.py:5 (added line `source.debit(amount)` in transfer)\",\"trigger\":\"Any call to transfer(source, target, amount) that completes without an exception.\",\"impact\":\"The source account is debited twice while the target is credited once, so amount is destroyed from the source balance on every transfer. This directly contradicts the function docstring ('debiting source once and crediting target once') and causes monetary loss / balance corruption for all callers. Note also that the debit-credit-debit ordering means a failure in the second debit cannot be rolled back, leaving source and target inconsistent, though the primary defect is the duplicate debit itself.\",\"severity\":\"P0\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "e92e7f34542f886679025825c13730464ccbbb7b9b57d7aa498d5d5a9338b267",
+      "attempt_seconds": 51.16147518157959,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "f665fbc2a97c6555c0faee2bc3b5e8d09f905989b22df008235394fa5b85d7bf",
+      "attempt_seconds": 35.88785743713379,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "84a27d856b6513ed4cb6515a1f5954e5e931de117ca593fabe8ab49f4128141a",
+      "attempt_seconds": 44.620734214782715,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "00febd8467b08b5835ce246ad315fb9db2c60dfe0c84cb46d8dc1ec8d1e73381",
+      "attempt_seconds": 54.773491859436035,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "0256b3aec17d3a1957e1f1744def2b5b9048ce5de082a0c503e402173d9b32e7",
+      "attempt_seconds": 35.506144523620605,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "aba201a79ee8f819b23b31d887875e975ae8c6dd983a3450348e42d9949cc4b4",
+      "attempt_seconds": 59.307626724243164,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "c98886cf98744296fe29705973176d37a3e9c10fc87f89f4155f3594b76545ca",
+      "attempt_seconds": 49.04533076286316,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "f2933d811c23ada8d08bdb8f949bd25933e9479624f17b6d7dae14643ccb1096",
+      "attempt_seconds": 46.02231168746948,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "opencode-go/glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "opencode-go/glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"opencode-go/glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "c598106e9b28461fb5d15e6b5fc7ad58a7806ce54ce908a15fde70ea4769fa84",
+      "attempt_seconds": 49.01630663871765,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "3becf9fb4b2d7d8f5a2ca5709d0e7654eb6e51a8d1df1c4e2b7443cf67e57406",
+      "attempt_seconds": 52.407599210739136,
+      "case_id": "reviewer-quality-06-clean-contract",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "2a7b77866be23d3c438f268a7cf5d6527a22ca8e9638fce420b68f343365687f",
+      "attempt_seconds": 64773.723489522934,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": true,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "unreported",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": false,
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "harness_error",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 0.0,
+      "status": "harness_error",
+      "task_status": "TIMEOUT",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "57d204acc87ab8418b392a8f28a495f6776aeb2e4c1ca619424fb1033a2be44d",
+      "attempt_seconds": 59.984925985336304,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-07-delta-fixed",
+        "DELTA:clear"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": [], \"notes\": \"Original finding resolved: current revision e989250 restores items[offset:offset + limit], exactly matching base cc13cd8 (base...current diff empty; review...current reverts the off-by-one). Bounded exercise confirms full limit records at full page boundaries (page(items,0,5)==[0..4], page(items,5,5)==[5..9]) and correct tail truncation (page(items,7,5)==[7,8,9]) and empty page (limit 0). Caller client.py::list_records is an unchanged pass-through to page(), so the fix needs no caller adaptation and introduces no new behavior there. The NameError from client.py's missing page import exists identically in base and is pre-existing, outside this bounded review.\"}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "f576844821910c0b7aeff6a9d87576d6c79310a6aeb555845544da9b5ede514c",
+      "attempt_seconds": 49.42395281791687,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "DELTA:clear",
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 0.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "636854a14e5f5a34095627ce7fe1d3e65e0d4e3f63802d32484028737481312e",
+      "attempt_seconds": 53.6715521812439,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 0.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "92c5d8adbcc35752cf4a3ac30911c2483043ba15338a2b8a269592072a87f24c",
+      "attempt_seconds": 65.59170126914978,
+      "case_id": "reviewer-quality-07-delta-fixed",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "DELTA:clear",
+        "FN:reviewer-quality-07-delta-fixed"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "clear",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 0.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "236328825c4218e72f9e1293a451b8b8264f20cf83a4e28766736721a54614ec",
+      "attempt_seconds": 356.4801187515259,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3-4 (base...current; also present unchanged in review...current delta)\",\"trigger\":\"Any caller requests a full page: page([1..10], 0, 5) with the current code returns [1,2,3,4] instead of [1,2,3,4,5]. Verified by in-memory execution. The limit=1 case is degenerate: page(items, offset, 1) always returns [].\",\"impact\":\"The original finding \u2014 the page helper omits the last requested item at a full page boundary \u2014 is NOT resolved. The current commit's delta versus the review commit (review...current) only extracts the expression into a variable `end`; the off-by-one `offset + limit - 1` is carried over verbatim. Every page returned by page() and its sole caller list_records() (client.py:3, which forwards arguments unchanged) is one item short, and single-item pages are empty. Fix: `end = offset + limit` (i.e., the original baseline expression items[offset:offset+limit]).\",\"severity\":2}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "19e10daab48e4004713d7b565954a92aba633daea8e2256bc303d2cb11cf5aef",
+      "attempt_seconds": 98.05732846260071,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open",
+        "UNEXPECTED_VALID: records.py:3 with offset=0 and limit=0 produces items[0:-1] rather than an empty page."
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 1,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"glm-5.3\", \"verdict\": \"defects\", \"findings\": [{\"location\": \"records.py:3-4\", \"trigger\": \"Full page boundary, e.g. page(items, 0, 10) with 10 available records; also limit=1 at any offset\", \"impact\": \"The claimed fix does not resolve the prior finding. 'end = offset + limit - 1; return items[offset:end]' is semantically identical to the review commit's 'items[offset:offset + limit - 1]' (probe: outputs equal in every case). The helper still returns limit-1 records and silently omits the last requested item: offset=0 limit=10 over 10 items returns records 0-8 and drops record 9; offset=0 limit=1 returns an empty page. The correct fix is to remove the '- 1', restoring the base behavior items[offset:offset + limit]. The unchanged caller client.py list_records passes (items, offset, limit) straight through, so every list_records caller receives short pages with no error raised, making the dropped record invisible.\", \"severity\": \"high\"}, {\"location\": \"records.py:3\", \"trigger\": \"limit=0 with offset=0, e.g. page(items, 0, 0)\", \"impact\": \"end evaluates to -1, so items[0:-1] returns all records except the last instead of an empty page (probe: 10 items, limit=0 returns 9 records, records 0-8). The helper returns records outside the requested page. Base returned items[0:0] = [], so this is introduced by the review commit and unchanged by the current revision; it propagates unchanged through client.py list_records.\", \"severity\": \"medium\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "8e41a4c0b9b23f685dc0a04a8a91ce68aac7f73b972ae079d63b414a5742b266",
+      "attempt_seconds": 64.32433104515076,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "unreported",
+      "provider_error": false,
+      "repeat": 2,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": false,
+      "reviewer_reported_identity": "unreported",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "unavailable",
+      "reviewer_status": "incomplete",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "unreported",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "reviewer_error",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "c83dfc9c5b9ac74cd72e1d4ed93aa451831b24c4f14905c45904f306e4f918c6",
+      "attempt_seconds": 65.15647029876709,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 3,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3-4 (current commit 61fa14e, delta from review commit 192d892)\",\"trigger\":\"Any call with limit >= 1, e.g. page([1,2,3,4,5], 0, 5) or the pass-through caller list_records(items, offset, limit) in client.py:3\",\"impact\":\"The claimed fix does not resolve the original finding. The base slice items[offset:offset + limit] was correct; review commit 192d892 changed it to offset + limit - 1, dropping the last requested item (page([1..5], 0, 5) returns [1,2,3,4]). The current revision only hoists that same wrong expression into a variable (end = offset + limit - 1; items[offset:end]) and returns an identical slice, so every full page is still one record short, and limit == 1 now returns an empty list. The caller list_records in client.py forwards arguments unchanged and is still affected. Correct fix: return items[offset:offset + limit]\",\"severity\":\"high\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "glm",
+      "artifact_sha256": "56f5721b1d2ef4048bbd1e60221e9cc868530ebbd492169fee79cf4f252be81d",
+      "attempt_seconds": 66.3372848033905,
+      "case_id": "reviewer-quality-08-delta-incomplete",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "openai-codex/gpt-6.1-sol",
+          "served": [
+            "gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "openai-codex/gpt-6.1-sol:low",
+          "served": "unreported"
+        }
+      },
+      "judge_classifications": [
+        "TP:still-open"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "c9fbcb75c02c1448f8606fe5af046a11421d83fd1f477c54fc2d80c669564d75",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": "unavailable",
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "glm-5.3",
+      "provider_error": false,
+      "repeat": 4,
+      "reviewer_backend_served": "unreported",
+      "reviewer_delivery_observed": true,
+      "reviewer_reported_identity": "glm-5.3",
+      "reviewer_requested": "opencode-go/glm-5.3:high",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"glm-5.3\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3-4 (page, current commit 61fa14e)\",\"trigger\":\"Call page(items, offset, limit) where offset+limit <= len(items), e.g. page([1,2,3,4,5], 0, 5)\",\"impact\":\"The original finding is not resolved. The review commit used items[offset:offset + limit - 1], which dropped the last item of a full page. The current revision only extracts that same expression into a variable: end = offset + limit - 1; return items[offset:end] is behaviorally identical. Verified locally: page([1,2,3,4,5], 0, 5) returns [1, 2, 3, 4], omitting the fifth record, and page([1,2,3,4,5], 2, 3) returns [3, 4] instead of [3, 4, 5]. The caller client.py list_records forwards the result unchanged, so every full page returned through it is short by one record. Fix: return items[offset:offset + limit].\",\"severity\":\"P1\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_usage": "unavailable",
+      "reviewer_verdict": "defects",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "captured reviewer delivery and reported session identity; backend-served identity is unreported",
+    "expected_model_id": "glm-5.3",
+    "expected_reviewer_selector": "opencode-go/glm-5.3:high",
+    "mismatches": [],
+    "reported_model_ids": [
+      "glm-5.3"
+    ],
+    "reviewer_reported_identities": [
+      "glm-5.3",
+      "opencode-go/glm-5.3"
+    ],
+    "valid": true
+  },
+  "cohort_complete": true,
+  "coverage_complete": true,
+  "created_at": "2026-11-09T09:04:50.628240+00:00",
+  "planned": {
+    "attempts": 40,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-02-contract",
+      "reviewer-quality-03-authorization",
+      "reviewer-quality-04-integrity",
+      "reviewer-quality-05-clean-boundary",
+      "reviewer-quality-06-clean-contract",
+      "reviewer-quality-07-delta-fixed",
+      "reviewer-quality-08-delta-incomplete"
+    ],
+    "repeats_per_case": 5
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/reviewer-quality-glm-capture-cohort",
+      "run_id": "reviewer-quality-glm-capture-cohort",
+      "run_record": "evals/provenance/omp-reviewer-glm-5-3-go-2026-11-07-reviewer-quality-glm-capture-cohort.json",
+      "run_record_sha256": "f658e757e2225682e4b3524a759eed7b83fb9e6a61768d704b591dab74703574"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-glm-5.3-go.yaml",
+    "experiment_sha256": "1bc4a72619f58843410bdd5dba3189b0a6a981f4b837dfd356dc218246c45616",
+    "route_overlay_path": "/home/jmcvetta/projects/daily-driver.issue-737-reviewer-quality/evals/fixtures/reviewer-quality/shared/routes/glm.yml",
+    "route_overlay_sha256": "805e42c910651b62ab77e5c4b13a9e60d5d73ef761753ce78eb966b39d5cbd1a"
+  },
+  "summary": {
+    "attempts": 40,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 10,
+        "false_alarms": 0,
+        "planned_denominator": 10
+      },
+      "delta": {
+        "accuracy": 0.625,
+        "correct": 5,
+        "eligible_denominator": 8,
+        "planned_denominator": 10
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 2,
+        "precision": 0.9047619047619048,
+        "precision_denominator": 21,
+        "recall": 1.0,
+        "recall_eligible_denominator": 19,
+        "recall_planned_denominator": 20,
+        "tp": 19
+      },
+      "unexpected_valid": [
+        {
+          "case_id": "reviewer-quality-01-boundary",
+          "evidence": "UNEXPECTED_VALID:records.py:3 returns all but the last item for offset=0 and limit=0 because the slice end becomes -1.",
+          "repeat": 2
+        },
+        {
+          "case_id": "reviewer-quality-01-boundary",
+          "evidence": "UNEXPECTED_VALID:At offset 0 and limit 0, the changed slice becomes items[0:-1] and can return records instead of an empty page; the reported example with offset 1 would actually return [].",
+          "repeat": 4
+        },
+        {
+          "case_id": "reviewer-quality-08-delta-incomplete",
+          "evidence": "UNEXPECTED_VALID: records.py:3 with offset=0 and limit=0 produces items[0:-1] rather than an empty page.",
+          "repeat": 1
+        }
+      ]
+    },
+    "eligible": 37,
+    "harness_errors": 2,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 40,
+      "max": 90032.42507243156,
+      "mean": 3929.6766879975794,
+      "median": 51.18479633331299,
+      "min": 35.506144523620605,
+      "population_stddev": 17090.957791500146
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 5,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 5
+      },
+      "reviewer-quality-02-contract": {
+        "eligible": 5,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 5
+      },
+      "reviewer-quality-03-authorization": {
+        "eligible": 4,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 1,
+        "verified_reviewer_completions": 4
+      },
+      "reviewer-quality-04-integrity": {
+        "eligible": 5,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 5
+      },
+      "reviewer-quality-05-clean-boundary": {
+        "eligible": 5,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 5
+      },
+      "reviewer-quality-06-clean-contract": {
+        "eligible": 5,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 0,
+        "verified_reviewer_completions": 5
+      },
+      "reviewer-quality-07-delta-fixed": {
+        "eligible": 4,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 1,
+        "verified_reviewer_completions": 4
+      },
+      "reviewer-quality-08-delta-incomplete": {
+        "eligible": 4,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 5,
+        "reviewer_errors": 1,
+        "verified_reviewer_completions": 4
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_delivery_unverified": 0,
+    "unattempted": 0,
+    "verified_reviewer_completion_rate": 0.925,
+    "verified_reviewer_completions": 37
+  },
+  "winner": null
+}

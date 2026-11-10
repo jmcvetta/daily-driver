@@ -53,9 +53,14 @@ check-title-gate:
   - 'skills/session-title/SKILL.md'
 check-omp-extension:
   - 'scripts/check-omp-extension.mjs'
+  - 'scripts/task-contract-cases.mjs'
+  - 'hooks/task-state*'
+  - '.claude-plugin/plugin.json'
+  - '.codex-plugin/plugin.json'
   - 'extensions/daily-driver.js'
   - 'extensions/role-default-helper.mjs'
   - 'extensions/task-state.mjs'
+  - 'extensions/task-contract.mjs'
   - 'package.json'
 check-model-class-roles:
   - 'scripts/check-model-class-role-defaults.mjs'
@@ -112,3 +117,4 @@ check-omp-embark-title-live:
   - 'evals/coder-eval-omp/src/coder_eval_omp/tools.py'
   - 'scripts/check-omp-task-state-live.py'
   - 'extensions/task-state.mjs'
+  - 'extensions/task-contract.mjs'

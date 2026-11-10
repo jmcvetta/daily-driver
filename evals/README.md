@@ -1,6 +1,6 @@
 # Evals
 
-Nineteen suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
+Twenty suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
 than by `claude plugin eval`. The reasoning for the harness is
 [`docs/notes/0002-eval-harness.md`](../docs/notes/0002-eval-harness.md);
 the short version is that the built-in cannot be run on this account, is
@@ -127,6 +127,225 @@ The bounded one-repeat smoke passed all three cases in
 [`omp-gpt-6-1-sol-workflow-2026-10-18-2026-10-18_15-45-41`](provenance/omp-gpt-6-1-sol-workflow-2026-10-18-2026-10-18_15-45-41.json).
 It is a treated-only smoke, not an ablation or an estimate of fleet reliability.
 
+## Reviewer-quality comparison
+
+`tasks/reviewer-quality/` measures findings from Omp's real `reviewer` agent,
+not review dispatch or the parent model's answer. The suite is opt-in.
+It uses eight local Git fixtures, no live pull requests, and no review
+publication. Existing reviewer defaults and workflow experiments stay unchanged.
+
+The two explicit experiments select `opencode-go/glm-5.3:high` and
+`opencode-go/deepseek-v4-pro:high` only for the reviewer. Both pin the parent
+and helper routes to `openai-codex/gpt-6.1-sol:low`. Both use the same plugin
+revision, reviewer brief, tools, limits, and `omp-gpt-6.1-sol` judge.
+The route overlays live in `fixtures/reviewer-quality/shared/routes/` and
+apply only inside each task's private Omp configuration.
+
+Freeze the source commit before measurement. The four defective full reviews
+cover a boundary, a cross-file contract, authorization, and data integrity.
+Two full reviews are correct. Two fix-delta reviews carry prior findings and
+dispositions: one correction is complete; the other is incomplete.
+Answer keys and rubric calibration examples are outside subject inputs.
+Only a finding with the correct location, triggering condition, and concrete
+impact counts. Duplicate findings count once. Style comments do not count.
+An unexpected valid defect needs supporting evidence.
+
+Use the existing OpenCode Go authentication. Do not change plans, buy usage,
+or substitute another provider. The provider's
+[usage policy](https://opencode.ai/docs/go/) defines per-model five-hour,
+weekly, and monthly windows. The focused runner uses concurrency one and
+stops its process group on observed quota or rate-limit pushback. It never
+retries. Keep interrupted attempts and coverage gaps.
+
+From the repository root:
+
+```sh
+make evals-plan-reviewer-quality
+make evals-preflight TASKS='tasks/reviewer-quality/*.yaml'
+make evals-judge-preflight JUDGE=omp-gpt-6.1-sol
+uv run --frozen python3 scripts/evals-judge.py calibrate \
+  --judge omp-gpt-6.1-sol --dir evals/fixtures/reviewer-quality/calibration \
+  --output evals/runs/reviewer-quality-rubric-calibration.json
+python3 scripts/evals-reviewer-run.py --arm glm --phase smoke \
+  --run-dir evals/runs/reviewer-quality-glm-smoke
+make evals-record RUN=evals/runs/reviewer-quality-glm-smoke \
+  EXPERIMENT=evals/experiments/omp-reviewer-glm-5.3-go.yaml \
+  JUDGE=omp-gpt-6.1-sol
+python3 scripts/evals-reviewer-run.py --arm deepseek --phase smoke \
+  --run-dir evals/runs/reviewer-quality-deepseek-smoke
+make evals-record RUN=evals/runs/reviewer-quality-deepseek-smoke \
+  EXPERIMENT=evals/experiments/omp-reviewer-deepseek-v4-pro-go.yaml \
+  JUDGE=omp-gpt-6.1-sol
+```
+
+Each smoke runs one defective and one clean case. Inspect actual reviewer
+completion, route evidence, grades, and durable records for both arms before
+starting the cohort. A catalog listing alone is not proof of inference.
+Run each arm with `--phase cohort` and a fresh explicit run directory, then
+record it with its exact experiment path as above. Each cohort contains
+eight cases times five repeats: 40 attempts per arm, 80 total. Do not use
+`runs/latest` or rerun failed attempts.
+
+Separate reviewer findings, fix-delta verdicts, completion errors, and
+orchestration. Report precision and recall with denominators, clean-case
+false alarms, fix-delta accuracy, latency distributions, and repeat
+variability. Name severe missed defects. Keep requested route, observed
+harness identity, and backend-served identity separate. Missing served
+identity is `unreported`; known mismatches invalidate attribution.
+The parent returns the reviewer's JSON unchanged. The collector reads the
+adapter's final response from `task.json`; it does not require a file write
+inside the read-only Git fixture. Earlier result-file artifacts remain readable.
+Each case requests `wait` immediately after dispatch so the completed reviewer
+result reaches the recorded tool output without opening the sandbox to
+`agent://` reads. Treat this revised configuration as a separate measurement
+from the earlier frozen cohort.
+
+For the corrected fix-delta measurement, both delta tasks request an
+explanation of the finding's status, code, and caller impact. Calibrate each
+delta rubric against its labelled examples before running `--phase delta`,
+which runs five repeats of each delta case per arm. Preserve the earlier
+cohort separately: its fixed-delta response contract could not express the
+explanation its rubric required.
+Reviewer usage and latency are `unavailable` unless directly exposed.
+Parent usage is not reviewer usage. Subscription allowance consumption is
+not cash spend; unknown cash spend is not zero.
+
+### Observed comparison
+
+Both interrupted DeepSeek slots were rerun once with the user's authorization.
+The [replacement record](provenance/reviewer-quality/deepseek-replacements.json)
+preserves their terminal evaluator results and independent judge scores. The
+original interruptions remain in the
+[reconciliation](provenance/reviewer-quality/deepseek-resumption.json).
+
+**Reviewer attribution is incomplete.** In both replacements, the parent
+dispatched a reviewer but the eval guard rejected its `agent://` result read.
+The retained records do not show delivery of a completed reviewer result.
+The parent's final JSON and the judge's scores do not prove that the reviewer
+produced that JSON. Both replacements are therefore excluded from reviewer
+quality metrics, even though their evaluator records say `SUCCESS`.
+
+The same attribution check applies to the original cohorts. A captured
+completed reviewer result must match the parent's final JSON. Under that rule,
+the GLM cohort has no verified reviewer results and the DeepSeek cohort has
+five; 16 additional final responses in each arm have unverified delivery.
+The two smoke results for each arm also lack captured delivery. This does not
+prove those reviewers failed; it means the retained evidence cannot attribute
+their parent responses to them. The standard run index scores parent responses,
+not necessarily reviewer output.
+
+The revised capture smoke used source commit `74660927775deeb0a1f6719b51e6d96145df4027`
+and Omp 18.14.1. Each model reviewed the defective and clean boundary once.
+All four reviewer deliveries matched the final responses; the independent judge
+scored each response 1. Both models reported the boundary defect and cleared
+the clean case. The
+[GLM record](provenance/reviewer-quality/glm-capture-smoke.json) and
+[DeepSeek record](provenance/reviewer-quality/deepseek-capture-smoke.json)
+preserve the outcomes. GLM's defective-case identity was an object rather than
+the requested string, so the collector marks that identity unreported.
+Backend-served identity remains unreported for all four. These two cases do
+not establish which reviewer is better.
+
+The five verified DeepSeek responses are too few to establish a comparison.
+Their original task records include three positive full reviews, one clean
+full review, and one fix-delta review. Details, verdicts, errors, and the
+original two interruption markers remain in the
+[GLM record](provenance/reviewer-quality/glm-cohort-v3.json) and
+[DeepSeek record](provenance/reviewer-quality/deepseek-cohort-v3.json).
+Do not use the earlier unverified precision, recall, or delta accuracy claims.
+
+Attempt duration includes orchestration and is not reviewer latency. The
+DeepSeek cohort's near-zero duration in the standard index measures its resume
+aggregation, not the cohort. Reviewer usage and backend-served identity are
+unavailable. The evidence does not distinguish the reviewers. Keep the current
+default; this is not a promotion.
+
+### Revised capture cohort
+
+The separately [frozen cohort](provenance/reviewer-quality/freeze-capture-cohort.json)
+ran five repeats per case and subject. The
+[GLM evidence](provenance/reviewer-quality/glm-capture-cohort.json) and
+[DeepSeek evidence](provenance/reviewer-quality/deepseek-capture-cohort.json)
+retain every planned slot and independent judge result. Both arms used the
+same `c8c20c0aa89f7269a18baa337e54fde3f446c5a7` plugin tree and Omp 18.14.1.
+DeepSeek ran from an archive of that commit after the GLM evidence was committed.
+The standard recorder initially attributed that arm to the recording checkout;
+its plugin revision was corrected to the archived source.
+
+| Measure | GLM 5.3 | DeepSeek V4 Pro |
+| --- | --- | --- |
+| Captured reviewer completions | 37/40 | 40/40 |
+| Evaluator success / timeout | 38/40 / 2/40 | 40/40 / 0/40 |
+| Full-review true positives / eligible defects | 19/19 | 20/20 |
+| Full-review false positives | 2 | 0 |
+| Full-review precision | 19/21 | 20/20 |
+| Clean-case false alarms | 0/10 | 0/10 |
+| Incomplete-fix detection | 4/4 eligible | 5/5 eligible |
+| Fixed-delta strict rubric pass (invalid) | 1/4 eligible | 0/5 eligible |
+| Attempt duration median / range | 51.2 s / 35.5–90,032.4 s | 77.0 s / 46.0–144.0 s |
+
+The standard results index reports 35/40 rubric passes for each arm, not
+evaluator completion or verdict accuracy. DeepSeek's five non-passes are correct
+clear verdicts that lack the explanation the rubric requires.
+
+Both detected every eligible authorization and data-integrity defect; one GLM
+authorization attempt timed out. GLM's two false positives asserted a unit
+mismatch without evidence. One further GLM result lacked a verified reviewer
+delivery despite an evaluator success. The fixed-delta rubric requires explicit
+confirmation of the corrected location and caller impact, while the requested
+clear-result JSON has no field for that explanation. Most clear verdicts
+therefore failed that rubric. Those fixed-delta scores are invalid for
+comparing reviewer performance. The small fixture set and five repeats limit
+generalization.
+
+Attempt durations include orchestration, not reviewer latency. Two GLM timeouts
+span system suspension and inflate its range; the median is not reviewer-only
+latency. Reviewer usage, backend-served identities, subscription consumption,
+and cash spend are unavailable, not zero. DeepSeek had more attributable
+completions and fewer false positives here; GLM had a lower attempt median.
+These observations do not establish an overall winner. Keep the existing
+DeepSeek default unchanged.
+
+### Corrected fix-delta comparison
+
+The [corrected protocol](provenance/reviewer-quality/freeze-delta-v2.json)
+provides an explanation field and uses five repeats per case and model.
+The fixed and incomplete rubrics each classified all three labelled
+calibration examples correctly. Both arms used the archived plugin tree
+`8ab7a6ed24c1e6c9024e7beea6f652d0ba48175b` and Omp 18.14.1.
+
+| Measure | GLM 5.3 | DeepSeek V4 Pro |
+| --- | --- | --- |
+| Verified reviewer completions | 10/10 | 10/10 |
+| Correct fixed-delta reviews | 4/5 | 5/5 |
+| Correct incomplete-fix reviews | 5/5 | 5/5 |
+| Attempt duration median / range | 67.5 s / 59.5–76.0 s | 85.5 s / 70.4–110.1 s |
+
+The first judge pass scored all 20 reviews as correct but assigned contradictory
+missed-fix labels to seven passing fixed reviews. Its
+[GLM](provenance/reviewer-quality/glm-delta-v2.json) and
+[DeepSeek](provenance/reviewer-quality/deepseek-delta-v2.json) results remain
+available. After clarifying the label definitions and recalibrating, the same
+responses were independently regraded; no reviewer was rerun. The regrade
+penalized one GLM review for an overgeneralized claim about a zero limit that
+the first pass accepted. The score depends on the judge's treatment of that
+claim. The regraded
+[GLM](provenance/reviewer-quality/glm-delta-v2-regraded.json) and
+[DeepSeek](provenance/reviewer-quality/deepseek-delta-v2-regraded.json)
+evidence retains the judge rationale and each reviewer response.
+
+Attempt duration includes orchestration, not reviewer latency. Backend-served
+identity, reviewer-only usage, and cash spend remain unavailable. Two fixtures
+and five repeats per case do not establish an overall winner.
+
+`scripts/evals-reviewer-quality.py` collects bounded per-case evidence from
+explicit run directories and their committed records. An incomplete cohort
+does not complete the comparison. Render the standard run index after recording:
+
+```sh
+make evals-render-results
+```
+
 `tasks/embark/23`–`26` cover unsupported epic outcomes: missing evidence,
 an invalidated plan requiring agreement, unconfirmed transfer after recovery
 exhaustion, and an in-scope integration repair. These client-less cases assess
@@ -141,7 +360,6 @@ The in-scope repair, resumed blocker and revoked-approval cases passed in
 [`2026-11-04_17-57-15`](provenance/omp-gpt-6-1-sol-2026-11-04-2026-11-04_17-57-15.json).
 The resume fixture recorded the body and label changes; the revocation fixture
 recorded no forbidden verification.
-
 ## Evidence-backed stopping
 
 The five `tasks/undertake/24-*` cases cover earlier approval on resume,
@@ -582,7 +800,6 @@ subscription billing, not zero. No observed regression appears in this sample.
 The public-search floor and one-replicate production-refusal difference do not
 establish parity or an improvement, and no lower total cost or reliability is
 established.
-
 
 ## Provenance
 
