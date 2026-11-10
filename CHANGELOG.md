@@ -18,6 +18,7 @@
 
 ### Fixed
 
+* Admit legitimate provider transport rewrites without rejecting the unchanged undertaking model, including unmapped Kimi continuation, native consultations and recovery explanations ([#842](https://github.com/jmcvetta/daily-driver/issues/842)).
 * Restore the admitted undertaking route before the next user prompt after rejected inference, without requiring manual cancellation or model selection ([#822](https://github.com/jmcvetta/daily-driver/issues/822)).
 * Prevent invented approval checkpoints and preserve actionable reasons and resume paths in blocked replies ([#835](https://github.com/jmcvetta/daily-driver/issues/835)).
 * Preserve default model-class routes when Omp clones settings, allowing independent reviewer dispatch after undertaking routing ([#819](https://github.com/jmcvetta/daily-driver/issues/819)).

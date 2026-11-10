@@ -437,6 +437,48 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.deepEqual(resumed.calls.models, []);
 	});
 
+	// A provider's request rewrite must not turn warning-and-continue into a route rejection.
+	for (const mapped of [false, true]) {
+		routingCheck(`provider transport rewriting preserves ${mapped ? "mapped" : "unmapped"} worker continuation`, async (create) => {
+			const selected = mapped ? REASONING : DEEPSEEK_PRO;
+			const options = mapped ? {} : {
+				current: selected, models: [selected, ...MODELS], family: deepseekFamily,
+			};
+			const s = await create(options);
+			await s.route({ modelClass: "reasoning" });
+			assert.equal(s.describe().undertaking.status, mapped ? "pending" : "verified");
+			const request = {
+				...selected, api: "anthropic-messages", baseUrl: "https://transport.example.invalid",
+				headers: { "x-provider-transport": "fixture" },
+			};
+			const respond = async (session) => {
+				await session.fire("before_provider_request", {}, request);
+				await session.fire("assistant_message", { message: {
+					role: "assistant", provider: selected.provider, model: selected.id, content: [],
+				} });
+				assert.equal(session.describe().undertaking.status, "verified");
+				assert.equal(session.describe().undertaking.observedModel, qualified(selected));
+				assert.equal(session.calls.aborts, 0);
+				assertAllowed(await session.tool("write", { path: "implementation.js", content: "change" }));
+			};
+			await respond(s);
+			await s.prompt();
+			await respond(s);
+			const child = await create({
+				...options, current: selected, auth: s.auth, parentId: s.agentId, agentName: "reasoning",
+			});
+			await respond(child);
+			const entries = structuredClone(s.entries);
+			await s.close();
+			const resumed = await create({
+				...options, current: selected, auth: s.auth, sessionId: s.sessionId, agentId: s.agentId, entries,
+			});
+			await respond(resumed);
+			assert.equal(resumed.describe().undertaking.capability, mapped ? "mapped" : "unverified");
+			assert.equal(resumed.pi.getThinkingLevel(), "high");
+		});
+	}
+
 	// Explicit operator mappings must be honored, but must not authorize an incompatible provider.
 	routingCheck("explicit family assignment selects its variant and rejects another provider", async (create) => {
 		const options = { current: DEEPSEEK_PRO, models: [DEEPSEEK_PRO, DEEPSEEK_FLASH, GATEWAY_FLASH, ...MODELS], family: deepseekFamily };
@@ -578,7 +620,11 @@ export default function registerUndertakingRoutingChecks(check) {
 			auth: s.auth, sessionId: s.sessionId, agentId: s.agentId,
 			entries, current: REASONING, effort: "low",
 		});
-		await resumed.request();
+		// A recovery explanation must also survive the provider's request transport rewrite.
+		await resumed.fire("before_provider_request", {}, {
+			...REASONING, api: "anthropic-messages", baseUrl: "https://transport.example.invalid",
+			headers: { "x-provider-transport": "fixture" },
+		});
 		await resumed.assistant();
 		assert.equal(resumed.calls.aborts, 0, "recovery must still permit explanation");
 		assertBlocked(await resumed.tool("write", { path: "implementation.js", content: "change" }));
@@ -1420,6 +1466,38 @@ export default function registerUndertakingRoutingChecks(check) {
 		assert.equal(parent.auth.sessions.isRestricted(PROVIDER, parent.sessionId), true);
 		await child.close();
 		assert.equal(parent.auth.sessions.isRestricted(PROVIDER, parent.sessionId), true);
+	});
+
+	// A native consultation's transport rewrite must neither reject it nor verify the pending worker.
+	routingCheck("native consultation permits provider transport rewriting across reload", async (create) => {
+		const parent = await create();
+		await parent.route({ modelClass: "reasoning" });
+		const before = structuredClone(parent.describe().undertaking);
+		parent.entries.push({ type: "custom", customType: "model_mention", data: {
+			agent: "m1", selector: qualified(FRONTIER), name: "Astra",
+		} });
+		const key = `transport-consultation-${++nextSession}`;
+		await parent.spawn([qualified(FRONTIER)], "m1", key, "m1");
+		const options = {
+			auth: parent.auth, parentId: parent.agentId, agentId: key, agentName: "m1",
+			current: FRONTIER, handoff: false,
+		};
+		const child = await create(options);
+		const request = {
+			...FRONTIER, api: "anthropic-messages", baseUrl: "https://transport.example.invalid",
+			headers: { "x-provider-transport": "fixture" },
+		};
+		await child.fire("before_provider_request", {}, request);
+		assert.equal(child.calls.aborts, 0);
+		assert.equal(child.describe().undertaking, null);
+		assert.deepEqual(parent.describe().undertaking, before);
+		const entries = structuredClone(child.entries);
+		await child.close();
+		const resumed = await create({ ...options, sessionId: child.sessionId, entries });
+		await resumed.fire("before_provider_request", {}, request);
+		assert.equal(resumed.calls.aborts, 0);
+		assert.equal(resumed.describe().undertaking, null);
+		assert.deepEqual(parent.describe().undertaking, before);
 	});
 
 	// Authentication-aware startup may substitute an unapproved model without marking it as fallback.
