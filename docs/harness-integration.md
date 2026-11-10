@@ -403,6 +403,21 @@ also require this guard. It rejects unauthorized inference, not host controls.
 Local inspection, cancellation and model restoration do not require worker
 verification.
 
+The request guard validates the captured live catalog selection against the
+admitted route. Providers can rewrite the request model's API, endpoint and
+headers without changing its provider/model selector. Comparing that transport
+model with the catalog snapshot caused false rejections, including Kimi's
+Anthropic shim. The guard no longer makes that comparison. Catalog backend,
+model, effort and authentication checks remain; request transport integrity
+belongs to the host/provider. The same split applies to native consultations
+and recovery explanations.
+
+An Omp 18.18.6 loopback proof exercises the built-in Kimi shim. Seven
+requests reached the local Anthropic endpoint while the catalog retained its
+OpenAI-compatible model. The proof covers unmapped-family warning and
+continuation, ordinary prompts, rejected model drift, automatic recovery and
+process reload without external inference.
+
 A disposable loopback-provider experiment on Omp 18.16.0 distinguished the
 selected route, the resolved retry fallback and actual HTTP requests. The host
 reported `retry_fallback_applied` for an incompatible model; its request never
