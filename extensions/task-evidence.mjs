@@ -35,9 +35,12 @@ export function observedOutcome(event) {
 		if (value.isError === true) return { result: "failed", basis: "result-error" };
 		const checks = Array.isArray(value) ? value : value.statusCheckRollup;
 		if (Array.isArray(checks) && checks.length) {
-			const results = checks.map((check) => check.conclusion ?? check.state ?? check.status);
-			if (results.some((result) => ["FAILURE", "FAILED", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"].includes(result))) return { result: "failed", basis: "check-conclusions" };
-			if (results.every((result) => ["SUCCESS", "success"].includes(result))) return { result: "passed", basis: "check-conclusions" };
+			const results = checks.map((check) => {
+				const result = check.conclusion ?? check.state ?? check.status;
+				return typeof result === "string" ? result.toUpperCase() : result;
+			});
+			if (results.some((result) => ["FAILURE", "FAILED", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED", "STARTUP_FAILURE"].includes(result))) return { result: "failed", basis: "check-conclusions" };
+			if (results.every((result) => result === "SUCCESS")) return { result: "passed", basis: "check-conclusions" };
 			return { result: "unresolved", basis: "incomplete-checks" };
 		}
 	}

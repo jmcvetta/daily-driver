@@ -85,6 +85,31 @@ export default function registerTaskEvidenceChecks(check) {
 			} finally { f.remove(); }
 		});
 
+		/** Terminal check failures must remain failed in receipts, while pending and unknown outcomes stay unresolved. */
+		check(`${harness} records startup and case-normalized failures without resolving incomplete checks`, async () => {
+			const f = fixture();
+			try {
+				const d = await driver(harness, f.root, { kinds: ["check"] });
+				const headRefOid = f.git("rev-parse", "HEAD");
+				for (const conclusion of [null, "PENDING", "in_progress", "UNKNOWN"]) {
+					const source = await d.observe(`incomplete-${conclusion}`, { headRefOid, statusCheckRollup: [{ conclusion }] });
+					assert.equal((await d.evidence(`incomplete-${conclusion}`, source, { result: "failed" })).isError, true);
+					assert.equal((await d.call("receipt")).details.criteria[0].disposition, "unresolved");
+				}
+				for (const failure of ["FAILURE", "FAILED", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED", "STARTUP_FAILURE"]) {
+					for (const conclusion of [failure, failure.toLowerCase()]) {
+						const source = await d.observe(conclusion, { headRefOid, statusCheckRollup: [{ conclusion }] });
+						assert.equal((await d.evidence(`passed-${conclusion}`, source)).isError, true);
+						assert.equal((await d.evidence(`failed-${conclusion}`, source, { result: "failed" })).isError, undefined);
+						const receipt = (await d.call("receipt")).details;
+						assert.equal(receipt.criteria[0].disposition, "failed");
+						assert.equal(receipt.criteria[0].evidence.some((item) => item.id === `failed-${conclusion}` && item.result === "failed"), true);
+					}
+				}
+				assert.equal((await d.call("complete", { summary: "Failed checks remain unfinished." })).isError, true);
+			} finally { f.remove(); }
+		});
+
 		/** A valid check alone must not replace required review, and edits must invalidate a completed receipt. */
 		check(`${harness} completes only current evidence and attributed judgments then invalidates changed artifacts`, async () => {
 			const f = fixture();
