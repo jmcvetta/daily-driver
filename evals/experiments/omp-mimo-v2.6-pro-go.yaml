@@ -2,7 +2,7 @@ experiment_id: omp-mimo-v2-6-pro-go
 description: MiMo V2.6 Pro on Go, with and without the plugin.
 defaults:
   repeats: 5
-  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  run_limits: {max_turns: 60, task_timeout: 1080, turn_timeout: 900}
   agent:
     type: omp
     model: opencode-go/mimo-v2.6-pro

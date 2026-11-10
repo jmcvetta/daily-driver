@@ -2,7 +2,7 @@ experiment_id: omp-kimi-k3-1-pro-code
 description: Kimi K3.1 Pro on Kimi Code, with and without the plugin.
 defaults:
   repeats: 5
-  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  run_limits: {max_turns: 60, task_timeout: 1080, turn_timeout: 900}
   agent:
     type: omp
     model: kimi-code/k3.1-pro
