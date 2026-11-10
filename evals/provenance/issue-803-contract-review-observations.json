@@ -110,11 +110,30 @@
     "artifact_sha": "c44ab330d4b06e32a336bafa5f986abdbdf041db",
     "contract_id": "contract:956fc550-4e2f-4c05-9749-17f62b08d648",
     "observation": "Under the explicitly approved one-fixture host-loopback grant, the workspace-write proxy preflight reached the allowed 127.0.0.1 fixture once and returned HTTP 200. A controlled 127.0.0.2 fixture was denied by the proxy with HTTP 403 and zero listener hits. The denial caused the wrapper command to report failure, as expected. The integrated fixture retained the offline issue source and appended C1 and C2 to the request at contract revision 2.",
-    "limits": "The native review launch was blocked by the proxy when it attempted chatgpt.com, which was outside the allowlist. No native reviewer request or fixture COMMENT was recorded. Separately, the fixture setup TUI's app-server log recorded an unapproved chatgpt.com plugin-discovery request returning HTTP 401; the fixture's no-external-network condition was breached. No real credentials were supplied. The cause of the unexpected review-launch destination remains unverified. This is not model judgment or complete Codex integration proof."
+    "limits": "This attempt recorded no reviewer request or COMMENT when the proxy blocked the child. Separately, setup logged a routine plugin-list refresh returning HTTP 401; the original scope then prohibited it, but a later user clarification permits routine plugin refresh and supersedes that stop classification. No real credentials were supplied. The historical failure remains; this does not establish model judgment or completed integration."
   },
   "codex_fixture_publication": {
     "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
     "observation": "The offline GitHub fixture accepted and retained scripted COMMENT review ID 1 with contract revision 2 and C2 in its summary.",
     "limits": "The review was scripted, not returned by Codex. This tests fixture publication only and does not establish model behavior or actual Codex review publication."
+  },
+  "codex_cli_argument_rejection": {
+    "cli": "codex-cli 0.160.0",
+    "observation": "The first direct host-controller invocation was rejected before any provider request because `codex exec review` does not accept `--sandbox`. The loopback stub was bound, but it received zero catalog or Responses requests; exit code 2 and no publication. The retry used the supported invocation-local `sandbox_mode=\"workspace-write\"` config.",
+    "limits": "Argument parsing only; no model response or review. The failed attempt is retained privately and does not overwrite earlier failures."
+  },
+  "codex_direct_host_review": {
+    "cli": "codex-cli 0.160.0",
+    "route": "codex exec review --base main --ephemeral",
+    "mode": "Host fixture controller; explicit private HOME/CODEX_HOME; existing plugin/provider config; workspace-write; strict command proxy; local scripted Responses provider and local plugin-catalog response",
+    "contract": "contract:956fc550-4e2f-4c05-9749-17f62b08d648 revision 2; request, C1 and C2 source references",
+    "artifact_sha": "c44ab330d4b06e32a336bafa5f986abdbdf041db",
+    "request_sha256": "a7f022ee7de0f39f7ca6df8fd1b227a13f636d4064eb45aed905e84510d0d81a",
+    "observation": "The local stub received one catalog request and one native Responses request. The reviewer request receipt matched the retained request and issue-tool source references, criteria, artifact SHA and existing developer instructions. Codex exited 0 with a C2 finding; only then the offline GitHub recorder submitted COMMENT review ID 1 on the artifact with no invented inline anchor. The prior failed ledger and its two-correction count were not mutated.",
+    "limits": "The host controller composed the existing retained-source handoff, native Codex review surface and offline publication recorder. The model response was scripted, not semantic judgment. This does not prove default nested-shell networking, actual GitHub publication, or behavioral acceptance. The local catalog response was permitted; no external model inference was made."
+  },
+  "plugin_refresh_clarification": {
+    "observation": "A later user clarification permits routine Codex plugin-list refresh; the earlier setup refresh is no longer a stop condition.",
+    "limits": "This does not authorize external model inference, unrelated external traffic, real credentials, shared configuration changes, non-fixture local services or sandbox bypass."
   }
 }

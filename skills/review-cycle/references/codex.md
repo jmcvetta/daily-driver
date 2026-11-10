@@ -265,3 +265,17 @@ base target and developer-instruction transport with a scripted provider.
 It ended as an interrupted review. It does not establish model findings or
 GitHub publication. Neither observation establishes an effort-level selector,
 pull-request argument, or native publication flag.
+
+The later bounded fixture used Codex CLI 0.160.0 through a host fixture
+controller. It explicitly bound private `HOME` and `CODEX_HOME`, retained the
+installed plugin/provider configuration and developer instructions, used
+`workspace-write` with the default-deny command proxy, and routed both the
+scripted Responses provider and auxiliary plugin-catalog request to controlled
+loopback. The actual `codex exec review --base main` request carried the
+retained revision-2 request/C1/C2 source references and artifact identity. After
+terminal exit 0 and a returned C2 finding, the controller recorded fixture
+COMMENT review 1 without an invented anchor. This proves the host-composed
+source-handoff, native-review and fixture-publication path only. Its judgment
+was scripted; it does not establish model behavior, default nested-shell
+networking, or real GitHub publication. Earlier failed attempts remain
+separate evidence.
