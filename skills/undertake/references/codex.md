@@ -78,8 +78,11 @@ and actor. Run that exact command with `{action, record}` JSON on stdin.
 in the JSON answer: a controller rejection exits 0. Run the call on its own, so
 its exact output matches the receipt it records and stays out of task evidence.
 Do not select another session identity. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
-define every action and record, including authorization, blocker and reported
-complete.
+define every action and record, including `evidence`, `receipt` and
+evidence-gated `complete`. Reuse current-head CI and reviewed-SHA records.
+Codex shell observations without native exit status cannot establish a
+command pass. A recorded check response with its exact head and conclusions
+can establish check evidence; transport success cannot.
 
 Codex-specific packaging loads common hooks and `hooks/task-state-codex.json`.
 Only the latter registers `Interrupt`; Claude never reads that event.

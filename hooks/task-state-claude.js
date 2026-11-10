@@ -51,7 +51,7 @@ async function stopHandler($, e, next) {
 /** register binds task contracts to Claude's engine-stamped origins and cancellation events. */
 export function register(on) {
 	on("session.start", async ($, e, next) => {
-		await $.tool.register({ name: "task_state", description: "Read and amend the private versioned task contract. Plans do not revise contracts. Sources do not grant permission. Completion is reported, not verified.",
+		await $.tool.register({ name: "task_state", description: "Record versioned task contracts and criterion evidence. receipt renders current dispositions. complete requires current command/check outcomes and attributed judgments for every requirement. Sources do not grant permission or prove arbitrary semantics.",
 			inputSchema: { type: "object", properties: { action: { type: "string" }, record: { type: "string" } }, required: ["action"], additionalProperties: false }, isDeferred: false });
 		await observe($, { name: "session.start" });
 		return next(e);
@@ -76,6 +76,8 @@ export function register(on) {
 			catch (error) { return { deny: `Task-state command failed: ${error.message}` }; }
 			return result.isError ? { deny: result.content?.[0]?.text ?? "Task-state command failed" } : { result: JSON.stringify(result.details) };
 		}
+		const { tool: observedTool, tool_use_id: observedId, agentId: observedAgent, requestMeta: _requestMeta, ...observedInput } = e;
+		await observe($, { name: "tool.start", id: observedId, tool: observedTool, input: observedInput }, observedAgent);
 		const result = await next(e);
 		if (!result) return result;
 		// The tool's arguments sit beside reserved per-call fields; a per-call id in the input would make every failure look new.

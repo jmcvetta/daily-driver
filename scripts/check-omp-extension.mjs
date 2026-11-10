@@ -46,6 +46,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import registerUndertakingRoutingChecks from "./undertaking-routing-cases.mjs";
 import registerTaskContractChecks from "./task-contract-cases.mjs";
+import registerTaskEvidenceChecks from "./task-evidence-cases.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, "..");
@@ -3608,7 +3609,7 @@ check("task state accepts fixture-discovered sources throughout a lifecycle", as
 		routes: [{ route: "fixture", disposition: "failed", evidence: failure }],
 		independentWork: { pending: [], completed: [] }, externalContribution: "Provide fixture access.",
 		resume: "Retry the fixture." })).isError);
-	assert.equal((await session.command("complete", { summary: "Fixture work completed." })).details.state.status, "reported-complete");
+	assert.equal((await session.command("complete", { summary: "Fixture work completed." })).isError, true);
 });
 
 /** Ordinary answers must not be trapped, while non-undertake repository work is protected. */
@@ -3889,20 +3890,21 @@ check("tool evidence is bounded and retains authentic diagnostic fragments", asy
 	assert.notEqual(changed.fingerprint, evidence.fingerprint);
 });
 
-/** Completion reports release the task without claiming an independent proof of completion. */
-check("task completion is an explicit report rather than a runtime proof", async () => {
+/** A summary must not release unfinished work without criterion evidence. */
+check("task completion rejects an unsupported summary and retains runtime enforcement", async () => {
 	const session = taskSession();
 	await session.input("Fix the parser.");
 	assert.equal((await session.command("complete", { summary: "" })).isError, true);
 	const result = await session.command("complete", { summary: "Parser fixed with regression coverage." });
-	assert.equal(result.details.state.status, "reported-complete");
-	assert.match(result.details.limits, /not independently proven/u);
-	assert.equal(await session.stop(), undefined);
-	assert.equal(await session.fire("context", { messages: [] }, session.ctx), undefined);
-	assert.equal(await session.fire("before_agent_start", { systemPrompt: ["Policy"] }, session.ctx), undefined);
-	assert.equal(await session.fire("session.compacting", {}, session.ctx), undefined);
+	assert.equal(result.isError, true);
+	assert.equal((await session.command("status")).details.state.status, "active");
+	assert.ok((await session.stop()).continue);
+	assert.ok(await session.fire("context", { messages: [] }, session.ctx));
+	assert.ok(await session.fire("before_agent_start", { systemPrompt: ["Policy"] }, session.ctx));
+	assert.ok(await session.fire("session.compacting", {}, session.ctx));
 });
 registerTaskContractChecks(check, ROOT);
+registerTaskEvidenceChecks(check);
 
 await Promise.all(checks);
 rmSync(worktrees.root, { recursive: true, force: true });

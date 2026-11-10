@@ -299,6 +299,11 @@ Schema version 1 contains:
 - `requiredEvidenceKinds`, `requiredReviewKinds` and `approvalRequirements`.
 - `sourceRefs` with the retained `sourceId`, exact quote, canonical source
   class, native origin and captured source version or observation fingerprint.
+- Optional criterion `verification`: `{kinds, toolName, input, subject}`.
+  Supported kinds are `command`, `check`, `judgment`, `approval` and `report`.
+  `subject` declares `{kind: "repository", root}` or
+  `{kind: "artifact", path}`. Ground the verification operation in the
+  requirement before it runs. An unknown verification contract cannot pass.
 
 Unknown fields are `null`. They do not mean empty, approved or fulfilled.
 Initial capture retains the request as criterion `request`. Ground the
@@ -345,7 +350,19 @@ tool observation. It does not recover omitted tool-output bytes.
   routes: [{route, disposition: "failed" | "prohibited" | "unavailable",
   evidence: {sourceId, quote}}], externalContribution,
   independentWork: {pending: [], completed: []}, resume}`.
-- `complete`: `{summary}`. It remains a report. It does not verify acceptance.
+- `evidence`: `{id, taskId, criterionId, contractRevision, subject, source,
+  kind, result, judgment?, requirement?, supersedes?}`. `source` is a retained
+  observation reference. Copy `subject` from its execution binding, not from
+  the current head. Results are `passed`, `failed` or `unresolved`.
+  A judgment carries `{reviewer, rationale, artifacts}`. An approval also
+  names its contract `requirement`. An explicit supersession retains the old
+  evidence for audit and replaces only the same criterion, kind and subject.
+- `receipt`: renders current criterion dispositions, supporting references,
+  artifact identities, unknowns, decisions, risks and outstanding approvals.
+  Rendering does not publish, approve or complete the task.
+- `complete`: `{summary}`. Requires current evidence for every criterion and
+  declared evidence/review/approval requirement. It records `verified-complete`
+  only when evidence accounting passes. It does not prove arbitrary semantics.
 
 References establish provenance, not the meaning of arbitrary approval prose.
 Read the original scope, conditions, revocations, expiry and fresh-confirmation
@@ -357,6 +374,39 @@ source discovery, exact-quote limits and an example sequence. Tool
 input/output payloads have bounded previews, truncation metadata and a
 fingerprint; the adapter does not persist a second full copy of every file or
 command result.
+
+Execution bindings capture task, session, contract revision and subject before
+the operation starts. A late result retains that binding. Repository evidence
+names the exact commit and dirty-state distinction. Dirty repository evidence
+cannot establish completion. File artifacts use SHA-256 content identities.
+Contract revisions and changed subjects make old evidence stale without
+deleting it. Check responses must include actual conclusions and the exact
+checked `headRefOid`, or `artifactDigest` for a file. A successful tool
+transport is not a check pass. Commands require a native exit status; shell
+output that merely prints a success claim is not an exit status.
+
+Subjective acceptance uses attributed judgments with rationale and inspected
+artifact references retained in the review observation. Each artifact reference
+must contain the captured commit or content digest. An agent cannot invent
+attribution or rationale that the source does not contain. Attribution and
+prose sufficiency still need review against that observation. Agent reports
+remain a separate evidence kind and cannot establish a pass. Receipt consumers
+must distinguish these kinds and redact sensitive commentary and local paths.
+Do not publish retained source quotes. Reuse the receipt inside existing
+PR details and handoffs instead of maintaining a second evidence ledger.
+
+`status` with a source ID can recover a truncated Omp observation from its
+existing native tool-result entry when the full-output fingerprint matches.
+It does not replay the tool or create another transcript store. If the native
+entry or decisive result is unavailable, the criterion remains unresolved.
+Hook ledgers retain bounded observations and cannot recover omitted bytes.
+
+The native stop gate also rejects omitted completion calls. A summary or
+printed “done” does not settle a task. Rejected completion leaves it active.
+The existing two-correction bound still applies. Explicit cancellation, abort,
+an evidenced external wait and correction exhaustion remain possible without
+recording verified completion. Historical `reported-complete` records retain
+their original status; they are never upgraded by migration.
 
 ### Persistence and delegation
 
@@ -479,6 +529,52 @@ These native-event observations establish the adapter route. Offline
 controller/adapter regressions run in the existing `check-omp-extension`
 suite. They do not replace installed-runtime evidence or prove that a model
 will honor arbitrary approval prose.
+
+### Completion-evidence scenarios
+
+The optional `--completion-harness` mode of the existing live task-state
+script exercises the installed runtime with a private HOME, local Git
+fixture and loopback scripted provider. It makes no external inference or
+GitHub fixture requests. Each process has a 120-second deadline and a
+24-request bound. It does not add a recurring CI job or install a shared
+runtime.
+
+```sh
+python3 scripts/check-omp-task-state-live.py --completion-harness omp
+WORKTRUNK_PLUGIN_ROOT=/path/to/installed/worktrunk-plugin \
+  python3 scripts/check-omp-task-state-live.py --completion-harness claude
+python3 scripts/check-omp-task-state-live.py --completion-harness codex
+```
+
+Claude loads the unchanged shipped manifest and its declared Worktrunk
+dependency. Omitting that dependency can omit Daily Driver's tool while an
+unrelated fixture plugin still loads. Codex installs the unchanged plugin
+through a private local marketplace. Its fixture explicitly permits the
+reviewed local hooks through the CLI's automation hook-trust option; it does
+not bypass the task completion gate. The private Codex configuration sets
+`tool_output_token_limit = 20000` so the native status response is not
+truncated before the scripted provider can read it. A truncated status is
+not evidence of a controller pass.
+
+Observed on 2026-11-10:
+
+| Harness | Local provider requests | Completion and abort result |
+| --- | --- | --- |
+| Omp 18.18.6 | 16 | Rejected summary-only completion and a failed check inside successful transport. Current check evidence plus a source-backed scripted judgment completed. A dirty subject reopened the task; correction count stopped at two. The existing live suite also exercised native RPC abort without completion. |
+| Claude Code 2.1.321 | 18 | The same completion and dirty-subject cases passed. A second process received SIGINT during corrective request 1. It stopped without completion or another provider request; its private task remained `active`. |
+| Codex CLI 0.160.0 | 18 | The same completion and dirty-subject cases passed. SIGINT during corrective request 1 stopped further requests and persisted `cancelled`, without completion. |
+
+Claude print-mode SIGINT did not persist a cancellation record in this
+scenario. Do not describe that state as cancelled or completed. Its unfinished
+contract remains available for a supported resume. The native mod's
+`turn.complete.isAborted` route and the shared explicit-cancellation tests
+remain separate coverage.
+
+These fixtures establish runtime transitions and evidence-kind accounting.
+Their scripted judgments do not establish independent semantic correctness.
+The existing runtime suite also covers missing, unrelated, truncated, stale,
+wrong-task, changed-revision and non-code-artifact evidence, required approvals,
+contradictory results, exact native-source recovery and historical reports.
 
 ## Omp task roles and worktrees
 

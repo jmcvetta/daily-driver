@@ -190,6 +190,9 @@ criterion IDs and native original-source locators. Do not substitute the epic's
 contract for the child's contract. Let `undertake` ground a new child's contract
 in the authoritative issue version. A copied dispatch prompt is interpretation,
 not user approval; preserve applicable original authority references and limits.
+Carry the current receipt's criterion dispositions, evidence references,
+unverified work, risks and outstanding approvals in that same handoff.
+Do not copy private source quotes or treat a rendered receipt as completion.
 
 The harness denies the first dispatch until this session is titled, as
 `session-title`'s `When to set it` says; `Title the session` precedes this step.
