@@ -52,19 +52,26 @@ export function amendContract(state, record, reference) {
 	if (!Array.isArray(next.criteria) || !next.criteria.length) throw new Error("A contract needs stable acceptance-criterion ids");
 	const ids = new Set();
 	// Key order and controller-added fields are not requirement changes.
-	const canonical = (criterion) => JSON.stringify([criterion.id, criterion.description, criterion.sourceRefs.map((ref) => [ref?.sourceId, ref?.quote])]);
+	const canonical = (criterion) => JSON.stringify([criterion.id, criterion.description, criterion.sourceRefs.map((ref) => [ref?.sourceId, ref?.quote]), criterion.verification ?? null]);
 	const previousById = new Map((state.contract.criteria ?? []).map((criterion) => [criterion.id, criterion]));
 	next.criteria = next.criteria.map((criterion) => {
 		if (!nonblank(criterion?.id) || !nonblank(criterion.description) || ids.has(criterion.id)) throw new Error("Criterion ids must be nonblank and unique");
 		ids.add(criterion.id);
 		if (!Array.isArray(criterion.sourceRefs) || !criterion.sourceRefs.length) throw new Error("Every criterion requires retained source references");
+		if (criterion.verification !== undefined && (!Array.isArray(criterion.verification.kinds) || !criterion.verification.kinds.length ||
+			criterion.verification.kinds.some((kind) => !["command", "check", "judgment", "approval", "report"].includes(kind)))) throw new Error("Declare supported criterion verification kinds");
 		// An unchanged criterion keeps its recorded form; a delegated child may not hold the parent's sources.
 		const previous = previousById.get(criterion.id);
 		return previous && canonical(previous) === canonical(criterion) ? previous : { ...criterion, sourceRefs: criterion.sourceRefs.map(normalize) };
 	});
 	const previous = state.contract.criteria ?? [];
 	const removed = previous.filter((criterion) => !ids.has(criterion.id));
-	const changedCriteria = previous.some((criterion) => ids.has(criterion.id) && JSON.stringify(criterion) !== JSON.stringify(next.criteria.find((item) => item.id === criterion.id)));
+	const changedCriteria = previous.some((criterion) => {
+		const nextCriterion = next.criteria.find((item) => item.id === criterion.id);
+		if (!nextCriterion) return false;
+		// Grounding an unknown verification contract adds detail; changing an established one changes the requirement.
+		return canonical(criterion.verification === undefined ? { ...criterion, verification: nextCriterion.verification } : criterion) !== canonical(nextCriterion);
+	});
 	const changesObjective = state.contract.objective !== null && next.objective !== state.contract.objective;
 	// Adding sourced detail to unknown fields and appending criteria is not a scope reduction.
 	const changesBinding = ["operation", "target"].some((key) => record[key] !== undefined && record[key] !== state[key]);

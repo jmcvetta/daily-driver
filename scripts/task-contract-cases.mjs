@@ -341,7 +341,8 @@ export default function registerTaskContractChecks(check, root) {
 	/** A stop typed after reported completion must not rewrite finished work as cancelled. */
 	check("a cancel message leaves a reported-complete task complete", async () => {
 		const s = session(); s.input("Fix the parser.");
-		await s.command("complete", { summary: "Parser fixed." });
+		s.entries.push({ type: "custom", customType: "daily-driver.task-state", data: { sessionId: "contract-session",
+			state: { ...(await s.status()).state, status: "reported-complete", completion: "Historical report." } } });
 		s.input("stop");
 		assert.equal((await s.status()).state.status, "reported-complete");
 	});
@@ -454,7 +455,8 @@ export default function registerTaskContractChecks(check, root) {
 	check("a fresh request after reported completion begins a new task", async () => {
 		const s = session(); s.input("Fix the parser.");
 		const first = (await s.status()).state.contract.contractId;
-		assert.equal((await s.command("complete", { summary: "Parser fixed." })).isError, undefined);
+		s.entries.push({ type: "custom", customType: "daily-driver.task-state", data: { sessionId: "contract-session",
+			state: { ...(await s.status()).state, status: "reported-complete", completion: "Historical report." } } });
 		s.input("Fix the scanner.");
 		const next = (await s.status()).state;
 		assert.equal(next.status, "active");

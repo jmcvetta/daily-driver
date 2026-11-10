@@ -628,6 +628,10 @@ def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -
 
 
 def main() -> None:
+    if len(sys.argv) == 3 and sys.argv[1] == "--completion-harness":
+        from task_evidence_live import run_completion_harness
+        run_completion_harness(sys.argv[2])
+        return
     omp = shutil.which("omp")
     if not omp:
         raise RuntimeError("omp must be installed for the task-state lifecycle proof")
@@ -729,13 +733,14 @@ export default function(pi) {
             contract = run(omp, base, env, "contract", observer)
             calls = [frame for frame in contract if frame.get("type") == "tool_execution_end"]
             assert len(calls) == 10, calls
-            assert all(not frame.get("isError") for index, frame in enumerate(calls) if index != 5), calls
+            assert all(not frame.get("isError") for index, frame in enumerate(calls) if index not in (5, 9)), calls
             assert calls[5].get("isError"), calls[5]
+            assert calls[9].get("isError") and "Completion rejected" in json.dumps(calls[9]), calls[9]
             contract_session = next((base / "contract-session").glob("*.jsonl"))
             contract_entries = [json.loads(line) for line in contract_session.read_text().splitlines()]
             contract_state = [entry["data"]["state"] for entry in contract_entries
                               if entry.get("customType") == "daily-driver.task-state"][-1]
-            assert contract_state["status"] == "reported-complete", contract_state
+            assert contract_state["status"] == "active" and contract_state.get("stopFailure"), contract_state
             assert contract_state["blocker"]["kind"] == "execution", contract_state
             print("Rendered task-state device:", json.dumps(calls[0]))
             rows = [json.loads(line) for line in (base / "state.log").read_text().splitlines()]

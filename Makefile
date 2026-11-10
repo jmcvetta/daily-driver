@@ -38,6 +38,7 @@ CODER_EVAL_VERSION := 0.11.6
 # Resolve adapters from this checkout, not another worktree's shared tool install.
 CODER_EVAL := TELEMETRY_ENABLED=false uv tool run --isolated --python 3.13 \
 	--from coder-eval==$(CODER_EVAL_VERSION) \
+	--with typer==0.24.1 \
 	--with-editable "$(CURDIR)/evals/coder-eval-omp" \
 	--with-editable "$(CURDIR)/evals/coder-eval-codex" coder-eval
 
