@@ -1,0 +1,501 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Actual sibling isolation and primary preservation passed",
+          "details": "Pattern '(?m)^mode=linked\\nbranch=issue-52-strict-parser\\nbase=upstream/master\\ntask-root=.*\\nverified=yes$' found in file (matched: 'mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=/home/jmcvetta/projects/dai')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The requested local commit actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/git\\s+commit\\b/)\nExamples: ['/bin/bash -lc \\'git add -- src/parser.py && git commit -m \"Enable strict parser mode\" -m \"Co-Authored-By: Codex <noreply@']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Staging stays explicit and the completion claim has evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Staging stays explicit and the completion claim has evidence",
+            "duration_seconds": 10.32,
+            "findings": [
+              "Staged only src/parser.py and created local commit abfa48e.",
+              "Fixture verification exited successfully.",
+              "Primary branch, HEAD, and untracked status remained unchanged.",
+              "No push, issue write, or PR write occurred.",
+              "Provenance skill and Codex reference were retrieved before the first edit."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "55beea98c3b82e3347258f18baad4f1a88877577f3a80c4826edf321a7fb6abf",
+            "rationale": "The trace shows the parser change committed locally in the isolated task worktree using named-file staging, with the primary checkout preserved and no remote writes. The result anchor is present, and the commit and verification statements are supported by tool results.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 12076,
+              "output": 156
+            },
+            "weight": 1.0
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "26b2badf53eb47e081fdba345c4ed71fb9f6cfed131e6bda60149bcb7b42c1bd"
+      },
+      "max_turns_exhausted": true,
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Actual sibling isolation and primary preservation passed",
+          "details": "Pattern '(?m)^mode=linked\\nbranch=issue-52-strict-parser\\nbase=upstream/master\\ntask-root=.*\\nverified=yes$' found in file (matched: 'mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=/home/jmcvetta/projects/dai')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The requested local commit actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/git\\s+commit\\b/)\nExamples: ['/bin/bash -lc \\'git diff -- src/parser.py\\ngit add src/parser.py\\ngit diff --cached -- src/parser.py\\ngit commit -m \"Enable ']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Staging stays explicit and the completion claim has evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Staging stays explicit and the completion claim has evidence",
+            "duration_seconds": 5.17,
+            "findings": [
+              "Provenance skill and Codex reference were retrieved before the first edit.",
+              "Committed STRICT_MODE = True in src/parser.py as 412e33d using git add src/parser.py.",
+              "Verifier exited 0; final task worktree was clean.",
+              "Primary remained on master with its original untracked content."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "55beea98c3b82e3347258f18baad4f1a88877577f3a80c4826edf321a7fb6abf",
+            "rationale": "The result anchor and tool trace support a local parser commit in the isolated task worktree, explicit named-file staging, successful verification, and preservation of primary checkout content. No push, issue write, or PR write occurred.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 11961,
+              "output": 123
+            },
+            "weight": 1.0
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "26b2badf53eb47e081fdba345c4ed71fb9f6cfed131e6bda60149bcb7b42c1bd"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Actual sibling isolation and primary preservation passed",
+          "details": "Pattern '(?m)^mode=linked\\nbranch=issue-52-strict-parser\\nbase=upstream/master\\ntask-root=.*\\nverified=yes$' found in file (matched: 'mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=/home/jmcvetta/projects/dai')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The requested local commit actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/git\\s+commit\\b/)\nExamples: ['/bin/bash -lc \\'git add -- src/parser.py && git diff --cached --check && git diff --cached --stat && git commit -m \"Enabl']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Staging stays explicit and the completion claim has evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Staging stays explicit and the completion claim has evidence",
+            "duration_seconds": 6.8,
+            "findings": [
+              "Committed STRICT_MODE = True as b20f338 on issue-52-strict-parser.",
+              "Staged only src/parser.py using git add -- src/parser.py.",
+              "Primary checkout status remained unchanged.",
+              "bash .fixture/verify.sh linked exited successfully.",
+              "Provenance skill and Codex reference were retrieved before the first edit."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "55beea98c3b82e3347258f18baad4f1a88877577f3a80c4826edf321a7fb6abf",
+            "rationale": "The result anchor and tool trace support a local parser-only commit in the isolated task worktree, explicit named-file staging, preserved primary content, and successful verification. No push, issue, or PR write occurred, and the final claims are supported.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 12079,
+              "output": 131
+            },
+            "weight": 1.0
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "26b2badf53eb47e081fdba345c4ed71fb9f6cfed131e6bda60149bcb7b42c1bd"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Actual sibling isolation and primary preservation passed",
+          "details": "Pattern '(?m)^mode=linked\\nbranch=issue-52-strict-parser\\nbase=upstream/master\\ntask-root=.*\\nverified=yes$' found in file (matched: 'mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=/home/jmcvetta/projects/dai')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The requested local commit actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/git\\s+commit\\b/)\nExamples: ['/bin/bash -lc \\'git add src/parser.py\\ngit diff --cached --check\\ngit diff --cached -- src/parser.py\\ngit commit -m \"Enable ']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Staging stays explicit and the completion claim has evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Staging stays explicit and the completion claim has evidence",
+            "duration_seconds": 5.47,
+            "findings": [
+              "Provenance was retrieved before the first edit (calls 1\u20132).",
+              "Staged only src/parser.py and committed as 2f5068d on issue-52-strict-parser.",
+              "Verifier exited 0; final task status was clean and primary status and tip were unchanged.",
+              "No unsupported success or test claims identified."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "55beea98c3b82e3347258f18baad4f1a88877577f3a80c4826edf321a7fb6abf",
+            "rationale": "The result anchor and tool trace support the requested parser change committed locally in an isolated sibling worktree, with named-file staging and preserved primary content. Verification succeeded, and no push, issue, or PR write occurred.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 14102,
+              "output": 128
+            },
+            "weight": 1.0
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "26b2badf53eb47e081fdba345c4ed71fb9f6cfed131e6bda60149bcb7b42c1bd"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.376108,
+      "cost_source": "reported",
+      "elapsed_seconds": 109.51354503631592,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "disclosure-corrected-fixtures-codex-20261109",
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 301696,
+        "output_tokens": 4202,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 19840
+      },
+      "tokens": 325738,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.335,
+      "cost_source": "reported",
+      "elapsed_seconds": 88.4725124835968,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-corrected-fixtures-codex-20261109",
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 243840,
+        "output_tokens": 4003,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18598
+      },
+      "tokens": 266441,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": 0.390366,
+      "cost_source": "reported",
+      "elapsed_seconds": 95.28549671173096,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-corrected-fixtures-codex-20261109",
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 332672,
+        "output_tokens": 4116,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 20110
+      },
+      "tokens": 356898,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.495209,
+      "cost_source": "reported",
+      "elapsed_seconds": 131.76236987113953,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-corrected-fixtures-codex-20261109",
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 316928,
+        "output_tokens": 5731,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 32963
+      },
+      "tokens": 355622,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "codex-daily-driver",
+    "recorded_version": "codex-cli 0.160.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-09T17:33:59.477349",
+  "experiment_id": "disclosure-corrected-fixtures-codex-20261109",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "26b2badf53eb47e081fdba345c4ed71fb9f6cfed131e6bda60149bcb7b42c1bd",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 50218,
+      "output": 538
+    }
+  },
+  "plugin_revision": {
+    "commit": "67e77597c1854d69450ab374159df0e511d87a28",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-09T10:49:18.372857+00:00",
+  "run_id": "disclosure-ordinary-commit",
+  "schema_version": 5,
+  "started_at": "2026-11-09T17:26:54.433197",
+  "variants": [
+    {
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "per_replicate_scores": {
+        "constitution-disclosure-ordinary-commit": [
+          null,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "constitution-disclosure-ordinary-commit"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "per_replicate_scores": {
+        "constitution-disclosure-ordinary-commit": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "constitution-disclosure-ordinary-commit"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}

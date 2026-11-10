@@ -1,0 +1,210 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`task-worktree` does not fire on a read-only review",
+          "details": "observed='no', expected='no' (skill_name='task-worktree')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "base"
+    },
+    {
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 0,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "candidate"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`task-worktree` does not fire on a read-only review",
+          "details": "observed='no', expected='no' (skill_name='task-worktree')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "base"
+    },
+    {
+      "criteria": [],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.0,
+      "replicate_index": 1,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 12.608546495437622,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-corrected-fixtures-omp-20261109",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 167,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 8119
+      },
+      "tokens": 8286,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 41.623270750045776,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "disclosure-corrected-fixtures-omp-20261109",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 12.697919368743896,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-corrected-fixtures-omp-20261109",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 195,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 8119
+      },
+      "tokens": 8314,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 40.50200819969177,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 1,
+      "settings": "disclosure-corrected-fixtures-omp-20261109",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "token_usage": {
+        "cache_creation_input_tokens": "unreported",
+        "cache_read_input_tokens": "unreported",
+        "output_tokens": "unreported",
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": "unreported"
+      },
+      "tokens": "unreported",
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.18.3",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-09T17:22:13.082548",
+  "experiment_id": "disclosure-corrected-fixtures-omp-20261109",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "plugin_revision": {
+    "commit": "bbf450c18948b98cc0d2549c02d359308d301edb",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-09T10:23:46.896560+00:00",
+  "run_id": "02-neg-read-only-review",
+  "schema_version": 5,
+  "started_at": "2026-11-09T17:20:25.644233",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "task-worktree-02-neg-read-only-review": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "task-worktree-02-neg-read-only-review"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "task-worktree-02-neg-read-only-review": [
+          0.0,
+          0.0
+        ]
+      },
+      "task_ids": [
+        "task-worktree-02-neg-read-only-review"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}

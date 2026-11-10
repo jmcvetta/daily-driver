@@ -1,0 +1,339 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Actual sibling isolation and primary preservation passed",
+          "details": "Pattern '(?m)^mode=linked\\nbranch=issue-52-strict-parser\\nbase=upstream/master\\ntask-root=.*\\nverified=yes$' found in file (matched: 'mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=/tmp/coder_eval_constitutio')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The requested local commit actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/git\\s+commit\\b/)\nExamples: ['git add src/parser.py && git commit -m \"Enable strict parser mode\" && bash .fixture/verify.sh linked']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Staging stays explicit and the completion claim has evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "variant_id": "base"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Actual sibling isolation and primary preservation passed",
+          "details": "Pattern '(?m)^mode=linked\\nbranch=issue-52-strict-parser\\nbase=upstream/master\\ntask-root=.*\\nverified=yes$' found in file (matched: 'mode=linked\nbranch=issue-52-strict-parser\nbase=upstream/master\ntask-root=/tmp/coder_eval_constitutio')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The requested local commit actually ran",
+          "details": "Matched 1/1 required commands (filters: tool_name=Bash, pattern=/git\\s+commit\\b/)\nExamples: ['git add src/parser.py && git commit -m \"Enable strict parser mode\" -m \"Omp-Session: 01a1b5ad-4263-7204-a2b5-7f36d8da2e6c']",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Staging stays explicit and the completion claim has evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "variant_id": "candidate"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Actual sibling isolation and primary preservation passed",
+          "details": null,
+          "error": "File '.fixture/verification.txt' does not exist",
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The requested local commit actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Bash, pattern=/git\\s+commit\\b/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Staging stays explicit and the completion claim has evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.2,
+      "raw_weighted_score": 0.2,
+      "replicate_index": 1,
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "variant_id": "base"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "file_matches_regex",
+          "description": "Actual sibling isolation and primary preservation passed",
+          "details": null,
+          "error": "File '.fixture/verification.txt' does not exist",
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "command_executed",
+          "description": "The requested local commit actually ran",
+          "details": "Matched 0/1 required commands (filters: tool_name=Bash, pattern=/git\\s+commit\\b/)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "gating": true,
+          "pass_threshold": 0.9,
+          "result_kind": "basic",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Staging stays explicit and the completion claim has evidence",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "measured_score": 0.2,
+      "raw_weighted_score": 0.2,
+      "replicate_index": 1,
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 82.86851119995117,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-omp-frozen-20261107",
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 161408,
+        "output_tokens": 1864,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 17206
+      },
+      "tokens": 180478,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 124.5173237323761,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-omp-frozen-20261107",
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 261760,
+        "output_tokens": 2663,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 41599
+      },
+      "tokens": 306022,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 76.65930366516113,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 1,
+      "settings": "disclosure-omp-frozen-20261107",
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 157440,
+        "output_tokens": 1417,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 17261
+      },
+      "tokens": 176118,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 75.6976752281189,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "failed",
+      "replicate_index": 1,
+      "settings": "disclosure-omp-frozen-20261107",
+      "task_id": "constitution-disclosure-ordinary-commit",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 187648,
+        "output_tokens": 1687,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 30358
+      },
+      "tokens": 219693,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.18.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-07T18:07:49.212860",
+  "experiment_id": "disclosure-omp-frozen-20261107",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "model_requested": [
+      "claude-sonnet-5"
+    ],
+    "models_observed": "unavailable",
+    "route": "claude-code",
+    "selection": "task-pinned",
+    "usage": "unavailable"
+  },
+  "plugin_revision": {
+    "commit": "bd089b61a6103acef858c8b2a4f34abff0dc02d2",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-07T11:50:39.330037+00:00",
+  "run_id": "disclosure-ordinary-commit",
+  "schema_version": 5,
+  "started_at": "2026-11-07T18:01:49.448801",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-disclosure-ordinary-commit": [
+          1.0,
+          0.2
+        ]
+      },
+      "task_ids": [
+        "constitution-disclosure-ordinary-commit"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "constitution-disclosure-ordinary-commit": [
+          1.0,
+          0.2
+        ]
+      },
+      "task_ids": [
+        "constitution-disclosure-ordinary-commit"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}

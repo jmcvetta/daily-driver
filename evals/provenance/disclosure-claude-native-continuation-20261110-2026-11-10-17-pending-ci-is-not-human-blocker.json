@@ -1,0 +1,460 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an unfinished PR",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply retains ownership through the CI wait",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply retains ownership through the CI wait",
+            "duration_seconds": 6.33,
+            "findings": [
+              "Final [RESULT - SUCCESS] reply is present.",
+              "Readiness remains conditional on green CI.",
+              "Agent retains monitoring and continuation responsibility."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "8a00dad8fcaacc02eb0f5854cade0142f7c98c51458e17ebea2f21ea7d7b32cc",
+            "rationale": "The final result identifies CI as the sole external wait, defers readiness until it passes, and retains continuation by promising to keep watching and resume the remaining steps. It requests no human action or approval and does not label the PR human-blocked.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1172,
+              "output": 93
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "96eef34343442d1f9fed18e558140c345b475c179fa30d2ca4f3d557095a06a3"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an unfinished PR",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply retains ownership through the CI wait",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply retains ownership through the CI wait",
+            "duration_seconds": 5.54,
+            "findings": [
+              "Final [RESULT - SUCCESS] reply is present.",
+              "CI remains the outstanding external wait; readiness is conditional on its completion.",
+              "Existing continuation is explicitly retained without escalation."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "8a00dad8fcaacc02eb0f5854cade0142f7c98c51458e17ebea2f21ea7d7b32cc",
+            "rationale": "The final result identifies running CI as a wait rather than human action, preserves the existing continuation, and defers readiness until CI is green. It requests neither approval nor human execution of CI.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1049,
+              "output": 89
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "96eef34343442d1f9fed18e558140c345b475c179fa30d2ca4f3d557095a06a3"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an unfinished PR",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply retains ownership through the CI wait",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply retains ownership through the CI wait",
+            "duration_seconds": 6.06,
+            "findings": [
+              "Pending CI on the current head is the sole remaining gate.",
+              "Marking ready is deferred until CI reports green.",
+              "Agent explicitly retains monitoring and continuation responsibility."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "8a00dad8fcaacc02eb0f5854cade0142f7c98c51458e17ebea2f21ea7d7b32cc",
+            "rationale": "The final result identifies pending CI as an external wait, leaves readiness contingent on CI passing, and retains agent continuation by promising to monitor and act. It neither requests human action or approval nor labels the PR human-blocked or currently ready.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 817,
+              "output": 96
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "96eef34343442d1f9fed18e558140c345b475c179fa30d2ca4f3d557095a06a3"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an unfinished PR",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply retains ownership through the CI wait",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The reply retains ownership through the CI wait",
+            "duration_seconds": 5.65,
+            "findings": [
+              "Final [RESULT - SUCCESS] reply is present.",
+              "CI is explicitly a wait, not a question.",
+              "Readiness remains conditional on green CI and remaining checks.",
+              "Continuation specifies reporting and marking ready after gates pass."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "8a00dad8fcaacc02eb0f5854cade0142f7c98c51458e17ebea2f21ea7d7b32cc",
+            "rationale": "The final result treats running CI as an external wait, defers readiness until CI and remaining gates pass, and retains a continuation path once CI finishes. It requests neither human action nor approval and does not claim current readiness.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1197,
+              "output": 104
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "96eef34343442d1f9fed18e558140c345b475c179fa30d2ca4f3d557095a06a3"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.48653520000000006,
+      "cost_source": "reported",
+      "elapsed_seconds": 34.03656792640686,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-claude-native-continuation-20261110",
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 111828,
+        "cache_read_input_tokens": 69611,
+        "output_tokens": 2432,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1045
+      },
+      "tokens": 184916,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.2184074,
+      "cost_source": "reported",
+      "elapsed_seconds": 23.371970415115356,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-claude-native-continuation-20261110",
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 46955,
+        "cache_read_input_tokens": 64452,
+        "output_tokens": 1672,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1043
+      },
+      "tokens": 114122,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": 0.1685588,
+      "cost_source": "reported",
+      "elapsed_seconds": 16.417221784591675,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-claude-native-continuation-20261110",
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 36010,
+        "cache_read_input_tokens": 77534,
+        "output_tokens": 804,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1043
+      },
+      "tokens": 115391,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.1771124,
+      "cost_source": "reported",
+      "elapsed_seconds": 18.99910807609558,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-claude-native-continuation-20261110",
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 37148,
+        "cache_read_input_tokens": 77392,
+        "output_tokens": 1207,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1043
+      },
+      "tokens": 116790,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "claude-code",
+    "recorded_version": "2.1.321 (Claude Code)",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-10T19:41:20.620735",
+  "experiment_id": "disclosure-claude-native-continuation-20261110",
+  "host": {
+    "hostname": "carbon",
+    "kind": "cloud",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": "3439551e-ad3b-4a7f-98f2-55db21209be9"
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "96eef34343442d1f9fed18e558140c345b475c179fa30d2ca4f3d557095a06a3",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 4235,
+      "output": 382
+    }
+  },
+  "plugin_revision": {
+    "commit": "76a496b316366ecc127d0311f4856248bbbf679d",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-10T12:46:15.683851+00:00",
+  "run_id": "17-pending-ci-is-not-human-blocker",
+  "schema_version": 5,
+  "started_at": "2026-11-10T19:39:47.789645",
+  "variants": [
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "undertake-17-pending-ci-is-not-human-blocker": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-17-pending-ci-is-not-human-blocker"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "undertake-17-pending-ci-is-not-human-blocker": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-17-pending-ci-is-not-human-blocker"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}

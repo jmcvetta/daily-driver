@@ -12,7 +12,7 @@ description: >-
   "you pick", "use your judgement" (or "judgment") and "stop asking me".
   Supplies the test that separates a question only the user can answer from
   one the agent can answer directly, and the rule that answers the second kind.
-  It waives no confirmation another rule requires — the constitution's discussion
+  It waives no confirmation another rule requires — provenance's discussion
   of an unavoidable workaround among them — and relaxes nothing governing an
   irreversible, destructive or outward-facing action.
 ---
@@ -57,9 +57,9 @@ in advance is what makes most of these questions answerable without asking:
 > Do it the correct, standard, non-lazy, non-hacky, professional-engineering,
 > maintainable, sane way.
 
-Where that rule picks a winner, there is nothing to ask. It is the constitution
-restated at the moment of choosing — *correct beats quick*, *abjure
-workarounds*, *simplicity is beautiful* — and those rules are not menu items.
+Where that rule picks a winner, there is nothing to ask. It applies
+`provenance`'s coding discipline at the moment of choosing: correctness, simple
+code, and discussion before unavoidable workarounds. Those rules are not menu items.
 
 
 The tell
@@ -96,7 +96,7 @@ genuinely does not settle it:
   interface others depend on. Then ask, with the trade-off named and a
   recommendation attached; a bare menu is still not the way to ask.
 - **Scope.** Doing materially more, less, or other than what was asked.
-- **A confirmation another rule requires.** The constitution discusses an
+- **A confirmation another rule requires.** `provenance` discusses an
   unavoidable workaround before writing it, and `review` — where it is live
   rather than in `attic/skills/` — offers its walkthrough before applying
   anything. This skill overrides none of them.
