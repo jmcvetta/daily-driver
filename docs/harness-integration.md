@@ -578,9 +578,9 @@ contradictory results, exact native-source recovery and historical reports.
 
 ## Omp task roles and worktrees
 
-The Omp installation defines `mechanical`, `implementation`, `reasoning` and
-`frontier` task roles. Where no operator assignment exists, the extension
-supplies defaults. Frontier is limited to explicitly approved, bounded research
+The Omp installation defines `mechanical`, `implementation`, `integration`,
+`reasoning` and `frontier` task roles. Where no operator assignment exists, the
+extension supplies defaults. Frontier is limited to explicitly approved, bounded research
 or planning; ordinary implementation uses a non-frontier route unless the user
 separately authorizes that exception. The defaults require configured
 credentials. Use `/model` → Roles to assign models. Existing `omp_configs/`

@@ -75,7 +75,7 @@ first for non-GPT gateway routes. All OpenAI roles in `multi-model.yml` use
 
 These overlays select concrete model roles. They do not prove that a role or
 model satisfies a task capability class. Task issues record `mechanical`,
-`implementation`, or `reasoning` through
+`implementation`, `integration`, or `reasoning` through
 [`issue-body`'s shared guidance](../skills/issue-body/references/model-classes.md);
 dispatch inspects the effective agent configuration and actual route before
 selecting a compatible implementer. Keep concrete selectors in these YAML

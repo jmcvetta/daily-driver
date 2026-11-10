@@ -41,8 +41,9 @@ USAGE
     Historical issue metadata uses `standard` and `advanced`; explicitly map
     those to `implementation` and `reasoning` with `--class-override` when
     mining old pull requests. Overrides accept only buildable `mechanical` or
-    `implementation`; old names are not canonical input. The `frontier` token
-    is preserved by metadata reads but is not a benchmark class.
+    `implementation`; old names are not canonical input. The `integration`,
+    `reasoning`, and `frontier` tokens are preserved by metadata reads but are
+    not benchmark classes.
 
 Needs `GITHUB_TOKEN` or `GH_TOKEN` for the REST API, `git`, and whatever the
 resolved test command needs (`uv`, `pnpm`) already on PATH. No third-party
@@ -87,8 +88,9 @@ DEFAULT_CANDIDATES_FILE = FIXTURES_DIR / "candidates.json"
 
 API_ROOT = "https://api.github.com"
 
-# The suite builds only mechanical/implementation cases. `reasoning` and
-# `frontier` are valid metadata but do not have a supported benchmark contract.
+# The suite builds only mechanical/implementation cases. `integration`,
+# `reasoning`, and `frontier` are valid metadata but have no supported
+# benchmark contract.
 BUILDABLE_CLASSES = ("mechanical", "implementation")
 
 class BuildError(Exception):
@@ -204,7 +206,7 @@ def qualifying_reason(
 
 
 _MODEL_CLASS_RE = re.compile(
-    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|reasoning|frontier)`?(?![\w-])",
+    r"^##\s*Model class\s*$\s*`?(mechanical|implementation|integration|reasoning|frontier)`?(?![\w-])",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -1329,10 +1331,10 @@ def _test_qualifying_reason() -> None:
 
 
 def _test_read_model_class() -> None:
-    # Without this check, a frontier assignment is silently mined as unlabelled.
-    for token in ("mechanical", "implementation", "reasoning", "frontier"):
+    # Without this check, valid class assignments are silently mined as unlabelled.
+    for token in ("mechanical", "implementation", "integration", "reasoning", "frontier"):
         assert read_model_class(f"## Model class\n`{token}`\n") == token
-    for token in ("standard", "advanced", "implementation-suffix", "reasoning_suffix", "frontier-extra"):
+    for token in ("standard", "advanced", "implementation-suffix", "integration-extra", "reasoning_suffix", "frontier-extra"):
         assert read_model_class(f"## Model class\n`{token}`\n") == "unlabelled"
     assert read_model_class("## Model class\nmechanical-extra\n") == "unlabelled"
     assert read_model_class("no such section here") == "unlabelled"
@@ -1346,7 +1348,7 @@ def _test_read_model_class() -> None:
         "jmcvetta/career#511",
         "implementation",
     )
-    for token in ("reasoning", "frontier", "standard", "advanced", "implementation-extra"):
+    for token in ("integration", "reasoning", "frontier", "standard", "advanced", "implementation-extra"):
         try:
             parse_class_override(f"jmcvetta/career#511={token}")
         except BuildError:

@@ -14,10 +14,11 @@ const model = (id, overrides = {}) => ({
 	...overrides,
 });
 const MECHANICAL = model("gpt-6-luna");
+const TERRA = model("gpt-6.1-terra");
 const REASONING = model("gpt-6.1-sol");
 const FRONTIER = model("gpt-6-astra");
 const FOREIGN = model("claude-sonnet", { provider: "anthropic" });
-const MODELS = [MECHANICAL, REASONING, FRONTIER, FOREIGN];
+const MODELS = [MECHANICAL, TERRA, REASONING, FRONTIER, FOREIGN];
 const DEEPSEEK_PRO = model("deepseek-v4-pro", { provider: "deepseek-go", api: "openai-completions" });
 const DEEPSEEK_FLASH = model("deepseek-v4-flash", { provider: "deepseek-go", api: "openai-completions" });
 const GATEWAY_FLASH = model("deepseek/deepseek-v4-flash", { provider: "vercel-ai-gateway", api: "openai-completions" });
@@ -313,17 +314,18 @@ export default function registerUndertakingRoutingChecks(check) {
 		});
 	}
 
-	// An accepted setter is not evidence that the next request actually used the selected model.
-	routingCheck("upward selection waits for the selected worker response", async (create) => {
+	// Accepted integration model and effort setters do not prove the next request used them.
+	routingCheck("upward integration selection waits for the selected worker response", async (create) => {
 		const s = await create();
-		const result = await s.route({ modelClass: "reasoning" });
+		const result = await s.route({ modelClass: "integration" });
 		assert.notEqual(result.isError, true);
-		assert.equal(result.details.undertaking.selectedModel, qualified(REASONING));
+		assert.equal(result.details.undertaking.selectedModel, qualified(TERRA));
 		assert.equal(result.details.undertaking.status, "pending");
 		assert.ok(s.calls.statuses.some(({ value }) => /verif/iu.test(value ?? "")));
 		assert.deepEqual(s.calls.notifications, []);
 		assert.equal(s.calls.models.length, 1);
-		assert.equal(s.calls.models[0], REASONING);
+		assert.equal(s.calls.models[0], TERRA);
+		assert.deepEqual(s.calls.effort, ["medium"]);
 		assertBlocked(await s.tool("write", { path: "implementation.js", content: "change" }));
 		await s.request();
 		assert.equal(s.calls.aborts, 0);
