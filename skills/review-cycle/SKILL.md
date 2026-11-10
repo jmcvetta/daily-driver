@@ -197,9 +197,8 @@ Review record, not transcript
 
 **Every reviewer carries a bounded brief and a publication contract.** What
 disqualifies a dispatch is not that it is a subagent — the constitution reaches
-every subagent here, through `SubagentStart` and the `PreToolUse` hook on
-`Agent`/`Task` — it is a dispatch with no rubric bounding what it reviews and
-no route landing its findings as resolvable threads under a submitted
+every subagent here, through `SubagentStart` — it is a dispatch with no rubric
+bounding what it reviews and no route landing its findings as resolvable threads under a submitted
 `COMMENT` review. What stays forbidden is a dispatch missing either half.
 
 **At `Review the head` the reviewer is still the harness's named review
