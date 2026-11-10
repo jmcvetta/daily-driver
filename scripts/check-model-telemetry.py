@@ -195,7 +195,7 @@ def main() -> int:
     check("count_check_reruns: two extra runs of the same name is two reruns", reruns == 2)
     check("count_check_reruns: no repeats is zero reruns", mt.count_check_reruns([{"name": "a"}, {"name": "b"}]) == 0)
 
-    for token in ("mechanical", "implementation", "reasoning"):
+    for token in ("mechanical", "implementation", "integration", "reasoning"):
         check(
             f"read_model_class: preserves {token}",
             mt.read_model_class(f"## Model class\n\n`{token}`\n") == token,

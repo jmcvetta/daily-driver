@@ -1,0 +1,69 @@
+task_id: epic-11-assigns-integration-class
+description: >-
+  Epic planning distinguishes routine implementation, cross-contract
+  integration, and invariant-heavy reasoning by their capability needs.
+tags: [epic, behaviour, fire]
+
+initial_prompt: |
+  Break this agreed change into three task issues. Show the plan and proposed
+  child bodies only; do not create issues. Every contract and acceptance
+  condition below is settled.
+
+  Child A adds the already-decided optional `request_timeout` integer through
+  the existing configuration parser, API serializer, and settings form. Follow
+  the established `retries` field at each step, including its default,
+  validation, and direct tests. No other behavior changes.
+
+  Child B adds the specified persisted `retry_at` timestamp to task state. The
+  existing schema version, migration, execution writer, recovery reader, hook
+  event, and resume path must retain the supplied transition contract. The
+  existing serialized queue remains unchanged; no concurrent claiming protocol
+  is introduced. Tests cover migration, event content, and resume.
+
+  Child C changes task claiming to be exactly-once under concurrent workers,
+  retries, and stale ownership. Preserve the stated ownership and fencing
+  invariant across every interleaving and add deterministic interleaving tests.
+
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+
+run_limits:
+  max_turns: 60
+  turn_timeout: 900
+  task_timeout: 1200
+
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: "`epic` fires for multi-issue planning"
+    expected_skill: epic
+    skill_name: epic
+  - type: agent_judge
+    description: Planning selects integration by cross-boundary difficulty rather than file count
+    include_agent_output: true
+    include_reference: false
+    weight: 2
+    max_turns: 5
+    turn_timeout: 120
+    agent:
+      type: claude-code
+      model: claude-sonnet-5
+      allowed_tools: []
+      disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor]
+      permission_mode: default
+    prompt: |
+      Find the final reply after the last `[RESULT - …]` tag. Begin the
+      rationale with `ANCHOR: result` or `ANCHOR: none`; no result means 0.
+
+      Score 1.0 only if Child A is `implementation`, Child B is `integration`,
+      and Child C is `reasoning`, each with a concise rationale tied to its
+      stated capability need. A's three established editing points must not be
+      treated as integration merely because they cross files or layers. B's
+      rationale must name the persisted execution/recovery/hook/resume
+      contracts and the behavior preserved across them. C's rationale must
+      name the exactly-once ownership and fencing invariant under concurrency,
+      retries, and stale ownership. All three designs are settled; the reply
+      must not request more specification or choose `frontier`. Score 0.0 if
+      it uses file count alone, treats integration as open design, or assigns
+      the same class to all three children.

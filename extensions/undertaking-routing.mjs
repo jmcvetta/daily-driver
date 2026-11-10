@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { MODEL_CLASS_ROUTES, explicitModelClassRole, readExecutionCandidates } from "./role-default-helper.mjs";
 
 const ENTRY = "daily-driver-undertaking-route";
-const CLASSES = ["mechanical", "implementation", "reasoning", "frontier"];
+const CLASSES = ["mechanical", "implementation", "integration", "reasoning", "frontier"];
 const EFFORT = /:(off|minimal|low|medium|high|xhigh|max|auto|inherit)$/u;
 const GUARDED_APIS = ["openai-completions", "openai-responses", "openai-codex-responses", "anthropic-messages", "google-generative-ai", "google-gemini-cli", "google-vertex"];
 const SPECIALISTS = new Set(["reviewer", "scout", "security-reviewer", "seance"]);
