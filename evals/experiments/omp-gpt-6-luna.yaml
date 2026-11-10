@@ -27,6 +27,7 @@ defaults:
     # Exact Codex selector, also pinned for every helper role in this home's
     # role overlay by the Omp adapter.
     model: openai-codex/gpt-6-luna
+    extra_args: ["--thinking", "high"]
     permission_mode: acceptEdits
     # Enforced as `omp --tools=read`: `Skill` needs `read`, which is how Omp
     # engages a skill. A row that restates this field replaces it.
