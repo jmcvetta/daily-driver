@@ -45,10 +45,10 @@ defaults:
   agent:
     type: claude-code
 
-    # `coder-eval` 0.11.6 defaults this to `claude-sonnet-4-6`, which is stale.
-    # Pinned so a report says which model produced it, and so the arms differ
-    # only in whether the plugin is loaded.
-    model: claude-sonnet-5
+    # The corrected cohort pins both model and effort.
+    model: claude-sonnet-5-5
+    sdk_options:
+      effort: high
 
     permission_mode: acceptEdits
 

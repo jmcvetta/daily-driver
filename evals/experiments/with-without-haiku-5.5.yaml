@@ -3,9 +3,7 @@
 # whether this plugin's skills fire, and the constitution lands, when the
 # session runs on the cheapest current Claude model.
 #
-# Effort is left unset, as in `with-without.yaml`, so the session runs at
-# Claude Code's own default for the model. `make evals-run-haiku-5-5` runs it,
-# and the `-e` warning in `with-without.yaml` applies here unchanged.
+# The corrected cohort pins medium effort. Historical records predate this pin.
 
 experiment_id: with-without-haiku-5-5
 description: >-
@@ -39,6 +37,8 @@ defaults:
     type: claude-code
 
     model: claude-haiku-5-5
+    sdk_options:
+      effort: medium
 
     permission_mode: acceptEdits
 
