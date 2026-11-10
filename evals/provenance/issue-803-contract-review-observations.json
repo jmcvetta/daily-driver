@@ -101,6 +101,11 @@
     "observation": "A private-home loopback fixture amended the retained issue contract to revision 2 and launched the native review command. Its running exec session was continued with write_stdin three times.",
     "limits": "Each continuation remained nonterminal and reported reconnecting while waiting for network. The local provider observed no native reviewer request, and no fixture review was submitted. The parent process exited; its exec session has no documented standalone continuation. A nested sandbox network restriction is a possible cause, not an established diagnosis."
   },
+  "codex_isolation_preflight": {
+    "cli": "codex-cli 0.160.0",
+    "observation": "An unprivileged bubblewrap user and network namespace had only loopback and no routes; a same-port local listener check did not reach the host listener. Strict config/read accepted experimental proxy default-deny with an exact 127.0.0.1 allow, broader local binding disabled, and upstream proxy disabled. Inside the isolated namespace, a workspace-write proxy preflight failed to create its first exec process with permission denied; neither controlled listener was reached. A minimal workspace-write /bin/true with private dev, proc and tmp failed inside bubblewrap because it could not create a new namespace.",
+    "limits": "Configuration acceptance is not proxy-enforcement evidence. The documented allow rule is IP-scoped, not port-scoped, so host-loopback use could reach other listeners. The nested namespace failure is observed; it does not prove the cause of the earlier permission-denied error. No reviewer or valid fixture publication was established and no sandbox or host privilege was relaxed."
+  },
   "codex_fixture_publication": {
     "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
     "observation": "The offline GitHub fixture accepted and retained scripted COMMENT review ID 1 with contract revision 2 and C2 in its summary.",
