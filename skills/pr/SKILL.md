@@ -1,9 +1,10 @@
 ---
 name: pr
 description: >-
-  This skill should be used whenever a GitHub pull request is being opened for
-  the current branch, or an existing one is being brought up to date as a
-  whole — including when the user says "/pr", "open a PR", "create a PR",
+  Read before validation, proposing or changing CI enforcement, or opening or
+  updating a pull request. The policy applies without an issue or PR; reading it
+  does not start PR creation. For the current branch, triggers include
+  "/pr", "open a PR", "create a PR",
   "raise a pull request", or "update the PR", and including any call the agent
   makes on its own initiative before creating a pull request, or updating an
   existing pull request beyond its title or body alone. Supplies the branch
@@ -121,3 +122,68 @@ Github Issues
 If this PR was created to fix/implement a Github Issue, reference it. Deciding
 that there is an issue to reference is this skill's call; the section's format
 and placement in the body belong to `pr-body`.
+
+
+Validation and completion
+=========================
+
+This policy applies to ordinary repository work as well as pull requests.
+Reading it does not start PR creation.
+
+Completion requires observed success from all remaining applicable project
+gates: tests, linters, formatters, and validation. Expected success is not evidence.
+
+Push and read CI. Local project checks require a specific failure being repaired
+or an isolated bounded experiment with disposable inputs and a stated concrete
+question. Whole-project checks and routine assurance are not experiments.
+Experiments grant no production access, dangerous operations, live third-party
+fixtures, paid model runs, broader triggers, or recurring checks.
+
+Never bypass or remove validation for cost or effort. Only explicit owner
+direction may reduce CI scope or spending: disclose lost coverage; never claim
+removed or unrun checks passed, hide failures, weaken security, or skip required
+tests. `provenance` owns the application-test and script-execution contract.
+
+
+Recurring CI costs
+==================
+
+This policy applies before proposing or changing CI enforcement. Read it at
+that action, not only when opening a PR. Reading the policy does not authorize
+opening a PR.
+
+New CI checks add recurring execution, review, failure-triage and maintenance
+costs. More checks are not inherently better. Prefer established checks and
+necessary regression coverage in existing suites. Do not add a job, workflow,
+tool, matrix entry or standalone check when existing tooling can catch the
+defect; placing a standalone check inside an existing job does not change this.
+
+Before proposing an additional check, name the concrete failure it catches and
+the gap in existing coverage. Extra confidence, best practice or completeness
+alone is not a reason. Keep enforcement proportional to the task; do not make
+a task-local problem repository-wide or keep a one-time migration check
+permanently without a recurring need.
+
+Paid services, recurring checks, broader triggers, or matrix dimensions need
+user approval for the named expansion, not general feature or green-CI approval.
+Do not ask again when authorized. Ordinary implementation and regression
+coverage in existing suites need no new approval.
+
+Proposals use only these three short fields: **Failure caught**, **Existing
+coverage gap**, and **Recurring cost**. State trigger frequency,
+runner/matrix footprint, expected runtime, external charges and what the
+check replaces, where applicable. Mark unknowns and distinguish estimates
+from measurements. Do not run paid benchmarks to fill these fields.
+
+For authorized additions, use appropriate timeouts, safe cancellation of
+superseded runs and relevant-change selection that preserves coverage and
+required-status reporting. Avoid duplicate enforcement. When a new check
+replaces an old one, remove the obsolete check in the same change without
+losing required coverage.
+
+This policy does not permit skipping required tests, weakening security,
+hiding failures or disabling established gates to save cost. Tests of testing
+machinery remain prohibited unless that machinery is the shipped product.
+
+**CI is the gate** means use established project gates. It does not instruct
+you to invent a new gate for each task.

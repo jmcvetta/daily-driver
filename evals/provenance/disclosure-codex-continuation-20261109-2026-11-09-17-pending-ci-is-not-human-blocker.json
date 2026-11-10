@@ -1,0 +1,303 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an unfinished PR",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply retains ownership through the CI wait",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "variant_id": "base"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an unfinished PR",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply retains ownership through the CI wait",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "variant_id": "candidate"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an unfinished PR",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply retains ownership through the CI wait",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "variant_id": "base"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`undertake` handles an unfinished PR",
+          "details": "observed='yes', expected='yes' (skill_name='undertake')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The reply retains ownership through the CI wait",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.288887,
+      "cost_source": "reported",
+      "elapsed_seconds": 41.2643837928772,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-codex-continuation-20261109",
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 111744,
+        "output_tokens": 1260,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 39043
+      },
+      "tokens": 152047,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.234744,
+      "cost_source": "reported",
+      "elapsed_seconds": 35.69487285614014,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-codex-continuation-20261109",
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 73088,
+        "output_tokens": 1486,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 30724
+      },
+      "tokens": 105298,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": 0.332045,
+      "cost_source": "reported",
+      "elapsed_seconds": 60.97423768043518,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-codex-continuation-20261109",
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 177920,
+        "output_tokens": 1718,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 38309
+      },
+      "tokens": 217947,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.296046,
+      "cost_source": "reported",
+      "elapsed_seconds": 41.47925519943237,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-codex-continuation-20261109",
+      "task_id": "undertake-17-pending-ci-is-not-human-blocker",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 158592,
+        "output_tokens": 1522,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 34218
+      },
+      "tokens": 194332,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "codex-daily-driver",
+    "recorded_version": "codex-cli 0.160.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-09T16:35:30.558479",
+  "experiment_id": "disclosure-codex-continuation-20261109",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "model_requested": [
+      "claude-sonnet-5"
+    ],
+    "models_observed": "unavailable",
+    "route": "claude-code",
+    "selection": "task-pinned",
+    "usage": "unavailable"
+  },
+  "plugin_revision": {
+    "commit": "4913934300724df0554fa5894924d34bc39de05e",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-09T09:41:20.683381+00:00",
+  "run_id": "17-pending-ci-is-not-human-blocker",
+  "schema_version": 5,
+  "started_at": "2026-11-09T16:32:31.135304",
+  "variants": [
+    {
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "per_replicate_scores": {
+        "undertake-17-pending-ci-is-not-human-blocker": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-17-pending-ci-is-not-human-blocker"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "per_replicate_scores": {
+        "undertake-17-pending-ci-is-not-human-blocker": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "undertake-17-pending-ci-is-not-human-blocker"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}

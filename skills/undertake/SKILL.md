@@ -1,20 +1,15 @@
 ---
 name: undertake
 description: >-
-  This skill should be used whenever a GitHub issue, or a task this skill is
-  explicitly invoked on, is being taken from its description to a completed
-  result — a pull request ready for review or an evidenced answer-only research
-  result — and on the agent's own move from reading an issue to writing code
-  for it. It covers keeping a pull request current after it goes ready too:
-  "the PR is behind master", "bring the branch up to date". Two things fire
-  it: an issue handed over to be worked, or an explicit invocation. An
-  invocation carrying no issue opens one itself, but one of the two is still
-  required — "implement a retry loop" and "fix this function", with neither,
-  are ordinary work and must NOT fire it. Supplies the step order and gates,
-  the ready gate a branch behind its base does not pass, the pause on a human
-  action, and the base merge that keeps it current; the round is
-  `review-cycle`'s. Not for reading or discussing an issue: "what does #191
-  say" is a question, not an assignment.
+  Use for an assigned GitHub issue, an explicit undertaking invocation, or a
+  PR branch update such as "bring it up to date". Owns the issue-to-result
+  sequence, readiness and ongoing base currency; review rounds belong to
+  review-cycle. An invocation without an issue opens one. Ordinary coding
+  requests without an issue or invocation do not start this sequence.
+  Reading or discussing an issue is not an assignment. Also read the relevant
+  execution policy before delegation, manual frontier escalation or an
+  unfinished stop, even without an issue. A policy-only read does not start
+  the issue sequence or create an issue.
 ---
 
 # Undertake
@@ -38,7 +33,7 @@ restate**. The task branch and execution root live in `task-worktree`, the
 title convention in `pr-title`, the pull request itself in `pr`, the review
 round in `review-cycle`, the model, harness and session record every write
 carries in `provenance`, what is worth asking the user in `judgement-call`,
-and the engineering standard in the constitution. Where a step below names a
+and coding discipline in `provenance`. Where a step below names a
 rule one of those owns, it names it as a pointer and cites the owner — a rule
 that acquires a second home here is one whose copy goes stale, and a citation
 is what makes the drift visible. There is no exception.
@@ -62,6 +57,49 @@ rather than the positions those two occupy today.
 `scripts/check-step-names.py` is what enforces it.
 
 
+Execution policy outside the issue sequence
+===========================================
+
+Read these policies before their action, including ordinary work without an
+issue. Reading them does not start the sequence below.
+
+**Delegation.** Plan first. Delegate only independent parallel work; single
+tasks stay with their owner. Avoid excess capability or workers; batch suitable
+work. Launch independent file slices together before your own work.
+Quota is the user's money.
+
+**Manual frontier escalation.** The escalation authorizes diagnosis and plan
+repair without asking again. Identify the failed approach, design, affected
+surfaces, constraints and acceptance criteria. Preserve every behavior without
+bypasses or dropped criteria. Read-only research and authorized planning or
+specification edits are allowed. Code, tests, configuration, implementation
+commits, and the implementation/review/CI loop need a separate explicit user
+exception with bounded scope. Manual selection, “fix this”, urgency, difficulty,
+or task approval is not that exception.
+
+Return to the lowest eligible ordinary class through a supported verified
+in-session switch or a route-enforced verified full handoff. Retain the issue,
+branch, worktree, valid changes, failure evidence, repaired plan, acceptance
+criteria and original approval sources and conditions. Do not create a competing
+branch or claim. The receiver owns execution; the sender stops without
+supervision. Without a return route, deliver the repaired plan, capability gap
+and smallest operator action. No implementation fallback, unverified transfer,
+or completion claim. This cost boundary applies without an undertaking or
+frontier agent; it is not speculative parallel delegation.
+
+**Errors and unfinished stops.** Diagnose errors, repair within scope, revise
+the plan, and continue permitted work. A failed command or approach alone is
+not a blocker. Suspected Daily Driver defects use `issue`'s attribution and
+automatic-reporting route; target-repository defects use their normal route.
+Pause only for a contribution you cannot supply. Before an unfinished stop,
+finish independent permitted work unless safety requires immediate stop.
+Report the blocked operation, observed failure or exact prohibition, original
+authorization checked, permitted routes considered, smallest external
+contribution, completed or actionable independent work, and actual resume path.
+Use `Where it stops and waits` for classification, even outside an undertaking.
+Never probe a prohibited operation to prove a blocker.
+
+
 The sequence
 ============
 
@@ -72,7 +110,7 @@ The sequence
 | 2 | `Read the issue and its edges` | the harness's issue client, `issue-deps`, `issue-labels` |
 | 3 | `Establish task worktree` | `task-worktree` |
 | 4 | `Claim the issue` | this skill |
-| 5 | `Implement` | the constitution |
+| 5 | `Implement` | `provenance` |
 | 6 | `Open the draft` | `pr` |
 | 7 | `Review the head` | `review-cycle` |
 | 8 | `Fix, answer, resolve, push` | `review-cycle` |
@@ -252,8 +290,8 @@ claim provenance record the observed model, not task metadata.
 Operator selection is different from an agent assignment. Do not reject a
 manual frontier switch or native model-mention consultation for missing
 issue-level frontier approval. Preserve the assigned worker, class, approval
-record, and verification state. Follow the constitution's *Manual frontier
-escalation* for plan repair and return to the ordinary worker; consultation
+record, and verification state. Follow *Manual frontier escalation* in this
+skill's execution policy for plan repair and return to the ordinary worker; consultation
 does not authorize implementation. Agent-initiated routes and automatic
 fallbacks still require their own authorization.
 
@@ -534,8 +572,8 @@ execution identity to a non-frontier route. It does not implement or supervise
 that work on frontier. The receiving session owns the undertaking. This is
 routing, not parallelism across issues; `embark` still owns wave dispatch.
 
-For a manual escalation during an existing undertaking, follow the
-constitution's *Manual frontier escalation*: repair the failed plan first,
+For a manual escalation during an existing undertaking, follow this skill's
+*Manual frontier escalation*: repair the failed plan first,
 then return the existing work and its authorization to a verified eligible
 worker. Preserve the branch, worktree and claim; do not start a competing
 undertaking. If no return route is available, deliver the repaired plan and
@@ -550,9 +588,8 @@ worked at once, that skill opens a session or a subagent per task, and each of
 them runs this sequence in its own context. Delegation there is what buys the
 parallelism; delegation here duplicates a session that is already on the work.
 
-The constitution governs, under *While you write code*, *Before you commit* and
-*When you hit a wall*. Nothing about how to write or commit the code is decided
-here.
+`provenance` governs coding and commit discipline. `pr` governs validation and
+CI execution. This skill owns execution sequencing and operational escalation.
 
 **Architecture documentation is part of implementation.** Before changing the
 system, read its relevant architecture documentation and diagrams. As the
@@ -1303,7 +1340,7 @@ was given, report the stop under `Reporting to an orchestrator`.
   branch`'s first source. Guessing which one the harness will accept risks a
   claim already posted at `Claim the issue` that no push can honour.
 - **The approach failing mid-implementation**, at `Implement`, is not itself
-  a stop. Apply the constitution's *When you hit a wall*: diagnose, revise the
+  a stop. Apply *Errors and unfinished stops*: diagnose, revise the
   plan and continue. Escalate only an evidenced dependency under the rules
   below; do not ask the user to approve ordinary repair work.
 - **CI still running**, at `Ready for review`. A wait, not a question —

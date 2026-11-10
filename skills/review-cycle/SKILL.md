@@ -197,10 +197,9 @@ Review record, not transcript
 
 **Every reviewer carries a bounded brief and a publication contract.** What
 disqualifies a dispatch is not that it is a subagent — the constitution reaches
-every subagent here, through `SubagentStart` and the `PreToolUse` hook on
-`Agent`/`Task` — it is a dispatch with no rubric bounding what it reviews and
-no route landing its findings as resolvable threads under a submitted
-`COMMENT` review. What stays forbidden is a dispatch missing either half.
+every subagent here, through `SubagentStart` — it is a dispatch with no rubric
+bounding what it reviews and no route landing its findings as resolvable
+threads under a submitted `COMMENT` review. What stays forbidden is a dispatch missing either half.
 
 **At `Review the head` the reviewer is still the harness's named review
 surface, and only that surface.** It supplies both by being named, along with
@@ -365,7 +364,7 @@ one more targeted pass over that correction delta and its regression risk.
 That repeats while the passes keep finding defects.
 
 **Three consecutive passes that each record defects is the wall**, in the
-sense the constitution's *When you hit a wall* gives it: the corrections are
+sense `undertake`'s operational escalation policy gives it: the corrections are
 not converging, and a fourth attempt is the push-through that rule forbids.
 Stop there. Post the outstanding defects on the pull request, leave (or
 return) the pull request in draft, keep the caller's watch armed, and say in
