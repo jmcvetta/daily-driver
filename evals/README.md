@@ -979,16 +979,18 @@ variants use this same dependency revision. The bare control loads no plugins.
 No user-level Claude plugin installation is required.
 
 Make eval commands use `uv tool run --isolated`, the pinned harness, and
-editable adapters from this checkout. A shared `coder-eval` installation can
-retain an older adapter, including one from another worktree. Direct CLI
-commands must select the same isolated adapters instead of trusting that
-installation. For example, this selected plan makes no inference calls:
+editable adapters from this checkout. They also pin Typer to 0.24.1:
+coder-eval 0.11.6 fails to start with Typer 0.29.0. A shared `coder-eval`
+installation can retain an older adapter, including one from another worktree.
+Direct CLI commands must use the same isolated dependencies and adapters.
+For example, this selected plan makes no inference calls:
 
 ```sh
 (
   cd evals
   TELEMETRY_ENABLED=false uv tool run --isolated --python 3.13 \
     --from coder-eval==0.11.6 \
+    --with typer==0.24.1 \
     --with-editable ./coder-eval-omp --with-editable ./coder-eval-codex \
     coder-eval plan -e experiments/classes-gemini-3.1-pro.yaml \
       tasks/model-classes/career-370.yaml
@@ -1227,6 +1229,7 @@ separately and refresh quota between Gemini runs:
   cd evals
   TELEMETRY_ENABLED=false uv tool run --isolated --python 3.13 \
     --from coder-eval==0.11.6 \
+    --with typer==0.24.1 \
     --with-editable ./coder-eval-omp --with-editable ./coder-eval-codex \
     coder-eval run --max-parallel 1 --repeats 1 \
     -D run_limits.max_turns=5 -D run_limits.turn_timeout=120 \
