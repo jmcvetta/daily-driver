@@ -7,11 +7,10 @@
 review surface and "never a bare subagent", on the stated grounds that a bare
 subagent "is an ad-hoc dispatch with no review rubric or publication
 contract" and inherits nothing. The second half was false in this plugin:
-`hooks/hooks.json` runs `hooks/inject-constitution.py` on both
-`SubagentStart` and a `PreToolUse` matcher of `^(Agent|Task)$`, so every
-subagent already receives the constitution. `a00f9f3`, the commit that added
-the rule, was written to make subagents inherit that law on Codex too — it
-never claimed a subagent inherits nothing, and the rule as stated overshot
+`hooks/hooks.json` runs `hooks/inject-constitution.py` on `SubagentStart`, so
+every subagent already receives the constitution. `a00f9f3`, the commit that
+added the rule, was written to make subagents inherit that law on Codex too —
+it never claimed a subagent inherits nothing, and the rule as stated overshot
 that intent.
 
 The cost was not theoretical. `Verify the fix delta` asks for one reviewer
