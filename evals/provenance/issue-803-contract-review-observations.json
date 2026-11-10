@@ -32,5 +32,20 @@
     "observation": "The delivered reviewer cleared the conforming control, named its SHA and revision, and did not demand sorting or validation.",
     "judge": "omp-gpt-6.1-sol, score 1, rubric freeze 5a5379fc3b8e017a909c3a576778b4e4f487ad0e2a4949c3cf159125ed5b8af7",
     "limits": "The case-specific rubric is uncalibrated. This is not a baseline-versus-candidate comparison or publication proof."
+  },
+  "omp_publication": {
+    "plugin_revision": "ac802f27cd14e2f4b09aa29443fce21ad348ec2c",
+    "parent_model": "openai-codex/gpt-6.1-sol:high",
+    "reviewer_model": "unreported",
+    "artifact_sha": "4623a4741c4435b3f230e532e2ecb50446f100bd",
+    "contract": "uploader-contract revision 2; fixture issue #24 version 2",
+    "observation": "The named reviewer identified omitted C2 backoff. The parent submitted fixture COMMENT review ID 1 on the artifact, placing the unanchorable omission in the summary and rejecting the worker's completion claim.",
+    "judge": "omp-gpt-6.1-sol, score 1, rubric freeze fc7d7f7a6d17dda2f07286fde6177469db6ce26a98e955d0bee2e216e20943e6",
+    "limits": "The explicit evaluation prompt supplied the contract; fixture task-state handoff was unavailable and issue view did not contain its version-2 snapshot. The case-specific rubric is uncalibrated. This does not prove retained-source transport or another harness."
+  },
+  "codex_fixture_publication": {
+    "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
+    "observation": "The offline GitHub fixture accepted and retained scripted COMMENT review ID 1 with contract revision 2 and C2 in its summary.",
+    "limits": "The review was scripted, not returned by Codex. This tests fixture publication only and does not establish model behavior or actual Codex review publication."
   }
 }
