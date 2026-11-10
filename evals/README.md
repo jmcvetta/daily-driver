@@ -91,6 +91,11 @@ identity and effective effort were unreported. Its recorded checkout was dirty:
 the pending Makefile runner cutover was the tracked modification. This is
 smoke evidence, not a frozen cohort.
 
+A matching [Terra smoke](provenance/omp-gpt-6-1-terra-2026-11-10-issue-695-terra-smoke.json)
+also passed both treated cases and failed both bare cases. Omp reported the
+selected Terra route and high effort for each attempt; backend-served identity
+remained unreported. The recording checkout was dirty from README edits made
+after the run started. This is not full-cohort evidence.
 
 A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
 checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated
