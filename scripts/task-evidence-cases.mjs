@@ -15,7 +15,7 @@ function fixture() {
 	return { root, git, remove: () => rmSync(root, { recursive: true, force: true }) };
 }
 
-async function driver(harness, root) {
+async function driver(harness, root, overrides = {}) {
 	let ledger;
 	const entries = [];
 	const ctx = { cwd: root, agent: { kind: "main" }, sessionManager: { getSessionId: () => "evidence-session", getBranch: () => entries }, ui: { notify() {} } };
@@ -38,9 +38,9 @@ async function driver(harness, root) {
 	const initial = (await call("status")).details;
 	const source = initial.sources[0];
 	const ref = { sourceId: source.sourceId, quote: source.text };
-	const verification = { kinds: ["check", "judgment"], toolName: "fixture-check", input: { root }, subject: { kind: "repository", root } };
+	const verification = { kinds: ["check", "judgment"], toolName: "fixture-check", input: { root }, subject: { kind: "repository", root }, ...overrides };
 	const grounded = await call("contract", { expectedRevision: initial.state.contract.revision, change: "Ground the required offline check and review", sourceRefs: [ref], contract: {
-		criteria: initial.state.contract.criteria.map((item) => ({ ...item, verification })), requiredEvidenceKinds: ["check"], requiredReviewKinds: ["judgment"], approvalRequirements: [],
+		criteria: initial.state.contract.criteria.map((item) => ({ ...item, verification })), requiredEvidenceKinds: verification.kinds.filter((kind) => ["command", "check"].includes(kind)), requiredReviewKinds: verification.kinds.filter((kind) => kind === "judgment"), approvalRequirements: [],
 	} });
 	assert.equal(grounded.isError, undefined, JSON.stringify(grounded));
 	const observe = async (id, response, input = verification.input, pre = true) => {
@@ -54,7 +54,7 @@ async function driver(harness, root) {
 		return call("evidence", { id, taskId: state.taskId, criterionId: "request", contractRevision: state.contract.revision,
 			subject: source.execution?.subject, source: { sourceId: source.sourceId, quote: source.text }, kind: "check", result: "passed", ...overrides });
 	};
-	return { call, event, observe, evidence, verification };
+	return { call, event, observe, evidence, verification, ref };
 }
 
 /** registerTaskEvidenceChecks prevents transport success and stale artifacts from becoming verified completion. */
@@ -94,7 +94,10 @@ export default function registerTaskEvidenceChecks(check) {
 				assert.equal((await d.evidence("check", source)).isError, undefined);
 				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
 				assert.equal((await d.evidence("no-attribution", source, { kind: "judgment" })).isError, true);
-				assert.equal((await d.evidence("review", source, { kind: "judgment", judgment: { reviewer: "independent fixture reviewer", rationale: "Inspected the fixture behavior against the recorded requirement.", artifacts: [`${f.git("rev-parse", "HEAD")}:subject.txt`] } })).isError, undefined);
+				const judgment = { reviewer: "independent fixture reviewer", rationale: "Inspected the fixture behavior against the recorded requirement.", artifacts: [`${f.git("rev-parse", "HEAD")}:subject.txt`] };
+				assert.equal((await d.evidence("invented-review", source, { kind: "judgment", judgment })).isError, true);
+				const review = await d.observe("review", { judgment });
+				assert.equal((await d.evidence("review", review, { kind: "judgment", judgment })).isError, undefined);
 				const receipt = (await d.call("receipt")).details;
 				assert.equal(receipt.verified, true); assert.equal(receipt.criteria[0].evidence.length, 2);
 				assert.equal(JSON.stringify(receipt).includes('"quote"'), false);
@@ -123,6 +126,36 @@ export default function registerTaskEvidenceChecks(check) {
 				await d.event("Interrupt"); await d.event("Stop");
 				assert.equal((await d.call("status")).details.state.status, "cancelled");
 				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
+			} finally { f.remove(); }
+		});
+
+		/** Contract changes must invalidate existing results even when the repository head does not move. */
+		check(`${harness} retains prior evidence but rejects a changed contract revision`, async () => {
+			const f = fixture();
+			try {
+				const d = await driver(harness, f.root);
+				const source = await d.observe("current", { headRefOid: f.git("rev-parse", "HEAD"), statusCheckRollup: [{ conclusion: "SUCCESS" }] });
+				assert.equal((await d.evidence("original-check", source)).isError, undefined);
+				const before = (await d.call("status")).details.state;
+				assert.equal((await d.call("contract", { expectedRevision: before.contract.revision, change: "Ground the existing offline constraint", sourceRefs: [d.ref], contract: { constraints: ["Offline fixture only"] } })).isError, undefined);
+				const receipt = (await d.call("receipt")).details;
+				assert.equal(receipt.criteria[0].disposition, "stale");
+				assert.equal(receipt.criteria[0].evidence[0].id, "original-check");
+				assert.equal((await d.evidence("relabeled-old-check", source)).isError, true);
+				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
+			} finally { f.remove(); }
+		});
+
+		/** Relative file identities must bind to execution cwd, not the controller process's working directory. */
+		check(`${harness} uses file content identity and native exit outcomes without inheriting changed content`, async () => {
+			const f = fixture();
+			try {
+				const d = await driver(harness, f.root, { kinds: ["command"], subject: { kind: "artifact", path: "subject.txt" } });
+				const source = await d.observe("file-command", { exit_code: 0, output: "Offline assertion passed." });
+				assert.equal((await d.evidence("file-command", source, { kind: "command" })).isError, undefined);
+				assert.equal((await d.call("complete", { summary: "File assertion passed." })).details.state.status, "verified-complete");
+				writeFileSync(join(f.root, "subject.txt"), "changed\n");
+				assert.equal((await d.call("receipt")).details.criteria[0].disposition, "stale");
 			} finally { f.remove(); }
 		});
 	}

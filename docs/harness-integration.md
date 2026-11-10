@@ -164,8 +164,10 @@ a native exit status; shell output that merely prints a success claim is not
 an exit status.
 
 Subjective acceptance uses attributed judgments with rationale and inspected
-artifact references. Attribution and prose sufficiency still need review
-against the original observation. Agent reports remain a separate evidence
+artifact references retained in the review observation. An agent cannot invent
+attribution or rationale that the source does not contain. Attribution and
+prose sufficiency still need review against that observation. Agent reports
+remain a separate evidence
 kind and cannot establish a pass. Receipt consumers must distinguish these
 kinds and redact sensitive commentary and local paths before publishing.
 Do not publish retained source quotes. Reuse the receipt inside existing
@@ -305,6 +307,32 @@ These native-event observations establish the adapter route. Offline
 controller/adapter regressions run in the existing `check-omp-extension`
 suite. They do not replace installed-runtime evidence or prove that a model
 will honor arbitrary approval prose.
+
+### Completion-evidence scenarios
+
+The optional `--completion-harness` mode of the existing live task-state
+script exercises the installed runtime with a private HOME, local Git
+fixture and loopback scripted provider. It makes no external inference or
+GitHub fixture requests. Each process has a 120-second deadline and a
+24-request bound. It does not add a recurring CI job or install a shared
+runtime.
+
+```sh
+python3 scripts/check-omp-task-state-live.py --completion-harness omp
+WORKTRUNK_PLUGIN_ROOT=/path/to/installed/worktrunk-plugin \
+  python3 scripts/check-omp-task-state-live.py --completion-harness claude
+python3 scripts/check-omp-task-state-live.py --completion-harness codex
+```
+
+Claude loads the unchanged shipped manifest and its declared Worktrunk
+dependency. Omitting that dependency can omit Daily Driver's tool while an
+unrelated fixture plugin still loads. Codex installs the unchanged plugin
+through a private local marketplace. Its fixture explicitly permits the
+reviewed local hooks through the CLI's automation hook-trust option; it does
+not bypass the task completion gate. The private Codex configuration sets
+`tool_output_token_limit = 20000` so the native status response is not
+truncated before the scripted provider can read it. A truncated status is
+not evidence of a controller pass.
 
 ## Omp task roles and worktrees
 

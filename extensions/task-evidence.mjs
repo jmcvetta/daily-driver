@@ -58,7 +58,7 @@ export function recordEvidence(state, record, source, sessionId) {
 	const execution = source.execution;
 	if (source.kind !== "tool" || !execution || execution.sessionId !== sessionId || execution.taskId !== state.taskId || execution.contractRevision !== state.contract.revision || execution.contractId !== state.contract.contractId) throw new Error("Evidence lacks this task/session's execution-time binding");
 	if (!execution.subject || !equal(record.subject, execution.subject)) throw new Error("Evidence must use the subject captured at execution time");
-	if (!criterion.verification?.subject || !equal(execution.subject, captureSubject(execution.subject.root ?? ".", criterion.verification.subject))) throw new Error("Evidence subject is not the criterion's declared current artifact");
+	if (!criterion.verification?.subject || !equal(execution.subject, captureSubject(execution.cwd, criterion.verification.subject))) throw new Error("Evidence subject is not the criterion's declared current artifact");
 	if (source.textTruncated) throw new Error("Truncated evidence cannot establish a decisive result; retrieve an exact retained source");
 	if (!criterion.verification?.kinds?.includes(record.kind)) throw new Error("Evidence kind does not match the criterion's declared verification");
 	if (record.kind === "command" || record.kind === "check") {
@@ -72,6 +72,7 @@ export function recordEvidence(state, record, source, sessionId) {
 		}
 	} else if (record.kind !== "report") {
 		if (!nonblank(record.judgment?.reviewer) || !nonblank(record.judgment?.rationale) || !Array.isArray(record.judgment?.artifacts) || !record.judgment.artifacts.length || record.judgment.artifacts.some((item) => !nonblank(item))) throw new Error("An attributed judgment requires reviewer, rationale and inspected artifact references");
+		if ([record.judgment.reviewer, record.judgment.rationale, ...record.judgment.artifacts].some((value) => !source.text.includes(value))) throw new Error("Judgment attribution, rationale and artifacts must appear in the retained review observation");
 		if (source.isError) throw new Error("A failed observation cannot support an approving judgment");
 	}
 	if (record.supersedes && !(state.criterionEvidence ?? []).some((item) => item.id === record.supersedes && item.criterionId === record.criterionId && item.kind === record.kind && equal(item.subject, record.subject))) throw new Error("Supersession must identify evidence for the same criterion, kind and subject");
@@ -105,7 +106,7 @@ export function completionReceipt(state, cwd) {
 		artifacts: [...new Map(all.map((item) => [JSON.stringify(item.subject), item.subject])).values()], criteria,
 		notVerified: criteria.filter((item) => item.disposition !== "passed").map((item) => item.id), missingKinds, unknownRequirements,
 		decisions: state.contractHistory.map(({ revision, change }) => ({ revision, rationale: change })),
-		risks: state.plan?.risks ?? null, outstandingApprovals,
+		risks: state.plan?.risks === undefined ? null : { kind: "agent-report", items: state.plan.risks }, outstandingApprovals,
 		verified: Boolean(criteria.length) && criteria.every((item) => item.disposition === "passed") && !missingKinds.length && !unknownRequirements.length && outstandingApprovals?.length === 0,
 		limits: "Command/check outcomes, attributed judgments and agent reports remain distinct. Evidence accounting does not prove arbitrary semantics or the meaning of approval prose. Source excerpts are private; rendering does not publish or complete anything." };
 }

@@ -542,6 +542,10 @@ def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -
 
 
 def main() -> None:
+    if len(sys.argv) == 3 and sys.argv[1] == "--completion-harness":
+        from task_evidence_live import run_completion_harness
+        run_completion_harness(sys.argv[2])
+        return
     omp = shutil.which("omp")
     if not omp:
         raise RuntimeError("omp must be installed for the task-state lifecycle proof")

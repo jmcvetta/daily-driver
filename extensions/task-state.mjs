@@ -301,7 +301,7 @@ export function createTaskStateController(pi) {
 			const criterion = state.contract.criteria?.find((item) => item.verification?.toolName === event.toolName && JSON.stringify(item.verification.input) === JSON.stringify(event.input ?? {}));
 			pi.appendEntry("daily-driver.task-execution", { sessionId: sessionId(ctx), toolCallId: event.toolCallId, externalSourceId: state.externalSourceId,
 				execution: { taskId: state.taskId, contractId: state.contract.contractId, contractRevision: state.contract.revision,
-					sessionId: sessionId(ctx), inputFingerprint: digest(event.input ?? {}), subject: captureSubject(cwd, criterion?.verification.subject) } });
+					sessionId: sessionId(ctx), cwd, inputFingerprint: digest(event.input ?? {}), subject: captureSubject(cwd, criterion?.verification.subject) } });
 		}
 		if (event.toolName !== "task" || !state || state.status !== "active") return;
 		const handoff = contractHandoff(state, { harness: "omp", sessionId: sessionId(ctx), sourceId: state.externalSourceId });
