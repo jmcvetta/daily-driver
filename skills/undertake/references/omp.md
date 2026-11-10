@@ -56,50 +56,33 @@ shared roles.
 Read `details.undertaking` from the result or `daily_driver_get_session`:
 `issue`, `modelClass`, `selectedModel`, `observedModel`, `status`, and
 `capability`, with optional `reason` and `warning`. The session result also
-reports provider and non-secret authentication route. `status` is `pending`,
-`verified`, or `blocked`; `capability` is `mapped` or `unverified`.
-`verified` permits the undertaking to proceed, but execution identity is not
-proof of class suitability. `pending` means a mapped switch was requested but
-actual worker execution is not yet confirmed. Show informative status, not an
-error; wait for the next worker assistant response and read the state again
-before worktree creation, claim, or implementation. A matching model and effort
-can verify without a switch. Read-only discovery and route/session recovery
-remain available while pending; queued mutating calls are blocked.
+reports provider and non-secret authentication route. `status` is `selected`
+after initial route selection; malformed or cancelled state can report
+`blocked`. A selected route is not proof of the observed execution identity or
+class suitability. Keep the requested class, selected model, and observed model
+separate. Do not claim verification from a selector or status alone.
 
-Admission snapshots the effective candidate identities and effort. Worker
-dispatch and observation reuse that decision. A successful response must
-follow an admitted worker request; resolving a selector, rejecting a request,
-or receiving a consultation does not verify the worker. Visible incompatible
-retry and prewalk candidates fail before dispatch.
 
-Routing alone and informative progress wording remain workflow instructions.
-The runtime retains the actual batch admission barrier, not a separate
-conversation-wide procedure check. Omp does not expose every automatic
-transition before resolution, so a final request guard still rejects actual
-unauthorized inference. This guard does not block native host inspection,
-cancellation or model restoration.
+Admission snapshots the effective candidate identities and effort for the
+initial undertaking route. Visible incompatible retry and prewalk candidates
+fail before dispatch. This admission does not impose a continuing request-route
+guard. Agent-initiated worker selection and fallback remain subject to the
+class, frontier approval, and route-integrity requirements as workflow policy;
+operator model, provider, and effort changes remain permitted and must not be
+blocked or reversed.
 
-Request admission checks the captured catalog selection, not the provider's
-transformed request API, endpoint or headers. Provider transport rewriting
-must not interrupt an unchanged selected route. Backend checks apply to catalog
-configuration; the workflow guard does not certify request transport integrity.
+If the known family is absent from the class table, a prominent warning names
+the family, class, and retained provider/model. Continue immediately on the
+invoking model, provider, and effort without confirmation. Class suitability
+remains unverified. Preserve this disposition for agent-initiated worker
+dispatch. If a child cannot retain the initial route, work in the invoking
+session. A missing or cleared class, unavailable initial target, or incompatible
+agent assignment is a configuration gap; unknown identity and later operator
+selection are not absent-family continuation or route violations.
 
-If the known family is absent from the class table, a prominent warning names the
-family, class, and retained provider/model. Continue immediately on the invoking
-model, provider, and effort without confirmation. The route is observed but class
-suitability remains unverified; do not claim qualification. Preserve this
-disposition on re-entry, reload, and permitted worker dispatch. If a child cannot
-retain the route, work in the invoking session.
-
-The effective route must retain the current model family, provider, backend
-and authentication route, including visible child and fallback candidates.
-Account refresh or eligible rotation does not change that invariant. A known
-mapped family with a missing or cleared class, unavailable target, or incompatible
-assignment is a configuration gap. Unknown identity and actual route violations
-are gaps, not absent-family continuation. A rejected route reports its gap and
-must allow explanation and recovery; `blocked` is not success. Independently
-configured `reviewer`, `scout`, `security-reviewer`, and `seance` helpers are
-not issue implementation workers and retain their configured routes.
+Independently configured `reviewer`, `scout`, `security-reviewer`, and `seance`
+helpers are not issue implementation workers for class selection. This does not
+define their cancellation ownership.
 
 After the pull request is ready, or answer-only research is completed and
 recorded, call `daily_driver_finish_undertaking({ issue: <positive issue number> })`
@@ -110,13 +93,12 @@ completed undertaking or resume the existing one before selecting another.
 A finish call with the wrong issue also returns an error and preserves the
 existing state.
 
-**Ordinary conversation recovers automatically.** After request rejection,
-the next prompt restores the admitted worker model and effort without a
-cancel command or manual model change. Restoration validates the existing
-route and available credentials; it does not broaden admission, replay the
-failed request, cancel the task, or verify a pending worker. A missing target
-or unavailable credentials remain an explicit gap. Native consultation and
-independent helper routes remain separate.
+**Operator choices remain in control after admission.** Request rejection or
+resume does not restore or require the initially selected model or effort.
+Operators may change model, provider, and effort at any later point; routing
+must not block those changes. The initial selection remains the undertaking's
+assigned worker identity for agent-initiated dispatch and fallback checks.
+Native consultations and independent helper routes remain separate.
 
 **Operator recovery does not require a model turn.** Run `/undertaking status`
 locally to inspect the owner, selected model and effort, host selection, last

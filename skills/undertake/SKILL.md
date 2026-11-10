@@ -77,12 +77,14 @@ commits, and the implementation/review/CI loop need a separate explicit user
 exception with bounded scope. Manual selection, “fix this”, urgency, difficulty,
 or task approval is not that exception.
 
-Return to the lowest eligible ordinary class through a supported verified
-in-session switch or a route-enforced verified full handoff. Retain the issue,
-branch, worktree, valid changes, failure evidence, repaired plan, acceptance
-criteria and original approval sources and conditions. Do not create a competing
-branch or claim. The receiver owns execution; the sender stops without
-supervision. Without a return route, deliver the repaired plan, capability gap
+For agent-controlled continuation, return to the lowest eligible ordinary
+class through a supported verified in-session switch or a full handoff that can
+constrain and verify that route. This policy does not force or reverse an
+operator's model, provider, or effort choice. Retain the issue, branch, worktree,
+valid changes, failure evidence, repaired plan, acceptance criteria and original
+approval sources and conditions. Do not create a competing branch or claim.
+The receiver owns execution; the sender stops without supervision. If no
+eligible agent route is available, deliver the repaired plan, capability gap
 and smallest operator action. No implementation fallback, unverified transfer,
 or completion claim. This cost boundary applies without an undertaking or
 frontier agent; it is not speculative parallel delegation.
@@ -239,17 +241,16 @@ A frontier assignment must carry explicit approval and its exact work envelope
 before execution. Frontier implementation also needs an explicit user
 exception recorded for that implementation scope.
 
-**Route classed undertaking work before the worktree or claim.** This covers a
-classed `task`, `research` and `bug` alike, by the same route; there is no
-second router. Branch-free answer-only research keeps its route after routing.
-Resolve the
-exact class within the invoking model family and provider, including effort and
-visible fallbacks. Preserve backend and authentication route where supported.
-Never substitute another provider. An eligible account may refresh or rotate;
-do not change shared roles or credentials to make a route available. This
-policy covers undertaking workers, delegated issue work, and their execution
-fallbacks. Independently configured `reviewer`, `scout`, `security-reviewer`,
-and `seance` helpers are not issue implementation workers.
+**Select the initial route for classed undertaking work before the worktree or
+claim.** This covers classed `task`, `research` and `bug` issues alike; there is
+no second router. Resolve the exact class within the invoking model family and
+provider, including effort and visible fallbacks. Preserve backend and
+authentication route where supported. Never substitute another provider. An
+eligible account may refresh or rotate; do not change shared roles or
+credentials to make a route available. This initial selection covers
+undertaking workers, delegated issue work, and their execution fallbacks.
+Independently configured `reviewer`, `scout`, `security-reviewer`, and
+`seance` helpers are not issue implementation workers.
 
 When the known invoking family is absent from the class-routing table, issue a
 prominent WARNING naming the family, required class, and retained provider/model.
@@ -257,25 +258,35 @@ Continue immediately on the invoking model, provider, and effort without
 confirmation. Its suitability for the class is unverified; an observed
 execution identity does not establish suitability. Keep that disposition for
 the same undertaking and its permitted workers. Do not dispatch a replacement
-worker merely to obtain a mapping. If a child cannot retain the route, work in
-the invoking session instead. Frontier approval and route integrity still apply.
+worker merely to obtain a mapping. If a child cannot retain the initial route,
+work in the invoking session instead. Frontier approval and route integrity
+still apply.
 
 A known mapped family with a missing or cleared class, unavailable target, or
-incompatible assignment is a configuration gap. Unknown family or execution
-identity is not evidence of an absent family. Report actual route violations
-and unsupported controls without claiming verification. Preserve provider where
-the harness supports it; state any limitation and never deliberately substitute
-another provider.
+incompatible assignment is a configuration gap at initial selection. Unknown
+family or execution identity is not evidence of an absent family. Report
+unsupported controls without claiming verification. Preserve provider where
+the harness supports it; state any limitation and never deliberately
+substitute another provider.
 
-For a mapped family, prefer a supported in-session switch. Continue only when
-the worker confirms the selected execution identity, not merely when a setter
-accepts a switch. While confirmation is pending, show informative status, not
-an error, and do not establish a worktree, claim, or implement. Sequence routing
-alone in its assistant tool batch and wait for the next worker response to verify
-a pending change before mutations. If an in-session switch is unavailable, a
-full handoff is allowed only on a surface that can constrain and verify the
-same route. The receiving session owns the undertaking; the sender stops.
-If neither route can enforce the invariant, report the precise gap before work.
+For a mapped family, prefer a supported in-session switch for this initial
+selection. Continue only when the worker confirms the selected execution
+identity, not merely when a setter accepts a switch. While confirmation is
+pending, show informative status and do not establish a worktree, claim, or
+implement. Sequence routing alone in its assistant tool batch and wait for the
+next worker response to verify a pending change before mutations. If an
+in-session switch is unavailable, a full handoff is allowed only on a surface
+that can constrain and verify the same initial route. The receiving session
+owns the undertaking; the sender stops. If neither route can establish the
+initial selection, report the precise gap before work.
+
+After initial selection, an operator may change model, provider, or effort.
+Never block or reverse that operator choice, including after request rejection,
+on ordinary conversation, or when resuming an undertaking. Such changes do not
+reassign the undertaking's selected worker or issue class, and do not authorize
+agent-initiated reassignment, delegation, or automatic fallback. Agent-initiated
+routes and fallbacks remain subject to the initial route, frontier approval,
+and route-integrity requirements.
 
 In Omp, an attempt to select another issue does not replace the existing
 undertaking owner. Finish the completed undertaking or resume the existing one

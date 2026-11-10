@@ -29,17 +29,19 @@ prove class suitability or working credentials. Reassess Omp's parent-model
 authentication fallback; do not assume it satisfies the class.
 
 For classed undertaking, call `daily_driver_route_undertaking` alone in its
-assistant tool batch before worktree or claim. A mapped selection preserves
-family, provider, backend, and authentication across workers and fallbacks.
-For a pending change, show non-error status and wait for the next worker response
-to verify execution before mutations. Matching model and effort need no switch.
-If the known family is absent from the class table, warn prominently and
-continue immediately on the invoking model, provider, and effort; suitability
-remains unverified. Retain the invoking session if a child cannot retain the
-route. A missing or cleared class in a mapped family, incompatible assignment,
-unknown identity, or actual route violation is a configuration gap. Do not
-rewrite shared roles or credentials. Independently configured host helpers are
-outside this undertaking policy.
+assistant tool batch before worktree or claim. This makes the initial selection
+within the invoking family and provider; a mapped selection also constrains
+agent-initiated workers and fallbacks to the required family, provider, backend,
+and authentication route. Report the selected route as progress, without
+claiming class suitability or observed execution identity from the selector.
+Matching model and effort need no switch. If the known family is absent from
+the class table, warn prominently and continue immediately on the invoking
+model, provider, and effort; suitability remains unverified. Retain the invoking
+session if a child cannot retain the initial route. A missing or cleared class
+in a mapped family, incompatible assignment, unknown identity, or actual
+agent-route mismatch is a configuration gap. Do not rewrite shared roles or
+credentials. Independently configured host helpers are not issue implementation
+workers for class selection; this does not define their cancellation ownership.
 
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
@@ -53,12 +55,13 @@ retry fallback, or visible parent-model inheritance. Such a route still
 requires explicit approval and the approved work envelope.
 
 An operator's manual frontier selection or native `^provider/model`
-consultation is not an agent-initiated class assignment. The adapter admits
-that consultation without issue-level frontier approval and without changing
-the assigned worker or verifying it. Native dispatch is pinned to the branch's
-exact mentioned model; overrides and automatic fallback acquire no permission.
-The runtime guarantee covers Daily Driver routing and observed dispatch, not
-the origin of every trusted extension's top-level model change.
+consultation is not an agent-initiated class assignment. It is not blocked for
+missing issue-level frontier approval and does not change the assigned worker
+or verify it. Operator model, provider, and effort changes remain permitted
+after initial admission, including on resume. Native dispatch is pinned to the
+branch's exact mentioned model; overrides and automatic fallback acquire no
+permission. Agent-initiated dispatch remains subject to its own class and
+frontier authorization.
 
 The plugin provides runtime defaults only for roles without an effective
 assignment. A global/project setting or CLI overlay present before plugin

@@ -237,14 +237,10 @@ class Model(BaseHTTPRequestHandler):
 
 
 def run_routing_controls(omp: str, base: Path, env: dict[str, str]) -> None:
-    """Prevent a rejected worker or malformed route from stranding local cancellation."""
+    """Keep cancellation and malformed-state controls available without inference."""
     observer = base / "controls-observer.mjs"
     observer.write_text('''import { createHash } from "node:crypto";
 export default function(pi) {
- // Drift after prompt preparation so this probe still exercises rejected-request controls.
- pi.on("before_agent_start",async(_event,ctx)=>{
-  await pi.setModel(ctx.models.resolve("embark-title-probe/embark-title-probe-model"));
- });
  pi.registerCommand("seed-controls", {handler: async (args,ctx) => {
   const model = ctx.models.current();
   const auth = ctx.modelRegistry.authStorage.keys.source(model.provider, {env:"aliases"});
@@ -323,15 +319,13 @@ export default function(pi) {
                     else:
                         command("seed", "/seed-controls " + ("malformed" if malformed else "active"))
                         seeded = status("seeded-status")
-                        assert seeded["state"] == ("blocked" if malformed else "pending"), seeded
-                        if not malformed:
-                            send({"id": "blocked-worker", "type": "prompt", "message": "CONTROL_CONVERSATION_RETAINED"})
-                            wait(lambda frame: frame.get("type") == "agent_end" and frame.get("isTerminal", True))
-                        info = status("blocked-status")
+                        assert seeded["state"] == ("blocked" if malformed else "selected"), seeded
+                        info = status("owner-status")
                         assert info["issue"] == 828, info
-                        assert info["state"] == ("blocked" if malformed else "pending"), info
+                        assert info["state"] == ("blocked" if malformed else "selected"), info
                         assert info["observedModel"] == "unreported", info
-                        assert info["lastRejection"], info
+                        if malformed:
+                            assert info["lastRejection"], info
                         command("wrong-owner", "/undertaking cancel 829")
                         assert status("still-owned")["issue"] == 828
                         command("cancel-owner", "/undertaking cancel 828")
@@ -352,85 +346,39 @@ export default function(pi) {
             assert not any(route.get("completed") or route.get("lifecycle") == "completed" for route in routes)
             if not malformed:
                 assert "CONTROL_CONVERSATION_RETAINED" in session_file.read_text()
-    print("Local undertaking controls: rejected worker, malformed restore, exact owner and cancellation reload passed with zero inference requests")
+    print("Local undertaking controls: malformed state, exact owner and cancellation reload passed with zero inference requests")
 
 
 def run_routing_boundaries(omp: str, base: Path, env: dict[str, str]) -> None:
-    """Prevent transformed provider requests from being rejected and stranding recovery."""
+    """Exercise operator model changes after initial routing and after resume."""
     observer = base / "boundaries-observer.mjs"
-    observer.write_text('''import { appendFileSync } from "node:fs";
-import { installUndertakingRouting } from "''' + os.path.relpath(ROOT / "extensions/undertaking-routing.mjs", base) + '''";
-import { lookup } from "@oh-my-pi/pi-coding-agent/config/registry";
+    observer.write_text('''import { installUndertakingRouting } from "''' + os.path.relpath(ROOT / "extensions/undertaking-routing.mjs", base) + '''";
 export default function(pi) {
  const endpoint=process.env.OFFLINE_PROVIDER_URL;
- const modelConfig=id=>({id,name:id,reasoning:false,input:["text"],compat:{kimiApiFormat:"anthropic"},
+ const modelConfig=id=>({id,name:id,reasoning:true,input:["text"],compat:{kimiApiFormat:"anthropic"},
   cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:131072,maxTokens:1024});
  pi.registerProvider("kimi-code",{
   baseUrl:endpoint,apiKey:"offline-routing-fixture",api:"openai-completions",
   models:[modelConfig("embark-title-probe-model"),modelConfig("independent-reviewer")]
  });
- let models;
- pi.on("before_agent_start",(_event,ctx)=>{ models=ctx.models; });
- pi.on("before_provider_request",(_event,ctx)=>{
-  const identity=model=>({provider:model.provider,id:model.id,api:model.api,baseUrl:model.baseUrl,headers:model.headers ?? {}});
-  appendFileSync(process.env.BOUNDARY_IDENTITIES,JSON.stringify({selected:identity(models.current()),request:identity(ctx.model)})+"\\n");
- });
- let route, finish;
- let drift = false;
- let routes = [{
+ let route;
+ const routes = [{
   referenceModel:"kimi-code/embark-title-probe-model",
   classes:{reasoning:"kimi-code/independent-reviewer"}
  }];
  const register = pi.registerTool.bind(pi);
  pi.registerTool = definition => {
   if (definition.name === "daily_driver_route_undertaking") route = definition;
-  if (definition.name === "daily_driver_finish_undertaking") finish = definition;
   register(definition);
  };
  installUndertakingRouting(pi, () => pi.pi.settings, () => routes);
- pi.on("before_agent_start",async(_event,ctx)=>{
-  if(!drift) return;
-  drift=false;
-  await pi.setModel(ctx.models.resolve("kimi-code/embark-title-probe-model"));
- });
- pi.registerCommand("route-unmapped", {handler:async(_args,ctx)=>{
-  const finished=await finish.execute("finish",{issue:829},null,null,ctx);
-  if(finished.isError) { ctx.ui.notify(JSON.stringify({finished}),"info"); return; }
-  routes=[];
-  const identity=()=>({model:ctx.models.current().provider+"/"+ctx.models.current().id,effort:pi.getThinkingLevel()});
-  const before=identity();
-  const admission=await route.execute("unmapped",{issue:830,modelClass:"reasoning"},null,null,ctx);
-  ctx.ui.notify(JSON.stringify({finished,admission,before,after:identity()}),"info");
- }});
- pi.registerCommand("route-boundary", {handler:async(args,ctx)=>{
-  if(args === "drift") { drift=true; return; }
-  const settings=pi.pi.settings;
-  const chains=lookup("retry.fallbackChains");
-  const previous=chains.get(settings);
-  const prewalk=lookup("prewalk.enabled");
-  const previousPrewalk=prewalk.get(settings);
-  const previousSmol=settings.getModelRole("smol");
-  if(args === "fallback") chains.override(settings,{
-   "kimi-code/independent-reviewer":["kimi-code/embark-title-probe-model"]
-  });
-  if(args === "prewalk") {
-   settings.overrideModelRoles({smol:"kimi-code/embark-title-probe-model"});
-   prewalk.override(settings,true);
-  }
-  try {
-   const result=await route.execute("boundary",{issue:829,modelClass:"reasoning"},null,null,ctx);
-   ctx.ui.notify(JSON.stringify({admission:result}),"info");
-  } finally {
-   chains.override(settings,previous);
-   prewalk.override(settings,previousPrewalk);
-   if(args === "prewalk") settings.overrideModelRoles({smol:previousSmol ?? null});
-  }
+ pi.registerCommand("route-boundary", {handler:async(_args,ctx)=>{
+  const result=await route.execute("boundary",{issue:829,modelClass:"reasoning"},null,null,ctx);
+  ctx.ui.notify(JSON.stringify({admission:result}),"info");
  }});
 }''', encoding="utf-8")
     storage = base / "boundaries-session"
     storage.mkdir()
-    identities = base / "boundaries-identities.jsonl"
-    env = {**env, "BOUNDARY_IDENTITIES": str(identities)}
     start_requests = len(REQUEST_IDENTITIES)
     selected = f"kimi-code/{REVIEWER_MODEL}"
     for resume in (False, True):
@@ -489,62 +437,20 @@ export default function(pi) {
                     admission = next(json.loads(frame["message"])["admission"] for frame in output
                                      if frame.get("message", "").startswith('{"admission":'))
                     assert not admission.get("isError"), admission
-                    assert admission["details"]["undertaking"]["status"] == "pending", admission
-                else:
-                    assert status("reload-pending")["state"] == "pending"
+                    assert admission["details"]["undertaking"]["selectedModel"] == selected, admission
+                    model("operator-model", FIXTURE.MODEL)
+                    send({"id": "operator-effort", "type": "set_thinking_level", "level": "low"})
+                    effort = wait(lambda frame: frame.get("id") == "operator-effort")
+                    assert effort.get("success"), effort
                 before = len(REQUEST_IDENTITIES)
-                result = prompt("verify-worker")
+                result = prompt("operator-prompt")
                 assert result.get("status") == "completed", result
-                assert len(REQUEST_IDENTITIES) == before + 1, "transformed request did not reach provider"
-                verified = status("verified")
-                assert verified["state"] == "verified" and verified["observedModel"] == selected, verified
-                before = len(REQUEST_IDENTITIES)
-                result = prompt("ordinary-worker")
-                assert result.get("status") == "completed", result
-                assert len(REQUEST_IDENTITIES) == before + 1, "ordinary prompt did not reach provider"
-                ordinary = status("ordinary")
-                assert ordinary["state"] == "verified" and ordinary["hostModel"] == selected, ordinary
-                if not resume:
-                    before = len(REQUEST_IDENTITIES)
-                    for candidate in ("fallback", "prewalk"):
-                        output = command("preflight-" + candidate, "/route-boundary " + candidate)
-                        rejected = next(json.loads(frame["message"])["admission"] for frame in output
-                                        if frame.get("message", "").startswith('{"admission":'))
-                        assert rejected.get("isError"), rejected
-                        assert rejected["details"]["undertaking"]["selectedModel"] == selected, rejected
-                        assert len(REQUEST_IDENTITIES) == before, "visible candidate preflight incurred inference"
-                before = len(REQUEST_IDENTITIES)
-                command("arm-late-drift", "/route-boundary drift")
-                prompt("reject-drift")
-                info = status("rejected")
-                assert info["selectedModel"] == selected and info["state"] == "verified", info
-                assert info["hostModel"] == f"kimi-code/{FIXTURE.MODEL}" and info["lastRejection"], info
-                assert len(REQUEST_IDENTITIES) == before, "rejected worker reached the provider"
-                prompt("automatically-restored-worker")
-                restored = status("restored")
-                assert restored["hostModel"] == selected and restored["observedModel"] == selected, restored
-                assert restored["state"] == "verified" and restored["issue"] == 829, restored
-                assert len(REQUEST_IDENTITIES) == before + 1, "recovery must make only the user's admitted request"
-                if resume:
-                    output = command("admit-unmapped", "/route-unmapped")
-                    evidence = next(json.loads(frame["message"]) for frame in output
-                                    if frame.get("message", "").startswith('{"finished":'))
-                    assert not evidence["finished"].get("isError"), evidence
-                    admission = evidence["admission"]
-                    assert not admission.get("isError"), admission
-                    undertaking = admission["details"]["undertaking"]
-                    assert undertaking["capability"] == "unverified" and undertaking["selectedModel"] == selected, undertaking
-                    assert "WARNING:" in undertaking["warning"] and "unverified" in undertaking["warning"], undertaking
-                    assert any(frame.get("message", "").startswith("WARNING:") for frame in output), output
-                    assert evidence["before"] == evidence["after"] and evidence["after"]["model"] == selected, evidence
-                    before = len(REQUEST_IDENTITIES)
-                    result = prompt("unmapped-worker")
-                    assert result.get("status") == "completed", result
-                    assert len(REQUEST_IDENTITIES) == before + 1, "unmapped worker did not reach provider"
-                    unmapped = status("unmapped")
-                    assert unmapped["state"] == "verified" and unmapped["issue"] == 830, unmapped
-                    assert unmapped["hostModel"] == unmapped["observedModel"] == selected, unmapped
-                    assert unmapped["hostEffort"] == evidence["before"]["effort"], unmapped
+                assert len(REQUEST_IDENTITIES) == before + 1, "operator-selected request did not reach provider"
+                assert REQUEST_IDENTITIES[-1] == FIXTURE.MODEL, REQUEST_IDENTITIES
+                info = status("operator-status")
+                assert info["hostModel"] == f"kimi-code/{FIXTURE.MODEL}", info
+                assert info["hostEffort"] == "low", info
+                assert info["issue"] == 829, info
             finally:
                 process.stdin.close()
                 try:
@@ -552,22 +458,8 @@ export default function(pi) {
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait()
-    assert REQUEST_IDENTITIES[start_requests:] == [REVIEWER_MODEL] * 7, REQUEST_IDENTITIES[start_requests:]
-    records = [json.loads(line) for line in identities.read_text(encoding="utf-8").splitlines()]
-    records = [record for record in records if record["request"]["id"] == REVIEWER_MODEL]
-    assert len(records) == 7, records
-    for record in records:
-        catalog, request = record["selected"], record["request"]
-        assert catalog["provider"] == request["provider"] == "kimi-code", record
-        assert catalog["id"] == request["id"] == REVIEWER_MODEL, record
-        assert catalog["api"] == "openai-completions" and request["api"] == "anthropic-messages", record
-        assert request["baseUrl"] + "/v1" == catalog["baseUrl"], record
-        assert request["headers"].get("X-Msh-Platform") == "kimi_cli", record
-        assert catalog["headers"].get("X-Msh-Platform") != "kimi_cli", record
-    assert REQUEST_TRANSPORTS[-7:] == [("/v1/messages", "kimi_cli")] * 7, REQUEST_TRANSPORTS
-    print(f"Undertaking boundaries: selected=kimi-code/{REVIEWER_MODEL} (openai-completions); "
-          "request=kimi-code/independent-reviewer (anthropic-messages); endpoint changed; header names changed; "
-          "seven requests delivered, unmapped warning, ordinary prompts, drift recovery and reload passed")
+    assert REQUEST_IDENTITIES[start_requests:] == [FIXTURE.MODEL, FIXTURE.MODEL], REQUEST_IDENTITIES[start_requests:]
+    print("Undertaking admission: operator model and effort reached local provider before and after resume")
 
 
 def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -> list[dict]:
