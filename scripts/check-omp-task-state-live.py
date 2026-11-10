@@ -30,6 +30,7 @@ REVIEWER_MODEL = "independent-reviewer"
 REVIEWER_REQUESTS: list[str] = []
 TOTAL_REQUESTS = 0
 REQUEST_IDENTITIES: list[str] = []
+REQUEST_TRANSPORTS: list[tuple[str, str | None]] = []
 PROBES = {
     "first": "Fix smoke-first. Verify the fixture offline only.",
     "resume": "Report smoke-resume current state without starting a new task.",
@@ -52,6 +53,7 @@ class Model(BaseHTTPRequestHandler):
         TOTAL_REQUESTS += 1
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         REQUEST_IDENTITIES.append(body["model"])
+        REQUEST_TRANSPORTS.append((self.path, self.headers.get("X-Msh-Platform")))
         messages = body.get("messages", [])
         phase = None
         for candidate in reversed(messages):
@@ -203,14 +205,28 @@ class Model(BaseHTTPRequestHandler):
         else:
             message = {"role": "assistant", "content": "I stopped without evidence or reported completion."}
             finish = "stop"
-        chunks = [
-            {"id": "task-state", "object": "chat.completion.chunk", "model": FIXTURE.MODEL,
-             "choices": [{"index": 0, "delta": message}]},
-            {"id": "task-state", "object": "chat.completion.chunk", "model": FIXTURE.MODEL,
-             "choices": [{"index": 0, "delta": {}, "finish_reason": finish}],
-             "usage": {"prompt_tokens": 20, "completion_tokens": 5, "total_tokens": 25}},
-        ]
-        payload = "".join(f"data: {json.dumps(chunk)}\n\n" for chunk in chunks) + "data: [DONE]\n\n"
+        if phase == "boundaries":
+            chunks = [
+                {"type": "message_start", "message": {"id": "task-state", "type": "message",
+                 "role": "assistant", "model": body["model"], "content": [], "stop_reason": None,
+                 "usage": {"input_tokens": 20, "output_tokens": 0}}},
+                {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}},
+                {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "BOUNDARY_OK"}},
+                {"type": "content_block_stop", "index": 0},
+                {"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": None},
+                 "usage": {"output_tokens": 5}},
+                {"type": "message_stop"},
+            ]
+            payload = "".join(f"event: {chunk['type']}\ndata: {json.dumps(chunk)}\n\n" for chunk in chunks)
+        else:
+            chunks = [
+                {"id": "task-state", "object": "chat.completion.chunk", "model": FIXTURE.MODEL,
+                 "choices": [{"index": 0, "delta": message}]},
+                {"id": "task-state", "object": "chat.completion.chunk", "model": FIXTURE.MODEL,
+                 "choices": [{"index": 0, "delta": {}, "finish_reason": finish}],
+                 "usage": {"prompt_tokens": 20, "completion_tokens": 5, "total_tokens": 25}},
+            ]
+            payload = "".join(f"data: {json.dumps(chunk)}\n\n" for chunk in chunks) + "data: [DONE]\n\n"
         data = payload.encode("utf-8")
         REQUESTS[phase] = index + 1
         self.send_response(200)
@@ -340,27 +356,52 @@ export default function(pi) {
 
 
 def run_routing_boundaries(omp: str, base: Path, env: dict[str, str]) -> None:
-    """Prevent request rejection from requiring manual cancellation or model restoration."""
+    """Prevent transformed provider requests from being rejected and stranding recovery."""
     observer = base / "boundaries-observer.mjs"
-    observer.write_text('''import { installUndertakingRouting } from "''' + os.path.relpath(ROOT / "extensions/undertaking-routing.mjs", base) + '''";
+    observer.write_text('''import { appendFileSync } from "node:fs";
+import { installUndertakingRouting } from "''' + os.path.relpath(ROOT / "extensions/undertaking-routing.mjs", base) + '''";
 import { lookup } from "@oh-my-pi/pi-coding-agent/config/registry";
 export default function(pi) {
- let route;
+ const endpoint=process.env.OFFLINE_PROVIDER_URL;
+ const modelConfig=id=>({id,name:id,reasoning:false,input:["text"],compat:{kimiApiFormat:"anthropic"},
+  cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:131072,maxTokens:1024});
+ pi.registerProvider("kimi-code",{
+  baseUrl:endpoint,apiKey:"offline-routing-fixture",api:"openai-completions",
+  models:[modelConfig("embark-title-probe-model"),modelConfig("independent-reviewer")]
+ });
+ let models;
+ pi.on("before_agent_start",(_event,ctx)=>{ models=ctx.models; });
+ pi.on("before_provider_request",(_event,ctx)=>{
+  const identity=model=>({provider:model.provider,id:model.id,api:model.api,baseUrl:model.baseUrl,headers:model.headers ?? {}});
+  appendFileSync(process.env.BOUNDARY_IDENTITIES,JSON.stringify({selected:identity(models.current()),request:identity(ctx.model)})+"\\n");
+ });
+ let route, finish;
  let drift = false;
+ let routes = [{
+  referenceModel:"kimi-code/embark-title-probe-model",
+  classes:{reasoning:"kimi-code/independent-reviewer"}
+ }];
  const register = pi.registerTool.bind(pi);
  pi.registerTool = definition => {
   if (definition.name === "daily_driver_route_undertaking") route = definition;
+  if (definition.name === "daily_driver_finish_undertaking") finish = definition;
   register(definition);
  };
- installUndertakingRouting(pi, () => pi.pi.settings, () => [{
-  referenceModel:"embark-title-probe/embark-title-probe-model",
-  classes:{reasoning:"embark-title-probe/independent-reviewer"}
- }]);
+ installUndertakingRouting(pi, () => pi.pi.settings, () => routes);
  pi.on("before_agent_start",async(_event,ctx)=>{
   if(!drift) return;
   drift=false;
-  await pi.setModel(ctx.models.resolve("embark-title-probe/embark-title-probe-model"));
+  await pi.setModel(ctx.models.resolve("kimi-code/embark-title-probe-model"));
  });
+ pi.registerCommand("route-unmapped", {handler:async(_args,ctx)=>{
+  const finished=await finish.execute("finish",{issue:829},null,null,ctx);
+  if(finished.isError) { ctx.ui.notify(JSON.stringify({finished}),"info"); return; }
+  routes=[];
+  const identity=()=>({model:ctx.models.current().provider+"/"+ctx.models.current().id,effort:pi.getThinkingLevel()});
+  const before=identity();
+  const admission=await route.execute("unmapped",{issue:830,modelClass:"reasoning"},null,null,ctx);
+  ctx.ui.notify(JSON.stringify({finished,admission,before,after:identity()}),"info");
+ }});
  pi.registerCommand("route-boundary", {handler:async(args,ctx)=>{
   if(args === "drift") { drift=true; return; }
   const settings=pi.pi.settings;
@@ -370,10 +411,10 @@ export default function(pi) {
   const previousPrewalk=prewalk.get(settings);
   const previousSmol=settings.getModelRole("smol");
   if(args === "fallback") chains.override(settings,{
-   "embark-title-probe/independent-reviewer":["embark-title-probe/embark-title-probe-model"]
+   "kimi-code/independent-reviewer":["kimi-code/embark-title-probe-model"]
   });
   if(args === "prewalk") {
-   settings.overrideModelRoles({smol:"embark-title-probe/embark-title-probe-model"});
+   settings.overrideModelRoles({smol:"kimi-code/embark-title-probe-model"});
    prewalk.override(settings,true);
   }
   try {
@@ -388,8 +429,10 @@ export default function(pi) {
 }''', encoding="utf-8")
     storage = base / "boundaries-session"
     storage.mkdir()
+    identities = base / "boundaries-identities.jsonl"
+    env = {**env, "BOUNDARY_IDENTITIES": str(identities)}
     start_requests = len(REQUEST_IDENTITIES)
-    selected = f"{FIXTURE.PROVIDER}/{REVIEWER_MODEL}"
+    selected = f"kimi-code/{REVIEWER_MODEL}"
     for resume in (False, True):
         session_file = next(storage.glob("*.jsonl")) if resume else None
         argv = [omp, "--mode", "rpc", "--extension", str(observer),
@@ -435,7 +478,7 @@ export default function(pi) {
                 return wait(lambda frame: frame.get("type") == "prompt_result" and frame.get("id") == identifier)
 
             def model(identifier, model_id):
-                send({"id": identifier, "type": "set_model", "provider": FIXTURE.PROVIDER, "modelId": model_id})
+                send({"id": identifier, "type": "set_model", "provider": "kimi-code", "modelId": model_id})
                 assert wait(lambda frame: frame.get("id") == identifier).get("success")
 
             try:
@@ -449,9 +492,18 @@ export default function(pi) {
                     assert admission["details"]["undertaking"]["status"] == "pending", admission
                 else:
                     assert status("reload-pending")["state"] == "pending"
-                prompt("verify-worker")
+                before = len(REQUEST_IDENTITIES)
+                result = prompt("verify-worker")
+                assert result.get("status") == "completed", result
+                assert len(REQUEST_IDENTITIES) == before + 1, "transformed request did not reach provider"
                 verified = status("verified")
                 assert verified["state"] == "verified" and verified["observedModel"] == selected, verified
+                before = len(REQUEST_IDENTITIES)
+                result = prompt("ordinary-worker")
+                assert result.get("status") == "completed", result
+                assert len(REQUEST_IDENTITIES) == before + 1, "ordinary prompt did not reach provider"
+                ordinary = status("ordinary")
+                assert ordinary["state"] == "verified" and ordinary["hostModel"] == selected, ordinary
                 if not resume:
                     before = len(REQUEST_IDENTITIES)
                     for candidate in ("fallback", "prewalk"):
@@ -466,13 +518,33 @@ export default function(pi) {
                 prompt("reject-drift")
                 info = status("rejected")
                 assert info["selectedModel"] == selected and info["state"] == "verified", info
-                assert info["hostModel"] == f"{FIXTURE.PROVIDER}/{FIXTURE.MODEL}" and info["lastRejection"], info
+                assert info["hostModel"] == f"kimi-code/{FIXTURE.MODEL}" and info["lastRejection"], info
                 assert len(REQUEST_IDENTITIES) == before, "rejected worker reached the provider"
                 prompt("automatically-restored-worker")
                 restored = status("restored")
                 assert restored["hostModel"] == selected and restored["observedModel"] == selected, restored
                 assert restored["state"] == "verified" and restored["issue"] == 829, restored
                 assert len(REQUEST_IDENTITIES) == before + 1, "recovery must make only the user's admitted request"
+                if resume:
+                    output = command("admit-unmapped", "/route-unmapped")
+                    evidence = next(json.loads(frame["message"]) for frame in output
+                                    if frame.get("message", "").startswith('{"finished":'))
+                    assert not evidence["finished"].get("isError"), evidence
+                    admission = evidence["admission"]
+                    assert not admission.get("isError"), admission
+                    undertaking = admission["details"]["undertaking"]
+                    assert undertaking["capability"] == "unverified" and undertaking["selectedModel"] == selected, undertaking
+                    assert "WARNING:" in undertaking["warning"] and "unverified" in undertaking["warning"], undertaking
+                    assert any(frame.get("message", "").startswith("WARNING:") for frame in output), output
+                    assert evidence["before"] == evidence["after"] and evidence["after"]["model"] == selected, evidence
+                    before = len(REQUEST_IDENTITIES)
+                    result = prompt("unmapped-worker")
+                    assert result.get("status") == "completed", result
+                    assert len(REQUEST_IDENTITIES) == before + 1, "unmapped worker did not reach provider"
+                    unmapped = status("unmapped")
+                    assert unmapped["state"] == "verified" and unmapped["issue"] == 830, unmapped
+                    assert unmapped["hostModel"] == unmapped["observedModel"] == selected, unmapped
+                    assert unmapped["hostEffort"] == evidence["before"]["effort"], unmapped
             finally:
                 process.stdin.close()
                 try:
@@ -480,8 +552,22 @@ export default function(pi) {
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait()
-    assert REQUEST_IDENTITIES[start_requests:] == [REVIEWER_MODEL] * 4, REQUEST_IDENTITIES[start_requests:]
-    print("Undertaking boundaries: rejected HTTP drift, automatic next-prompt recovery and reload passed without manual intervention")
+    assert REQUEST_IDENTITIES[start_requests:] == [REVIEWER_MODEL] * 7, REQUEST_IDENTITIES[start_requests:]
+    records = [json.loads(line) for line in identities.read_text(encoding="utf-8").splitlines()]
+    records = [record for record in records if record["request"]["id"] == REVIEWER_MODEL]
+    assert len(records) == 7, records
+    for record in records:
+        catalog, request = record["selected"], record["request"]
+        assert catalog["provider"] == request["provider"] == "kimi-code", record
+        assert catalog["id"] == request["id"] == REVIEWER_MODEL, record
+        assert catalog["api"] == "openai-completions" and request["api"] == "anthropic-messages", record
+        assert request["baseUrl"] + "/v1" == catalog["baseUrl"], record
+        assert request["headers"].get("X-Msh-Platform") == "kimi_cli", record
+        assert catalog["headers"].get("X-Msh-Platform") != "kimi_cli", record
+    assert REQUEST_TRANSPORTS[-7:] == [("/v1/messages", "kimi_cli")] * 7, REQUEST_TRANSPORTS
+    print(f"Undertaking boundaries: selected=kimi-code/{REVIEWER_MODEL} (openai-completions); "
+          "request=kimi-code/independent-reviewer (anthropic-messages); endpoint changed; header names changed; "
+          "seven requests delivered, unmapped warning, ordinary prompts, drift recovery and reload passed")
 
 
 def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -> list[dict]:
@@ -608,6 +694,7 @@ export default function(pi) {
 }''', encoding="utf-8")
             env = {key: os.environ[key] for key in ("PATH", "TMPDIR", "LANG", "TERM") if key in os.environ}
             env.update(HOME=str(home), STATE_LOG=str(base / "state.log"), ABORT_READY=str(base / "abort-ready"))
+            env["OFFLINE_PROVIDER_URL"] = f"http://127.0.0.1:{server.server_address[1]}/v1"
             for key in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
                 env[key] = str(home / key.lower())
             agents = home / ".omp" / "agent" / "agents"
@@ -617,6 +704,9 @@ export default function(pi) {
                 f"model: {FIXTURE.PROVIDER}/{REVIEWER_MODEL}\n---\nReturn ROUTE_REVIEW_OK without tools.\n",
                 encoding="utf-8",
             )
+            if sys.argv[1:] == ["--routing-boundaries-only"]:
+                run_routing_boundaries(omp, base, env)
+                return
             routing = run(omp, base, env, "routing", routing_observer)
             route_calls = [frame for frame in routing if frame.get("type") == "tool_execution_end"]
             assert len(route_calls) == 5 and all(not frame.get("isError") for frame in route_calls), route_calls
