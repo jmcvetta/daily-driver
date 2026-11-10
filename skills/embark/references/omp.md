@@ -68,8 +68,8 @@ The route an implementor runs
 The `task` surface selects an `agent`, not a model. Every epic story must pass
 `Take the wave`'s assignability gate before dispatch. For mapped families,
 select the agent named for its required class (`mechanical`, `implementation`,
-`reasoning`, or `frontier`). Each batch item sets only `agent`; it carries no
-per-item model argument. Resolve the effective route under
+`integration`, `reasoning`, or `frontier`). Each batch item sets only `agent`;
+it carries no per-item model argument. Resolve the effective route under
 [`issue-body`'s required-class policy](../../issue-body/references/omp.md#the-required-class):
 `task.agentModelOverrides[agentName]` takes precedence over discovered agent
 frontmatter, including a tagged-role assignment such as `@implementation` or

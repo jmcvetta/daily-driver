@@ -156,7 +156,7 @@ def run_task_ids(run: dict[str, Any], variant_id: str) -> list[str]:
     return task_ids
 
 
-_CLASS_TAG_RE = re.compile(r"^class:(mechanical|implementation|reasoning)$")
+_CLASS_TAG_RE = re.compile(r"^class:(mechanical|implementation|integration|reasoning)$")
 
 # Mirrors coder_eval's FinalStatus.category -- this script never imports
 # coder_eval, so the mapping is kept here rather than read from the enum.

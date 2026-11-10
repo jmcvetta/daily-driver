@@ -43,7 +43,7 @@ outside this undertaking policy.
 
 The plugin's `frontier` role defaults to the supported
 `openai-codex/gpt-6-astra:high` selector. Do not invent a Fable selector or
-assume an API route. The `reasoning` role defaults to
+assume an API route. The `integration` and `reasoning` roles default to
 `openai-codex/gpt-6.1-sol:high`, not a frontier route. Classify the resolved
 selector, not the role label: an effective Astra/Fable route is frontier even
 when selected through `reasoning`, an agent override, a configured prewalk or
@@ -89,8 +89,8 @@ Pass rates use the latest run with scored outcomes for each class. `error` and
 unrecognized outcomes are unscored, not model failures; an error-only run does
 not displace the prior scored measurement.
 The capability suite builds only `mechanical` and `implementation` cases.
-`reasoning` and `frontier` receive no measured class claim; route identity and
-approval policy do not imply benchmark support.
+`integration`, `reasoning`, and `frontier` receive no measured class claim;
+route identity and approval policy do not imply benchmark support.
 
 <!-- measured-routes-start -->
 | Model | Settings | Class earned | Mechanical pass rate | Implementation pass rate | Cost per passed case | Run | Recorded |

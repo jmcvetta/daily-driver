@@ -133,7 +133,7 @@ Frontier authorization
 
 **Do not publish or revise an issue into a ready frontier assignment before
 approval.** When the author judges frontier necessary, stop and ask the user
-in chat for explicit confirmation. State why the three ordinary classes cannot
+in chat for explicit confirmation. State why the four ordinary classes cannot
 reliably settle the work. Give the bounded work envelope: question or decision,
 known input scope, expected deliverable, and proposed frontier sessions or
 passes. Distinguish facts, estimates, and unknowns; do not perform frontier

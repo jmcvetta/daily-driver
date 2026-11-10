@@ -2,6 +2,7 @@
 export const MODEL_CLASS_ROLE_DEFAULTS = Object.freeze({
 	mechanical: "openai-codex/gpt-6-luna:low",
 	implementation: "openai-codex/gpt-6-luna:high",
+	integration: "openai-codex/gpt-6.1-sol:high",
 	reasoning: "openai-codex/gpt-6.1-sol:high",
 	frontier: "openai-codex/gpt-6-astra:high",
 });
@@ -57,6 +58,7 @@ function validateModelClassRoutes(routes) {
 export const MODEL_CLASS_ROLE_TAGS = Object.freeze({
 	mechanical: Object.freeze({ name: "Mechanical" }),
 	implementation: Object.freeze({ name: "Implementation" }),
+	integration: Object.freeze({ name: "Integration" }),
 	reasoning: Object.freeze({ name: "Reasoning" }),
 	frontier: Object.freeze({ name: "Frontier" }),
 });

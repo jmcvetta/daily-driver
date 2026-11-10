@@ -63,7 +63,8 @@ effective-kind edits that preserve evidence and provenance. Provenance cases
 also cover repeated blocks, distinct field values, successive revisions, and
 attribution on separate comments. `tasks/epic/`
 includes mixed-kind children and epic outcome completion, first-delivery scope,
-outcome-based task boundaries, and deployment continuity. The undertaking
+ordinary-class boundary selection, outcome-based task boundaries, and
+deployment continuity. The undertaking
 integration-proof case uses a local authenticated request/response fixture to
 assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
@@ -2313,9 +2314,10 @@ under `answer_key_contact` and a measured score of 0. It is scored as a
 failure, not dropped: a model that goes looking when stuck has failed the
 case.
 
-**What it does not measure.** No `reasoning` case: that class is decided by
-the production table and public benchmarks, not by a fixture small enough to
-grade in two minutes (see `skills/issue-body/references/model-classes.md`).
+**What it does not measure.** No `integration` or `reasoning` case: those
+classes are decided by the production table and public benchmarks, not by a
+fixture small enough to grade in two minutes (see
+`skills/issue-body/references/model-classes.md`).
 No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
 is the `omp` arm's, over a different question. And nothing here proves a
 model *should* run in the `task` role generally, only that it cleared a few

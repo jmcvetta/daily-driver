@@ -11,13 +11,20 @@ name a provider, price tier, context window, or reasoning-effort setting.
 | Class | Suitable work | Boundary |
 | --- | --- | --- |
 | `mechanical` | A bounded transformation with an explicit rule, identified scope, existing example, and direct check. | No substantive implementation choice or diagnosis remains. |
-| `implementation` | Settled design using repository patterns, routine local choices, ordinary multi-file coordination, meaningful tests, and local failure diagnosis. | The normal class for a specified feature or bug fix. |
+| `implementation` | Settled design using repository patterns, routine local choices, ordinary multi-file coordination, meaningful tests, and local failure diagnosis. | The normal class for a specified feature or bug fix, even when several files change. |
+| `integration` | Settled implementation whose primary difficulty is coordinating multiple existing components or contracts and preserving behavior across their boundaries. | Name the interacting components or contracts and the cross-boundary behavior to preserve. Ordinary multi-file work, file count, and missing specification are not reasons. |
 | `reasoning` | A settled design with sustained reasoning about interacting invariants or difficult failure modes. | State the irreducible reason, such as concurrency correctness, security boundaries, or data integrity. File count, a security filename, and missing specification are not reasons. |
 | `frontier` | Exceptional, bounded research or planning where the cheaper classes cannot reliably settle the named question. | Requires explicit user approval for the assignment and work envelope; never a default implementation route. |
 
+For example, adding a field through an established API, state, and UI path is
+`implementation`. A settled persisted-state transition affecting execution,
+recovery, hooks, and resume is `integration`. Making task claiming exactly-once
+under concurrent workers, retries, and stale ownership is `reasoning`. When
+both integration and reasoning apply, choose `reasoning`.
+
 Frontier does not mean difficult, underspecified, unavailable, or retrying.
 Those conditions do not authorize its use. A frontier assignment states why the
-three ordinary classes are insufficient.
+four ordinary classes are insufficient.
 
 Improve the task specification before raising its class. A stronger model does
 not make an underspecified task ready.
@@ -26,7 +33,8 @@ not make an underspecified task ready.
 
 Before publishing or revising an issue into a frontier assignment ready for
 execution, stop and ask the user in chat for explicit confirmation. Explain why
-`mechanical`, `implementation`, and `reasoning` cannot reliably deliver it.
+`mechanical`, `implementation`, `integration`, and `reasoning` cannot reliably
+deliver it.
 Silence, broad plan approval, or the author's own judgement is not approval.
 Approval of a plan counts only when it explicitly includes the frontier
 assignment and its work envelope.

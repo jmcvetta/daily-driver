@@ -313,10 +313,10 @@ export default function registerUndertakingRoutingChecks(check) {
 		});
 	}
 
-	// An accepted setter is not evidence that the next request actually used the selected model.
-	routingCheck("upward selection waits for the selected worker response", async (create) => {
+	// An accepted integration setter is not evidence that the next request used the selected model.
+	routingCheck("upward integration selection waits for the selected worker response", async (create) => {
 		const s = await create();
-		const result = await s.route({ modelClass: "reasoning" });
+		const result = await s.route({ modelClass: "integration" });
 		assert.notEqual(result.isError, true);
 		assert.equal(result.details.undertaking.selectedModel, qualified(REASONING));
 		assert.equal(result.details.undertaking.status, "pending");
