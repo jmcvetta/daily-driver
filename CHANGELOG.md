@@ -33,6 +33,26 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.59.0](https://github.com/jmcvetta/daily-driver/compare/v0.58.0...v0.59.0) (2026-11-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* Claude task contracts require native mods support (terminal 2.1.287 or later). A bound task can no longer change scope through begin; use a sourced contract amendment. Explicit resume preserves existing correction bounds. The task-state command exits 0 when the controller reports `isError`.
+
+### Features
+
+* preserve versioned task contracts across supported harnesses ([#809](https://github.com/jmcvetta/daily-driver/issues/809)) ([07cc5c2](https://github.com/jmcvetta/daily-driver/commit/07cc5c221f981b435addacf6e12f276ac0c45c8f))
+
+
+### Bug Fixes
+
+* **omp:** admit legitimate provider transport rewrites ([#850](https://github.com/jmcvetta/daily-driver/issues/850)) ([d1dbc0f](https://github.com/jmcvetta/daily-driver/commit/d1dbc0fd8a2aa08994f1f9109dad38d86f07d191))
+* **omp:** restore undertaking conversation after route rejection ([#843](https://github.com/jmcvetta/daily-driver/issues/843)) ([7a229aa](https://github.com/jmcvetta/daily-driver/commit/7a229aaae9ab61d50c028b2d55a388cd510e2d71))
+* preserve approval boundaries and stop reasons ([#839](https://github.com/jmcvetta/daily-driver/issues/839)) ([4e9fcf8](https://github.com/jmcvetta/daily-driver/commit/4e9fcf804f25b182b39c212034a2aa6d2a5fee5d))
+* **pr:** quiet unchanged Omp owner reminders ([#845](https://github.com/jmcvetta/daily-driver/issues/845)) ([d265de5](https://github.com/jmcvetta/daily-driver/commit/d265de5208d798b7ebe92c55ed82c15dab7e150f))
+* **undertake:** record standing resume branch authorization ([#825](https://github.com/jmcvetta/daily-driver/issues/825)) ([575771e](https://github.com/jmcvetta/daily-driver/commit/575771ebc8ea771715e980d3bafadd231af905ad))
+
 ## [0.58.0](https://github.com/jmcvetta/daily-driver/compare/v0.57.1...v0.58.0) (2026-11-04)
 
 
