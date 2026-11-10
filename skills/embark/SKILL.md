@@ -237,9 +237,9 @@ switch is available, report the gap. Frontier implementation requires explicit
 user authorization for that exception and its bounded scope; planning or
 research approval does not cover it.
 
-For a manual escalation during a task, the constitution's *Manual frontier
-escalation* requires plan repair before returning the existing work. This is
-not permission to retain or supervise the implementation on frontier.
+For a manual escalation during a task, `undertake`'s *Manual frontier escalation*
+policy requires plan repair before returning the existing work. This is not
+permission to retain or supervise the implementation on frontier.
 
 The selected route and actual model are distinct from any task class. Record
 `unreported` when actual identity is unavailable; visible provider fallbacks
@@ -477,8 +477,8 @@ goes stale while it waits and the merge that fixes that is cheap. Nothing here
 decays that way: this backstop catches a dropped event and a dead session, the
 worst case it bounds is one wave delayed by one interval, and a wave of five is
 already holding five two-minute cadences of its own. A second-by-second watch
-over the top of them is quota spent on nothing, and the constitution's
-*Delegation* rule says whose money that is. In the fallback the subagent
+over the top of them is quota spent on nothing, and `undertake`'s
+*Delegation* policy says whose money that is. In the fallback the subagent
 lifecycle supplies the wake, and where the harness can hold no timer at all
 the wave is read again whenever a result or a pull-request event next wakes
 the session — said once, not claimed.

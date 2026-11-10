@@ -1,0 +1,242 @@
+{
+  "attempts": [
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`task-worktree` does not fire on a read-only review",
+          "details": "observed='no', expected='no' (skill_name='task-worktree')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "base"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`task-worktree` does not fire on a read-only review",
+          "details": "observed='no', expected='no' (skill_name='task-worktree')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "candidate"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`task-worktree` does not fire on a read-only review",
+          "details": "observed='no', expected='no' (skill_name='task-worktree')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "base"
+    },
+    {
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`task-worktree` does not fire on a read-only review",
+          "details": "observed='no', expected='no' (skill_name='task-worktree')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "no",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.17394600000000002,
+      "cost_source": "reported",
+      "elapsed_seconds": 13.782768726348877,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-claude-native-continuation-20261110",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "token_usage": {
+        "cache_creation_input_tokens": 41403,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 733,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1072
+      },
+      "tokens": 43208,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.0529054,
+      "cost_source": "reported",
+      "elapsed_seconds": 8.753051042556763,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-claude-native-continuation-20261110",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "token_usage": {
+        "cache_creation_input_tokens": 10518,
+        "cache_read_input_tokens": 30747,
+        "output_tokens": 367,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1072
+      },
+      "tokens": 42704,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": 0.0550574,
+      "cost_source": "reported",
+      "elapsed_seconds": 10.468061447143555,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-claude-native-continuation-20261110",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "token_usage": {
+        "cache_creation_input_tokens": 10661,
+        "cache_read_input_tokens": 30747,
+        "output_tokens": 525,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1072
+      },
+      "tokens": 43005,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.0537354,
+      "cost_source": "reported",
+      "elapsed_seconds": 18.433382749557495,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-claude-native-continuation-20261110",
+      "task_id": "task-worktree-02-neg-read-only-review",
+      "token_usage": {
+        "cache_creation_input_tokens": 10518,
+        "cache_read_input_tokens": 30747,
+        "output_tokens": 451,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1072
+      },
+      "tokens": 42788,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "claude-code",
+    "recorded_version": "2.1.321 (Claude Code)",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-10T19:39:45.855123",
+  "experiment_id": "disclosure-claude-native-continuation-20261110",
+  "host": {
+    "hostname": "carbon",
+    "kind": "cloud",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": "3439551e-ad3b-4a7f-98f2-55db21209be9"
+  },
+  "plugin_revision": {
+    "commit": "76a496b316366ecc127d0311f4856248bbbf679d",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-10T12:46:15.575580+00:00",
+  "run_id": "02-neg-read-only-review",
+  "schema_version": 5,
+  "started_at": "2026-11-10T19:38:54.412138",
+  "variants": [
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "task-worktree-02-neg-read-only-review": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "task-worktree-02-neg-read-only-review"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "task-worktree-02-neg-read-only-review": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "task-worktree-02-neg-read-only-review"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}

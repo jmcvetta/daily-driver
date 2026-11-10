@@ -61,8 +61,8 @@ Actions, Ansible, containers and Claude Code plugins.
 ### Apply it to a project
 
 The catalog records control status and previously decided changes. It does
-not authorize unsolicited control expansion during unrelated work. The
-constitution's [recurring CI cost policy](../rules/constitution.md#recurring-ci-costs)
+not authorize unsolicited control expansion during unrelated work.
+[`pr`'s recurring CI cost policy](../skills/pr/SKILL.md#recurring-ci-costs)
 governs proposals for new checks and other recurring CI expansion.
 
 1. Implement every universal control and applicable decided change recorded
@@ -141,8 +141,8 @@ tag rather than `main`.
 
 A repository rule that a pattern or script can detect may be an executable
 check, not only a sentence in a document. Add one only when it catches a
-concrete failure that existing coverage misses, and only under the
-constitution's recurring CI cost policy. A regression test in an existing
+concrete failure that existing coverage misses, and only under
+`pr`'s recurring CI cost policy. A regression test in an existing
 suite may provide the needed coverage without adding a separate check.
 Tests whose subject is testing machinery are not quality controls and must
 not be added, except when that machinery is the shipped product. Conventions

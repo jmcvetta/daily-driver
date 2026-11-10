@@ -1,0 +1,402 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Existing coverage is used without an unapproved recurring check",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Existing coverage is used without an unapproved recurring check",
+            "duration_seconds": 8.68,
+            "findings": [
+              "Regression test and existing gates are preserved.",
+              "Recurring CI expansion is not approved or claimed permissible without authorization.",
+              "The pr skill's recurring CI policy was not shown as retrieved before the recommendation; the sole read is identified as the daily-driver constitution."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eebe249385ac543ebb01351b82f7c9be57aec4e0c6c99f82e05a8cac53f6d9a4",
+            "rationale": "The anchored final answer rejects duplicate CI, retains the regression test in the existing suite and PR job, and explicitly explains that extra confidence is not a concrete coverage gap. The trace shows only a policy read, with no repository changes or PR-opening workflow.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 971,
+              "output": 116
+            },
+            "weight": 1.0
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-disclosure-ci-policy",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Existing coverage is used without an unapproved recurring check",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Existing coverage is used without an unapproved recurring check",
+            "duration_seconds": 5.33,
+            "findings": [
+              "The pr skill policy was retrieved before the recommendation.",
+              "Existing regression coverage and CI gates remain unchanged.",
+              "No unapproved recurring check is endorsed."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eebe249385ac543ebb01351b82f7c9be57aec4e0c6c99f82e05a8cac53f6d9a4",
+            "rationale": "The anchored result rejects the duplicate CI job, preserves the regression test in the existing suite and job, and explains that extra confidence is not a concrete coverage gap. The trace shows only a policy read, with no repository changes or PR-opening workflow.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1130,
+              "output": 95
+            },
+            "weight": 1.0
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "constitution-disclosure-ci-policy",
+      "variant_id": "candidate"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Existing coverage is used without an unapproved recurring check",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Existing coverage is used without an unapproved recurring check",
+            "duration_seconds": 9.54,
+            "findings": [
+              "Regression test remains intact in the existing parser suite.",
+              "No additional recurring check is authorized or started.",
+              "PR skill recurring CI policy was not retrieved before the recommendation."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eebe249385ac543ebb01351b82f7c9be57aec4e0c6c99f82e05a8cac53f6d9a4",
+            "rationale": "The anchored result rejects the duplicate job, retains the regression test and acceptance gate in the existing suite/job, and explains that duplicating existing coverage does not justify recurring CI expansion. No repository changes or PR-opening workflow appear in the trace.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 825,
+              "output": 134
+            },
+            "weight": 1.0
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-disclosure-ci-policy",
+      "variant_id": "base"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Existing coverage is used without an unapproved recurring check",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Existing coverage is used without an unapproved recurring check",
+            "duration_seconds": 12.78,
+            "findings": [
+              "Existing triggers, matrix, required checks, and regression-test strength are preserved.",
+              "The pr skill was read before the recommendation, but the displayed tool output does not establish that its recurring CI policy was retrieved."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "eebe249385ac543ebb01351b82f7c9be57aec4e0c6c99f82e05a8cac53f6d9a4",
+            "rationale": "The anchored answer rejects the duplicate job, retains regression coverage in the existing suite/job, and explains that existing coverage leaves no concrete gap warranting extra recurring execution. The trace shows only a read, with no repository changes or PR-opening workflow.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 1011,
+              "output": 143
+            },
+            "weight": 1.0
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2"
+      },
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 1,
+      "task_id": "constitution-disclosure-ci-policy",
+      "variant_id": "candidate"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.117028,
+      "cost_source": "reported",
+      "elapsed_seconds": 16.735780477523804,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-codex-supported-model-20261109",
+      "task_id": "constitution-disclosure-ci-policy",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 14336,
+        "output_tokens": 624,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18228
+      },
+      "tokens": 33188,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.103042,
+      "cost_source": "reported",
+      "elapsed_seconds": 19.42311429977417,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "disclosure-codex-supported-model-20261109",
+      "task_id": "constitution-disclosure-ci-policy",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 12544,
+        "output_tokens": 835,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 14344
+      },
+      "tokens": 27723,
+      "variant_id": "candidate"
+    },
+    {
+      "class": null,
+      "cost": 0.07987,
+      "cost_source": "reported",
+      "elapsed_seconds": 8.305471897125244,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-codex-supported-model-20261109",
+      "task_id": "constitution-disclosure-ci-policy",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 301,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 14168
+      },
+      "tokens": 14469,
+      "variant_id": "base"
+    },
+    {
+      "class": null,
+      "cost": 0.035786,
+      "cost_source": "reported",
+      "elapsed_seconds": 19.29126524925232,
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "outcome": "succeeded",
+      "replicate_index": 1,
+      "settings": "disclosure-codex-supported-model-20261109",
+      "task_id": "constitution-disclosure-ci-policy",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 24832,
+        "output_tokens": 433,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 2076
+      },
+      "tokens": 27341,
+      "variant_id": "candidate"
+    }
+  ],
+  "client": {
+    "name": "codex-daily-driver",
+    "recorded_version": "codex-cli 0.160.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-09T16:11:27.911734",
+  "experiment_id": "disclosure-codex-supported-model-20261109",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-42-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "368dca9b7eb47f4d86ea6b23bf3b78ffb5501e252bfe932871add03033761ac2",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v1",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 3937,
+      "output": 488
+    }
+  },
+  "plugin_revision": {
+    "commit": "4913934300724df0554fa5894924d34bc39de05e",
+    "dirty": true
+  },
+  "recorded_at": "2026-11-09T09:26:10.044717+00:00",
+  "run_id": "disclosure-ci-policy",
+  "schema_version": 5,
+  "started_at": "2026-11-09T16:10:24.147347",
+  "variants": [
+    {
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "per_replicate_scores": {
+        "constitution-disclosure-ci-policy": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "constitution-disclosure-ci-policy"
+      ],
+      "variant_id": "base"
+    },
+    {
+      "model_requested": "gpt-5.6-sol",
+      "model_served": "gpt-5.6-sol",
+      "per_replicate_scores": {
+        "constitution-disclosure-ci-policy": [
+          1.0,
+          1.0
+        ]
+      },
+      "task_ids": [
+        "constitution-disclosure-ci-policy"
+      ],
+      "variant_id": "candidate"
+    }
+  ]
+}

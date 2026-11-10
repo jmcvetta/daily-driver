@@ -673,6 +673,9 @@ def answer_key_contact(artifact: dict[str, Any], root: Path) -> list[str]:
 def run_attempts(run_dir: Path, run: dict[str, Any], root: Path) -> list[dict[str, Any]]:
     """Read criterion and early-stop evidence from every preserved task artifact.
 
+    A tool-limit partial is an error with no completion score, even when the
+    framework reports deterministic success. The raw status and score remain.
+
     A model-classes replicate that reached the answer key is recorded with its
     evidence under `answer_key_contact` and a measured score of 0: a copied
     answer is a failure to do the work, and leaving it out instead would hide
@@ -696,7 +699,12 @@ def run_attempts(run_dir: Path, run: dict[str, Any], root: Path) -> list[dict[st
             "raw_weighted_score": artifact.get("weighted_score", result.get("weighted_score", 0.0)),
             "criteria": artifact["success_criteria_results"],
             "early_stop": artifact.get("early_stop"),
+            "max_turns_exhausted": artifact.get("max_turns_exhausted", False),
         }
+        if attempt["max_turns_exhausted"]:
+            attempt["coder_eval_status"] = attempt["final_status"]
+            attempt["final_status"] = "ERROR"
+            attempt["measured_score"] = None
         if task_id.startswith("model-classes-"):
             attempt["answer_key_contact"] = answer_key_contact(artifact, root)
             if attempt["answer_key_contact"]:
@@ -789,15 +797,20 @@ def apply_judge(
     object. A replicate whose judge errored has no score at all: `measured_score`
     is null and the case outcome is `error`, never a 0.0 the subject earned.
     An answer-key contact also disqualifies a raw-success case from earning a class.
+    Tool-limit partials keep their error outcome and have no completion score,
+    including when their captured output satisfies a semantic criterion.
     """
     for attempt in attempts:
         sidecar = sidecars.get((attempt["variant_id"], attempt["task_id"], attempt["replicate_index"]))
         if sidecar is None:
             continue
-        attempt["coder_eval_status"] = attempt["final_status"]
+        attempt.setdefault("coder_eval_status", attempt["final_status"])
         attempt["final_status"] = judged_status(attempt["final_status"], sidecar)
-        # A replicate that reached the answer key stays at the forced 0.
-        attempt["measured_score"] = 0.0 if attempt.get("answer_key_contact") else sidecar["weighted_score"]
+        # A partial attempt cannot earn a completion score from its captured output.
+        if attempt.get("max_turns_exhausted"):
+            attempt["measured_score"] = None
+        else:
+            attempt["measured_score"] = 0.0 if attempt.get("answer_key_contact") else sidecar["weighted_score"]
         attempt["judge"] = {
             "freeze_sha": sidecar["freeze_sha"],
             "evaluation_status": sidecar["evaluation_status"],
@@ -808,7 +821,7 @@ def apply_judge(
         attempt = by_key.get((case["variant_id"], case["task_id"], case["replicate_index"]))
         if attempt is None:
             continue
-        if "judge" in attempt:
+        if "judge" in attempt or attempt.get("max_turns_exhausted"):
             case["outcome"] = row_outcome(attempt["final_status"])
         if attempt.get("answer_key_contact") and case["outcome"] == "succeeded":
             case["outcome"] = "failed"
@@ -816,7 +829,7 @@ def apply_judge(
         for task_id, values in variant["per_replicate_scores"].items():
             for index in range(len(values)):
                 attempt = by_key.get((variant["variant_id"], task_id, index))
-                if attempt is not None and "judge" in attempt:
+                if attempt is not None and ("judge" in attempt or attempt.get("max_turns_exhausted")):
                     values[index] = attempt["measured_score"]
 
 

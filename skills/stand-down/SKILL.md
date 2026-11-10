@@ -173,7 +173,7 @@ finish.
 
 **The work-in-progress commit**, on every harness: it lands on the task's
 existing feature branch, never a new one. Its message marks it plainly as
-unfinished work from a stand-down. It stages named files — the constitution's
+unfinished work from a stand-down. It stages named files — `provenance`'s
 rule against `git add -A` and `git add .` holds here too — and it skips no
 hook and no test. It opens no pull request and marks nothing ready. A branch
 with nothing to commit is pushed as is, so origin carries whatever was

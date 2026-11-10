@@ -113,8 +113,8 @@ established, report the exact gap. For an absent family, retain the invoking
 session if a child cannot retain its route; do not spawn a replacement merely
 to obtain a mapping.
 
-After manual escalation of an existing task, first repair the plan under the
-constitution's *Manual frontier escalation*. Use the route above only when
+After manual escalation of an existing task, first repair the plan under this
+skill's *Manual frontier escalation* policy. Use the route above only when
 its constraints are established; transfer the existing work and authority,
 not a new claim. Otherwise deliver the plan and report the missing return route.
 

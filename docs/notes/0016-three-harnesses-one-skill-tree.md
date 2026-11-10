@@ -12,6 +12,12 @@ portable and set the shape this follows.
 **Amends:** [`0011`](0011-two-harnesses-one-skill-tree.md) in two places, marked
 below.
 
+**Current delivery:** this note preserves the original measurements. The
+[runtime integration guide](../harness-integration.md#core-delivery-and-workflow-retrieval)
+records the later native Codex child proof, compact core, and removal of the
+duplicate prompt rewrite. The unobserved-subagent limitation and deliberate
+duplicate below describe the historical implementation, not the current one.
+
 `0011` answered how much of the tree is allowed to know which harness is reading
 it, with two harnesses in view. Codex (`codex`) is the third, it reads Claude
 Code plugins natively, and #181 measured what that means against a running
