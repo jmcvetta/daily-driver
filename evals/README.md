@@ -2314,10 +2314,9 @@ under `answer_key_contact` and a measured score of 0. It is scored as a
 failure, not dropped: a model that goes looking when stuck has failed the
 case.
 
-**What it does not measure.** No `integration` or `reasoning` case: those
-classes are decided by the production table and public benchmarks, not by a
-fixture small enough to grade in two minutes (see
-`skills/issue-body/references/model-classes.md`).
+**What it does not measure.** No `integration` or `reasoning` case: their class
+assignments are configured policy, and this suite makes no capability claim for
+either class (see `skills/issue-body/references/model-classes.md`).
 No plugin, no skill routing, no `bare`/`with-plugin` delta — that comparison
 is the `omp` arm's, over a different question. And nothing here proves a
 model *should* run in the `task` role generally, only that it cleared a few

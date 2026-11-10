@@ -40,8 +40,8 @@ START_MARKER = "<!-- measured-routes-start -->"
 END_MARKER = "<!-- measured-routes-end -->"
 
 # Highest first: the class earned is reported as the highest one a route
-# clears, per model-classes.md's "Class earned" rule. `reasoning` and
-# `frontier` are intentionally absent: no cases or scoring rules measure them.
+# clears, per model-classes.md's "Class earned" rule. `integration`, `reasoning`
+# and `frontier` are intentionally absent: no cases or scoring rules measure them.
 BUILDABLE_CLASSES = ("implementation", "mechanical")
 
 # "passed on at least two of three repeats" -- a fraction so any repeat count
@@ -83,8 +83,9 @@ def overlay_settings(experiments_dir: Path, overlay: str) -> str:
 def model_class_cases(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Every buildable-class case with its record's run, date and client.
 
-    A case tagged with a class outside `BUILDABLE_CLASSES` (`reasoning` or
-    `frontier`) is dropped rather than kept: nothing computes a status for it,
+    A case tagged with a class outside `BUILDABLE_CLASSES` (`integration`,
+    `reasoning` or `frontier`) is dropped rather than kept: nothing computes a
+    status for it,
     and keeping it would mark its route measured -- excluding it from the
     overlay `unmeasured` fallback -- while every column still read
     `unreported`, which is a more misleading state than reporting no case at
