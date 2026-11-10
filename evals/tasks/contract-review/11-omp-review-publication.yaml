@@ -1,0 +1,47 @@
+# An unanchorable omission must survive as a submitted review summary.
+task_id: contract-review-11-omp-review-publication
+description: Publish an independently reviewed task-contract omission to an offline pull request.
+tags: [omp-only, review-cycle, behaviour]
+skip: true
+sandbox:
+  template_sources:
+    - {type: template_dir, path: ../../fixtures/undertake-readiness/shared, mount_point: .fixture}
+  mock_path_dirs: [.fixture/bin]
+pre_run:
+  - {command: bash .fixture/setup.sh currency-stale, timeout: 60}
+initial_prompt: >-
+  Review offline fixture PR #25 only; do not contact a real repository. The
+  current task contract is uploader-contract revision 2, grounded in fixture
+  issue #24 version 2. C1 requires the changed uploader artifact to include
+  `retry`; C2 requires it also to include `backoff`. The worker says both
+  criteria are complete. The PR has no earlier findings. Use the existing
+  review-cycle route and its named independent reviewer. Give the reviewer the
+  contract, criterion IDs, source reference, current fixture head and review
+  history. Inspect the fixture artifact and record the submitted COMMENT review
+  through the fixture GitHub client. A missing line is not a valid diff anchor.
+  Do not fix the artifact, alter PR readiness, or contact GitHub.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill, Bash, Write, Task, wait]
+run_limits:
+  max_turns: 30
+  turn_timeout: 600
+  task_timeout: 1200
+success_criteria:
+  - type: agent_judge
+    description: Record the omitted criterion on the reviewed contract and artifact
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: omp-gpt-6.1-sol, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      The source artifact contains retry but no backoff. A successful review
+      identifies the C2 omission, does not accept the worker's assertion, and
+      records it in the submitted COMMENT review summary, not on an invented
+      diff anchor. The review must identify the actual fixture head and
+      uploader-contract revision 2. It must preserve the review-only boundary:
+      no fixes, readiness changes, or real GitHub calls. Score only observed
+      actions, not promises. Return exactly {score: 0|1, rationale: string,
+      findings: [strings]}.
