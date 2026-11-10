@@ -106,6 +106,12 @@
     "observation": "An unprivileged bubblewrap user and network namespace had only loopback and no routes; a same-port local listener check did not reach the host listener. Strict config/read accepted experimental proxy default-deny with an exact 127.0.0.1 allow, broader local binding disabled, and upstream proxy disabled. Inside the isolated namespace, a workspace-write proxy preflight failed to create its first exec process with permission denied; neither controlled listener was reached. A minimal workspace-write /bin/true with private dev, proc and tmp failed inside bubblewrap because it could not create a new namespace.",
     "limits": "Configuration acceptance is not proxy-enforcement evidence. The documented allow rule is IP-scoped, not port-scoped, so host-loopback use could reach other listeners. The nested namespace failure is observed; it does not prove the cause of the earlier permission-denied error. No reviewer or valid fixture publication was established and no sandbox or host privilege was relaxed."
   },
+  "codex_authorized_proxy_attempt": {
+    "artifact_sha": "c44ab330d4b06e32a336bafa5f986abdbdf041db",
+    "contract_id": "contract:956fc550-4e2f-4c05-9749-17f62b08d648",
+    "observation": "Under the explicitly approved one-fixture host-loopback grant, the workspace-write proxy preflight reached the allowed 127.0.0.1 fixture once and returned HTTP 200. A controlled 127.0.0.2 fixture was denied by the proxy with HTTP 403 and zero listener hits. The denial caused the wrapper command to report failure, as expected. The integrated fixture retained the offline issue source and appended C1 and C2 to the request at contract revision 2.",
+    "limits": "The native review launch was blocked by the proxy when it attempted chatgpt.com, which was outside the allowlist. No native reviewer request or fixture COMMENT was recorded. Separately, the fixture setup TUI's app-server log recorded an unapproved chatgpt.com plugin-discovery request returning HTTP 401; the fixture's no-external-network condition was breached. No real credentials were supplied. The cause of the unexpected review-launch destination remains unverified. This is not model judgment or complete Codex integration proof."
+  },
   "codex_fixture_publication": {
     "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
     "observation": "The offline GitHub fixture accepted and retained scripted COMMENT review ID 1 with contract revision 2 and C2 in its summary.",
