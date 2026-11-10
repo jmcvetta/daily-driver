@@ -493,7 +493,12 @@ read. Preserve objective, scope, exclusions, constraints, stable criterion IDs,
 evidence/review kinds and approval requirements. Unknown fields stay unknown.
 Keep plans separate. A revised issue cannot silently delete an unmet criterion.
 Material amendments retain the prior revision and applicable original user
-decision; retries and compaction need no new approval.
+decision; retries and compaction need no new approval. If an initial grounding
+attempt fails because it replaced the auto-captured request criterion, retain
+`request`, append sourced issue criteria, populate the unknown fields, and
+declare each criterion's verification before execution; replacing or removing
+`request` still needs a later original user decision. A contract revision after
+execution requires newly bound evidence under the revised contract.
 
 On resume, recover the existing contract identity and revision before changing
 the plan. Delegation and stop handoffs carry criterion IDs and original-source
