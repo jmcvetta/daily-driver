@@ -43,6 +43,39 @@
     "judge": "omp-gpt-6.1-sol, score 1, rubric freeze fc7d7f7a6d17dda2f07286fde6177469db6ce26a98e955d0bee2e216e20943e6",
     "limits": "The explicit evaluation prompt supplied the contract; fixture task-state handoff was unavailable and issue view did not contain its version-2 snapshot. The case-specific rubric is uncalibrated. This does not prove retained-source transport or another harness."
   },
+  "omp_publication_baseline": {
+    "plugin_revision": "adefdb1997a24da43e023a27eafad342232ff61a",
+    "parent_model": "openai-codex/gpt-6.1-sol:high",
+    "reviewer_model": "unreported",
+    "artifact_sha": "6007bbbae6b6464647f91cd4a7f5dcff62a1dacb",
+    "contract": "uploader-contract revision 2; fixture issue #24 version 2",
+    "observation": "The named reviewer identified omitted C2 backoff. The parent submitted fixture COMMENT review ID 1 on the artifact, placing the omission in the summary.",
+    "judge": "omp-gpt-6.1-sol, score 1, rubric freeze fc7d7f7a6d17dda2f07286fde6177469db6ce26a98e955d0bee2e216e20943e6",
+    "limits": "One baseline and one candidate observation both used an explicitly supplied contract. The case-specific rubric is uncalibrated. The pair establishes neither an improvement nor retained-source transport."
+  },
+  "evaluation_runner": {
+    "coder_eval": "0.11.6",
+    "uv": "0.12.11",
+    "python": "3.13.15",
+    "default_typer": "0.29.0",
+    "default_result": "The isolated default runner failed before planning: TypeError: Option() got an unexpected keyword argument 'click_type'.",
+    "observed_constraint": "The same isolated invocation planned and ran with --with 'typer==0.24.1'. This was an invocation-local constraint, not a change to the runner or an authentication repair.",
+    "issue": "https://github.com/jmcvetta/daily-driver/issues/852"
+  },
+  "omp_integrated_transport": {
+    "harness": "Omp 18.18.6",
+    "source": "Offline gh issue view 24 output retained as tool:full-0, fingerprint e844493c09762c28ecaf2560f21ba2d243e2280db55f847ab28ede05af0ce56b",
+    "contract_id": "contract:b32a2e8b-35f3-4e27-a4f0-36790457a199",
+    "reviewed_sha": "31622880218721e3a05d58d879e65d26726590cb",
+    "current_sha": "ee905df8d37ec24201f89a3b64f30b53090c4bc7",
+    "observation": "Revision 2 and its C2 source reached a scripted named reviewer and fixture COMMENT review ID 1. A user-grounded C3 then produced revision 3. The scripted applicability record marks the old conclusion inapplicable and requests full review. A bounded delta brief carried both SHAs, implemented C2 and rejected R1 with no new evidence. Its recorded outcome is incomplete.",
+    "limits": "Scripted transport, not model judgment. Applicability and delta comments initially failed because the disposable fixture lacked fail_comment; after repair, only those writes were retried. They were recorded after artifact advance, so the run does not prove production ordering. Raw frames and failures are retained privately."
+  },
+  "retrievable_issue_fixture": {
+    "scenario": "review-contract",
+    "observation": "In a disposable checkout, setup succeeded and offline gh issue view 24 returned fixture issue version 2, contract uploader-contract revision 2, and both C1 retry and C2 backoff.",
+    "limits": "The revised fixture has not been exercised by a model reviewer. Earlier explicit-prompt observations remain unchanged."
+  },
   "codex_fixture_publication": {
     "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
     "observation": "The offline GitHub fixture accepted and retained scripted COMMENT review ID 1 with contract revision 2 and C2 in its summary.",

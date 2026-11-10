@@ -344,7 +344,7 @@ def main(argv):
 
     if group == "issue" and verb == "view":
         record(args, "issue", True, **seen(state))
-        print("#24 Add retry to the uploader\n\nAcceptance and verification: uploader retries; test added.")
+        print(state.get("issue_body", "#24 Add retry to the uploader\n\nAcceptance and verification: uploader retries; test added."))
         return
 
     if group == "api":

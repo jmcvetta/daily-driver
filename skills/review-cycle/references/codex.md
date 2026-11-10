@@ -69,10 +69,13 @@ command, action `handoff`. Pass the contract, criterion IDs, evidence
 expectations, original requirement references, artifact SHA and complete
 history to the same `codex exec review --base <branch>` invocation using
 `-c developer_instructions=<TOML string>`. The override replaces the configured
-value. Read the effective value through the Codex app-server `config/read`
-method for the same working directory and configuration, and include it
-unchanged before the brief. Keep that read private. If it cannot be recovered,
-do not discard it. Require the contract challenges and criterion-linked findings in
+value. Start the Codex app-server with the same configuration and working
+directory. After its `initialize` / `initialized` handshake, call `config/read`
+with `{"includeLayers": false, "cwd": "<task-worktree>"}`. Include the returned
+effective `config.developer_instructions` unchanged before the brief when it is
+set. A successful read with no value needs no prefix. Keep that read private.
+If the read fails, do not discard a possibly configured value. Require the
+contract challenges and criterion-linked findings in
 `SKILL.md`. Do not expose secrets in command arguments or publish private source
 contents. Codex CLI 0.160.0 rejects a
 positional `PROMPT` with `--base`; do not use both. An isolated loopback
@@ -254,10 +257,12 @@ SHA and dispositions so later rounds have a stable duplicate check.
 Provenance
 ==========
 
-`codex-cli 0.154.0`, read on 2026-09-12. The subcommands and their flags are
-quoted from `codex review --help` and `codex exec review --help`; `sleep_tool`
-is read from `codex features list`, where it is `stable` and on. **No review
-was run**: that needs credentials this container does not have, so what
-`codex exec review` reports and how it is formatted is not measured here. What
-is measured is its interface — no pull request argument, no effort level, and
-no flag that posts anything.
+The original interface survey used `codex-cli 0.154.0` on 2026-09-12. It
+read `codex review --help`, `codex exec review --help`, and `codex features
+list`. It ran no review, so it did not measure review output or publication.
+
+The later 0.160.0 loopback observation described above exercised the native
+base target and developer-instruction transport with a scripted provider.
+It ended as an interrupted review. It does not establish model findings or
+GitHub publication. Neither observation establishes an effort-level selector,
+pull-request argument, or native publication flag.
