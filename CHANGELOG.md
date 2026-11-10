@@ -38,6 +38,15 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.60.1](https://github.com/jmcvetta/daily-driver/compare/v0.60.0...v0.60.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* allow model changes during undertakings ([#861](https://github.com/jmcvetta/daily-driver/issues/861)) ([961035d](https://github.com/jmcvetta/daily-driver/commit/961035dd7ef1bbc4258bdbd603a2e5478f743ec4))
+* guide incomplete task-contract grounding toward retaining the captured request ([#867](https://github.com/jmcvetta/daily-driver/issues/867)) ([df4cc3e](https://github.com/jmcvetta/daily-driver/commit/df4cc3ef9b8a73ef59fc796b2344cd8a89d65b7e))
+* name issue and recovery route in undertaking guard blocks ([#868](https://github.com/jmcvetta/daily-driver/issues/868)) ([402e7b7](https://github.com/jmcvetta/daily-driver/commit/402e7b76c2fdbaf0d52385f003d35fcbc545cd21))
+
 ## [0.60.0](https://github.com/jmcvetta/daily-driver/compare/v0.59.1...v0.60.0) (2026-11-10)
 
 
