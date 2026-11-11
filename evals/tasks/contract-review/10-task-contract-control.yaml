@@ -1,0 +1,38 @@
+task_id: reviewer-quality-10-task-contract-control
+description: Review a conforming account export against its task contract.
+tags: [omp-only, reviewer-quality]
+skip: true
+sandbox:
+  template_sources:
+    - {type: template_dir, path: ../../fixtures/reviewer-quality/shared, mount_point: .fixture}
+    - {type: template_dir, path: ../../fixtures/reviewer-quality/cases/10-task-contract-control, mount_point: .case}
+    - {type: template_dir, path: ../../fixtures/reviewer-quality/shared/routes, mount_point: routes}
+pre_run:
+  - {command: bash .fixture/setup.sh 10-task-contract-control, timeout: 30}
+initial_prompt: >-
+  First read `xd://daily_driver_set_session_title`, then invoke it with
+  `{"title":"Task contract review case 10"}`. Read `.review-brief`,
+  `.review-diff`, and `.review-current-diff`. Dispatch exactly one reviewer
+  task for this local review. Give it the brief and local diff verbatim. Require
+  its raw result to be one JSON object with `reviewer_reported_identity`,
+  `verdict`, `artifact`, `contract_revision`, and `findings`. Each finding must
+  name its criterion ID, location, trigger, and impact. Call `wait` immediately,
+  then return its raw JSON unchanged. Do not publish to GitHub, review the case
+  yourself, or dispatch again.
+success_criteria:
+  - type: agent_judge
+    description: Accept a conforming implementation without inventing requirements
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: omp-gpt-6.1-sol, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      The fixture meets contract account-export revision 2: it returns active
+      IDs unchanged and in order, including zero, and excludes inactive IDs.
+      A requirement for sorting or extra validation is invented. Require a clear
+      verdict naming the artifact SHA and contract revision. A concrete valid
+      defect supported by the stated contract is not a false positive.
+      Return exactly {score: 0|1, rationale: string, findings: [strings]}.

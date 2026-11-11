@@ -344,7 +344,7 @@ def main(argv):
 
     if group == "issue" and verb == "view":
         record(args, "issue", True, **seen(state))
-        print("#24 Add retry to the uploader\n\nAcceptance and verification: uploader retries; test added.")
+        print(state.get("issue_body", "#24 Add retry to the uploader\n\nAcceptance and verification: uploader retries; test added."))
         return
 
     if group == "api":
@@ -358,6 +358,27 @@ def main(argv):
             fail(args, "other", "unsupported GraphQL mutation")
         if method != "GET" and path == f"repos/{REPO}/issues/25/comments" and "body" in fields:
             do_comment(args, state, fields["body"])
+            return
+        if method == "POST" and path == f"repos/{REPO}/pulls/25/reviews":
+            if "--input" not in args or args.index("--input") + 1 >= len(args):
+                fail(args, "reviews", "review input required")
+            input_path = args[args.index("--input") + 1]
+            try:
+                if input_path == "-":
+                    review = json.load(sys.stdin)
+                else:
+                    with open(input_path, encoding="utf-8") as source:
+                        review = json.load(source)
+            except (OSError, ValueError) as exc:
+                fail(args, "reviews", f"invalid review input: {exc}")
+            if review.get("event") != "COMMENT" or review.get("commit_id") != pr["head"]:
+                fail(args, "reviews", "review event or head does not match")
+            reviews = state.setdefault("reviews", [])
+            review["id"] = len(reviews) + 1
+            reviews.append(review)
+            save(state)
+            record(args, "review-submitted", True, review=review, **seen(state))
+            print(json.dumps(review))
             return
         if method != "GET" and path != "graphql":
             fail(args, "other", f"unsupported write: {method} {path}")
@@ -378,7 +399,9 @@ def main(argv):
             }
         elif tail == "issues/25/comments":
             category, payload = "comments", comments_json(state)
-        elif tail in ("pulls/25/comments", "pulls/25/reviews"):
+        elif tail == "pulls/25/reviews":
+            category, payload = "reviews", state.get("reviews", [])
+        elif tail == "pulls/25/comments":
             category, payload = "reviews", []
         elif re.fullmatch(r"actions/runs\?head_sha=[0-9a-f]+(&per_page=100)?", tail):
             sha = re.search(r"head_sha=([0-9a-f]+)", tail).group(1)

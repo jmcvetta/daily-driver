@@ -146,6 +146,18 @@ Freeze the source commit before measurement. The four defective full reviews
 cover a boundary, a cross-file contract, authorization, and data integrity.
 Two full reviews are correct. Two fix-delta reviews carry prior findings and
 dispositions: one correction is complete; the other is incomplete.
+
+The opt-in `09-task-contract` and `10-task-contract-control` cases give the
+reviewer a versioned task contract. The first contains a boundary failure and
+an omitted exclusion despite the worker's completion assertion. The second is
+a conforming control that excludes unrequested validation and sorting. These
+cases are separate from the historical eight-case comparison below. One
+defective and one control observation are recorded in
+[`issue-803-contract-review-observations.json`](provenance/issue-803-contract-review-observations.json).
+They do not prove review publication or other harnesses.
+The same record distinguishes the scripted Claude native-fork publication
+proof from model judgment, and records incomplete Codex continuation and
+isolated-network preflight failures.
 Answer keys and rubric calibration examples are outside subject inputs.
 Only a finding with the correct location, triggering condition, and concrete
 impact counts. Duplicate findings count once. Style comments do not count.

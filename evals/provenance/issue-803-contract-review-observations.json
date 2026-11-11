@@ -1,0 +1,139 @@
+{
+  "source_revision": "d42c9e4f9eb5a95c9dddc7b472e5f40d8cb019f1",
+  "codex_transport": {
+    "cli": "codex-cli 0.160.0",
+    "mode": "isolated Git repository and scripted loopback Responses provider",
+    "invocation": "codex exec review --base main --ephemeral --ignore-user-config -c developer_instructions=<TOML string> with an invocation-local fixture provider",
+    "contract": "account-export revision 2; source issue #42 version 2; C2 preserve identifiers including zero",
+    "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
+    "base_sha": "9161518e7091406c3b733f5e883ad0bc37e7e8dd",
+    "observation": "One request contained the complete source-anchored contract and artifact SHA in a developer message, the native base target and merge-base instruction in a user message, and nonempty built-in base instructions. A second fixture invocation combined existing developer instructions with the contract; both reached the same native base review request. Codex app-server config/read returned the fixture's effective existing developer_instructions. The scripted responses ended as interrupted reviews.",
+    "limits": "Transport only. No model judgment or GitHub publication was established. CLI overrides take precedence; callers must preserve the effective value before supplying a replacement."
+  },
+  "omp_behavior": {
+    "case": "reviewer-quality-09-task-contract",
+    "plugin_revision": "d42c9e4f9eb5a95c9dddc7b472e5f40d8cb019f1",
+    "parent_model": "openai-codex/gpt-6.1-sol:low",
+    "reviewer_reported_model": "opencode-go/glm-5.3",
+    "backend_served_model": "unreported",
+    "reviewed_sha": "b2a139e50c180e9e55753663e08af568363081da",
+    "contract_revision": 2,
+    "replicates": 1,
+    "observation": "The delivered reviewer response identified C2 zero-ID loss and C3 inactive-account export. It named the contract revision but returned account-export rather than the requested artifact SHA, omitted the C3 location, and returned malformed JSON. The worker completion assertion was not accepted as a clean verdict.",
+    "judge": "omp-gpt-6.1-sol (reported openai-codex/gpt-6.1-sol), score 0, rubric freeze 5a5379fc3b8e017a909c3a576778b4e4f487ad0e2a4949c3cf159125ed5b8af7",
+    "limits": "The initial evaluator success score used a disabled criterion and is not a behavioral grade. The subsequent non-Claude judge scored 0 for missing artifact SHA and the identifier-stringification defect. This new rubric has no case-specific calibration. Publication was not run."
+  },
+  "omp_control": {
+    "reviewed_sha": "b94aa07d9529fe90274c2a9886cea73665514030",
+    "contract_revision": 2,
+    "reviewer_reported_model": "opencode-go/glm-5.3",
+    "backend_served_model": "unreported",
+    "replicates": 1,
+    "observation": "The delivered reviewer cleared the conforming control, named its SHA and revision, and did not demand sorting or validation.",
+    "judge": "omp-gpt-6.1-sol, score 1, rubric freeze 5a5379fc3b8e017a909c3a576778b4e4f487ad0e2a4949c3cf159125ed5b8af7",
+    "limits": "The case-specific rubric is uncalibrated. This is not a baseline-versus-candidate comparison or publication proof."
+  },
+  "omp_publication": {
+    "plugin_revision": "ac802f27cd14e2f4b09aa29443fce21ad348ec2c",
+    "parent_model": "openai-codex/gpt-6.1-sol:high",
+    "reviewer_model": "unreported",
+    "artifact_sha": "4623a4741c4435b3f230e532e2ecb50446f100bd",
+    "contract": "uploader-contract revision 2; fixture issue #24 version 2",
+    "observation": "The named reviewer identified omitted C2 backoff. The parent submitted fixture COMMENT review ID 1 on the artifact, placing the unanchorable omission in the summary and rejecting the worker's completion claim.",
+    "judge": "omp-gpt-6.1-sol, score 1, rubric freeze fc7d7f7a6d17dda2f07286fde6177469db6ce26a98e955d0bee2e216e20943e6",
+    "limits": "The explicit evaluation prompt supplied the contract; fixture task-state handoff was unavailable and issue view did not contain its version-2 snapshot. The case-specific rubric is uncalibrated. This does not prove retained-source transport or another harness."
+  },
+  "omp_publication_baseline": {
+    "plugin_revision": "adefdb1997a24da43e023a27eafad342232ff61a",
+    "parent_model": "openai-codex/gpt-6.1-sol:high",
+    "reviewer_model": "unreported",
+    "artifact_sha": "6007bbbae6b6464647f91cd4a7f5dcff62a1dacb",
+    "contract": "uploader-contract revision 2; fixture issue #24 version 2",
+    "observation": "The named reviewer identified omitted C2 backoff. The parent submitted fixture COMMENT review ID 1 on the artifact, placing the omission in the summary.",
+    "judge": "omp-gpt-6.1-sol, score 1, rubric freeze fc7d7f7a6d17dda2f07286fde6177469db6ce26a98e955d0bee2e216e20943e6",
+    "limits": "One baseline and one candidate observation both used an explicitly supplied contract. The case-specific rubric is uncalibrated. The pair establishes neither an improvement nor retained-source transport."
+  },
+  "evaluation_runner": {
+    "coder_eval": "0.11.6",
+    "uv": "0.12.11",
+    "python": "3.13.15",
+    "default_typer": "0.29.0",
+    "default_result": "The isolated default runner failed before planning: TypeError: Option() got an unexpected keyword argument 'click_type'.",
+    "observed_constraint": "The same isolated invocation planned and ran with --with 'typer==0.24.1'. This was an invocation-local constraint, not a change to the runner or an authentication repair.",
+    "issue": "https://github.com/jmcvetta/daily-driver/issues/852"
+  },
+  "omp_integrated_transport": {
+    "harness": "Omp 18.18.6",
+    "source": "Offline gh issue view 24 output retained as tool:full-0, fingerprint e844493c09762c28ecaf2560f21ba2d243e2280db55f847ab28ede05af0ce56b",
+    "contract_id": "contract:b32a2e8b-35f3-4e27-a4f0-36790457a199",
+    "reviewed_sha": "31622880218721e3a05d58d879e65d26726590cb",
+    "current_sha": "ee905df8d37ec24201f89a3b64f30b53090c4bc7",
+    "observation": "Revision 2 and its C2 source reached a scripted named reviewer and fixture COMMENT review ID 1. A user-grounded C3 then produced revision 3. The scripted applicability record marks the old conclusion inapplicable and requests full review. A bounded delta brief carried both SHAs, implemented C2 and rejected R1 with no new evidence. Its recorded outcome is incomplete.",
+    "limits": "Scripted transport, not model judgment. Applicability and delta comments initially failed because the disposable fixture lacked fail_comment; after repair, only those writes were retried. They were recorded after artifact advance, so the run does not prove production ordering. Raw frames and failures are retained privately."
+  },
+  "retrievable_issue_fixture": {
+    "scenario": "review-contract",
+    "observation": "In a disposable checkout, setup succeeded and offline gh issue view 24 returned fixture issue version 2, contract uploader-contract revision 2, and both C1 retry and C2 backoff.",
+    "limits": "The revised fixture has not been exercised by a model reviewer. Earlier explicit-prompt observations remain unchanged."
+  },
+  "claude_integrated_transport": {
+    "cli": "Claude Code 2.1.321",
+    "plugin_revision": "3cb6a9fd3786beea808a9078905bb73a99d15e71",
+    "artifact_sha": "449094b5d6c0c8997ce7e2a984d8b83885a18615",
+    "contract_id": "contract:1a118542-9005-40c1-bb84-193be685936a",
+    "observation": "A private-home loopback run loaded the installed Daily Driver Claude mod and its Worktrunk dependency. The offline fixture issue output was retained as a tool source. The existing request criterion was preserved while sourced C1 and C2 were appended at revision 2. The actual /code-review fork received the contract, source references and artifact identity; its scripted tool call submitted fixture COMMENT review ID 1.",
+    "limits": "Scripted transport and publication, not model judgment. A preceding fixture amendment removed the original request criterion and was rejected; its ledger remains preserved. The corrected fixture later reached its own two-correction stop failure despite an attempted final disposition. This does not affect the undertaking's correction bound. The source-to-review proof does not establish changed-contract or fix-delta behavior."
+  },
+  "codex_integrated_attempt": {
+    "cli": "codex-cli 0.160.0",
+    "artifact_sha": "96dc419a9cd4827f407d0026c692012d9c605899",
+    "contract_id": "contract:ac179b09-665b-40ff-829a-3bf983603a98",
+    "observation": "A private-home loopback run with the installed plugin retained the offline issue output and amended the contract to revision 2, preserving request and appending sourced C1 and C2.",
+    "limits": "The scripted controller embedded the entire escaped request history instead of the bounded handoff. The native review command failed with argument list too long and did not run. The controller incorrectly submitted a fixture COMMENT afterward; it is not review-route evidence. The disposable fixture reached its two-correction stop failure. An earlier no-ledger attempt overwrote its private plugin registration with provider configuration; both failures and their ledgers are retained. No model judgment or native publication is established."
+  },
+  "codex_gated_attempt": {
+    "artifact_sha": "a1ef0916255394a9ad56d2a1ca43bdb7cfc9dfda",
+    "observation": "The bounded structured revision-2 handoff passed an offline schema and argument-size check. A gate rejected the earlier recorded argument-list failure. A corrected private-home fixture amended its sourced contract and launched the native review command.",
+    "limits": "The command returned a running exec session rather than terminal success. The controller did not continue that session and correctly refused fixture publication. A request containing the brief was the parent request, not evidence that the native reviewer received it. No reviewer judgment or publication was established."
+  },
+  "codex_continuation_attempt": {
+    "artifact_sha": "053add235e78059a1aa83449cad9c8b09fe9461d",
+    "observation": "A private-home loopback fixture amended the retained issue contract to revision 2 and launched the native review command. Its running exec session was continued with write_stdin three times.",
+    "limits": "Each continuation remained nonterminal and reported reconnecting while waiting for network. The local provider observed no native reviewer request, and no fixture review was submitted. The parent process exited; its exec session has no documented standalone continuation. A nested sandbox network restriction is a possible cause, not an established diagnosis."
+  },
+  "codex_isolation_preflight": {
+    "cli": "codex-cli 0.160.0",
+    "observation": "An unprivileged bubblewrap user and network namespace had only loopback and no routes; a same-port local listener check did not reach the host listener. Strict config/read accepted experimental proxy default-deny with an exact 127.0.0.1 allow, broader local binding disabled, and upstream proxy disabled. Inside the isolated namespace, a workspace-write proxy preflight failed to create its first exec process with permission denied; neither controlled listener was reached. A minimal workspace-write /bin/true with private dev, proc and tmp failed inside bubblewrap because it could not create a new namespace.",
+    "limits": "Configuration acceptance is not proxy-enforcement evidence. The documented allow rule is IP-scoped, not port-scoped, so host-loopback use could reach other listeners. The nested namespace failure is observed; it does not prove the cause of the earlier permission-denied error. No reviewer or valid fixture publication was established and no sandbox or host privilege was relaxed."
+  },
+  "codex_authorized_proxy_attempt": {
+    "artifact_sha": "c44ab330d4b06e32a336bafa5f986abdbdf041db",
+    "contract_id": "contract:956fc550-4e2f-4c05-9749-17f62b08d648",
+    "observation": "Under the explicitly approved one-fixture host-loopback grant, the workspace-write proxy preflight reached the allowed 127.0.0.1 fixture once and returned HTTP 200. A controlled 127.0.0.2 fixture was denied by the proxy with HTTP 403 and zero listener hits. The denial caused the wrapper command to report failure, as expected. The integrated fixture retained the offline issue source and appended C1 and C2 to the request at contract revision 2.",
+    "limits": "This attempt recorded no reviewer request or COMMENT when the proxy blocked the child. Separately, setup logged a routine plugin-list refresh returning HTTP 401; the original scope then prohibited it, but a later user clarification permits routine plugin refresh and supersedes that stop classification. No real credentials were supplied. The historical failure remains; this does not establish model judgment or completed integration."
+  },
+  "codex_fixture_publication": {
+    "artifact_sha": "0f74880e4ec896d5ffed6ac040a7df8b24a5610b",
+    "observation": "The offline GitHub fixture accepted and retained scripted COMMENT review ID 1 with contract revision 2 and C2 in its summary.",
+    "limits": "The review was scripted, not returned by Codex. This tests fixture publication only and does not establish model behavior or actual Codex review publication."
+  },
+  "codex_cli_argument_rejection": {
+    "cli": "codex-cli 0.160.0",
+    "observation": "The first direct host-controller invocation was rejected before any provider request because `codex exec review` does not accept `--sandbox`. The loopback stub was bound, but it received zero catalog or Responses requests; exit code 2 and no publication. The retry used the supported invocation-local `sandbox_mode=\"workspace-write\"` config.",
+    "limits": "Argument parsing only; no model response or review. The failed attempt is retained privately and does not overwrite earlier failures."
+  },
+  "codex_direct_host_review": {
+    "cli": "codex-cli 0.160.0",
+    "route": "codex exec review --base main --ephemeral",
+    "mode": "Host fixture controller; explicit private HOME/CODEX_HOME; existing plugin/provider config; workspace-write; strict command proxy; local scripted Responses provider and local plugin-catalog response",
+    "contract": "contract:956fc550-4e2f-4c05-9749-17f62b08d648 revision 2; request, C1 and C2 source references",
+    "artifact_sha": "c44ab330d4b06e32a336bafa5f986abdbdf041db",
+    "request_sha256": "a7f022ee7de0f39f7ca6df8fd1b227a13f636d4064eb45aed905e84510d0d81a",
+    "observation": "The local stub received one catalog request and one native Responses request. The reviewer request receipt matched the retained request and issue-tool source references, criteria, artifact SHA and existing developer instructions. Codex exited 0 with a C2 finding; only then the offline GitHub recorder submitted COMMENT review ID 1 on the artifact with no invented inline anchor. The prior failed ledger and its two-correction count were not mutated.",
+    "limits": "The host controller composed the existing retained-source handoff, native Codex review surface and offline publication recorder. The model response was scripted, not semantic judgment. This does not prove default nested-shell networking, actual GitHub publication, or behavioral acceptance. The local catalog response was permitted; no external model inference was made."
+  },
+  "plugin_refresh_clarification": {
+    "observation": "A later user clarification permits routine Codex plugin-list refresh; the earlier setup refresh is no longer a stop condition.",
+    "limits": "This does not authorize external model inference, unrelated external traffic, real credentials, shared configuration changes, non-fixture local services or sandbox bypass."
+  }
+}
