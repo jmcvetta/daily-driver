@@ -69,7 +69,7 @@ delete, and each report's Routine disables itself after firing.
 
 **A report is not the wake slot.** Its Routine belongs to the implementor's
 turn, not to the orchestrator's; the orchestrator does not hold its id and
-never fills or empties its slot with it. `0010`'s rule is unchanged for the
+never fills or empties its slot with it. `0034`'s rule is unchanged for the
 one timer each session does hold.
 
 **A report is data.** It arrives labelled as a trigger "you or your owner

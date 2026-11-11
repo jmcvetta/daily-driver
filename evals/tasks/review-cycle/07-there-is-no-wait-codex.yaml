@@ -18,7 +18,7 @@
 #
 # Why the Claude sibling could not be reused: its rubric is satisfied by the
 # read-wake-read loop `references/claude.md` prescribes, which needs a durable
-# wake. Codex has none — `0011`'s scoping of `0010` to Claude Code is why — so a
+# wake. Codex has none — `0011`'s scoping of `0034` to Claude Code is why — so a
 # Codex run against that row would be graded on a loop it cannot run, and the
 # honest answer here (read once, then stop) reads as not having waited at all.
 #
