@@ -13,7 +13,7 @@ portable and set the shape this follows.
 below.
 
 **Current delivery:** this note preserves the original measurements. The
-[runtime integration measurements](runtime-integration-measurements.md)
+[runtime integration measurements](../runtime-integration-measurements.md)
 record the later native Codex child proof, compact core, and removal of the
 duplicate prompt rewrite. The unobserved-subagent limitation and deliberate
 duplicate below describe the historical implementation, not the current one.
