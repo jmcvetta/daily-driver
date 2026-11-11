@@ -1,0 +1,13 @@
+experiment_id: classes-mimo-v2-6-pro-go
+description: Fixed merged-PR cases on MiMo V2.6 Pro through Go at high effort.
+defaults:
+  repeats: 3
+  run_limits: {max_turns: 30, task_timeout: 780, turn_timeout: 600}
+  agent:
+    type: omp
+    model: opencode-go/mimo-v2.6-pro
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+variants:
+  - variant_id: default

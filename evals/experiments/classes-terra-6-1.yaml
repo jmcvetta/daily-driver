@@ -1,0 +1,18 @@
+# Model-class capability through the Codex subscription.
+experiment_id: classes-terra-6-1
+description: Fixed merged-PR cases on GPT 6.1 Terra at high effort.
+defaults:
+  repeats: 3
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: openai-codex/gpt-6.1-terra
+    extra_args: ["--thinking", "high"]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+variants:
+  - variant_id: default
+    description: The model against the model-classes suite.

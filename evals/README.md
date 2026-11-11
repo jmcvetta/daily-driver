@@ -77,6 +77,27 @@ and [`19-04-35`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_19-04-35.json)
 The subject's served identity was unreported; the Omp GPT 6.1 Sol judge scored
 each case. The successive-revision cases use one turn, not a resumed session.
 
+A paired Omp/Sol setup smoke used the firing and behavior cases in
+[`issue-695-sol-smoke`](provenance/omp-gpt-6-1-sol-ablation-2026-11-10-issue-695-sol-smoke.json).
+Both treated cases passed; both bare cases failed their applicable criteria.
+The Sol judge completed both semantic judgments. The requested subject was
+`openai-codex/gpt-6.1-sol`; served subject identity was unreported. This
+smoke does not establish the effective effort or the model-classes route, and
+is not full-cohort evidence.
+
+A matching Luna smoke is recorded in
+[`issue-695-luna-smoke`](provenance/omp-gpt-6-luna-2026-11-10-issue-695-luna-smoke.json).
+Both treated cases passed; both bare cases failed. The subject's served
+identity and effective effort were unreported. Its recorded checkout was dirty:
+the pending Makefile runner cutover was the tracked modification. This is
+smoke evidence, not a frozen cohort.
+
+A matching [Terra smoke](provenance/omp-gpt-6-1-terra-2026-11-10-issue-695-terra-smoke.json)
+also passed both treated cases and failed both bare cases. Omp reported the
+selected Terra route and high effort for each attempt; backend-served identity
+remained unreported. The recording checkout was dirty from README edits made
+after the run started. This is not full-cohort evidence.
+
 A separate two-turn Omp 18.14.1 smoke used `--plugin-dir` pointing at this
 checkout, `--model openai-codex/gpt-6.1-sol`, `--tools read`, and an isolated
 `--session-dir`. The first `omp -p` drafted an upload-timeout PR body; a second
@@ -842,12 +863,17 @@ its cost evidence. `cost` is numeric when the harness reports a price
 (`cost_source: reported`) or reports token counts the recorder can price from
 [`prices.yaml`](prices.yaml) (`cost_source: computed`). The exact Omp Codex
 models `openai-codex/gpt-6-luna`, `openai-codex/gpt-6-sol`,
-`openai-codex/gpt-6.1-sol`, and `openai-codex/gpt-5.6-terra` use `cost: null`
-and `cost_source: subscription`; token usage remains recorded, but no API
-price is inferred. When usage is missing, `cost` is null and
-`cost_source: unreported`; it is never treated as
-free. Other token-only routes without a price-table entry or an explicit
-unpriced subscription entry fail recording. New schema-5 records require
+`openai-codex/gpt-6.1-sol`, `openai-codex/gpt-6.1-terra`, and historical
+`openai-codex/gpt-5.6-terra` use `cost: null` and `cost_source: subscription`;
+token usage remains recorded when available, but no API price is inferred.
+For other routes, missing usage leaves `cost` null and `cost_source: unreported`;
+it is never treated as free. Other token-only routes without a price-table entry
+or an explicit unpriced subscription entry fail recording. OpenCode Go catalog
+estimates represent allowance consumption, not observed cash charges. The
+recorder leaves their cash cost unreported until billing evidence is available;
+token buckets remain separate. A Go plan can fall back to Console balance if
+extra usage is enabled, so a model selector alone does not prove which source
+paid for a request. New schema-5 records require
 explicit token buckets (`token_usage`) as well as billing-source evidence.
 Historical records remain unchanged, including both schema-4 forms: records
 with token buckets and records with subscription billing.
@@ -949,18 +975,12 @@ evals-preflight` stops a run that carries one anyway. Port the row; do not look
 for a key.
 
 ```sh
-make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
-make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
-make evals-run        # the whole suite on Claude Code, both variants. Uses subscription allowance.
-make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
-make evals-render-routes  # rewrite the Measured routes table from committed provenance
-make evals-render-results # rewrite RESULTS.md from committed provenance
-
-make evals-run TASKS='tasks/pr/*.yaml'     # one suite
-make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
-
-make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
-make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Uses subscription allowance.
+make evals-install
+make evals-run EXPERIMENT=evals/experiments/with-without.yaml RUN=evals/runs/sonnet-cohort JUDGE=omp-gpt-6.1-sol
+make evals-run EXPERIMENT=evals/experiments/with-without-haiku-5.5.yaml RUN=evals/runs/haiku-cohort JUDGE=omp-gpt-6.1-sol
+make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml JUDGE=omp-gpt-6.1-sol
+make evals-render-routes
+make evals-render-results
 ```
 `REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
 example `make evals-run REPEATS=1`. When unset or empty, the experiment default
@@ -1005,7 +1025,8 @@ provenance; do not substitute YAML parsing or trigger-only checks for observed
 case results. For example, the Omp GPT 6.1 Sol route is:
 
 ```sh
-make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+make evals-run-omp EXPERIMENT=evals/experiments/omp-gpt-6.1-sol-ablation.yaml \
+  RUN=evals/runs/issue-smoke REPEATS=1 JUDGE=omp-gpt-6.1-sol \
   TASKS='tasks/issue/05-bug-body-gets-no-task-contract.yaml tasks/issue/07-research-contract-draft.yaml'
 ```
 
@@ -1053,7 +1074,8 @@ subagent type (see the `subagent_type` note below). Run the three named cases
 with an available Omp model and judge:
 
 ```sh
-make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+make evals-run-omp EXPERIMENT=evals/experiments/omp-gpt-6.1-sol-ablation.yaml \
+  RUN=evals/runs/triage-smoke REPEATS=1 JUDGE=omp-gpt-6.1-sol \
   TASKS='tasks/fix-daily-driver-bugs/01-promotes-independent-reports.yaml tasks/fix-daily-driver-bugs/02-no-duplicate-or-blocked-dispatch.yaml tasks/fix-daily-driver-bugs/03-unavailable-route-blocks-only-its-task.yaml'
 ```
 
@@ -1137,119 +1159,23 @@ rubric tested; it is not a general model-quality ranking
 ([`judges/calibration/observed/omp-gpt-6.1-sol.json`](judges/calibration/observed/omp-gpt-6.1-sol.json)).
 
 ```sh
-make evals-judge-calibrate JUDGE=omp-glm-5.3                              # measure a judge first; a few cents
-make evals-run-omp-gpt-5-6-sol JUDGE=omp-glm-5.3 TASKS='tasks/undertake/09-title-before-claim-omp.yaml'
+make evals-judge-calibrate JUDGE=omp-gpt-6.1-sol
 ```
 
 ```sh
-make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'
+make evals-run-omp EXPERIMENT=evals/experiments/omp-gpt-6.1-sol-ablation.yaml RUN=evals/runs/undertake-smoke REPEATS=1 JUDGE=omp-gpt-6.1-sol TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'
 ```
 
 Both the subject and judge use `openai-codex` for this configuration. Do not
 route OpenAI models through the Vercel AI Gateway. The experiment uses one
 repeat per variant for the focused run; expand only after reviewing those results.
 
-### Gemini through Google Antigravity
+### Retired Gemini routes
 
-Run the exact Omp routes `google-antigravity/gemini-3.8-flash:high` and
-`google-antigravity/gemini-3.1-pro:high`; never substitute Vercel. The Omp
-adapter pins every chat role, including task, helper, and subagent roles, to
-the experiment's subject model. `model_served` stays `unreported` when Omp does
-not report it.
+Gemini and Antigravity are excluded from the current rerun. Historical
+provenance and its original interpretation remain available; do not dispatch
+those routes as part of this cohort.
 
-Before inference, read availability and quota:
-
-```sh
-omp models google-antigravity
-omp usage --provider google-antigravity --json --redact --no-extensions
-```
-
-A listed model is not proof that inference works. Record the redacted quota
-snapshot and timestamp before each model batch, and again after it. Refresh
-the cache with `omp usage invalidate --provider google-antigravity` first.
-Do not change the user's Omp defaults, buy credits, enable overages, or retry
-authentication, transport, or quota failures through another provider. Keep
-quota exhaustion distinct from model errors and preserve partial runs.
-Antigravity has no applicable per-token price in the plan documentation, so
-`prices.yaml` records token usage and an unavailable dollar cost.
-
-The initial smoke uses two repeats on two coding cases, four replicates at
-concurrency 4, with one subject model at a time. If quota drops sharply,
-switch Gemini to `JOBS=1` and run one task and repeat at a time, checking
-quota before dispatching another. A completed eval is more useful than
-concurrent partial runs. Keep every run separate; concurrency does not reduce
-the total token use of the same work.
-
-```sh
-make evals-run-classes MODEL=gemini-3.1-pro JOBS=1 REPEATS=1 \
-  TASKS='tasks/model-classes/career-370.yaml'
-omp usage invalidate --provider google-antigravity
-omp usage --provider google-antigravity --json --redact --no-extensions
-make evals-run-classes MODEL=gpt-6.1-sol JOBS=1 REPEATS=1 \
-  TASKS='tasks/model-classes/career-370.yaml'
-```
-
-Review the transcripts for actual read/edit/command use and executable grader
-results before expanding. When quota permits, run each full class model
-separately at three repeats; use serial Gemini execution after high consumption:
-
-```sh
-make evals-run-classes MODEL=gemini-3.8-flash JOBS=1
-make evals-run-classes MODEL=gemini-3.1-pro JOBS=1
-make evals-run-classes MODEL=gpt-6.1-sol JOBS=4
-```
-
-The full workflow comparison uses the same ten Daily Driver tasks and three
-repeats with `JUDGE=omp-gpt-6.1-sol` for Gemini and Sol. Use `JOBS=1` for
-Gemini after high quota consumption. Run one case and repeat at a time when
-quota is tight, and record incomplete coverage. Executable criteria remain
-authoritative; Sol judges only the semantic rubrics. Run the commands separately:
-
-```sh
-WORKFLOW_TASKS='tasks/task-worktree/01-isolate-new-task-omp.yaml tasks/task-worktree/02-neg-read-only-review.yaml tasks/task-worktree/03-neg-existing-task-worktree.yaml tasks/session-title/07-one-call-sets-the-title-omp.yaml tasks/session-title/05-neg-pr-title.yaml tasks/judgement-call/01-ask-in-chat-extension-omp.yaml tasks/constitution/active-harness-is-not-model-omp.yaml tasks/undertake/17-access-gap-without-handoff.yaml tasks/undertake/17-actual-human-auth-contribution.yaml tasks/undertake/17-authorized-agent-handoff.yaml'
-make evals-run-omp-gemini-3-8-flash JOBS=1 JUDGE=omp-gpt-6.1-sol TASKS="$WORKFLOW_TASKS"
-make evals-run-omp-gemini-3-1-pro JOBS=1 JUDGE=omp-gpt-6.1-sol TASKS="$WORKFLOW_TASKS"
-make evals-run-omp-gpt-6-1-sol-workflow JOBS=4 JUDGE=omp-gpt-6.1-sol TASKS="$WORKFLOW_TASKS"
-```
-
-For a single workflow eval with a quota check before the next dispatch:
-
-```sh
-make evals-run-omp-gemini-3-1-pro JOBS=1 REPEATS=1 JUDGE=omp-gpt-6.1-sol \
-  TASKS='tasks/constitution/active-harness-is-not-model-omp.yaml'
-omp usage invalidate --provider google-antigravity
-omp usage --provider google-antigravity --json --redact --no-extensions
-```
-
-For the trigger-only read-only probe, use its bounded limits explicitly. It
-has no semantic criteria, so no judge call is needed. Run each experiment
-separately and refresh quota between Gemini runs:
-
-```sh
-(
-  cd evals
-  TELEMETRY_ENABLED=false uv tool run --isolated --python 3.13 \
-    --from coder-eval==0.11.6 \
-    --with typer==0.24.1 \
-    --with-editable ./coder-eval-omp --with-editable ./coder-eval-codex \
-    coder-eval run --max-parallel 1 --repeats 1 \
-    -D run_limits.max_turns=5 -D run_limits.turn_timeout=120 \
-    -D run_limits.task_timeout=300 -e experiments/omp-gemini-3.1-pro.yaml \
-    --exclude-tags claude-only,codex-only,skip:omp,model-classes \
-    tasks/task-worktree/02-neg-read-only-review.yaml
-)
-```
-
-The matching experiments are `omp-gemini-3.8-flash.yaml` and
-`omp-gpt-6.1-sol-workflow.yaml`. Record each exact run directory with its
-experiment through `scripts/evals-record.py`; never overwrite a finalized run.
-
-Keep smoke, full class, and workflow runs distinct. Record attempted,
-completed, pass, and error counts; per-case failures; elapsed time; reported
-tokens; and unavailable dollar cost. Never pool different tasks or judges,
-remove failure rows, or infer a general main-agent or reasoning-class
-recommendation from these small samples. Link every reported figure to its
-committed provenance record.
 
 **What a non-Claude judge changes.** `make evals-judge-preflight` runs first and
 fails before any subject if `omp` is missing, Omp does not list the judge's exact
@@ -1411,7 +1337,8 @@ gate is not restored here.
 Run the evals-only title regression through both title skills with:
 
 ```sh
-make evals-run-omp-gpt-6-1-sol JUDGE=omp-gpt-6.1-sol \
+make evals-run-omp EXPERIMENT=evals/experiments/omp-gpt-6.1-sol-ablation.yaml \
+  RUN=evals/runs/title-smoke REPEATS=1 JUDGE=omp-gpt-6.1-sol \
   TASKS='tasks/pr-title/09-evals-only-are-tests.yaml'
 ```
 
@@ -1960,14 +1887,8 @@ Omp's own Codex login; the target reports it as unconfigured and does not
 fail.
 
 ```sh
-make evals-run-omp-glm-5-3                    # GLM 5.3 only
-make evals-run-omp-glm-5-3-flash              # GLM 5.3 Flash tier probe
-make evals-run-omp-deepseek-v4-pro            # DeepSeek V4 Pro 0813 only
-make evals-run-omp-deepseek-v4-1-flash        # DeepSeek V4.1 Flash 1017 only
-make evals-run-omp-gpt-5-6-sol                # GPT 5.6 Sol via openai-codex
-make evals-run-omp-gpt-6-luna                 # GPT 6 Luna via openai-codex
-make evals-run-omp-gpt-6-sol                  # GPT 6 Sol via openai-codex
-make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
+make evals-run-omp EXPERIMENT=evals/experiments/omp-gpt-6.1-sol-ablation.yaml \
+  RUN=evals/runs/sol-cohort JUDGE=omp-gpt-6.1-sol JOBS=1
 ```
 
 Each experiment pins one provider/model ID, and the Omp home the agent borrows
@@ -2019,11 +1940,9 @@ live run.
 ### Running an Omp arm
 
 ```sh
-make evals-install                       # rebuilds the local agents every time
-export AI_GATEWAY_API_KEY=…              # for a non-GPT gateway subject only
-omp models find glm-5.3                  # the supported non-GPT route must resolve
-TASKS='tasks/undertake/*.yaml'
-setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
+make evals-run-omp EXPERIMENT=evals/experiments/omp-glm-5.3.yaml \
+  RUN=evals/runs/glm-cohort JUDGE=omp-gpt-6.1-sol JOBS=1 \
+  TASKS='tasks/undertake/*.yaml'
 ```
 
 - **The judge runs on its selected route.** Only a Claude-judged `agent_judge`
