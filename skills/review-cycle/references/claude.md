@@ -14,9 +14,8 @@ The session's built-in **`/code-review`**, run against the pull request with
 `--comment` is what carries the findings out of the terminal and onto the pull
 request. They arrive as **resolvable review threads**, inline on the diff under
 a submitted `COMMENT` review — measured on live pull requests at `medium` and
-again at `max`, CLI 2.1.263, 2026-09-07, and recorded in
-[`0001`](../../../docs/notes/0001-built-in-review-surface.md) §4. The default
-level is measured rather than assumed from a deeper level's result.
+again at `max`, CLI 2.1.263, 2026-09-07. The default level is measured rather
+than assumed from a deeper level's result.
 
 **The level is named on every invocation.** `/code-review` otherwise reuses
 whatever level was typed last, in some other session, about some other diff.
@@ -217,8 +216,9 @@ summary carries unanchorable or clean results. Validate the head and diff
 anchors again immediately before this call. A missing token, GitHub rejection,
 or head change leaves the findings intact and reports publication as incomplete.
 
-The `/comments` fallback measured in `0001` demonstrates inline posting, not
-this submitted-review aggregation; read the response and review history before
+The `/comments` fallback — REST `POST …/pulls/{n}/comments` with the ambient
+token, measured 2026-09-12 on PR #190 — demonstrates inline posting, not this
+submitted-review aggregation; read the response and review history before
 claiming the aggregation succeeded.
 
 | Operation | Call |

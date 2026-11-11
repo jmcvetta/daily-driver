@@ -17,7 +17,7 @@ SHELL := /bin/bash
 	evals-variants evals-preflight evals-record evals-render-routes evals-render-results evals-leaks check-evals-leaks evals-run evals-run-omp \
 	evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-deepseek-v4-1-flash \
 	check-claude-dependency evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna \
-	evals-run-codex evals-run-comparison evals-run-classes evals-run-haiku-5-5 mcp-usage
+	evals-run-codex evals-run-comparison evals-run-classes evals-run-haiku-5-5
 
 # The `coder_eval` release the eval suites are written against. Pinned on
 # purpose: being able to hold a version back is the whole reason the suites are
@@ -698,18 +698,12 @@ evals-run-classes: evals-judge-preflight evals-plan evals-preflight
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/classes-$(MODEL).yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-# mcp-usage: which GitHub MCP tools were actually called, rolled up to the
-# toolsets that supply them. Laptop-only — it reads Claude
-# Code's session transcripts, which CI does not have — and deliberately not
-# part of `check`. See docs/github-mcp.md for what the answer is for.
-mcp-usage:
-	python3 scripts/github-mcp-usage.py
-
 # model-telemetry: mine `undertake`'s claim/readiness comments and
 # `review-cycle`'s `Review verification` comments for one repository's
 # production rework, and re-render evals/provenance/production/README.md
 # over every repository's records on disk. Needs GITHUB_TOKEN or GH_TOKEN,
-# so like mcp-usage it is laptop-only and deliberately not part of `check`.
+# so like the retired `mcp-usage` target it is laptop-only and deliberately not
+# part of `check`.
 #   make model-telemetry REPO=owner/repo
 #   make model-telemetry REPO=owner/repo REFRESH=1
 model-telemetry:
