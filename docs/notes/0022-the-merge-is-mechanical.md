@@ -10,7 +10,7 @@ that carries the change it justifies.
 **Resolves:** [#310](https://github.com/jmcvetta/daily-driver/issues/310).
 **Amends:** [`0011`](0011-two-harnesses-one-skill-tree.md), which scoped
 `0010`'s never-empty wake slot to Claude Code and left Omp's watch to
-catch-up looks; and [`0017`](0017-the-catch-up-look.md), which rejected a
+catch-up looks; and [`0035`](0035-the-catch-up-look.md), which rejected a
 watcher process for the base branch.
 
 `Keep it current`'s cadence had one actor everywhere: the session. On Omp the

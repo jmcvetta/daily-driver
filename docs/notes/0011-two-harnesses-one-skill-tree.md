@@ -7,7 +7,7 @@ children, as each part was built. This note records those decisions after the
 fact, in one place, because the reasons were spread over an epic and would
 otherwise be readable only from its pull requests.
 **Resolves:** [#152](https://github.com/jmcvetta/daily-driver/issues/152).
-**Amends:** [`0010`](0010-the-wake-slot-is-never-empty.md), whose never-empty
+**Amends:** [`0034`](0034-the-wake-slot-is-never-empty.md), whose never-empty
 wake slot is a Claude Code rule rather than a rule of this toolkit.
 **Amended by:** [#229](https://github.com/jmcvetta/daily-driver/issues/229),
 which withdrew the `description` exception recorded below.

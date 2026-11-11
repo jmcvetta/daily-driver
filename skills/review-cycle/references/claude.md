@@ -134,7 +134,7 @@ The backstop
   Re-arming on every wake regardless puts a timer in flight per check that
   reports, each of which wakes and re-arms again, and a wait that spends more
   turns than the poll it replaced has replaced nothing.
-  [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) is the
+  [`0034`](../../../docs/notes/0034-the-wake-slot-is-never-empty.md) is the
   decision, and the report behind it is a session that emptied the slot and
   slept through a green run.
   [`0011`](../../../docs/notes/0011-two-harnesses-one-skill-tree.md) scopes it
@@ -176,7 +176,7 @@ has reported or a genuine blocker or user stop requires it:
   cancel was clearing the way for. What this bullet forbids is standing down
   instead — no timer and no subscription, on a pull request `pr` is still
   driving, which is the session asleep through a green run that
-  [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) records.
+  [`0034`](../../../docs/notes/0034-the-wake-slot-is-never-empty.md) records.
   **A wait with no active PR-maintenance watch arms nothing.** A round run on
   its own — without a `pr` watch — has no cadence to resume and no step that
   would ever end one, so a check-in armed here would wake a session that has

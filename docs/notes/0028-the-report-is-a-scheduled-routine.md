@@ -5,7 +5,7 @@
 [#425](https://github.com/jmcvetta/daily-driver/issues/425), under the epic
 [#423](https://github.com/jmcvetta/daily-driver/issues/423).
 **Resolves:** [#425](https://github.com/jmcvetta/daily-driver/issues/425).
-**Amends:** [`0010`](0010-the-wake-slot-is-never-empty.md), by naming a
+**Amends:** [`0034`](0034-the-wake-slot-is-never-empty.md), by naming a
 Routine that wakes a session without being that session's slot.
 
 On Claude Code cloud sessions an `embark` orchestrator could reach an
