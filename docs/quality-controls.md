@@ -10,6 +10,10 @@ baseline. A decided change that has not landed is marked as decided (see
 *How to read this standard*). A companion issue in each repository lands the
 change, and its pull request removes the mark.
 
+Statuses below were reconciled against each repository's current CI and
+configuration on 2026-11-11: a landed decision has its mark removed, and a
+decision still unlanded is retained with its observed evidence.
+
 The survey covered five repositories:
 
 | Short name | Repository |
@@ -164,11 +168,13 @@ than kept as a gate.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
-| Opengrep, pinned engine (`.opengrep-version`, cosign-verified) and pinned community corpus (`.opengrep/community-rules.pin`), with each excluded rule given a reason in `.opengrep/excluded-rules.txt` | PG | `gate → none` |
+| Opengrep, pinned engine (`.opengrep-version`, cosign-verified) and pinned community corpus (`.opengrep/community-rules.pin`), with each excluded rule given a reason in `.opengrep/excluded-rules.txt` | PG | `none` |
 | Ruff `S` rules (Python only; see `QC-LINT`) | CA | `gate` |
 
-`none` in DD, PRA and CMWB, and in PG once its corpus is retired. PG's custom
-`.opengrep/rules/` stay under `QC-CONVENTION-RULES`.
+`none` in DD, PRA, CMWB and PG: PG's corpus is retired (verified on
+2026-11-11 — `.opengrep/` holds only the custom `rules/`, and `make opengrep`
+runs `opengrep_custom` alone). PG's custom `.opengrep/rules/` stay under
+`QC-CONVENTION-RULES`.
 
 ### QC-WORKFLOW-SECURITY — workflows are safe against untrusted input
 
@@ -184,8 +190,10 @@ event fields, over-broad token permissions, dangerous triggers such as
 | Implementation | Repository | Status |
 | --- | --- | --- |
 | zizmor 1.31.1, `.github/zizmor.yml` (`hash-pin`; two inline ignores carry reasons) | DD | `gate` |
+| zizmor, run as `make zizmor` in CI | PG | `gate` |
 
-- Status: `gate` in DD; `none → gate` in CA, PG, PRA and CMWB.
+- Status: `gate` in DD and PG; `none → gate` in CA, PRA and CMWB. CA, PRA and
+  CMWB still had no zizmor step in their workflows on 2026-11-11.
 
 ### QC-GENERATED-FRESH — generated files match their source
 
@@ -217,11 +225,11 @@ the normal CI gate checks it.
 
 | Repository | Dependabot ecosystems | Decided, not yet landed |
 | --- | --- | --- |
-| DD | `github-actions`, `terraform` | `npm`, for the `package-lock.json` that pins the CI-selector dependencies (#707) |
+| DD | `github-actions`, `terraform`, `npm` | — |
 | CA | `github-actions` (Python is `uv.lock`, which Dependabot has no ecosystem for) | — |
 | PRA | `npm`, `github-actions` | — |
-| PG | none | `github-actions` |
-| CMWB | none | `github-actions`, `terraform` |
+| PG | `github-actions` | — |
+| CMWB | `github-actions`, `terraform` | — |
 
 The decided standard is that every repository with pinned third-party
 dependencies has Dependabot on for the matching ecosystems.
@@ -289,7 +297,7 @@ No function exceeds the complexity thresholds of the linter's defaults.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | Ruff `C901`, `PLR0911`, `PLR0912`, `PLR0915` at default thresholds | CA | `gate` |
-| TypeScript | Biome `complexity/noExcessiveCognitiveComplexity`, enabled beyond the `recommended` preset | PG | `none → gate` |
+| TypeScript | Biome `complexity/noExcessiveCognitiveComplexity`, enabled beyond the `recommended` preset (`biome.json` sets it to `error`) | PG | `gate` |
 
 ### QC-FILE-SIZE — bounded file length
 
@@ -298,7 +306,7 @@ No production source file exceeds a counted-line limit.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | `kokoro/core/scripts/check_file_size.py`: 500 lines, not counting docstrings, comments or blank lines | CA | `gate` |
-| TypeScript | a script mirroring CA's `check_file_size.py` at 500 lines, not counting comments or blank lines (Biome has no file-length rule) | PG | `none → gate` |
+| TypeScript | a script mirroring CA's `check_file_size.py` at 500 lines, not counting comments or blank lines (Biome has no file-length rule) — `.github/scripts/check_typescript_file_size.py` | PG | `gate` |
 
 ### QC-MODULE-BOUNDARIES — enforced dependency direction
 
@@ -343,8 +351,8 @@ request or fails it.
 | --- | --- | --- | --- |
 | Python | pytest-cov with branch coverage; per-package line and branch floors in `kokoro/coverage-baseline.json`, enforced on full runs | CA | `gate` |
 | TypeScript | vitest v8 coverage, with a diff-aware sticky comment (`davelosert/vitest-coverage-report-action`); no threshold | PRA | `gate` |
-| TypeScript | vitest v8 coverage, same diff-aware comment as PRA | PG | `none → gate` |
-| Python | pytest-cov, mirroring CA without floors until a baseline exists | CMWB | `none → gate` |
+| TypeScript | vitest v8 coverage, same diff-aware comment as PRA | PG | `gate` |
+| Python | pytest-cov, mirroring CA without floors until a baseline exists | CMWB | `gate` |
 
 ### QC-MUTATION — test strength
 
@@ -369,7 +377,7 @@ changing it.
 | JavaScript (npm) | `npm ci` (CI-selector dependencies) | DD | `gate` |
 | Python (uv) | `uv lock --check --offline` | CA | `gate` |
 | OpenTofu providers | none; the lock stays committed for hash-pinning | DD | `none` |
-| OpenTofu providers | the same | PRA | `gate → none` |
+| OpenTofu providers | the same | PRA | `gate → none` (the drift check still runs — verified 2026-11-11) |
 
 OpenTofu provider lockfiles (`.terraform.lock.hcl`) stay committed for
 hash-pinning when a configuration is applied by hand, but the decided
@@ -389,8 +397,8 @@ is added.
 | Ecosystem | Tool | Repositories | Status |
 | --- | --- | --- | --- |
 | Python | pip-audit over the `uv export` of the lockfile | CA | `gate` |
-| TypeScript (pnpm) | `pnpm audit --prod` (fails on any finding; no severity floor) | PG | `none → gate` |
-| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | DD `gate`; PRA `none → gate` |
+| TypeScript (pnpm) | `pnpm audit --prod` (fails on any finding; no severity floor) | PG | `gate` |
+| TypeScript (npm) | `npm audit --omit=dev` (fails on any finding; no severity floor) | PRA, DD | DD `gate`; PRA `none → gate` (PRA's `npm ci` still runs `--no-audit` as of 2026-11-11) |
 
 ### QC-BUILD — the shipped artifact builds and loads
 
@@ -426,7 +434,7 @@ a reason.
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml` (five skips carry reasons) | DD | `gate` |
 | OpenTofu, Dockerfile, secrets | Checkov, pinned, frameworks `terraform dockerfile secrets` (`apps/omp-web`) | PG | `gate` |
 | OpenTofu | Checkov, `.checkov.yaml`, selected only when Tofu changes | CA | `gate` |
-| OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | PRA | `none → gate` |
+| OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | PRA | `gate` |
 | OpenTofu | Checkov 3.2.472, `.checkov.yaml`, selected by the infra filter | CMWB | `gate` |
 
 
@@ -451,27 +459,27 @@ control covers.
 | QC-RELEASE-PROJECTION | gate | gate | gate | gate | gate |
 | QC-RELEASE-CONFIG | none | gate (schema unpinned) | local | none | none |
 | QC-CONVENTION-RULES | gate | gate | gate | none | none |
-| QC-SAST | none | gate (Python) | gate → none | none | none |
-| QC-WORKFLOW-SECURITY | gate | none → gate | none → gate | none → gate | none → gate |
+| QC-SAST | none | gate (Python) | none | none | none |
+| QC-WORKFLOW-SECURITY | gate | none → gate | gate | none → gate | none → gate |
 | QC-GENERATED-FRESH | none | local (TypeScript) | gate | gate | none |
 | QC-SUPPLY-CHAIN | gate (partial) | gate (partial) | gate | none | gate (partial) |
-| QC-DEPENDENCY-UPDATES | on | on | none → on | on | none → on |
+| QC-DEPENDENCY-UPDATES | on | on | on | on | on |
 | QC-TESTS-OFFLINE | none | gate | none | none | none |
 | QC-FORMAT | gate (HCL) | gate | gate | gate (HCL) | gate (HCL) |
 | QC-LINT | gate (shell, plugin) | gate (Python) | gate | none | none |
 | QC-TYPECHECK | none | gate (Python) | gate | gate | none |
-| QC-COMPLEXITY | none | gate (Python) | none → gate | none | none |
-| QC-FILE-SIZE | none | gate (Python) | none → gate | none | none |
+| QC-COMPLEXITY | none | gate (Python) | gate | none | none |
+| QC-FILE-SIZE | none | gate (Python) | gate | none | none |
 | QC-MODULE-BOUNDARIES | n/a | gate (Python) | none | n/a | n/a |
 | QC-DOC-COMMENTS | none | gate (Python) | none | none | none |
 | QC-UNIT-TESTS | none | gate | gate | gate | gate |
-| QC-COVERAGE | none | gate (Python) | none → gate | gate | none → gate |
+| QC-COVERAGE | none | gate (Python) | gate | gate | gate |
 | QC-MUTATION | none | none | local | none | none |
 | QC-LOCKFILE | gate (npm); none (HCL) | gate (Python) | gate (pnpm) | gate (npm); gate → none (HCL) | none |
-| QC-VULN-AUDIT | gate | gate (Python) | none → gate | none → gate | n/a |
+| QC-VULN-AUDIT | gate | gate (Python) | gate | none → gate | n/a |
 | QC-BUILD | n/a | none | gate | gate | n/a |
 | QC-IAC-VALIDATE | gate | gate | gate | gate | gate |
-| QC-IAC-POLICY | gate | gate | gate | none → gate | gate |
+| QC-IAC-POLICY | gate | gate | gate | gate | gate |
 
 CA also holds a TypeScript tree (`agent-cli`, `core`, `cflow`, `viewer`,
 `polite-pace`). Its vitest and `tsc` legs run only locally (`make
