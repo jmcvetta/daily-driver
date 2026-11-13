@@ -1,0 +1,560 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Pinned requirements and allocation both constrain review",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Pinned requirements and allocation both constrain review",
+            "duration_seconds": 10.95,
+            "findings": [
+              "Pins REQ-1 review to the exact recorded specification commit.",
+              "Checks task allocation and exclusion of REQ-2.",
+              "Checks delivered PR revision and recorded delivery evidence.",
+              "Flags specification changes for epic handling, not amendment through the implementation PR."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "be1245f708a36b87cfdbe35a0ecccef30963d1eb4adc2b5c9d04879c4822997a",
+            "rationale": "The response covers all required review checks and explicitly routes the governing specification change to epic rather than accepting an implicit contract update.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 10116,
+              "output": 90
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "f01b010be4e3e16a7afa6389ba4c309f668aa278bb86d197939f31d249abc37a"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "review-cycle-20-specification-allocation",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Both sources are pinned and changed requirements are not silently adopted",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "ERROR",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Both sources are pinned and changed requirements are not silently adopted",
+            "error": {
+              "kind": "unsupported",
+              "message": "prompt is 126173 bytes, over this judge's max_prompt_bytes 120000"
+            },
+            "index": 0,
+            "pass_threshold": 0.7,
+            "prompt_sha": "e29680904b468ee777bdc3079914a388c7b49c3f63c12d5ea419aa7be3c10429",
+            "section": "success_criteria",
+            "status": "error",
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "error",
+        "freeze_sha": "f01b010be4e3e16a7afa6389ba4c309f668aa278bb86d197939f31d249abc37a"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": null,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "undertake-36-specification-revision",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Research-only dispatch and discovery continuation",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Research-only dispatch and discovery continuation",
+            "duration_seconds": 11.12,
+            "findings": [
+              "Research eligibility includes blockers, scheduling, claims, class metadata, and route checks.",
+              "Explicitly prohibits specification and implementation dispatch under discovery.",
+              "Requires evidenced research completion and leaves the discovery parent open."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "69ee4bfa12b1e4f2245d34171376f38065742a26de8fc37df421af252623e70f",
+            "rationale": "The answer restricts dispatch to eligible research and explicitly excludes interactive specification and staged implementation. It directs exhausted discovery back to epic for review, specification, or publication while keeping the parent open.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 11948,
+              "output": 93
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "f01b010be4e3e16a7afa6389ba4c309f668aa278bb86d197939f31d249abc37a"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "embark-20-discovery-research-only",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Promotion follows complete staging and verification",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Promotion follows complete staging and verification",
+            "duration_seconds": 15.24,
+            "findings": [
+              "Preserves the existing parent and completed research/specification lineage.",
+              "Pins tasks to the exact merge commit and stable requirement IDs.",
+              "Verifies references, coverage, readiness, parent and blocked-by edges, and sequencing.",
+              "Atomically swaps discovery to epic only after all gates pass; failed gates prevent promotion and dispatch."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "4550cf018c1b0a0c9431701dd16765c195c4ad102a8a5657d29575ea001025b1",
+            "rationale": "The answer preserves #10 and its lineage and sequences agreed task staging after recording the approved master merge and canonical specification path. It requires reference, readiness, graph, and sequencing checks before atomic promotion, explicitly prohibiting staged task execution while discovery remains.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 12328,
+              "output": 156
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "f01b010be4e3e16a7afa6389ba4c309f668aa278bb86d197939f31d249abc37a"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "epic-08-discovery-promotion",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Parent membership and marker are preserved",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Parent membership and marker are preserved",
+            "duration_seconds": 11.87,
+            "findings": [
+              "Research requires readiness and valid model class with rationale.",
+              "At most one active interactive specification may attach without an implementation class.",
+              "Tasks stage only after specification merge and spec-backed readiness checks.",
+              "Story derives from a confirmed direct discovery or epic parent; promotion and failed reads preserve lineage."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "0812ede399f42c71462f23b26eef64dd1bd48aac3de5ab18daf2e97bed563203",
+            "rationale": "The response satisfies all specified readiness and lineage rules, explicitly allowing the interactive specification child and preserving story markers through promotion and failed graph reads.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 15821,
+              "output": 99
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "f01b010be4e3e16a7afa6389ba4c309f668aa278bb86d197939f31d249abc37a"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-deps-09-discovery-children",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "agent_judge",
+          "description": "Same-parent demotion and scoped reconciliation",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "SUCCESS",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Same-parent demotion and scoped reconciliation",
+            "duration_seconds": 7.35,
+            "findings": [
+              "Preserves parent identity, lineage, allocations, and provenance.",
+              "Pauses affected work while independent active work retains its existing contract.",
+              "Requires interactive amendment, renewed operator approval, and operator merge.",
+              "Reconciles affected allocations and contracts to the exact merged SHA with original-user authority for material changes.",
+              "Checks references, coverage, graph, sequencing, and readiness before atomic re-promotion."
+            ],
+            "index": 0,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "5d77049c236b89d35fad2b77fa32c9584e165ec9dc5bebee56b8b118ba264ef0",
+            "rationale": "The answer explicitly covers every required lifecycle safeguard, from same-parent demotion and selective pausing through interactive approval, exact-SHA reconciliation, verification, and atomic re-promotion. It expressly forbids silent specification adoption.",
+            "score": 1.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 8908,
+              "output": 136
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "f01b010be4e3e16a7afa6389ba4c309f668aa278bb86d197939f31d249abc37a"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 1.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "epic-09-substantive-amendment",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 28.970550298690796,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "review-cycle-20-specification-allocation",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 9600,
+        "output_tokens": 299,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 16572
+      },
+      "tokens": 26471,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 42.55232644081116,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "error",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "undertake-36-specification-revision",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 69504,
+        "output_tokens": 771,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 31282
+      },
+      "tokens": 101557,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 34.84678101539612,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "embark-20-discovery-research-only",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 3712,
+        "output_tokens": 335,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 14720
+      },
+      "tokens": 18767,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 32.64456081390381,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "epic-08-discovery-promotion",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 13824,
+        "output_tokens": 435,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 14772
+      },
+      "tokens": 29031,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 28.830403804779053,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "issue-deps-09-discovery-children",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 10496,
+        "output_tokens": 529,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 18007
+      },
+      "tokens": 29032,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": null,
+      "cost_source": "subscription",
+      "elapsed_seconds": 24.840246200561523,
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unreported",
+      "outcome": "succeeded",
+      "replicate_index": 0,
+      "settings": "omp-gpt-6-1-sol",
+      "task_id": "epic-09-substantive-amendment",
+      "token_usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 9984,
+        "output_tokens": 575,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 15089
+      },
+      "tokens": 25648,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "omp",
+    "recorded_version": "omp/18.20.0",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-13T13:24:44.664584",
+  "experiment_id": "omp-gpt-6-1-sol",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 1,
+    "freeze_sha": "f01b010be4e3e16a7afa6389ba4c309f668aa278bb86d197939f31d249abc37a",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": "unavailable"
+  },
+  "plugin_revision": {
+    "commit": "bdc91301fb8241cf2344afb34357137a689e2e2b",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-13T06:25:04.629500+00:00",
+  "run_id": "2026-11-13_13-23-44",
+  "schema_version": 5,
+  "started_at": "2026-11-13T13:23:44.365507",
+  "variants": [
+    {
+      "model_requested": "openai-codex/gpt-6.1-sol",
+      "model_served": "unknown",
+      "per_replicate_scores": {
+        "embark-20-discovery-research-only": [
+          1.0
+        ],
+        "epic-08-discovery-promotion": [
+          1.0
+        ],
+        "epic-09-substantive-amendment": [
+          1.0
+        ],
+        "issue-deps-09-discovery-children": [
+          1.0
+        ],
+        "review-cycle-20-specification-allocation": [
+          1.0
+        ],
+        "undertake-36-specification-revision": [
+          null
+        ]
+      },
+      "task_ids": [
+        "review-cycle-20-specification-allocation",
+        "undertake-36-specification-revision",
+        "embark-20-discovery-research-only",
+        "epic-08-discovery-promotion",
+        "issue-deps-09-discovery-children",
+        "epic-09-substantive-amendment"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}
