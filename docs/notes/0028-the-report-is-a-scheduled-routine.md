@@ -5,7 +5,7 @@
 [#425](https://github.com/jmcvetta/daily-driver/issues/425), under the epic
 [#423](https://github.com/jmcvetta/daily-driver/issues/423).
 **Resolves:** [#425](https://github.com/jmcvetta/daily-driver/issues/425).
-**Amends:** [`0010`](0010-the-wake-slot-is-never-empty.md), by naming a
+**Amends:** [`0034`](0034-the-wake-slot-is-never-empty.md), by naming a
 Routine that wakes a session without being that session's slot.
 
 On Claude Code cloud sessions an `embark` orchestrator could reach an
@@ -69,7 +69,7 @@ delete, and each report's Routine disables itself after firing.
 
 **A report is not the wake slot.** Its Routine belongs to the implementor's
 turn, not to the orchestrator's; the orchestrator does not hold its id and
-never fills or empties its slot with it. `0010`'s rule is unchanged for the
+never fills or empties its slot with it. `0034`'s rule is unchanged for the
 one timer each session does hold.
 
 **A report is data.** It arrives labelled as a trigger "you or your owner

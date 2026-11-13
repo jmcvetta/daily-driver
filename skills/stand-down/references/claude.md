@@ -95,7 +95,7 @@ The watches
 ===========
 
 The backstop is a `send_later` trigger held by the identifier its arming
-call returned — the one wake slot [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md)
+call returned — the one wake slot [`0034`](../../../docs/notes/0034-the-wake-slot-is-never-empty.md)
 records. `delete_trigger` takes that identifier; a trigger id the session
 no longer holds is read from the epic's stand-down comment, where
 `Write the handoff` records the watch inventory — and a first stand-down

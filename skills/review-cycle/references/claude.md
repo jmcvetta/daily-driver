@@ -14,9 +14,8 @@ The session's built-in **`/code-review`**, run against the pull request with
 `--comment` is what carries the findings out of the terminal and onto the pull
 request. They arrive as **resolvable review threads**, inline on the diff under
 a submitted `COMMENT` review — measured on live pull requests at `medium` and
-again at `max`, CLI 2.1.263, 2026-09-07, and recorded in
-[`0001`](../../../docs/notes/0001-built-in-review-surface.md) §4. The default
-level is measured rather than assumed from a deeper level's result.
+again at `max`, CLI 2.1.263, 2026-09-07. The default level is measured rather
+than assumed from a deeper level's result.
 
 **The level is named on every invocation.** `/code-review` otherwise reuses
 whatever level was typed last, in some other session, about some other diff.
@@ -135,7 +134,7 @@ The backstop
   Re-arming on every wake regardless puts a timer in flight per check that
   reports, each of which wakes and re-arms again, and a wait that spends more
   turns than the poll it replaced has replaced nothing.
-  [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) is the
+  [`0034`](../../../docs/notes/0034-the-wake-slot-is-never-empty.md) is the
   decision, and the report behind it is a session that emptied the slot and
   slept through a green run.
   [`0011`](../../../docs/notes/0011-two-harnesses-one-skill-tree.md) scopes it
@@ -177,7 +176,7 @@ has reported or a genuine blocker or user stop requires it:
   cancel was clearing the way for. What this bullet forbids is standing down
   instead — no timer and no subscription, on a pull request `pr` is still
   driving, which is the session asleep through a green run that
-  [`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) records.
+  [`0034`](../../../docs/notes/0034-the-wake-slot-is-never-empty.md) records.
   **A wait with no active PR-maintenance watch arms nothing.** A round run on
   its own — without a `pr` watch — has no cadence to resume and no step that
   would ever end one, so a check-in armed here would wake a session that has
@@ -217,8 +216,9 @@ summary carries unanchorable or clean results. Validate the head and diff
 anchors again immediately before this call. A missing token, GitHub rejection,
 or head change leaves the findings intact and reports publication as incomplete.
 
-The `/comments` fallback measured in `0001` demonstrates inline posting, not
-this submitted-review aggregation; read the response and review history before
+The `/comments` fallback — REST `POST …/pulls/{n}/comments` with the ambient
+token, measured 2026-09-12 on PR #190 — demonstrates inline posting, not this
+submitted-review aggregation; read the response and review history before
 claiming the aggregation succeeded.
 
 | Operation | Call |

@@ -193,8 +193,9 @@ precision argument for preferring the built-in over narrow agents only holds
 where verification actually runs; where it does not, the judgment tier is
 carrying more weight than this section assumes.
 
-See [`docs/notes/0001-built-in-review-surface.md`](../../../docs/notes/0001-built-in-review-surface.md)
-for the full matrix and the version it was read from.
+See retired note `docs/notes/0001-built-in-review-surface.md` (Git history;
+issue #35 is the surviving record of its phases) for the full matrix and the
+version it was read from.
 
 If `/code-review` is not available in this session, fall back in order:
 
@@ -247,12 +248,11 @@ place of* the standard four-tier rubric.
 > then the two roles stand, and this note is the reason they are worth
 > re-examining.
 >
-> [`0001`](../../../docs/notes/0001-built-in-review-surface.md) surveys what the
-> built-in does today and finds the crossover is **per model family**, not
-> global: on Sonnet 5 this panel sits on top of a verified multi-agent panel,
-> while on Opus 5 at Standard or Full depth it sits on top of a single
-> unverified reviewer. It settles nothing about finding quality — that is still
-> the measurement in #35.
+> Retired note `0001` surveyed what the built-in did and found the crossover is
+> **per model family**, not global: on Sonnet 5 this panel sits on top of a
+> verified multi-agent panel, while on Opus 5 at Standard or Full depth it sits
+> on top of a single unverified reviewer. It settles nothing about finding
+> quality — that is still the measurement in #35; the note is in Git history.
 
 
 Synthesis

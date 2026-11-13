@@ -7,7 +7,7 @@ children, as each part was built. This note records those decisions after the
 fact, in one place, because the reasons were spread over an epic and would
 otherwise be readable only from its pull requests.
 **Resolves:** [#152](https://github.com/jmcvetta/daily-driver/issues/152).
-**Amends:** [`0010`](0010-the-wake-slot-is-never-empty.md), whose never-empty
+**Amends:** [`0034`](0034-the-wake-slot-is-never-empty.md), whose never-empty
 wake slot is a Claude Code rule rather than a rule of this toolkit.
 **Amended by:** [#229](https://github.com/jmcvetta/daily-driver/issues/229),
 which withdrew the `description` exception recorded below.
@@ -72,13 +72,13 @@ timer. It is unref'd, and the runtime clears it on `session_shutdown`. It does
 not survive the session, so it is not `send_later`, and nothing on Omp can wake
 a session that has ended.
 
-Two rules follow. `0010`'s never-empty wake slot is Claude Code only. On Omp,
+Two rules follow. `0034`'s never-empty wake slot is Claude Code only. On Omp,
 `hub` supervises `gh pr checks --watch` with a fifteen-minute stop, then the
 session reads the head commit's check runs and statuses. `github.run_watch` is
 optional and disabled by default, so it is never the Omp route. `undertake`'s
 `Keep it current` cadence — which outlives the turn that armed it — stops at
-`Ready for review`. `0010` is not edited for this: the amendment is recorded
-here, as `0010` recorded its own amendments to `0006` and `0007`.
+`Ready for review`. `0034` is not edited for this: the amendment is recorded
+here, as `0034` recorded its own amendments to `0006` and `0007`.
 
 **Omp's review surface leaves no threads.** The `reviewer` task agent returns
 its findings to the session. The findings do not land on the pull request, so

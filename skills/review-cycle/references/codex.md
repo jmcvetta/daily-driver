@@ -168,7 +168,7 @@ what the next session will reach for.
 There is no wake slot
 ---------------------
 
-[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md)'s
+[`0034`](../../../docs/notes/0034-the-wake-slot-is-never-empty.md)'s
 never-empty wake slot is Claude Code's rule and not this harness's, for the
 reason [`0011`](../../../docs/notes/0011-two-harnesses-one-skill-tree.md)
 scoped it there: a harness with no durable wake has no slot to fill. Codex is

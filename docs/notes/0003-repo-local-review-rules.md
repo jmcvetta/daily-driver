@@ -39,10 +39,9 @@ actually describe. They are removed here:
 **The plugin carries no mechanism for repo-local review rules.** `CLAUDE.md`
 is already read on every surface, is already the level subsidiarity names, and
 already reaches a reviewer subagent — that last is measured, not assumed:
-R2's table in
-[`plugin-replaces-global-memory.md`](../planning/plugin-replaces-global-memory.md)
-settles `CLAUDE.md` → subagent as **yes**, which is the row the constitution's
-own `PreToolUse` hook exists to match. A conventional path of our own — some
+R2's table in the retired planning note `plugin-replaces-global-memory.md`
+(Git history) settled `CLAUDE.md` → subagent as **yes**, which is the row the
+constitution's own `PreToolUse` hook exists to match. A conventional path of our own — some
 `.claude/review-rules.md` a reviewer is told to look for — would be a second
 memory layer with the same job as the first, and the reviewer would have to be
 told about it in the global layer, spending in every session exactly what this
@@ -57,18 +56,18 @@ is *how many repositories does this describe*.
 
 ## What this does to #35's measurement
 
-Two of the six arms [`0001`](0001-built-in-review-surface.md) defines are
+Two of the six arms note 0001 (retired to Git history) defines are
 configurations *of this file*: **D**, one general-purpose agent carrying
 `review-guidelines.md`, and **E**, `/code-review medium` plus
 `review-guidelines.md` and no judgment panel. Both now carry a guidelines file
 with no repo-specific rules in it.
 
-That matters because `0001` names the inference it was guarding against: a
+That matters because note 0001 named the inference it was guarding against: a
 small B − A read as "a thin wrapper would do", "one that silently assumes the
 repo-specific rules survive the move". After this decision they do not survive
 the move — they are not in the file to move — so arms D and E measure the
 built-in plus a *general* checklist, and neither can be read as evidence about
-repo-specific rules either way. `0001` carries an `Amended in part` header
+repo-specific rules either way. Note 0001 carried an `Amended in part` header
 saying so.
 
 ## Where the rules go now
