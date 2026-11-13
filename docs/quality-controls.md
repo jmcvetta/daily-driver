@@ -168,7 +168,7 @@ than kept as a gate.
 
 | Implementation | Repository | Status |
 | --- | --- | --- |
-| Opengrep, pinned engine (`.opengrep-version`, cosign-verified) and pinned community corpus (`.opengrep/community-rules.pin`), with each excluded rule given a reason in `.opengrep/excluded-rules.txt` | PG | `none` |
+| Opengrep, pinned engine (cosign-verified); the pinned community corpus and its per-rule exclusions are retired as recorded below | PG | `none` |
 | Ruff `S` rules (Python only; see `QC-LINT`) | CA | `gate` |
 
 `none` in DD, PRA, CMWB and PG: PG's corpus is retired (verified on
