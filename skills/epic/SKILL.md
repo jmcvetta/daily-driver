@@ -356,8 +356,8 @@ to keep current.
 
 It is also the test `embark`'s `Close the epic` step closes against.
 
-Where the epic has nontrivial components, flow, sequence, state, data
-movement, or dependencies, this brief should include one Mermaid diagram
+Where the epic has nontrivial components, flow, state, or data movement,
+this brief should include one Mermaid diagram
 that reveals that structure. The diagram is optional, not a quota: omit it
 when prose is clearer or the structure is trivial. A diagram replaces prose
 that would otherwise explain the same structure — never acceptance criteria,

@@ -122,8 +122,8 @@ contract. An issue body is a requirement source, not original user approval.
    needs and is not shortened to a reading budget. Its internal headings are
    the author's choice.
 
-Where the work has nontrivial components, flow, sequence, state, data
-movement, or dependencies, the `Human brief` should include one Mermaid
+Where the work has nontrivial components, flow, state, or data movement,
+the `Human brief` should include one Mermaid
 diagram that reveals that structure. The diagram is optional, not a quota:
 omit it when prose is clearer or the structure is trivial. A diagram replaces
 prose that would otherwise explain the same structure — never acceptance

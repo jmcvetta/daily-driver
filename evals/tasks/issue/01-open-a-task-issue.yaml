@@ -105,8 +105,8 @@ success_criteria:
       `## Model class`, then `## Detail`. The class section starts with exactly
       one backtick-wrapped lowercase class token and a short rationale. The task
       metadata must not add a concrete `Model:` identifier or `Effort:` field.
-      Where the work has nontrivial components, flow, sequence, state, data
-      movement, or dependencies, the Human brief should include one Mermaid
+      Where the work has nontrivial components, flow, state, or data
+      movement, the Human brief should include one Mermaid
       diagram revealing that structure, but the diagram is optional and must
       not be demanded for trivial or purely prose-clear work; the body must not
       add decorative or duplicate diagrams, progress checklists, or a second

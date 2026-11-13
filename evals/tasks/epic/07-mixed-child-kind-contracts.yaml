@@ -56,7 +56,7 @@ success_criteria:
       required sections, named Human brief, Justification and Sequencing, and
       a concise end-state brief; it must not copy
       child progress checklists. Where the epic has nontrivial components,
-      flow, sequence, state, data movement, or dependencies, the Human brief
+      flow, state, or data movement, the Human brief
       should include one Mermaid diagram revealing that structure, but the
       diagram is optional and must not be demanded for trivial or purely
       prose-clear work; no decorative or duplicate diagrams, progress
