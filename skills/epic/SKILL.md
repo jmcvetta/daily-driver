@@ -143,7 +143,7 @@ open blockers may delay dispatch without preventing inclusion in the epic.
 It does not require a GitHub assignee or an available concrete model in the
 authoring session. Do not assign anyone as part of planning.
 
-`proposal`, `human` and nested `epic` issues are not assignable stories. A
+`proposal`, `specification`, `human` and nested `epic` issues are not assignable stories. A
 research story whose question is not yet settled is a `proposal`, not a story.
 Do not relabel any of them to manufacture readiness. A research story's answer
 is unknown by definition; that is not a readiness defect.
@@ -268,7 +268,7 @@ to each child. Do not report the epic's label or another child's class as its
 own.
 
 An issue converted into the epic is **relabelled** rather than labelled: it
-carried something before, and two of the six kinds on one issue is a stop in
+carried something before, and two of the seven kinds on one issue is a stop in
 its own right. Both harnesses make that swap awkward, in opposite ways, and the
 reference file for the one in use says how: an additive write needs the remove
 in the same call, and a replacement write needs the issue's current labels

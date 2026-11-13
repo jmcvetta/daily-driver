@@ -21,9 +21,9 @@ from the **effective** label — the one the issue carries after the requested
 change — not the one it carried before: relabelling `proposal` to `task`
 makes it a task body from that edit onward.
 
-Each of the six managed kinds has a contract. `task`'s grounded handoff and
-fixed opening are defined below. The `research`, `bug`, `proposal`, and
-`human` contracts are in
+Each of the seven managed kinds has a contract. `task`'s grounded handoff and
+fixed opening are defined below. The `research`, `bug`, `proposal`,
+`specification`, and `human` contracts are in
 [`references/kind-contracts.md`](references/kind-contracts.md).
 `epic`'s existing body contract remains in
 [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body); invoke it rather than
@@ -205,12 +205,14 @@ an unstated product or architecture decision?
   clear enough to begin bounded diagnosis. A reproduction is not mandatory.
 - For `proposal`, readiness is for discussion only, never unattended
   implementation.
+- For `specification`, readiness is for interactive collaboration, not
+  unattended execution; unresolved decisions are expected on the issue.
 - For `human`, readiness is for the responsible person to act without
   reconstructing the request. It is never agent-execution readiness.
 - For `epic`, use both existing epic decomposition gates and confirm the graph
   agrees with its rendered waves.
 
-The detailed contracts for research, bug, proposal, and human are in
+The detailed contracts for research, bug, proposal, specification, and human are in
 [`references/kind-contracts.md`](references/kind-contracts.md). The epic
 contract remains in [`epic/SKILL.md`](../epic/SKILL.md#the-epic-body).
 
@@ -236,8 +238,8 @@ Assignable stories
 An epic's story must be assignable, so that an orchestrator can hand it to a
 worker. **Assignable is not the `task` kind.** A story is assignable when it is:
 
-1. An agent-eligible kind — `task`, `research` or `bug`. `proposal`, `human`
-   and `epic` are never assignable stories.
+1. An agent-eligible kind — `task`, `research` or `bug`. `proposal`,
+   `specification`, `human` and `epic` are never assignable stories.
 2. Ready under its own kind's readiness test above, with the kind's contract
    and completion test unchanged. A research story's unknown answer is not a
    defect. A bug story states the incorrect behavior, the expected contract,

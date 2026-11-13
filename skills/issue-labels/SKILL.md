@@ -7,7 +7,7 @@ description: >-
   get?", "is this an epic or a task?", "that label is wrong", or "which issue
   kinds are eligible for agent work?", and whenever the agent sets a label on
   an issue. It also fires when `undertake` opens an issue or reads one it is
-  about to start on. Supplies the six issue kinds and the supplemental story
+  about to start on. Supplies the seven issue kinds and the supplemental story
   marker, including their write rules.
   The kind determines work eligibility; body readiness is `issue-body`'s.
   Not for pull request labels or graph writes, which are `issue-deps`'.
@@ -16,7 +16,7 @@ description: >-
 # Issue labels
 
 A label is read by a person scanning a list and by an agent deciding what kind
-of work the issue describes. The six issue-kind labels answer:
+of work the issue describes. The seven issue-kind labels answer:
 
 > **What kind of issue is this, and is work by an agent eligible by kind?**
 
@@ -29,7 +29,7 @@ a disagreement, and nothing resolves it.
 
 `story` is a supplemental marker. It makes a confirmed direct child of an epic
 visible in a list. It is not an issue kind, does not decide readiness, and may
-sit beside one of the six kinds.
+sit beside one of the seven kinds.
 
 **The routes are per harness, and they live beside this file.** Reading a
 label and writing one are named in words here and resolved to a route there:
@@ -46,6 +46,7 @@ harness in use before writing a label.
 | `task` | Discrete work, specified and ready for an agent | Yes; body must pass task readiness |
 | `bug` | Bug report | Yes; body must pass bug diagnosis readiness |
 | `proposal` | Proposed feature | No — discussion, not implementation |
+| `specification` | Interactive drafting of a canonical specification | Yes, interactively through `specification`; never unattended |
 | `research` | A question to settle | Yes; body must pass research readiness |
 | `human` | Work only a person can do | No — the action belongs to a person |
 
@@ -82,14 +83,14 @@ Ask the question in this order. The first answer that holds is the label.
    stated coordinated outcome is assessed against the dispositions of its
    children. `epic` is the skill that decides there is one and writes the
    children; this label is what the finished epic then carries.
-2. **Can an agent do the work at all?** Where it cannot — credentials no
-   agent holds, a decision only the user can make, an action outside the
-   repository — it is `human`. The question comes before `bug`, `research` and
-   `task`, because each of those three promises an agent may start and that
-   promise is false whichever of the three the body would otherwise fit. It
-   does not come before `proposal`, which is the last step's other answer: a
-   wish whose shape is still open cannot be judged a person's to do, and
-   deciding the shape is what settles which it is.
+2. **Can an agent do the work at all?** Where the work itself is only a
+   person's action — credentials no agent holds, a decision reserved to the
+   user, or an action outside the repository — it is `human`. An interactive
+   `specification` is not human-only merely because the operator decides
+   product questions and merges: the agent can investigate and draft it.
+   A `proposal` is also discussion rather than a reserved person-only action.
+   This question precedes `bug`, `research` and `task`, which promise an agent
+   may start the work.
 3. **Is it a bug report?** Then `bug`. Nothing here defines the word.
 4. **Does it close on an answer rather than on a change?** A question to
    settle, an option to compare, a spike to run — `research`. What the answer
@@ -101,7 +102,11 @@ Ask the question in this order. The first answer that holds is the label.
    Where the answer is issues, writing them is `epic`'s, and they are the
    deliverable rather than a separate follow-up. Where it is code, that is a
    separate issue: the research closes, and a `task` opens.
-5. **Is the intent settled?** Where what "done" means is written down and
+5. **Is the deliverable a collaboratively settled canonical specification?**
+   Use `specification` for interactive drafting through an approved, merged
+   document. It is not `human`: agents investigate and draft alongside the
+   operator. A `proposal` instead closes on a decision or handoff.
+6. **Is the intent settled?** Where what "done" means is written down and
    needs no further decision, it is a `task`. Where it is not — a capability
    somebody wants, with the shape of it still open — it is a `proposal`.
 
@@ -116,8 +121,7 @@ What the label decides
 
 **Eligibility by kind, and nothing else.** `undertake` reads it at `Read the
 issue and its edges`; `issue-body` separately checks whether the body is
-sufficient for unattended work. One kind out of the six is a stop in three
-cases:
+sufficient for unattended work. The following kinds stop unattended execution:
 
 - An `epic` is a stop **for `undertake`**, which needs an individual work item
   and an epic coordinates children. It is not a stop for every reader of the
@@ -127,12 +131,15 @@ cases:
 - A `proposal` is a stop for implementation. Its body can be ready for
   discussion, but its shape is still open; deciding it is the user's and
   decomposing accepted work is `epic`'s.
+- A `specification` is interactive work, not an unattended assignment.
+  `undertake` routes it to `specification` and `embark` does not dispatch it.
+  The agent can research and draft; the operator settles product decisions.
 - A `human` is a stop, and the only one that is a stop for every reader of
   the label rather than for one skill. There is no agent route to the reserved
   action, so `undertake` does not cut a branch and `embark` does not dispatch
   an agent for it: it waits for the person.
 
-Two labels out of the six is a fourth stop, and it is below with its remedy.
+Two kind labels are also a stop, with the remedy below.
 `task` and a corrected `bug` can produce pull requests when a verified change
 is the deliverable. **`research` runs through and need not**: an answer may be
 follow-on issues, or a supported no, with no code to put on a branch. The issue
@@ -148,7 +155,7 @@ labels every issue it opens and so does `epic`, so an unlabelled issue is one
 a person opened. Naming the label without writing it leaves the next session to name
 it again.
 
-**Two of the six on one issue is a stop.** They are two answers to a single
+**Two of the seven on one issue is a stop.** They are two answers to a single
 question, and nothing here ranks them — a `proposal` that is also a `task`
 says the shape is both open and settled, and picking either reading is
 guessing at intent. Say which two are on it, say which one `Picking one`
@@ -172,7 +179,7 @@ keeps the marker.
 (`task`, `research` or `bug`); `issue-deps` checks assignability before
 linking. The marker remains graph-derived, not proof of readiness. A non-task
 kind alone is not a defect. If a read finds a child that is a `proposal`,
-`human` or `epic`, or lacks a complete handoff or class, report the readiness
+`specification`, `human` or `epic`, or lacks a complete handoff or class, report the readiness
 defect for repair through `issue`. Reconcile the marker against the confirmed
 edge without silently changing the kind or body, hiding the edge, or removing
 `story` merely because the child is not ready.
@@ -234,7 +241,7 @@ What the body carries
 =====================
 
 `issue-body` defines the task handoff and fixed format, plus distinct
-information, readiness, and completion contracts for all six managed kinds.
+information, readiness, and completion contracts for all seven managed kinds.
 It does not change the taxonomy or make kind eligibility a substitute for
 checking the body. Read it whenever an issue body is written or revised,
 alongside the kind picked here.
@@ -243,7 +250,7 @@ alongside the kind picked here.
 Where the standard is declared
 ==============================
 
-`infra/github/labels.tf` declares six issue kinds and the supplemental `story`
+`infra/github/labels.tf` declares seven issue kinds and the supplemental `story`
 `github_issue_label` resource. The names, colours and descriptions
 come from a file under review rather than from whoever clicked last. OpenTofu
 owns only what it declares, so stock labels survive an apply untouched.
@@ -265,6 +272,6 @@ Three consequences worth knowing:
   broken stack.
 
 Applying the standard to a repository that does not run this Tofu stack means
-copying `labels.tf`, or creating the six kinds and `story` by hand with the
+copying `labels.tf`, or creating the seven kinds and `story` by hand with the
 descriptions in the tables above. The descriptions are what a person hovering
 a label reads.

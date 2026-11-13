@@ -134,7 +134,7 @@ The two are not the same question, and `epic` writes both on purpose:
 `issue-body`'s `Assignable stories` test before dispatch: an agent-eligible kind
 (`task`, `research` or `bug`), ready under that kind's own readiness test, with
 exactly one valid `## Model class` section and rationale. A non-task kind alone
-is not a defect. Report a child that is a `proposal`, `human` or `epic`, or that
+is not a defect. Report a child that is a `proposal`, `specification`, `human` or `epic`, or that
 lacks a complete handoff or valid class, as a planning defect; repair it through
 `issue` only where the intent is settled and the gaps are repository-answerable.
 Do not dispatch it, silently relabel it, default its class, or change its edge
@@ -202,7 +202,7 @@ The harness denies the first dispatch until this session is titled, as
 migrate a legacy or invalid task only on that issue and only when its grounded
 handoff is otherwise ready. A missing or invalid class on a research or bug
 story is a planning defect, never defaulted. A bare `story` marker does not
-pass this gate. `proposal`, `human` and `epic` issues are not dispatch
+pass this gate. `proposal`, `specification`, `human` and `epic` issues are not dispatch
 candidates. A story with an open blocker is not dispatched early, and an
 unavailable route stops only that story.
 

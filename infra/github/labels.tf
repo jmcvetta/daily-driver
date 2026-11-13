@@ -1,7 +1,7 @@
 # The issue labels this toolkit recognises.
 #
-# Six issue-kind labels answer one question -- what kind of issue is this, and
-# is it ready for an agent to work unattended -- and every issue carries
+# Seven issue-kind labels answer what kind of issue this is and whether an
+# agent can work on it; every issue carries
 # exactly one. `story` is a supplemental marker for a confirmed direct child
 # of an epic. It does not answer the readiness question.
 # `skills/issue-labels/SKILL.md` is the standard; this file is where it is
@@ -59,6 +59,13 @@ resource "github_issue_label" "proposal" {
   name        = "proposal"
   color       = "1d76db"
   description = "Proposed feature"
+}
+
+resource "github_issue_label" "specification" {
+  repository  = github_repository.this.name
+  name        = "specification"
+  color       = "7057ff"
+  description = "Interactive drafting of a canonical specification"
 }
 
 resource "github_issue_label" "research" {

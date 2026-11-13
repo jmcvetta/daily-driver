@@ -1,0 +1,35 @@
+# A specification issue is neither an unattended task nor human-only work.
+task_id: issue-labels-07-specification-is-interactive
+description: The specification kind admits interactive agent collaboration, not unattended dispatch.
+tags: [issue-labels, specification, behaviour, fire]
+initial_prompt: >-
+  Which issue kind fits collaborative drafting of a canonical document when
+  the operator must decide unresolved product choices and merge the approved
+  document? Compare task, proposal, research and human. Explain only; do not
+  create or label an issue.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: Issue kind selection is consulted
+    expected_skill: issue-labels
+    skill_name: issue-labels
+  - type: agent_judge
+    description: Distinct interactive kind and completion boundary
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if the answer selects specification, distinguishes it from
+      unattended task, decision-or-handoff proposal, evidenced-answer research
+      and person-only human, and permits agent collaboration but not unattended
+      undertake or embark dispatch. It must require an operator-approved merged
+      document and recorded handoff for completion. Score 0 for claimed writes
+      or unattended dispatch; otherwise score 0.5 for a material omission.
