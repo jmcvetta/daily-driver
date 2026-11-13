@@ -24,6 +24,7 @@ evals/
 │   │                    … when a type is chosen, and never for a commit message?
 │   ├── pr-body/         … when a body is written, and only then?
 │   ├── review-cycle/    … when a review is to be run and answered, and only then?
+│   ├── specification/   … when interactive specification drafting is requested?
 │   ├── undertake/       … when work is undertaken, and only when handed over?
 │   ├── epic/            … when work is broken up, and never when it fits one PR?
 │   ├── embark/          … when an epic's wave is put to sea, and never one issue?
@@ -55,10 +56,11 @@ evals/
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
 
-`tasks/issue/` covers the six kind-specific body contracts and their
+`tasks/issue/` covers the seven kind-specific body contracts and their
 boundaries: settled versus unresolved task intent, bounded research and
-evidenced negative/inconclusive outcomes, bugs without task metadata,
-non-executable proposals, safe human handoffs, automatic bug reports, and
+evidenced negative/inconclusive outcomes, interactive specifications, bugs
+without task metadata, non-executable proposals, safe human handoffs,
+automatic bug reports, and
 effective-kind edits that preserve evidence and provenance. Provenance cases
 also cover repeated blocks, distinct field values, successive revisions, and
 attribution on separate comments. `tasks/epic/`

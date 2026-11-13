@@ -83,14 +83,14 @@ Ask the question in this order. The first answer that holds is the label.
    stated coordinated outcome is assessed against the dispositions of its
    children. `epic` is the skill that decides there is one and writes the
    children; this label is what the finished epic then carries.
-2. **Can an agent do the work at all?** Where it cannot — credentials no
-   agent holds, a decision only the user can make, an action outside the
-   repository — it is `human`. The question comes before `bug`, `research` and
-   `task`, because each of those three promises an agent may start and that
-   promise is false whichever of the three the body would otherwise fit. It
-   does not come before `proposal`, which is the last step's other answer: a
-   wish whose shape is still open cannot be judged a person's to do, and
-   deciding the shape is what settles which it is.
+2. **Can an agent do the work at all?** Where the work itself is only a
+   person's action — credentials no agent holds, a decision reserved to the
+   user, or an action outside the repository — it is `human`. An interactive
+   `specification` is not human-only merely because the operator decides
+   product questions and merges: the agent can investigate and draft it.
+   A `proposal` is also discussion rather than a reserved person-only action.
+   This question precedes `bug`, `research` and `task`, which promise an agent
+   may start the work.
 3. **Is it a bug report?** Then `bug`. Nothing here defines the word.
 4. **Does it close on an answer rather than on a change?** A question to
    settle, an option to compare, a spike to run — `research`. What the answer
