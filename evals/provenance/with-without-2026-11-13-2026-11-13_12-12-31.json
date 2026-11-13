@@ -1,0 +1,497 @@
+{
+  "attempts": [
+    {
+      "coder_eval_status": "FAILURE",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='no', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='no', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The draft body is a grounded task handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The draft body is a grounded task handoff with model class metadata",
+            "duration_seconds": 6.45,
+            "findings": [
+              "Missing required ## Human brief, ## Model class, and ## Detail structure and class token.",
+              "Acceptance criteria incorrectly require signing removed artifacts and include a vague runtime target.",
+              "Invents repository evidence about git configuration and exact file length/line numbers beyond the supplied facts.",
+              "Includes checkbox-style acceptance criteria despite the prohibition on progress checklists."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "b21d3957fb46d1d1df14164b554d84ab00ef334cfe1fe3614527714759a2fc07",
+            "rationale": "ANCHOR: result. The reply explicitly selects Task and proposes a handoff, but lacks the mandatory Model class section, which requires a zero score.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2762,
+              "output": 113
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "096f4c08341219387670d8b09249942ba5127ac8c3cce9910845dc32e50b02db"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 0.5,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue` fires on an issue being opened",
+          "details": "observed='yes', expected='yes' (skill_name='issue')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`issue-body` fires on the body being written",
+          "details": "observed='yes', expected='yes' (skill_name='issue-body')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": true,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "The draft body is a grounded task handoff with model class metadata",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "The draft body is a grounded task handoff with model class metadata",
+            "duration_seconds": 10.92,
+            "findings": [
+              "Claims direct repository verification and a specific repository path not established by the supplied facts.",
+              "Asserts that most runtime is spent re-signing unchanged artifacts without supporting evidence.",
+              "Concrete Model identifier appears only in the distinct provenance block, not task metadata.",
+              "The simple comparison change does not require a Mermaid diagram."
+            ],
+            "index": 2,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "b21d3957fb46d1d1df14164b554d84ab00ef334cfe1fe3614527714759a2fc07",
+            "rationale": "ANCHOR: result. The reply selects `task` and provides a usable handoff with the required sections, class token, scope, and observable acceptance criteria, but introduces unsupported grounding claims.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 3079,
+              "output": 161
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "096f4c08341219387670d8b09249942ba5127ac8c3cce9910845dc32e50b02db"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.75,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "issue-01-open-a-task-issue",
+      "variant_id": "with-plugin"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`epic` and child body contract skills fire for mixed-kind decomposition",
+          "details": "observed='no', expected='yes' (skill_name='epic')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "no",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 0.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Mixed child bodies use each kind's contract and preserve epic completion gate",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Mixed child bodies use each kind's contract and preserve epic completion gate",
+            "duration_seconds": 7.21,
+            "findings": [
+              "Missing Human brief, Justification, and Sequencing sections and concise end-state brief.",
+              "Release waits on all three children closing rather than evidence of a successful coordinated outcome.",
+              "Research may close inconclusively, and approval may record rejection, without preventing epic completion.",
+              "Implementation child lacks explicit implementation-class metadata.",
+              "No Mermaid diagram represents the nontrivial release-gate structure."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "95de4cfeb4e09372bf8cce104a3f6d32018165246fb90c7d12203ba2904e4598",
+            "rationale": "ANCHOR: result The reply distinguishes implementation, research, and human approval, but explicitly makes child closure the release gate, allowing inconclusive research and rejection to satisfy it. It also omits the required epic sections and coordinated-outcome acceptance evidence.",
+            "score": 0.0,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 2430,
+              "output": 140
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "096f4c08341219387670d8b09249942ba5127ac8c3cce9910845dc32e50b02db"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.0,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "epic-07-mixed-child-kind-contracts",
+      "variant_id": "bare"
+    },
+    {
+      "coder_eval_status": "SUCCESS",
+      "criteria": [
+        {
+          "criterion_type": "skill_triggered",
+          "description": "`epic` and child body contract skills fire for mixed-kind decomposition",
+          "details": "observed='yes', expected='yes' (skill_name='epic')",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "expected_label": "yes",
+          "gating": false,
+          "observed_label": "yes",
+          "pass_threshold": 0.9,
+          "result_kind": "classification",
+          "score": 1.0
+        },
+        {
+          "criterion_type": "agent_judge",
+          "description": "Mixed child bodies use each kind's contract and preserve epic completion gate",
+          "details": "(skipped: enabled=false)",
+          "error": null,
+          "evaluation_status": "evaluated",
+          "findings": [],
+          "gating": true,
+          "pass_threshold": 0.7,
+          "result_kind": "judge",
+          "score": 1.0,
+          "token_usage": null,
+          "transcript_path": null
+        }
+      ],
+      "early_stop": null,
+      "final_status": "FAILURE",
+      "judge": {
+        "criteria": [
+          {
+            "description": "Mixed child bodies use each kind's contract and preserve epic completion gate",
+            "duration_seconds": 10.1,
+            "findings": [
+              "Research incorrectly receives Model class implementation; the settled code task instead receives provisional mechanical classification.",
+              "Sequencing invents approval dependencies despite no supplied blocked-by edges, rather than identifying a scheduling choice.",
+              "Human approval appropriately requires dated evidence from the release owner, not agent sign-off.",
+              "Research has bounded scope, evaluation criteria, and a cited answer deliverable without assuming the compliance answer.",
+              "Epic has a concise end-state brief and no copied progress checklists, but lacks a Mermaid diagram for its nontrivial coordination and explicit completion safeguards."
+            ],
+            "index": 1,
+            "observed": {
+              "model": "gpt-6.1-sol",
+              "provider": "openai-codex"
+            },
+            "pass_threshold": 0.7,
+            "prompt_sha": "95de4cfeb4e09372bf8cce104a3f6d32018165246fb90c7d12203ba2904e4598",
+            "rationale": "ANCHOR: result The decomposition preserves the quatrain and three epic sections and distinguishes research and human approval, but has material classification and sequencing errors. It also omits a structural diagram and explicit coordinated-outcome evidence requirements.",
+            "score": 0.5,
+            "section": "success_criteria",
+            "status": "judged",
+            "usage": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 3483,
+              "output": 167
+            },
+            "weight": 2
+          }
+        ],
+        "evaluation_status": "evaluated",
+        "freeze_sha": "096f4c08341219387670d8b09249942ba5127ac8c3cce9910845dc32e50b02db"
+      },
+      "max_turns_exhausted": false,
+      "measured_score": 0.5,
+      "raw_weighted_score": 1.0,
+      "replicate_index": 0,
+      "task_id": "epic-07-mixed-child-kind-contracts",
+      "variant_id": "with-plugin"
+    }
+  ],
+  "cases": [
+    {
+      "class": null,
+      "cost": 0.37798819999999994,
+      "cost_source": "reported",
+      "elapsed_seconds": 44.13213515281677,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "with-without",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 84014,
+        "cache_read_input_tokens": 86916,
+        "output_tokens": 2463,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1318
+      },
+      "tokens": 174711,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.4763258,
+      "cost_source": "reported",
+      "elapsed_seconds": 86.13403010368347,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "with-without",
+      "task_id": "issue-01-open-a-task-issue",
+      "token_usage": {
+        "cache_creation_input_tokens": 71727,
+        "cache_read_input_tokens": 626754,
+        "output_tokens": 6412,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1332
+      },
+      "tokens": 706225,
+      "variant_id": "with-plugin"
+    },
+    {
+      "class": null,
+      "cost": 0.36908949999999996,
+      "cost_source": "reported",
+      "elapsed_seconds": 34.640931367874146,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "with-without",
+      "task_id": "epic-07-mixed-child-kind-contracts",
+      "token_usage": {
+        "cache_creation_input_tokens": 84161,
+        "cache_read_input_tokens": 43696,
+        "output_tokens": 2589,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1419
+      },
+      "tokens": 131865,
+      "variant_id": "bare"
+    },
+    {
+      "class": null,
+      "cost": 0.30661669999999996,
+      "cost_source": "reported",
+      "elapsed_seconds": 119.64553880691528,
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "outcome": "failed",
+      "replicate_index": 0,
+      "settings": "with-without",
+      "task_id": "epic-07-mixed-child-kind-contracts",
+      "token_usage": {
+        "cache_creation_input_tokens": 35898,
+        "cache_read_input_tokens": 363584,
+        "output_tokens": 9456,
+        "reasoning_tokens": "unreported",
+        "uncached_input_tokens": 1426
+      },
+      "tokens": 410364,
+      "variant_id": "with-plugin"
+    }
+  ],
+  "client": {
+    "name": "claude-code",
+    "recorded_version": "2.1.321 (Claude Code)",
+    "version": "unknown"
+  },
+  "coder_eval_version": "0.11.6",
+  "completed_at": "2026-11-13T12:17:15.750948",
+  "experiment_id": "with-without",
+  "host": {
+    "hostname": "carbon",
+    "kind": "laptop",
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.43",
+    "session_id": null
+  },
+  "judge": {
+    "cost_source": "subscription",
+    "criterion_errors": 0,
+    "freeze_sha": "096f4c08341219387670d8b09249942ba5127ac8c3cce9910845dc32e50b02db",
+    "judge_id": "omp-gpt-6.1-sol",
+    "model_requested": "openai-codex/gpt-6.1-sol",
+    "models_observed": [
+      "gpt-6.1-sol"
+    ],
+    "price_included_in_cases": false,
+    "prompt_version": "omp-judge-v2",
+    "route": "omp",
+    "selection": "run-selected",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300
+    },
+    "status": "validated",
+    "usage": {
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "input": 11754,
+      "output": 581
+    }
+  },
+  "plugin_revision": {
+    "commit": "98697c3bb587e21d5cdd39e01dcfa338b0e3a071",
+    "dirty": false
+  },
+  "recorded_at": "2026-11-13T05:17:52.650535+00:00",
+  "run_id": "2026-11-13_12-12-31",
+  "schema_version": 5,
+  "started_at": "2026-11-13T12:12:31.184955",
+  "variants": [
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "epic-07-mixed-child-kind-contracts": [
+          0.0
+        ],
+        "issue-01-open-a-task-issue": [
+          0.0
+        ]
+      },
+      "task_ids": [
+        "issue-01-open-a-task-issue",
+        "epic-07-mixed-child-kind-contracts"
+      ],
+      "variant_id": "bare"
+    },
+    {
+      "model_requested": "claude-sonnet-5",
+      "model_served": "claude-sonnet-5",
+      "per_replicate_scores": {
+        "epic-07-mixed-child-kind-contracts": [
+          0.5
+        ],
+        "issue-01-open-a-task-issue": [
+          0.75
+        ]
+      },
+      "task_ids": [
+        "issue-01-open-a-task-issue",
+        "epic-07-mixed-child-kind-contracts"
+      ],
+      "variant_id": "with-plugin"
+    }
+  ]
+}

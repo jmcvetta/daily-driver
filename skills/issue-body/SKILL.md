@@ -111,10 +111,10 @@ contract. An issue body is a requirement source, not original user approval.
 2. **A haiku.** Immediately after the summary, separated by a blank line:
    three 5-7-5 lines, italicised line by line, as
    [`HAIKU.md`](../../HAIKU.md) shows.
-3. **`## Summary`.** A short paragraph or two describing the change and
+3. **`## Human brief`.** A short paragraph or two describing the change and
    reason, without duplicating `Detail`. It is human-facing, so the
    constitution's audience rule governs it.
-4. **`## Model class`.** Immediately after `Summary`, before `Detail`. Its
+4. **`## Model class`.** Immediately after `Human brief`, before `Detail`. Its
    first paragraph is exactly one backtick-wrapped lowercase class token;
    one short rationale paragraph follows.
 5. **`## Detail`.** The grounded map, settled design, acceptance, and
@@ -122,10 +122,21 @@ contract. An issue body is a requirement source, not original user approval.
    needs and is not shortened to a reading budget. Its internal headings are
    the author's choice.
 
+Where the work has nontrivial components, flow, state, or data movement,
+the `Human brief` should include one Mermaid
+diagram that reveals that structure. The diagram is optional, not a quota:
+omit it when prose is clearer or the structure is trivial. A diagram replaces
+prose that would otherwise explain the same structure — never acceptance
+criteria, never an exact contract, and never the dependency graph, which
+stays authoritative for execution ordering. Where a diagram and the text
+disagree, the text wins and the diagram is corrected in the same turn. No
+decorative or duplicate diagrams, no progress checklists, and no second
+hand-maintained dependency record.
+
 The class is implementation metadata, not authoring, review, judging, effort,
 or concrete-model provenance. A task body has no trailing `Model:` or
 `Effort:` line — that is class metadata's own shape, immediately below
-`## Summary`, and is a different thing from `provenance`'s block, which sits
+`## Human brief`, and is a different thing from `provenance`'s block, which sits
 below a `---` rule at the very end of the body and this rule does not touch.
 This shape is `task`'s alone; an `epic` body is untouched.
 Frontier authorization
@@ -270,7 +281,7 @@ still hold stay; the affected specification changes; and readiness runs again.
 Unrelated text is not reflowed and existing issues are not swept.
 
 A deliberately revised task emits the new section and removes its trailing
-task `Model:` field — the legacy class-metadata field below `## Summary`, never
+task `Model:` field — the legacy class-metadata field below `## Human brief`, never
 a `provenance` block below the closing `---` rule, which follows `provenance`'s
 distinct-attribution rule. When selecting an old task for work, assess its body
 against the class rubric and migrate only that issue before dispatch. Map the
@@ -283,7 +294,7 @@ authoritative when both forms exist.
 The model class section
 =======================
 
-The section is immediately below `## Summary` and before `## Detail`:
+The section is immediately below `## Human brief` and before `## Detail`:
 
 ```markdown
 ## Model class
