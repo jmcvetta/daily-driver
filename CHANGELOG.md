@@ -40,6 +40,21 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.61.0](https://github.com/jmcvetta/daily-driver/compare/v0.60.1...v0.61.0) (2026-11-13)
+
+
+### Features
+
+* add human briefs with encouraged diagrams to task and epic bodies ([#877](https://github.com/jmcvetta/daily-driver/issues/877)) ([c1310e0](https://github.com/jmcvetta/daily-driver/commit/c1310e07caba4a9f6c5429bd7d5d69b13ee997c5))
+* add interactive specification workflow ([#875](https://github.com/jmcvetta/daily-driver/issues/875)) ([f9d9ce7](https://github.com/jmcvetta/daily-driver/commit/f9d9ce706037efb4a2105dce6d8a115df335f787))
+* integrate discovery and specification-backed execution ([#879](https://github.com/jmcvetta/daily-driver/issues/879)) ([96cb47a](https://github.com/jmcvetta/daily-driver/commit/96cb47ac0cc00930044d124b4ad39f990af51e5c))
+
+
+### Bug Fixes
+
+* bind task verification to native worktree outcomes ([#880](https://github.com/jmcvetta/daily-driver/issues/880)) ([76f032a](https://github.com/jmcvetta/daily-driver/commit/76f032ac74ad411f7374d74534784e9e014a89c4))
+* retire stale docs and separate guidance from historical records ([#876](https://github.com/jmcvetta/daily-driver/issues/876)) ([5b8da61](https://github.com/jmcvetta/daily-driver/commit/5b8da61ae0e70a12f4d7ff259ea9ec0d06e32c63))
+
 ## [0.60.1](https://github.com/jmcvetta/daily-driver/compare/v0.60.0...v0.60.1) (2026-11-10)
 
 
