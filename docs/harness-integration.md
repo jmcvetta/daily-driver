@@ -109,8 +109,13 @@ Schema version 1 contains:
 - Optional criterion `verification`: `{kinds, toolName, input, subject}`.
   Supported kinds are `command`, `check`, `judgment`, `approval` and `report`.
   `subject` declares `{kind: "repository", root}` or
-  `{kind: "artifact", path}`. Ground the verification operation in the
-  requirement before it runs. An unknown verification contract cannot pass.
+  `{kind: "artifact", path}`. For command or check evidence, `toolName` is
+  nonblank and `input` is the exact tool input object, not a command string.
+  For example, use `{kinds: ["command"], toolName: "bash", input: {command:
+  "make check", cwd: "/path/to/task-worktree"}, subject: {kind: "repository",
+  root: "/path/to/task-worktree"}}`. Bash supplies command evidence, not check
+  conclusions. Ground the selector after selecting the execution worktree and
+  before the operation runs. An unknown verification contract cannot pass.
 
 Unknown fields are `null`. They do not mean empty, approved or fulfilled.
 Initial capture retains the request as criterion `request`. Ground the
@@ -190,8 +195,10 @@ command result.
 
 Execution bindings capture task, session, contract revision and subject before
 the operation starts. A late result retains that binding. Repository evidence
-names the exact commit and dirty-state distinction. Dirty repository evidence
-cannot establish completion. File artifacts use SHA-256 content identities.
+names the exact worktree root, commit and dirty-state distinction; executing
+in a different checkout cannot establish evidence for the selected worktree.
+Dirty repository evidence cannot establish completion. File artifacts use
+SHA-256 content identities.
 Contract revisions and changed subjects make old evidence stale without
 deleting it. Check responses must include actual conclusions and the exact
 checked `headRefOid`, or `artifactDigest` for a file. A successful tool

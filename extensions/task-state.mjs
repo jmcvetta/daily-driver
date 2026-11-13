@@ -224,7 +224,7 @@ export function createTaskStateController(pi) {
 		if (REQUEST.test(event.text) && current?.status !== "active") begin(ctx, current ? { newTask: true } : {}, source);
 	}
 
-	function toolResult(event, ctx) {
+	function toolResult(event, ctx, observationId = event.toolCallId) {
 		const state = read(ctx);
 		if (!available(ctx) || !read(ctx) ||
 			["daily_driver_task_state", "daily_driver_get_session", "daily_driver_set_session_title"].includes(event.toolName) ||
@@ -234,13 +234,13 @@ export function createTaskStateController(pi) {
 		const textTruncated = output.length > EVIDENCE_TEXT_LIMIT;
 		const prefixLength = EVIDENCE_TEXT_LIMIT / 2;
 		const observation = {
-			sourceId: `tool:${event.toolCallId}`, kind: "tool", toolName: event.toolName,
+			sourceId: `tool:${observationId}`, kind: "tool", toolName: event.toolName,
 			input: input.slice(0, EVIDENCE_INPUT_LIMIT), inputTruncated: input.length > EVIDENCE_INPUT_LIMIT,
 			text: textTruncated ? `${output.slice(0, prefixLength)}\n${output.slice(-(EVIDENCE_TEXT_LIMIT - prefixLength - 1))}` : output,
 			textTruncated, prefixLength, originalTextLength: output.length,
 			fingerprint: digest([event.toolName, event.input, output]), isError: Boolean(event.isError),
 			outputFingerprint: digest(output),
-			outcome: observedOutcome(event),
+			outcome: ompOutcome(event),
 			execution: entries(ctx, "daily-driver.task-execution").find((entry) => entry.data.toolCallId === event.toolCallId)?.data.execution ?? null,
 			origin: { sessionId: sessionId(ctx), toolCallId: event.toolCallId, input: input.slice(0, EVIDENCE_INPUT_LIMIT) },
 			taskSourceId: entries(ctx, "daily-driver.task-execution").find((entry) => entry.data.toolCallId === event.toolCallId)?.data.externalSourceId ?? state.externalSourceId,
@@ -248,6 +248,32 @@ export function createTaskStateController(pi) {
 		if (!observations(ctx).some((item) => item.sourceId === observation.sourceId)) {
 			pi.appendEntry(OBSERVATION, { sessionId: sessionId(ctx), observation });
 		}
+	}
+
+	// Native bash omits exitCode on success. This terminal details marker
+	// distinguishes completion from pending jobs and missing results.
+	function ompOutcome(event) {
+		const details = event.details;
+		if (event.toolName !== "bash") return observedOutcome(event);
+		if (details && typeof details === "object") {
+			if (details.async && details.async.state !== "completed" && details.async.state !== "failed") return { result: "unresolved", basis: "outcome-unavailable" };
+			if (Number.isInteger(details.exitCode)) return { result: details.exitCode === 0 ? "passed" : "failed", basis: "exit-status", exitCode: details.exitCode };
+			if (!event.isError && details.timedOut !== true && typeof details.wallTimeNoticeEmitted === "boolean" && (!details.async || details.async.state === "completed")) return { result: "passed", basis: "exit-status", exitCode: 0 };
+		}
+		return event.isError ? { result: "failed", basis: "tool-error" } : { result: "unresolved", basis: "outcome-unavailable" };
+	}
+
+	function toolUpdate(event, ctx) {
+		if (event.toolName !== "bash") return;
+		const result = event.partialResult;
+		const details = result?.details;
+		if (!details?.async || !["completed", "failed"].includes(details.async.state)) return;
+		const start = observations(ctx).find((item) => item.sourceId === `tool:${event.toolCallId}`);
+		if (!start || start.outcome?.result !== "unresolved" || !start.execution) return;
+		let input;
+		try { input = JSON.parse(start.input); } catch { return; }
+		toolResult({ toolCallId: event.toolCallId, toolName: "bash", input, content: result.content,
+			details, isError: details.async.state === "failed" }, ctx, `${event.toolCallId}:terminal`);
 	}
 
 	function instructions(ctx) {
@@ -261,7 +287,7 @@ export function createTaskStateController(pi) {
 		} : null;
 		const support = capability();
 		if (!support.enforced) return `${RULE}\nRuntime task-state stop enforcement is unavailable: ${support.reason} The shared continuation rule still applies. Do not expand tool permissions, invent a human blocker, or claim record-based enforcement. Retain authorization and blocker evidence in the normal handoff.\nCurrent private task handoff:\n${JSON.stringify(handoff)}`;
-		return `${RULE}\nUse daily_driver_task_state status before an unfinished stop. Ground criterion verification as {kinds: [command|check|judgment|approval|report], toolName, input}. Unknown requirements remain unresolved. Record evidence with taskId, criterionId, contractRevision, captured subject, source, kind and result. Command/check passes require actual outcomes for the declared operation. Judgments require reviewer, rationale and inspected artifacts. Reports cannot establish a pass. receipt renders current dispositions without publishing or completing. complete requires every criterion, review and approval; it cannot waive absent, stale or failed evidence. Use contract for sourced amendments, plan for execution changes, and blocker for legitimate external waits. Cancellation and bounded corrections remain available. Never publish private sources.\nCurrent private task handoff:\n${JSON.stringify(handoff)}`;
+		return `${RULE}\nUse daily_driver_task_state status before an unfinished stop. Ground criterion verification as {kinds: [command|check|judgment|approval|report], toolName, input, subject: {kind: "repository", root: "/absolute/task/worktree"}} or subject: {kind: "artifact", path: "/absolute/artifact"}. Command/check input is the exact tool input object; bash uses command, not check. Unknown requirements remain unresolved. Record evidence with taskId, criterionId, contractRevision, captured subject, source, kind and result. Command/check passes require actual outcomes for the declared operation. Judgments require reviewer, rationale and inspected artifacts. Reports cannot establish a pass. receipt renders current dispositions without publishing or completing. complete requires every criterion, review and approval; it cannot waive absent, stale or failed evidence. Use contract for sourced amendments, plan for execution changes, and blocker for legitimate external waits. Cancellation and bounded corrections remain available. Never publish private sources.\nCurrent private task handoff:\n${JSON.stringify(handoff)}`;
 	}
 
 	const shouldExpose = (ctx) => available(ctx) && ["active", "cancelled"].includes(read(ctx)?.status);
@@ -474,7 +500,7 @@ export function createTaskStateController(pi) {
 		if (current?.status === "active") save(ctx, { ...current, status: "cancelled", cancellationSource: source });
 	}
 
-	return { input, toolResult, beforeAgentStart, context, compacting, execute, stop, cancel, adopt, delegateCall,
+	return { input, toolResult, toolUpdate, beforeAgentStart, context, compacting, execute, stop, cancel, adopt, delegateCall,
 		agentEnd, shutdown, instructions };
 }
 
@@ -482,7 +508,8 @@ export function createTaskStateController(pi) {
 export function installTaskState(pi) {
 	const controller = createTaskStateController(pi);
 	for (const [name, handler] of [
-		["input", controller.input], ["tool_result", controller.toolResult],
+		["input", controller.input], ["tool_result", (event, ctx) => controller.toolResult(event, ctx)],
+		["tool_execution_update", controller.toolUpdate],
 		["tool_call", controller.delegateCall],
 		["before_agent_start", controller.beforeAgentStart], ["context", controller.context],
 		["session.compacting", controller.compacting], ["session_stop", controller.stop],
@@ -504,7 +531,7 @@ Actions and records:
 - plan: {summary, ...details}. Records execution state without a contract revision.
 - handoff: returns the contract, history, plan, unresolved criterion IDs, authority locators and correction identity/count. It grants no authority.
 - receipt: renders objective, revision, artifact identities, criterion dispositions, evidence references, unknowns, recorded decisions, risks and outstanding approvals. It never publishes or completes a task.
-- evidence: {id, taskId, criterionId, contractRevision, subject, source, kind, result, judgment?, requirement?, supersedes?}. source is a retained observation reference. subject must equal its execution.subject. kind is command, check, judgment, approval or report; result is passed, failed or unresolved. Declare criterion verification {kinds, toolName, input} through contract before execution. Commands/checks must match that operation and actual outcomes. A judgment/approval requires {reviewer, rationale, artifacts} under judgment. approval also names its requirement. report cannot pass a criterion. supersedes explicitly replaces evidence for the same criterion, kind and subject.
+- evidence: {id, taskId, criterionId, contractRevision, subject, source, kind, result, judgment?, requirement?, supersedes?}. source is a retained observation reference. subject must equal its execution.subject. kind is command, check, judgment, approval or report; result is passed, failed or unresolved. Declare verification before execution, for example {kinds:["command"],toolName:"bash",input:{command:"make check",cwd:"/absolute/task/worktree"},subject:{kind:"repository",root:"/absolute/task/worktree"}}. An artifact selector is {kind:"artifact",path:"/absolute/artifact"}. Use command for bash; check requires identity-bearing check conclusions. Commands/checks must match that operation and actual outcomes. A judgment/approval requires {reviewer, rationale, artifacts} under judgment. approval also names its requirement. report cannot pass a criterion. supersedes explicitly replaces evidence for the same criterion, kind and subject.
 - authorization: {id, kind, operation, target, limits, conditions, source}, all required; strings except source must be nonblank. kind is ${oneOf(AUTHORIZATION_KINDS)} and must match the original user or workflow source. User sources must be associated with the active task. Optional expiresAt is a parseable date; freshConfirmation marks confirmation required; revokes and supersedes name existing authorization IDs. IDs are immutable: use a new ID for amendments. Applicability reports scope, expiry, revocation and confirmation; review the original conditions.
 - blocker: {kind, operation, target, evidence, authorizationIds, routes, independentWork, externalContribution, resume}. operation and target exactly match active state. kind is ${oneOf(BLOCKER_KINDS)}. evidence is a nonempty reference array: external and execution require tool evidence; execution requires an error; safety and authorization require user or workflow authority. authorizationIds lists every retained authorization ID, including amendments, or [] if none. routes is a nonempty array of {route, disposition, evidence}; route is nonblank, disposition is ${oneOf(ROUTE_DISPOSITIONS)}, and evidence is a reference. Failed needs an observed error; prohibited needs original authority, not a tool probe. independentWork is {pending: [], completed: []}; pending must be empty except for safety. externalContribution and resume are nonblank strings. Validation checks references, not whether routes are truly exhausted.
 - complete: {summary}. Requires a receipt with every criterion passed, declared evidence/review kinds and approvals satisfied, and no unknown requirements. Records verified-complete, not arbitrary semantic correctness. Missing, failed, stale and truncated evidence rejects completion and leaves the task active. Existing reported-complete history is never upgraded.

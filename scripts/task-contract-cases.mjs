@@ -105,6 +105,30 @@ export default function registerTaskContractChecks(check, root) {
 		assert.equal(after.scope, grounded.details.state.contract.scope);
 	});
 
+	/** Invalid declarations must not become established requirements that need new authority to repair. */
+	check("rejects malformed verification before grounding and permits immediate correction", async () => {
+		const s = session(); s.input("Implement the parser issue.");
+		const before = (await s.status()).state.contract;
+		const source = (await s.status()).sources[0];
+		const ref = { sourceId: source.sourceId, quote: source.text };
+		const valid = { kinds: ["command"], toolName: "bash", input: { command: "make check", cwd: "/offline/fixture" }, subject: { kind: "repository", root: "/offline/fixture" } };
+		for (const verification of [
+			{ ...valid, subject: undefined }, { ...valid, subject: { kind: "repository" } },
+			{ ...valid, input: "make check" }, { ...valid, kinds: ["check"] },
+			{ ...valid, kinds: [] },
+		]) {
+			const result = await s.command("contract", { expectedRevision: before.revision, change: "Ground verification", sourceRefs: [ref],
+				contract: { criteria: [{ ...before.criteria[0], verification }] } });
+			assert.equal(result.isError, true);
+			assert.match(result.content[0].text, /Example:/);
+			assert.deepEqual((await s.status()).state.contract, before);
+		}
+		const result = await s.command("contract", { expectedRevision: before.revision, change: "Ground valid verification", sourceRefs: [ref],
+			contract: { criteria: [{ ...before.criteria[0], verification: valid }] } });
+		assert.equal(result.isError, undefined, JSON.stringify(result));
+		assert.equal(result.details.state.contract.criteria[0].id, "request");
+	});
+
 	check("replacing the captured request during grounding is rejected with recovery guidance", async () => {
 		const s = session(); s.input("Implement the parser issue.");
 		await s.controller.toolResult({ toolCallId: "grounding-issue-2", toolName: "read", input: { path: "issue://862" }, content: "Keep the parser offline." }, s.ctx);
