@@ -15,9 +15,10 @@ export function captureSubject(cwd, artifact) {
 			const path = realpathSync(resolve(cwd, artifact.path));
 			return { kind: "artifact", path, digest: hash(readFileSync(path)) };
 		}
-		const git = (...args) => execFileSync("git", ["-C", artifact?.root ?? cwd, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-		const root = git("rev-parse", "--show-toplevel");
-		return { kind: "repository", root, commit: git("rev-parse", "HEAD"), dirty: Boolean(git("status", "--porcelain", "--untracked-files=all")) };
+		const git = (root, ...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+		const root = git(artifact?.root ?? cwd, "rev-parse", "--show-toplevel");
+		if (artifact?.root && realpathSync(git(cwd, "rev-parse", "--show-toplevel")) !== realpathSync(root)) return null;
+		return { kind: "repository", root, commit: git(root, "rev-parse", "HEAD"), dirty: Boolean(git(root, "status", "--porcelain", "--untracked-files=all")) };
 	} catch { return null; }
 }
 
@@ -94,7 +95,7 @@ export function completionReceipt(state, cwd) {
 	const all = state.criterionEvidence ?? [];
 	const superseded = new Set(all.map((item) => item.supersedes).filter(Boolean));
 	const applicable = (item) => item.contractRevision === state.contract.revision && item.contractId === state.contract.contractId &&
-		equal(item.subject, captureSubject(cwd, item.subject)) && !(item.subject.kind === "repository" && item.subject.dirty);
+		equal(item.subject, captureSubject(item.subject.kind === "repository" ? item.subject.root : cwd, item.subject)) && !(item.subject.kind === "repository" && item.subject.dirty);
 	const criteria = (state.contract.criteria ?? []).map((criterion) => {
 		const records = all.filter((item) => item.criterionId === criterion.id && !superseded.has(item.id));
 		const current = records.filter(applicable);

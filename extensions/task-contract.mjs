@@ -61,8 +61,22 @@ export function amendContract(state, record, reference) {
 		if (!nonblank(criterion?.id) || !nonblank(criterion.description) || ids.has(criterion.id)) throw new Error("Criterion ids must be nonblank and unique");
 		ids.add(criterion.id);
 		if (!Array.isArray(criterion.sourceRefs) || !criterion.sourceRefs.length) throw new Error("Every criterion requires retained source references");
-		if (criterion.verification !== undefined && (!Array.isArray(criterion.verification.kinds) || !criterion.verification.kinds.length ||
-			criterion.verification.kinds.some((kind) => !["command", "check", "judgment", "approval", "report"].includes(kind)))) throw new Error("Declare supported criterion verification kinds");
+		if (criterion.verification !== undefined) {
+			const verification = criterion.verification;
+			const example = 'Example: {kinds:["command"],toolName:"bash",input:{command:"make check",cwd:"/path/to/worktree"},subject:{kind:"repository",root:"/path/to/worktree"}}';
+			const invalid = (reason) => { throw new Error(`${reason}. ${example} For an established declaration, correction requires a later original user decision (authoritySource).`); };
+			if (!verification || typeof verification !== "object" || Array.isArray(verification) ||
+				!Array.isArray(verification.kinds) || !verification.kinds.length ||
+				verification.kinds.some((kind) => !["command", "check", "judgment", "approval", "report"].includes(kind))) invalid("verification.kinds must be a nonempty array of supported evidence kinds");
+			const subject = verification.subject;
+			if (!subject || typeof subject !== "object" || Array.isArray(subject) ||
+				!((subject.kind === "repository" && nonblank(subject.root)) || (subject.kind === "artifact" && nonblank(subject.path)))) invalid("verification.subject requires a repository root or artifact path");
+			if (verification.kinds.some((kind) => kind === "command" || kind === "check")) {
+				if (!nonblank(verification.toolName)) invalid("Command/check verification requires a nonblank toolName");
+				if (!verification.input || typeof verification.input !== "object" || Array.isArray(verification.input)) invalid("Command/check verification.input must be the actual tool input object, not a command string");
+				if (verification.toolName === "bash" && verification.kinds.includes("check")) invalid("Native bash supplies command evidence, not check conclusions; use command instead of check");
+			}
+		}
 		// An unchanged criterion keeps its recorded form; a delegated child may not hold the parent's sources.
 		const previous = previousById.get(criterion.id);
 		return previous && canonical(previous) === canonical(criterion) ? previous : { ...criterion, sourceRefs: criterion.sourceRefs.map(normalize) };
