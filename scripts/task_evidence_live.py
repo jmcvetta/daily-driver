@@ -135,6 +135,96 @@ export default function(pi) {
         finally:
             server.shutdown()
 
+def _run_omp_bash():
+    """Bind a real native bash result to a linked worktree while Omp starts in the primary checkout."""
+    with tempfile.TemporaryDirectory(prefix='issue-866-native-omp-') as temporary:
+        base = Path(temporary); home = base / 'home'; root = base / 'sandbox'; root.mkdir()
+        def git(*args):
+            return subprocess.check_output(['git', '-C', str(root), *map(str, args)], text=True, stderr=subprocess.DEVNULL).strip()
+        git('init', '--initial-branch=master'); git('config', 'user.name', 'Offline Fixture'); git('config', 'user.email', 'fixture@example.invalid')
+        (root / 'subject.txt').write_text('primary\n'); git('add', 'subject.txt'); git('commit', '-m', 'Primary fixture')
+        worktree = base / 'task-worktree'
+        git('worktree', 'add', '-b', 'task', worktree)
+        (worktree / 'subject.txt').write_text('task\n')
+        subprocess.check_call(['git', '-C', str(worktree), 'commit', '-am', 'Task fixture'], stdout=subprocess.DEVNULL)
+        head = subprocess.check_output(['git', '-C', str(worktree), 'rev-parse', 'HEAD'], text=True).strip()
+        assert head != git('rev-parse', 'HEAD')
+        count = []
+        command = {'command': 'printf native-ok', 'cwd': str(worktree)}
+        class Provider(BaseHTTPRequestHandler):
+            def log_message(self, *_): pass
+            def do_POST(self):
+                body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+                messages = body.get('messages', [])
+                index = len(count); count.append(index); assert index < 24
+                if index in (0, 3, 5, 9, 12):
+                    action = ('write', {'action': 'status'})
+                elif index == 1:
+                    status = _latest_status(messages); source = status['sources'][0]
+                    ref = {'sourceId': source['sourceId'], 'quote': source['text']}
+                    verification = {'kinds': ['command'], 'toolName': 'bash', 'input': command, 'subject': {'kind': 'repository', 'root': str(worktree)}}
+                    criteria = [{**item, 'verification': verification} for item in status['state']['contract']['criteria']]
+                    criteria.append({'id': 'async', 'description': 'Record the native background command.', 'sourceRefs': [ref], 'verification': {'kinds': ['command'], 'toolName': 'bash', 'input': {'command': 'sleep 1; printf done', 'cwd': str(worktree), 'async': True}, 'subject': {'kind': 'repository', 'root': str(worktree)}}})
+                    action = ('write', {'action': 'contract', 'record': json.dumps({'expectedRevision': 1, 'change': 'Ground native worktree command', 'sourceRefs': [ref], 'contract': {'criteria': criteria, 'requiredEvidenceKinds': [], 'requiredReviewKinds': [], 'approvalRequirements': []}})})
+                elif index == 2:
+                    action = ('bash', command)
+                elif index == 4:
+                    status = _latest_status(messages)
+                    source = next(item for item in status['evidence'] if item['toolName'] == 'bash')
+                    record = {'id': 'native-command', 'taskId': status['state']['taskId'], 'criterionId': 'request', 'contractRevision': 2,
+                              'subject': source['execution']['subject'], 'source': {'sourceId': source['sourceId'], 'quote': 'native-ok'}, 'kind': 'command', 'result': 'passed'}
+                    action = ('write', {'action': 'evidence', 'record': json.dumps(record)})
+                elif index == 10:
+                    status = _latest_status(messages)
+                    source = next(item for item in status['evidence'] if item['sourceId'] == 'tool:bash-7:terminal')
+                    record = {'id': 'async-command', 'taskId': status['state']['taskId'], 'criterionId': 'async', 'contractRevision': 2,
+                              'subject': source['execution']['subject'], 'source': {'sourceId': source['sourceId'], 'quote': 'done'}, 'kind': 'command', 'result': 'passed'}
+                    action = ('write', {'action': 'evidence', 'record': json.dumps(record)})
+                elif index == 11:
+                    action = ('write', {'action': 'complete', 'record': json.dumps({'summary': 'Native worktree commands passed.'})})
+                elif index == 6:
+                    action = ('bash', {'command': 'printf success; exit 7', 'cwd': str(worktree)})
+                elif index == 7:
+                    action = ('bash', {'command': 'sleep 1; printf done', 'cwd': str(worktree), 'async': True})
+                elif index == 8:
+                    action = ('bash', {'command': 'sleep 2', 'cwd': str(worktree)})
+                else:
+                    action = None
+                if action:
+                    name, args = action
+                    if name == 'write': args = {'path': 'xd://daily_driver_task_state', 'content': json.dumps(args)}
+                    message = {'role': 'assistant', 'tool_calls': [{'index': 0, 'id': f'bash-{index}', 'type': 'function', 'function': {'name': name, 'arguments': json.dumps(args)}}]}
+                    finish = 'tool_calls'
+                else:
+                    message = {'role': 'assistant', 'content': 'Native bash scenario complete.'}; finish = 'stop'
+                chunks = [{'id': 'fixture', 'object': 'chat.completion.chunk', 'model': live.FIXTURE.MODEL, 'choices': [{'index': 0, 'delta': message}]}, {'id': 'fixture', 'object': 'chat.completion.chunk', 'model': live.FIXTURE.MODEL, 'choices': [{'index': 0, 'delta': {}, 'finish_reason': finish}], 'usage': {'prompt_tokens': 20, 'completion_tokens': 5, 'total_tokens': 25}}]
+                data = (''.join('data: ' + json.dumps(chunk) + '\n\n' for chunk in chunks) + 'data: [DONE]\n\n').encode()
+                self.send_response(200); self.send_header('Content-Type', 'text/event-stream'); self.send_header('Content-Length', str(len(data))); self.end_headers(); self.wfile.write(data)
+        server = ThreadingHTTPServer(('127.0.0.1', 0), Provider); threading.Thread(target=server.serve_forever, daemon=True).start()
+        live.FIXTURE.write_home(home, server.server_address[1])
+        env = {key: os.environ[key] for key in ('PATH', 'TMPDIR', 'LANG', 'TERM') if key in os.environ}; env['HOME'] = str(home)
+        live.PROBES['native-bash'] = 'Implement the offline native bash fixture.'
+        observer = base / 'observer.mjs'; observer.write_text('export default function() {}')
+        wrapper = base / 'omp-fixture'
+        wrapper.write_text('#!/bin/sh\nexec ' + subprocess.check_output(['which', 'omp'], text=True).strip() + ' "$@" --tools read,write,bash\n'); wrapper.chmod(0o700)
+        try:
+            frames = live.run(str(wrapper), base, env, 'native-bash', observer)
+            entries = [json.loads(line) for line in next((base / 'persistent-session').glob('*.jsonl')).read_text().splitlines()]
+            observations = [entry['data']['observation'] for entry in entries if entry.get('customType') == 'daily-driver.task-observation']
+            native = next(item for item in observations if item['origin']['toolCallId'] == 'bash-2')
+            failed = next(item for item in observations if item['origin']['toolCallId'] == 'bash-6')
+            assert native['execution']['subject']['commit'] == head and native['outcome']['result'] == 'passed', native
+            assert failed['outcome']['result'] == 'failed', failed
+            pending = next(item for item in observations if item['sourceId'] == 'tool:bash-7')
+            terminal = next((item for item in observations if item['sourceId'] == 'tool:bash-7:terminal'), None)
+            assert pending['outcome']['result'] == 'unresolved', pending
+            assert terminal and terminal['outcome']['result'] == 'passed', observations
+            assert any(entry.get('customType') == 'daily-driver.task-state' and entry['data']['state']['status'] == 'verified-complete' for entry in entries)
+            terminal_frame = next(frame for frame in frames if frame.get('type') == 'tool_execution_end' and frame.get('toolCallId') == 'bash-2')
+            print(json.dumps({'harness': subprocess.check_output(['omp', '--version'], text=True).strip(), 'native_result_details': terminal_frame['result'].get('details'), 'native_bash': native['outcome'], 'failed_bash': failed['outcome'], 'async_bash': terminal['outcome'], 'linked_worktree_head': head, 'frames': len(frames)}))
+        finally:
+            server.shutdown()
+
 def _interrupt_correction(argv, root, env, ledger_root, abort, count):
     abort["start"] = len(count)
     process = subprocess.Popen(argv, cwd=root, env=env, text=True, stdin=subprocess.DEVNULL,
@@ -335,3 +425,5 @@ def run_completion_harness(harness):
     if harness not in runners:
         raise ValueError("Completion harness must be omp, claude or codex")
     runners[harness]()
+    if harness == "omp":
+        _run_omp_bash()
