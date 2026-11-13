@@ -252,8 +252,11 @@ measured discovery through an *installed plugin* rather than through that
 directory. What is measured here is one half: the linker links all fourteen
 skills into it. Whether a session then sees them is what the first run answers.
 
-**The arm has not been run.** Nothing here has touched a live Codex session, and
-no paid run has happened. What is measured is:
+**The arm has not been run** *(historical: the committed measured results live
+in [evals/RESULTS.md](../../evals/RESULTS.md), and the
+[evaluation runbook](../../evals/README.md#choose-the-execution-session-first)
+is the current procedure)*. At decision time nothing had touched a live Codex
+session, and no paid run had happened. What was measured is:
 
 - Both in-repo agent kinds register through the entry-point seam, and
   `coder-eval plan -e experiments/codex.yaml tasks/*/*.yaml` resolves
@@ -268,8 +271,8 @@ no paid run has happened. What is measured is:
   that the three arms' task sets and the Makefile's routing stay in step
   (`scripts/check-eval-arms.py`).
 
-The next thing to do is one paid run of a narrow slice — non-zero on a positive
-row, zero on a negative one, and a judged row scoring on its rubric rather than
-on a missing anchor. It needs OpenAI credentials, which this session had none
-of. The Omp arm's equivalent run is still outstanding too, and `0013` records
-it.
+The next thing to do was one paid run of a narrow slice — non-zero on a
+positive row, zero on a negative one, and a judged row scoring on its rubric
+rather than on a missing anchor. It needed OpenAI credentials, which that
+session had none of. The Omp arm's equivalent run was still outstanding too,
+and `0013` records it.

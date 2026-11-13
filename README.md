@@ -86,7 +86,8 @@ policy before delegation, frontier escalation or unfinished stops. These policy
 reads apply without an issue or pull request and do not create one. The
 [skill catalog](skills/README.md) supplies the
 workflow map. [Runtime integration](docs/harness-integration.md) describes
-delivery and its measured limits.
+delivery, with its dated measurements in
+[runtime-integration-measurements](docs/runtime-integration-measurements.md).
 
 The constitution consumes context in every session and delivered subagent, so
 keep this document focused: include rules that change behavior in most
@@ -104,6 +105,8 @@ already supply. Amend it through a pull request against Daily Driver.
   design decisions and harness behavior.
 - [Runtime integration and compatibility](docs/harness-integration.md):
   hooks, the Omp extension, worktree behavior and harness limits.
+- [Runtime integration measurements](docs/runtime-integration-measurements.md):
+  dated delivery-measurement checkpoints and the evidence-file links.
 - [Quality controls](docs/quality-controls.md): the deterministic checks every
   repository runs, by control and by language.
 - [Evaluation guide](evals/README.md) and [measured results](evals/RESULTS.md):

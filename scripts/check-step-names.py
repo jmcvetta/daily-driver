@@ -55,10 +55,10 @@ THE ESCAPE HATCH
 
         <!-- step-names: external phase — the phases are issue #35's. -->
 
-    The exemption is per noun, not per file: `docs/notes/0001` cites issue
-    #35's phases throughout and still had a stale `stage 2` pointing at
-    `review-cycle`, which is exactly the citation a file-wide waiver would have
-    hidden. And it counts only at the left margin and outside a fenced block,
+    The exemption is per noun, not per file: retired note `docs/notes/0001`
+    cited issue #35's phases throughout and still had a stale `stage 2` pointing
+    at `review-cycle`, which is exactly the citation a file-wide waiver would
+    have hidden. And it counts only at the left margin and outside a fenced block,
     so that a file *documenting* the hatch -- an indented example, a fenced one
     -- does not thereby take it. The note did, until a review caught it.
 

@@ -444,7 +444,7 @@ orchestrator resolving a conflict in code it never wrote is the wrong hand on
 the tiller.
 
 **One wake slot, and a turn never ends with it empty** while a wave is at sea.
-[`0010`](../../docs/notes/0010-the-wake-slot-is-never-empty.md) is the rule.
+[`0034`](../../docs/notes/0034-the-wake-slot-is-never-empty.md) is the rule.
 This orchestrator owns its own slot for the wave watch; each implementor's
 `pr` watch has its own slot, which `review-cycle` may borrow during a CI wait.
 Keep each slot by the identifier its call returned, and fill it before that
