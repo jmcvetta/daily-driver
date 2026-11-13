@@ -48,10 +48,12 @@ when the approved canonical document is merged and its handoff is recorded.
 ## Canonical document
 
 Write a concise human brief describing the purpose and intended outcome. Add a
-Mermaid diagram when it clarifies nontrivial structure; diagrams and summaries
-explain, but never replace textual requirements. State settled behavior,
-architecture, interfaces, constraints, edge cases, acceptance criteria and
-product non-goals. Make requirements unambiguous and independently verifiable.
+Mermaid diagram when it clarifies nontrivial structure. Textual requirements
+are authoritative; summaries and diagrams explain them and never replace or
+override them. When explaining the document contract, state that distinction.
+State settled behavior, architecture, interfaces, constraints, edge cases,
+acceptance criteria and product non-goals. Make requirements unambiguous and
+independently verifiable.
 Assign stable, meaningful IDs and anchors to requirements and acceptance
 criteria so later work can cite an exact requirement at an immutable commit.
 Preserve IDs across editorial changes; do not reuse an ID for different behavior.
