@@ -174,7 +174,7 @@ rule: the child must have exactly one agent-eligible kind (`task`, `research`
 or `bug`), pass `issue-body`'s readiness test for that kind, and carry exactly
 one valid `## Model class` section with a rationale before the edge is written.
 A kind label alone is insufficient, and missing or invalid class metadata is
-never defaulted. `proposal`, `human` and `epic` issues fail the gate. An open
+never defaulted. `proposal`, `specification`, `human` and `epic` issues fail the gate. An open
 legitimate blocker delays dispatch, not linking.
 
 Leave an already-ready story unchanged. Resolve repository-answerable gaps
@@ -189,7 +189,7 @@ This readiness gate does not replace the relationship evidence test or
 
 A relationship read is not permission to migrate an existing child's body or
 kind. A non-task kind alone is not a violation. Report a child that is not
-assignable — a `proposal`, `human` or `epic` kind, or a missing handoff or class
+assignable — a `proposal`, `specification`, `human` or `epic` kind, or a missing handoff or class
 — as a readiness defect, and use the normal issue workflow for repair. Keep the
 edge and its derived marker truthful; never remove or manufacture an edge to
 hide the defect.

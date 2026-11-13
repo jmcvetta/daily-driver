@@ -68,7 +68,7 @@ or name a skill; the [skill catalog](skills/README.md) explains when to use each
 
 | Task | Provided skills |
 | ---- | --------------- |
-| Plan and carry out work | [epic](skills/epic/SKILL.md), [undertake](skills/undertake/SKILL.md) |
+| Plan and carry out work | [specification](skills/specification/SKILL.md), [epic](skills/epic/SKILL.md), [undertake](skills/undertake/SKILL.md) |
 | Coordinate parallel work and stop it safely | [embark](skills/embark/SKILL.md), [stand-down](skills/stand-down/SKILL.md) |
 | Isolate changes and handle decisions | [task-worktree](skills/task-worktree/SKILL.md), [judgement-call](skills/judgement-call/SKILL.md) |
 | Create and organize issues | [issue](skills/issue/SKILL.md), [issue-body](skills/issue-body/SKILL.md), [issue-labels](skills/issue-labels/SKILL.md), [issue-deps](skills/issue-deps/SKILL.md) |

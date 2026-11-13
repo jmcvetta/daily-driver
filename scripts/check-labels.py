@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The label standard is written twice, so the two copies are checked.
 
-`skills/issue-labels/SKILL.md` carries the tables a session reads: six
+`skills/issue-labels/SKILL.md` carries the tables a session reads: seven
 mutually-exclusive issue kinds and supplemental visual markers.
 `infra/github/labels.tf` carries the `github_issue_label` resources GitHub is
 configured from. A label's description is the same string in both, because the

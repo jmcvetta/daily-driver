@@ -200,11 +200,13 @@ waits`.
 The label too, because it states the kind's agent eligibility, and
 `issue-labels` says what each one means. The `epic` label is that stop arriving
 as one word. **A `proposal` is a stop as well** — its shape is still open, so
-decomposing it is `epic`'s work and agreeing the plan is the user's. **A
-`human` is a stop as well** — there is no agent execution route for the reserved
-action. **Two of the six on one issue is a stop too**: the label answers the
-readiness question twice. `task`, `bug` and `research`, one of them and no
-other, are eligible to proceed, subject to their body readiness tests.
+decomposing it is `epic`'s work and agreeing the plan is the user's. A
+**`specification` is a stop**: route it to the interactive `specification`
+skill, without creating an implementation undertaking. **A `human` is a stop
+as well** — there is no agent execution route for the reserved action. **Two
+of the seven on one issue is a stop too**: the label answers the readiness
+question twice. `task`, `bug` and `research`, one of them and no other, are
+eligible to proceed, subject to their body readiness tests.
 
 **Eligibility is not body sufficiency.** Before claiming or starting work,
 apply `issue-body`'s readiness test for the effective kind. Repair only gaps
@@ -1354,9 +1356,9 @@ was given, report the stop under `Reporting to an orchestrator`.
   the stop and the wording, and the `epic` label is what says so in one word.
 - **An issue whose label does not clear it for work**, at `Read the issue and
   its edges`. A `proposal`'s shape is not yet decided, so deciding it is the
-  user's and decomposing it is `epic`'s; a `human` names work no agent can
-  do, so the person it waits on is the answer; an issue carrying two of the
-  six answers the readiness question twice and answers it neither way.
+  user's and decomposing it is `epic`'s; `specification` routes to interactive
+  `specification`; a `human` names work no agent can do, so the person it
+  waits on is the answer; two of the seven kinds answer the question twice.
   `issue-labels` is what each label claims, and what a contradiction between
   two of them costs.
 - **More than one distinct existing task branch** on the issue's record, or a
