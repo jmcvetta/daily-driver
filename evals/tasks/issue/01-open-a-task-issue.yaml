@@ -101,10 +101,17 @@ success_criteria:
       request describes broken behavior and does not name a kind. It proposes
       a ready task handoff, not a bug report, without asking which kind to use.
       The body states the observable outcome, reason, scope, and observable
-      acceptance criteria. It contains `## Summary`, immediately followed by
+      acceptance criteria. It contains `## Human brief`, immediately followed by
       `## Model class`, then `## Detail`. The class section starts with exactly
       one backtick-wrapped lowercase class token and a short rationale. The task
       metadata must not add a concrete `Model:` identifier or `Effort:` field.
+      Where the work has nontrivial components, flow, state, or data
+      movement, the Human brief should include one Mermaid
+      diagram revealing that structure, but the diagram is optional and must
+      not be demanded for trivial or purely prose-clear work; the body must not
+      add decorative or duplicate diagrams, progress checklists, or a second
+      hand-maintained dependency record, and the diagram must not replace the
+      textual acceptance criteria or the dependency graph.
       The final provenance block below `---` is distinct and must be retained.
       The surrounding reply distinguishes grounded context from routine
       implementer choices; it must not invent repository evidence.

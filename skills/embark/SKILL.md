@@ -736,7 +736,7 @@ Each pause has a specific cause; missing evidence alone is not one.
   wave`. The graph wins, so the wave is not in doubt; the body is wrong, and
   fixing it is `epic`'s `Fill in the epic` rather than an edit made in passing
   here.
-- **An unsupported `Summary` claim**, at `Close the epic`. Diagnose and route
+- **An unsupported `Human brief` claim**, at `Close the epic`. Diagnose and route
   it under that step. Ask a person only for a genuinely missing decision or
   contribution; an exhausted bound is an execution failure, not a request to
   take over the work.
@@ -750,7 +750,7 @@ Each pause has a specific cause; missing evidence alone is not one.
 Everything else runs through. No permission is asked to open a session, to
 comment on the epic, to subscribe to a pull request, or to launch the next
 wave. Where the harness classifier applies, a gated merge and session archive
-require the user's recorded authorization; closing an epic whose `Summary` is
+require the user's recorded authorization; closing an epic whose `Human brief` is
 delivered needs no separate confirmation.
 
 
@@ -778,7 +778,7 @@ Non-goals
   base; `pr`'s `Keep it current` maintains each sibling PR's head.
 - **Does not close the epic in `Landing: by hand` mode.** It reports the epic
   ready and stops there. The default `Landing: orchestrator` mode closes it
-  only after `Close the epic` reads every `Summary` claim as delivered.
+  only after `Close the epic` reads every `Human brief` claim as delivered.
 - **Does not fire on one issue.** A single task uses `undertake`, not an epic,
   muster roll, or wave watch. Non-frontier undertakers implement in their
   session; `undertake`'s narrow frontier exception hands ordinary work to an

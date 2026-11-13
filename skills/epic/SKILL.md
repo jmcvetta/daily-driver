@@ -242,12 +242,12 @@ user wrote is gone from the issue the moment it lands. Two things make that
 safe, and neither is optional. `Agree the plan` names the issue and says its
 body is replaced, so the conversion is agreed rather than done to somebody.
 And nothing in the original is dropped: what it says about the whole change
-becomes `Summary` and `Justification`, and what it says about one part goes
+becomes `Human brief` and `Justification`, and what it says about one part goes
 into that part's child issue, which is where its owner will read it.
 
 The epic first, then the children, because each child names the epic as its
 parent and the parent must exist to be named. The epic's body at this point is
-`Summary` and `Justification`, and stops there: `Sequencing` is made of issue
+`Human brief` and `Justification`, and stops there: `Sequencing` is made of issue
 numbers that do not exist yet, which is why `Fill in the epic` is a step of its
 own.
 
@@ -332,7 +332,7 @@ Without an embarked fleet, a person applies the same test.
 The epic body
 =============
 
-Three sections, and no fourth. `Summary` and `Justification` are written at
+Three sections, and no fourth. `Human brief` and `Justification` are written at
 `Open the issues`; `Sequencing` waits for `Fill in the epic`, because it is
 made of issue numbers that do not exist until the tasks are open.
 
@@ -346,8 +346,8 @@ that wrote it — placed and retained as that skill defines on each body write.
 Neither the quatrain nor the attribution is a fourth section: they carry no
 heading, and the rule above is about `##` sections, not about them.
 
-Summary
--------
+Human brief
+-----------
 
 What is to be changed: how the software behaves differently once the epic is
 finished. Concise, and about the end state rather than the route to it — the
@@ -355,6 +355,17 @@ tasks are listed under `Sequencing`, and repeating them here is a second list
 to keep current.
 
 It is also the test `embark`'s `Close the epic` step closes against.
+
+Where the epic has nontrivial components, flow, state, or data movement,
+this brief should include one Mermaid diagram
+that reveals that structure. The diagram is optional, not a quota: omit it
+when prose is clearer or the structure is trivial. A diagram replaces prose
+that would otherwise explain the same structure — never acceptance criteria,
+never an exact contract, and never the dependency graph, which stays
+authoritative for execution ordering. Where a diagram and the text disagree,
+the text wins and the diagram is corrected in the same turn. No decorative
+or duplicate diagrams, no progress checklists, and no second hand-maintained
+dependency record.
 
 Justification
 -------------
@@ -457,7 +468,7 @@ Non-goals
   carries its own state, because a wave is not something the sub-issue panel
   knows about. A checkbox beside each task is, and it rots.
 - **Does not close a task.** Merging its pull request does that. `embark`
-  closes an embarked epic at `Close the epic`, against its `Summary`; without
+  closes an embarked epic at `Close the epic`, against its `Human brief`; without
   a fleet, a person applies the same test.
 - **Does not sweep the issue list.** An epic is drafted for the work in hand.
   Reading through open issues looking for a set that could be grouped under one
