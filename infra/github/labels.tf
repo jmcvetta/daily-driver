@@ -1,9 +1,8 @@
 # The issue labels this toolkit recognises.
 #
-# Seven issue-kind labels answer what kind of issue this is and whether an
-# agent can work on it; every issue carries
-# exactly one. `story` is a supplemental marker for a confirmed direct child
-# of an epic. It does not answer the readiness question.
+# Eight issue-kind labels answer what kind of issue this is and whether an
+# agent can work on it; every issue carries exactly one. `story` marks a
+# confirmed direct child of an epic or discovery.
 # `skills/issue-labels/SKILL.md` is the standard; this file is where it is
 # declared, so names, colours and descriptions come from a file under review.
 #
@@ -30,12 +29,19 @@ resource "github_issue_label" "epic" {
   description = "Coordinates a sequence of other issues"
 }
 
+resource "github_issue_label" "discovery" {
+  repository  = github_repository.this.name
+  name        = "discovery"
+  color       = "b68ee8"
+  description = "Coordinates research and specification before implementation"
+}
+
 # A lighter purple than its epic parent distinguishes a story in issue lists.
 resource "github_issue_label" "story" {
   repository  = github_repository.this.name
   name        = "story"
   color       = "d4c5f9"
-  description = "A focused piece of work within an epic"
+  description = "A focused piece of work within an epic or discovery"
 }
 
 resource "github_issue_label" "task" {

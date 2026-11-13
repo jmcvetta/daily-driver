@@ -73,3 +73,8 @@ requires renewed operator scope agreement; do not infer it from prior approval.
 Use the same reviewed PR and operator approval and merge boundaries for the
 changed canonical document. Record the decision and resulting commit in the
 issue handoff.
+When the document governs an epic, `epic` first demotes that same parent to
+`discovery` and pauses affected implementation. After the operator approves
+and merges the substantive amendment, hand its exact merge SHA back to `epic`
+for allocation, contract and graph reconciliation before re-promotion. An
+implementation PR must not amend its governing specification silently.

@@ -55,6 +55,9 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   checks, attributed judgments and agent reports. Redact private source
   quotes and sensitive local details. Do not repeat the receipt in another
   summary or infer completion from rendering it.
+  For a specification-backed task, identify the document path, exact delivered
+  specification commit and requirement IDs, and distinguish evidence of
+  delivery from unverified allocation.
 - **Unopinionated**: This is a short description of the branch, NOT a code
   review. Do NOT do opine on code quality or security.
 - **Provenance**: Last, below all of the above, `provenance`'s block — the

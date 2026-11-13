@@ -44,6 +44,13 @@ including the return to draft while a later round runs. This skill borrows the
 watch's CI wake but owns neither base maintenance nor readiness. Nothing here
 marks a draft ready or merges anything.
 
+For a specification-backed task, review the implementation against both the
+task's allocation and exclusions and the referenced requirement IDs in the
+document at its exact recorded commit. Check the delivered revision and
+evidence in the PR body. A changed governing specification or mismatched
+allocation is a finding routed to `epic`, not implicit approval to change
+the contract or amend the specification in an implementation PR.
+
 
 The round
 =========

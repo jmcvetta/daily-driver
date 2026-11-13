@@ -53,6 +53,9 @@ implement the issue, gather verification evidence, and open a pull request for
 review. Results depend on the task and the active harness; a request does not
 guarantee success or a merge.
 
+For work that needs research before implementation, use `epic` to coordinate
+a discovery and interactive specification, then `embark` the promoted epic.
+
 ## Local maintenance
 
 In this repository, ask Omp to `fix-daily-driver-bugs` to triage open automatic

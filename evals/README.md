@@ -56,7 +56,7 @@ evals/
 └── coder-eval-codex/    `coder_eval`'s Codex agent, with the judge's anchor put back
 ```
 
-`tasks/issue/` covers the seven kind-specific body contracts and their
+`tasks/issue/` covers the eight kind-specific body contracts and their
 boundaries: settled versus unresolved task intent, bounded research and
 evidenced negative/inconclusive outcomes, interactive specifications, bugs
 without task metadata, non-executable proposals, safe human handoffs,

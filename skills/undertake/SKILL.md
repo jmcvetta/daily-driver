@@ -196,6 +196,8 @@ skipped in the common case where the issue was handed over. `epic` sizes it,
 decomposes it, and each task issue it opens comes back here as the issue this
 sequence takes in. **An epic itself is a stop**, under `Where it stops and
 waits`.
+An issue labelled `discovery` also stops ordinary undertaking; route its
+research orchestration and interactive specification to `embark` and `epic`.
 
 The label too, because it states the kind's agent eligibility, and
 `issue-labels` says what each one means. The `epic` label is that stop arriving
@@ -204,7 +206,7 @@ decomposing it is `epic`'s work and agreeing the plan is the user's. A
 **`specification` is a stop**: route it to the interactive `specification`
 skill, without creating an implementation undertaking. **A `human` is a stop
 as well** — there is no agent execution route for the reserved action. **Two
-of the seven on one issue is a stop too**: the label answers the readiness
+of the eight on one issue is a stop too**: the label answers the readiness
 question twice. `task`, `bug` and `research`, one of them and no other, are
 eligible to proceed, subject to their body readiness tests.
 
@@ -218,6 +220,13 @@ follow-on issue specifications, or a supported no; do not open an empty PR
 when its agreed deliverable is answer-only. Bounded inconclusive research is
 complete only with the evidence, limitation, and resolution path required by
 `issue-body`; failed access or abandoned work is not completion.
+
+For a specification-backed task, before claim read the parent publication
+record and the document at its exact merged `master` SHA. Confirm the task's
+path and requirement IDs match that record and exist at that revision. A
+discovery parent never authorizes a new implementation dispatch, including a
+staged task. Report mismatches and route affected scope to `epic`; do not
+silently select a newer revision.
 
 **A `task`, and any classed `research` or `bug`, carries a required model
 class.** A `task` always does. A `research` or `bug` does when it is an epic
@@ -501,6 +510,16 @@ attempt fails because it replaced the auto-captured request criterion, retain
 declare each criterion's verification before execution; replacing or removing
 `request` still needs a later original user decision. A contract revision after
 execution requires newly bound evidence under the revised contract.
+
+For specification-backed work bind both the issue version and the exact
+specification revision in the execution contract. Use criterion `sourceRefs`
+and source versions for the allocated requirement text as well as issue
+allocation and exclusions; retain the issue as external task identity.
+Original-user authority still governs material contract amendments. On every
+base update, compare the governing document and allocated IDs against the
+pinned revision and parent record before affected work continues. Report and
+route a substantive mismatch to `epic`; do not silently change criteria.
+Independent unaffected work retains its existing contract.
 
 On resume, recover the existing contract identity and revision before changing
 the plan. Delegation and stop handoffs carry criterion IDs and original-source
@@ -1358,7 +1377,7 @@ was given, report the stop under `Reporting to an orchestrator`.
   its edges`. A `proposal`'s shape is not yet decided, so deciding it is the
   user's and decomposing it is `epic`'s; `specification` routes to interactive
   `specification`; a `human` names work no agent can do, so the person it
-  waits on is the answer; two of the seven kinds answer the question twice.
+  waits on is the answer; two of the eight kinds answer the question twice.
   `issue-labels` is what each label claims, and what a contradiction between
   two of them costs.
 - **More than one distinct existing task branch** on the issue's record, or a

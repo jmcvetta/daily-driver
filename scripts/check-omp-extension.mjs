@@ -612,6 +612,15 @@ check("GitHub URL requests require an issue URI result for identity", () => {
 	assert.equal(startupState(s).status, "required");
 });
 
+/** A discovery parent must not bypass the explicit embark title barrier. */
+check("discovery metadata arms the embark title barrier", () => {
+	const s = makeSession();
+	const ctx = startupCtx(s, "discovery-session");
+	s.fire("input", { text: "embark 582", source: "rpc" }, ctx);
+	deliverEpicRead(s, ctx, epicMetadata.replace("Labels: task, epic", "Labels: discovery"));
+	assert.equal(startupState(s).status, "required");
+});
+
 /** This prevents child, malformed and stale issue results from releasing dispatch. */
 check("only matching complete epic metadata arms the immediate barrier", () => {
 	const s = makeSession();

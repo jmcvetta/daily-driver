@@ -34,7 +34,7 @@ exclusion below.
 - **`github_branch_protection`** on `master` — required `Checks` and
   `Release Projection` checks on an up-to-date branch, linear history, conversation resolution, no
   force pushes or deletions
-- **`github_issue_label`** ×8 — seven issue kinds plus the `story` supplemental
+- **`github_issue_label`** ×9 — eight issue kinds plus the `story` supplemental
   marker. The `issue-labels` skill defines their contract.
 
 ## Required Checks
@@ -129,11 +129,9 @@ same file.
 
 ## The Issue Labels
 
-`labels.tf` declares seven issue kinds plus the supplemental `story` marker from
-`skills/issue-labels/SKILL.md`. The kinds decide agent eligibility. The marker
-only makes a confirmed direct child of an epic visible in issue lists; it
-never replaces its kind or its parent edge. The skill is the standard; this is
-where all eight labels are declared.
+`labels.tf` declares eight issue kinds plus the supplemental `story` marker
+from `skills/issue-labels/SKILL.md`. The marker identifies a confirmed direct
+child of an epic or discovery; it never replaces the kind or parent edge.
 
 Two properties are worth knowing before an apply:
 
@@ -144,9 +142,9 @@ Two properties are worth knowing before an apply:
   claims no more of the namespace than that.
 - **Pre-existing labels must be imported.** Every repository GitHub creates
   ships with `bug`, and creating an existing label fails rather than adopting
-  it. `import.sh` carries `bug`. If `story` or `specification` was created
-  before this managed apply, import the existing label with its matching
-  `github_issue_label.<name>` address before planning.
+  it. `import.sh` carries `bug`. If `story`, `specification` or `discovery`
+  already exists, import it with its matching `github_issue_label.<name>`
+  address before planning.
 
 The description strings are duplicated in the skill's tables, and
 `scripts/check-labels.py` fails `make check` when they drift. That check is a
@@ -155,10 +153,10 @@ editing a skill runs it without OpenTofu installed.
 
 After the human applies this stack, that person runs one backfill for existing
 open stories. For each open issue, read its native direct parent and the
-parent's labels. Add only `story` when the parent is confirmed and carries
-`epic`; preserve every existing label. Do not infer a parent from issue text or
-add a marker after a failed graph read. This rollout step waits on the same
-human who applies the Tofu stack.
+parent's labels. Add only `story` when the confirmed parent carries `epic` or
+`discovery`; preserve every existing label. Do not infer a parent from issue
+text or add a marker after a failed graph read. This rollout waits for the
+person who applies the Tofu stack.
 
 ## Renaming the Repository
 
@@ -180,7 +178,7 @@ with provider 6.13.0 against this stack's committed state — is:
       ~ repository = "claude-daily-driver" -> "daily-driver" # forces replacement
 ```
 
-for all eight labels, plus `github_repository_vulnerability_alerts`, which
+for all nine labels, plus `github_repository_vulnerability_alerts`, which
 holds nothing worth keeping. A destroyed label is stripped from every issue
 carrying it, and creating it again does not put it back.
 
@@ -200,7 +198,7 @@ export GITHUB_TOKEN=$(gh auth token)
 
 tofu apply -target=github_repository.this               # the rename, alone
 
-for label in epic story task bug proposal specification research human; do
+for label in epic discovery story task bug proposal specification research human; do
 	tofu state rm "github_issue_label.${label//-/_}"
 	tofu import "github_issue_label.${label//-/_}" "daily-driver:$label"
 done
@@ -282,6 +280,6 @@ than the "No changes." a fully-imported stack would:
 - `github_workflow_repository_permissions.this` created
 - `github_branch_protection.master` created
 - `github_issue_label.bug` updated in place — the description replaced with the
-  standard's — and the seven other labels created
+  standard's — and the eight other labels created
 
 After applying, commit `terraform.tfstate` to Git.
