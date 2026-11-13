@@ -464,9 +464,9 @@ enforcement is separately exercised by the installed scripted-provider check.
 
 ## Progressive disclosure comparison
 
-The [runtime integration guide](../docs/harness-integration.md#core-delivery-and-workflow-retrieval)
-records complete-source and actual-delivery byte counts for the compact core.
-Current and historical baselines are named in that guide. Installed local-provider
+The [runtime integration measurements](../docs/runtime-integration-measurements.md)
+record complete-source and actual-delivery byte counts for the compact core.
+Current and historical baselines are named there. Installed local-provider
 captures prove delivery, not voluntary model compliance.
 
 The new `constitution/disclosure-ordinary-commit.yaml` and

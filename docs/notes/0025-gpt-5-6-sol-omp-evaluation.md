@@ -27,8 +27,9 @@ This slice differs from the GLM slice. It used
 `deps-05-references-search-not-list-omp`; it is not a relabelled copy of GLM's
 positive or judged rows.
 
-`reply-is-concise` is excluded. Issue #195 remains open, and this subject has
-no pre-registered, re-derived word bands.
+`reply-is-concise` is excluded. Issue #195 was open when this note was written
+and was closed as completed on 2026-10-06; the exclusion stands on this frozen
+run's lack of pre-registered, re-derived word bands.
 
 ## Per-replicate results
 

@@ -21,7 +21,7 @@ run. That is #96, reported from a live session.
 **The wait is a loop of turns: read the checks, wake later, read again, capped.**
 *Amended 2026-09-08 — the wake is now a pull request subscription, and the loop
 is its backstop; the interval is unchanged. See* Amended *below.*
-**Amended by [`0010`](0010-the-wake-slot-is-never-empty.md),
+**Amended by [`0034`](0034-the-wake-slot-is-never-empty.md),
 2026-09-09:** the two timers this note and its sibling each specify are one
 wake slot, and a turn never ends with it empty.
 

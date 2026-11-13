@@ -250,7 +250,7 @@ The backstop, and the one slot
 `mcp__Claude_Code_Remote__send_later` survives the session that armed it, which
 is what makes a watch across turns possible at all. Keep the `trigger_id` it
 returns: that is this session's one wake slot, and
-[`0010`](../../../docs/notes/0010-the-wake-slot-is-never-empty.md) is the rule
+[`0034`](../../../docs/notes/0034-the-wake-slot-is-never-empty.md) is the rule
 it is held under. The test is whether the slot is empty rather than what woke
 the turn.
 
