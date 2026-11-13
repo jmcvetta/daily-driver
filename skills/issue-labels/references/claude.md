@@ -23,9 +23,9 @@ Reconciling the story marker
 ============================
 
 `issue-deps` supplies a verified direct-parent read. If that parent's labels
-include `epic`, include `story` in the replacement `labels` set. If no parent
-is confirmed or its labels omit `epic`, remove `story` from that set. A failed
-graph read preserves the current set and reports the limitation. The
+include `epic` or `discovery`, include `story` in the replacement `labels`
+set. If no parent is confirmed or neither kind is present, remove `story`.
+A failed graph read preserves the current set and reports the limitation. The
 replacement write includes the existing issue kind, stock labels, bot labels,
 and unrelated labels; `story` is never a substitute for a kind.
 

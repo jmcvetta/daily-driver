@@ -83,6 +83,30 @@ export default function registerTaskContractChecks(check, root) {
 		assert.equal((await s.command("contract", { ...remove, expectedRevision: 1 })).isError, true);
 	});
 
+	/** A changed specification must not silently replace the task's pinned source. */
+	check("specification-backed criteria retain both source versions and reject silent changes", async () => {
+		const s = session(); s.input("Implement the allocated requirement.");
+		await s.controller.toolResult({ toolCallId: "issue", toolName: "read", input: { path: "issue://874" }, content: "Allocate REQ-1 at abc123." }, s.ctx);
+		await s.controller.toolResult({ toolCallId: "spec", toolName: "read", input: { path: "docs/specs/example.md@abc123" }, content: "REQ-1: Retain records." }, s.ctx);
+		const before = (await s.status()).state.contract;
+		const issue = { sourceId: "tool:issue", quote: "Allocate REQ-1 at abc123." };
+		const spec = { sourceId: "tool:spec", quote: "REQ-1: Retain records." };
+		const criterion = { id: "REQ-1", description: "Retain records.", sourceRefs: [issue, spec] };
+		const result = await s.command("contract", { expectedRevision: before.revision, change: "Ground allocation and specification",
+			sourceRefs: [issue, spec], contract: { criteria: [...before.criteria, criterion] } });
+		assert.equal(result.isError, undefined);
+		const grounded = result.details.state.contract;
+		assert.equal(grounded.criteria[1].sourceRefs.length, 2);
+		assert.ok(grounded.criteria[1].sourceRefs.every((ref) => ref.version));
+		await s.controller.toolResult({ toolCallId: "spec-new", toolName: "read", input: { path: "docs/specs/example.md@def456" }, content: "REQ-1: Delete records." }, s.ctx);
+		const newer = { sourceId: "tool:spec-new", quote: "REQ-1: Delete records." };
+		const changed = { ...criterion, description: "Delete records.", sourceRefs: [issue, newer] };
+		const rejected = await s.command("contract", { expectedRevision: grounded.revision, change: "Replace requirement",
+			sourceRefs: [newer], contract: { criteria: [grounded.criteria[0], changed] } });
+		assert.equal(rejected.isError, true);
+		assert.deepEqual((await s.status()).state.contract, grounded);
+	});
+
 	/** A failed initial grounding must recover without approval by retaining the captured request, never by weakening the guard. */
 	check("grounding a captured request appends sourced criteria and declares verification without approval", async () => {
 		const s = session(); s.input("Implement the parser issue.");

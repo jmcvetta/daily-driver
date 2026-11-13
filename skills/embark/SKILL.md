@@ -52,6 +52,26 @@ stays where it was put.
 [`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision and
 `scripts/check-step-names.py` is what enforces it.
 
+Discovery dispatch and specification coverage
+=============================================
+
+Accept a `discovery` parent as well as an `epic`. Read its kind and graph
+again at each wave and before each dispatch. For discovery, dispatch only
+ready, unblocked `research` children with valid class metadata. Never dispatch
+its interactive `specification` child or any staged implementation task.
+When no eligible research remains, do not close the parent: return to `epic`
+for research review, interactive specification or publication, reporting
+blocked research separately. Existing independent implementation already in
+progress during amendment may continue under its unchanged contract; affected
+work pauses. Discovery itself never starts implementation.
+
+For a promoted specification-backed epic, before dispatch confirm each task's
+document path, exact merged `master` SHA and requirement IDs match the parent
+publication record and exist at that revision. Route mismatches to `epic`;
+continue unrelated eligible work. At closure, require evidenced delivery of
+every allocated requirement at the recorded revision, not only closed children.
+Ordinary issue-backed epics retain their existing dispatch and closure rules.
+
 
 The sequence
 ============
@@ -88,9 +108,9 @@ the ordinary skill and title-gate behavior.
 The epic's body, its sub-issues, and the blocked-by edges among them. Reading
 the graph is free and needs no confirmation; `issue-deps` says so.
 
-**An issue with no sub-issues is not an epic**, and that is the stop of that
-name below. A task issue handed over is `undertake`'s, and work not decomposed
-yet is `epic`'s.
+An `epic` with no sub-issues is not an epic. A discovery may await research or
+its interactive specification; return it to `epic`, never close it for that.
+An undecomposed task goes to `undertake` or `epic` as appropriate.
 
 Read the epic's comments too, because `Take the wave` needs to know which tasks
 are at sea already. On Omp, an explicit request reads them only after
@@ -118,8 +138,8 @@ sequence's: say so in a line and go on to `Take the wave`.
 2 — Take the wave
 -----------------
 
-The batch that sails together: every open agent-eligible child issue of this
-epic whose blockers are all closed, less the ones already at sea.
+The batch that sails together: eligible open children whose blockers are
+closed, less those already at sea. Under discovery this means research only.
 
 **The graph decides what can run; the epic's `Sequencing` decides what does.**
 The two are not the same question, and `epic` writes both on purpose:
@@ -130,16 +150,12 @@ The two are not the same question, and `epic` writes both on purpose:
   disagreement. It is the scheduling choice `epic` requires that child line
   to state, and it is honoured: the child waits for its wave.
 
-**Every story must be assignable.** Apply `epic`'s assignable-story rule and
-`issue-body`'s `Assignable stories` test before dispatch: an agent-eligible kind
-(`task`, `research` or `bug`), ready under that kind's own readiness test, with
-exactly one valid `## Model class` section and rationale. A non-task kind alone
-is not a defect. Report a child that is a `proposal`, `specification`, `human` or `epic`, or that
-lacks a complete handoff or valid class, as a planning defect; repair it through
-`issue` only where the intent is settled and the gaps are repository-answerable.
-Do not dispatch it, silently relabel it, default its class, or change its edge
-or marker to conceal the defect. Continue other assignable stories, but do not
-claim the epic is ready while a story fails the gate.
+**Every dispatch candidate must be assignable.** Apply `epic`'s
+assignable-story rule and `issue-body` readiness and class tests. An epic's
+invalid child is a planning defect. A discovery's interactive specification
+and staged implementation tasks are valid children but never dispatch
+candidates. Do not silently relabel or change edges or markers to conceal a
+defect; repair grounded gaps through `issue` and continue eligible work.
 
 **Already at sea is read from the record, never assumed.** A child is at sea
 when a muster roll on the epic names a session for it, or when its own issue
@@ -163,8 +179,9 @@ and is still not a reason to launch a second one. That collision is the thing
 This step is the router, and the wave that comes in at `Watch the wave` returns
 here to be routed again:
 
-- **No open child issue left.** Go to `Close the epic`, which checks the
-  coordinated outcome rather than child count alone.
+- **Discovery research is exhausted and none is at sea.** Return to `epic`;
+  do not close the parent. With no open child under an epic, go to `Close the
+  epic` and check its coordinated outcome rather than child count alone.
 - **Every agent-eligible child still open is at sea.** The fleet is out and
   this session has nothing to launch — which is exactly the state a watcher
   resumed after the last one died finds. Go to `Watch the wave`, over the

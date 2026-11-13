@@ -46,6 +46,50 @@ name stays where it was put.
 [`0005`](../../docs/notes/0005-steps-are-cited-by-name.md) is the decision and
 `scripts/check-step-names.py` is what enforces it.
 
+Discovery and specification-backed delivery
+===========================================
+
+When research and a collaboratively settled specification must precede
+decomposition, open the coordinating issue as `discovery`, not an `epic`.
+Keep that issue number, comments and parent/child lineage throughout. Its body
+states the intended outcome, open research, interactive specification child,
+and sequencing; it does not pretend implementation is settled. The parent
+may have eligible `research` children and at most one active interactive
+`specification` child. Do not open implementation tasks before the operator
+has approved and merged the specification. `embark` runs eligible research
+only and returns here when it is exhausted; it never closes the discovery on
+child count or dispatches the interactive specification.
+
+After operator approval and merge to `master`, record the exact merge commit
+and canonical document path on the parent. With separately agreed
+decomposition, create implementation tasks under that same discovery, each
+allocating stable requirement IDs at that exact commit, with exclusions,
+grounded implementation map, verification and model class as `issue-body`
+requires. Write and verify every parent and blocked-by edge and sequencing.
+Read the document at the pinned commit and confirm each ID exists, every
+allocation is covered, and every task passes readiness. The discovery label
+remains the dispatch authority throughout staging: no staged implementation
+task may run. Only after all gates pass, atomically replace `discovery` with
+`epic` in one label update and report readiness for `embark`. A failed gate
+leaves the parent in discovery and identifies the defect.
+
+If the agreed outcome fits one PR, convert the same parent to a single
+specification-backed `task` only with scope agreement, rather than creating an
+artificial epic. If evidence supports not proceeding, record it and close the
+parent as not planned.
+
+For a substantive amendment, atomically demote the same `epic` to `discovery`
+before affected work proceeds. Preserve all existing issues, edges, allocations
+and provenance. Identify and pause only affected implementation; independent
+eligible implementation already in progress may continue against its existing
+contract, but discovery dispatch never starts a staged implementation task.
+Add needed research and one active interactive amendment specification child.
+`specification` owns renewed operator agreement, review and operator merge.
+After merge, reconcile affected allocations and execution contracts to the new
+exact SHA with original-user authority for material changes. Recheck all
+references, graph, readiness and coverage before the atomic re-promotion.
+An implementation PR must never silently amend its governing specification.
+
 
 The sequence
 ============
@@ -143,10 +187,11 @@ open blockers may delay dispatch without preventing inclusion in the epic.
 It does not require a GitHub assignee or an available concrete model in the
 authoring session. Do not assign anyone as part of planning.
 
-`proposal`, `specification`, `human` and nested `epic` issues are not assignable stories. A
-research story whose question is not yet settled is a `proposal`, not a story.
-Do not relabel any of them to manufacture readiness. A research story's answer
-is unknown by definition; that is not a readiness defect.
+For an implementation epic, dispatchable stories exclude `proposal`,
+`specification`, `human` and nested parent issues. The closed interactive
+specification and research lineage remains attached after promotion; it is not
+a dispatch candidate or a planning defect. A discovery's active specification
+child is likewise a valid parent member, not a dispatchable story.
 
 Each story records what was asked and no more. Scope invented to round out a
 plan is scope every pull request is then measured against. A plan padded to
@@ -268,7 +313,7 @@ to each child. Do not report the epic's label or another child's class as its
 own.
 
 An issue converted into the epic is **relabelled** rather than labelled: it
-carried something before, and two of the seven kinds on one issue is a stop in
+carried something before, and two of the eight kinds on one issue is a stop in
 its own right. Both harnesses make that swap awkward, in opposite ways, and the
 reference file for the one in use says how: an additive write needs the remove
 in the same call, and a replacement write needs the issue's current labels

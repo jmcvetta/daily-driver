@@ -2531,7 +2531,7 @@ export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 				],
 			};
 		}
-		if (!metadata.labels.some((label) => label.toLowerCase() === "epic")) {
+		if (!metadata.labels.some((label) => ["epic", "discovery"].includes(label.toLowerCase()))) {
 			saveStartupState(ctx, { status: "inactive" });
 			return undefined;
 		}

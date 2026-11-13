@@ -1,0 +1,28 @@
+# Reviewing only the issue or only the specification misses scope defects.
+task_id: review-cycle-20-specification-allocation
+description: Review spec-backed delivery against pinned requirements and task allocation.
+tags: [review-cycle, discovery, behaviour, fire]
+initial_prompt: >-
+  Use review-cycle to explain what an independent reviewer checks for a task
+  allocating REQ-1 at an exact specification commit while excluding REQ-2.
+  The PR also changes the governing spec. Explain only; do not submit a review.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Write, Edit, NotebookEdit, Bash, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: agent_judge
+    description: Pinned requirements and allocation both constrain review
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if review checks REQ-1 at the exact referenced commit,
+      task allocation and REQ-2 exclusion, delivery evidence and PR revision,
+      and flags the governing specification change for the epic amendment
+      lifecycle rather than treating it as an implicit contract update.
+      Score 0 for silently accepting the changed specification; otherwise 0.5.

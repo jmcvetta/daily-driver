@@ -21,13 +21,13 @@ from the **effective** label — the one the issue carries after the requested
 change — not the one it carried before: relabelling `proposal` to `task`
 makes it a task body from that edit onward.
 
-Each of the seven managed kinds has a contract. `task`'s grounded handoff and
+Each of the eight managed kinds has a contract. `task`'s grounded handoff and
 fixed opening are defined below. The `research`, `bug`, `proposal`,
 `specification`, and `human` contracts are in
 [`references/kind-contracts.md`](references/kind-contracts.md).
-`epic`'s existing body contract remains in
-[`epic/SKILL.md`](../epic/SKILL.md#the-epic-body); invoke it rather than
-copying its format here. `issue-labels` owns kind selection. `story` and
+`epic` owns the parent contracts for both `epic` and `discovery`; invoke
+[`epic/SKILL.md`](../epic/SKILL.md) rather than copying them here.
+`issue-labels` owns kind selection. `story` and
 unrelated labels add no body contract.
 
 These are information requirements, not a quota of headings. Keep small
@@ -104,6 +104,17 @@ Execution retains these requirements in a versioned task contract. Stable
 criterion IDs belong to that runtime record; this template needs no new
 headings. Later issue edits do not silently cancel unmet criteria in an active
 contract. An issue body is a requirement source, not original user approval.
+
+**Specification-backed task variant.** Name the canonical document path, its
+exact operator-approved merge commit on `master`, and the stable requirement
+IDs allocated to this task. The issue owns allocation, explicit exclusions,
+grounded implementation map, verification route and model class. The document
+at that revision owns behavior, interfaces, constraints and acceptance; do
+not duplicate them in full. Before presenting the task as ready, read that
+revision, verify every cited ID exists and matches the parent publication
+record, and confirm its allocation and exclusions are unambiguous. Keep the
+issue as external task identity. Missing or mismatched revision or IDs route to
+`epic`, not a silent substitution of the newest document.
 
 **A task body opens in a fixed shape.** Its parts appear in this order:
 

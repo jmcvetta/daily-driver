@@ -74,8 +74,8 @@ its output. Verify that a read target is an issue before believing an empty
 graph. After a write, read the other end with `--json blocking` or
 `--json subIssues`.
 
-Before a parent or sub-issue write to an epic, including a create call that
-sets a parent, apply `Sub-issues`' pre-link assignability gate in `SKILL.md`.
+Before a parent or sub-issue write to an epic or discovery, including a create
+call that sets a parent, apply its `Sub-issues` gate in `SKILL.md`.
 This includes both `--parent` and `--add-sub-issue` and any available MCP route.
 
 After every parent read or write, read the confirmed parent's labels and invoke

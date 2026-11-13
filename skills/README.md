@@ -19,10 +19,10 @@ limits; a shared skill does not imply identical capabilities on every harness.
 | Skill | When to use it |
 | ----- | -------------- |
 | [specification](specification/SKILL.md) | Collaborate on a canonical specification and publish it through an operator-approved, reviewed PR. |
-| [epic](epic/SKILL.md) | Break work into multiple issues and establish their dependencies and completion criteria. |
+| [epic](epic/SKILL.md) | Coordinate discovery and specification-backed promotion, or break settled work into issues with dependencies and completion criteria. |
 | [undertake](undertake/SKILL.md) | Complete assigned issues; also read its execution policy before delegation, frontier escalation or unfinished stops without starting an issue. |
 | [task-worktree](task-worktree/SKILL.md) | Establish an isolated feature branch and worktree before repository-changing work. |
-| [embark](embark/SKILL.md) | Dispatch eligible child issues of an epic in parallel and monitor the work. |
+| [embark](embark/SKILL.md) | Dispatch discovery research or eligible epic children in parallel and monitor the work. |
 | [stand-down](stand-down/SKILL.md) | Stop an embarked epic, preserve work in progress, and record a handoff. |
 
 ## Create and organize issues
