@@ -162,7 +162,7 @@ export default function registerTaskContractChecks(check, root) {
 		const removed = await s.command("contract", replacement);
 		assert.equal(removed.isError, true);
 		assert.match(removed.content?.[0]?.text ?? "", /retain `request`/);
-		assert.match(removed.content?.[0]?.text ?? "", /newly bound evidence/);
+		assert.match(removed.content?.[0]?.text ?? "", /complete definition is unchanged/);
 		const unchanged = (await s.status()).state.contract;
 		assert.equal(unchanged.revision, before.revision);
 		assert.deepEqual(unchanged.criteria, before.criteria);

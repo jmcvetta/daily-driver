@@ -20,6 +20,9 @@
 
 ### Fixed
 
+* Preserve evidence for unchanged criteria across contract revisions while requiring fresh observations for changed criteria ([#883](https://github.com/jmcvetta/daily-driver/issues/883)).
+
+
 * Validate task verification declarations before grounding, bind repository evidence to the selected worktree, and retain native Omp bash terminal outcomes without treating shell output as check conclusions ([#866](https://github.com/jmcvetta/daily-driver/issues/866)).
 
 * Name the owning issue, the block condition and a `/undertaking status` recovery route in remaining undertaking guard blocks; a manual model or effort difference is never a block reason ([#864](https://github.com/jmcvetta/daily-driver/issues/864)).

@@ -4,6 +4,7 @@ import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTaskStateController } from "../extensions/task-state.mjs";
+import { completionReceipt, recordEvidence } from "../extensions/task-evidence.mjs";
 import { handleTaskEvent } from "../hooks/task-state.mjs";
 
 function fixture() {
@@ -203,8 +204,8 @@ export default function registerTaskEvidenceChecks(check) {
 			} finally { f.remove(); }
 		});
 
-		/** Contract changes must invalidate existing results even when the repository head does not move. */
-		check(`${harness} retains prior evidence but rejects a changed contract revision`, async () => {
+		/** Unchanged criteria keep historical evidence, while a current evidence record can cite its retained observation. */
+		check(`${harness} preserves evidence across revisions for unchanged criteria`, async () => {
 			const f = fixture();
 			try {
 				const d = await driver(harness, f.root);
@@ -212,10 +213,14 @@ export default function registerTaskEvidenceChecks(check) {
 				assert.equal((await d.evidence("original-check", source)).isError, undefined);
 				const before = (await d.call("status")).details.state;
 				assert.equal((await d.call("contract", { expectedRevision: before.contract.revision, change: "Ground the existing offline constraint", sourceRefs: [d.ref], contract: { constraints: ["Offline fixture only"] } })).isError, undefined);
-				const receipt = (await d.call("receipt")).details;
-				assert.equal(receipt.criteria[0].disposition, "stale");
-				assert.equal(receipt.criteria[0].evidence[0].id, "original-check");
-				assert.equal((await d.evidence("relabeled-old-check", source)).isError, true);
+				const retained = (await d.call("receipt")).details.criteria[0];
+				assert.equal(retained.disposition, "unresolved");
+				assert.equal(retained.evidence[0].applicability, "current");
+				assert.equal(source.execution.contractRevision, before.contract.revision);
+				const reused = await d.evidence("rebound-old-observation", source);
+				assert.equal(reused.isError, undefined, JSON.stringify(reused));
+				assert.equal(reused.details.state.criterionEvidence.at(-1).contractRevision, before.contract.revision + 1);
+				assert.equal(reused.details.state.criterionEvidence.at(-1).source.sourceId, source.sourceId);
 				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
 			} finally { f.remove(); }
 		});
@@ -274,6 +279,76 @@ export default function registerTaskEvidenceChecks(check) {
 			} finally { f.remove(); }
 		});
 	}
+	check("appending a criterion preserves unchanged evidence and binds reused observations to the new revision", async () => {
+		const f = fixture();
+		try {
+			const d = await driver("omp", f.root, { kinds: ["check"] });
+			const success = { headRefOid: f.git("rev-parse", "HEAD"), statusCheckRollup: [{ conclusion: "SUCCESS" }] };
+			const original = await d.observe("criterion-a-original", success);
+			const retained = await d.observe("criterion-a-retained", success);
+			assert.equal((await d.evidence("criterion-a", original)).isError, undefined);
+			const before = (await d.call("status")).details.state;
+			const criterionB = { id: "criterion-b", description: "Verify the second criterion.", sourceRefs: [d.ref], verification: d.verification };
+			const amended = await d.call("contract", { expectedRevision: before.contract.revision, change: "Append criterion B", sourceRefs: [d.ref],
+				contract: { criteria: [...before.contract.criteria, criterionB] } });
+			assert.equal(amended.isError, undefined, JSON.stringify(amended));
+			let receipt = (await d.call("receipt")).details;
+			assert.equal(receipt.criteria.find((item) => item.id === "request").disposition, "passed");
+			assert.equal(receipt.criteria.find((item) => item.id === "criterion-b").disposition, "unresolved");
+			assert.deepEqual(receipt.notVerified, ["criterion-b"]);
+			assert.equal((await d.call("complete", { summary: "B is still unresolved." })).isError, true);
+			const reused = await d.evidence("criterion-a-reused", retained);
+			assert.equal(reused.isError, undefined, JSON.stringify(reused));
+			assert.equal(reused.details.state.criterionEvidence.at(-1).contractRevision, before.contract.revision + 1);
+			assert.equal(reused.details.state.criterionEvidence.at(-1).source.sourceId, retained.sourceId);
+			const currentB = await d.observe("criterion-b-check", success);
+			assert.equal((await d.evidence("criterion-b-evidence", currentB, { criterionId: "criterion-b" })).isError, undefined);
+			receipt = (await d.call("receipt")).details;
+			assert.equal(receipt.verified, true);
+			assert.equal((await d.call("complete", { summary: "Both criteria passed." })).details.state.status, "verified-complete");
+		} finally { f.remove(); }
+	});
+
+	check("changed criterion definitions reject old evidence and unknown history", async () => {
+		for (const [name, change] of [
+			["description", (criterion) => ({ ...criterion, description: "A changed criterion description." })],
+			["source references", (criterion, ref) => ({ ...criterion, sourceRefs: [ref] })],
+			["verification operation", (criterion) => ({ ...criterion, verification: { ...criterion.verification, toolName: "different-check" } })],
+			["verification subject", (criterion) => ({ ...criterion, verification: { ...criterion.verification, subject: { kind: "artifact", path: "subject.txt" } } })],
+		]) {
+			const f = fixture();
+			try {
+				const d = await driver("omp", f.root, { kinds: ["check"] });
+				const source = await d.observe(`before-${name}`, { headRefOid: f.git("rev-parse", "HEAD"), statusCheckRollup: [{ conclusion: "SUCCESS" }] });
+				assert.equal((await d.evidence(`evidence-${name}`, source)).isError, undefined);
+				await d.event("UserPromptSubmit", { prompt: `Authorize changing the ${name} definition for this isolated fixture.`, turn_id: `authorize-${name}` });
+				const status = (await d.call("status")).details;
+				const decision = status.sources.at(-1);
+				const ref = { sourceId: decision.sourceId, quote: decision.text };
+				const criterion = status.state.contract.criteria[0];
+				const changed = change(criterion, ref);
+				const amended = await d.call("contract", { expectedRevision: status.state.contract.revision, change: `Change ${name}`, sourceRefs: [ref],
+					authoritySource: ref, contract: { criteria: [changed] } });
+				assert.equal(amended.isError, undefined, JSON.stringify(amended));
+				assert.equal((await d.call("receipt")).details.criteria[0].disposition, "stale");
+				assert.equal((await d.evidence(`reuse-${name}`, source)).isError, true);
+			} finally { f.remove(); }
+		}
+
+		const f = fixture();
+		try {
+			const d = await driver("omp", f.root, { kinds: ["check"] });
+			const source = await d.observe("known-revision", { headRefOid: f.git("rev-parse", "HEAD"), statusCheckRollup: [{ conclusion: "SUCCESS" }] });
+			const record = await d.evidence("known-evidence", source);
+			assert.equal(record.isError, undefined);
+			const state = structuredClone(record.details.state);
+			state.contractHistory = state.contractHistory.filter((entry) => entry.revision !== source.execution.contractRevision);
+			assert.equal(completionReceipt(state, f.root).criteria[0].disposition, "stale");
+			assert.throws(() => recordEvidence(state, { ...state.criterionEvidence[0], id: "unknown-history", contractRevision: state.contract.revision },
+				source, "evidence-session"), /unchanged criterion revision/);
+		} finally { f.remove(); }
+	});
+
 
 	/** A bounded preview must not force replay when the exact native tool result is already retained. */
 	check("Omp recovers exact native evidence without treating its truncated preview as a pass", async () => {
