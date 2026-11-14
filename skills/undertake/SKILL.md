@@ -508,8 +508,10 @@ decision; retries and compaction need no new approval. If an initial grounding
 attempt fails because it replaced the auto-captured request criterion, retain
 `request`, append sourced issue criteria, populate the unknown fields, and
 declare each criterion's verification before execution; replacing or removing
-`request` still needs a later original user decision. A contract revision after
-execution requires newly bound evidence under the revised contract.
+`request` still needs a later original user decision. Evidence from an earlier
+contract revision remains valid only when that revision exists in contract
+history and the full criterion definition is unchanged; new evidence may cite
+its earlier execution observation under the same condition.
 
 For specification-backed work bind both the issue version and the exact
 specification revision in the execution contract. Use criterion `sourceRefs`

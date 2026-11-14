@@ -3,6 +3,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { criterionDefinitionsMatch } from "./task-contract.mjs";
+
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const equal = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 const nonblank = (value) => typeof value === "string" && Boolean(value.trim());
@@ -60,7 +62,13 @@ export function recordEvidence(state, record, source, sessionId) {
 	if (!nonblank(record.id) || (state.criterionEvidence ?? []).some((item) => item.id === record.id)) throw new Error("Evidence ids are immutable and unique");
 	if (!KINDS.includes(record.kind) || !["passed", "failed", "unresolved"].includes(record.result)) throw new Error("Name an evidence kind and an explicit result");
 	const execution = source.execution;
-	if (source.kind !== "tool" || !execution || execution.sessionId !== sessionId || execution.taskId !== state.taskId || execution.contractRevision !== state.contract.revision || execution.contractId !== state.contract.contractId) throw new Error("Evidence lacks this task/session's execution-time binding");
+	const historicalContract = state.contractHistory?.find((item) => item.revision === execution?.contractRevision)?.contract;
+	const historicalCriterion = historicalContract?.contractId === state.contract.contractId
+		? historicalContract.criteria?.find((item) => item.id === record.criterionId) : null;
+	if (source.kind !== "tool" || !execution || execution.sessionId !== sessionId || execution.taskId !== state.taskId ||
+		execution.contractId !== state.contract.contractId || !historicalCriterion || !criterionDefinitionsMatch(historicalCriterion, criterion)) {
+		throw new Error("Evidence lacks this task/session's execution-time binding to an unchanged criterion revision");
+	}
 	if (!execution.subject || !equal(record.subject, execution.subject)) throw new Error("Evidence must use the subject captured at execution time");
 	if (!criterion.verification?.subject || !equal(execution.subject, captureSubject(execution.cwd, criterion.verification.subject))) throw new Error("Evidence subject is not the criterion's declared current artifact");
 	if (source.textTruncated) throw new Error("Truncated evidence cannot establish a decisive result; retrieve an exact retained source");
@@ -94,23 +102,34 @@ export function recordEvidence(state, record, source, sessionId) {
 export function completionReceipt(state, cwd) {
 	const all = state.criterionEvidence ?? [];
 	const superseded = new Set(all.map((item) => item.supersedes).filter(Boolean));
-	const applicable = (item) => item.contractRevision === state.contract.revision && item.contractId === state.contract.contractId &&
-		equal(item.subject, captureSubject(item.subject.kind === "repository" ? item.subject.root : cwd, item.subject)) && !(item.subject.kind === "repository" && item.subject.dirty);
+	const applicable = (item, criterion) => {
+		const historicalContract = state.contractHistory?.find((entry) => entry.revision === item.contractRevision)?.contract;
+		const historicalCriterion = historicalContract?.contractId === state.contract.contractId
+			? historicalContract.criteria?.find((entry) => entry.id === criterion.id) : null;
+		return historicalCriterion && criterionDefinitionsMatch(historicalCriterion, criterion) &&
+			item.contractId === state.contract.contractId &&
+			equal(item.subject, captureSubject(item.subject.kind === "repository" ? item.subject.root : cwd, item.subject)) &&
+			!(item.subject.kind === "repository" && item.subject.dirty);
+	};
 	const criteria = (state.contract.criteria ?? []).map((criterion) => {
 		const records = all.filter((item) => item.criterionId === criterion.id && !superseded.has(item.id));
-		const current = records.filter(applicable);
+		const current = records.filter((item) => applicable(item, criterion));
 		const kinds = criterion.verification?.kinds;
 		let disposition = "unresolved";
 		if (current.some((item) => item.result === "failed")) disposition = "failed";
 		else if (records.length && !current.length) disposition = "stale";
 		else if (kinds?.length && kinds.every((kind) => kind !== "report" && current.some((item) => item.kind === kind && item.result === "passed")) && !current.some((item) => item.result !== "passed")) disposition = "passed";
 		return { id: criterion.id, disposition, evidence: records.map((item) => ({ id: item.id, kind: item.kind, result: item.result, source: item.source,
-			applicability: applicable(item) ? "current" : "stale", ...(item.judgment ? { judgment: item.judgment } : {}) })) };
+			applicability: applicable(item, criterion) ? "current" : "stale", ...(item.judgment ? { judgment: item.judgment } : {}) })) };
 	});
 	const requiredKinds = [...(state.contract.requiredEvidenceKinds ?? []), ...(state.contract.requiredReviewKinds ?? [])];
-	const missingKinds = requiredKinds.filter((kind) => !all.some((item) => item.kind === kind && item.result === "passed" && applicable(item) && !superseded.has(item.id)));
+	const currentEvidence = (item) => {
+		const criterion = state.contract.criteria?.find((entry) => entry.id === item.criterionId);
+		return criterion && applicable(item, criterion);
+	};
+	const missingKinds = requiredKinds.filter((kind) => !all.some((item) => item.kind === kind && item.result === "passed" && currentEvidence(item) && !superseded.has(item.id)));
 	const approvals = state.contract.approvalRequirements;
-	const outstandingApprovals = approvals === null ? null : approvals.filter((requirement) => !all.some((item) => item.kind === "approval" && item.requirement === requirement && item.result === "passed" && applicable(item) && !superseded.has(item.id)));
+	const outstandingApprovals = approvals === null ? null : approvals.filter((requirement) => !all.some((item) => item.kind === "approval" && item.requirement === requirement && item.result === "passed" && currentEvidence(item) && !superseded.has(item.id)));
 	const unknownRequirements = ["requiredEvidenceKinds", "requiredReviewKinds", "approvalRequirements"].filter((key) => state.contract[key] === null);
 	return { taskId: state.taskId, objective: state.contract.objective, contractId: state.contract.contractId, revision: state.contract.revision,
 		artifacts: [...new Map(all.map((item) => [JSON.stringify(item.subject), item.subject])).values()], criteria,
