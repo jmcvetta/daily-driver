@@ -91,15 +91,7 @@ frontier agent; it is not speculative parallel delegation.
 
 **Errors and unfinished stops.** Diagnose errors, repair within scope, revise
 the plan, and continue permitted work. A failed command or approach alone is
-not a blocker. Suspected Daily Driver defects use `issue`'s attribution and
-automatic-reporting route; target-repository defects use their normal route.
-Pause only for a contribution you cannot supply. Before an unfinished stop,
-finish independent permitted work unless safety requires immediate stop.
-Report the blocked operation, observed failure or exact prohibition, original
-authorization checked, permitted routes considered, smallest external
-contribution, completed or actionable independent work, and actual resume path.
-Use `Where it stops and waits` for classification, even outside an undertaking.
-Never probe a prohibited operation to prove a blocker.
+not a blocker. Suspected Daily Driver defects use `issue`'s attribution and automatic-reporting route; target-repository defects use their normal route. Pause only for a contribution you cannot supply. Before an unfinished stop, finish independent permitted work unless safety requires immediate stop. Report the blocked operation, observed failure or exact prohibition, original authorization checked, permitted routes considered, smallest external contribution, completed or actionable independent work, and actual resume path. Use `Where it stops and waits` for classification, even outside an undertaking. Never probe a prohibited operation to prove a blocker.
 
 
 The sequence

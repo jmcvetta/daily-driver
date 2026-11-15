@@ -44,8 +44,8 @@ async function driver(harness, root, overrides = {}) {
 		criteria: initial.state.contract.criteria.map((item) => ({ ...item, verification })), requiredEvidenceKinds: verification.kinds.filter((kind) => ["command", "check"].includes(kind)), requiredReviewKinds: verification.kinds.filter((kind) => kind === "judgment"), approvalRequirements: [],
 	} });
 	assert.equal(grounded.isError, undefined, JSON.stringify(grounded));
-	const observe = async (id, response, input = verification.input, pre = true) => {
-		const data = { tool_use_id: id, tool_name: "fixture-check", tool_input: input, tool_response: response };
+	const observe = async (id, response, input = verification.input, pre = true, toolName = "fixture-check") => {
+		const data = { tool_use_id: id, tool_name: toolName, tool_input: input, tool_response: response };
 		if (pre) await event("PreToolUse", data);
 		await event("PostToolUse", data);
 		return (await call("status", { sourceId: `tool:${id}` })).details.source;
@@ -165,14 +165,19 @@ export default function registerTaskEvidenceChecks(check) {
 				const source = await d.observe("success", { headRefOid: f.git("rev-parse", "HEAD"), statusCheckRollup: [{ conclusion: "SUCCESS" }] });
 				assert.equal((await d.evidence("check", source)).isError, undefined);
 				assert.equal((await d.call("complete", { summary: "done" })).isError, true);
-				assert.equal((await d.evidence("no-attribution", source, { kind: "judgment" })).isError, true);
+				const missingAttribution = await d.evidence("no-attribution", source, { kind: "judgment" });
+				assert.equal(missingAttribution.isError, true);
+				assert.match(missingAttribution.content?.[0]?.text ?? missingAttribution.message, /new successful review observation/u);
+				const contractBeforeRecovery = (await d.call("status")).details.state.contract;
 				const judgment = { reviewer: "independent fixture reviewer", rationale: "Inspected the fixture behavior.\nRetained the required records.", artifacts: [`${f.git("rev-parse", "HEAD")}:subject.txt`] };
 				assert.equal((await d.evidence("invented-review", source, { kind: "judgment", judgment })).isError, true);
 				const oldJudgment = { ...judgment, artifacts: ["old-head:subject.txt"] };
 				const oldReview = await d.observe("old-review", { judgment: oldJudgment });
 				assert.equal((await d.evidence("old-review", oldReview, { kind: "judgment", judgment: oldJudgment })).isError, true);
-				const review = await d.observe("review", { judgment });
+				const review = await d.observe("review", { judgment }, { files: ["subject.txt"] }, true, "fixture-review");
+				assert.equal(review.toolName, "fixture-review");
 				assert.equal((await d.evidence("review", review, { kind: "judgment", judgment })).isError, undefined);
+				assert.deepEqual((await d.call("status")).details.state.contract, contractBeforeRecovery);
 				const receipt = (await d.call("receipt")).details;
 				assert.equal(receipt.verified, true); assert.equal(receipt.criteria[0].evidence.length, 2);
 				assert.equal(JSON.stringify(receipt).includes('"quote"'), false);

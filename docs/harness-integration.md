@@ -216,6 +216,13 @@ attribution or rationale that the source does not contain. Attribution and
 prose sufficiency still need review against that observation. Agent reports
 remain a separate evidence kind and cannot establish a pass. Receipt consumers
 must distinguish these kinds and redact sensitive commentary and local paths.
+The declared operation constrains command and check evidence, not judgment
+evidence. If an observation cannot support a judgment because it lacks review
+attribution or uses unsuitable metadata, keep the unchanged criterion and
+capture a new successful review observation that contains the reviewer,
+rationale and exact current artifact identity. This evidence recovery does not
+require a contract amendment or new user authority. Approval evidence remains
+subject to its named approval requirement; a new observation does not grant it.
 Do not publish retained source quotes. Reuse the receipt inside existing
 PR details and handoffs instead of maintaining a second evidence ledger.
 
