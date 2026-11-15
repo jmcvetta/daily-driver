@@ -1,6 +1,6 @@
 # Evals
 
-Twenty suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
+Twenty-one suites, run by [`coder_eval`](https://github.com/UiPath/coder_eval) rather
 than by `claude plugin eval`. The reasoning for the harness is
 [`docs/notes/0002-eval-harness.md`](../docs/notes/0002-eval-harness.md);
 the short version is that the built-in cannot be run on this account, is
@@ -17,6 +17,7 @@ evals/
 │   ├── codex.yaml                  the same suites, on Codex — see "The Codex arm"
 │   └── classes-*.yaml              model-classes experiments with their own model pins
 ├── tasks/
+│   ├── council/         offline planning-stage trigger and boundary cases
 │   ├── fix-daily-driver-bugs/  offline GitHub-fixture triage and dispatch cases
 │   ├── pr/              does `pr` fire when a PR is opened, and only then?
 │   ├── pr-title/        … when a title is written, and only then?
@@ -71,6 +72,54 @@ integration-proof case uses a local authenticated request/response fixture to
 assert that proof precedes dependent work; it makes no network or cloud calls.
 These are behavioral cases: graders assess decisions and evidence, not a fixed
 heading list.
+
+`tasks/council/` covers an explicit planning consultation and negative controls
+for settled implementation, epic dispatch, and pull-request review. Every case
+is offline: it cannot invoke Agent Council, a configured provider, or a
+repository-mutating shell command. The suite judges whether the answer preserves
+unresolved user decisions and stops before execution; it does not test a live
+Agent Council integration.
+
+Council transcript grading has its own frozen rubric and known-pass/known-fail
+calibration set. Before judging, record all planning, rubric-authoring,
+implementation, and evaluated-subject contributors for each case from retained
+session or run evidence. Exclude the union of their model families from the
+judge set; partition cases into batches when those exclusions differ. Never
+infer execution attribution from issue authorship or a requested model. Use
+`scripts/evals-judge.py` with an eligible, calibrated route from `judges/`.
+Each judge sees the fixed rubric and original transcript, not the author's
+proposed grade or another judge's verdict. Keep judge, rubric freeze,
+transcript, routing evidence, verdict, rationale, and usage per batch. A known
+family mismatch invalidates attribution; unknown family or route identity stays
+unresolved. Do not silently substitute a same-family judge or drop incomplete
+cases. Model-authored calibration labels are not human ground truth.
+
+Plan the catalog without inference, then run the focused preflight:
+
+```sh
+make evals-plan
+make evals-preflight TASKS='tasks/council/*.yaml'
+```
+
+Before inference, recover provenance for each case and partition batches by the
+excluded planning and execution families. Check the intended judge route with
+`make evals-judge-preflight JUDGE=<judge-id>`, then calibrate it against this
+suite's frozen examples:
+
+```sh
+uv run --frozen python3 scripts/evals-judge.py calibrate \
+  --judge <eligible-judge-id> \
+  --dir evals/fixtures/council/calibration \
+  --output evals/fixtures/council/calibration/observed/<judge-id>.json
+```
+
+Run only after calibration passes its rule and provenance establishes that the
+judge is outside the batch's excluded family union. Keep original transcripts,
+the calibration record, rubric freeze, route evidence, scores and failures.
+Use the existing `make evals-run-omp-<subject> JUDGE=<judge-id>
+TASKS='tasks/council/*.yaml'` and `make evals-record` routes. Record incomplete
+cases and unavailable identities separately; neither calibration on another
+rubric nor a requested model name proves independence.
 
 The six focused provenance cases passed with the Omp GPT 6.1 Sol subject in
 [`18-59-30`](provenance/omp-gpt-6-1-sol-2026-10-31-2026-10-31_18-59-30.json),

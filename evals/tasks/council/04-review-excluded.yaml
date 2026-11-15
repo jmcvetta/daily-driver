@@ -1,0 +1,26 @@
+# Council does not replace pull request review.
+task_id: council-04-review-excluded
+description: A PR review request stays on review-cycle.
+tags: [council, behaviour, no-fire]
+initial_prompt: >-
+  Review pull request #42 and address its findings. Do not use council or write
+  anything; explain the normal route.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Bash, Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: agent_judge
+    description: PR review does not trigger council
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if the answer does not invoke council and routes the review
+      to review-cycle. Do not penalize it for declining a review or writes
+      because the fixture forbids them. Score 0 if it selects council; otherwise
+      0.5 for a material omission.

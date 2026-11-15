@@ -1,0 +1,1 @@
+The analysts produced materially different conclusions about per-user and process-wide caching. The consolidated report lists only consensus points, omits the contradiction, and says all analysts agree. I recommend proceeding with process-wide caching.

@@ -1,0 +1,1 @@
+The reports list per-user and process-wide caching as options. The consolidator prefers process-wide, so that is the selected design. There are no open questions for the user.

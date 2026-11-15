@@ -1,0 +1,35 @@
+# Explicit planning uses council as a precursor and leaves decisions with the user.
+task_id: council-01-explicit-planning
+description: Explicit council request explores planning and stops before execution.
+tags: [council, behaviour, fire]
+initial_prompt: >-
+  Use council for an open question about whether a local cache should be
+  process-wide or per-user. Compare options, risks, and unresolved decisions.
+  Do not run Agent Council now, call providers, write files, or create issues;
+  explain the planning route and what evidence it would return.
+agent:
+  allowed_tools: [Read, Grep, Glob, Skill]
+  disallowed_tools: [Bash, Write, Edit, NotebookEdit, Agent, Task]
+run_limits: {max_turns: 8, turn_timeout: 180, task_timeout: 400}
+success_criteria:
+  - type: skill_triggered
+    weight: 0
+    description: Council is selected for an explicit open planning request
+    expected_skill: council
+    skill_name: council
+  - type: agent_judge
+    description: Planning stops with evidence and unresolved user decisions
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 2
+    max_turns: 4
+    turn_timeout: 120
+    agent: {type: claude-code, model: claude-sonnet-5, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      Score 1 only if the answer selects council for this explicit open planning
+      question; says it compares options, risks, open questions and substantive
+      disagreement; preserves unresolved decisions for the user; and stops
+      before issue creation, implementation, or review. It must not call the
+      CLI, a provider, or claim a run occurred. Score 0 for execution or a
+      claimed run; otherwise 0.5 for a material omission.

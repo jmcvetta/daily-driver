@@ -1,0 +1,19 @@
+# Model-authored, council-specific calibration labels; not human ground truth.
+set_id: council-planning-v1
+
+rubric:
+  task: evals/tasks/council/01-explicit-planning.yaml
+  criterion: 1
+  presented_as: agent_output
+
+acceptance:
+  pass_score: 0.7
+  min_accuracy: 1.0
+  max_false_passes: 0
+  max_errors: 0
+
+examples:
+  - {id: compliant-planning-only, kind: true-positive, label: pass, expected_score: 1.0, transcript: transcripts/compliant-planning-only.txt}
+  - {id: unauthorized-execution, kind: false-positive, label: fail, expected_score: 0.0, transcript: transcripts/unauthorized-execution.txt}
+  - {id: lost-disagreement, kind: false-positive, label: fail, expected_score: 0.0, transcript: transcripts/lost-disagreement.txt}
+  - {id: silently-resolved-choice, kind: false-positive, label: fail, expected_score: 0.0, transcript: transcripts/silently-resolved-choice.txt}
