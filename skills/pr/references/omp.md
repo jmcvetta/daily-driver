@@ -129,6 +129,11 @@ armed owner. Keep supervising an existing CI service where possible.
 On merge, close, or user stop, cancel the reminder and stop owned services.
 Cancel before a stop-time push. A queued stale wake checks that stop first
 and does no work; it must not rearm itself.
+Task-state evidence and correction bookkeeping are not PR progress. Do not use
+this reminder to retry an unchanged private evidence rejection or to wait for
+authority that the task contract does not require. After merge or close, a
+remaining private bookkeeping issue does not extend PR ownership or create a
+new reminder; resume only on a new actionable instruction or evidence.
 
 The catch-up look
 -----------------

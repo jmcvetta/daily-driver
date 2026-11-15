@@ -236,6 +236,21 @@ It does not complete the task or invent an approval requirement. User stop
 input and an aborted stop event prevent continuation. The adapter does not
 prove arbitrary prose claims about approval or exhausted routes.
 
+When judgment evidence is rejected, inspect the exact rejection and task
+receipt. If the established criterion still permits judgment, obtain a new
+successful observation that contains the reviewer, rationale, and exact
+current artifact identity, then record that evidence against the unchanged
+criterion. A metadata read or a prior failed attempt is not a review. Do not
+amend the criterion or request user authority merely to replace an unsuitable
+observation; material contract changes retain their normal authority gate.
+
+When the same task-state rejection or unsupported stop reaches its correction
+limit, do not schedule a reminder solely to inspect unchanged bookkeeping or
+repeat a request for authority. Keep the failure unresolved until new evidence
+or a real decision can change it. An open PR's CI/review owner reminder remains
+separate and follows `pr`'s current-head continuation rules; merged or closed
+PRs do not justify a new owner reminder.
+
 Enforcement requires direct access to the task-state tool or Omp's active
 `write` device route. If both are unavailable, the adapter records and warns
 about that capability limit instead of demanding an inaccessible tool. It
