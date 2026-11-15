@@ -6,8 +6,20 @@ const nonblank = (value) => typeof value === "string" && Boolean(value.trim());
 export const sourceReference = (source, quote) => ({ sourceId: source.sourceId, quote, sourceClass: source.kind,
 	origin: source.origin ?? null, version: source.version ?? source.fingerprint ?? null });
 
+/**
+ * criterionDefinitionsMatch reports whether two criteria keep the complete definition.
+ *
+ * @param {object} left - The historical or current criterion.
+ * @param {object} right - The criterion to compare.
+ * @returns {boolean} Whether id, description, sources and verification match.
+ */
+export function criterionDefinitionsMatch(left, right) {
+	return JSON.stringify([left.id, left.description, left.sourceRefs.map((ref) => [ref?.sourceId, ref?.quote]), left.verification ?? null]) ===
+		JSON.stringify([right.id, right.description, right.sourceRefs.map((ref) => [ref?.sourceId, ref?.quote]), right.verification ?? null]);
+}
+
 /** Recovery guidance for a failed initial grounding that replaces the auto-captured request criterion. */
-const GROUNDING_RECOVERY = "Initial grounding must keep the auto-captured request criterion: retain `request`, append sourced acceptance criteria, populate the unknown fields, and declare each criterion's verification before execution. A contract revision after execution requires newly bound evidence under the revised contract. Replacing or removing `request` is a material amendment that needs a later original user decision (authoritySource) and removedCriteria with the user-authorized reason.";
+const GROUNDING_RECOVERY = "Initial grounding must keep the auto-captured request criterion: retain `request`, append sourced acceptance criteria, populate the unknown fields, and declare each criterion's verification before execution. Evidence for a criterion remains valid across revisions only while its complete definition is unchanged and the cited revision exists in contract history. Replacing or removing `request` is a material amendment that needs a later original user decision (authoritySource) and removedCriteria with the user-authorized reason.";
 
 /** createContract retains a request without inventing unspecified acceptance or approval requirements. */
 export function createContract(taskId, source) {
@@ -55,7 +67,6 @@ export function amendContract(state, record, reference) {
 	if (!Array.isArray(next.criteria) || !next.criteria.length) throw new Error("A contract needs stable acceptance-criterion ids");
 	const ids = new Set();
 	// Key order and controller-added fields are not requirement changes.
-	const canonical = (criterion) => JSON.stringify([criterion.id, criterion.description, criterion.sourceRefs.map((ref) => [ref?.sourceId, ref?.quote]), criterion.verification ?? null]);
 	const previousById = new Map((state.contract.criteria ?? []).map((criterion) => [criterion.id, criterion]));
 	next.criteria = next.criteria.map((criterion) => {
 		if (!nonblank(criterion?.id) || !nonblank(criterion.description) || ids.has(criterion.id)) throw new Error("Criterion ids must be nonblank and unique");
@@ -79,7 +90,7 @@ export function amendContract(state, record, reference) {
 		}
 		// An unchanged criterion keeps its recorded form; a delegated child may not hold the parent's sources.
 		const previous = previousById.get(criterion.id);
-		return previous && canonical(previous) === canonical(criterion) ? previous : { ...criterion, sourceRefs: criterion.sourceRefs.map(normalize) };
+		return previous && criterionDefinitionsMatch(previous, criterion) ? previous : { ...criterion, sourceRefs: criterion.sourceRefs.map(normalize) };
 	});
 	const previous = state.contract.criteria ?? [];
 	const removed = previous.filter((criterion) => !ids.has(criterion.id));
@@ -88,7 +99,7 @@ export function amendContract(state, record, reference) {
 		const nextCriterion = next.criteria.find((item) => item.id === criterion.id);
 		if (!nextCriterion) return false;
 		// Grounding an unknown verification contract adds detail; changing an established one changes the requirement.
-		const changed = canonical(criterion.verification === undefined ? { ...criterion, verification: nextCriterion.verification } : criterion) !== canonical(nextCriterion);
+		const changed = !criterionDefinitionsMatch(criterion.verification === undefined ? { ...criterion, verification: nextCriterion.verification } : criterion, nextCriterion);
 		if (changed && criterion.id === "request" && criterion.interpretation === true) changedGroundedRequest = true;
 		return changed;
 	});

@@ -199,8 +199,12 @@ names the exact worktree root, commit and dirty-state distinction; executing
 in a different checkout cannot establish evidence for the selected worktree.
 Dirty repository evidence cannot establish completion. File artifacts use
 SHA-256 content identities.
-Contract revisions and changed subjects make old evidence stale without
-deleting it. Check responses must include actual conclusions and the exact
+Evidence recorded under an earlier revision remains applicable only when that
+revision exists in `contractHistory` and its complete criterion definition
+matches the current criterion. A new evidence action may cite an earlier
+execution observation under the same condition; the new evidence record binds
+to the current revision. Changed criterion definitions and unknown revisions
+remain stale. Subjects must still match their current artifact identity. Check responses must include actual conclusions and the exact
 checked `headRefOid`, or `artifactDigest` for a file. A successful tool
 transport is not a check pass. Commands require a native exit status; shell
 output that merely prints a success claim is not an exit status.
