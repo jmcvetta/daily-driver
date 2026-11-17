@@ -33,6 +33,7 @@ PROBES = {
     "routing": "Exercise smoke-routing with the offline reviewer.",
     "reviewer": "ROUTE_REVIEW_CHILD",
     "boundaries": "Exercise offline undertaking request boundaries.",
+    "model_check": "What is 17 times 23? Answer with only the number.",
 }
 
 
@@ -88,8 +89,14 @@ class Model(BaseHTTPRequestHandler):
             REVIEWER_REQUESTS.append(body["model"])
             message = {"role": "assistant", "content": "ROUTE_REVIEW_OK"}
             finish = "stop"
+        elif phase == "model_check":
+            message = {"role": "assistant", "content": "391"}
+            finish = "stop"
         elif phase == "boundaries":
             message = {"role": "assistant", "content": "BOUNDARY_OK"}
+            finish = "stop"
+        elif phase == "routing":
+            message = {"role": "assistant", "content": "Routing fixture complete."}
             finish = "stop"
         else:
             raise AssertionError(f"Unexpected probe phase: {phase}")
@@ -106,6 +113,10 @@ class Model(BaseHTTPRequestHandler):
                 {"type": "message_stop"},
             ]
             payload = "".join(f"event: {chunk['type']}\ndata: {json.dumps(chunk)}\n\n" for chunk in chunks)
+        elif not body.get("stream", False):
+            payload = json.dumps({"id": "routing", "object": "chat.completion", "model": body["model"],
+                                  "choices": [{"index": 0, "message": message, "finish_reason": finish}],
+                                  "usage": {"prompt_tokens": 20, "completion_tokens": 5, "total_tokens": 25}})
         else:
             chunks = [
                 {"id": "task-state", "object": "chat.completion.chunk", "model": FIXTURE.MODEL,
@@ -118,7 +129,7 @@ class Model(BaseHTTPRequestHandler):
         data = payload.encode("utf-8")
         REQUESTS[phase] = index + 1
         self.send_response(200)
-        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Content-Type", "text/event-stream" if body.get("stream", False) else "application/json")
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
