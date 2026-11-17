@@ -1,0 +1,40 @@
+task_id: reviewer-quality-09-task-contract
+description: Review an incomplete account export against its task contract.
+tags: [omp-only, reviewer-quality]
+skip: true
+sandbox:
+  template_sources:
+    - {type: template_dir, path: ../../fixtures/reviewer-quality/shared, mount_point: .fixture}
+    - {type: template_dir, path: ../../fixtures/reviewer-quality/cases/09-task-contract, mount_point: .case}
+    - {type: template_dir, path: ../../fixtures/reviewer-quality/shared/routes, mount_point: routes}
+pre_run:
+  - {command: bash .fixture/setup.sh 09-task-contract, timeout: 30}
+initial_prompt: >-
+  First read `xd://daily_driver_set_session_title`, then invoke it with
+  `{"title":"Task contract review case 09"}`. Read `.review-brief`,
+  `.review-diff`, and `.review-current-diff`. Dispatch exactly one reviewer
+  task for this local review. Give it the brief and local diff verbatim. Require
+  its raw result to be one JSON object with `reviewer_reported_identity`,
+  `verdict`, `artifact`, `contract_revision`, and `findings`. Each finding must
+  name its criterion ID, location, trigger, and impact. Ask the reviewer to
+  inspect the artifacts rather than accept the worker's claim. Call `wait`
+  immediately, then return its raw JSON unchanged. Do not publish to GitHub,
+  review the case yourself, or dispatch again.
+success_criteria:
+  - type: agent_judge
+    description: Detect omitted criteria and unsupported completion claims
+    include_agent_output: true
+    include_tool_calls: true
+    include_reference: false
+    weight: 1
+    max_turns: 5
+    turn_timeout: 120
+    agent: {type: claude-code, model: omp-gpt-6.1-sol, allowed_tools: [], disallowed_tools: [Bash, Read, Glob, Grep, Write, Edit, NotebookEdit, WebFetch, WebSearch, Task, Agent, Skill, Monitor], permission_mode: default}
+    prompt: |
+      The fixture's contract is account-export revision 2. The implementation
+      stringifies IDs and drops ID zero (C2), and exports inactive accounts
+      with nonzero IDs (C3). The single test does not support the worker's claim
+      that all criteria pass. Require a concrete defect, trigger and impact for
+      each C2 and C3, the correct criterion IDs and revision, and artifact SHA.
+      Reject claims that all criteria pass. Do not require uncontracted work.
+      Return exactly {score: 0|1, rationale: string, findings: [strings]}.

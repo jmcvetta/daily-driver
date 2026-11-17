@@ -64,6 +64,24 @@ are not a transcript-only degradation. Give the reviewer the complete history,
 reviewed SHA, and current head; the publication route below turns its findings
 into the submitted threads that `Fix, answer, resolve, push` answers.
 
+Obtain the current contract through the installed session-bound task-state
+command, action `handoff`. Pass the contract, criterion IDs, evidence
+expectations, original requirement references, artifact SHA and complete
+history to the same `codex exec review --base <branch>` invocation using
+`-c developer_instructions=<TOML string>`. The override replaces the configured
+value. Start the Codex app-server with the same configuration and working
+directory. After its `initialize` / `initialized` handshake, call `config/read`
+with `{"includeLayers": false, "cwd": "<task-worktree>"}`. Include the returned
+effective `config.developer_instructions` unchanged before the brief when it is
+set. A successful read with no value needs no prefix. Keep that read private.
+If the read fails, do not discard a possibly configured value. Require the
+contract challenges and criterion-linked findings in
+`SKILL.md`. Do not expose secrets in command arguments or publish private source
+contents. Codex CLI 0.160.0 rejects a
+positional `PROMPT` with `--base`; do not use both. An isolated loopback
+provider observed the developer instruction and native base target in one
+request. It did not establish model behavior or review publication.
+
 **It is a second agent run, and it is billed as one.** `codex exec review`
 starts a fresh session with its own model. That is what makes it a named
 surface carrying its own rubric and publication route, rather than an ad-hoc
@@ -91,6 +109,8 @@ implemented finding is solved and any concrete regressions in that delta. It
 must not perform a full-PR audit, solicit style work, or supply the verdict —
 the session records the result from the delegate's report, never in place of
 it.
+Include the current contract ID and revision and the relevant criteria,
+evidence expectations and original requirement references in that brief.
 
 Publish any findings it raises through this file's `Review history,
 publication, and threads` route below, then record the pass with
@@ -101,6 +121,7 @@ Review verification
 scope reviewed: <sha>
 pass: <n>
 verified: <sha>
+contract: <contract ID and revision>
 findings: <finding ids and dispositions>
 outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>
@@ -235,10 +256,26 @@ SHA and dispositions so later rounds have a stable duplicate check.
 Provenance
 ==========
 
-`codex-cli 0.154.0`, read on 2026-09-12. The subcommands and their flags are
-quoted from `codex review --help` and `codex exec review --help`; `sleep_tool`
-is read from `codex features list`, where it is `stable` and on. **No review
-was run**: that needs credentials this container does not have, so what
-`codex exec review` reports and how it is formatted is not measured here. What
-is measured is its interface — no pull request argument, no effort level, and
-no flag that posts anything.
+The original interface survey used `codex-cli 0.154.0` on 2026-09-12. It
+read `codex review --help`, `codex exec review --help`, and `codex features
+list`. It ran no review, so it did not measure review output or publication.
+
+The later 0.160.0 loopback observation described above exercised the native
+base target and developer-instruction transport with a scripted provider.
+It ended as an interrupted review. It does not establish model findings or
+GitHub publication. Neither observation establishes an effort-level selector,
+pull-request argument, or native publication flag.
+
+The later bounded fixture used Codex CLI 0.160.0 through a host fixture
+controller. It explicitly bound private `HOME` and `CODEX_HOME`, retained the
+installed plugin/provider configuration and developer instructions, used
+`workspace-write` with the default-deny command proxy, and routed both the
+scripted Responses provider and auxiliary plugin-catalog request to controlled
+loopback. The actual `codex exec review --base main` request carried the
+retained revision-2 request/C1/C2 source references and artifact identity. After
+terminal exit 0 and a returned C2 finding, the controller recorded fixture
+COMMENT review 1 without an invented anchor. This proves the host-composed
+source-handoff, native-review and fixture-publication path only. Its judgment
+was scripted; it does not establish model behavior, default nested-shell
+networking, or real GitHub publication. Earlier failed attempts remain
+separate evidence.

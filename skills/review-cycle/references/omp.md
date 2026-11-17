@@ -21,15 +21,23 @@ are not a transcript-only degradation. Give the reviewer the complete history,
 reviewed SHA, and current head; the publication route below turns its findings
 into the submitted threads that `Fix, answer, resolve, push` answers.
 
+Before dispatch, obtain the contract through `daily_driver_task_state`'s
+`handoff` action. Include its current contract and original requirement
+references, criterion IDs, evidence expectations, artifact SHA and history in
+the `reviewer` task brief. Ask for the contract challenges in `SKILL.md` and
+criterion-linked findings. Do not publish private source contents.
+
 
 Fix-delta verification
 ======================
 
 Dispatch exactly one `reviewer` task agent with a bounded brief. Give it the
 pull request, base branch, full-review SHA, current SHA, original findings,
-dispositions, and pass number. Require it to compare the pull request's
-three-dot content at the reviewed SHA with its three-dot content at the current
-SHA, exclude changes attributable only to the base branch, and inspect affected
+dispositions, pass number, and current contract revision. Include the criteria,
+evidence expectations and original references relevant to those findings.
+Require it to compare the pull request's three-dot content at the reviewed SHA
+with its three-dot content at the current SHA, exclude changes attributable only
+to the base branch, and inspect affected
 callers. It reports only whether each implemented finding is solved and any
 concrete regressions in that delta. It must not perform a full-PR audit or offer
 style improvements.
@@ -41,6 +49,7 @@ Review verification
 scope reviewed: <sha>
 pass: <n>
 verified: <sha>
+contract: <contract ID and revision>
 findings: <finding ids and dispositions>
 outcome: <clear|defects|incomplete|unavailable>
 defects: <none|concise list>

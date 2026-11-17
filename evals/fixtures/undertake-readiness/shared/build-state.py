@@ -78,6 +78,14 @@ elif scenario == "currency-stale":
     state["comments"] = []
     state["ci_green_for"] = [head]
     state["expect"].update(ready=False, report="none", notice="existing", no_review_round=True)
+elif scenario == "review-contract":
+    state["comments"] = []
+    state["issue_body"] = (
+        "#24 Add retry and backoff to the uploader\n\n"
+        "Fixture issue version 2. Contract uploader-contract revision 2.\n"
+        "C1: the changed uploader artifact includes `retry`.\n"
+        "C2: the changed uploader artifact includes `backoff`.\n"
+    )
 elif scenario.startswith("service-"):
     state["pr"]["draft"] = False
     state["expect"].update(ready=False, report="none")
