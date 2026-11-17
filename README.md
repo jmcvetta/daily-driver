@@ -77,16 +77,13 @@ or name a skill; the [skill catalog](skills/README.md) explains when to use each
 | Create and organize issues | [issue](skills/issue/SKILL.md), [issue-body](skills/issue-body/SKILL.md), [issue-labels](skills/issue-labels/SKILL.md), [issue-deps](skills/issue-deps/SKILL.md) |
 | Prepare and review pull requests; validate changes and change CI | [pr](skills/pr/SKILL.md), [pr-title](skills/pr-title/SKILL.md), [pr-body](skills/pr-body/SKILL.md), [review-cycle](skills/review-cycle/SKILL.md) |
 | Classify changes and upgrade dependencies | [conventional-commits-type](skills/conventional-commits-type/SKILL.md), [deps](skills/deps/SKILL.md) |
-| Write documentation, follow coding and commit discipline, and identify agent work | [readme](skills/readme/SKILL.md), [provenance](skills/provenance/SKILL.md), [session-title](skills/session-title/SKILL.md) |
+| Write documentation and identify agent work | [readme](skills/readme/SKILL.md), [provenance](skills/provenance/SKILL.md), [session-title](skills/session-title/SKILL.md) |
 
 ## Constitution
 
 The [constitution](rules/constitution.md) keeps universal safety, authority,
 task isolation, evidence, and execution rules always available. Workflow
-details stay in their owning skills. Read `provenance` before code, edits or
-scripts; `pr` before validation or CI; and the relevant `undertake` execution
-policy before delegation, frontier escalation or unfinished stops. These policy
-reads apply without an issue or pull request and do not create one. The
+details stay in their owning skills. The
 [skill catalog](skills/README.md) supplies the
 workflow map. [Runtime integration](docs/harness-integration.md) describes
 delivery, with its dated measurements in

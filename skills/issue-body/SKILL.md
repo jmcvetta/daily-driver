@@ -100,10 +100,8 @@ inapplicable detail is omitted rather than manufactured into boilerplate.
    For research, frontier is the only class exception and does not add the task
    template.
 
-Execution retains these requirements in a versioned task contract. Stable
-criterion IDs belong to that runtime record; this template needs no new
-headings. Later issue edits do not silently cancel unmet criteria in an active
-contract. An issue body is a requirement source, not original user approval.
+An issue body is a requirement source, not original user approval. Later issue
+edits do not silently cancel agreed requirements for active work.
 
 **Specification-backed task variant.** Name the canonical document path, its
 exact operator-approved merge commit on `master`, and the stable requirement

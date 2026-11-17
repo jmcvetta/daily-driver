@@ -202,14 +202,9 @@ undertake it, a `session-title` title where the surface supports one, and
 inherited permissions. The issue is the work statement; do not copy its scope
 into the prompt.
 
-For a resumed task, also carry its retained contract ID/revision, unresolved
-criterion IDs and native original-source locators. Do not substitute the epic's
-contract for the child's contract. Let `undertake` ground a new child's contract
-in the authoritative issue version. A copied dispatch prompt is interpretation,
-not user approval; preserve applicable original authority references and limits.
-Carry the current receipt's criterion dispositions, evidence references,
-unverified work, risks and outstanding approvals in that same handoff.
-Do not copy private source quotes or treat a rendered receipt as completion.
+For a resumed task, carry its outstanding work, risks, applicable original
+authority references and limits. A copied dispatch prompt is interpretation,
+not user approval. Do not copy private source quotes.
 
 The harness denies the first dispatch until this session is titled, as
 `session-title`'s `When to set it` says; `Title the session` precedes this step.

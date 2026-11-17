@@ -33,7 +33,7 @@ restate**. The task branch and execution root live in `task-worktree`, the
 title convention in `pr-title`, the pull request itself in `pr`, the review
 round in `review-cycle`, the model, harness and session record every write
 carries in `provenance`, what is worth asking the user in `judgement-call`,
-and coding discipline in `provenance`. Where a step below names a
+and coding discipline in the constitution. Where a step below names a
 rule one of those owns, it names it as a pointer and cites the owner — a rule
 that acquires a second home here is one whose copy goes stale, and a citation
 is what makes the drift visible. There is no exception.
@@ -485,41 +485,19 @@ ordinary undertakings.
 
 **Own the agreed result through a pause.** A review-ready pull request is the
 result when the assignment stops there; ownership does not add deployment or
-first-use acceptance. A component worker may finish its own contract before an
+first-use acceptance. A component worker may finish its own work before an
 epic's outcome is evidenced. A genuine pause retains responsibility for
 diagnosis, outstanding requirements and the next executable action; it does
 not make the user responsible for finishing the work or imply completion.
 
-**Retain the task contract before implementation.** Use the active harness's
-task-state route to ground the captured request in the issue version actually
-read. Preserve objective, scope, exclusions, constraints, stable criterion IDs,
-evidence/review kinds and approval requirements. Unknown fields stay unknown.
-Keep plans separate. A revised issue cannot silently delete an unmet criterion.
-Material amendments retain the prior revision and applicable original user
-decision; retries and compaction need no new approval. If an initial grounding
-attempt fails because it replaced the auto-captured request criterion, retain
-`request`, append sourced issue criteria, populate the unknown fields, and
-declare each criterion's verification before execution; replacing or removing
-`request` still needs a later original user decision. Evidence from an earlier
-contract revision remains valid only when that revision exists in contract
-history and the full criterion definition is unchanged; new evidence may cite
-its earlier execution observation under the same condition.
+For specification-backed work, retain the exact specification revision and
+allocated requirements. On every base update, compare the governing document
+and allocated IDs against the pinned revision and parent record before affected
+work continues. Report and route a substantive mismatch to `epic`; do not
+silently change requirements. Independent unaffected work may continue.
 
-For specification-backed work bind both the issue version and the exact
-specification revision in the execution contract. Use criterion `sourceRefs`
-and source versions for the allocated requirement text as well as issue
-allocation and exclusions; retain the issue as external task identity.
-Original-user authority still governs material contract amendments. On every
-base update, compare the governing document and allocated IDs against the
-pinned revision and parent record before affected work continues. Report and
-route a substantive mismatch to `epic`; do not silently change criteria.
-Independent unaffected work retains its existing contract.
-
-On resume, recover the existing contract identity and revision before changing
-the plan. Delegation and stop handoffs carry criterion IDs and original-source
-locators, not copied prose presented as approval. The
-[shared runtime contract](../../docs/harness-integration.md#contract-and-execution-state)
-defines the representation. The active harness reference names the tool.
+On resume or delegation, preserve the original scope, constraints and applicable
+authority. Copied handoff prose is not itself approval.
 
 **A direct request authorizes its scoped work and normal verification.** This
 includes focused behavioral evaluation through the configured subscription.
@@ -619,7 +597,7 @@ worked at once, that skill opens a session or a subagent per task, and each of
 them runs this sequence in its own context. Delegation there is what buys the
 parallelism; delegation here duplicates a session that is already on the work.
 
-`provenance` governs coding and commit discipline. `pr` governs validation and
+The constitution governs coding and commit discipline. `pr` governs validation and
 CI execution. This skill owns execution sequencing and operational escalation.
 
 **Architecture documentation is part of implementation.** Before changing the
@@ -805,15 +783,9 @@ independent verification that the gate consumes. The completion notice is one
 of the gate's reads, so a round that closed without posting it is not yet
 ready.
 
-Read the current task receipt before reporting completion. Every required
-criterion must have current evidence of its declared kind, including required
-review and approval. Reuse the existing current-head CI and reviewed-SHA
-observations. Record attributed judgments separately from command/check
-outcomes and agent reports. Stale, failed, missing and truncated evidence
-cannot pass. Use the receipt in the existing report, with essential risks
-and unknowns, not a second hand-written ledger. Keep private sources out of
-public text. The runtime `complete` transition enforces evidence accounting;
-it does not prove arbitrary semantics or replace this readiness gate.
+Before reporting completion, confirm the requested work and required review
+and approval are complete. Report checks, attributed judgments, failures,
+risks and unknowns accurately; keep private sources out of public text.
 
 Once the pull request is ready, finish the Omp undertaking through its harness
 route before reusing the session for another issue.
@@ -1273,9 +1245,6 @@ In order:
    - Reached: <the last step of the sequence completed>.
    - Outstanding: <what is blocked, failing, or unverified — failed checks,
      open review threads, a human action owed — or "nothing known">.
-   - Contract: <stable contract ID and revision, unresolved criterion IDs, and
-     private native source locators; or "unavailable">. Retain the full contract
-     privately. This comment does not amend it or verify acceptance.
    - Environment: <each tool or credential the outstanding work needs, with
      the repository route that sets it up, e.g. "`omp`: `make evals-install
      && make evals-setup-omp`" — or "the checkout alone">.
@@ -1285,8 +1254,6 @@ In order:
    - Stop evidence: <blocked operation and evidence reference, route
      disposition, independent work remaining, and smallest external
      contribution; or "user-requested stop — no blocker claimed">.
-   - Corrective continuations: <unchanged-condition identity and count, or
-     "unavailable">. A resume does not reset an exhausted bound.
    - Resume: <the concrete next action, e.g. "run `/undertake #N`; it resumes
      on the branch above">.
    ```

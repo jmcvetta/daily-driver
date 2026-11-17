@@ -266,11 +266,11 @@ check-scripts:
 check-pr-keep-current:
 	python3 scripts/test-pr-keep-current.py
 
-# Exercise live Omp title and task-state regressions with local providers.
+# Exercise the live Omp title barrier with a local provider.
 # The title barrier needs native issue:// access rather than the eval guard.
 check-omp-embark-title-live:
 	python3 scripts/check-omp-embark-title-live.py
-	python3 scripts/check-omp-task-state-live.py
+	python3 scripts/check-omp-routing-live.py
 
 
 

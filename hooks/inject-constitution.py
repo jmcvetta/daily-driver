@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
-"""Deliver the complete core at session and subagent startup.
+"""Deliver standing instructions at session and subagent startup.
 
 Claude Code and Codex consume `additionalContext` from the same two events.
-Omp's rule provider reads the same constitution body. Workflow details remain
-in their owning skills and are retrieved before the action they govern.
-
-SubagentStart supplies standing context without rewriting delegated prompts
-or copying attachments and tool arguments. The manifest's finite Codex output
-limit must fit the complete rendered core; oversized output would otherwise
-silently remove instructions from the model-visible context.
+Omp's rule provider reads the same constitution body. SubagentStart supplies
+standing context without rewriting delegated prompts or copying attachments.
 
 Usage: inject-constitution.py {session-start,subagent-start}
 """

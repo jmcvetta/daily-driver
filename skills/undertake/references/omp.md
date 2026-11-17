@@ -109,7 +109,7 @@ cancel unfinished routing. When status reports `cancelOwner: invalid`, use
 `/undertaking cancel invalid` for that malformed current-session record.
 Cancellation aborts and waits for local work, releases only the owned lease,
 retires pending handoffs, and revokes owned children. It persists cancellation
-without completing the issue or task state. It preserves transcript, worktree,
+without completing the issue. It preserves transcript, worktree,
 branch, and approval evidence. A later undertaking requires fresh normal
 admission. Repeated cancellation with no owner is a no-op. Use the workflow's
 stop handoff separately when work must be stood down.
@@ -196,71 +196,9 @@ resolved, never from an assumed `origin`.
 Omp uses one branch identity for the local task and remote push branch. The
 Claude primary-held designation exception does not apply to this route.
 
-Task evidence state
--------------------
-
-`daily_driver_task_state` stores the versioned contract and separate execution
-state in private, active-branch session entries. Clear repository work captures
-the request automatically. Call `{action: "status"}` before an amendment,
-another approval request or an unfinished stop. Do not activate an ordinary
-question. Mutating calls take a JSON-string `record`. `status` with
-`record: "{\"sourceId\":\"<id>\"}"` reads retained originals rather than previews.
-The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
-define `contract`, `plan`, `handoff`, `resume`, `evidence`, `receipt` and `complete`.
-
-The record shapes, defaults, source discovery and exact-quote limits are
-documented once, in the device itself: read `xd://daily_driver_task_state`.
-Use the latest external user source returned by `status` to begin, never a
-copied handoff. A later `begin` cannot rewrite bound labels or contracted
-scope; `newTask: true` needs fresh user input, and `resume` keeps the
-contract and correction allowance. Sources must resolve to original user
-input or workflow instructions. Exact quotes establish provenance, not
-semantic permission, so read conditions against the original source before
-acting. `evidence` binds criterion results to execution-time identities.
-`receipt` renders current dispositions without side effects. `complete`
-requires every criterion and declared review/approval; it does not prove
-arbitrary semantic correctness. Reuse current-head CI and reviewed-SHA
-observations instead of rerunning checks to fill the receipt.
-
-The tool never grants permission or replaces harness approval. Original
-sources and tool evidence stay in session entries through compaction and
-process resume. Cross-session handoffs carry source references and applicable
-scope; copied agent text is not an original approval source in a new session.
-Revalidate through the original source or existing workflow authorization.
-
-The `session_stop` adapter checks active unfinished tasks and returns at most
-two corrections for an unchanged observed condition. The count survives
-resume; rewriting record labels does not renew it. Exhaustion persists an
-execution failure and emits an error notification without another model turn.
-It does not complete the task or invent an approval requirement. User stop
-input and an aborted stop event prevent continuation. The adapter does not
-prove arbitrary prose claims about approval or exhausted routes.
-
-When judgment evidence is rejected, inspect the exact rejection and task
-receipt. If the established criterion still permits judgment, obtain a new
-successful observation that contains the reviewer, rationale, and exact
-current artifact identity, then record that evidence against the unchanged
-criterion. A metadata read or a prior failed attempt is not a review. Do not
-amend the criterion or request user authority merely to replace an unsuitable
-observation; material contract changes retain their normal authority gate.
-
-When the same task-state rejection or unsupported stop reaches its correction
-limit, do not schedule a reminder solely to inspect unchanged bookkeeping or
-repeat a request for authority. Keep the failure unresolved until new evidence
-or a real decision can change it. An open PR's CI/review owner reminder remains
-separate and follows `pr`'s current-head continuation rules; merged or closed
-PRs do not justify a new owner reminder.
-
-Enforcement requires direct access to the task-state tool or Omp's active
-`write` device route. If both are unavailable, the adapter records and warns
-about that capability limit instead of demanding an inaccessible tool. It
-does not enable tools or invent a human blocker; the shared continuation rule
-still applies.
-
-Omp's `input` distinguishes original external input from scheduled reminders
-and tool output. Native child sessions retain delegated scope as interpretation,
-not new user authority. Their separate session ledgers cannot mutate the
-parent's contract. Other harnesses use their own proven lifecycle adapters.
+Retain applicable original authorization and its limits through delegation,
+resume and compaction. Copied prose grants no approval. Never publish private
+sources in issue or PR comments.
 
 
 The milestone

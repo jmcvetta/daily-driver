@@ -74,31 +74,9 @@ leaves it unchanged. Post the complete answer with
 with `mcp__github__issue_write` only when `issue-body`'s research completion
 test holds. Failed or incomplete research stays open.
 
-Authorization and unfinished stops
-----------------------------------
-
-Use `mcp__daily-driver__task_state` with `action` and an optional JSON-string
-`record`. The [shared contract operations](../../../docs/harness-integration.md#task-state-operations)
-define every action and record: `status`, `contract`, `plan`, `handoff`,
-`resume`, `authorization`, `blocker`, `evidence`, `receipt` and `complete`.
-Recover the contract before changing a resumed task's plan. `complete`
-requires criterion evidence, not a summary alone. Use `receipt` in the existing
-PR/handoff format; reuse recorded current-head checks and attributed review.
-
-This route requires Claude Code native mods support, terminal version 2.1.287
-or later; the installed-runtime proof used 2.1.316. The mod registers the tool,
-captures engine-stamped `prompt.submit.origin` and records aborted turns through
-`turn.complete.isAborted`. Settings `UserPromptSubmit` has no safe origin
-discriminator and is not used as user authority. SDK-host input is interpretation,
-not user approval.
-
-Contracts and original sources persist privately under `CLAUDE_CONFIG_DIR`
-(default `~/.claude`). The controller restores scope, criterion IDs, sources
-and correction bounds on resume and compaction. Delegation retains native
-source locators; copied prose grants no approval. Cancellation suppresses
-pending corrections. Never publish private quotes in issue or PR comments.
-The [runtime integration](../../../docs/harness-integration.md#hook-harness-boundary)
-records packaging, prerequisites and the bounded native-event proof.
+Retain applicable original authorization and its limits through delegation,
+resume and compaction. Copied prose grants no approval. Never publish private
+sources in issue or PR comments.
 
 
 The implementor

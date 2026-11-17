@@ -142,7 +142,7 @@ fixtures, paid model runs, broader triggers, or recurring checks.
 Never bypass or remove validation for cost or effort. Only explicit owner
 direction may reduce CI scope or spending: disclose lost coverage; never claim
 removed or unrun checks passed, hide failures, weaken security, or skip required
-tests. `provenance` owns the application-test and script-execution contract.
+tests. The constitution owns the application-test and script-execution contract.
 
 
 Recurring CI costs

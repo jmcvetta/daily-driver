@@ -421,8 +421,7 @@ not just the agent's stated intention. Resume and delegation history in these
 cases is supplied in the initial prompt; these cases do not prove actual
 compaction, session storage or delegation delivery. Their restricted tool
 lists exclude the `write` device route, so the comparison measures workflow
-decisions and actual fixture actions, not stop-controller enforcement. The
-installed-runtime check below covers that separate boundary.
+decisions and actual fixture actions.
 
 Issue #835 adds task-authoring, requested-plugin, and blocked-reminder cases.
 The fixture records local operations, not real service changes. The first
@@ -435,13 +434,6 @@ passed; that rerun used a dirty checkout. Each case ran once with requested
 Omp `openai-codex/gpt-6.1-sol` subject and judge. The subject identity was
 unreported. These small runs do not establish fleet reliability.
 
-The existing `make check-omp-embark-title-live` suite runs the title barrier
-and task-state regressions against installed Omp with local scripted providers.
-The task-state scenario checks persisted approval, two corrective continuations,
-process resume and an actual RPC abort. The runtime regression checks in
-`scripts/check-omp-extension.mjs` cover source rejection, scope, revocation,
-expiry, fresh confirmation, independent work, compaction context and cancellation.
-These checks cover the shipped runtime, not the evaluation grader.
 
 The same installed-Omp check schedules a reminder after an owner turn settles.
 It verifies that the new turn reads an offline maintenance-conflict fixture and
