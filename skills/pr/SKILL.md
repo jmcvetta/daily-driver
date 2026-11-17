@@ -154,21 +154,32 @@ opening a PR.
 
 New CI checks add recurring execution, review, failure-triage and maintenance
 costs. More checks are not inherently better. Prefer established checks and
-necessary regression coverage in existing suites. Do not add a job, workflow,
-tool, matrix entry or standalone check when existing tooling can catch the
-defect; placing a standalone check inside an existing job does not change this.
+necessary regression coverage. Routine CI integration for approved code is
+part of delivery, not an additional enforcement proposal. Select new features,
+apps, or packages for the repository's established test, typecheck, build, and
+coverage commands; add them to existing path or package selection; and follow
+established per-component job patterns without separate approval. This remains
+routine integration when it adds recurring runner time or instantiates a
+package-specific job required by the repository's convention. Adding package
+membership to an existing package matrix does not add a matrix dimension; a
+new dimension adds a factor such as an operating system, runtime version, or
+browser.
 
-Before proposing an additional check, name the concrete failure it catches and
-the gap in existing coverage. Extra confidence, best practice or completeness
-alone is not a reason. Keep enforcement proportional to the task; do not make
-a task-local problem repository-wide or keep a one-time migration check
-permanently without a recurring need.
+Do not add a job, workflow, tool, standalone check, or matrix dimension when
+existing tooling can catch the defect; placing a standalone check inside an
+existing job does not change this. Before proposing additional enforcement,
+name the concrete failure it catches and the gap in existing coverage. Extra
+confidence, best practice, or completeness alone is not a reason. Keep
+enforcement proportional to the task; do not make a task-local problem
+repository-wide or keep a one-time migration check permanently without a
+recurring need.
 
-Paid services, recurring checks, broader triggers, or matrix dimensions need
-user approval for the named expansion, not general feature or green-CI approval.
-Do not ask again when authorized. Ordinary implementation and regression
-coverage in existing suites need no new approval.
-
+Paid services, broader triggers, additional matrix dimensions, new kinds of
+enforcement, and redundant or standalone checks beyond normal implementation
+validation need user approval for the named expansion, not general feature or
+green-CI approval. Do not ask again when authorized. Ordinary tests for
+approved new or changed code, bug-fix regression coverage, and their routine
+integration in established CI need no separate approval.
 Proposals use only these three short fields: **Failure caught**, **Existing
 coverage gap**, and **Recurring cost**. State trigger frequency,
 runner/matrix footprint, expected runtime, external charges and what the
