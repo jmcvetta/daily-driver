@@ -28,8 +28,8 @@ missing review result is an incomplete review, not a clean verdict.
 The helper reads the checkout's effective `developer_instructions`, adds the
 constitution without printing either instruction set, and starts a separate
 review thread. It computes the Git merge base and uses a native custom review
-target with the same merge-base comparison instruction as Codex's base-branch
-review. Review history is user-role reference data, not developer instructions.
+target to request the committed three-dot comparison. Review history is
+user-role reference data, not developer instructions.
 This custom target is needed because Codex 0.160.0's base-branch review drops
 preloaded user history. The helper does not modify Codex configuration.
 
@@ -244,9 +244,9 @@ SHA and dispositions so later rounds have a stable duplicate check.
 Provenance
 ==========
 
-Codex 0.160.0: an isolated loopback scripted-provider experiment with a
-non-empty committed diff exercised `config/read`, `thread/start`, and
-`review/start` with a `baseBranch` target. The request carried both synthetic
-operator instructions and the complete constitution; the complete scripted
-review text returned to the caller. This establishes delivery and output
+Codex 0.160.0: isolated loopback scripted-provider experiments with a non-empty
+committed diff exercised `config/read`, `thread/start`, and `review/start`.
+The custom review request carried synthetic operator instructions and the
+complete constitution in developer context, with review history in user
+context. The complete scripted review text returned to the caller. This proves
 transport, not the quality or correctness of a model review.

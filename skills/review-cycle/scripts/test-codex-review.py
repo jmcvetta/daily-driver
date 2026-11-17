@@ -31,3 +31,4 @@ with tempfile.TemporaryDirectory(prefix='codex-review-fixture-') as tmp:
  messages=[item for request in captured for item in request.get('input',[]) if item.get('type')=='message']
  assert any(item.get('role')=='user' and 'SYNTHETIC_HISTORY' in json.dumps(item) for item in messages)
  assert all('SYNTHETIC_HISTORY' not in json.dumps(item) for item in messages if item.get('role') in ('developer','system'))
+ assert any(item.get('role')=='user' and f'git diff {base}...HEAD' in json.dumps(item) for item in messages)
