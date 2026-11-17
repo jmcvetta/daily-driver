@@ -33,7 +33,7 @@ restate**. The task branch and execution root live in `task-worktree`, the
 title convention in `pr-title`, the pull request itself in `pr`, the review
 round in `review-cycle`, the model, harness and session record every write
 carries in `provenance`, what is worth asking the user in `judgement-call`,
-and coding discipline in `provenance`. Where a step below names a
+and coding discipline in the constitution. Where a step below names a
 rule one of those owns, it names it as a pointer and cites the owner — a rule
 that acquires a second home here is one whose copy goes stale, and a citation
 is what makes the drift visible. There is no exception.
