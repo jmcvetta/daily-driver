@@ -1,6 +1,6 @@
 {
   "name": "daily-driver",
-  "description": "Daily Driver workflows and source-anchored task contracts for Codex.",
+  "description": "Daily Driver workflows for Codex.",
   "skills": "./skills/",
-  "hooks": ["./hooks/hooks.json", "./hooks/task-state-codex.json"]
+  "hooks": ["./hooks/hooks.json"]
 }

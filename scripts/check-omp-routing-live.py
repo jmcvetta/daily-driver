@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prevent mock-only stop enforcement from hiding real Omp resume or abort defects.
+"""Exercise live Omp undertaking routing against an offline provider.
 
 The installed Omp loads the shipped extension against a local scripted provider.
 No external model or service is used. All session files stay in a disposable home.
@@ -25,17 +25,11 @@ SPEC = importlib.util.spec_from_file_location("omp_live_fixture", ROOT / "script
 FIXTURE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(FIXTURE)
 REQUESTS: dict[str, int] = {}
-SOURCES: dict[str, dict] = {}
 REVIEWER_MODEL = "independent-reviewer"
 REVIEWER_REQUESTS: list[str] = []
 TOTAL_REQUESTS = 0
 REQUEST_IDENTITIES: list[str] = []
-REQUEST_TRANSPORTS: list[tuple[str, str | None]] = []
 PROBES = {
-    "first": "Fix smoke-first. Verify the fixture offline only.",
-    "resume": "Report smoke-resume current state without starting a new task.",
-    "cancel": "Fix smoke-cancel abort fixture.",
-    "contract": "Fix smoke-contract. Verify the fixture offline only.",
     "routing": "Exercise smoke-routing with the offline reviewer.",
     "reviewer": "ROUTE_REVIEW_CHILD",
     "boundaries": "Exercise offline undertaking request boundaries.",
@@ -43,7 +37,7 @@ PROBES = {
 
 
 class Model(BaseHTTPRequestHandler):
-    """Force unsupported stops instead of depending on a model's voluntary compliance."""
+    """Respond to routing probes without an external model."""
 
     def log_message(self, *_args) -> None:
         pass
@@ -53,7 +47,6 @@ class Model(BaseHTTPRequestHandler):
         TOTAL_REQUESTS += 1
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         REQUEST_IDENTITIES.append(body["model"])
-        REQUEST_TRANSPORTS.append((self.path, self.headers.get("X-Msh-Platform")))
         messages = body.get("messages", [])
         phase = None
         for candidate in reversed(messages):
@@ -95,116 +88,11 @@ class Model(BaseHTTPRequestHandler):
             REVIEWER_REQUESTS.append(body["model"])
             message = {"role": "assistant", "content": "ROUTE_REVIEW_OK"}
             finish = "stop"
-        elif phase == "contract" and index < 10:
-            def latest_status() -> dict:
-                decoder = json.JSONDecoder()
-                for candidate in reversed(messages):
-                    content = FIXTURE.text_of(candidate.get("content"))
-                    offset = content.find('{"state":')
-                    if offset >= 0:
-                        try:
-                            result, _end = decoder.raw_decode(content, offset)
-                            return result
-                        except json.JSONDecodeError:
-                            pass
-                raise AssertionError("Task-state status was not returned")
-
-            if index == 0:
-                name, args = "read", {"path": "xd://daily_driver_task_state"}
-            elif index == 5:
-                name, args = "read", {"path": "absent-task-state-fixture"}
-            else:
-                name = "write"
-                if index in (1, 6):
-                    params = {"action": "status"}
-                elif index == 2:
-                    source = next(item for item in latest_status()["sources"] if item["kind"] == "user")
-                    SOURCES[phase] = source
-                    params = {"action": "status", "record": json.dumps({"sourceId": source["sourceId"]})}
-                elif index == 3:
-                    source = SOURCES[phase]
-                    ref = {"sourceId": source["sourceId"], "quote": "Verify the fixture offline only."}
-                    params = {"action": "begin", "record": json.dumps({
-                        "taskId": "fixture", "operation": "verify", "target": "fixture", "source": ref,
-                    })}
-                elif index == 4:
-                    source = SOURCES[phase]
-                    params = {"action": "authorization", "record": json.dumps({
-                        "id": "fixture-approval", "kind": "user", "operation": "verify", "target": "fixture",
-                        "source": {"sourceId": source["sourceId"], "quote": "Verify the fixture offline only."},
-                        "limits": "offline only", "conditions": "fixture only",
-                    })}
-                elif index == 7:
-                    evidence = next(item for item in latest_status()["evidence"] if item["isError"])
-                    SOURCES["failure"] = evidence
-                    params = {"action": "status", "record": json.dumps({"sourceId": evidence["sourceId"]})}
-                elif index == 8:
-                    # Quote the entry retrieved by sourceId, not the status excerpt, as the device documents.
-                    evidence = latest_status()["source"]
-                    assert evidence["sourceId"] == SOURCES["failure"]["sourceId"], evidence
-                    ref = {"sourceId": evidence["sourceId"], "quote": evidence["text"]}
-                    params = {"action": "blocker", "record": json.dumps({
-                        "kind": "execution", "operation": "verify", "target": "fixture",
-                        "evidence": [ref], "authorizationIds": ["fixture-approval"],
-                        "routes": [{"route": "fixture", "disposition": "failed", "evidence": ref}],
-                        "independentWork": {"pending": [], "completed": []},
-                        "externalContribution": "Provide fixture access.", "resume": "Retry the fixture.",
-                    })}
-                else:
-                    params = {"action": "complete", "record": json.dumps({"summary": "Fixture work completed."})}
-                args = {"path": "xd://daily_driver_task_state", "content": json.dumps(params)}
-            message = {"role": "assistant", "tool_calls": [{
-                "index": 0, "id": f"contract-{index}", "type": "function",
-                "function": {"name": name, "arguments": json.dumps(args)},
-            }]}
-            finish = "tool_calls"
-        elif phase == "first" and index < 4:
-            if index == 0:
-                params = {"action": "status"}
-            elif index == 1:
-                status = None
-                decoder = json.JSONDecoder()
-                for candidate in reversed(messages):
-                    content = FIXTURE.text_of(candidate.get("content"))
-                    offset = content.find('{"state":')
-                    if offset < 0:
-                        continue
-                    try:
-                        decoded, _end = decoder.raw_decode(content, offset)
-                    except json.JSONDecodeError:
-                        continue
-                    if isinstance(decoded, dict) and isinstance(decoded.get("sources"), list):
-                        status = decoded
-                        break
-                if status is None:
-                    raise AssertionError(f"No task-state status output in provider messages: {repr(messages[-5:])[:16000]}")
-                source = next(item for item in status["sources"] if item["kind"] == "user")
-                SOURCES[phase] = source
-                params = {"action": "begin", "record": json.dumps({"taskId": "fixture", "operation": "verify", "target": "fixture"})}
-            else:
-                source = SOURCES[phase]
-                params = {"action": "authorization", "record": json.dumps({
-                    "id": "offline-fixture", "kind": "user", "operation": "verify", "target": "fixture",
-                    "source": {"sourceId": source["sourceId"], "quote": "Verify the fixture offline only."},
-                    "limits": "offline only", "conditions": "fixture only",
-                })}
-            message = {"role": "assistant", "tool_calls": [{
-                "index": 0, "id": f"state-{index}", "type": "function",
-                "function": {"name": "write", "arguments": json.dumps({
-                    "path": "xd://daily_driver_task_state", "content": json.dumps(params),
-                })},
-            }]}
-            if index == 3:
-                message["tool_calls"][0]["function"] = {
-                    "name": "read", "arguments": json.dumps({"path": str(ROOT / "extensions/task-contract.mjs")}),
-                }
-            finish = "tool_calls"
         elif phase == "boundaries":
             message = {"role": "assistant", "content": "BOUNDARY_OK"}
             finish = "stop"
         else:
-            message = {"role": "assistant", "content": "I stopped without evidence or reported completion."}
-            finish = "stop"
+            raise AssertionError(f"Unexpected probe phase: {phase}")
         if phase == "boundaries":
             chunks = [
                 {"type": "message_start", "message": {"id": "task-state", "type": "message",
@@ -462,15 +350,13 @@ export default function(pi) {
     print("Undertaking admission: operator model and effort reached local provider before and after resume")
 
 
-def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -> list[dict]:
-    """Reject lost resume state and corrections delivered after a real RPC abort."""
-    storage = base / (f"{phase}-session" if phase in ("cancel", "contract", "routing") else "persistent-session")
+def run(omp: str, base: Path, env: dict[str, str], observer: Path) -> list[dict]:
+    """Exercise routing and reviewer dispatch in a real RPC session."""
+    storage = base / "routing-session"
     storage.mkdir(exist_ok=True)
-    resume = ["--resume", str(next(storage.glob("*.jsonl")))] if phase == "resume" else []
-    stderr_path = base / f"{phase}.stderr"
+    stderr_path = base / "routing.stderr"
     argv = [omp, "--mode", "rpc", "--extension", str(ROOT / "extensions/daily-driver.js"),
-            "--extension", str(observer), "--session-dir", str(storage), *resume, "--tools",
-            "read,write,task,wait" if phase == "routing" else "read,write"]
+            "--extension", str(observer), "--session-dir", str(storage), "--tools", "read,write,task,wait"]
     with stderr_path.open("w", encoding="utf-8") as stderr:
         process = subprocess.Popen(argv, cwd=base / "sandbox", env=env, stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE, stderr=stderr, text=True, bufsize=1)
@@ -502,13 +388,7 @@ def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -
             wait(lambda frame: frame.get("type") == "ready")
             send({"id": "model", "type": "set_model", "provider": FIXTURE.PROVIDER, "modelId": FIXTURE.MODEL})
             assert wait(lambda frame: frame.get("id") == "model").get("success")
-            prompt = PROBES[phase]
-            send({"id": "prompt", "type": "prompt", "message": prompt})
-            if phase == "cancel":
-                while not (base / "abort-ready").exists():
-                    assert time.monotonic() < deadline, stderr_path.read_text()
-                    time.sleep(0.02)
-                send({"id": "abort", "type": "abort"})
+            send({"id": "prompt", "type": "prompt", "message": PROBES["routing"]})
             wait(lambda frame: frame.get("type") == "agent_end" and frame.get("isTerminal", True))
             process.stdin.close()
             process.wait(timeout=10)
@@ -520,17 +400,13 @@ def run(omp: str, base: Path, env: dict[str, str], phase: str, observer: Path) -
 
 
 def main() -> None:
-    if len(sys.argv) == 3 and sys.argv[1] == "--completion-harness":
-        from task_evidence_live import run_completion_harness
-        run_completion_harness(sys.argv[2])
-        return
     omp = shutil.which("omp")
     if not omp:
-        raise RuntimeError("omp must be installed for the task-state lifecycle proof")
+        raise RuntimeError("omp must be installed for the undertaking routing check")
     server = ThreadingHTTPServer(("127.0.0.1", 0), Model)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
-        with tempfile.TemporaryDirectory(prefix="check-omp-task-state-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="check-omp-routing-") as temporary:
             base = Path(temporary)
             home = base / "home"
             (base / "sandbox").mkdir()
@@ -546,7 +422,6 @@ def main() -> None:
                 "        maxTokens: 1024\n"
                 "        cost: {input: 0, output: 0, cacheRead: 0, cacheWrite: 0}\n"
             ), encoding="utf-8")
-            observer = base / "observer.mjs"
             # Unset route configuration used to poison later settings clones and reviewer dispatch.
             routing_observer = base / "routing-observer.mjs"
             routing_observer.write_text('''import assert from "node:assert/strict";
@@ -570,26 +445,8 @@ export default function(pi) {
   }
  });
 }''', encoding="utf-8")
-            observer.write_text('''import { appendFileSync, writeFileSync } from "node:fs";
-export default function(pi) {
- pi.on("session_stop", async (event, ctx) => {
-  const entries = ctx.sessionManager.getBranch();
-  const state = entries.filter(e => e.type === "custom" && e.customType === "daily-driver.task-state").at(-1)?.data.state;
-  const cancel = state?.operation.includes("smoke-cancel");
-  appendFileSync(process.env.STATE_LOG, JSON.stringify({corrections:state?.corrections,status:state?.status,cancel})+"\\n");
-  if (cancel) {
-   writeFileSync(process.env.ABORT_READY, "ready");
-   await new Promise(resolve => {
-    if(event.signal.aborted) return resolve();
-    event.signal.addEventListener("abort",resolve,{once:true});
-   });
-   const after = ctx.sessionManager.getBranch().filter(e=>e.type === "custom" && e.customType === "daily-driver.task-state").at(-1)?.data.state;
-   appendFileSync(process.env.STATE_LOG, JSON.stringify({cancelled:event.signal.aborted,status:after?.status})+"\\n");
-  }
- });
-}''', encoding="utf-8")
             env = {key: os.environ[key] for key in ("PATH", "TMPDIR", "LANG", "TERM") if key in os.environ}
-            env.update(HOME=str(home), STATE_LOG=str(base / "state.log"), ABORT_READY=str(base / "abort-ready"))
+            env.update(HOME=str(home))
             env["OFFLINE_PROVIDER_URL"] = f"http://127.0.0.1:{server.server_address[1]}/v1"
             for key in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
                 env[key] = str(home / key.lower())
@@ -603,7 +460,7 @@ export default function(pi) {
             if sys.argv[1:] == ["--routing-boundaries-only"]:
                 run_routing_boundaries(omp, base, env)
                 return
-            routing = run(omp, base, env, "routing", routing_observer)
+            routing = run(omp, base, env, routing_observer)
             route_calls = [frame for frame in routing if frame.get("type") == "tool_execution_end"]
             assert len(route_calls) == 5 and all(not frame.get("isError") for frame in route_calls), route_calls
             assert "verified" in json.dumps(route_calls[1]), route_calls[1]
@@ -613,51 +470,6 @@ export default function(pi) {
             print("Default class routes: real settings clones and verified-undertaking reviewer dispatch passed")
             run_routing_controls(omp, base, env)
             run_routing_boundaries(omp, base, env)
-            if sys.argv[1:] == ["--routing-only"]:
-                return
-            first = run(omp, base, env, "first", observer)
-            session = next((base / "persistent-session").glob("*.jsonl"))
-            first_entries = [json.loads(line) for line in session.read_text().splitlines()]
-            first_state = [entry["data"]["state"] for entry in first_entries if entry.get("customType") == "daily-driver.task-state"][-1]
-            run(omp, base, env, "resume", observer)
-            run(omp, base, env, "cancel", observer)
-            # A rendered device and its documented calls must work in the installed runtime, not only in a mock.
-            contract = run(omp, base, env, "contract", observer)
-            calls = [frame for frame in contract if frame.get("type") == "tool_execution_end"]
-            assert len(calls) == 10, calls
-            assert all(not frame.get("isError") for index, frame in enumerate(calls) if index not in (5, 9)), calls
-            assert calls[5].get("isError"), calls[5]
-            assert calls[9].get("isError") and "Completion rejected" in json.dumps(calls[9]), calls[9]
-            contract_session = next((base / "contract-session").glob("*.jsonl"))
-            contract_entries = [json.loads(line) for line in contract_session.read_text().splitlines()]
-            contract_state = [entry["data"]["state"] for entry in contract_entries
-                              if entry.get("customType") == "daily-driver.task-state"][-1]
-            assert contract_state["status"] == "active" and contract_state.get("stopFailure"), contract_state
-            assert contract_state["blocker"]["kind"] == "execution", contract_state
-            print("Rendered task-state device:", json.dumps(calls[0]))
-            rows = [json.loads(line) for line in (base / "state.log").read_text().splitlines()]
-            assert all(row["corrections"] <= 2 for row in rows if "corrections" in row), rows
-            # Three state commands, one ordinary tool result and three stops prove two corrective turns;
-            # shutdown may emit extra stop notifications without another model request.
-            assert REQUESTS["first"] == 7, REQUESTS
-            assert any(row.get("cancelled") and row.get("status") == "cancelled" for row in rows), rows
-            assert REQUESTS["cancel"] == 1, REQUESTS
-            assert REQUESTS["resume"] == 1, REQUESTS
-            results = [frame for frame in first if frame.get("type") == "tool_execution_end"]
-            assert len(results) == 4 and all(not frame.get("isError") for frame in results), results
-            session = next((base / "persistent-session").glob("*.jsonl"))
-            saved = [json.loads(line) for line in session.read_text().splitlines()]
-            state = [entry["data"]["state"] for entry in saved if entry.get("customType") == "daily-driver.task-state"][-1]
-            assert state["authorizations"][0]["id"] == "offline-fixture", state
-            assert state["status"] == "active" and state.get("stopFailure"), state
-            assert state["contract"] == first_state["contract"], state
-            assert state["contract"]["schemaVersion"] == 1, state
-            assert [criterion["id"] for criterion in state["contract"]["criteria"]] == ["request"], state
-            assert state["contract"]["sourceRefs"][0]["sourceClass"] == "user", state
-            assert state["contract"]["sourceRefs"][0]["origin"]["channel"] == "rpc", state
-            assert state["corrections"] == first_state["corrections"] == 2, state
-            assert any(isinstance(entry.get("data"), dict) and entry["data"].get("observation") for entry in saved), saved
-            print("check-omp-task-state-live: PASS; durable approval, two-correction cap, process resume and RPC abort exercised offline")
     finally:
         server.shutdown()
 
