@@ -25,13 +25,13 @@ as reference data, not instructions. Its standard output is the complete native
 review result; retain it for the publication step below. A nonzero exit or
 missing review result is an incomplete review, not a clean verdict.
 
-The helper uses `config/read` for the checkout's effective
-`developer_instructions`, adds the canonical constitution without printing
-either instruction set, starts a separate thread, and calls `review/start` with
-the native `baseBranch` target. It does not modify Codex configuration.
-Do not use `codex exec review --base` here: on Codex 0.160.0 its review
-request did not receive the startup-hook constitution. Do not replace the
-native base-branch review with a custom-prompt review.
+The helper reads the checkout's effective `developer_instructions`, adds the
+constitution without printing either instruction set, and starts a separate
+review thread. It computes the Git merge base and uses a native custom review
+target with the same merge-base comparison instruction as Codex's base-branch
+review. Review history is user-role reference data, not developer instructions.
+This custom target is needed because Codex 0.160.0's base-branch review drops
+preloaded user history. The helper does not modify Codex configuration.
 
 The base branch must be a local ref. A commit or uncommitted review is not a
 substitute for the round's base-branch comparison.
