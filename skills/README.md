@@ -51,7 +51,7 @@ limits; a shared skill does not imply identical capabilities on every harness.
 | ----- | -------------- |
 | [readme](readme/SKILL.md) | Explain what a project or directory provides and how to use it. |
 | [judgement-call](judgement-call/SKILL.md) | Distinguish engineering choices the agent should settle from tradeoffs that need the user's decision. |
-| [provenance](provenance/SKILL.md) | Read coding and commit discipline before code, edits or scripts; attribute GitHub contributions and commits. |
+| [provenance](provenance/SKILL.md) | Attribute GitHub contributions and commits; coding and commit discipline live in the constitution. |
 | [session-title](session-title/SKILL.md) | Give the current session a short, recognizable title. |
 
 The [constitution](../rules/constitution.md) keeps universal safety, authority,

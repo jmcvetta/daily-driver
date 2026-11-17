@@ -597,7 +597,7 @@ worked at once, that skill opens a session or a subagent per task, and each of
 them runs this sequence in its own context. Delegation there is what buys the
 parallelism; delegation here duplicates a session that is already on the work.
 
-`provenance` governs coding and commit discipline. `pr` governs validation and
+The constitution governs coding and commit discipline. `pr` governs validation and
 CI execution. This skill owns execution sequencing and operational escalation.
 
 **Architecture documentation is part of implementation.** Before changing the
