@@ -49,12 +49,9 @@ The body of a pull request, whether it is being opened or rewritten. In order:
   how the change was made, how it was verified, and the material risk or
   uncertainty — said once. What the opening line and `Summary` already say is
   not repeated here.
-  Where task state is available, use its current `receipt` for criterion
-  dispositions and evidence references. Keep unverified requirements, stale
-  results, risks and outstanding approvals visible. Distinguish observed
-  checks, attributed judgments and agent reports. Redact private source
-  quotes and sensitive local details. Do not repeat the receipt in another
-  summary or infer completion from rendering it.
+  Keep unverified requirements, stale results, risks and outstanding approvals
+  visible. Distinguish observed checks, attributed judgments and agent reports.
+  Do not publish private source quotes or sensitive local details.
   For a specification-backed task, identify the document path, exact delivered
   specification commit and requirement IDs, and distinguish evidence of
   delivery from unverified allocation.

@@ -14,7 +14,6 @@
     "conventional-commits"
   ],
   "agents": [],
-  "hooks": "./hooks/task-state-claude.json",
   "dependencies": [
     "worktrunk"
   ]

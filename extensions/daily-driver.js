@@ -2,13 +2,10 @@
  * Omp runtime adapter for daily-driver.
  *
  * This is the Oh My Pi half of the daily-driver plugin. The common guards
- * correspond to `hooks/hooks.json`. Native Omp session events, Claude mods
- * and Codex-specific hooks share the task-contract controller while retaining
- * their own input-origin, persistence and cancellation adapters.
- * The harnesses share the skills and marketplace catalog
+ * correspond to `hooks/hooks.json`. The harnesses share the skills and marketplace catalog
  * (`.claude-plugin/marketplace.json`); there is no separate Omp catalog.
  *
- * Five jobs:
+ * Four jobs:
  *
  * 1. Block Omp's `ask` tool, the way Claude Code denies `AskUserQuestion`.
  *    The model is told not to retry and to ask the question in chat instead,
@@ -34,13 +31,9 @@
  *    `daily_driver_get_session` is part of the runtime surface consumed by
  *    harness-portable skills.
  *
- * 5. Retain private task and authorization evidence and correct unsupported
- *    unfinished stops through the bounded task-state controller.
- *
  * This file has no third-party dependencies: it runs as a plain `.js` module
  * under Omp, with no build step and no package install between this repo and
- * a user's `~/.omp`. Trigger maps stay in the factory closure; durable task
- * evidence stays on the active session branch. Neither is process-global.
+ * a user's `~/.omp`. Trigger maps stay in the factory closure.
  */
 
 import { execFileSync } from "node:child_process";
@@ -49,7 +42,6 @@ import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { installModelClassDefaults, readModelClassRoutes } from "./role-default-helper.mjs";
 import { installUndertakingRouting } from "./undertaking-routing.mjs";
-import { installTaskState } from "./task-state.mjs";
 
 /**
  * What the model is told when it calls Omp's `ask` tool. Mirrors the wording
@@ -2354,7 +2346,6 @@ function newTriggerId() {
 /** The `daily-driver` Omp extension factory. */
 export default function dailyDriverExtension(pi, { modelTagsSetting } = {}) {
 	const z = pi.zod;
-	installTaskState(pi);
 
 	const initializedSettings = new WeakSet();
 	const routingSettings = new Map();

@@ -4,6 +4,8 @@
 
 ### Changed
 
+* Remove epic #800's task-contract and completion-evidence machinery and restore direct standing-instruction delivery across supported harnesses ([#895](https://github.com/jmcvetta/daily-driver/issues/895)).
+
 * Require criterion-level completion evidence and render current change receipts across Omp, Claude Code and Codex; retain unresolved requirements, stale identities and attributed judgments instead of accepting summary-only completion, and preserve startup failures and case-normalized failed check outcomes in receipts ([#801](https://github.com/jmcvetta/daily-driver/issues/801)).
 * Preserve source-anchored, versioned task contracts and separate execution plans across Omp, Claude Code native mods and Codex CLI hooks; retain criterion IDs, amendment history, authority references and cancellation bounds through resume and delegation ([#802](https://github.com/jmcvetta/daily-driver/issues/802)).
 * Consolidate undertaking admission and worker checks around concrete route decisions; remove redundant routing-procedure injection while retaining same-batch mutation protection, truthful worker verification and the final unauthorized-request guard ([#829](https://github.com/jmcvetta/daily-driver/issues/829)).

@@ -219,10 +219,11 @@ def check_wiring(errors: list[str]) -> None:
                 f"({command!r}); D12 is one file read by exact path"
             )
         limit = handlers[0].get("additionalContextLimit")
-        if limit != 5000:
+        required = len(constitution_body().encode("utf-8"))
+        if not isinstance(limit, int) or limit < required:
             errors.append(
-                f"hooks/hooks.json: {event} needs its finite 5000-token cap "
-                "to avoid truncated context"
+                f"hooks/hooks.json: {event} context limit cannot accommodate "
+                "the complete constitution"
             )
 
     # One script for every event is what makes "the same file, by exact path"
@@ -271,7 +272,7 @@ def check_wiring(errors: list[str]) -> None:
 
 
 def check_delivery(errors: list[str]) -> None:
-    """Reject omitted, duplicated, or oversized bodies on any delivery route."""
+    """Reject omitted or duplicated bodies on any delivery route."""
     body = constitution_body()
 
     for harness, mode, event_name, event in CONTEXT_EVENTS:
@@ -282,9 +283,7 @@ def check_delivery(errors: list[str]) -> None:
             errors.append(f"{where}: additionalContext is missing or empty")
             continue
         if not context.endswith(body) or context.count(body) != 1:
-            errors.append(f"{where}: additionalContext must end with one complete core")
-        if len(context.encode("utf-8")) > 9000:
-            errors.append(f"{where}: rendered core exceeds the proved 9000-byte budget")
+            errors.append(f"{where}: additionalContext must end with one complete constitution")
         if "updatedInput" in output:
             errors.append(f"{where}: startup context must not rewrite tool input")
 

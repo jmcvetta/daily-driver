@@ -70,7 +70,7 @@ cross the unattended boundary to take the major upgrade.
 
 A red suite is still answered by finding which upgrade broke what, and never
 by pinning around the failure, skipping the test, or silencing it —
-`provenance`'s test discipline.
+the constitution's test discipline.
 
 
 

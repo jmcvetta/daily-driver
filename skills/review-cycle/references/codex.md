@@ -12,20 +12,29 @@ that is the stop below.
 The review surface
 ==================
 
-**`codex exec review --base <branch>`**, run from the shell against the branch
-that is checked out. `codex review` is the same surface with the terminal UI
-around it; the `exec` spelling is the one an unattended session can take.
+Run the native app-server base-branch review from the checked-out branch:
 
-| Flag | What it selects |
-| ---- | --------------- |
-| `--base <BRANCH>` | The changes on this branch against its base |
-| `--commit <SHA>` | The changes one commit introduced |
-| `--uncommitted` | Staged, unstaged and untracked changes |
+```sh
+python3 <daily-driver-root>/skills/review-cycle/scripts/codex-review.py <base-branch> --history <history-file>
+```
 
-**`--base` is the one the round wants.** It is the closest thing here to the
-three-dot diff `Does it go again?` reasons about, and `--uncommitted` would
-review a working tree that `Fix, answer, resolve, push` is about to change
-anyway.
+The UTF-8 history file contains the complete submitted reviews and threads,
+their dispositions, the reviewed SHA and the current head. Store it in an
+owner-only file outside the checkout and artifacts. The helper passes this
+as reference data, not instructions. Its standard output is the complete native
+review result; retain it for the publication step below. A nonzero exit or
+missing review result is an incomplete review, not a clean verdict.
+
+The helper reads the checkout's effective `developer_instructions`, adds the
+constitution without printing either instruction set, and starts a separate
+review thread. It computes the Git merge base and uses a native custom review
+target to request the committed three-dot comparison. Review history is
+user-role reference data, not developer instructions.
+This custom target is needed because Codex 0.160.0's base-branch review drops
+preloaded user history. The helper does not modify Codex configuration.
+
+The base branch must be a local ref. A commit or uncommitted review is not a
+substitute for the round's base-branch comparison.
 
 **It reviews the checkout, not the pull request.** There is no argument that
 takes a pull request number, and nothing is fetched: the branch has to be the
@@ -37,8 +46,8 @@ checked out.
 merge to `Neither` — not a new diff — *because* the pull request's diff is
 three-dot, so a clean merge changes the head and changes nothing the review
 would read. Here the review reads a local comparison against a local ref, and
-whether `--base` resolves to the merge base or to the branch tip is **not
-measured**. Two rules follow, and neither of them is a re-reading of the
+whether the native base-branch review resolves to the merge base or to the
+branch tip is **not measured**. Two rules follow, and neither is a re-reading of the
 default:
 
 - **The classification is unchanged.** `Does it go again?` classifies the
@@ -64,8 +73,8 @@ are not a transcript-only degradation. Give the reviewer the complete history,
 reviewed SHA, and current head; the publication route below turns its findings
 into the submitted threads that `Fix, answer, resolve, push` answers.
 
-**It is a second agent run, and it is billed as one.** `codex exec review`
-starts a fresh session with its own model. That is what makes it a named
+**It is a second agent run, and it is billed as one.** The app-server review
+starts a fresh thread with its own model. That is what makes it a named
 surface carrying its own rubric and publication route, rather than an ad-hoc
 dispatch with neither, and it is also why the round runs it once per diff
 rather than once per push.
@@ -235,10 +244,9 @@ SHA and dispositions so later rounds have a stable duplicate check.
 Provenance
 ==========
 
-`codex-cli 0.154.0`, read on 2026-09-12. The subcommands and their flags are
-quoted from `codex review --help` and `codex exec review --help`; `sleep_tool`
-is read from `codex features list`, where it is `stable` and on. **No review
-was run**: that needs credentials this container does not have, so what
-`codex exec review` reports and how it is formatted is not measured here. What
-is measured is its interface — no pull request argument, no effort level, and
-no flag that posts anything.
+Codex 0.160.0: isolated loopback scripted-provider experiments with a non-empty
+committed diff exercised `config/read`, `thread/start`, and `review/start`.
+The custom review request carried synthetic operator instructions and the
+complete constitution in developer context, with review history in user
+context. The complete scripted review text returned to the caller. This proves
+transport, not the quality or correctness of a model review.

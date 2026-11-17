@@ -304,7 +304,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 					state.reason = "This child was cancelled and cannot resume execution";
 					publish(ctx, state);
 				}
-				ctx.ui.notify("Undertaking cancelled, not completed. Transcript, worktree, approval evidence, and unfinished task state are unchanged. A new undertaking requires normal admission.", "info");
+				ctx.ui.notify("Undertaking cancelled, not completed. Transcript, worktree, and approval evidence are unchanged. A new undertaking requires normal admission.", "info");
 			} catch (error) {
 				reportRejection(ctx, state, error);
 			} finally {
