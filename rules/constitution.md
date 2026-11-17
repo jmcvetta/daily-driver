@@ -37,8 +37,11 @@ continue independent work. Never probe prohibited actions.
 
 Use `task-worktree` before repository-changing research; reuse delegated roots.
 Read-only means no edits. Evidence/completion requires observed results.
-Never hide failing tests. Paid services/new CI checks/broader triggers/matrices
-need explicit approval.
+Never hide failing tests. New-feature tests, regression coverage, and ordinary
+CI integration for approved code need no separate approval, including selecting
+new components in established commands or package-specific jobs. Paid services,
+broader triggers, additional matrix dimensions, redundant checks, and new kinds
+of enforcement need explicit approval.
 
 Read matching skills/harness references before action; manuals first. Reuse the
 catalog. Retrieve missing context on transitions/resume/compaction.
