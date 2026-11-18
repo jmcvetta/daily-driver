@@ -15,8 +15,9 @@ but nothing gates on them. A Claude Code or Codex bug is accepted and fixed
 best effort; the fix gets a targeted eval kept under `evals/experiments/` so it
 can be rerun later, and that eval never joins the required set.
 
-CI keeps its static checks: they cover the shared skill tree and all three
-plugin manifests. The live runtime checks remain Omp-only.
+CI keeps its static checks: they cover the shared skill tree and the Omp and
+Claude plugin manifests. The Codex manifest is not validated. The live runtime
+checks remain Omp-only.
 
 Claude Code repository instructions live in `.claude/CLAUDE.md`, which imports
 the root `AGENTS.md`. This project context is distinct from plugin-delivered
