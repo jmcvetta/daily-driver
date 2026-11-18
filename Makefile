@@ -375,9 +375,9 @@ evals-setup-omp:
 # spend. Run it before every `evals-run-omp*`.
 #
 # Claude Code, Codex and model-classes arms are manual and are deliberately not
-# planned here: nothing plans an arm nobody intends to run. Plan a manual arm on
-# demand with `cd evals && $(CODER_EVAL) plan -e experiments/<arm>.yaml
-# tasks/*/*.yaml`.
+# planned here: nothing plans an arm nobody intends to run. `evals-run-classes`
+# plans the one classes arm its MODEL selects; for any other manual arm, run
+# `cd evals && $(CODER_EVAL) plan -e experiments/<arm>.yaml tasks/*/*.yaml`.
 #
 # Both eval targets `cd evals` first, and that is load-bearing twice over. The
 # plugin path in the experiment is relative and resolves against the process
@@ -690,14 +690,18 @@ evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 # repository actually runs (`claude-only`, `omp-only`, `codex-only`); the
 # suite's own rows carry no arm tag of that shape to exclude BY, only
 # `model-classes` itself, which every other arm already excludes. Still
-# `REPEATS=2` keeps the compatibility smoke separate from the three-repeat
-# full suite.
+# `REPEATS=2` keeps the compatibility smoke separate from the full suite, whose
+# repeat count each experiment file declares.
+#
+# The selected arm is planned here, after MODEL is known: `evals-plan` covers
+# the required Omp arms only, and a manual arm nobody has named is not planned.
 evals-run-classes: TASKS = tasks/model-classes/*.yaml
 evals-run-classes: evals-judge-preflight evals-plan evals-preflight
 	@if [ -z "$(MODEL)" ]; then \
 		echo "evals-run-classes: set MODEL=<classes experiment stem>, e.g. MODEL=glm" >&2; \
 		exit 1; \
 	fi
+	cd evals && $(CODER_EVAL) plan -e experiments/classes-$(MODEL).yaml $(TASKS)
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) -e experiments/classes-$(MODEL).yaml \
 		--exclude-tags claude-only,omp-only,codex-only,skip:model-classes $(RUN_TASKS); status=$$?; \
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/classes-$(MODEL).yaml; \

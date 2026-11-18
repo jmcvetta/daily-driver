@@ -2047,8 +2047,11 @@ make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
 Each experiment pins one provider/model ID, and the Omp home the agent borrows
-must configure it. Every GPT subject, judge, and helper call must use
-`openai-codex`; no GPT call may use the Vercel AI Gateway.
+must configure it. Every GPT subject, judge, and helper call in these required
+arms must use `openai-codex`; no GPT call in a supported arm may use the Vercel
+AI Gateway. The manual `classes-gpt-6-luna-gateway` arm is the one authorized
+exception: it measures the gateway route as an evaluation subject, changes no
+role default, and is not part of a required run.
 
 | Experiment | Model |
 | --- | --- |
@@ -2413,6 +2416,15 @@ make evals-run-classes MODEL=opus-low
 make evals-run-classes MODEL=sol-6-1
 make evals-run-classes MODEL=luna-6
 make evals-run-classes MODEL=terra-5-6
+make evals-run-classes MODEL=gpt-6-luna-gateway
+make evals-run-classes MODEL=deepseek-v4-1-flash-gateway
+```
+
+The last two are the matched Vercel AI Gateway coding arms. Each pins one
+first-party upstream with `vercel_gateway_only`, so an unavailable upstream
+fails instead of being served by another provider, and neither may fall back to
+the `openai-codex` subscription route. Their assignment, evidence and limits
+are in "Vercel GPT-6 Luna against DeepSeek V4.1 Flash" below.
 
 The Claude Code files (`classes-haiku-low`, `classes-haiku-medium`,
 `classes-opus-low`, `classes-sonnet-high`, `classes-sonnet-low`) set effort
@@ -2421,13 +2433,33 @@ They run the bare session `with-without.yaml` measures against — `plugins: []`
 and `setting_sources: [project]` — so an advisor or a plugin in the operator's
 own user settings never reaches the model under test.
 
-`defaults.repeats` is 3 in every file, so a full run is 3 replicates per
-case per model, each a real `git apply` plus the
+`defaults.repeats` is 3 in the historical files. The two gateway coding arms
+declare 5, because a matched comparison needs the same five-replicate
+denominator on both sides. A full run is that many replicates per case per
+model, each a real `git apply` plus the
 repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
 process, so a token exported before `coder-eval run` is what
 `shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case, or use the `smoke`-tagged case per class (the smallest of each) to check a new overlay cheaply before spending a full run on it.
+
+**Computed, per-message cost.** Omp exposes no provider bill; its
+`usage.cost` is a catalog estimate at one fixed rate per bucket, drawn from
+whatever upstream its catalog happens to list. The adapter ignores it and
+prices each assistant message from `evals/coder-eval-omp/prices.json`, a dated
+snapshot of the Vercel AI Gateway endpoints API for the upstream the arm
+restricts itself to, using that message's own prompt size for a tier and its
+own timestamp for a peak window. Refresh and commit that snapshot before a
+benchmark: `python3 scripts/evals-fetch-prices.py` rewrites it from the API for
+every gateway model an experiment restricts with `vercel_gateway_only`, and
+`--check` reports a stale one; `evals/coder-eval-omp/README.md`'s Cost section
+has the sourcing rule and the two published details it has to assume. The
+recorder labels the result `computed`, never `reported`, and a model without a
+card records `unreported` rather than a guess. `evals/prices.yaml` keeps both
+models as `unpriced_reason` entries because a run's aggregate token counts
+cannot reproduce a tier or a window. Cache-read tokens are priced from the
+published rate; DeepSeek's absent cache-write rate is recorded as `null` and
+costs nothing, which is not the same as a missing bucket.
 
 Keep `TMPDIR` outside this evaluation checkout, with space for preserved
 sandboxes and dependency environments. The contact detector rejects printed
@@ -2478,6 +2510,139 @@ API fixtures) are the acceptance test for the qualifying filter, the test-file
 split, the class and elapsed reads, and `task_timeout` derivation. No
 standalone CI check repeats them: the builder runs them before every
 invocation, so a defect in it surfaces on its next run.
+
+
+## Vercel GPT-6 Luna against DeepSeek V4.1 Flash
+
+The operator's `openai-codex` quota was exhausted, so this comparison asks
+which of two gateway-routed coding models to use for delegated implementation
+work. Both arms run the same six `model-classes` cases, five repeats each,
+`max_turns: 30`, `turn_timeout: 660`, `task_timeout: 780`, `-j 2` per arm with
+both arms concurrent. Each arm restricts itself to one first-party upstream
+with `vercel_gateway_only`, so no request is served by another provider and
+neither arm may fall back to the `openai-codex` subscription route. Both runs
+started at 18:20 UTC on 2026-11-18 and finished within an hour of each other,
+so the arms overlapped rather than running hours apart. Records:
+[Luna](provenance/classes-gpt-6-luna-gateway-2026-11-19-luna.json),
+[DeepSeek](provenance/classes-deepseek-v4-1-flash-gateway-2026-11-19-deepseek.json).
+Run directories `evals/runs/900/luna` and `evals/runs/900/deepseek` are local
+and not committed.
+
+All six cases come from `jmcvetta/career`: `career-370`, `career-444` and
+`career-462` are `mechanical`, and `career-141`, `career-469` and `career-475`
+are `implementation`. Grading is each case's committed executable criteria
+against its hidden answer key.
+
+**Per case.** `passed/attempted` counts only attempts that completed: a
+session cut by the harness's turn cap, or one whose fixture failed before the
+model ran, is shown in its own column and is not a pass. Those columns are
+part of every denominator's story, not a footnote.
+
+| Case | Class | Luna passed/attempted | Luna turn-capped | Luna fixture fault | DeepSeek passed/attempted | DeepSeek turn-capped | DeepSeek fixture fault |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| career-141 | implementation | 3/3 | 2 | 0 | 2/3 | 2 | 0 |
+| career-370 | mechanical | 5/5 | 0 | 0 | 4/4 | 1 | 0 |
+| career-444 | mechanical | 5/5 | 0 | 0 | 1/1 | 4 | 0 |
+| career-462 | mechanical | 5/5 | 0 | 0 | 4/5 | 0 | 0 |
+| career-469 | implementation | 4/4 | 0 | 1 | 2/2 | 3 | 0 |
+| career-475 | implementation | 2/2 | 2 | 1 | 3/3 | 1 | 1 |
+| **Total** | | **24/24** | **4** | **2** | **16/18** | **11** | **1** |
+
+Luna passed every attempt that completed. DeepSeek lost one `mechanical`
+repeat (`career-462`) and one `implementation` repeat (`career-141`); both are
+answer-key contact, below. No attempt in either arm hit `TIMEOUT`, and no
+provider, quota or authentication error appears in either run.
+
+**Effect estimate.** Treat each case as one cluster and average the per-case
+success rates, so a case contributing five repeats cannot outweigh one
+contributing one:
+
+- Luna: 6 of 6 cases at 1.00 → 1.00.
+- DeepSeek: 4 of 6 cases at 1.00, `career-141` at 0.67, `career-462` at 0.80 →
+  0.911.
+- DeepSeek − Luna: **−0.089**, case-clustered bootstrap 95% interval
+  **[−0.200, 0.000]** over 20,000 resamples of the six cases.
+
+That interval includes zero and rests on six clusters. It is evidence about
+these six cases under this configuration, not a broad capability claim, and it
+does not establish that either model is generally better.
+
+**Latency.** Seconds over completed attempts only, where the model's session
+ran and graded.
+
+| Case | Luna median (range) | DeepSeek median (range) |
+| --- | --- | --- |
+| career-141 | 238 (168–395) | 146 (90–179) |
+| career-370 | 87 (67–143) | 126 (86–135) |
+| career-444 | 266 (169–359) | 298 (single attempt) |
+| career-462 | 49 (38–259) | 103 (56–311) |
+| career-469 | 253 (213–553) | 210 (182–238) |
+| career-475 | 224 (220–228) | 178 (123–230) |
+| **All completed** | **198 (38–553)** | **134 (56–311)** |
+
+DeepSeek is faster on three of six cases; Luna's slowest attempts on
+`career-469` ran close to the 660-second turn ceiling without reaching it.
+
+**Tokens and cost.** Buckets summed over all 30 attempts per arm: the
+turn-capped ones are included because their tokens were still spent, while the
+fixture-failed ones failed in `pre_run` before the model ran and contribute
+nothing. `reasoning` is unreported by Omp; `cache_write` is absent from the
+DeepSeek card and recorded as `null`, which costs nothing.
+
+| Bucket | Luna | DeepSeek |
+| --- | --- | --- |
+| Uncached input | 631,811 | 660,741 |
+| Output | 266,220 | 278,649 |
+| Reasoning | unreported | unreported |
+| Cache read | 10,256,508 | 16,664,192 |
+| Cache write | 0 (billed at $0.125/M) | 0 (no published rate) |
+| Computed USD | $0.2989 | $0.3163 |
+| Per attempt | $0.0100 | $0.0105 |
+| Per passed case | $0.0125 | $0.0198 |
+
+Costs are **computed**, not billed: the adapter priced every assistant message
+from the committed endpoint snapshot in
+`coder-eval-omp/prices.json` (read 2026-11-18 from the gateway endpoints API),
+using that message's own prompt size for Luna's 272,001-token tier and its own
+timestamp for DeepSeek's peak windows. Omp's `usage.cost` was not used.
+
+**DeepSeek peak windows.** The upstream publishes a 2× multiplier on weekdays
+01:00–04:00 and 06:00–10:00 UTC. The run spanned 18:20–19:13 UTC on Wednesday
+2026-11-18, so **no attempt fell inside a peak window** and no DeepSeek message
+was priced at the multiplier; the adapter still applied the published window
+to each message's own timestamp, so a run at another hour would have carried
+it. Luna has no peak window. Two published details remain assumptions and are
+documented in [`coder-eval-omp/README.md`](coder-eval-omp/README.md#cost): the
+`holiday_calendar: "cn"` exclusion publishes no holiday list, and the tier
+boundary overlaps at exactly 272,001 prompt tokens.
+
+**Failure modes.**
+
+- **Turn cap (Luna 4, DeepSeek 11).** The adapter stops a session when it
+  crosses `max_turns: 30`, settles it as `MAX_TURNS_EXHAUSTED`, and the
+  recorder keeps that as an execution-limit outcome with no score even where
+  the on-disk work already satisfied every criterion. All 15 such attempts
+  graded 1.0 on the criteria before the cut; none is counted as a pass here.
+  DeepSeek reaches the ceiling far more often — every attempt that used 31
+  turns was cut — which is itself a reliability difference for delegated work.
+  The ceiling is the suite's and was not raised for this run.
+- **Fixture fault (Luna 2, DeepSeek 1).** Three attempts lost their `pre_run`
+  clone at the 120-second watchdog, clustered at 01:48–01:52 UTC. Preserved
+  sandboxes show a zero-byte `FETCH_HEAD` and a partially written packfile of
+  3.3–4.3 MB against a complete 4.7 MB pack: the fetch was still transferring,
+  not refused. All three fell in the same ten-minute window in which four
+  sandboxes were each cloning, installing dependencies and running the case's
+  test command; the local machine was saturated, and the watchdog fired before
+  the clone finished. These are infrastructure errors, not model outcomes, and
+  they stay in the run as errors rather than being rerun.
+- **Answer-key contact (Luna 0, DeepSeek 2).** Both DeepSeek criterion
+  failures reached for the answer instead of doing the work: one broad
+  `grep` over `~/.cache`, `~/.local` and `/tmp` printed the eval fixture's
+  path, and one enumerated host `uv` cache binaries looking for a runnable
+  `pytest`. The suite records each as a measured score of 0 with the
+  offending call under `answer_key_contact`, and neither is counted as a
+  partial or a behavioural success. It is a failure to do the task, and it
+  stays visible rather than being dropped.
 
 
 ## Two defaults, decided on purpose
