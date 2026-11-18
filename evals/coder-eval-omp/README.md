@@ -220,6 +220,19 @@ prices `total_cost_usd` as `None` (`coder_eval`'s own "unreported", not
 too. `pricing.py` is pure, like `rpc.py`; it prices recorded token usage without
 a `coder_eval` install.
 
+**A dated card prices each message, not each run.** Omp's `usage.cost` object
+is a local catalog estimate at one fixed rate per bucket — for
+`deepseek/deepseek-v4.1-flash-1017` it says 0.3/1.2/0.007 USD per million,
+which is the gateway's *baseten* upstream, whatever `vercel_gateway_only`
+selected. It is not a provider bill. The adapter therefore ignores it and
+lets `pricing.cost_usd` price every assistant message from the card, using
+that message's own prompt size for a `tier` and its own `timestamp` for a
+`peak` window. A row may add `cache_read_usd_per_million` and
+`cache_write_usd_per_million`; `null` records a bucket the upstream does not
+bill. Without a timestamp on a peak-priced row, or without a row at all, the
+turn is reported as unreported rather than completed at a flat rate. The
+recorder marks an Omp figure `computed`, never `reported`.
+
 ## What is tested, and what is not
 
 `rpc.py`, `pricing.py`, `home.py` and `tools.py` import nothing — not

@@ -31,10 +31,21 @@ models:
   vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:
     unpriced_reason: >-
       Vercel's first-party DeepSeek endpoint publishes prompt, completion and
-      cache-read rates but no cache-write rate, so the four-rate record cannot
-      price it without inventing one.
+      cache-read rates, applies a peak-hour multiplier, and publishes no
+      cache-write rate, so a flat four-rate record cannot price it without
+      inventing both the window and the missing rate. The Omp adapter records
+      the gateway's own `usage.cost` instead.
     source: https://ai-gateway.vercel.sh/v1/models/deepseek/deepseek-v4.1-flash-1017/endpoints
-    read_on: 2026-10-30
+    read_on: 2026-11-18
+  vercel-ai-gateway/openai/gpt-6-luna:
+    unpriced_reason: >-
+      Vercel's first-party OpenAI endpoint prices prompt, completion and cached
+      input in tiers that step at 272,001 prompt tokens, and a run's aggregate
+      token counts do not say which request crossed the boundary. The Omp
+      adapter records the gateway's own `usage.cost`, which the gateway
+      computes per request, instead of guessing a tier.
+    source: https://ai-gateway.vercel.sh/v1/models/openai/gpt-6-luna/endpoints
+    read_on: 2026-11-18
   openai-codex/gpt-6.1-sol:
     unpriced_reason: Codex subscription usage has no per-token dollar rate.
     source: https://developers.openai.com/codex/pricing

@@ -1,0 +1,35 @@
+# The model-classes capability arm for GPT-6 Luna through the Vercel AI Gateway.
+#
+# Measures whether this model, in the role it plays for delegated implementation
+# work (its `task` role), clears the mechanical/implementation cases the suite
+# builds from real merged pull requests -- see `scripts/evals-cases-from-prs.py`
+# and `evals/tasks/model-classes/`. One variant: there is no plugin ablation
+# here, only the question "does this model finish this task and leave its own
+# tests passing". `make evals-run-classes MODEL=gpt-6-luna-gateway` runs it.
+#
+# The route is the gateway's first-party OpenAI endpoint only. `gpt-6-luna` on
+# `openai-codex` is a different billing and serving path and its records are not
+# comparable to this arm's; `vercel_gateway_only` makes an unavailable OpenAI
+# upstream fail instead of falling back to another provider.
+experiment_id: classes-gpt-6-luna-gateway
+description: >-
+  Model-class capability on the six fixed merged-PR cases,
+  vercel-ai-gateway/openai/gpt-6-luna:high restricted to the OpenAI upstream,
+  in the `task` role.
+
+defaults:
+  repeats: 10
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: vercel-ai-gateway/openai/gpt-6-luna:high
+    vercel_gateway_only: [openai]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+variants:
+  - variant_id: default
+    description: This model against the model-classes suite.

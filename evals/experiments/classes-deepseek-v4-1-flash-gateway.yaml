@@ -1,0 +1,36 @@
+# The model-classes capability arm for DeepSeek V4.1 Flash 1017 through the
+# Vercel AI Gateway.
+#
+# Measures whether this model, in the role it plays for delegated implementation
+# work (its `task` role), clears the mechanical/implementation cases the suite
+# builds from real merged pull requests -- see `scripts/evals-cases-from-prs.py`
+# and `evals/tasks/model-classes/`. One variant: there is no plugin ablation
+# here, only the question "does this model finish this task and leave its own
+# tests passing". `make evals-run-classes MODEL=deepseek-v4-1-flash-gateway`
+# runs it.
+#
+# The route is the gateway's first-party DeepSeek endpoint only. The upstream
+# publishes peak-hour multipliers and no cache-write rate, so a flat local rate
+# card cannot price it; the run records the gateway's own `usage.cost` instead.
+experiment_id: classes-deepseek-v4-1-flash-gateway
+description: >-
+  Model-class capability on the six fixed merged-PR cases,
+  vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high restricted to the
+  DeepSeek upstream, in the `task` role.
+
+defaults:
+  repeats: 10
+  run_limits:
+    max_turns: 30
+    task_timeout: 780
+    turn_timeout: 600
+  agent:
+    type: omp
+    model: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high
+    vercel_gateway_only: [deepseek]
+    permission_mode: acceptEdits
+    allowed_tools: [Bash, Read, Write, Edit, Grep, Glob]
+
+variants:
+  - variant_id: default
+    description: This model against the model-classes suite.

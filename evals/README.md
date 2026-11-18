@@ -2364,6 +2364,15 @@ make evals-run-classes MODEL=opus-low
 make evals-run-classes MODEL=sol-6-1
 make evals-run-classes MODEL=luna-6
 make evals-run-classes MODEL=terra-5-6
+make evals-run-classes MODEL=gpt-6-luna-gateway
+make evals-run-classes MODEL=deepseek-v4-1-flash-gateway
+```
+
+The last two are the matched Vercel AI Gateway coding arms. Each pins one
+first-party upstream with `vercel_gateway_only`, so an unavailable upstream
+fails instead of being served by another provider, and neither may fall back to
+the `openai-codex` subscription route. Their assignment, evidence and limits
+are in "Vercel GPT-6 Luna against DeepSeek V4.1 Flash" below.
 
 The Claude Code files (`classes-haiku-low`, `classes-haiku-medium`,
 `classes-opus-low`, `classes-sonnet-high`, `classes-sonnet-low`) set effort
@@ -2372,13 +2381,28 @@ They run the bare session `with-without.yaml` measures against — `plugins: []`
 and `setting_sources: [project]` — so an advisor or a plugin in the operator's
 own user settings never reaches the model under test.
 
-`defaults.repeats` is 3 in every file, so a full run is 3 replicates per
-case per model, each a real `git apply` plus the
+`defaults.repeats` is 3 in the historical files. The two gateway coding arms
+declare 10, because a matched comparison needs the same ten-replicate
+denominator on both sides. A full run is that many replicates per case per
+model, each a real `git apply` plus the
 repository's own test command (`pytest` or `pnpm exec vitest`) inside a
 shallow single-commit checkout of the source repository. `GITHUB_TOKEN` or
 `GH_TOKEN` must be set — the `tempdir` driver runs `pre_run` as a plain host
 process, so a token exported before `coder-eval run` is what
 `shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case, or use the `smoke`-tagged case per class (the smallest of each) to check a new overlay cheaply before spending a full run on it.
+
+**Computed, per-message cost.** Omp exposes no provider bill; its
+`usage.cost` object is a local catalog estimate at a single fixed rate. The
+adapter therefore prices each assistant message from the dated card in
+`evals/coder-eval-omp/prices.json`, using that message's own prompt size for
+Luna's tiers and its own timestamp for DeepSeek's peak windows. The card cites
+the first-party endpoint and the date it was read. The recorder labels the
+result `computed`, never `reported`, and a message without a timestamp on a
+peak-priced card or a model without a card records `unreported` rather than a
+guess. `evals/prices.yaml` keeps both models as `unpriced_reason` entries
+because a run's aggregate token counts cannot reproduce either rule. Cache-read
+tokens are priced from the published rate; DeepSeek's absent cache-write rate is
+recorded as `null` and costs nothing, which is not the same as a missing bucket.
 
 Keep `TMPDIR` outside this evaluation checkout, with space for preserved
 sandboxes and dependency environments. The contact detector rejects printed
