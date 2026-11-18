@@ -60,14 +60,15 @@ class SyncTest(unittest.TestCase):
         command = 'set -e; eval "$(command wt config shell init bash)"; wt -y sync; pwd'
         return run(self.caller, "bash", "--noprofile", "--norc", "-c", command, env=self.env)
 
-    def test_linked_caller_returns_to_master_and_removes_stale_branch(self) -> None:
-        """A child-process checkout can clean a branch but cannot change the calling shell."""
+    def test_linked_caller_returns_to_master_and_removes_merged_worktrees(self) -> None:
+        """Shell integration leaves the caller in master before merged worktrees are removed."""
         result = self.sync()
         self.assertEqual(result.stdout.splitlines()[-1], str(self.primary))
         self.assertIn(f"removed stale worktree: {self.stale}", result.stdout)
         self.assertFalse(self.stale.exists())
         self.assertNotIn("stale", run(self.primary, "git", "branch", "--list", "stale").stdout)
-        self.assertTrue(self.caller.exists())
+        self.assertFalse(self.caller.exists())
+        self.assertNotIn("caller", run(self.primary, "git", "branch", "--list", "caller").stdout)
 
     def test_unintegrated_branch_keeps_changes_after_worktree_removal(self) -> None:
         """A gone upstream alone must not force-delete unpublished commits."""

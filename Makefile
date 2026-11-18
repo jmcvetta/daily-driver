@@ -76,16 +76,14 @@ export PATH := $(PATH):$(HOME)/.local/bin:$(HOME)/.bun/bin
 # __git_sync_run: implementation for `wt sync`, which first switches the caller
 # to master's worktree. Offer gone-upstream and merged branches to Worktrunk for
 # cleanup. Worktrunk decides whether each branch is integrated; it refuses dirty
-# or locked worktrees and keeps branches that still add changes. Preserve the
-# invoking worktree even when its branch is also merged.
+# or locked worktrees and keeps branches that still add changes.
 __git_sync_run:
 	git pull
 	git fetch --prune
 	@{ \
 		git branch -vv | awk '/: gone\]/ {sub(/^\+ /, ""); print $$1}'; \
 		git branch --merged master --format='%(refname:short)'; \
-	} | awk -v caller="$${WT_SYNC_CALLER:-}" \
-		'$$0 != "master" && $$0 != caller && !seen[$$0]++' | \
+	} | awk '$$0 != "master" && !seen[$$0]++' | \
 	while read -r b; do \
 		wt=$$(git worktree list --porcelain | awk -v b="$$b" '/^worktree /{p = substr($$0, 10)} /^branch /{if (substr($$0, 8) == "refs/heads/" b) {print p; exit}}'); \
 		if [ -n "$$wt" ]; then \
