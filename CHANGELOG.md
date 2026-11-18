@@ -45,6 +45,13 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.62.1](https://github.com/jmcvetta/daily-driver/compare/v0.62.0...v0.62.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* reclassify Claude Code and Codex as best-effort harnesses ([#899](https://github.com/jmcvetta/daily-driver/issues/899)) ([0d10f3c](https://github.com/jmcvetta/daily-driver/commit/0d10f3cfeb8b6fced8c9f36875eafeabb504af5d))
+
 ## [0.62.0](https://github.com/jmcvetta/daily-driver/compare/v0.61.2...v0.62.0) (2026-11-17)
 
 
