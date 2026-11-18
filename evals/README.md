@@ -7,6 +7,14 @@ the short version is that the built-in cannot be run on this account, is
 publicly undocumented, announces no changes, and — decisively — ships inside
 the `claude` binary, so there is no version to hold back.
 
+The `omp-*.yaml` experiments are the required arms: their results are the eval
+evidence for the supported harness, Omp. The Claude Code arms
+(`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`),
+the Codex arm (`codex.yaml`), and the `classes-*.yaml` experiments are manual:
+kept and runnable, but no gate requires them. A fix for a Claude Code or Codex
+bug gets a targeted eval kept under `experiments/` so it can be rerun later;
+that eval stays manual.
+
 ```
 evals/
 ├── experiments/
@@ -848,6 +856,21 @@ with token buckets and records with subscription billing.
 
 ## Running them
 
+### Required and manual arms
+
+Only the `omp-*.yaml` arms are required. Everything else runs by hand when a
+change needs it, and its result never gates a merge:
+
+- **Required (Omp):** `make evals-run-omp` and the individual
+  `make evals-run-omp-*` targets.
+- **Manual (Claude Code):** `make evals-run`, `make evals-run-haiku-5-5`,
+  `make evals-run-comparison`.
+- **Manual (Codex):** `make evals-run-codex`.
+- **Manual (model classes):** `make evals-run-classes MODEL=<stem>`.
+
+`make evals-plan` still plans every arm; it calls no model and costs nothing.
+CI runs no eval arm, required or manual.
+
 ### Choose the execution session first
 
 Choose the subject model, judge model, and execution session separately. A
@@ -945,7 +968,8 @@ for a key.
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
 make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
-make evals-run        # the whole suite on Claude Code, both variants. Uses subscription allowance.
+make evals-run-omp    # REQUIRED: every registered Omp arm.
+make evals-run        # MANUAL, Claude Code: the whole suite, both variants. Uses subscription allowance.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 make evals-render-routes  # rewrite the Measured routes table from committed provenance
 make evals-render-results # rewrite RESULTS.md from committed provenance
@@ -953,8 +977,8 @@ make evals-render-results # rewrite RESULTS.md from committed provenance
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
-make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
-make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Uses subscription allowance.
+make evals-run-codex  # MANUAL, Codex: the same suites. Needs the Codex SDK and a key.
+make evals-run-haiku-5-5  # MANUAL, Claude Code: the same ablation on Haiku 5.5. Uses subscription allowance.
 ```
 `REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
 example `make evals-run REPEATS=1`. When unset or empty, the experiment default
@@ -1922,10 +1946,11 @@ score for this row has been measured in either arm.
 
 ## The Omp arm
 
-The same suites and plugin run Omp subjects with paired `bare` and
-`with-plugin` variants. GLM 5.3 Flash is the tier probe beside full GLM.
-The committed GPT 6 Sol and Luna experiments use their Codex provider routes.
-Their historical gateway records remain unchanged.
+The `omp-*.yaml` arms are the required set: these are the eval results Omp's
+supported tier rests on. The same suites and plugin run Omp subjects with
+paired `bare` and `with-plugin` variants. GLM 5.3 Flash is the tier probe
+beside full GLM. The committed GPT 6 Sol and Luna experiments use their Codex
+provider routes. Their historical gateway records remain unchanged.
 The DeepSeek experiments pin the newest dated Pro and Flash catalog entries and
 restrict each to DeepSeek's first-party upstream; a missing route fails instead
 of falling back to another provider. The older DeepSeek result does not
@@ -2126,8 +2151,10 @@ has in each run's `environment_info`.
 
 ## The Codex arm
 
-The same suites, the same skills, a third harness.
-`docs/notes/0015-the-codex-arm.md` is the decision; this is how it is run.
+Manual only: Codex is a best-effort harness, so this arm remains runnable by
+hand and never becomes a required gate. The same suites, the same skills, a
+third harness. `docs/notes/0015-the-codex-arm.md` is the decision; this is how
+it is run.
 
 ```sh
 make evals-run-codex                          # the Codex arm

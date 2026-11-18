@@ -512,6 +512,13 @@ evals-leaks:
 check-evals-leaks:
 	python3 scripts/check-evals-leaks.py --selftest
 
+# Support tier for these arms. The `omp-*.yaml` experiments are the REQUIRED
+# arms: they are the eval evidence Omp's support rests on. The Claude Code arms
+# (`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`)
+# and the Codex arm (`codex.yaml`) stay runnable by hand but are not required:
+# Claude Code and Codex are best effort. A fix for a Claude Code or Codex bug
+# gets a targeted eval kept in `evals/experiments/`, never a required gate.
+#
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tags on eval tasks and each runner's exclusion list
 # determine which arm runs each row.
@@ -520,6 +527,8 @@ check-evals-leaks:
 # `str` option that `coder_eval` splits on commas, so a second `--exclude-tags`
 # replaces the first rather than adding to it -- and the exclusions it dropped
 # come back as rows run in the wrong arm, silently, at full price.
+#
+# MANUAL ONLY: Claude Code arm. Not a required gate.
 evals-run: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) -e experiments/with-without.yaml \
 		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
@@ -534,8 +543,9 @@ evals-run-haiku-5-5: evals-judge-preflight evals-plan evals-preflight
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without-haiku-5.5.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-# evals-run-omp: run every registered Omp experiment. Ablation targets compare
-# bare and treated variants; the focused acceptance target measures with-plugin only.
+# evals-run-omp: run every registered Omp experiment. These are the REQUIRED
+# arms. Ablation targets compare bare and treated variants; the focused
+# acceptance target measures with-plugin only.
 evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-deepseek-v4-1-flash evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-omp-gpt-6-1-sol evals-run-omp-gemini-3-8-flash evals-run-omp-gemini-3-1-pro evals-run-omp-gpt-6-1-sol-workflow
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
@@ -639,6 +649,8 @@ evals-run-omp-gpt-6-1-sol-workflow: evals-judge-preflight evals-plan evals-prefl
 # because `coder_eval`'s Codex agent links skills and installs no hooks, so no
 # constitution reaches that arm and every row there would score 0 for the wrong
 # reason. See docs/notes/0015-the-codex-arm.md.
+#
+# MANUAL ONLY: Codex arm. Not a required gate.
 evals-run-codex: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/codex.yaml \
 		--exclude-tags claude-only,omp-only,skip:codex,model-classes $(RUN_TASKS); status=$$?; \
@@ -661,6 +673,8 @@ evals-run-codex: evals-judge-preflight evals-plan evals-preflight
 # run pays for both arms and measures plugin-versus-nothing.
 # Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=. The 16 is
 # this target's own default, so it applies unless JOBS= is given.
+#
+# MANUAL ONLY: Claude Code comparison arm. Not a required gate.
 
 evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 	@test -d ../daily-driver-base/skills || { \
