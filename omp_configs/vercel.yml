@@ -1,5 +1,5 @@
 modelRoles:
-  default: vercel-ai-gateway/alibaba/qwen3.8-flash-next:medium
+  default: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:low
   mechanical: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:low
   implementation: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high
   reasoning: vercel-ai-gateway/deepseek/deepseek-v4-pro-0813:high
