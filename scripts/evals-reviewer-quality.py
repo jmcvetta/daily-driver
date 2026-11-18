@@ -824,6 +824,11 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "attempt_seconds": attempt_seconds if not interrupted and isinstance(attempt_seconds, (int, float)) else None,
                     "reviewer_usage": telemetry.get("usage") if telemetry_verified else "unavailable",
                     "reviewer_cost_usd": reviewer_cost,
+                    "parent_token_usage": run_record_case.get("token_usage", "unavailable"),
+                    "parent_cost_usd": run_record_case.get("cost", "unavailable")
+                    if isinstance(run_record_case.get("cost"), (int, float))
+                    else "unavailable",
+                    "parent_cost_source": run_record_case.get("cost_source", "unavailable"),
                     "judge_freeze_sha": judge.get("freeze_sha", "unreported"),
                     "artifact_sha256": sha256_file(result_path) if result_path and result_path.is_file() else "unavailable",
                 })
@@ -842,6 +847,32 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         if telemetry_summary["verified"] > 0
         else None
     )
+    parent_tokens: dict[str, int | None] = {
+        "uncached_input_tokens": 0,
+        "output_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "reasoning_tokens": 0,
+    }
+    parent_cost: float | None = 0.0
+    for entry in entries:
+        usage = entry.get("parent_token_usage")
+        if isinstance(usage, dict):
+            for bucket in parent_tokens:
+                value = usage.get(bucket)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    if parent_tokens[bucket] is not None:
+                        parent_tokens[bucket] += int(value)
+                else:
+                    parent_tokens[bucket] = None
+        else:
+            parent_tokens = {bucket: None for bucket in parent_tokens}
+        cost = entry.get("parent_cost_usd")
+        if isinstance(cost, (int, float)) and parent_cost is not None:
+            parent_cost += cost
+        else:
+            parent_cost = None
+    judge_usage = (record or {}).get("judge", {}).get("usage", "unavailable") if args.run_dir else "unavailable"
     return {
         "schema_version": 1,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -862,6 +893,24 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         },
         "analysis_valid": attribution_valid,
         "cost_comparison_valid": telemetry_summary["cost_comparison_valid"],
+        "usage": {
+            "parent": {
+                "tokens": parent_tokens,
+                "cost_usd": parent_cost if parent_cost is not None else "unavailable",
+                "source": "coder_eval record: parent Omp messages; Omp's own catalog is not used",
+            },
+            "reviewer": {
+                "tokens": telemetry_summary["usage"],
+                "cost_usd": telemetry_summary["cost_usd"],
+                "source": "adapter child telemetry, priced per message from the endpoint cards",
+            },
+            "judge": {
+                "requested": (record or {}).get("judge", {}).get("model_requested", "unreported"),
+                "served": (record or {}).get("judge", {}).get("models_observed", "unreported"),
+                "tokens": judge_usage,
+                "source": "the run record's judge usage; per-attempt judge usage is in its sidecar",
+            },
+        },
         "settings": {
             "experiment_path": args.experiment.as_posix(),
             "experiment_sha256": settings_sha,

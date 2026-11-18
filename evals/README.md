@@ -241,8 +241,10 @@ The adapter writes `omp-reviewer-telemetry.json` for every attempt. The
 collector matches the delivered `<task-result>` id to the child's own frames
 and reports the requested role route, the harness-reported model, Omp's
 resolved `@upstream` and thinking level, per-message token buckets, reviewer
-latency and per-message cost. `cost_comparison_valid` is false whenever a
-completed attempt lacks verified telemetry or a priced card. A missing
+latency and per-message cost. Its `usage` block keeps the three roles apart:
+the parent's Omp messages from the run record, the reviewer's own child frames,
+and the judge's record/sidecar usage. `cost_comparison_valid` is false whenever
+a completed attempt lacks verified telemetry or a priced card. A missing
 reviewer cost is `unreported`, never zero and never the parent's cost. Prices
 are computed from the committed endpoint cards, not billed amounts.
 
