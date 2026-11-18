@@ -274,7 +274,7 @@ Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
 Use a fresh explicit nested run directory for each phase and keep the
 interrupted attempts.
 
-**Dispatch stopped on 2026-11-18T22:05Z.** The DeepSeek reference arm completed
+**Dispatch stopped on 2026-11-18T22:10:53Z.** The DeepSeek reference arm completed
 24 of its 40 attempts; every further reviewer request then returned `402 A
 positive credit balance is required for all requests, including BYOK ...
 (type=insufficient_funds)`. The wrapper was extended to treat 402 and
@@ -286,6 +286,62 @@ reviewer route for a fresh dispatch. Resume requires a restored gateway credit
 balance and fresh run directories; the 24 completed and 16 refused slots are
 not rerun. See
 [`vercel-quota-stop.json`](provenance/reviewer-quality/vercel-quota-stop.json).
+
+#### Observed smoke and partial reference cohort
+
+The smoke pair completed on all seven arms: 14/14 attempts, every one with
+verified child telemetry, the arm's recorded effort and first-party upstream,
+a true positive on the defective case, and a clear clean case. Cost is the
+reviewer's own computed cost for its two attempts, not the parent's or the
+judge's.
+
+| Arm | Reviewer | Effort | Upstream | Cost | Reviewer median | TP | Clean FA |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DeepSeek reference | `deepseek-v4-pro-0813` | high | deepseek | $0.0195 | 17.2 s | 1/1 | 0/1 |
+| Luna | `gpt-6-luna` | high | openai | $0.0037 | 26.6 s | 1/1 | 0/1 |
+| Kimi | `kimi-k3.1-pro` | low | moonshotai | $0.0484 | 20.4 s | 1/1 | 0/1 |
+| GLM | `glm-5.3` | high | zai | $0.0372 | 26.3 s | 1/1 | 0/1 |
+| Qwen | `qwen4-max` | low | alibaba | $0.0544 | 34.8 s | 1/1 | 0/1 |
+| MiMo | `mimo-v2.6-pro` | low | xiaomi | $0.0084 | 28.5 s | 1/1 | 0/1 |
+| Mistral | `mistral-large-4` | low | mistral | $0.0252 | 22.4 s | 1/1 | 0/1 |
+
+The DeepSeek reference cohort is partial and is not compared with any other
+arm. It planned 40 attempts, all 40 are terminal, 24 completed and 16 are the
+gateway's `402 insufficient_funds` provider errors. Coverage is three complete
+repeats per case and two refused repeats per case.
+
+| Measure | DeepSeek V4 Pro, 24 completed attempts |
+| --- | --- |
+| Full-review true positives / positive attempts | 12 / 12 |
+| Full-review false positives | 1 |
+| Full-review precision | 12/13 |
+| Clean-case false alarms | 0 / 6 |
+| Fixed- and incomplete-delta correct | 6 / 6 |
+| Credible unkeyed findings | 1 (`01-boundary`, repeat 0) |
+| Reviewer latency min / median / mean / max | 10.1 / 18.5 / 21.0 / 48.9 s |
+| Reviewer tokens: input / output / cache read / cache write / reasoning | 242,510 / 45,923 / 753,024 / 0 / unreported |
+| Reviewer computed cost | $0.2676 |
+| Cost per rubric-correct review | $0.0111 |
+| Attempts with a peak-priced message | 0 |
+
+| Case | Terminal | Completed | Rubric-correct | Provider errors |
+| --- | --- | --- | --- | --- |
+| `01-boundary` | 5 | 3 | 3 | 2 |
+| `02-contract` | 5 | 3 | 3 | 2 |
+| `03-authorization` | 5 | 3 | 3 | 2 |
+| `04-integrity` | 5 | 3 | 3 | 2 |
+| `05-clean-boundary` | 5 | 3 | 3 | 2 |
+| `06-clean-contract` | 5 | 3 | 3 | 2 |
+| `07-delta-fixed` | 5 | 3 | 3 | 2 |
+| `08-delta-incomplete` | 5 | 3 | 3 | 2 |
+
+The 24 completed attempts show no missed keyed defect on the four defective
+full reviews and no incorrect delta verdict; one extra finding on
+`01-boundary` is recorded as an unexpected valid observation rather than
+counted as a missed defect. That is evidence about these three repeats, not a
+reliability estimate and not a comparison. The other six arms have smoke
+evidence only. The full per-arm comparison remains blocked by the gateway
+refusal.
 
 ### Observed comparison
 
