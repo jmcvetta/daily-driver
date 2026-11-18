@@ -661,7 +661,13 @@ class OmpAgent(Agent[OmpAgentConfig]):
                         tokens=None,
                     )
                 )
-            cost = cost_usd(self.config.model, reducer.usage) if self.config.model else UNREPORTED
+            if self.config.model:
+                # Per-message, because prompt tiers and peak-hour windows are
+                # properties of each request; the aggregate token counts in the
+                # record cannot recover them.
+                cost = cost_usd(self.config.model, reducer.price_messages)
+            else:
+                cost = UNREPORTED
             emit(
                 AgentEndEvent(
                     task_id=self.task_id,
