@@ -1,20 +1,28 @@
-"""Hand-maintained per-million-token USD rates for the models the Omp arm runs.
+"""Per-million-token USD rates for the models the Omp arm runs.
 
-Nothing here is fetched at run time: `coder_eval`'s model catalog reports
-which providers exist, not what they charge, and catalog presence is not a
-price. `prices.json` beside this module is a dated snapshot a person updates
-by hand, keyed by the model identifier exactly as `omp_configs/*.yml` and an
-experiment's `agent.model` spell it (`<gateway>/<provider>/<model>`, for
-example `vercel-ai-gateway/zai/glm-5.3`).
+**Where the rates come from.** They are read from the Vercel AI Gateway
+endpoints API — `https://ai-gateway.vercel.sh/v1/models/<provider>/<model>/endpoints`
+— which is public and authoritative, and lists one card per upstream with its
+own tiers and peak windows. `prices.json` beside this module is a dated
+snapshot of that response for the upstream an arm actually restricts itself to
+(`vercel_gateway_only`), carrying `source` and `read_on`. Rates are never typed
+by hand: a hand-typed card is how the 0.3/1.2/0.007 baseten figure came to sit
+under a `deepseek`-restricted arm. Refresh the snapshot before a benchmark and
+commit it, so a record can name the card that priced it.
 
-A row may carry more than one rate per bucket. The gateway's own endpoints
-publish prompt-length tiers (Luna steps at 272,001 prompt tokens) and
-peak-hour multipliers (DeepSeek's first-party endpoint doubles its rates
-inside two UTC windows on weekdays). Both are properties of the request, and
-the reducer keeps each assistant message's own token counts and timestamp, so
-`cost_usd` can apply them per message instead of averaging across a run.
+**Do not use Omp's `usage.cost`.** Omp prices a turn from its bundled catalog,
+which stores exactly one rate per model id no matter how many upstreams serve
+it, and does not apply tiers or peak windows. Its figure is an estimate about
+an upstream the arm may not have used. The adapter ignores it.
 
-Pure — no `coder_eval` import, same reasoning as `rpc.py`.
+**Why pricing happens here and not in the recorder.** Tiers key off one
+request's prompt size and peak windows off one request's timestamp. The reducer
+has both per assistant message; `run.json` keeps only run-level aggregates, so
+a run priced after the fact cannot be priced correctly at all.
+
+Pure — no `coder_eval` import, same reasoning as `rpc.py`. The module reads a
+committed snapshot and performs no network call at run time; fetching is a
+separate, explicit step.
 """
 
 from __future__ import annotations

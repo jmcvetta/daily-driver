@@ -2395,17 +2395,20 @@ process, so a token exported before `coder-eval run` is what
 `shared/clone-base.sh` clones with. Narrow with `TASKS=tasks/model-classes/<repo>-<pr>.yaml` for one case, or use the `smoke`-tagged case per class (the smallest of each) to check a new overlay cheaply before spending a full run on it.
 
 **Computed, per-message cost.** Omp exposes no provider bill; its
-`usage.cost` object is a local catalog estimate at a single fixed rate. The
-adapter therefore prices each assistant message from the dated card in
-`evals/coder-eval-omp/prices.json`, using that message's own prompt size for
-Luna's tiers and its own timestamp for DeepSeek's peak windows. The card cites
-the first-party endpoint and the date it was read. The recorder labels the
-result `computed`, never `reported`, and a message without a timestamp on a
-peak-priced card or a model without a card records `unreported` rather than a
-guess. `evals/prices.yaml` keeps both models as `unpriced_reason` entries
-because a run's aggregate token counts cannot reproduce either rule. Cache-read
-tokens are priced from the published rate; DeepSeek's absent cache-write rate is
-recorded as `null` and costs nothing, which is not the same as a missing bucket.
+`usage.cost` is a catalog estimate at one fixed rate per bucket, drawn from
+whatever upstream its catalog happens to list. The adapter ignores it and
+prices each assistant message from `evals/coder-eval-omp/prices.json`, a dated
+snapshot of the Vercel AI Gateway endpoints API for the upstream the arm
+restricts itself to, using that message's own prompt size for a tier and its
+own timestamp for a peak window. Refresh and commit that snapshot before a
+benchmark; `evals/coder-eval-omp/README.md`'s Cost section has the sourcing
+rule and the two published details it has to assume. The recorder labels the
+result `computed`, never `reported`, and a model without a card records
+`unreported` rather than a guess. `evals/prices.yaml` keeps both models as
+`unpriced_reason` entries because a run's aggregate token counts cannot
+reproduce a tier or a window. Cache-read tokens are priced from the published
+rate; DeepSeek's absent cache-write rate is recorded as `null` and costs
+nothing, which is not the same as a missing bucket.
 
 Keep `TMPDIR` outside this evaluation checkout, with space for preserved
 sandboxes and dependency environments. The contact detector rejects printed

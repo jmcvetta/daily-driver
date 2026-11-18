@@ -208,30 +208,55 @@ under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`.
 
 ## Cost
 
-`pricing.py` prices a run from `prices.json`, a hand-maintained table of USD
-per million input/output tokens keyed by model identifier — the same spelling
-`omp_configs/*.yml` and an experiment's `agent.model` use
-(`vercel-ai-gateway/zai/glm-5.3`, not a bare model name). Nothing fetches a
-price at run time: the table is a dated snapshot, sourced from
-`@oh-my-pi/pi-catalog@18.4.2`'s bundled model catalog, of the models the
-current `evals/experiments/omp-*.yaml` files actually run. A model with no row
-prices `total_cost_usd` as `None` (`coder_eval`'s own "unreported", not
-`0.0`) — adding a new Omp model to an experiment means adding its row here
-too. `pricing.py` is pure, like `rpc.py`; it prices recorded token usage without
-a `coder_eval` install.
+**Rates come from the gateway, not from a person and not from Omp.**
+`prices.json` is a dated snapshot of the Vercel AI Gateway endpoints API —
+`https://ai-gateway.vercel.sh/v1/models/<provider>/<model>/endpoints`, public
+and unauthenticated — for the upstream an arm restricts itself to with
+`vercel_gateway_only`. Each row carries `source` and `read_on`. Refresh the
+snapshot before a benchmark and commit it, so every record can name the card
+that priced it.
 
-**A dated card prices each message, not each run.** Omp's `usage.cost` object
-is a local catalog estimate at one fixed rate per bucket — for
-`deepseek/deepseek-v4.1-flash-1017` it says 0.3/1.2/0.007 USD per million,
-which is the gateway's *baseten* upstream, whatever `vercel_gateway_only`
-selected. It is not a provider bill. The adapter therefore ignores it and
-lets `pricing.cost_usd` price every assistant message from the card, using
-that message's own prompt size for a `tier` and its own `timestamp` for a
-`peak` window. A row may add `cache_read_usd_per_million` and
-`cache_write_usd_per_million`; `null` records a bucket the upstream does not
-bill. Without a timestamp on a peak-priced row, or without a row at all, the
-turn is reported as unreported rather than completed at a flat rate. The
-recorder marks an Omp figure `computed`, never `reported`.
+Two things must not be used as a price:
+
+- **Omp's `usage.cost`.** Omp prices from its bundled catalog, which stores one
+  rate per model id no matter how many upstreams serve it, and applies neither
+  tiers nor peak windows. For `deepseek/deepseek-v4.1-flash-1017` the catalog
+  says 0.3/1.2/0.007 USD per million — the gateway's *baseten* card — even
+  under a `deepseek`-only restriction, whose published rates are 0.15/0.6/0.003.
+  It is an estimate about an upstream the arm may not have used.
+- **A hand-typed row.** Hand-keying is how the baseten figure came to sit under
+  a restricted DeepSeek arm in the first place.
+
+Rows are keyed by the model identifier exactly as `omp_configs/*.yml` and an
+experiment's `agent.model` spell it (`vercel-ai-gateway/zai/glm-5.3`, not a
+bare model name); a trailing `:<level>` thinking suffix is stripped before
+lookup. A model with no row prices `total_cost_usd` as `None`
+(`coder_eval`'s own "unreported", not `0.0`).
+
+**A card prices each message, not each run.** `pricing.cost_usd` prices every
+assistant message using that message's own prompt size for a `tier` and its own
+`timestamp` for a `peak` window, because both are properties of one request and
+`run.json` keeps only run-level aggregates. A row may add
+`cache_read_usd_per_million` and `cache_write_usd_per_million`; `null` records
+a bucket the upstream does not bill, which is not the same as a missing rate.
+Without a timestamp on a peak-priced row, or without a row at all, the turn is
+reported as unreported rather than completed at a flat rate. The recorder marks
+an Omp figure `computed`, never `reported`.
+
+**Two published details the endpoints API does not settle, recorded as
+assumptions rather than resolved silently:**
+
+- `peak_pricing.holiday_calendar: "cn"` excludes Chinese public holidays from a
+  peak window, and no holiday list is published with it. Holidays inside a
+  window are priced as peak, which overstates cost on those days.
+- A tier publishes `max: 272001` on the low card and `min: 272001` on the high
+  one, overlapping at exactly that value, and does not say whether the tier is
+  chosen by total prompt tokens including cached input. The card applies the
+  higher tier at `>= prompt_tokens_at_least`, counted over uncached input plus
+  cache read plus cache write.
+
+`pricing.py` is pure, like `rpc.py`: it reads the committed snapshot, makes no
+network call, and prices recorded token usage without a `coder_eval` install.
 
 ## What is tested, and what is not
 
