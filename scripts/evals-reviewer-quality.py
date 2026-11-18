@@ -287,6 +287,28 @@ def verify_reviewer_telemetry(
     return evidence
 
 
+def identity_mismatch(reviewer_identity: str, requested: str) -> bool:
+    """Whether a child's reported identity disagrees with the arm's selector.
+
+    A Vercel child reports its provider-local id (`mistral/…`), not the gateway
+    prefix, so the gateway's own prefix is not compared; the upstream is checked
+    from the adapter's resolved identity instead. Each other provider is
+    compared by prefix, model id and any reported thinking suffix.
+    """
+    expected_provider = requested.split("/", 1)[0]
+    reported_provider = reviewer_identity.split("/", 1)[0] if "/" in reviewer_identity else None
+    provider_mismatch = (
+        expected_provider != "vercel-ai-gateway"
+        and reported_provider is not None
+        and reported_provider != expected_provider
+    )
+    effort_mismatch = (
+        ":" in reviewer_identity
+        and reviewer_identity.rsplit(":", 1)[1] != requested.rsplit(":", 1)[1]
+    )
+    return provider_mismatch or effort_mismatch or normalize_model(reviewer_identity) != normalize_model(requested)
+
+
 def reviewer_result_fields(text: str | None) -> tuple[str, str]:
     """Read explicit reported identity and verdict from the final response."""
     if not text:
@@ -739,18 +761,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 judge = judge_evidence(run_dir, record, args.variant, case, repeat) if row else {"status": "unavailable", "classifications": [], "score": "unavailable"}
                 if reviewer_identity != "unreported":
                     observed_identities.append(reviewer_identity)
-                    expected_provider = requested.split("/", 1)[0]
-                    reported_provider = reviewer_identity.split("/", 1)[0] if "/" in reviewer_identity else None
-                    # A Vercel child reports its provider-local id (`mistral/…`),
-                    # not the gateway prefix; its upstream is checked from the
-                    # adapter's resolved identity instead.
-                    provider_mismatch = (
-                        expected_provider != "vercel-ai-gateway"
-                        and reported_provider is not None
-                        and reported_provider != expected_provider
-                    )
-                    effort_mismatch = ":" in reviewer_identity and reviewer_identity.rsplit(":", 1)[1] != requested.rsplit(":", 1)[1]
-                    if provider_mismatch or effort_mismatch or normalize_model(reviewer_identity) != normalize_model(requested):
+                    if identity_mismatch(reviewer_identity, requested):
                         attribution_mismatches.append({"run_id": run_id, "case_id": case, "repeat": str(repeat), "reported": reviewer_identity, "expected_selector": requested})
                 if not row:
                     status = "unattempted"
@@ -1180,8 +1191,20 @@ def _test_delivery_and_cost_summary() -> None:
     assert summary["latency_reviewer_seconds"]["median"] == 2.0
 
 
+def _test_identity_mismatch() -> None:
+    requested = "vercel-ai-gateway/mistral/mistral-large-4:low"
+    assert not identity_mismatch("mistral/mistral-large-4", requested)
+    assert identity_mismatch("zai/glm-5.3", requested)
+    assert identity_mismatch("mistral/mistral-large-4:high", requested)
+    assert identity_mismatch("mistral/mistral-large-3", requested)
+    go_requested = "opencode-go/deepseek-v4-pro:high"
+    assert not identity_mismatch("opencode-go/deepseek-v4-pro:high", go_requested)
+    assert identity_mismatch("vercel-ai-gateway/deepseek/deepseek-v4-pro:high", go_requested)
+
+
 def _run_self_tests() -> None:
     _test_reviewer_telemetry()
+    _test_identity_mismatch()
     _test_delivery_and_cost_summary()
 
 

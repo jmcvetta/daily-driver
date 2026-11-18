@@ -195,5 +195,12 @@ One row per committed record, oldest first.
 | 2026-11-11 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 2 | 0/2 | subscription | subscription | 1m 07s |
 | 2026-11-13 | with-without | claude-code | claude-sonnet-5 | omp-gpt-6.1-sol (run-selected) | 4 | 0/4 | $1.53 | no task completed | 4m 44s |
 | 2026-11-13 | omp-gpt-6-1-sol | omp | openai-codex/gpt-6.1-sol (requested) | omp-gpt-6.1-sol (run-selected) | 6 | 5/6 | subscription | subscription | 1m 00s |
+| 2026-11-18 | omp-reviewer-mistral-large-4-vercel | omp | vercel-ai-gateway/openai/gpt-6.1-sol:low (requested) | omp-vercel-gpt-6.1-sol (run-selected) | 2 | 2/2 | $0.09 | $0.05 | 1m 59s |
+| 2026-11-18 | omp-reviewer-deepseek-v4-pro-vercel | omp | vercel-ai-gateway/openai/gpt-6.1-sol:low (requested) | omp-vercel-gpt-6.1-sol (run-selected) | 2 | 2/2 | $0.08 | $0.04 | 1m 55s |
+| 2026-11-18 | omp-reviewer-luna-vercel | omp | vercel-ai-gateway/openai/gpt-6.1-sol:low (requested) | omp-vercel-gpt-6.1-sol (run-selected) | 2 | 2/2 | $0.08 | $0.04 | 2m 16s |
+| 2026-11-18 | omp-reviewer-kimi-vercel | omp | vercel-ai-gateway/openai/gpt-6.1-sol:low (requested) | omp-vercel-gpt-6.1-sol (run-selected) | 2 | 2/2 | $0.08 | $0.04 | 2m 03s |
+| 2026-11-18 | omp-reviewer-glm-5-3-vercel | omp | vercel-ai-gateway/openai/gpt-6.1-sol:low (requested) | omp-vercel-gpt-6.1-sol (run-selected) | 2 | 2/2 | $0.08 | $0.04 | 1m 58s |
+| 2026-11-18 | omp-reviewer-qwen4-max-vercel | omp | vercel-ai-gateway/openai/gpt-6.1-sol:low (requested) | omp-vercel-gpt-6.1-sol (run-selected) | 2 | 2/2 | $0.08 | $0.04 | 2m 23s |
+| 2026-11-18 | omp-reviewer-mimo-v2-6-pro-vercel | omp | vercel-ai-gateway/openai/gpt-6.1-sol:low (requested) | omp-vercel-gpt-6.1-sol (run-selected) | 2 | 2/2 | $0.08 | $0.04 | 2m 18s |
 | 2026-11-19 | classes-gpt-6-luna-gateway | omp | vercel-ai-gateway/openai/gpt-6-luna:high (requested) | not recorded | 30 | 24/30 | not recorded | not recorded | 52m 52s |
 | 2026-11-19 | classes-deepseek-v4-1-flash-gateway | omp | vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high (requested) | not recorded | 30 | 16/30 | not recorded | not recorded | 49m 10s |
