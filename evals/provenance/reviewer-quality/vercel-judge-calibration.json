@@ -1,0 +1,37 @@
+{
+  "judge_id": "omp-vercel-gpt-6.1-sol",
+  "model": "vercel-ai-gateway/openai/gpt-6.1-sol",
+  "measured_at": "2026-11-18",
+  "sets": [
+    {
+      "set_id": "reviewer-quality-01-boundary-v1",
+      "correct": 3,
+      "total": 3,
+      "false_passes": 0,
+      "errors": 0,
+      "met_acceptance_rule": true,
+      "record": "vercel-judge-calibration-full.json"
+    },
+    {
+      "set_id": "reviewer-quality-07-delta-fixed-v2",
+      "correct": 3,
+      "total": 3,
+      "false_passes": 0,
+      "errors": 0,
+      "met_acceptance_rule": true,
+      "record": "vercel-judge-calibration-fixed.json"
+    },
+    {
+      "set_id": "reviewer-quality-08-delta-incomplete-v2",
+      "correct": 3,
+      "total": 3,
+      "false_passes": 0,
+      "errors": 0,
+      "met_acceptance_rule": true,
+      "record": "vercel-judge-calibration-incomplete.json"
+    }
+  ],
+  "rule": "Each committed set's declared acceptance rule: 100% of labels, no false passes, no errors.",
+  "result": "9/9 labels reproduced, 0 false passes, 0 errors, every set met.",
+  "scope": "This exact judge route and settings. The earlier openai-codex calibration is a different serving path and does not transfer."
+}

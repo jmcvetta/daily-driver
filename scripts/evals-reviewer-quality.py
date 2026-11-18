@@ -4,14 +4,18 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib
 import json
 import statistics
 import math
 import re
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 CASE_IDS = (
     "reviewer-quality-01-boundary",
@@ -102,6 +106,163 @@ def reviewer_delivery_observed(path: Path | None, final: str | None) -> bool:
                 if value == expected:
                     return True
     return False
+
+
+REVIEWER_TELEMETRY_FILENAME = "omp-reviewer-telemetry.json"
+
+
+def delivered_reviewer_id(path: Path | None) -> str | None:
+    """The subagent id a completed `<task-result>` delivered to the parent, if any.
+
+    The delivery text names the reviewer that produced the result, so the
+    adapter's child telemetry can be matched to that exact id rather than to
+    whichever reviewer happened to run last.
+    """
+    if path is None or path.name != "task.json" or not path.is_file():
+        return None
+    task = json_file(path)
+    found: list[str] = []
+    for iteration in task.get("iterations", []):
+        for command in iteration.get("commands", []):
+            result = str(command.get("result_summary") or "")
+            for tag in re.finditer(r'<task-result\b[^>]*\bagent="reviewer"[^>]*\bstatus="completed"[^>]*>', result):
+                match = re.search(r'\bid="([^"]+)"', tag.group(0))
+                if match:
+                    found.append(match.group(1))
+    return found[-1] if found else None
+
+
+def reviewer_telemetry_evidence(artifact_dir: Path, delivered_id: str | None) -> dict[str, Any]:
+    """Read the adapter's reviewer-child telemetry for one attempt.
+
+    A `.pending` guard, a missing file, an incomplete document and an
+    unreadable one all mean the same thing for the cost comparison: the
+    reviewer's usage is unavailable. They are reported distinctly so the
+    reason survives the run.
+    """
+    guard = artifact_dir / f"{REVIEWER_TELEMETRY_FILENAME}.pending"
+    if guard.exists():
+        return {"status": "guard"}
+    path = artifact_dir / REVIEWER_TELEMETRY_FILENAME
+    if not path.is_file():
+        return {"status": "missing"}
+    try:
+        document = json_file(path)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return {"status": "unreadable", "error": str(exc)}
+    if document.get("version") != 1 or document.get("complete") is not True:
+        return {"status": "incomplete"}
+    reviewers: list[dict[str, Any]] = []
+    for attempt in document.get("attempts", []):
+        if not isinstance(attempt, dict):
+            continue
+        for subagent in attempt.get("subagents", []):
+            if isinstance(subagent, dict) and subagent.get("agent") == "reviewer":
+                reviewers.append(subagent)
+    if not reviewers:
+        return {"status": "no_reviewer"}
+    if delivered_id is not None:
+        matched = [subagent for subagent in reviewers if subagent.get("id") == delivered_id]
+        if not matched:
+            return {"status": "delivery_mismatch", "delivered_id": delivered_id}
+        subagent = matched[-1]
+    else:
+        completed = [subagent for subagent in reviewers if subagent.get("status") == "completed"]
+        if len(completed) != 1:
+            return {"status": "ambiguous", "reviewer_records": len(reviewers)}
+        subagent = completed[0]
+    messages = [message for message in subagent.get("messages", []) if isinstance(message, dict)]
+    models = sorted({str(message.get("model")) for message in messages if isinstance(message.get("model"), str)})
+    usage: dict[str, Any] | None = {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache_read": 0,
+        "cache_write": 0,
+    }
+    reasoning_reported = True
+    for message in messages:
+        message_usage = message.get("usage")
+        if not isinstance(message_usage, dict):
+            usage = None
+            break
+        assert usage is not None
+        for bucket in ("input", "output", "cache_read", "cache_write"):
+            value = message_usage.get(bucket)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+                usage = None
+                break
+            usage[bucket] += int(value)
+        if usage is None:
+            break
+        reasoning = message_usage.get("reasoning")
+        if isinstance(reasoning, (int, float)) and not isinstance(reasoning, bool) and reasoning >= 0:
+            usage["reasoning"] += int(reasoning)
+        else:
+            reasoning_reported = False
+    if usage is not None and not reasoning_reported:
+        usage["reasoning"] = None
+    return {
+        "status": "verified",
+        "subagent_id": subagent.get("id"),
+        "status_detail": subagent.get("status"),
+        "requested_model": subagent.get("requested_model"),
+        "model_role": subagent.get("model_role"),
+        "resolved_model_identity": subagent.get("resolved_model_identity"),
+        "resolved_thinking_level": subagent.get("resolved_thinking_level"),
+        "backend_provider": subagent.get("backend_provider"),
+        "backend_model": subagent.get("backend_model"),
+        "harness_models": models,
+        "elapsed_ms": subagent.get("elapsed_ms"),
+        "generation_ms": subagent.get("generation_ms"),
+        "message_count": subagent.get("message_count"),
+        "usage": usage,
+        "cost_usd": subagent.get("cost_usd", "unreported"),
+    }
+
+
+def selector_key(value: str) -> str:
+    """A selector without its trailing thinking level."""
+    return value.rsplit(":", 1)[0] if ":" in value.rsplit("/", 1)[-1] else value
+
+
+def verify_reviewer_telemetry(
+    evidence: dict[str, Any], requested: str, expected_upstreams: list[str] | None
+) -> dict[str, Any]:
+    """Check that the child evidence is the requested reviewer route and effort.
+
+    The adapter reports what Omp recorded; this function compares it with the
+    arm's fixed selector. Any disagreement is an attribution mismatch: the
+    record keeps the evidence, but the usage and cost do not enter a measured
+    comparison.
+    """
+    if evidence.get("status") != "verified":
+        return evidence
+    problems: list[str] = []
+    telem_requested = evidence.get("requested_model")
+    if not isinstance(telem_requested, str) or selector_key(telem_requested) != selector_key(requested):
+        problems.append(f"requested_model {telem_requested!r} != {requested!r}")
+    effort = requested.rsplit(":", 1)[1] if ":" in requested.rsplit("/", 1)[-1] else None
+    resolved = evidence.get("resolved_thinking_level")
+    if effort is not None and resolved != effort:
+        problems.append(f"resolved_thinking_level {resolved!r} != {effort!r}")
+    models = evidence.get("harness_models") or []
+    expected_model = normalize_model(requested)
+    if not models or any(normalize_model(model) != expected_model for model in models):
+        problems.append(f"harness models {models!r} != {expected_model!r}")
+    backend = evidence.get("backend_provider")
+    if expected_upstreams:
+        if backend not in expected_upstreams:
+            problems.append(f"backend_provider {backend!r} not in {expected_upstreams!r}")
+    role = evidence.get("model_role")
+    if role is not None and role != "review":
+        problems.append(f"model_role {role!r} != 'review'")
+    evidence = dict(evidence)
+    evidence["attribution_problems"] = problems
+    evidence["attribution_valid"] = not problems
+    if problems:
+        evidence["status"] = "attribution_mismatch"
+    return evidence
 
 
 def reviewer_result_fields(text: str | None) -> tuple[str, str]:
@@ -248,19 +409,56 @@ def reported_identity(
     repeat: int,
     parent_requested: str,
     helper_requested: str,
+    reviewer_requested: str = "unreported",
+    telemetry: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Return parent, helper, and judge identities without conflating roles."""
+    """Return parent, helper, reviewer, and judge identities without conflating roles."""
     case_rows = [row for row in (record or {}).get("cases", []) if row.get("task_id") == case and row.get("replicate_index") == repeat]
     parent_served = case_rows[0].get("model_served", "unreported") if case_rows else "unreported"
     judge = (record or {}).get("judge") or {}
+    evidence = telemetry or {}
     return {
         "parent": {"requested": parent_requested, "served": parent_served},
         "helper": {"requested": helper_requested, "served": "unreported"},
+        "reviewer": {
+            "requested": reviewer_requested,
+            "harness": ", ".join(evidence.get("harness_models") or []) or "unreported",
+            "role_route": evidence.get("requested_model") or "unreported",
+            "backend_served": evidence.get("backend_provider") or "unreported",
+            "resolved_thinking_level": evidence.get("resolved_thinking_level") or "unreported",
+        },
         "judge": {
             "requested": judge.get("model_requested", "unreported"),
             "served": judge.get("models_observed", "unreported"),
         },
     }
+
+
+def rubric_correct(entry: dict[str, Any]) -> bool:
+    """Whether the independent judge found this attempt's review correct.
+
+    Full reviews need a 1.0; a corrected delta is the suite's accepted pass at
+    0.7 with the clear/defect verdict and classification it defines.
+    """
+    if entry.get("status") != "completed":
+        return False
+    score = entry.get("score")
+    if not isinstance(score, (int, float)) or isinstance(score, bool):
+        return False
+    case = entry["case_id"]
+    if case.endswith("07-delta-fixed"):
+        return (
+            score >= 0.7
+            and "DELTA:clear" in entry["judge_classifications"]
+            and entry["reviewer_verdict"] == "clear"
+        )
+    if case.endswith("08-delta-incomplete"):
+        return (
+            score >= 0.7
+            and "TP:still-open" in entry["judge_classifications"]
+            and entry["reviewer_verdict"] == "defects"
+        )
+    return score >= 1.0
 
 
 def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]:
@@ -307,10 +505,46 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
             "verified_reviewer_completions": sum(entry["reviewer_status"] == "completed" for entry in group),
             "reviewer_errors": sum(entry["reviewer_status"] in {"incomplete", "provider_error", "harness_error"} for entry in group),
             "judge_errors": sum(entry["judge_status"] == "error" for entry in group),
+            "reviewer_telemetry_verified": sum(entry["reviewer_telemetry_status"] == "verified" for entry in group),
             "missing": sum(entry["status"] == "unattempted" for entry in group),
             "misses": misses,
         }
     reviewer_completed = sum(entry["reviewer_status"] == "completed" for entry in entries)
+    completed = [entry for entry in entries if entry["status"] == "completed"]
+    telemetry_verified = [entry for entry in entries if entry["reviewer_telemetry_status"] == "verified"]
+    telemetry_costed = [
+        entry
+        for entry in completed
+        if entry["reviewer_telemetry_status"] == "verified"
+        and isinstance(entry["reviewer_cost_usd"], (int, float))
+        and not isinstance(entry["reviewer_cost_usd"], bool)
+    ]
+    usage_totals: dict[str, Any] | None = None
+    for entry in telemetry_verified:
+        usage = entry.get("reviewer_usage")
+        if not isinstance(usage, dict):
+            continue
+        if usage_totals is None:
+            usage_totals = {bucket: 0 for bucket in ("input", "output", "reasoning", "cache_read", "cache_write")}
+        for bucket in usage_totals:
+            value = usage.get(bucket)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                if usage_totals[bucket] is not None:
+                    usage_totals[bucket] += int(value)
+            else:
+                usage_totals[bucket] = None
+    reviewer_latencies = [
+        entry["latency_reviewer_seconds"]
+        for entry in telemetry_verified
+        if isinstance(entry.get("latency_reviewer_seconds"), (int, float))
+    ]
+    correct_costed = [entry for entry in telemetry_costed if rubric_correct(entry)]
+    total_cost = sum(entry["reviewer_cost_usd"] for entry in telemetry_costed) if telemetry_costed else None
+    cost_comparison_valid = bool(completed) and all(
+        entry["reviewer_telemetry_status"] == "verified"
+        and isinstance(entry["reviewer_cost_usd"], (int, float))
+        for entry in completed
+    )
     return {
         "attempts": len(entries),
         "eligible": len(classes),
@@ -356,6 +590,33 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
             "mean": sum(latencies) / len(latencies) if latencies else None,
             "population_stddev": math.sqrt(sum((value - sum(latencies) / len(latencies)) ** 2 for value in latencies) / len(latencies)) if latencies else None,
         },
+        "reviewer_telemetry": {
+            "verified": len(telemetry_verified),
+            "guard": sum(entry["reviewer_telemetry_status"] == "guard" for entry in entries),
+            "missing": sum(entry["reviewer_telemetry_status"] == "missing" for entry in entries),
+            "incomplete": sum(entry["reviewer_telemetry_status"] in {"incomplete", "unreadable"} for entry in entries),
+            "no_reviewer": sum(entry["reviewer_telemetry_status"] == "no_reviewer" for entry in entries),
+            "delivery_mismatch": sum(entry["reviewer_telemetry_status"] == "delivery_mismatch" for entry in entries),
+            "ambiguous": sum(entry["reviewer_telemetry_status"] == "ambiguous" for entry in entries),
+            "attribution_mismatch": sum(entry["reviewer_telemetry_status"] == "attribution_mismatch" for entry in entries),
+            "usage": usage_totals if usage_totals is not None else "unavailable",
+            "cost_usd": total_cost if total_cost is not None else "unavailable",
+            "cost_reported_attempts": len(telemetry_costed),
+            "completed_attempts": len(completed),
+            "cost_comparison_valid": cost_comparison_valid,
+            "cost_per_rubric_correct_review_usd": (
+                total_cost / len(correct_costed) if total_cost is not None and correct_costed else None
+            ),
+            "rubric_correct_denominator": len(correct_costed),
+        },
+        "latency_reviewer_seconds": {
+            "count": len(reviewer_latencies),
+            "min": min(reviewer_latencies) if reviewer_latencies else None,
+            "median": statistics.median(reviewer_latencies) if reviewer_latencies else None,
+            "max": max(reviewer_latencies) if reviewer_latencies else None,
+            "mean": sum(reviewer_latencies) / len(reviewer_latencies) if reviewer_latencies else None,
+            "population_stddev": math.sqrt(sum((value - sum(reviewer_latencies) / len(reviewer_latencies)) ** 2 for value in reviewer_latencies) / len(reviewer_latencies)) if reviewer_latencies else None,
+        },
         "per_case": per_case,
     }
 
@@ -382,6 +643,13 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     requested = route_models.get("review", "unreported")
     parent_requested = experiments.get("defaults", {}).get("agent", {}).get("model", "unreported")
     helper_requested = route_models.get("task", "unreported")
+    restriction = experiments.get("defaults", {}).get("agent", {}).get("vercel_gateway_only")
+    expected_upstreams: list[str] | None = None
+    if isinstance(restriction, dict):
+        for selector, upstreams in restriction.items():
+            if selector_key(str(selector)) == selector_key(str(requested)) and isinstance(upstreams, list):
+                expected_upstreams = [str(value) for value in upstreams]
+                break
     settings_sha = sha256_file(args.experiment)
     overlay_sha = sha256_file(overlay_path)
     entries = []
@@ -416,6 +684,20 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 text = final_response(result_path)
                 reviewer_identity, reviewer_verdict = reviewer_result_fields(text)
                 delivery_observed = reviewer_delivery_observed(artifact, text)
+                telemetry = verify_reviewer_telemetry(
+                    reviewer_telemetry_evidence(artifact.parent, delivered_reviewer_id(artifact)),
+                    str(requested),
+                    expected_upstreams,
+                )
+                if telemetry.get("status") == "attribution_mismatch":
+                    attribution_mismatches.append({
+                        "run_id": run_id,
+                        "case_id": case,
+                        "repeat": str(repeat),
+                        "reported": "; ".join(telemetry.get("attribution_problems") or []),
+                        "expected_selector": str(requested),
+                    })
+                telemetry_verified = telemetry.get("status") == "verified"
                 reviewer_completed = bool(text) and reviewer_verdict in {"clear", "defects"} and delivery_observed
                 parent_reported_reviewer_identity = reviewer_identity
                 if not delivery_observed:
@@ -457,6 +739,19 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 attempt_seconds = run_record_case.get("elapsed_seconds")
                 if not isinstance(attempt_seconds, (int, float)) and row:
                     attempt_seconds = row.get("duration")
+                reviewer_latency = telemetry.get("elapsed_ms")
+                reviewer_latency_seconds = (
+                    reviewer_latency / 1000
+                    if isinstance(reviewer_latency, (int, float)) and not isinstance(reviewer_latency, bool)
+                    else "unavailable"
+                )
+                cost = telemetry.get("cost_usd")
+                if not telemetry_verified or not delivery_observed:
+                    reviewer_cost: float | str = "unavailable"
+                elif isinstance(cost, (int, float)) and not isinstance(cost, bool):
+                    reviewer_cost = cost
+                else:
+                    reviewer_cost = "unreported"
                 entries.append({
                     "case_id": case, "repeat": repeat, "arm": args.arm, "variant_id": args.variant,
                     "run_id": run_id, "status": status,
@@ -475,11 +770,17 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "reviewer_delivery_observed": delivery_observed,
                     "parent_reported_reviewer_identity": parent_reported_reviewer_identity,
                     "reviewer_reported_identity": reviewer_identity,
-                    "reviewer_backend_served": "unreported",
-                    "identity": reported_identity(record, case, repeat, parent_requested, helper_requested),
-                    "latency_reviewer_seconds": "unavailable",
+                    "reviewer_harness_model": ", ".join(telemetry.get("harness_models") or []) or "unreported",
+                    "reviewer_backend_served": telemetry.get("backend_provider") or "unreported",
+                    "reviewer_telemetry_status": telemetry.get("status"),
+                    "reviewer_telemetry": telemetry,
+                    "reviewer_subagent_id": telemetry.get("subagent_id", "unreported"),
+                    "reviewer_resolved_thinking_level": telemetry.get("resolved_thinking_level") or "unreported",
+                    "identity": reported_identity(record, case, repeat, parent_requested, helper_requested, str(requested), telemetry),
+                    "latency_reviewer_seconds": reviewer_latency_seconds,
                     "attempt_seconds": attempt_seconds if not interrupted and isinstance(attempt_seconds, (int, float)) else None,
-                    "reviewer_usage": "unavailable",
+                    "reviewer_usage": telemetry.get("usage") if telemetry_verified else "unavailable",
+                    "reviewer_cost_usd": reviewer_cost,
                     "judge_freeze_sha": judge.get("freeze_sha", "unreported"),
                     "artifact_sha256": sha256_file(result_path) if result_path and result_path.is_file() else "unavailable",
                 })
@@ -489,20 +790,35 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         if identity_required > 0 and len(observed_identities) == identity_required
         else None
     )
+    summary = summarize(entries, cases)
+    telemetry_summary = summary["reviewer_telemetry"]
+    telemetry_attribution_valid = (
+        telemetry_summary["attribution_mismatch"] == 0
+        and telemetry_summary["delivery_mismatch"] == 0
+        and telemetry_summary["ambiguous"] == 0
+        if telemetry_summary["verified"] > 0
+        else None
+    )
     return {
         "schema_version": 1,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "arm": args.arm,
         "attribution": {
             "expected_reviewer_selector": requested,
+            "expected_reviewer_upstreams": expected_upstreams or "unrestricted",
             "expected_model_id": normalize_model(requested),
             "reviewer_reported_identities": sorted(set(observed_identities)),
             "reported_model_ids": sorted({normalize_model(value) for value in observed_identities}),
             "valid": attribution_valid,
+            "telemetry_valid": telemetry_attribution_valid,
             "mismatches": attribution_mismatches,
-            "basis": "captured reviewer delivery and reported session identity; backend-served identity is unreported",
+            "basis": (
+                "captured reviewer delivery, adapter child telemetry, and Omp's resolved "
+                "role route, thinking level and upstream; a missing served identity is unreported"
+            ),
         },
         "analysis_valid": attribution_valid,
+        "cost_comparison_valid": telemetry_summary["cost_comparison_valid"],
         "settings": {
             "experiment_path": args.experiment.as_posix(),
             "experiment_sha256": settings_sha,
@@ -513,10 +829,266 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "coverage_complete": all(entry["status"] not in {"unattempted", "interrupted"} for entry in entries),
         "cohort_complete": all(entry["status"] not in {"unattempted", "interrupted"} and str(entry["task_status"]).upper() not in {"UNREPORTED", "PENDING", "RUNNING"} for entry in entries),
         "runs": links,
-        "summary": summarize(entries, cases),
+        "summary": summary,
         "attempts": entries,
         "winner": None,
     }
+
+
+# ---------------------------------------------------------------------------
+# Self-tests: offline, inline frames and artifacts.
+# ---------------------------------------------------------------------------
+
+
+def _adapter_module(name: str) -> Any:
+    """Import a pure adapter module from the checkout, without coder_eval."""
+    src = Path(__file__).resolve().parent.parent / "evals" / "coder-eval-omp" / "src"
+    if str(src) not in sys.path:
+        sys.path.insert(0, str(src))
+    return importlib.import_module(f"coder_eval_omp.{name}")
+
+
+def _telemetry_frames() -> list[dict[str, Any]]:
+    """The shape Omp 18.22.2 emitted in the reviewer telemetry probe."""
+    return [
+        {
+            "type": "subagent_lifecycle",
+            "payload": {
+                "id": "ReviewerChild",
+                "agent": "reviewer",
+                "parentToolCallId": "call_reviewer",
+                "status": "started",
+            },
+        },
+        {
+            "type": "subagent_progress",
+            "payload": {
+                "agent": "reviewer",
+                "parentToolCallId": "call_reviewer",
+                "progress": {
+                    "id": "ReviewerChild",
+                    "status": "running",
+                    "modelOverride": ["vercel-ai-gateway/mistral/mistral-large-4:low"],
+                    "modelRole": "review",
+                    "resolvedModelIdentity": "vercel-ai-gateway/mistral/mistral-large-4@mistral",
+                    "resolvedThinkingLevel": "low",
+                    "resolvedModel": "vercel-ai-gateway/mistral/mistral-large-4@mistral:low",
+                },
+            },
+        },
+        {
+            "type": "subagent_event",
+            "payload": {
+                "id": "ReviewerChild",
+                "event": {
+                    "type": "message_end",
+                    "message": {
+                        "role": "assistant",
+                        "model": "mistral/mistral-large-4",
+                        "provider": "vercel-ai-gateway",
+                        "responseId": "gen_test",
+                        "timestamp": 1795036498397,
+                        "duration": 2069.2258299999994,
+                        "ttft": 1333.5296550000003,
+                        "stopReason": "stop",
+                        "usage": {
+                            "input": 1000,
+                            "output": 200,
+                            "cacheRead": 100,
+                            "cacheWrite": 0,
+                            "reasoningTokens": 50,
+                        },
+                    },
+                },
+            },
+        },
+        {
+            "type": "subagent_lifecycle",
+            "payload": {
+                "id": "ReviewerChild",
+                "agent": "reviewer",
+                "parentToolCallId": "call_reviewer",
+                "status": "completed",
+            },
+        },
+    ]
+
+
+def _test_reviewer_telemetry() -> None:
+    telemetry = _adapter_module("telemetry")
+    home = _adapter_module("home")
+    recorder = telemetry.ReviewerTelemetry()
+    for frame in _telemetry_frames():
+        assert recorder.ingest(frame)
+    document = recorder.document(1, 0, "vercel-ai-gateway/openai/gpt-6.1-sol:low")
+    assert len(document["subagents"]) == 1
+    child = document["subagents"][0]
+    assert child["agent"] == "reviewer"
+    assert child["parent_tool_call_id"] == "call_reviewer"
+    assert child["requested_model"] == "vercel-ai-gateway/mistral/mistral-large-4:low"
+    assert child["backend_provider"] == "mistral"
+    assert child["resolved_thinking_level"] == "low"
+    assert child["messages"][0]["usage"] == {
+        "input": 1000,
+        "output": 200,
+        "cache_read": 100,
+        "cache_write": 0,
+        "reasoning": 50,
+    }
+    assert isinstance(child["cost_usd"], float)
+
+    with tempfile.TemporaryDirectory(prefix="reviewer-selftest-") as tmp:
+        attempt_dir = Path(tmp)
+        (attempt_dir / REVIEWER_TELEMETRY_FILENAME).write_text(
+            telemetry.artifact_document([document], complete=True), encoding="utf-8"
+        )
+        evidence = reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")
+        assert evidence["status"] == "verified", evidence
+        assert evidence["usage"] == {
+            "input": 1000,
+            "output": 200,
+            "reasoning": 50,
+            "cache_read": 100,
+            "cache_write": 0,
+        }
+        assert isinstance(evidence["cost_usd"], float)
+
+        verified = verify_reviewer_telemetry(
+            evidence, "vercel-ai-gateway/mistral/mistral-large-4:low", ["mistral"]
+        )
+        assert verified["status"] == "verified"
+        mismatch = verify_reviewer_telemetry(
+            evidence, "vercel-ai-gateway/mistral/mistral-large-4:low", ["baseten"]
+        )
+        assert mismatch["status"] == "attribution_mismatch"
+        assert any("backend_provider" in problem for problem in mismatch["attribution_problems"])
+
+        wrong_effort = verify_reviewer_telemetry(
+            evidence, "vercel-ai-gateway/mistral/mistral-large-4:high", ["mistral"]
+        )
+        assert wrong_effort["status"] == "attribution_mismatch"
+
+        (attempt_dir / f"{REVIEWER_TELEMETRY_FILENAME}.pending").mkdir()
+        assert reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")["status"] == "guard"
+        (attempt_dir / f"{REVIEWER_TELEMETRY_FILENAME}.pending").rmdir()
+        (attempt_dir / REVIEWER_TELEMETRY_FILENAME).unlink()
+        assert reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")["status"] == "missing"
+
+        # A child message without usage makes the priced total unreported.
+        incomplete = telemetry.ReviewerTelemetry()
+        frames = _telemetry_frames()
+        frames[2]["payload"]["event"]["message"].pop("usage")
+        for frame in frames:
+            incomplete.ingest(frame)
+        fragment = incomplete.document(1, 0, "parent:low")
+        assert fragment["subagents"][0]["cost_usd"] == "unreported"
+        assert fragment["subagents"][0]["messages"][0]["usage"] is None
+
+        # Two role routes merge into one private models.yml; a duplicate is refused.
+        agent_dir = Path(tmp) / "agent"
+        agent_dir.mkdir()
+        home.restrict_model_routes(
+            agent_dir,
+            [
+                ("vercel-ai-gateway", "openai/gpt-6.1-sol", ["openai"]),
+                ("vercel-ai-gateway", "mistral/mistral-large-4", ["mistral"]),
+            ],
+        )
+        merged = yaml.safe_load((agent_dir / "models.yml").read_text(encoding="utf-8"))
+        overrides = merged["providers"]["vercel-ai-gateway"]["modelOverrides"]
+        assert overrides["openai/gpt-6.1-sol"]["compat"]["vercelGatewayRouting"]["only"] == ["openai"]
+        assert overrides["mistral/mistral-large-4"]["compat"]["vercelGatewayRouting"]["only"] == ["mistral"]
+        try:
+            home.restrict_model_routes(
+                agent_dir,
+                [
+                    ("vercel-ai-gateway", "mistral/mistral-large-4", ["mistral"]),
+                    ("vercel-ai-gateway", "mistral/mistral-large-4", ["zai"]),
+                ],
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("restrict_model_routes accepted two allowlists for one model")
+
+
+def _test_delivery_and_cost_summary() -> None:
+    with tempfile.TemporaryDirectory(prefix="reviewer-selftest-") as tmp:
+        artifact = Path(tmp) / "task.json"
+        artifact.write_text(
+            json.dumps(
+                {
+                    "iterations": [
+                        {
+                            "commands": [
+                                {
+                                    "result_summary": (
+                                        '<task-result id="ReviewerChild" agent="reviewer" status="completed">'
+                                        "<output>{}</output></task-result>"
+                                    )
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        assert delivered_reviewer_id(artifact) == "ReviewerChild"
+
+    entries = [
+        {
+            "case_id": "reviewer-quality-01-boundary",
+            "repeat": 0,
+            "status": "completed",
+            "reviewer_status": "completed",
+            "reviewer_telemetry_status": "verified",
+            "reviewer_cost_usd": 0.5,
+            "reviewer_usage": {
+                "input": 100,
+                "output": 10,
+                "reasoning": 5,
+                "cache_read": 0,
+                "cache_write": 0,
+            },
+            "latency_reviewer_seconds": 2.0,
+            "judge_classifications": ["TP:reviewer-quality-01-boundary"],
+            "reviewer_verdict": "defects",
+            "score": 1.0,
+            "provider_error": False,
+            "harness_error": False,
+            "judge_status": "judged",
+            "attempt_seconds": 10.0,
+        },
+        {
+            "case_id": "reviewer-quality-02-contract",
+            "repeat": 0,
+            "status": "completed",
+            "reviewer_status": "completed",
+            "reviewer_telemetry_status": "missing",
+            "reviewer_cost_usd": "unavailable",
+            "reviewer_usage": "unavailable",
+            "latency_reviewer_seconds": "unavailable",
+            "judge_classifications": ["FN:reviewer-quality-02-contract"],
+            "reviewer_verdict": "clear",
+            "score": 0.0,
+            "provider_error": False,
+            "harness_error": False,
+            "judge_status": "judged",
+            "attempt_seconds": 10.0,
+        },
+    ]
+    summary = summarize(entries, [entry["case_id"] for entry in entries])
+    assert summary["reviewer_telemetry"]["verified"] == 1
+    assert summary["reviewer_telemetry"]["missing"] == 1
+    assert summary["reviewer_telemetry"]["cost_comparison_valid"] is False
+    assert summary["reviewer_telemetry"]["cost_per_rubric_correct_review_usd"] == 0.5
+    assert summary["latency_reviewer_seconds"]["median"] == 2.0
+
+
+def _run_self_tests() -> None:
+    _test_reviewer_telemetry()
+    _test_delivery_and_cost_summary()
 
 
 def parser() -> argparse.ArgumentParser:
@@ -541,6 +1113,11 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("--repeats must be positive")
     if args.record is not None and len(args.record) != len(args.run_dir):
         raise SystemExit("pass exactly one --record per --run-dir")
+    try:
+        _run_self_tests()
+    except AssertionError as exc:
+        print(f"error: collector self-test failed: {exc}", file=sys.stderr)
+        return 2
     try:
         result = build(args)
     except (OSError, json.JSONDecodeError, ValueError) as exc:

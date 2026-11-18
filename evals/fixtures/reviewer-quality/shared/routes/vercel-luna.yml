@@ -1,0 +1,30 @@
+# GPT-6 Luna at high effort, pinned to the first-party OpenAI endpoint.
+modelRoles:
+  default: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  smol: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  slow: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  vision: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  plan: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  commit: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  tiny: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  memory: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  task: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  advisor: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  mechanical: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  implementation: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  reasoning: vercel-ai-gateway/openai/gpt-6.1-sol:low
+  review: vercel-ai-gateway/openai/gpt-6-luna:high
+task:
+  maxConcurrency: 1
+  maxRecursionDepth: 1
+  maxRuntimeMs: 600000
+  softRequestBudget: 30
+  # A caller-supplied effort hint would outrank the fixed `:high` suffix.
+  enableEffort: false
+  agentModelOverrides:
+    reviewer: "@review"
+retry:
+  enabled: false
+  modelFallback: false
+  usageAwareFallback: false
+  waitForUsageReset: false

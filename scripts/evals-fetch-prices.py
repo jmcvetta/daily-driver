@@ -120,10 +120,26 @@ def restricted_arms(experiments_dir: Path) -> dict[str, tuple[str, ...]]:
     """Every gateway model an experiment restricts to named upstreams.
 
     Reads `defaults.agent` and each variant's own `agent`, because a variant
-    may override the model. A model restricted to different upstreams by two
-    experiments cannot have one row, so that is an error rather than a pick.
+    may override the model. A `vercel_gateway_only` mapping names several
+    routes — the parent and the reviewer role — and each one becomes its own
+    row. A model restricted to different upstreams by two experiments cannot
+    have one row, so that is an error rather than a pick.
     """
     arms: dict[str, tuple[str, ...]] = {}
+
+    def add(key: str, upstreams: Any, where: Path) -> None:
+        if not isinstance(upstreams, list) or not all(isinstance(name, str) and name for name in upstreams):
+            raise PriceError(f"{where}: vercel_gateway_only must be a list of upstream names or a mapping of them")
+        key = price_key(key)
+        split_model(key)
+        restriction = tuple(upstreams)
+        if key in arms and arms[key] != restriction:
+            raise PriceError(
+                f"{where}: {key} is restricted to {sorted(restriction)} here and "
+                f"{sorted(arms[key])} elsewhere; one row cannot price both"
+            )
+        arms[key] = restriction
+
     for path in sorted(experiments_dir.glob("*.yaml")):
         document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         agents = [(document.get("defaults") or {}).get("agent")]
@@ -134,20 +150,14 @@ def restricted_arms(experiments_dir: Path) -> dict[str, tuple[str, ...]]:
             if not isinstance(agent, dict):
                 continue
             model = agent.get("model")
-            upstreams = agent.get("vercel_gateway_only")
-            if not model or not upstreams:
+            restriction = agent.get("vercel_gateway_only")
+            if not model or not restriction:
                 continue
-            if not isinstance(upstreams, list) or not all(isinstance(name, str) and name for name in upstreams):
-                raise PriceError(f"{path}: vercel_gateway_only must be a list of upstream names")
-            key = price_key(str(model))
-            split_model(key)
-            restriction = tuple(upstreams)
-            if key in arms and arms[key] != restriction:
-                raise PriceError(
-                    f"{path}: {key} is restricted to {sorted(restriction)} here and "
-                    f"{sorted(arms[key])} elsewhere; one row cannot price both"
-                )
-            arms[key] = restriction
+            if isinstance(restriction, dict):
+                for selector, upstreams in restriction.items():
+                    add(str(selector), upstreams, path)
+                continue
+            add(str(model), restriction, path)
     return dict(sorted(arms.items()))
 
 
@@ -527,6 +537,15 @@ def _test_restricted_arms() -> None:
             "      vercel_gateway_only: [openai]\n"
         ),
         "unrestricted.yaml": "defaults:\n  agent:\n    model: vercel-ai-gateway/zai/glm-5.3\n",
+        "role-mapping.yaml": (
+            "defaults:\n"
+            "  agent:\n"
+            "    type: omp\n"
+            "    model: vercel-ai-gateway/openai/gpt-6.1-sol:low\n"
+            "    vercel_gateway_only:\n"
+            "      vercel-ai-gateway/openai/gpt-6.1-sol: [openai]\n"
+            "      vercel-ai-gateway/zai/glm-5.3: [zai]\n"
+        ),
     }
     with tempfile.TemporaryDirectory(prefix="prices-selftest-") as tmp:
         directory = Path(tmp)
@@ -536,6 +555,8 @@ def _test_restricted_arms() -> None:
         assert arms == {
             "vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017": ("deepseek",),
             "vercel-ai-gateway/openai/gpt-6-luna": ("openai",),
+            "vercel-ai-gateway/openai/gpt-6.1-sol": ("openai",),
+            "vercel-ai-gateway/zai/glm-5.3": ("zai",),
         }, arms
 
         (directory / "conflict.yaml").write_text(

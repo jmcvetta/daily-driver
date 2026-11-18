@@ -27,7 +27,21 @@ PUSHBACK = re.compile(
 def main() -> int:
     """Dispatch only the named arm and phase into a fresh explicit run directory."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--arm", choices=("glm", "deepseek"), required=True)
+    parser.add_argument(
+        "--arm",
+        choices=(
+            "glm",
+            "deepseek",
+            "vercel-deepseek-pro",
+            "vercel-luna",
+            "vercel-kimi",
+            "vercel-glm",
+            "vercel-qwen",
+            "vercel-mimo",
+            "vercel-mistral",
+        ),
+        required=True,
+    )
     parser.add_argument("--phase", choices=("smoke", "cohort", "delta"), required=True)
     parser.add_argument("--run-dir", type=Path, required=True)
     args = parser.parse_args()
@@ -37,6 +51,13 @@ def main() -> int:
     experiment = {
         "glm": "omp-reviewer-glm-5.3-go.yaml",
         "deepseek": "omp-reviewer-deepseek-v4-pro-go.yaml",
+        "vercel-deepseek-pro": "omp-reviewer-deepseek-v4-pro-vercel.yaml",
+        "vercel-luna": "omp-reviewer-luna-vercel.yaml",
+        "vercel-kimi": "omp-reviewer-kimi-vercel.yaml",
+        "vercel-glm": "omp-reviewer-glm-5.3-vercel.yaml",
+        "vercel-qwen": "omp-reviewer-qwen4-max-vercel.yaml",
+        "vercel-mimo": "omp-reviewer-mimo-v2.6-pro-vercel.yaml",
+        "vercel-mistral": "omp-reviewer-mistral-large-4-vercel.yaml",
     }[args.arm]
     cases = sorted((ROOT / "evals/tasks-judged/reviewer-quality").glob("*.yaml"))
     if len(cases) != 8:
@@ -48,6 +69,7 @@ def main() -> int:
     command = [
         "uv", "tool", "run", "--isolated", "--python", "3.13",
         "--from", "coder-eval==0.11.6",
+        "--with", "typer==0.24.1",
         "--with-editable", str(ROOT / "evals/coder-eval-omp"),
         "--with-editable", str(ROOT / "evals/coder-eval-codex"),
         "coder-eval", "run", "--include-skipped", "--max-parallel", "1", "--stream", "full",

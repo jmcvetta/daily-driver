@@ -1,0 +1,86 @@
+{
+  "acceptance_rule": {
+    "max_errors": 0,
+    "max_false_passes": 0,
+    "min_accuracy": 1.0,
+    "pass_score": 0.7
+  },
+  "correct": 3,
+  "errors": 0,
+  "examples": [
+    {
+      "correct": true,
+      "id": "true-positive-boundary",
+      "kind": "true-positive",
+      "label": "pass",
+      "observed_model": "openai/gpt-6.1-sol",
+      "predicted": "pass",
+      "rationale": "The report correctly identifies the exclusive end expression in records.py's page function, the positive-limit undercount, and the resulting skipped record during pagination.",
+      "score": 1.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 653,
+        "output": 49
+      }
+    },
+    {
+      "correct": true,
+      "id": "unsupported-finding",
+      "kind": "false-positive",
+      "label": "fail",
+      "observed_model": "openai/gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The report misses the off-by-one defect in page's exclusive slice end, which returns one fewer record for positive limits and can skip pagination results. Its input-validation and zero-limit findings do not match the required trigger or impact and provide no credible evidence of separate defects.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 668,
+        "output": 105
+      }
+    },
+    {
+      "correct": true,
+      "id": "missed-boundary-defect",
+      "kind": "missed-defect",
+      "label": "fail",
+      "observed_model": "openai/gpt-6.1-sol",
+      "predicted": "fail",
+      "rationale": "The agent reported no findings and missed the off-by-one defect in records.py page: the exclusive end offset + limit - 1 returns one fewer record for positive limits, omitting the page boundary item and potentially skipping results.",
+      "score": 0.0,
+      "usage": {
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "input": 614,
+        "output": 65
+      }
+    }
+  ],
+  "false_passes": 0,
+  "judge": {
+    "judge_id": "omp-vercel-gpt-6.1-sol",
+    "model_requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+    "route": "omp",
+    "settings": {
+      "thinking": "off",
+      "timeout_seconds": 300,
+      "vercel_gateway_only": [
+        "openai"
+      ]
+    },
+    "status": "candidate"
+  },
+  "labels_sha": "fd4417bcc8b6ba4c8d5c890c2958ca5b8649b75a9d1ac1abb2060c60d5021f3b",
+  "met_acceptance_rule": true,
+  "prompt_version": "omp-judge-v2",
+  "rubric_prompt_sha": "63c268a35281441484010cc471b6902b6c7d603e6b90800ade58b38dc29c30b7",
+  "rubric_source": {
+    "criterion": 0,
+    "presented_as": "agent_output",
+    "task": "evals/tasks/reviewer-quality/01-boundary.yaml"
+  },
+  "schema_version": 1,
+  "set_id": "reviewer-quality-01-boundary-v1",
+  "total": 3
+}
