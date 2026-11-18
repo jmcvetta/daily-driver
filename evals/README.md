@@ -2385,7 +2385,7 @@ and `setting_sources: [project]` — so an advisor or a plugin in the operator's
 own user settings never reaches the model under test.
 
 `defaults.repeats` is 3 in the historical files. The two gateway coding arms
-declare 10, because a matched comparison needs the same ten-replicate
+declare 5, because a matched comparison needs the same five-replicate
 denominator on both sides. A full run is that many replicates per case per
 model, each a real `git apply` plus the
 repository's own test command (`pytest` or `pnpm exec vitest`) inside a
@@ -2401,14 +2401,16 @@ prices each assistant message from `evals/coder-eval-omp/prices.json`, a dated
 snapshot of the Vercel AI Gateway endpoints API for the upstream the arm
 restricts itself to, using that message's own prompt size for a tier and its
 own timestamp for a peak window. Refresh and commit that snapshot before a
-benchmark; `evals/coder-eval-omp/README.md`'s Cost section has the sourcing
-rule and the two published details it has to assume. The recorder labels the
-result `computed`, never `reported`, and a model without a card records
-`unreported` rather than a guess. `evals/prices.yaml` keeps both models as
-`unpriced_reason` entries because a run's aggregate token counts cannot
-reproduce a tier or a window. Cache-read tokens are priced from the published
-rate; DeepSeek's absent cache-write rate is recorded as `null` and costs
-nothing, which is not the same as a missing bucket.
+benchmark: `python3 scripts/evals-fetch-prices.py` rewrites it from the API for
+every gateway model an experiment restricts with `vercel_gateway_only`, and
+`--check` reports a stale one; `evals/coder-eval-omp/README.md`'s Cost section
+has the sourcing rule and the two published details it has to assume. The
+recorder labels the result `computed`, never `reported`, and a model without a
+card records `unreported` rather than a guess. `evals/prices.yaml` keeps both
+models as `unpriced_reason` entries because a run's aggregate token counts
+cannot reproduce a tier or a window. Cache-read tokens are priced from the
+published rate; DeepSeek's absent cache-write rate is recorded as `null` and
+costs nothing, which is not the same as a missing bucket.
 
 Keep `TMPDIR` outside this evaluation checkout, with space for preserved
 sandboxes and dependency environments. The contact detector rejects printed

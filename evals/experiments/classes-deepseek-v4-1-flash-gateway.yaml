@@ -10,8 +10,10 @@
 # runs it.
 #
 # The route is the gateway's first-party DeepSeek endpoint only. The upstream
-# publishes peak-hour multipliers and no cache-write rate, so a flat local rate
-# card cannot price it; the run records the gateway's own `usage.cost` instead.
+# publishes peak-hour multipliers and no cache-write rate; the adapter prices
+# each assistant message from the committed endpoint snapshot, applying the
+# message's own timestamp to the peak window and recording the absent
+# cache-write bucket as null.
 experiment_id: classes-deepseek-v4-1-flash-gateway
 description: >-
   Model-class capability on the six fixed merged-PR cases,
@@ -19,11 +21,11 @@ description: >-
   DeepSeek upstream, in the `task` role.
 
 defaults:
-  repeats: 10
+  repeats: 5
   run_limits:
     max_turns: 30
     task_timeout: 780
-    turn_timeout: 600
+    turn_timeout: 660
   agent:
     type: omp
     model: vercel-ai-gateway/deepseek/deepseek-v4.1-flash-1017:high

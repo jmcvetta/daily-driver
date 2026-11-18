@@ -214,7 +214,12 @@ under `fixtures/fix-daily-driver-bugs/dispatch-evidence/`.
 and unauthenticated — for the upstream an arm restricts itself to with
 `vercel_gateway_only`. Each row carries `source` and `read_on`. Refresh the
 snapshot before a benchmark and commit it, so every record can name the card
-that priced it.
+that priced it: `python3 scripts/evals-fetch-prices.py` rewrites it for every
+gateway model an experiment restricts to one upstream, and fails rather than
+guess when that upstream is missing from the response or matched twice.
+`--check` reports a snapshot that no longer matches the API. Rows for models
+no experiment restricts are dropped, because an unrestricted gateway model has
+one card per upstream and nothing can choose between them.
 
 Two things must not be used as a price:
 

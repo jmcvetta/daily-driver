@@ -18,11 +18,11 @@ description: >-
   in the `task` role.
 
 defaults:
-  repeats: 10
+  repeats: 5
   run_limits:
     max_turns: 30
     task_timeout: 780
-    turn_timeout: 600
+    turn_timeout: 660
   agent:
     type: omp
     model: vercel-ai-gateway/openai/gpt-6-luna:high
