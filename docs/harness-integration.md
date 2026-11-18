@@ -2,6 +2,23 @@
 
 Daily Driver shares skill instructions and a marketplace catalog across Omp, Claude Code and Codex. Tool calls live in each skill's `references/` directory. Runtime adapters handle the differences between harnesses.
 
+## Support levels
+
+Omp is the supported harness. The required eval arms are the `omp-*.yaml`
+experiments that `make evals-run-omp` runs, and the live runtime checks in CI
+cover Omp alone.
+
+Claude Code and Codex are best effort. Their plugins, hooks and per-skill
+`references/claude.md` and `references/codex.md` routes are written and
+maintained on each change, and their eval arms stay in `evals/` for manual use,
+but nothing gates on them. A Claude Code or Codex bug is accepted and fixed
+best effort; the fix gets a targeted eval kept under `evals/experiments/` so it
+can be rerun later, and that eval never joins the required set.
+
+CI keeps its static checks: they cover the shared skill tree and the Omp and
+Claude plugin manifests. The Codex manifest is not validated. The live runtime
+checks remain Omp-only.
+
 Claude Code repository instructions live in `.claude/CLAUDE.md`, which imports
 the root `AGENTS.md`. This project context is distinct from plugin-delivered
 skills and the constitution injected by runtime hooks.

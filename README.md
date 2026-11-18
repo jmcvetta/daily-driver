@@ -1,9 +1,12 @@
 # daily-driver
 
 Daily Driver gives coding agents a shared engineering constitution, task-specific
-skills, and runtime integrations for Omp, Claude Code and Codex. You direct the
-task; the agent uses the workflow to plan, implement, verify, and prepare its
-change for review.
+skills, and runtime integrations for Omp, Claude Code and Codex. Omp is the
+supported harness: required evals and live checks cover it. Claude Code and
+Codex are best effort: their plugins, hooks and per-skill reference files are
+maintained, but no required eval arm or live runtime check gates on them. You
+direct the task; the agent uses the workflow to plan, implement, verify, and
+prepare its change for review.
 
 This is the author's personal toolkit, published without a license. See
 [License](#license) and [ANTI-LICENSE.md](ANTI-LICENSE.md); installation does
@@ -17,12 +20,18 @@ migration, cloud configuration and compatibility limits are in
 
 ### Omp
 
+Supported and tested: the required eval arms and the live runtime checks run on
+Omp.
+
 ```sh
 omp plugin marketplace add jmcvetta/daily-driver
 omp plugin install daily-driver@daily-driver
 ```
 
 ### Claude Code
+
+Best effort. The plugin, hooks and `references/claude.md` routes are maintained
+on each change, but no required eval or live check covers Claude Code.
 
 ```sh
 claude plugin marketplace add jmcvetta/daily-driver
@@ -31,7 +40,9 @@ claude plugin install daily-driver@daily-driver
 
 ### Codex
 
-Codex uses `plugin add`:
+Best effort, like Claude Code: the plugin, hooks and `references/codex.md` routes
+are maintained, without a required eval arm or live check. Codex uses
+`plugin add`:
 
 ```sh
 codex plugin marketplace add jmcvetta/daily-driver

@@ -7,6 +7,14 @@ the short version is that the built-in cannot be run on this account, is
 publicly undocumented, announces no changes, and — decisively — ships inside
 the `claude` binary, so there is no version to hold back.
 
+The arms run by `make evals-run-omp` are the required arms: their results are
+the eval evidence for the supported harness, Omp. The Claude Code arms
+(`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`),
+the Codex arm (`codex.yaml`), and the `classes-*.yaml` experiments are manual:
+kept and runnable, but no gate requires them. A fix for a Claude Code or Codex
+bug gets a targeted eval kept under `experiments/` so it can be rerun later;
+that eval stays manual.
+
 ```
 evals/
 ├── experiments/
@@ -897,6 +905,25 @@ with token buckets and records with subscription billing.
 
 ## Running them
 
+### Required and manual arms
+
+Only the arms run by `make evals-run-omp` are required. Everything else runs by
+hand when a change needs it — including the opt-in reviewer-quality arms and
+one-off comparison experiments — and its result never gates a merge:
+
+- **Required (Omp):** `make evals-run-omp` and the individual
+  `make evals-run-omp-*` targets.
+- **Manual (Claude Code):** `make evals-run`, `make evals-run-haiku-5-5`,
+  `make evals-run-comparison`.
+- **Manual (Codex):** `make evals-run-codex`.
+- **Manual (model classes):** `make evals-run-classes MODEL=<stem>`.
+
+`make evals-plan` validates only the required Omp arms; it calls no model and
+costs nothing. Plan a manual arm on demand with
+`coder-eval plan -e experiments/<arm>.yaml tasks/*/*.yaml` under the pinned
+isolated dependencies.
+CI runs no eval arm, required or manual.
+
 ### Choose the execution session first
 
 Choose the subject model, judge model, and execution session separately. A
@@ -993,8 +1020,9 @@ for a key.
 
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
-make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
-make evals-run        # the whole suite on Claude Code, both variants. Uses subscription allowance.
+make evals-plan       # validate the required Omp arms. Costs ZERO tokens. Do this first.
+make evals-run-omp    # REQUIRED: every registered Omp arm.
+make evals-run        # MANUAL, Claude Code: the whole suite, both variants. Uses subscription allowance.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
 make evals-render-routes  # rewrite the Measured routes table from committed provenance
 make evals-render-results # rewrite RESULTS.md from committed provenance
@@ -1002,8 +1030,8 @@ make evals-render-results # rewrite RESULTS.md from committed provenance
 make evals-run TASKS='tasks/pr/*.yaml'     # one suite
 make evals-run TASKS='tasks/*/*-neg-*.yaml' # just the no-fire half
 
-make evals-run-codex  # the same suites on Codex. Needs the Codex SDK and a key.
-make evals-run-haiku-5-5  # the same ablation on Claude Haiku 5.5. Uses subscription allowance.
+make evals-run-codex  # MANUAL, Codex: the same suites. Needs the Codex SDK and a key.
+make evals-run-haiku-5-5  # MANUAL, Claude Code: the same ablation on Haiku 5.5. Uses subscription allowance.
 ```
 `REPEATS` optionally overrides the runner's repeat count for `evals-run`, for
 example `make evals-run REPEATS=1`. When unset or empty, the experiment default
@@ -1041,8 +1069,10 @@ For example, this selected plan makes no inference calls:
 )
 ```
 
-For a focused behavior smoke, run `make evals-plan` first, then name the
-changed case files explicitly in `TASKS` on a supported subject/judge route.
+For a focused behavior smoke on a required Omp arm, run `make evals-plan`
+first, then name the changed case files explicitly in `TASKS` on a supported
+subject/judge route. For a manual arm, plan that arm's experiment directly
+with `coder-eval plan -e experiments/<arm>.yaml`.
 The run target performs its required preflight and writes ordinary run
 provenance; do not substitute YAML parsing or trigger-only checks for observed
 case results. For example, the Omp GPT 6.1 Sol route is:
@@ -1140,7 +1170,8 @@ your shell environment.
 
 **Run `plan` before every `run`.** It uses no inference and catches config
 errors before they consume subscription allowance or separately metered spend.
-`make evals-run` depends on `evals-plan` for exactly that reason.
+`make evals-plan` covers the required Omp arms; plan a manual arm with the
+direct `coder-eval plan -e experiments/<arm>.yaml` command before its run.
 
 Three things the Makefile does that a hand-typed `coder-eval` will not:
 
@@ -1500,7 +1531,8 @@ naming the situation and pointing at the fixture; the expected handling lives
 in the criteria, so a bare run does not pass them by following the prompt.
 Run only this focused set with the documented
 `make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
-route after its `evals-plan`; the normal project checks remain CI's gate.
+route after planning `experiments/with-without.yaml` directly; the normal
+project checks remain CI's gate.
 
 The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
 `10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-completion-notice.yaml`,
@@ -1971,10 +2003,11 @@ score for this row has been measured in either arm.
 
 ## The Omp arm
 
-The same suites and plugin run Omp subjects with paired `bare` and
-`with-plugin` variants. GLM 5.3 Flash is the tier probe beside full GLM.
-The committed GPT 6 Sol and Luna experiments use their Codex provider routes.
-Their historical gateway records remain unchanged.
+The arms `make evals-run-omp` runs are the required set: these are the eval
+results Omp's supported tier rests on. The same suites and plugin run Omp subjects with
+paired `bare` and `with-plugin` variants. GLM 5.3 Flash is the tier probe
+beside full GLM. The committed GPT 6 Sol and Luna experiments use their Codex
+provider routes. Their historical gateway records remain unchanged.
 The DeepSeek experiments pin the newest dated Pro and Flash catalog entries and
 restrict each to DeepSeek's first-party upstream; a missing route fails instead
 of falling back to another provider. The older DeepSeek result does not
@@ -2127,7 +2160,7 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
   [Turn and time ceilings](#turn-and-time-ceilings) states both rules.
 
 - **`make -n` does not dry-run a run target.** Its recipe line calls
-  `$(MAKE)`, so make executes it. `make evals-plan` is the free check.
+  `$(MAKE)`, so make executes it. A `coder-eval plan` run is the free check.
 
 **`agent: {type: omp}` is not a built-in kind.** It comes from
 `coder-eval-omp/`, a `coder_eval` plugin in this repository, installed beside
@@ -2175,8 +2208,10 @@ has in each run's `environment_info`.
 
 ## The Codex arm
 
-The same suites, the same skills, a third harness.
-`docs/notes/0015-the-codex-arm.md` is the decision; this is how it is run.
+Manual only: Codex is a best-effort harness, so this arm remains runnable by
+hand and never becomes a required gate. The same suites, the same skills, a
+third harness. `docs/notes/0015-the-codex-arm.md` is the decision; this is how
+it is run.
 
 ```sh
 make evals-run-codex                          # the Codex arm
@@ -2537,7 +2572,7 @@ unused slots or mix its outcomes with a corrected-policy run. A measurement
 starts from a fresh run directory and needs its own bounded approval, naming
 the source and plugin revisions, cases, variants, repeats, effective limits,
 the native Claude Code route and the stop condition. Check the effective
-limits first. `make evals-plan` calls no model, but it only validates and
+limits first. `coder-eval plan` calls no model, but it only validates and
 warns; it does not print `max_turns`. Resolve the numbers with `coder-eval`'s
 own `resolve_task_for_variant`, once per variant, which also calls no model.
 Keep `GH_TOKEN` and `GITHUB_TOKEN` unset, and keep controller-only
@@ -2555,7 +2590,7 @@ as a TIMEOUT before it can be graded. The headroom is the difference.
 trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
 and the fire half stops the moment the skill fires. Behaviour rows and
 `model-classes` grant more tools and more turns, and cost more. Run one suite at a time with
-`TASKS=` while iterating, and keep `make evals-plan` between edits, where the
+`TASKS=` while iterating, and keep a `plan` run between edits, where the
 mistakes are free.
 
 ## What is not here
