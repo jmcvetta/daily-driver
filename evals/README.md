@@ -869,8 +869,10 @@ one-off comparison experiments — and its result never gates a merge:
 - **Manual (Codex):** `make evals-run-codex`.
 - **Manual (model classes):** `make evals-run-classes MODEL=<stem>`.
 
-`make evals-plan` still validates the arms it names; it calls no model and
-costs nothing.
+`make evals-plan` validates only the required Omp arms; it calls no model and
+costs nothing. Plan a manual arm on demand with
+`coder-eval plan -e experiments/<arm>.yaml tasks/*/*.yaml` under the pinned
+isolated dependencies.
 CI runs no eval arm, required or manual.
 
 ### Choose the execution session first
@@ -969,7 +971,7 @@ for a key.
 
 ```sh
 make evals-install    # coder-eval, pinned; uv fetches Python 3.13 itself
-make evals-plan       # validate every case. Costs ZERO tokens. Do this first.
+make evals-plan       # validate the required Omp arms. Costs ZERO tokens. Do this first.
 make evals-run-omp    # REQUIRED: every registered Omp arm.
 make evals-run        # MANUAL, Claude Code: the whole suite, both variants. Uses subscription allowance.
 make evals-record RUN=evals/runs/<run_id> EXPERIMENT=evals/experiments/with-without.yaml
@@ -1117,7 +1119,8 @@ your shell environment.
 
 **Run `plan` before every `run`.** It uses no inference and catches config
 errors before they consume subscription allowance or separately metered spend.
-`make evals-run` depends on `evals-plan` for exactly that reason.
+`make evals-plan` covers the required Omp arms; plan a manual arm with the
+direct `coder-eval plan -e experiments/<arm>.yaml` command before its run.
 
 Three things the Makefile does that a hand-typed `coder-eval` will not:
 

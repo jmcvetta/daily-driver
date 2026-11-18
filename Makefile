@@ -367,9 +367,14 @@ evals-setup-claude:
 evals-setup-omp:
 	scripts/evals-setup-omp.sh evals/experiments/omp-*.yaml
 
-# evals-plan: validate every eval case without calling a model. It catches
-# config errors before they consume subscription allowance or metered spend.
-# Run it before every `evals-run`.
+# evals-plan: validate the REQUIRED Omp eval arms without calling a model. It
+# catches config errors before they consume subscription allowance or metered
+# spend. Run it before every `evals-run-omp*`.
+#
+# Claude Code, Codex and model-classes arms are manual and are deliberately not
+# planned here: nothing plans an arm nobody intends to run. Plan a manual arm on
+# demand with `cd evals && $(CODER_EVAL) plan -e experiments/<arm>.yaml
+# tasks/*/*.yaml`.
 #
 # Both eval targets `cd evals` first, and that is load-bearing twice over. The
 # plugin path in the experiment is relative and resolves against the process
@@ -381,8 +386,6 @@ evals-setup-omp:
 # Laptop-only, unlike check-git-sync: the cases need a live model, and this
 # repository's CI is deliberately credential-free.
 evals-plan: evals-setup-claude evals-variants
-	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/with-without-haiku-5.5.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
@@ -393,23 +396,7 @@ evals-plan: evals-setup-claude evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gemini-3.8-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gemini-3.1-pro.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol-workflow.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gemini-3.8-flash.yaml tasks/model-classes/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gemini-3.1-pro.yaml tasks/model-classes/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6.1-sol.yaml tasks/model-classes/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.gpts-choice.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-low.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-medium.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-opus-low.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-high.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-low.yaml tasks/*/*.yaml
 
 # The reviewer-quality cohort is opt-in and does not run workflow ablations.
 .PHONY: evals-plan-reviewer-quality
