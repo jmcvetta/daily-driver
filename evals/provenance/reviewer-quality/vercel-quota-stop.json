@@ -1,0 +1,16 @@
+{
+  "arm": "vercel-deepseek-pro",
+  "run_id": "vercel-deepseek-pro-cohort",
+  "run_dir": "evals/runs/906/vercel-deepseek-pro-cohort",
+  "planned_attempts": 40,
+  "completed_attempts": 24,
+  "failed_attempts": 16,
+  "failure": "omp provider error: 402 A positive credit balance is required for all requests, including BYOK, so fallback providers remain available. (type=insufficient_funds)",
+  "observed_at": "2026-11-18T22:10:53Z",
+  "action": "New dispatch stopped after this arm. The wrapper now treats 402 and insufficient_funds as provider pushback. No retry, no fallback to another provider, no purchase, no plan change, no credential change.",
+  "consequence": "The remaining six arms and the rest of this arm's repeats were not dispatched. Their slots remain planned but unattempted, and no result is inferred for them.",
+  "evidence": [
+    "evals/runs/906/vercel-deepseek-pro-cohort/run.json",
+    "evals/provenance/omp-reviewer-deepseek-v4-pro-vercel-2026-11-18-vercel-deepseek-pro-cohort.json"
+  ]
+}

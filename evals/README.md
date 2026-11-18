@@ -274,6 +274,19 @@ Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
 Use a fresh explicit nested run directory for each phase and keep the
 interrupted attempts.
 
+**Dispatch stopped on 2026-11-18T22:05Z.** The DeepSeek reference arm completed
+24 of its 40 attempts; every further reviewer request then returned `402 A
+positive credit balance is required for all requests, including BYOK ...
+(type=insufficient_funds)`. The wrapper was extended to treat 402 and
+`insufficient_funds` as provider pushback and stop the process group. New
+dispatch stopped: the 16 refused slots are kept as terminal provider-error
+records, the other six arms are unattempted, and nothing is inferred for them.
+The gateway's later judge calls completed, but that does not restore the
+reviewer route for a fresh dispatch. Resume requires a restored gateway credit
+balance and fresh run directories; the 24 completed and 16 refused slots are
+not rerun. See
+[`vercel-quota-stop.json`](provenance/reviewer-quality/vercel-quota-stop.json).
+
 ### Observed comparison
 
 Both interrupted DeepSeek slots were rerun once with the user's authorization.

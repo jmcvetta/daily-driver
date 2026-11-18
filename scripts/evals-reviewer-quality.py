@@ -733,7 +733,12 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 interrupted = isinstance(details, dict) and details.get("origin") == "manual interruption reconciliation"
                 row_status = str(row.get("status", "unreported")).upper() if row else "unattempted"
                 error_text = str(row.get("error_message", "") or "") if row else ""
-                provider_error = bool(re.search(r"rate[ -]?limit|quota|too many requests|(?:HTTP|status)[ :=]+429", error_text, re.IGNORECASE))
+                provider_error = bool(re.search(
+                    r"rate[ -]?limit|quota|too many requests|(?:HTTP|status)[ :=]+429|"
+                    r"insufficient[_ ]funds|positive credit balance|(?:HTTP|status)[ :=]+402",
+                    error_text,
+                    re.IGNORECASE,
+                ))
                 harness_error = bool(row) and not provider_error and row_status in {"ERROR", "TIMEOUT", "TIMED_OUT", "CRASHED"}
                 result_path = result_text(run_dir, args.variant, case, repeat) if row else None
                 text = final_response(result_path)
@@ -851,11 +856,15 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     )
     summary = summarize(entries, cases)
     telemetry_summary = summary["reviewer_telemetry"]
+    completed_entries = [entry for entry in entries if entry["status"] == "completed"]
     telemetry_attribution_valid = (
         telemetry_summary["attribution_mismatch"] == 0
         and telemetry_summary["delivery_mismatch"] == 0
-        and telemetry_summary["ambiguous"] == 0
-        if telemetry_summary["verified"] > 0
+        and all(
+            entry["reviewer_telemetry_status"] == "verified"
+            for entry in completed_entries
+        )
+        if completed_entries
         else None
     )
     parent_tokens: dict[str, int | None] = {
@@ -904,6 +913,20 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         },
         "analysis_valid": attribution_valid,
         "cost_comparison_valid": telemetry_summary["cost_comparison_valid"],
+        "coverage": {
+            "planned": len(entries),
+            "terminal": sum(1 for entry in entries if entry["status"] not in {"unattempted", "interrupted"}),
+            "completed": len(completed_entries),
+            "provider_errors": summary["provider_errors"],
+            "harness_errors": summary["harness_errors"],
+            "judge_errors": summary["judge_errors"],
+            "unattempted": summary["unattempted"],
+            "measurable_cohort": (
+                summary["provider_errors"] == 0
+                and summary["unattempted"] == 0
+                and summary["harness_errors"] == 0
+            ),
+        },
         "usage": {
             "parent": {
                 "tokens": parent_tokens,

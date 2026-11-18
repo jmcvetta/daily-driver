@@ -19,13 +19,30 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 PUSHBACK = re.compile(
     r"rate[ -]?limit(?:ed| exceeded| reached)?|quota (?:exceeded|exhausted|reached)|"
-    r"usage limit (?:exceeded|reached)|too many requests|(?:HTTP|status)[ :=]+429",
+    r"usage limit (?:exceeded|reached)|too many requests|(?:HTTP|status)[ :=]+429|"
+    r"insufficient[_ ]funds|positive credit balance|(?:HTTP|status)[ :=]+402",
     re.IGNORECASE,
 )
 
 
+def _selftest_pushback() -> None:
+    """The provider stop must recognize a 402 credit refusal, not only 429s."""
+    for text in (
+        "omp provider error: 402 A positive credit balance is required",
+        "insufficient_funds",
+        "HTTP 402",
+        "rate limit exceeded",
+        "status 429",
+        "quota exhausted",
+    ):
+        assert PUSHBACK.search(text), text
+    for text in ("iteration 402 completed", "no error", "turn 4/2"):
+        assert not PUSHBACK.search(text), text
+
+
 def main() -> int:
     """Dispatch only the named arm and phase into a fresh explicit run directory."""
+    _selftest_pushback()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--arm",
