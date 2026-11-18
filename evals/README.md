@@ -1998,8 +1998,11 @@ make evals-run-omp-glm-5-3 TASKS='tasks/pr/*.yaml'
 ```
 
 Each experiment pins one provider/model ID, and the Omp home the agent borrows
-must configure it. Every GPT subject, judge, and helper call must use
-`openai-codex`; no GPT call may use the Vercel AI Gateway.
+must configure it. Every GPT subject, judge, and helper call in these required
+arms must use `openai-codex`; no GPT call in a supported arm may use the Vercel
+AI Gateway. The manual `classes-gpt-6-luna-gateway` arm is the one authorized
+exception: it measures the gateway route as an evaluation subject, changes no
+role default, and is not part of a required run.
 
 | Experiment | Model |
 | --- | --- |
