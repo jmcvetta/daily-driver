@@ -1,0 +1,338 @@
+{
+  "analysis_valid": true,
+  "arm": "vercel-mistral",
+  "attempts": [
+    {
+      "arm": "vercel-mistral",
+      "artifact_sha256": "d04c05bc37e9402db30b1be57ea0cb3dc6b575c07d8075ad18c67d5856967d71",
+      "attempt_seconds": 53.06294798851013,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+          "served": [
+            "openai/gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "reviewer": {
+          "backend_served": "mistral",
+          "harness": "mistral/mistral-large-4",
+          "requested": "vercel-ai-gateway/mistral/mistral-large-4:low",
+          "resolved_thinking_level": "low",
+          "role_route": "vercel-ai-gateway/mistral/mistral-large-4:low"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": 20.563048,
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "mistral/mistral-large-4",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "mistral",
+      "reviewer_cost_usd": 0.01571962,
+      "reviewer_delivery_observed": true,
+      "reviewer_harness_model": "mistral/mistral-large-4",
+      "reviewer_peak_priced_messages": 0,
+      "reviewer_reported_identity": "mistral/mistral-large-4",
+      "reviewer_requested": "vercel-ai-gateway/mistral/mistral-large-4:low",
+      "reviewer_resolved_thinking_level": "low",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"mistral/mistral-large-4\", \"verdict\": \"defects\", \"findings\": [{\"location\": \"records.py:3 (page, slice expression items[offset:offset + limit - 1])\", \"trigger\": \"Any call to page(items, offset, limit) with limit >= 1, e.g. page([1,2,3,4,5], 0, 3) returns [1, 2] instead of [1, 2, 3]; page(items, offset, 1) returns [] instead of a single record.\", \"impact\": \"Off-by-one in pagination: the function returns at most limit - 1 records, directly contradicting its docstring \\\"Return up to limit records beginning at offset.\\\" Any cursor-based listing endpoint built on this helper silently drops the last record of every page, so clients iterating pages by cursor will skip one record per page and can never retrieve the final record of a full page.\", \"severity\": \"P1\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_subagent_id": "LocalReviewer",
+      "reviewer_telemetry": {
+        "attribution_problems": [],
+        "attribution_valid": true,
+        "backend_model": "vercel-ai-gateway/mistral/mistral-large-4",
+        "backend_provider": "mistral",
+        "cost_usd": 0.01571962,
+        "elapsed_ms": 20563.048,
+        "generation_ms": 20020.633,
+        "harness_models": [
+          "mistral/mistral-large-4"
+        ],
+        "message_count": 5,
+        "model_role": "review",
+        "peak_multipliers_seen": [],
+        "peak_priced_messages": 0,
+        "requested_model": "vercel-ai-gateway/mistral/mistral-large-4:low",
+        "resolved_model_identity": "vercel-ai-gateway/mistral/mistral-large-4@mistral",
+        "resolved_thinking_level": "low",
+        "status": "verified",
+        "status_detail": "completed",
+        "subagent_id": "LocalReviewer",
+        "usage": {
+          "cache_read": 23296,
+          "cache_write": 0,
+          "input": 17448,
+          "output": 893,
+          "reasoning": null
+        }
+      },
+      "reviewer_telemetry_status": "verified",
+      "reviewer_usage": {
+        "cache_read": 23296,
+        "cache_write": 0,
+        "input": 17448,
+        "output": 893,
+        "reasoning": null
+      },
+      "reviewer_verdict": "defects",
+      "run_id": "vercel-mistral-smoke",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "vercel-mistral",
+      "artifact_sha256": "cdcd8101cea00a0d5cd6216b331b44f01650df74b411eba8b131db81695caac4",
+      "attempt_seconds": 66.07037401199341,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+          "served": [
+            "openai/gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "reviewer": {
+          "backend_served": "mistral",
+          "harness": "mistral/mistral-large-4",
+          "requested": "vercel-ai-gateway/mistral/mistral-large-4:low",
+          "resolved_thinking_level": "low",
+          "role_route": "vercel-ai-gateway/mistral/mistral-large-4:low"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": 24.237321,
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "mistral/mistral-large-4",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "mistral",
+      "reviewer_cost_usd": 0.009480520000000001,
+      "reviewer_delivery_observed": true,
+      "reviewer_harness_model": "mistral/mistral-large-4",
+      "reviewer_peak_priced_messages": 0,
+      "reviewer_reported_identity": "mistral/mistral-large-4",
+      "reviewer_requested": "vercel-ai-gateway/mistral/mistral-large-4:low",
+      "reviewer_resolved_thinking_level": "low",
+      "reviewer_result": "{\"reviewer_reported_identity\": \"mistral/mistral-large-4\", \"verdict\": \"clear\", \"findings\": []}",
+      "reviewer_status": "completed",
+      "reviewer_subagent_id": "LocalReviewer",
+      "reviewer_telemetry": {
+        "attribution_problems": [],
+        "attribution_valid": true,
+        "backend_model": "vercel-ai-gateway/mistral/mistral-large-4",
+        "backend_provider": "mistral",
+        "cost_usd": 0.009480520000000001,
+        "elapsed_ms": 24237.321,
+        "generation_ms": 23868.617,
+        "harness_models": [
+          "mistral/mistral-large-4"
+        ],
+        "message_count": 3,
+        "model_role": "review",
+        "peak_multipliers_seen": [],
+        "peak_priced_messages": 0,
+        "requested_model": "vercel-ai-gateway/mistral/mistral-large-4:low",
+        "resolved_model_identity": "vercel-ai-gateway/mistral/mistral-large-4@mistral",
+        "resolved_thinking_level": "low",
+        "status": "verified",
+        "status_detail": "completed",
+        "subagent_id": "LocalReviewer",
+        "usage": {
+          "cache_read": 15616,
+          "cache_write": 0,
+          "input": 10278,
+          "output": 568,
+          "reasoning": null
+        }
+      },
+      "reviewer_telemetry_status": "verified",
+      "reviewer_usage": {
+        "cache_read": 15616,
+        "cache_write": 0,
+        "input": 10278,
+        "output": 568,
+        "reasoning": null
+      },
+      "reviewer_verdict": "clear",
+      "run_id": "vercel-mistral-smoke",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "captured reviewer delivery, adapter child telemetry, and Omp's resolved role route, thinking level and upstream; a missing served identity is unreported",
+    "expected_model_id": "mistral-large-4",
+    "expected_reviewer_selector": "vercel-ai-gateway/mistral/mistral-large-4:low",
+    "expected_reviewer_upstreams": [
+      "mistral"
+    ],
+    "mismatches": [],
+    "reported_model_ids": [
+      "mistral-large-4"
+    ],
+    "reviewer_reported_identities": [
+      "mistral/mistral-large-4"
+    ],
+    "telemetry_valid": true,
+    "valid": true
+  },
+  "cohort_complete": true,
+  "cost_comparison_valid": true,
+  "coverage_complete": true,
+  "created_at": "2026-11-18T21:44:20.041422+00:00",
+  "planned": {
+    "attempts": 2,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-05-clean-boundary"
+    ],
+    "repeats_per_case": 1
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/906/vercel-mistral-smoke",
+      "run_id": "vercel-mistral-smoke",
+      "run_record": "evals/provenance/omp-reviewer-mistral-large-4-vercel-2026-11-18-vercel-mistral-smoke.json",
+      "run_record_sha256": "47462abc0495ab04248ef5b7389363f481a2f019ddb9c8d7486a9f7fadb5b854"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-mistral-large-4-vercel.yaml",
+    "experiment_sha256": "7f43b2de24de22b8bb87294f9fa81c46b41a8668ad45077df8f443c0a1d69429",
+    "route_overlay_path": "/workspace/daily-driver.issue-906-vercel-reviewer-benchmark/evals/fixtures/reviewer-quality/shared/routes/vercel-mistral.yml",
+    "route_overlay_sha256": "5b33adfe6cbdb8e82e7bea5cd7ad6849bf2c8e11b2b7781fb046f5b34a623d9d"
+  },
+  "summary": {
+    "attempts": 2,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 1,
+        "false_alarms": 0,
+        "planned_denominator": 1
+      },
+      "delta": {
+        "accuracy": null,
+        "correct": 0,
+        "eligible_denominator": 0,
+        "planned_denominator": 0
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "precision_denominator": 1,
+        "recall": 1.0,
+        "recall_eligible_denominator": 1,
+        "recall_planned_denominator": 1,
+        "tp": 1
+      },
+      "unexpected_valid": []
+    },
+    "eligible": 2,
+    "harness_errors": 0,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 2,
+      "max": 66.07037401199341,
+      "mean": 59.56666100025177,
+      "median": 59.56666100025177,
+      "min": 53.06294798851013,
+      "population_stddev": 6.503713011741638
+    },
+    "latency_reviewer_seconds": {
+      "count": 2,
+      "max": 24.237321,
+      "mean": 22.4001845,
+      "median": 22.4001845,
+      "min": 20.563048,
+      "population_stddev": 1.8371365000000015
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "reviewer_telemetry_verified": 1,
+        "verified_reviewer_completions": 1
+      },
+      "reviewer-quality-05-clean-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "reviewer_telemetry_verified": 1,
+        "verified_reviewer_completions": 1
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_delivery_unverified": 0,
+    "reviewer_telemetry": {
+      "ambiguous": 0,
+      "attribution_mismatch": 0,
+      "completed_attempts": 2,
+      "cost_comparison_valid": true,
+      "cost_per_rubric_correct_review_usd": 0.012600070000000001,
+      "cost_reported_attempts": 2,
+      "cost_usd": 0.025200140000000003,
+      "delivery_mismatch": 0,
+      "guard": 0,
+      "incomplete": 0,
+      "missing": 0,
+      "no_reviewer": 0,
+      "peak_priced_attempts": 0,
+      "peak_priced_messages": 0,
+      "rubric_correct_denominator": 2,
+      "usage": {
+        "cache_read": 38912,
+        "cache_write": 0,
+        "input": 27726,
+        "output": 1461,
+        "reasoning": null
+      },
+      "verified": 2
+    },
+    "unattempted": 0,
+    "verified_reviewer_completion_rate": 1.0,
+    "verified_reviewer_completions": 2
+  },
+  "winner": null
+}

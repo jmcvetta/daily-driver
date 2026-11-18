@@ -186,6 +186,13 @@ def reviewer_telemetry_evidence(artifact_dir: Path, delivered_id: str | None) ->
         subagent = completed[0]
     messages = [message for message in subagent.get("messages", []) if isinstance(message, dict)]
     models = sorted({str(message.get("model")) for message in messages if isinstance(message.get("model"), str)})
+    peak_multipliers = [
+        message.get("peak_multiplier")
+        for message in messages
+        if isinstance(message.get("peak_multiplier"), (int, float))
+        and not isinstance(message.get("peak_multiplier"), bool)
+    ]
+    peak_messages = sum(1 for value in peak_multipliers if value > 1)
     usage: dict[str, Any] | None = {
         "input": 0,
         "output": 0,
@@ -229,6 +236,8 @@ def reviewer_telemetry_evidence(artifact_dir: Path, delivered_id: str | None) ->
         "elapsed_ms": subagent.get("elapsed_ms"),
         "generation_ms": subagent.get("generation_ms"),
         "message_count": subagent.get("message_count"),
+        "peak_priced_messages": peak_messages,
+        "peak_multipliers_seen": sorted(set(peak_multipliers)),
         "usage": usage,
         "cost_usd": subagent.get("cost_usd", "unreported"),
     }
@@ -614,6 +623,17 @@ def summarize(entries: list[dict[str, Any]], cases: list[str]) -> dict[str, Any]
             "attribution_mismatch": sum(entry["reviewer_telemetry_status"] == "attribution_mismatch" for entry in entries),
             "usage": usage_totals if usage_totals is not None else "unavailable",
             "cost_usd": total_cost if total_cost is not None else "unavailable",
+            "peak_priced_messages": sum(
+                entry.get("reviewer_peak_priced_messages", 0)
+                for entry in telemetry_verified
+                if isinstance(entry.get("reviewer_peak_priced_messages"), int)
+            ),
+            "peak_priced_attempts": sum(
+                1
+                for entry in telemetry_verified
+                if isinstance(entry.get("reviewer_peak_priced_messages"), int)
+                and entry["reviewer_peak_priced_messages"] > 0
+            ),
             "cost_reported_attempts": len(telemetry_costed),
             "completed_attempts": len(completed),
             "cost_comparison_valid": cost_comparison_valid,
@@ -798,6 +818,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     "reviewer_telemetry": telemetry,
                     "reviewer_subagent_id": telemetry.get("subagent_id", "unreported"),
                     "reviewer_resolved_thinking_level": telemetry.get("resolved_thinking_level") or "unreported",
+                    "reviewer_peak_priced_messages": telemetry.get("peak_priced_messages", "unavailable"),
                     "identity": reported_identity(record, case, repeat, parent_requested, helper_requested, str(requested), telemetry),
                     "latency_reviewer_seconds": reviewer_latency_seconds,
                     "attempt_seconds": attempt_seconds if not interrupted and isinstance(attempt_seconds, (int, float)) else None,

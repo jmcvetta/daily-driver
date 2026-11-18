@@ -2,7 +2,7 @@
 #
 # Same shape as omp-reviewer-deepseek-v4-pro-vercel: fixed parent, helpers and
 # judge, one reviewer route, first-party upstreams only.
-experiment_id: omp-reviewer-mimo-v2.6-pro-vercel
+experiment_id: omp-reviewer-mimo-v2-6-pro-vercel
 description: >-
   Reviewer finding quality on eight frozen local diffs. MiMo V2.6 Pro at low
   effort; parent and helpers fixed to GPT-6.1 Sol.

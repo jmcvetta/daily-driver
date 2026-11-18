@@ -1,0 +1,338 @@
+{
+  "analysis_valid": true,
+  "arm": "vercel-kimi",
+  "attempts": [
+    {
+      "arm": "vercel-kimi",
+      "artifact_sha256": "958f14d513f6111f0d33e35bd71bdad5035b643410b51c3277d501e9f1b9adcc",
+      "attempt_seconds": 55.15247178077698,
+      "case_id": "reviewer-quality-01-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+          "served": [
+            "openai/gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "reviewer": {
+          "backend_served": "moonshotai",
+          "harness": "moonshotai/kimi-k3.1-pro",
+          "requested": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low",
+          "resolved_thinking_level": "low",
+          "role_route": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low"
+        }
+      },
+      "judge_classifications": [
+        "TP:reviewer-quality-01-boundary"
+      ],
+      "judge_error": null,
+      "judge_freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": 17.933366999999997,
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "moonshotai/kimi-k3.1-pro",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "moonshotai",
+      "reviewer_cost_usd": 0.020136,
+      "reviewer_delivery_observed": true,
+      "reviewer_harness_model": "moonshotai/kimi-k3.1-pro",
+      "reviewer_peak_priced_messages": 0,
+      "reviewer_reported_identity": "moonshotai/kimi-k3.1-pro",
+      "reviewer_requested": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low",
+      "reviewer_resolved_thinking_level": "low",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"moonshotai/kimi-k3.1-pro\",\"verdict\":\"defects\",\"findings\":[{\"location\":\"records.py:3\",\"trigger\":\"Calling page(items, offset, limit) with a positive limit.\",\"impact\":\"The slice ends at offset + limit - 1, so the function returns at most limit - 1 records instead of limit; with limit = 1 it returns no records. This violates the pagination contract and can omit records from each page.\",\"severity\":\"P1\"}]}",
+      "reviewer_status": "completed",
+      "reviewer_subagent_id": "LocalReviewer",
+      "reviewer_telemetry": {
+        "attribution_problems": [],
+        "attribution_valid": true,
+        "backend_model": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro",
+        "backend_provider": "moonshotai",
+        "cost_usd": 0.020136,
+        "elapsed_ms": 17933.367,
+        "generation_ms": 17770.402,
+        "harness_models": [
+          "moonshotai/kimi-k3.1-pro"
+        ],
+        "message_count": 3,
+        "model_role": "review",
+        "peak_multipliers_seen": [],
+        "peak_priced_messages": 0,
+        "requested_model": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low",
+        "resolved_model_identity": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro@moonshotai",
+        "resolved_thinking_level": "low",
+        "status": "verified",
+        "status_detail": "completed",
+        "subagent_id": "LocalReviewer",
+        "usage": {
+          "cache_read": 16640,
+          "cache_write": 0,
+          "input": 5994,
+          "output": 482,
+          "reasoning": 196
+        }
+      },
+      "reviewer_telemetry_status": "verified",
+      "reviewer_usage": {
+        "cache_read": 16640,
+        "cache_write": 0,
+        "input": 5994,
+        "output": 482,
+        "reasoning": 196
+      },
+      "reviewer_verdict": "defects",
+      "run_id": "vercel-kimi-smoke",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    },
+    {
+      "arm": "vercel-kimi",
+      "artifact_sha256": "5b81fec2a2818169fcb5293de5bf16050b03adecfda9eee221db3fad3ee0d0f6",
+      "attempt_seconds": 67.84475612640381,
+      "case_id": "reviewer-quality-05-clean-boundary",
+      "harness_error": false,
+      "identity": {
+        "helper": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "judge": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol",
+          "served": [
+            "openai/gpt-6.1-sol"
+          ]
+        },
+        "parent": {
+          "requested": "vercel-ai-gateway/openai/gpt-6.1-sol:low",
+          "served": "unreported"
+        },
+        "reviewer": {
+          "backend_served": "moonshotai",
+          "harness": "moonshotai/kimi-k3.1-pro",
+          "requested": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low",
+          "resolved_thinking_level": "low",
+          "role_route": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low"
+        }
+      },
+      "judge_classifications": [],
+      "judge_error": null,
+      "judge_freeze_sha": "66da73d4d3446094b2fc3b04b8c103c955ec34379f82640b38213d44652d50ff",
+      "judge_status": "judged",
+      "latency_reviewer_seconds": 22.856409,
+      "parent_final_response": "unavailable",
+      "parent_reported_reviewer_identity": "moonshotai/kimi-k3.1-pro",
+      "provider_error": false,
+      "repeat": 0,
+      "reviewer_backend_served": "moonshotai",
+      "reviewer_cost_usd": 0.028243199999999996,
+      "reviewer_delivery_observed": true,
+      "reviewer_harness_model": "moonshotai/kimi-k3.1-pro",
+      "reviewer_peak_priced_messages": 0,
+      "reviewer_reported_identity": "moonshotai/kimi-k3.1-pro",
+      "reviewer_requested": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low",
+      "reviewer_resolved_thinking_level": "low",
+      "reviewer_result": "{\"reviewer_reported_identity\":\"moonshotai/kimi-k3.1-pro\",\"verdict\":\"clear\",\"findings\":[]}",
+      "reviewer_status": "completed",
+      "reviewer_subagent_id": "LocalReviewer",
+      "reviewer_telemetry": {
+        "attribution_problems": [],
+        "attribution_valid": true,
+        "backend_model": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro",
+        "backend_provider": "moonshotai",
+        "cost_usd": 0.028243199999999996,
+        "elapsed_ms": 22856.409,
+        "generation_ms": 22132.624,
+        "harness_models": [
+          "moonshotai/kimi-k3.1-pro"
+        ],
+        "message_count": 4,
+        "model_role": "review",
+        "peak_multipliers_seen": [],
+        "peak_priced_messages": 0,
+        "requested_model": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low",
+        "resolved_model_identity": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro@moonshotai",
+        "resolved_thinking_level": "low",
+        "status": "verified",
+        "status_detail": "completed",
+        "subagent_id": "LocalReviewer",
+        "usage": {
+          "cache_read": 22016,
+          "cache_write": 0,
+          "input": 8695,
+          "output": 645,
+          "reasoning": 198
+        }
+      },
+      "reviewer_telemetry_status": "verified",
+      "reviewer_usage": {
+        "cache_read": 22016,
+        "cache_write": 0,
+        "input": 8695,
+        "output": 645,
+        "reasoning": 198
+      },
+      "reviewer_verdict": "clear",
+      "run_id": "vercel-kimi-smoke",
+      "score": 1.0,
+      "status": "completed",
+      "task_status": "SUCCESS",
+      "variant_id": "reviewer"
+    }
+  ],
+  "attribution": {
+    "basis": "captured reviewer delivery, adapter child telemetry, and Omp's resolved role route, thinking level and upstream; a missing served identity is unreported",
+    "expected_model_id": "kimi-k3.1-pro",
+    "expected_reviewer_selector": "vercel-ai-gateway/moonshotai/kimi-k3.1-pro:low",
+    "expected_reviewer_upstreams": [
+      "moonshotai"
+    ],
+    "mismatches": [],
+    "reported_model_ids": [
+      "kimi-k3.1-pro"
+    ],
+    "reviewer_reported_identities": [
+      "moonshotai/kimi-k3.1-pro"
+    ],
+    "telemetry_valid": true,
+    "valid": true
+  },
+  "cohort_complete": true,
+  "cost_comparison_valid": true,
+  "coverage_complete": true,
+  "created_at": "2026-11-18T21:44:18.862540+00:00",
+  "planned": {
+    "attempts": 2,
+    "cases": [
+      "reviewer-quality-01-boundary",
+      "reviewer-quality-05-clean-boundary"
+    ],
+    "repeats_per_case": 1
+  },
+  "runs": [
+    {
+      "run_dir": "evals/runs/906/vercel-kimi-smoke",
+      "run_id": "vercel-kimi-smoke",
+      "run_record": "evals/provenance/omp-reviewer-kimi-vercel-2026-11-18-vercel-kimi-smoke.json",
+      "run_record_sha256": "4177ef19d4de5b07c439357c9020cf98a94796d4c9a91a05ae7be0ae4fc81e11"
+    }
+  ],
+  "schema_version": 1,
+  "settings": {
+    "experiment_path": "evals/experiments/omp-reviewer-kimi-vercel.yaml",
+    "experiment_sha256": "2239d464c66d0a0feb6432cb6d578691b9270e846097a4af99cac919430592e4",
+    "route_overlay_path": "/workspace/daily-driver.issue-906-vercel-reviewer-benchmark/evals/fixtures/reviewer-quality/shared/routes/vercel-kimi.yml",
+    "route_overlay_sha256": "0441b7b1add99cb38142114e0c53b3e6fcc70cd3c4a6d48561103220dedb9294"
+  },
+  "summary": {
+    "attempts": 2,
+    "classification": {
+      "clean": {
+        "eligible_denominator": 1,
+        "false_alarms": 0,
+        "planned_denominator": 1
+      },
+      "delta": {
+        "accuracy": null,
+        "correct": 0,
+        "eligible_denominator": 0,
+        "planned_denominator": 0
+      },
+      "full_review": {
+        "fn": 0,
+        "fp": 0,
+        "precision": 1.0,
+        "precision_denominator": 1,
+        "recall": 1.0,
+        "recall_eligible_denominator": 1,
+        "recall_planned_denominator": 1,
+        "tp": 1
+      },
+      "unexpected_valid": []
+    },
+    "eligible": 2,
+    "harness_errors": 0,
+    "judge_errors": 0,
+    "judge_unavailable": 0,
+    "latency_attempt_seconds": {
+      "count": 2,
+      "max": 67.84475612640381,
+      "mean": 61.49861395359039,
+      "median": 61.49861395359039,
+      "min": 55.15247178077698,
+      "population_stddev": 6.3461421728134155
+    },
+    "latency_reviewer_seconds": {
+      "count": 2,
+      "max": 22.856409,
+      "mean": 20.394887999999998,
+      "median": 20.394887999999998,
+      "min": 17.933366999999997,
+      "population_stddev": 2.461521000000001
+    },
+    "per_case": {
+      "reviewer-quality-01-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "reviewer_telemetry_verified": 1,
+        "verified_reviewer_completions": 1
+      },
+      "reviewer-quality-05-clean-boundary": {
+        "eligible": 1,
+        "judge_errors": 0,
+        "misses": 0,
+        "missing": 0,
+        "planned": 1,
+        "reviewer_errors": 0,
+        "reviewer_telemetry_verified": 1,
+        "verified_reviewer_completions": 1
+      }
+    },
+    "provider_errors": 0,
+    "reviewer_delivery_unverified": 0,
+    "reviewer_telemetry": {
+      "ambiguous": 0,
+      "attribution_mismatch": 0,
+      "completed_attempts": 2,
+      "cost_comparison_valid": true,
+      "cost_per_rubric_correct_review_usd": 0.0241896,
+      "cost_reported_attempts": 2,
+      "cost_usd": 0.0483792,
+      "delivery_mismatch": 0,
+      "guard": 0,
+      "incomplete": 0,
+      "missing": 0,
+      "no_reviewer": 0,
+      "peak_priced_attempts": 0,
+      "peak_priced_messages": 0,
+      "rubric_correct_denominator": 2,
+      "usage": {
+        "cache_read": 38656,
+        "cache_write": 0,
+        "input": 14689,
+        "output": 1127,
+        "reasoning": 394
+      },
+      "verified": 2
+    },
+    "unattempted": 0,
+    "verified_reviewer_completion_rate": 1.0,
+    "verified_reviewer_completions": 2
+  },
+  "winner": null
+}

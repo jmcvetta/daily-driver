@@ -27,7 +27,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Callable
 
-from .pricing import UNREPORTED, cost_usd
+from .pricing import UNREPORTED, cost_usd, load_prices, peak_multiplier, price_key as price_selector
 
 #: File in the task sandbox. The collector reads this name.
 EVIDENCE_FILENAME = "omp-reviewer-telemetry.json"
@@ -261,10 +261,19 @@ class ReviewerTelemetry:
     ) -> dict[str, Any]:
         """This attempt's artifact fragment, with reviewer cost computed per message."""
         subagents = []
+        table = load_prices()
         for subagent_id in self._order:
             record = self._subagents[subagent_id]
             messages = list(record["messages"])
             requested = record["requested_models"][0] if record["requested_models"] else None
+            card = table.get(price_selector(requested)) if requested else None
+            enriched = []
+            for message in messages:
+                entry = dict(message)
+                entry["peak_multiplier"] = (
+                    peak_multiplier(card.peak, message.get("timestamp_ms")) if card is not None else None
+                )
+                enriched.append(entry)
             priced = [
                 {
                     "tokens": {
@@ -306,7 +315,7 @@ class ReviewerTelemetry:
                     "thinking_levels": list(record["thinking_levels"]),
                     "elapsed_ms": round(max(elapsed, 0.0) * 1000, 3),
                     "generation_ms": round(float(generation), 3) if generation else None,
-                    "messages": messages,
+                    "messages": enriched,
                     "message_count": len(messages),
                     "message_overflow": record["message_overflow"],
                     "cost_usd": cost,
