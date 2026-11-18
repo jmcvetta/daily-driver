@@ -4,11 +4,18 @@
   "run_dir": "evals/runs/906/vercel-deepseek-pro-cohort",
   "planned_attempts": 40,
   "completed_attempts": 24,
-  "failed_attempts": 16,
+  "refused_attempts": 16,
+  "cause": "The campaign exhausted the Vercel AI Gateway balance. The parent, every non-review helper and the judge were pinned to vercel-ai-gateway/openai/gpt-6.1-sol:low by the issue, and every subject reviewer also billed through the same gateway. The operator did not want this spend.",
   "failure": "omp provider error: 402 A positive credit balance is required for all requests, including BYOK, so fallback providers remain available. (type=insufficient_funds)",
   "observed_at": "2026-11-18T22:10:53Z",
-  "action": "New dispatch stopped after this arm. The wrapper now treats 402 and insufficient_funds as provider pushback. No retry, no fallback to another provider, no purchase, no plan change, no credential change.",
-  "consequence": "The remaining six arms and the rest of this arm's repeats were not dispatched. Their slots remain planned but unattempted, and no result is inferred for them.",
+  "action": "Stopped all dispatch and stood down at the operator's instruction. No retry, no fallback to another provider, no purchase, no plan change, no credential change.",
+  "consequence": "The 16 refused slots are not model results and must be rerun if the campaign resumes. The 24 completed attempts are preserved as evidence only; they are not a complete cohort and are not compared with another arm. The other six arms have no cohort attempts.",
+  "computed_cost_so_far": {
+    "parent_and_run_usd": 1.6281,
+    "reviewer_child_usd": 0.4644,
+    "judge": "usage recorded, not priced in these records",
+    "source": "committed records; computed from endpoint cards, not billed amounts"
+  },
   "evidence": [
     "evals/runs/906/vercel-deepseek-pro-cohort/run.json",
     "evals/provenance/omp-reviewer-deepseek-v4-pro-vercel-2026-11-18-vercel-deepseek-pro-cohort.json"

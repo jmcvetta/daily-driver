@@ -274,17 +274,18 @@ Cohorts run all eight cases five times per arm: 40 attempts per arm, 280 total.
 Use a fresh explicit nested run directory for each phase and keep the
 interrupted attempts.
 
-**Dispatch stopped on 2026-11-18T22:10:53Z.** The DeepSeek reference arm completed
-24 of its 40 attempts; every further reviewer request then returned `402 A
-positive credit balance is required for all requests, including BYOK ...
-(type=insufficient_funds)`. The wrapper was extended to treat 402 and
-`insufficient_funds` as provider pushback and stop the process group. New
-dispatch stopped: the 16 refused slots are kept as terminal provider-error
-records, the other six arms are unattempted, and nothing is inferred for them.
-The gateway's later judge calls completed, but that does not restore the
-reviewer route for a fresh dispatch. Resume requires a restored gateway credit
-balance and fresh run directories; the 24 completed and 16 refused slots are
-not rerun. See
+**Dispatch stopped on 2026-11-18T22:10:53Z.** The campaign exhausted the
+Vercel AI Gateway balance. The parent, every non-review helper and the judge
+were pinned to `vercel-ai-gateway/openai/gpt-6.1-sol:low` by the issue, and
+every subject reviewer also billed through the same gateway. The DeepSeek
+reference arm completed 24 of its 40 attempts; every further reviewer request
+then returned `402 A positive credit balance is required for all requests,
+including BYOK ... (type=insufficient_funds)`. The wrapper now treats 402 and
+`insufficient_funds` as pushback and stops the process group. The operator
+stood the campaign down. The 16 refused slots are not model results and must
+be rerun if dispatch is authorized again; the other six arms are unattempted,
+and nothing is inferred for them. The 24 completed attempts are preserved as
+evidence only. See
 [`vercel-quota-stop.json`](provenance/reviewer-quality/vercel-quota-stop.json).
 
 #### Observed smoke and partial reference cohort
@@ -306,9 +307,9 @@ judge's.
 | Mistral | `mistral-large-4` | low | mistral | $0.0252 | 22.4 s | 1/1 | 0/1 |
 
 The DeepSeek reference cohort is partial and is not compared with any other
-arm. It planned 40 attempts, all 40 are terminal, 24 completed and 16 are the
-gateway's `402 insufficient_funds` provider errors. Coverage is three complete
-repeats per case and two refused repeats per case.
+arm. It planned 40 attempts, all 40 are terminal, 24 completed and 16 are
+funding refusals caused by the exhausted gateway balance. Coverage is three
+complete repeats per case and two refused repeats per case.
 
 | Measure | DeepSeek V4 Pro, 24 completed attempts |
 | --- | --- |
@@ -324,7 +325,7 @@ repeats per case and two refused repeats per case.
 | Cost per rubric-correct review | $0.0111 |
 | Attempts with a peak-priced message | 0 |
 
-| Case | Terminal | Completed | Rubric-correct | Provider errors |
+| Case | Terminal | Completed | Rubric-correct | Refused |
 | --- | --- | --- | --- | --- |
 | `01-boundary` | 5 | 3 | 3 | 2 |
 | `02-contract` | 5 | 3 | 3 | 2 |
