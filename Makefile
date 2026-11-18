@@ -512,8 +512,9 @@ evals-leaks:
 check-evals-leaks:
 	python3 scripts/check-evals-leaks.py --selftest
 
-# Support tier for these arms. The `omp-*.yaml` experiments are the REQUIRED
-# arms: they are the eval evidence Omp's support rests on. The Claude Code arms
+# Support tier for these arms. The `omp-*.yaml` experiments run by
+# `make evals-run-omp` are the REQUIRED arms: they are the eval evidence Omp's
+# support rests on. The Claude Code arms
 # (`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`)
 # and the Codex arm (`codex.yaml`) stay runnable by hand but are not required:
 # Claude Code and Codex are best effort. A fix for a Claude Code or Codex bug

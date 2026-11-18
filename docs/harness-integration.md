@@ -5,7 +5,8 @@ Daily Driver shares skill instructions and a marketplace catalog across Omp, Cla
 ## Support levels
 
 Omp is the supported harness. The required eval arms are the `omp-*.yaml`
-experiments, and the live runtime checks in CI cover Omp alone.
+experiments that `make evals-run-omp` runs, and the live runtime checks in CI
+cover Omp alone.
 
 Claude Code and Codex are best effort. Their plugins, hooks and per-skill
 `references/claude.md` and `references/codex.md` routes are written and

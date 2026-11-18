@@ -7,8 +7,8 @@ the short version is that the built-in cannot be run on this account, is
 publicly undocumented, announces no changes, and — decisively — ships inside
 the `claude` binary, so there is no version to hold back.
 
-The `omp-*.yaml` experiments are the required arms: their results are the eval
-evidence for the supported harness, Omp. The Claude Code arms
+The arms run by `make evals-run-omp` are the required arms: their results are
+the eval evidence for the supported harness, Omp. The Claude Code arms
 (`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`),
 the Codex arm (`codex.yaml`), and the `classes-*.yaml` experiments are manual:
 kept and runnable, but no gate requires them. A fix for a Claude Code or Codex
@@ -858,8 +858,9 @@ with token buckets and records with subscription billing.
 
 ### Required and manual arms
 
-Only the `omp-*.yaml` arms are required. Everything else runs by hand when a
-change needs it, and its result never gates a merge:
+Only the arms run by `make evals-run-omp` are required. Everything else runs by
+hand when a change needs it — including the opt-in reviewer-quality arms and
+one-off comparison experiments — and its result never gates a merge:
 
 - **Required (Omp):** `make evals-run-omp` and the individual
   `make evals-run-omp-*` targets.
@@ -868,7 +869,8 @@ change needs it, and its result never gates a merge:
 - **Manual (Codex):** `make evals-run-codex`.
 - **Manual (model classes):** `make evals-run-classes MODEL=<stem>`.
 
-`make evals-plan` still plans every arm; it calls no model and costs nothing.
+`make evals-plan` still validates the arms it names; it calls no model and
+costs nothing.
 CI runs no eval arm, required or manual.
 
 ### Choose the execution session first
@@ -1946,8 +1948,8 @@ score for this row has been measured in either arm.
 
 ## The Omp arm
 
-The `omp-*.yaml` arms are the required set: these are the eval results Omp's
-supported tier rests on. The same suites and plugin run Omp subjects with
+The arms `make evals-run-omp` runs are the required set: these are the eval
+results Omp's supported tier rests on. The same suites and plugin run Omp subjects with
 paired `bare` and `with-plugin` variants. GLM 5.3 Flash is the tier probe
 beside full GLM. The committed GPT 6 Sol and Luna experiments use their Codex
 provider routes. Their historical gateway records remain unchanged.
