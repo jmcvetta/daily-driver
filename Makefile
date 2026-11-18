@@ -367,9 +367,14 @@ evals-setup-claude:
 evals-setup-omp:
 	scripts/evals-setup-omp.sh evals/experiments/omp-*.yaml
 
-# evals-plan: validate every eval case without calling a model. It catches
-# config errors before they consume subscription allowance or metered spend.
-# Run it before every `evals-run`.
+# evals-plan: validate the REQUIRED Omp eval arms without calling a model. It
+# catches config errors before they consume subscription allowance or metered
+# spend. Run it before every `evals-run-omp*`.
+#
+# Claude Code, Codex and model-classes arms are manual and are deliberately not
+# planned here: nothing plans an arm nobody intends to run. Plan a manual arm on
+# demand with `cd evals && $(CODER_EVAL) plan -e experiments/<arm>.yaml
+# tasks/*/*.yaml`.
 #
 # Both eval targets `cd evals` first, and that is load-bearing twice over. The
 # plugin path in the experiment is relative and resolves against the process
@@ -381,8 +386,6 @@ evals-setup-omp:
 # Laptop-only, unlike check-git-sync: the cases need a live model, and this
 # repository's CI is deliberately credential-free.
 evals-plan: evals-setup-claude evals-variants
-	cd evals && $(CODER_EVAL) plan -e experiments/with-without.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/with-without-haiku-5.5.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-glm-5.3-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-deepseek-v4-pro.yaml tasks/*/*.yaml
@@ -393,23 +396,7 @@ evals-plan: evals-setup-claude evals-variants
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gemini-3.8-flash.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gemini-3.1-pro.yaml tasks/*/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol-workflow.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gemini-3.8-flash.yaml tasks/model-classes/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gemini-3.1-pro.yaml tasks/model-classes/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt-6.1-sol.yaml tasks/model-classes/*.yaml
 	cd evals && $(CODER_EVAL) plan -e experiments/omp-gpt-6.1-sol.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/codex.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cheaper.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-cocktail.gpts-choice.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-glm.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-low.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-haiku-medium.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-gpt.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-kimi.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-minimax.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-opus-low.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-high.yaml tasks/*/*.yaml
-	cd evals && $(CODER_EVAL) plan -e experiments/classes-sonnet-low.yaml tasks/*/*.yaml
 
 # The reviewer-quality cohort is opt-in and does not run workflow ablations.
 .PHONY: evals-plan-reviewer-quality
@@ -512,6 +499,14 @@ evals-leaks:
 check-evals-leaks:
 	python3 scripts/check-evals-leaks.py --selftest
 
+# Support tier for these arms. The `omp-*.yaml` experiments run by
+# `make evals-run-omp` are the REQUIRED arms: they are the eval evidence Omp's
+# support rests on. The Claude Code arms
+# (`with-without.yaml`, `with-without-haiku-5.5.yaml`, `base-vs-candidate.yaml`)
+# and the Codex arm (`codex.yaml`) stay runnable by hand but are not required:
+# Claude Code and Codex are best effort. A fix for a Claude Code or Codex bug
+# gets a targeted eval kept in `evals/experiments/`, never a required gate.
+#
 # Each arm excludes the other two arms' forks, plus any row tagged out of it
 # with `skip:<arm>`. The tags on eval tasks and each runner's exclusion list
 # determine which arm runs each row.
@@ -520,6 +515,8 @@ check-evals-leaks:
 # `str` option that `coder_eval` splits on commas, so a second `--exclude-tags`
 # replaces the first rather than adding to it -- and the exclusions it dropped
 # come back as rows run in the wrong arm, silently, at full price.
+#
+# MANUAL ONLY: Claude Code arm. Not a required gate.
 evals-run: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) $(if $(REPEATS),--repeats $(REPEATS)) -e experiments/with-without.yaml \
 		--exclude-tags omp-only,codex-only,skip:claude,model-classes $(RUN_TASKS); status=$$?; \
@@ -534,8 +531,9 @@ evals-run-haiku-5-5: evals-judge-preflight evals-plan evals-preflight
 	$(MAKE) -C .. evals-record RUN=evals/runs/latest EXPERIMENT=evals/experiments/with-without-haiku-5.5.yaml; \
 	record_status=$$?; test $$status -ne 0 && exit $$status; exit $$record_status
 
-# evals-run-omp: run every registered Omp experiment. Ablation targets compare
-# bare and treated variants; the focused acceptance target measures with-plugin only.
+# evals-run-omp: run every registered Omp experiment. These are the REQUIRED
+# arms. Ablation targets compare bare and treated variants; the focused
+# acceptance target measures with-plugin only.
 evals-run-omp: evals-run-omp-glm-5-3 evals-run-omp-glm-5-3-flash evals-run-omp-deepseek-v4-pro evals-run-omp-deepseek-v4-1-flash evals-run-omp-gpt-5-6-sol evals-run-omp-gpt-6-sol evals-run-omp-gpt-6-luna evals-run-omp-gpt-6-1-sol evals-run-omp-gemini-3-8-flash evals-run-omp-gemini-3-1-pro evals-run-omp-gpt-6-1-sol-workflow
 
 # evals-run-omp-*: the same suites on Oh My Pi, per configured model. Needs
@@ -639,6 +637,8 @@ evals-run-omp-gpt-6-1-sol-workflow: evals-judge-preflight evals-plan evals-prefl
 # because `coder_eval`'s Codex agent links skills and installs no hooks, so no
 # constitution reaches that arm and every row there would score 0 for the wrong
 # reason. See docs/notes/0015-the-codex-arm.md.
+#
+# MANUAL ONLY: Codex arm. Not a required gate.
 evals-run-codex: evals-judge-preflight evals-plan evals-preflight
 	cd evals && $(CODER_EVAL) run --max-parallel $(JOBS) -e experiments/codex.yaml \
 		--exclude-tags claude-only,omp-only,skip:codex,model-classes $(RUN_TASKS); status=$$?; \
@@ -661,6 +661,8 @@ evals-run-codex: evals-judge-preflight evals-plan evals-preflight
 # run pays for both arms and measures plugin-versus-nothing.
 # Runs 16 tasks at once (`coder-eval run -j`); override with JOBS=. The 16 is
 # this target's own default, so it applies unless JOBS= is given.
+#
+# MANUAL ONLY: Claude Code comparison arm. Not a required gate.
 
 evals-run-comparison: evals-judge-preflight evals-plan evals-preflight
 	@test -d ../daily-driver-base/skills || { \
