@@ -2534,9 +2534,10 @@ ran and graded.
 DeepSeek is faster on three of six cases; Luna's slowest attempts on
 `career-469` ran close to the 660-second turn ceiling without reaching it.
 
-**Tokens and cost.** Buckets summed over all 30 attempts per arm, including
-the turn-capped and fixture-failed ones, because their tokens were still
-spent. `reasoning` is unreported by Omp; `cache_write` is absent from the
+**Tokens and cost.** Buckets summed over all 30 attempts per arm: the
+turn-capped ones are included because their tokens were still spent, while the
+fixture-failed ones failed in `pre_run` before the model ran and contribute
+nothing. `reasoning` is unreported by Omp; `cache_write` is absent from the
 DeepSeek card and recorded as `null`, which costs nothing.
 
 | Bucket | Luna | DeepSeek |
