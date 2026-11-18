@@ -87,6 +87,30 @@ class SyncTest(unittest.TestCase):
         self.sync()
         self.assertNotIn("direct", run(self.primary, "git", "branch", "--list", "direct").stdout)
 
+    def test_merged_direct_branch_with_upstream_is_removed(self) -> None:
+        """An existing remote must not keep a merged local branch alive."""
+        run(self.primary, "git", "branch", "direct", "master")
+        run(self.primary, "git", "push", "-u", "origin", "direct")
+        self.sync()
+        self.assertNotIn("direct", run(self.primary, "git", "branch", "--list", "direct").stdout)
+
+    def test_merged_linked_branch_with_upstream_is_removed(self) -> None:
+        """Merged cleanup must include linked worktrees whose upstreams still exist."""
+        run(self.primary, "git", "push", "origin", "stale")
+        self.sync()
+        self.assertFalse(self.stale.exists())
+        self.assertNotIn("stale", run(self.primary, "git", "branch", "--list", "stale").stdout)
+
+    def test_unmerged_branch_with_upstream_is_kept(self) -> None:
+        """Merged cleanup must not remove a worktree that still adds commits."""
+        (self.stale / "new.txt").write_text("unpublished\n", encoding="utf-8")
+        run(self.stale, "git", "add", "new.txt")
+        run(self.stale, "git", "commit", "-m", "unpublished change")
+        run(self.stale, "git", "push", "-u", "origin", "stale")
+        self.sync()
+        self.assertTrue(self.stale.exists())
+        self.assertIn("stale", run(self.primary, "git", "branch", "--list", "stale").stdout)
+
     def test_dirty_stale_worktree_is_kept(self) -> None:
         """Cleanup must not delete user files or the branch that owns them."""
         (self.stale / "user-data.txt").write_text("keep\n", encoding="utf-8")

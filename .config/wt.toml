@@ -1,3 +1,4 @@
-# Shell integration keeps the caller in master's worktree after sync.
+# Shell integration keeps the caller in master's worktree after sync. Preserve
+# the invoking branch so merged-branch cleanup does not remove its worktree.
 [aliases]
-sync = "wt switch master --execute make -- __git_sync_run"
+sync = "WT_SYNC_CALLER={{ branch }} wt switch master --execute make -- __git_sync_run"
