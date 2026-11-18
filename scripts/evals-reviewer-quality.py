@@ -135,17 +135,30 @@ def delivered_reviewer_id(path: Path | None) -> str | None:
 def reviewer_telemetry_evidence(artifact_dir: Path, delivered_id: str | None) -> dict[str, Any]:
     """Read the adapter's reviewer-child telemetry for one attempt.
 
-    A `.pending` guard, a missing file, an incomplete document and an
-    unreadable one all mean the same thing for the cost comparison: the
-    reviewer's usage is unavailable. They are reported distinctly so the
-    reason survives the run.
+    `artifact_dir` is the attempt directory; the adapter writes inside the task
+    sandbox, which coder_eval preserves under `artifacts/<task>`. A `.pending`
+    guard, a missing file, an incomplete document and an unreadable one all
+    mean the same thing for the cost comparison: the reviewer's usage is
+    unavailable. They are reported distinctly so the reason survives the run.
     """
-    guard = artifact_dir / f"{REVIEWER_TELEMETRY_FILENAME}.pending"
-    if guard.exists():
+    candidates = [artifact_dir]
+    nested = [
+        path.parent
+        for path in artifact_dir.glob("artifacts/*/omp-reviewer-telemetry.json")
+        if path.is_file()
+    ]
+    if artifact_dir.name != "artifacts":
+        candidates.extend(nested)
+    if not nested and artifact_dir.is_dir():
+        candidates.extend(path.parent for path in artifact_dir.glob("artifacts/*/omp-reviewer-telemetry.json.pending"))
+    if any((directory / f"{REVIEWER_TELEMETRY_FILENAME}.pending").exists() for directory in candidates):
         return {"status": "guard"}
-    path = artifact_dir / REVIEWER_TELEMETRY_FILENAME
-    if not path.is_file():
+    existing = [directory for directory in candidates if (directory / REVIEWER_TELEMETRY_FILENAME).is_file()]
+    if not existing:
         return {"status": "missing"}
+    if len(existing) > 1:
+        return {"status": "ambiguous", "candidate_directories": len(existing)}
+    path = existing[0] / REVIEWER_TELEMETRY_FILENAME
     try:
         document = json_file(path)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
@@ -706,7 +719,16 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 judge = judge_evidence(run_dir, record, args.variant, case, repeat) if row else {"status": "unavailable", "classifications": [], "score": "unavailable"}
                 if reviewer_identity != "unreported":
                     observed_identities.append(reviewer_identity)
-                    provider_mismatch = "/" in reviewer_identity and reviewer_identity.split("/", 1)[0] != requested.split("/", 1)[0]
+                    expected_provider = requested.split("/", 1)[0]
+                    reported_provider = reviewer_identity.split("/", 1)[0] if "/" in reviewer_identity else None
+                    # A Vercel child reports its provider-local id (`mistral/…`),
+                    # not the gateway prefix; its upstream is checked from the
+                    # adapter's resolved identity instead.
+                    provider_mismatch = (
+                        expected_provider != "vercel-ai-gateway"
+                        and reported_provider is not None
+                        and reported_provider != expected_provider
+                    )
                     effort_mismatch = ":" in reviewer_identity and reviewer_identity.rsplit(":", 1)[1] != requested.rsplit(":", 1)[1]
                     if provider_mismatch or effort_mismatch or normalize_model(reviewer_identity) != normalize_model(requested):
                         attribution_mismatches.append({"run_id": run_id, "case_id": case, "repeat": str(repeat), "reported": reviewer_identity, "expected_selector": requested})
@@ -939,7 +961,9 @@ def _test_reviewer_telemetry() -> None:
 
     with tempfile.TemporaryDirectory(prefix="reviewer-selftest-") as tmp:
         attempt_dir = Path(tmp)
-        (attempt_dir / REVIEWER_TELEMETRY_FILENAME).write_text(
+        sandbox = attempt_dir / "artifacts" / "reviewer-quality-01-boundary"
+        sandbox.mkdir(parents=True)
+        (sandbox / REVIEWER_TELEMETRY_FILENAME).write_text(
             telemetry.artifact_document([document], complete=True), encoding="utf-8"
         )
         evidence = reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")
@@ -968,10 +992,10 @@ def _test_reviewer_telemetry() -> None:
         )
         assert wrong_effort["status"] == "attribution_mismatch"
 
-        (attempt_dir / f"{REVIEWER_TELEMETRY_FILENAME}.pending").mkdir()
+        (sandbox / f"{REVIEWER_TELEMETRY_FILENAME}.pending").mkdir()
         assert reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")["status"] == "guard"
-        (attempt_dir / f"{REVIEWER_TELEMETRY_FILENAME}.pending").rmdir()
-        (attempt_dir / REVIEWER_TELEMETRY_FILENAME).unlink()
+        (sandbox / f"{REVIEWER_TELEMETRY_FILENAME}.pending").rmdir()
+        (sandbox / REVIEWER_TELEMETRY_FILENAME).unlink()
         assert reviewer_telemetry_evidence(attempt_dir, "ReviewerChild")["status"] == "missing"
 
         # A child message without usage makes the priced total unreported.
