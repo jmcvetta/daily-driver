@@ -2472,8 +2472,8 @@ work. Both arms run the same six `model-classes` cases, five repeats each,
 both arms concurrent. Each arm restricts itself to one first-party upstream
 with `vercel_gateway_only`, so no request is served by another provider and
 neither arm may fall back to the `openai-codex` subscription route. Both runs
-started at 01:20 UTC on 2026-11-19; the arms overlapped in time rather than
-running hours apart. Records:
+started at 18:20 UTC on 2026-11-18 and finished within an hour of each other,
+so the arms overlapped rather than running hours apart. Records:
 [Luna](provenance/classes-gpt-6-luna-gateway-2026-11-19-luna.json),
 [DeepSeek](provenance/classes-deepseek-v4-1-flash-gateway-2026-11-19-deepseek.json).
 Run directories `evals/runs/900/luna` and `evals/runs/900/deepseek` are local
@@ -2557,11 +2557,12 @@ using that message's own prompt size for Luna's 272,001-token tier and its own
 timestamp for DeepSeek's peak windows. Omp's `usage.cost` was not used.
 
 **DeepSeek peak windows.** The upstream publishes a 2× multiplier on weekdays
-01:00–04:00 and 06:00–10:00 UTC. Every one of the 30 DeepSeek attempts started
-between 01:20 and 02:13 UTC on Thursday 2026-11-19, so **all 30 attempts were
-priced at the peak multiplier**. Luna has no peak window. Two published
-details remain assumptions and are documented in
-[`coder-eval-omp/README.md`](coder-eval-omp/README.md#cost): the
+01:00–04:00 and 06:00–10:00 UTC. The run spanned 18:20–19:13 UTC on Wednesday
+2026-11-18, so **no attempt fell inside a peak window** and no DeepSeek message
+was priced at the multiplier; the adapter still applied the published window
+to each message's own timestamp, so a run at another hour would have carried
+it. Luna has no peak window. Two published details remain assumptions and are
+documented in [`coder-eval-omp/README.md`](coder-eval-omp/README.md#cost): the
 `holiday_calendar: "cn"` exclusion publishes no holiday list, and the tier
 boundary overlaps at exactly 272,001 prompt tokens.
 
