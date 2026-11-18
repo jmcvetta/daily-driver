@@ -1020,8 +1020,10 @@ For example, this selected plan makes no inference calls:
 )
 ```
 
-For a focused behavior smoke, run `make evals-plan` first, then name the
-changed case files explicitly in `TASKS` on a supported subject/judge route.
+For a focused behavior smoke on a required Omp arm, run `make evals-plan`
+first, then name the changed case files explicitly in `TASKS` on a supported
+subject/judge route. For a manual arm, plan that arm's experiment directly
+with `coder-eval plan -e experiments/<arm>.yaml`.
 The run target performs its required preflight and writes ordinary run
 provenance; do not substitute YAML parsing or trigger-only checks for observed
 case results. For example, the Omp GPT 6.1 Sol route is:
@@ -1480,7 +1482,8 @@ naming the situation and pointing at the fixture; the expected handling lives
 in the criteria, so a bare run does not pass them by following the prompt.
 Run only this focused set with the documented
 `make evals-run TASKS='tasks/undertake/17-*.yaml tasks/pr-body/08-capability-gap-is-not-human-blocker.yaml'`
-route after its `evals-plan`; the normal project checks remain CI's gate.
+route after planning `experiments/with-without.yaml` directly; the normal
+project checks remain CI's gate.
 
 The readiness rows `undertake/08-cadence-stops-at-ready-omp.yaml`,
 `10-ready-is-marked-not-asked.yaml`, `13-gate-reads-the-completion-notice.yaml`,
@@ -2108,7 +2111,7 @@ setsid nohup make evals-run-omp-glm-5-3 TASKS="$TASKS" JOBS=16 > glm.log 2>&1 &
   [Turn and time ceilings](#turn-and-time-ceilings) states both rules.
 
 - **`make -n` does not dry-run a run target.** Its recipe line calls
-  `$(MAKE)`, so make executes it. `make evals-plan` is the free check.
+  `$(MAKE)`, so make executes it. A `coder-eval plan` run is the free check.
 
 **`agent: {type: omp}` is not a built-in kind.** It comes from
 `coder-eval-omp/`, a `coder_eval` plugin in this repository, installed beside
@@ -2520,7 +2523,7 @@ unused slots or mix its outcomes with a corrected-policy run. A measurement
 starts from a fresh run directory and needs its own bounded approval, naming
 the source and plugin revisions, cases, variants, repeats, effective limits,
 the native Claude Code route and the stop condition. Check the effective
-limits first. `make evals-plan` calls no model, but it only validates and
+limits first. `coder-eval plan` calls no model, but it only validates and
 warns; it does not print `max_turns`. Resolve the numbers with `coder-eval`'s
 own `resolve_task_for_variant`, once per variant, which also calls no model.
 Keep `GH_TOKEN` and `GITHUB_TOKEN` unset, and keep controller-only
@@ -2538,7 +2541,7 @@ as a TIMEOUT before it can be graded. The headroom is the difference.
 trigger-accuracy cases are cheap: five turns each, `Skill` the only tool,
 and the fire half stops the moment the skill fires. Behaviour rows and
 `model-classes` grant more tools and more turns, and cost more. Run one suite at a time with
-`TASKS=` while iterating, and keep `make evals-plan` between edits, where the
+`TASKS=` while iterating, and keep a `plan` run between edits, where the
 mistakes are free.
 
 ## What is not here
