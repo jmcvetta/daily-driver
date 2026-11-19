@@ -114,11 +114,14 @@ This adapter is not a security boundary against arbitrary trusted extensions.
 `dailyDriver.modelClassRoutes` is an array of entries with `referenceModel`
 and `classes`, for example `{ referenceModel: "provider/model", classes: {
 implementation: "provider/variant:high" } }`. Omp resolves the reference
-through its model catalog to identify the family and provider. A family entry
-does not authorize a different provider. The built-in OpenAI Codex entry
-preserves the existing defaults; explicit same-family class roles remain
-operator assignments. Plugin-installed global defaults do not establish a
-mapping for unrelated families. A mapping is not measurement evidence.
+through its model catalog to identify the family; that family mapping applies
+regardless of the reference model's provider. Omp resolves the configured
+class target to the same model identity in the invoking provider and family,
+then retains the invoking provider. Ambiguous or unavailable targets are route
+gaps. Explicit class roles remain valid only in the invoking provider and
+family. The built-in OpenAI Codex entry preserves existing defaults; plugin-
+installed global defaults do not establish a mapping for unrelated families.
+A mapping is not measurement evidence.
 
 An unset route configuration uses the registered default, including when Omp
 clones settings for a task. An explicit empty array stays empty; malformed
