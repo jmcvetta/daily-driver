@@ -4,8 +4,10 @@
 session running in Claude Code. Omp's routes are in [`omp.md`](omp.md),
 Codex's in [`codex.md`](codex.md).
 
-- **Opening an issue with a body.** `mcp__github__issue_write`, `method:
-  create`, `body` set.
+- **Opening an issue with a body.** Settle destination under
+  [`issue`'s target repository rule](../../issue/SKILL.md#the-target-repository)
+  and pass it in `mcp__github__issue_write`, `method: create`, with `body`;
+  set `owner` and `repo` when the target differs from the current repository.
 - **Replacing a body.** `mcp__github__issue_write`, `method: update`, `body`
   set. The update replaces the body outright rather than appending, so it
   carries the whole new body and not the part that is new.

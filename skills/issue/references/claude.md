@@ -9,7 +9,7 @@ running in Claude Code. Omp's routes are in [`omp.md`](omp.md), Codex's in
 | Read what is there | Read the issue | `mcp__github__issue_read` |
 | Read what is there | Search the open issues | `mcp__github__search_issues` |
 | The label | Set or swap a label | `mcp__github__issue_write` with `labels` set |
-| The body | Open with a body | `mcp__github__issue_write`, `method: create`, `body` set |
+| The body | Open with a body; settle destination under [the target repository rule](../SKILL.md#the-target-repository) and pass it here | `mcp__github__issue_write`, `method: create`, `body` set; set `owner` and `repo` when the target differs from the current repository |
 | The body | Replace a body | `mcp__github__issue_write`, `method: update`, `body` set |
 | The edges | Blocked-by, parent, sub-issue | `issue-deps`'s own routes |
 | The state | Close or reopen | `mcp__github__issue_write`, `method: update`, `state` set |
