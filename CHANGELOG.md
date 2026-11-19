@@ -50,6 +50,19 @@
 * Keep normal undertaking identity verification informative rather than erroneous, and allow recovery after rejected routing preflight ([#782](https://github.com/jmcvetta/daily-driver/issues/782)).
 * Preserve the selected undertaking route after rejecting an inference request, so restoring the original route allows conversation and recovery without restarting Omp ([#794](https://github.com/jmcvetta/daily-driver/issues/794)).
 
+## [0.67.0](https://github.com/jmcvetta/daily-driver/compare/v0.66.0...v0.67.0) (2026-11-19)
+
+
+### Features
+
+* **provenance:** add provider and capitalize Session ([#931](https://github.com/jmcvetta/daily-driver/issues/931)) ([eaa13be](https://github.com/jmcvetta/daily-driver/commit/eaa13bebb3ea283faed5635176bf3fc30cdec506))
+* qualify DeepSeek Flash for mechanical and implementation routes ([#928](https://github.com/jmcvetta/daily-driver/issues/928)) ([e4212b1](https://github.com/jmcvetta/daily-driver/commit/e4212b18158f64186e40e0bcbd40b2bbfc509ba6))
+
+
+### Bug Fixes
+
+* finish routine tool migration and clear lockfile-only blockers ([#930](https://github.com/jmcvetta/daily-driver/issues/930)) ([0fa9418](https://github.com/jmcvetta/daily-driver/commit/0fa941895f9f5c55cdb688a2c027a4bd17b5031e))
+
 ## [0.66.0](https://github.com/jmcvetta/daily-driver/compare/v0.65.1...v0.66.0) (2026-11-19)
 
 
