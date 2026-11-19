@@ -49,6 +49,10 @@ function optionValues(args) {
 			bodyOptions.push({ flag: value.slice(0, offset - 1), index, inline: true, value: value.slice(offset) });
 			continue;
 		}
+		if (value.startsWith("-b") && value.length > 2) {
+			bodyOptions.push({ flag: "-b", index, inline: true, attached: true, value: value.slice(2) });
+			continue;
+		}
 		if (value.startsWith("--body-file=")) {
 			bodyOptions.push({ flag: "--body-file", index, inline: true, value: value.slice(12) });
 			continue;
@@ -107,8 +111,7 @@ export function isGitHubBodyWrite(args) {
 	const endpoint = apiEndpoint(args);
 	if (!endpoint || method?.toUpperCase() === "GET") return false;
 	const hasBodyField = fieldOptions.some((option) => option.value?.split("=", 1)[0] === "body");
-	const bodyEndpoint = /\/(?:issues\/\d+\/comments|pulls\/\d+\/(?:comments(?:\/\d+\/replies)?|reviews))$/iu.test(endpoint);
-	return hasBodyField || (inputOptions.length > 0 && bodyEndpoint);
+	return hasBodyField || inputOptions.length > 0;
 }
 
 /** Whether `args` names an issue or pull-request comment write. */
@@ -164,7 +167,8 @@ function readOmpVersion() {
 }
 
 function putOptionValue(args, option, value) {
-	if (option.inline) args[option.index] = `${args[option.index].slice(0, args[option.index].indexOf("=") + 1)}${value}`;
+	if (option.attached) args[option.index] = `${option.flag}${value}`;
+	else if (option.inline) args[option.index] = `${args[option.index].slice(0, args[option.index].indexOf("=") + 1)}${value}`;
 	else args[option.index + 1] = value;
 }
 

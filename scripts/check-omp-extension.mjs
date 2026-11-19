@@ -948,6 +948,8 @@ check("body-bearing gh writes require the wrapper and non-body routes remain ope
 		"gh pr create --title x --body-file body.md",
 		"gh pr edit 7 --body y",
 		"gh issue comment 52 -b y",
+		"gh issue comment 52 -bhello",
+		"gh api -X PATCH repos/o/r/issues/52 --input body.json",
 		"gh pr comment 7 --body-file body.md",
 		"gh pr review 7 --body approved",
 		"gh api --method POST repos/o/r/pulls/7/reviews --input review.json",
@@ -995,7 +997,8 @@ for (let i = 0; i < args.length; i++) {
     temporaryPath = args[++i];
     payload = JSON.parse(fs.readFileSync(temporaryPath, "utf8"));
     body = payload.body ?? payload.comments?.map((comment) => comment.body).join("\\n") ?? null;
-  } else if (["-f", "-F", "--field", "--raw-field"].includes(args[i])) {
+  } else if (args[i].startsWith("-b") && args[i].length > 2) body = args[i].slice(2);
+  else if (["-f", "-F", "--field", "--raw-field"].includes(args[i])) {
     const field = args[++i];
     if (field.startsWith("body=")) body = field.slice(5);
   }
@@ -1085,6 +1088,17 @@ process.stdout.write(process.env.OMP_VERSION_OUTPUT || "omp/19.4.2\\n");
 		writeFileSync(replyFile, JSON.stringify({ body: "thread reply" }));
 		const reply = await execute(["api", "-X", "POST", "repos/o/r/pulls/7/comments/99/replies", "--input", replyFile]);
 		assert.ok(reply.capture.payload.body.includes("Model: model-b"));
+
+		const shortBody = await execute(["issue", "comment", "91", "-binline shorthand"]);
+		assert.ok(shortBody.capture.body.startsWith("inline shorthand"));
+		assert.ok(shortBody.capture.body.includes("Model: model-b\nHarness: Omp 19.4.2\nsession: session-b"));
+
+		const editFile = join(root, "issue-edit.json");
+		writeFileSync(editFile, JSON.stringify({ body: "edited issue body" }));
+		const issueEdit = await execute(["api", "-X", "PATCH", "repos/o/r/issues/91", "--input", editFile]);
+		assert.ok(issueEdit.capture.payload.body.startsWith("edited issue body"));
+		assert.ok(issueEdit.capture.payload.body.includes("Model: model-b"));
+		assert.equal(existsSync(issueEdit.capture.temporaryPath), false, "the private issue-edit JSON was removed");
 
 		nextExitCode = 7;
 		const failed = await execute(["pr", "comment", "7", "--body-file", originalFile]);
