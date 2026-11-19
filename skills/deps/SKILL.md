@@ -72,6 +72,23 @@ A red suite is still answered by finding which upgrade broke what, and never
 by pinning around the failure, skipping the test, or silencing it —
 the constitution's test discipline.
 
+**A compatible tool's own migration is inside the pass.** Where the bulk
+command moves a tool within its existing major constraint and the fallout is
+confined to that tool's configuration schema and its formatting of existing
+files — a formatter's renamed configuration key and the reformat of the files
+it already owns under the new version — the run performs the tool's own
+migration, applies the resulting formatting, and continues to green CI on the
+current head. That is the mechanical fallout of an upgrade the run itself
+asked for, not a decision a person owes: the run finishes what it moved.
+
+**The breaking-change prohibition is about application behaviour.** "Never
+edit code to accommodate a breaking change" means application code and the API
+or behaviour contracts it implements — the caller changes a changed library
+interface demands. A tool's configuration schema and the formatting that tool
+owns are not application code, so repairing them is the migration, not a code
+edit around a break. Every prohibition in `The run is unattended` still holds,
+and a major upgrade still goes to `Majors are not in the pass`.
+
 
 
 The run is unattended
@@ -81,8 +98,10 @@ Nobody is watching, so the boundary is the substance of the skill. Inside a
 run:
 
 - **Never merge.** The pull request is the end of the run.
-- **Never edit code to accommodate a breaking change.** See `Majors are not in
-  the pass` below.
+- **Never edit application code to accommodate a breaking change.** A
+  compatible tool's own configuration and format migration is not that; see
+  the paragraph above. Majors are excluded — see `Majors are not in the pass`
+  below.
 - **Never skip, disable or pin around a failing test.**
 - **Nothing outside this pull request.** No comment on anybody else's pull
   request, nothing closed, and no issue opened. Opening the pull request and

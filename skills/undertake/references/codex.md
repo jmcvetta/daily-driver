@@ -57,10 +57,12 @@ family, class, and retained provider/model, then continue immediately on the
 invoking model and effort without confirmation. Identity does not establish
 class suitability. Frontier approval and agent-route constraints still apply.
 
-For a mapped family, a missing or cleared class, unavailable target, or
-incompatible assignment is a gap. Unknown family or identity is not an absent
-family. This surface exposes no measured agent-callable in-session model switch;
-do not invent one. Report unsupported controls and do not claim verification.
+For a mapped family, a class omitted from the family map follows the same
+warning-and-continue with suitability unverified. An explicitly cleared class,
+unavailable target, or incompatible assignment is a gap. Unknown family or
+identity is not an absent family. This surface exposes no measured
+agent-callable in-session model switch; do not invent one. Report unsupported
+controls and do not claim verification.
 
 **Issue-only research writes use the issue client.** With no resume branch,
 this route skips `task-worktree`; do not create or publish a branch. If a

@@ -108,10 +108,11 @@ function classSelection(ctx, settings, routes, model, modelClass) {
 	const explicit = role.assigned && typeof role.value === "string" ? ctx.models.resolve(role.value) : null;
 	const explicitCompatible = explicit && explicit.provider === model.provider && ctx.models.family(explicit) === family;
 	const configured = explicitCompatible ? role.value : familyRows[0]?.classes[modelClass];
-	if (typeof configured !== "string" || !configured.trim()) {
-		if (familyRows.length) throw new Error("Mapped model class route is missing or cleared");
-		return { target: model, capability: "unverified" };
+	// An omitted class keeps the absent-family continuation; an explicit null is a configuration gap.
+	if (configured !== undefined && (typeof configured !== "string" || !configured.trim())) {
+		throw new Error(`Mapped model class route is cleared for ${modelClass}`);
 	}
+	if (configured === undefined) return { target: model, capability: "unverified" };
 	const configuredTarget = ctx.models.resolve(configured);
 	if (!configuredTarget) throw new Error("Configured class model is unavailable");
 	if (ctx.models.family(configuredTarget) !== family) throw new Error("Configured class model family must remain unchanged");
@@ -390,7 +391,7 @@ export function installUndertakingRouting(pi, getSettings, getRoutes = () => MOD
 	pi.registerTool({
 		name: "daily_driver_route_undertaking",
 		label: "Select undertaking model class",
-		description: "Select the issue's initial model class on its invoking family and provider. Call alone, not batched with other tools. Later operator model and effort changes are not restricted. An unmapped family warns and retains the invoking model.",
+		description: "Select the issue's initial model class on its invoking family and provider. Call alone, not batched with other tools. Later operator model and effort changes are not restricted. An unmapped family or an omitted class warns and retains the invoking model.",
 		parameters: pi.zod.object({
 			issue: pi.zod.number().int().min(1),
 			modelClass: pi.zod.string(),

@@ -119,9 +119,10 @@ regardless of the reference model's provider. Omp resolves the configured
 class target to the same model identity in the invoking provider and family,
 then retains the invoking provider. Ambiguous or unavailable targets are route
 gaps. Explicit class roles remain valid only in the invoking provider and
-family. The built-in OpenAI Codex entry preserves existing defaults; plugin-
-installed global defaults do not establish a mapping for unrelated families.
-A mapping is not measurement evidence.
+family. The built-in OpenAI Codex entry preserves existing defaults, and the
+DeepSeek V4.1 Flash entry maps only its measured mechanical and implementation
+classes. Plugin-installed global defaults do not establish a mapping for
+unrelated families. A mapping is not measurement evidence.
 
 An unset route configuration uses the registered default, including when Omp
 clones settings for a task. An explicit empty array stays empty; malformed
@@ -153,9 +154,11 @@ When the known family is absent from the class table, a prominent warning names
 the family, required class, and retained provider/model. Work continues
 immediately on the invoking model, provider, and effort without confirmation.
 The route's execution identity can be reported separately from class suitability.
-A missing or cleared class in a mapped family, unavailable or incompatible
-initial target, unknown identity, or observed agent-route mismatch requires
-explanation and repair; later operator selections are not route violations.
+A class omitted from a mapped family follows the same warning-and-continue:
+its absence leaves suitability unverified and retains the invoking route. An
+explicitly cleared (`null`) class, unavailable or incompatible initial target,
+unknown identity, or observed agent-route mismatch requires explanation and
+repair; later operator selections are not route violations.
 Failed preflight must permit explanation and retry without discarding an
 existing valid route. Route status is `selected` after initial selection;
 malformed or cancelled state can report `blocked`. Neither status alone
